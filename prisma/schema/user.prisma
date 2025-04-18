@@ -16,6 +16,8 @@ model User {
   apiKeys               ApiKey[]
   Category              Category[]
   services              Service[]
+  newOrders             NewOrder[]
+  addFunds              AddFund[]
   isTwoFactorEnabled    Boolean                @default(false)
   twoFactorConfirmation TwoFactorConfirmation?
   createdAt             DateTime               @default(now())

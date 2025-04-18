@@ -17,14 +17,14 @@ const Platform = () => {
         <button
           className="bg-blue text-white px-8 py-2 rounded-md uppercase dark:text-gray-300"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           SOCIAL MEDIA IS OUR BUSINESS
         </button>
         <h3
           className="text-3xl lg:text-4xl lg:w-7/12 lg:mx-auto mt-4 dark:text-gray-300"
           data-aos="fade-down"
-          data-aos-duration="2000"
+          data-aos-duration="1000"
         >
           Providing Service in All Social Networks
         </h3>
@@ -36,7 +36,7 @@ const Platform = () => {
           <div
             className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md py-6 lg:py-1 px-4 flex justify-center lg:justify-start items-center gap-x-3"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             <FaInstagram className="text-2xl" />
             <span className="font-semibold text-lg">Instagram</span>
@@ -44,7 +44,7 @@ const Platform = () => {
           <div
             className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md py-6 lg:py-1 px-4 flex justify-center lg:justify-start items-center gap-x-3"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             <FaFacebook className="text-2xl" />
             <span className="font-semibold text-lg">Facebook</span>
@@ -52,7 +52,7 @@ const Platform = () => {
           <div
             className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md py-6 lg:py-1 px-4 flex justify-center lg:justify-start items-center gap-x-3"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             <FaYoutube className="text-2xl" />
             <span className="font-semibold text-lg">Youtube</span>
@@ -60,7 +60,7 @@ const Platform = () => {
           <div
             className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md py-6 lg:py-1 px-4 flex justify-center lg:justify-start items-center gap-x-3"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             <FaTiktok className="text-2xl" />
             <span className="font-semibold text-lg">Tiktok</span>
@@ -68,7 +68,7 @@ const Platform = () => {
           <div
             className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md py-6 lg:py-1 px-4 flex justify-center lg:justify-start items-center gap-x-3"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             <FaTwitter className="text-2xl" />
             <span className="font-semibold text-lg">Twitter</span>
@@ -76,7 +76,7 @@ const Platform = () => {
           <div
             className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md py-6 lg:py-1 px-4 flex justify-center lg:justify-start items-center gap-x-3"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             <FaLinkedin className="text-2xl" />
             <span className="font-semibold text-lg">LinkedIn</span>
@@ -91,7 +91,7 @@ const Platform = () => {
           height={500}
           className="rounded-lg md:mx-auto lg:ml-auto"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         />
       </div>
     </section>

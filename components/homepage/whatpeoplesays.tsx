@@ -32,14 +32,14 @@ const testimonials = [
       'After trying several websites who claim to have fast delivery, Im glad I finally found this service. They literally started delivering 5 seconds after my payment.',
   },
   {
-    name: 'Babul Akter',
+    name: 'Salman Bin Abdullah',
     title: 'Facebook Influencer',
     image: testimonal4,
     feedback:
       'After trying several websites who claim to have fast delivery, Im glad I finally found this service. They literally started delivering 5 seconds after my payment',
   },
   {
-    name: 'Monir Hossain',
+    name: 'Jack Smith',
     title: 'Designer',
     image: testimonal5,
     feedback:
@@ -87,14 +87,14 @@ const WhatPeopleSays = () => {
         <h3
           className="text-3xl lg:text-4xl lg:w-7/12 lg:mx-auto mt-4 font-semibold dark:text-gray-300"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           What People Say About Us?
         </h3>
         <p
           className="text-xl mt-3 w-full md:w-10/12 lg:w-8/12 mx-auto dark:text-gray-400"
           data-aos="fade-down"
-          data-aos-duration="2000"
+          data-aos-duration="1000"
         >
           Our service has an extensive customer roster built on years’ worth of
           trust. Read what our buyers think about our range of service.
@@ -107,7 +107,7 @@ const WhatPeopleSays = () => {
                 key={index}
                 className="px-6 py-8"
                 data-aos="fade-down"
-                data-aos-duration="1500"
+                data-aos-duration="500"
               >
                 <div className="flex justify-center mb-6">
                   <Image

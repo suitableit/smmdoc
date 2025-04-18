@@ -12,14 +12,14 @@ const HeroSection = () => {
             <h1
               className="text-5xl font-medium mb-4 dark:text-gray-300"
               data-aos="fade-down"
-              data-aos-duration="1500"
+              data-aos-duration="500"
             >
               The Best Social Media Panel in The Market!
             </h1>
             <p
               className="text-lg mb-6 leading-7 dark:text-gray-400"
               data-aos="fade-down"
-              data-aos-duration="2000"
+              data-aos-duration="1000"
             >
               Manage all social media networks from a single panel, quality and
               cheap. We provide services on todays most popular social networks.
@@ -30,7 +30,7 @@ const HeroSection = () => {
               href="/sign-in"
               className="bg-blue text-white w-7/12 2xl:w-4/12 px-2 py-2.5 lg:py-3 rounded-md mx-auto lg:mx-0 text-md font-medium flex items-center justify-center space-x-2"
               data-aos="fade-down"
-              data-aos-duration="2000"
+              data-aos-duration="1000"
             >
               <span className="dark:text-gray-300">GET START NOW</span>
               <svg
@@ -55,7 +55,7 @@ const HeroSection = () => {
         <div
           className="flex justify-center"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           <Image
             src={heroImage}

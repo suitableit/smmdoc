@@ -15,14 +15,14 @@ const WhatWeOffer = () => {
           <button
             className="bg-blue text-white dark:bg-gray-500 dark:text-gray-400 px-8 py-2 rounded-md uppercase"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             What we offer
           </button>
           <h3
             className="text-3xl lg:text-4xl lg:w-7/12 lg:mx-auto mt-4 text-white dark:text-gray-400"
             data-aos="fade-down"
-            data-aos-duration="2000"
+            data-aos-duration="1000"
           >
             We are help dominate social media with the largest social media
             panel
@@ -40,7 +40,7 @@ const WhatWeOffer = () => {
               height={400}
               className="rounded-lg size-72 md:size-96 mx-auto lg:mx-0 my-3 lg:mt-0"
               data-aos="fade-down"
-              data-aos-duration="1500"
+              data-aos-duration="500"
             />
           </div>
           {/* text */}
@@ -49,7 +49,7 @@ const WhatWeOffer = () => {
             <div
               className="flex gap-x-6"
               data-aos="fade-down"
-              data-aos-duration="1500"
+              data-aos-duration="500"
             >
               <div className="bg-blue rounded-full size-12 lg:size-16 p-3 lg:p-4 flex-shrink-0 flex justify-center items-center">
                 <BsPersonHearts className="text-4xl text-white dark:text-gray-400" />
@@ -68,7 +68,7 @@ const WhatWeOffer = () => {
             <div
               className="flex gap-x-6"
               data-aos="fade-down"
-              data-aos-duration="1500"
+              data-aos-duration="500"
             >
               <div className="bg-blue rounded-full size-12 lg:size-16 p-3 lg:p-4 flex-shrink-0 flex justify-center items-center">
                 <AiOutlineStar className="text-4xl text-white dark:text-gray-400" />
@@ -86,7 +86,7 @@ const WhatWeOffer = () => {
             <div
               className="flex gap-x-6"
               data-aos="fade-down"
-              data-aos-duration="1500"
+              data-aos-duration="500"
             >
               <div className="bg-blue rounded-full size-12 lg:size-16 p-3 lg:p-4 flex-shrink-0 flex justify-center items-center">
                 <TbApiOff className="text-4xl text-white dark:text-gray-400" />
@@ -105,7 +105,7 @@ const WhatWeOffer = () => {
             <div
               className="flex gap-x-6"
               data-aos="fade-down"
-              data-aos-duration="1500"
+              data-aos-duration="500"
             >
               <div className="bg-blue rounded-full size-12 lg:size-16 p-3 lg:p-4 flex-shrink-0 flex justify-center items-center">
                 <BiSupport className="text-4xl text-white dark:text-gray-400" />
@@ -123,7 +123,7 @@ const WhatWeOffer = () => {
             <div
               className="flex gap-x-6"
               data-aos="fade-down"
-              data-aos-duration="1500"
+              data-aos-duration="500"
             >
               <div className="bg-blue rounded-full size-12 lg:size-16 p-3 lg:p-4 flex-shrink-0 flex justify-center items-center">
                 <GrUpdate className="text-4xl text-white dark:text-gray-400" />
@@ -142,7 +142,7 @@ const WhatWeOffer = () => {
             <div
               className="flex gap-x-6"
               data-aos="fade-down"
-              data-aos-duration="1500"
+              data-aos-duration="500"
             >
               <div className="bg-blue rounded-full size-12 lg:size-16 p-3 lg:p-4 flex-shrink-0 flex justify-center items-center">
                 <GrSecure className="text-4xl text-white dark:text-gray-400" />

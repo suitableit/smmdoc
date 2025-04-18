@@ -8,14 +8,14 @@ const HowItWorks = () => {
         <h3
           className="text-3xl lg:text-4xl lg:w-7/12 lg:mx-auto mt-4 font-semibold dark:text-gray-300"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           How It Works?
         </h3>
         <p
           className="text-xl mt-3 dark:text-gray-400"
           data-aos="fade-down"
-          data-aos-duration="2000"
+          data-aos-duration="1000"
         >
           By following the processes below you can make any order you want.
         </p>
@@ -27,7 +27,7 @@ const HowItWorks = () => {
           <div
             className="flex flex-col items-center text-center group transition-all duration-300"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             <div className="size-24 rounded-full border-4 border-dotted border-blue-900 flex items-center justify-center mb-4 group-hover:spinner relative">
               <span className="text-3xl font-medium text-blue-800">1</span>
@@ -49,7 +49,7 @@ const HowItWorks = () => {
           <div
             className="flex flex-col items-center text-center group transition-all duration-300"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             <div className="size-24 rounded-full border-4 border-dotted border-blue-900 flex items-center justify-center mb-4 group-hover:spinner">
               <span className="text-3xl font-medium text-blue-800">2</span>
@@ -71,7 +71,7 @@ const HowItWorks = () => {
           <div
             className="flex flex-col items-center text-center group transition-all duration-300"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             <div className="size-24 rounded-full border-4 border-dotted border-blue-900 flex items-center justify-center mb-4 group-hover:spinner">
               <span className="text-3xl font-medium text-blue-800">3</span>
@@ -94,7 +94,7 @@ const HowItWorks = () => {
           <div
             className="flex flex-col items-center text-center group transition-all duration-300"
             data-aos="fade-down"
-            data-aos-duration="1500"
+            data-aos-duration="500"
           >
             <div className="size-24 rounded-full border-4 border-dotted border-blue-900 flex items-center justify-center mb-4 group-hover:spinner">
               <span className="text-3xl font-medium text-blue-800">4</span>

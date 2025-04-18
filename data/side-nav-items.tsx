@@ -8,18 +8,28 @@ export const navItems = [
   },
   {
     title: 'New Order',
-    href: '/dashboard/new-order',
+    href: '/dashboard/user/new-order',
     icon: 'cart',
     label: 'New Order',
     roles: ['user'],
   },
   {
     title: 'Services',
-    href: '/dashboard/services',
+    href: '/dashboard/user/services',
     icon: 'list',
     label: 'Services',
     roles: ['user'],
   },
+
+  {
+    title: 'Add Funds',
+    href: '/dashboard/user/add-funds',
+    icon: 'payment',
+    label: 'Add Funds',
+    roles: ['user'],
+  },
+
+  // Admin only items
 
   {
     title: 'Categories',
@@ -34,6 +44,27 @@ export const navItems = [
     href: '/dashboard/admin/services',
     icon: 'services',
     label: 'Services',
+    roles: ['admin'],
+  },
+  {
+    title: 'Orders',
+    href: '/dashboard/admin/orders',
+    icon: 'cart',
+    label: 'Orders',
+    roles: ['admin'],
+  },
+  {
+    title: 'Users',
+    href: '/dashboard/admin/users',
+    icon: 'users',
+    label: 'Users',
+    roles: ['admin'],
+  },
+  {
+    title: 'Settings',
+    href: '/dashboard/admin/settings',
+    icon: 'settings',
+    label: 'Settings',
     roles: ['admin'],
   },
 ];

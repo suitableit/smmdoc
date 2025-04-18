@@ -12,14 +12,14 @@ const WhyChooseUs = () => {
         <button
           className="bg-blue text-white dark:text-gray-300 px-8 py-2 rounded-md uppercase"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           Why Choose Us
         </button>
         <h3
           className="text-3xl lg:text-4xl lg:w-7/12 lg:mx-auto mt-4 dark:text-gray-300"
           data-aos="fade-down"
-          data-aos-duration="2000"
+          data-aos-duration="1000"
         >
           We are help dominate social media with the largest social media panel
         </h3>
@@ -30,7 +30,7 @@ const WhyChooseUs = () => {
         <div
           className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md p-5 flex flex-col justify-center items-center gap-y-4"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           <Image
             src={greatQuality}
@@ -48,7 +48,7 @@ const WhyChooseUs = () => {
         <div
           className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md p-5 flex flex-col justify-center items-center gap-y-6"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           <Image
             src={paymentMethods}
@@ -68,7 +68,7 @@ const WhyChooseUs = () => {
         <div
           className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md p-5 flex flex-col justify-center items-center gap-y-6"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           <Image
             src={shockingPrice}
@@ -86,7 +86,7 @@ const WhyChooseUs = () => {
         <div
           className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md p-5 flex flex-col justify-center items-center gap-y-6"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           <Image
             src={unbelievablePrice}

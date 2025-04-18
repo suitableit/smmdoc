@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { logout } from '@/lib/actions/logout';
+import Link from 'next/link';
 
 export function Menu({ user }: any) {
   return (
@@ -32,6 +33,7 @@ export function Menu({ user }: any) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
+        {/* email */}
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-xs leading-none text-muted-foreground">
@@ -40,10 +42,20 @@ export function Menu({ user }: any) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {/* profile */}
+        <Link href={'/dashboard/profile'}>
+          <DropdownMenuItem className="cursor-pointer hover:outline-none">
+            Profile
+            <DropdownMenuSeparator />
+            <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </Link>
+
         <DropdownMenuGroup></DropdownMenuGroup>
         <DropdownMenuSeparator />
+        {/* logout */}
         <DropdownMenuItem
-          className="cursor-pointer"
+          className="cursor-pointer hover:outline-none"
           onClick={async () => await logout()}
         >
           Log out
