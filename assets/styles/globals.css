@@ -7,7 +7,12 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
-
+.jodit-wysiwyg {
+  background-color: #000 !important;
+}
+.jodit-wysiwyg * {
+  color: #fff !important;
+}
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -109,13 +114,15 @@ body {
 }
 
 *::-webkit-scrollbar {
-  background-color: #5f61d4;
-  width: 10px;
-  height: 10px;
+  display: none;
+  background-color: #3f43fd;
+  width: 5px;
+  height: 5px;
 }
 *::-webkit-scrollbar-thumb {
-  background-color: #3f43fd;
+  background-color: #525252;
   border-radius: 10px;
+  border: 1px solid #5f61d4;
 }
 
 /* custom colors */

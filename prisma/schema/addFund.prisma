@@ -1,0 +1,13 @@
+model AddFund {
+  id        String   @id @default(cuid())
+  method    String
+  amount    Float
+  phone     String
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}

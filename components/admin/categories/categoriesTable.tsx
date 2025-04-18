@@ -5,7 +5,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -23,7 +22,7 @@ export default function CategoriesTable() {
   // delete category
   const deleteCategory = async (id: string) => {
     toast.custom((t) => (
-      <div className="flex flex-col items-center justify-center p-5 text-center z-50 bg-white rounded-lg shadow-lg">
+      <div className="flex flex-col items-center justify-center p-5 text-center z-50 bg-white dark:bg-black rounded-lg shadow-lg">
         <p className="text-sm font-semibold">
           Are you sure you want to delete this category?
         </p>
@@ -39,7 +38,6 @@ export default function CategoriesTable() {
           <button
             onClick={async () => {
               try {
-                console.log('id', id);
                 await axiosInstance.delete(
                   `/api/admin/categories/delete-categories?id=${id}`
                 );
@@ -121,12 +119,6 @@ export default function CategoriesTable() {
           </TableRow>
         ))}
       </TableBody>
-      <TableFooter>
-        <TableRow>
-          <TableCell colSpan={3}></TableCell>
-          <TableCell className="text-right"></TableCell>
-        </TableRow>
-      </TableFooter>
     </Table>
   );
 }

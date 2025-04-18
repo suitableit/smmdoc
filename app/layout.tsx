@@ -8,6 +8,7 @@ import { SessionProvider } from 'next-auth/react';
 import { Geist, Geist_Mono } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
+import StoreProvider from './StoreProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -40,16 +41,18 @@ export default async function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <NextTopLoader />
-            <Toaster richColors position="bottom-right" />
-            {children}
-          </ThemeProvider>
+          <StoreProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <NextTopLoader />
+              <Toaster richColors position="bottom-right" />
+              {children}
+            </ThemeProvider>
+          </StoreProvider>
         </body>
       </html>
     </SessionProvider>

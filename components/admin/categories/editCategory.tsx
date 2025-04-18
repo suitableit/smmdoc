@@ -1,3 +1,4 @@
+'use client';
 import ButtonLoader from '@/components/button-loader';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,13 +27,14 @@ import {
   CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import useSWR, { mutate } from 'swr';
 
-export default function EditCategory({ id }: { id: string }) {
+export default function EditCategory() {
+  const { id } = useParams();
   const [isPending, startTransition] = useTransition();
   const { push } = useRouter();
   // fetch category data

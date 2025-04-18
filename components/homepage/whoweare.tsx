@@ -14,13 +14,13 @@ const WhoWeAre = () => {
         height={500}
         className="rounded-lg"
         data-aos="fade-down"
-        data-aos-duration="1500"
+        data-aos-duration="500"
       />
       {/* card */}
       <div
         className="bg-[#f6f9ff] dark:bg-gray-500 dark:text-gray-300 rounded p-6 flex flex-col"
         data-aos="fade-down"
-        data-aos-duration="1500"
+        data-aos-duration="500"
       >
         <p className="uppercase text-md text-blue dark:text-gray-300 dark:font-semibold">
           Who we are

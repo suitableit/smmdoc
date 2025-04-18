@@ -29,6 +29,7 @@ const createServiceSchema = z.object({
     ),
   avg_time: z.string().nonempty('Average time is required'),
   categoryId: z.string().nonempty('Category ID is required'),
+  updateText: z.optional(z.string()),
 });
 
 type CreateServiceSchema = z.infer<typeof createServiceSchema>;
@@ -41,6 +42,7 @@ const createServiceDefaultValues: CreateServiceSchema = {
   max_order: '',
   avg_time: '',
   categoryId: '',
+  updateText: '',
 };
 
 export {

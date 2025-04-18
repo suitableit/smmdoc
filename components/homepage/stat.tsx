@@ -11,7 +11,7 @@ const Statistics = () => {
         <div
           className="bg-white dark:bg-gray-500 dark:text-white shadow rounded py-4 px-8 flex justify-center items-center gap-x-3"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           <div className="text-blue text-5xl lg:text-4xl">
             <HiUserGroup />
@@ -28,7 +28,7 @@ const Statistics = () => {
         <div
           className="bg-white dark:bg-gray-500 dark:text-white shadow rounded py-4 px-8 flex justify-center items-center gap-x-3"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           <div className="text-red-600 dark:text-red-300 text-5xl lg:text-4xl">
             <FiGift />
@@ -45,7 +45,7 @@ const Statistics = () => {
         <div
           className="bg-white dark:bg-gray-500 dark:text-white shadow rounded py-4 px-8 flex justify-center items-center gap-x-3"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           <div className="text-yellow-500 text-5xl lg:text-4xl">
             <FcCustomerSupport />
@@ -62,7 +62,7 @@ const Statistics = () => {
         <div
           className="bg-white dark:bg-gray-500 dark:text-white shadow rounded py-4 px-8 flex justify-center items-center gap-x-3"
           data-aos="fade-down"
-          data-aos-duration="1500"
+          data-aos-duration="500"
         >
           <div className="text-green-600 text-5xl lg:text-4xl">
             <FaHandshake />
