@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
+import { PriceDisplay } from '@/components/PriceDisplay';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -252,23 +253,35 @@ export default function NewOrder() {
             </div>
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="price">Charge</Label>
-              <input
-                type="text"
-                id="price"
-                readOnly
-                disabled
-                className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-70"
-                value={
-                  qty
-                    ? `৳${
+              <div className="relative">
+                <input
+                  type="text"
+                  id="price"
+                  readOnly
+                  disabled
+                  className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-70"
+                  value={
+                    qty
+                      ? (services?.find((s) => s.id === selectedService)
+                          ?.rate || 0) * qty
+                      : ''
+                  }
+                  placeholder="Charge"
+                  required
+                />
+                <div className="absolute inset-y-0 right-2 flex items-center">
+                  {qty && (
+                    <PriceDisplay
+                      amount={
                         (services?.find((s) => s.id === selectedService)
                           ?.rate || 0) * qty
-                      }`
-                    : ''
-                }
-                placeholder="Charge"
-                required
-              />
+                      }
+                      originalCurrency="BDT"
+                      className="text-current bg-gray-50 px-2 rounded"
+                    />
+                  )}
+                </div>
+              </div>
             </div>
             <div className="flex flex-col space-y-1.5">
               <Button className="w-full" variant="default" type="submit">

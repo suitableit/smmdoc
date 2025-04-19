@@ -5,6 +5,8 @@ import { APP_DESCRIPTION, APP_NAME, APP_URL } from '@/lib/constants';
 import type { Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
 
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
+import { getUserCurrency } from '@/lib/actions/currency';
 import { Geist, Geist_Mono } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
@@ -35,6 +37,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
+  const serverCurrency = await getUserCurrency();
   return (
     <SessionProvider session={session}>
       <html lang="en" suppressHydrationWarning>
@@ -50,7 +53,9 @@ export default async function RootLayout({
             >
               <NextTopLoader />
               <Toaster richColors position="bottom-right" />
-              {children}
+              <CurrencyProvider serverCurrency={serverCurrency}>
+                {children}
+              </CurrencyProvider>
             </ThemeProvider>
           </StoreProvider>
         </body>

@@ -1,25 +1,24 @@
 import z from 'zod';
 
 const addFundSchema = z.object({
-  method: z.string().nonempty('Method is required!'),
-  phone: z
-    .string()
-    .nonempty('Phone number is required!')
-    .regex(/^(?:\+?88)?01[3-9]\d{8}$/, 'Invalid phone number!')
-    .min(11, 'Phone number must be at least 11 digits long!')
-    .max(14, 'Phone number must be at most 14 digits long!'),
-  amount: z
-    .string()
-    .nonempty('Amount is required!')
-    .regex(/^\d+$/, 'Amount must be a number!'),
+  method: z.string().min(1, 'Payment method is required'),
+  amountUSD: z.string().optional(), // For USD display
+  amountBDT: z.string().min(1, 'Amount is required'), // Primary amount in BDT
+  amountBDTConverted: z.string().optional(), // For BDT display when USD is primary
+  phone: z.string().min(1, 'Phone number is required'),
+  totalAmount: z.string(),
 });
 
 type AddFundSchema = z.infer<typeof addFundSchema>;
 
 const addFundDefaultValues: AddFundSchema = {
   method: 'uddoktapay',
+  amountUSD: '',
+  amountBDT: '',
+  amountBDTConverted: '',
   phone: '',
-  amount: '',
+  totalAmount: '',
+  // totalAmount is calculated based on the selected currency and amount
 };
 
 export { addFundDefaultValues, addFundSchema, type AddFundSchema };
