@@ -11,6 +11,7 @@ model User {
   role                  Role                   @default(user)
   emailVerified         DateTime?
   image                 String?
+  currency              String                 @default("BDT")
   accounts              Account[]
   sessions              Session[]
   apiKeys               ApiKey[]

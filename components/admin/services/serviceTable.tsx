@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
+import { PriceDisplay } from '@/components/PriceDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -93,7 +94,13 @@ export default function ServiceTable() {
               <TableCell className="text-ellipsis whitespace-nowrap text-wrap max-w-[400px] overflow-hidden">
                 {service?.name}
               </TableCell>
-              <TableCell>{service?.rate}</TableCell>
+              <TableCell>
+                <PriceDisplay
+                  amount={service?.rate}
+                  originalCurrency={'BDT'}
+                  className=" font-bold"
+                />
+              </TableCell>
               <TableCell>{service?.min_order}</TableCell>
               <TableCell>{service?.max_order}</TableCell>
               <TableCell>{service?.avg_time}</TableCell>

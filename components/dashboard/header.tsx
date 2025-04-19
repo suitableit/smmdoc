@@ -1,13 +1,24 @@
+'use client';
 import { cn } from '@/lib/utils';
 
-import { currentUser } from '@/lib/actions/auth';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCurrentUser } from '@/hooks/use-current-user';
 import Link from 'next/link';
 import { ModeToggle } from '../shared/header/mode-Toggle';
 import { Menu } from './menu';
 import MobileSidebar from './mobile-siderbar';
 
-const Header = async () => {
-  const user = await currentUser();
+const Header = () => {
+  const user = useCurrentUser();
+  const { currency, setCurrency, rate, isLoading } = useCurrency();
+
+  const handleCurrencyChange = async (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const newCurrency = e.target.value as 'USD' | 'BDT';
+    await setCurrency(newCurrency);
+  };
+
   return (
     <div className="fixed top-0 left-0 right-0 supports-backdrop-blur:bg-background/60 border-b bg-background/95 backdrop-blur z-20">
       <nav className="h-14 flex items-center justify-between px-4">
@@ -33,6 +44,24 @@ const Header = async () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Enhanced currency switcher */}
+          <div className="flex items-center gap-1">
+            <select
+              value={currency}
+              onChange={handleCurrencyChange}
+              className="bg-transparent border rounded-md px-2 py-1 text-sm focus:outline-none"
+              disabled={isLoading}
+            >
+              <option value="BDT">BDT (৳)</option>
+              <option value="USD">USD ($)</option>
+            </select>
+            {rate && !isLoading && (
+              <span className="text-xs text-gray-500">
+                1USD ≈ {rate.toFixed(2)}BDT
+              </span>
+            )}
+          </div>
+
           {user && <Menu user={user} />}
           <ModeToggle />
         </div>
