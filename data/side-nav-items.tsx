@@ -53,7 +53,7 @@ export const navItems = [
     title: 'Chaild Panel',
     href: '/dashboard/user/child-panel',
     icon: 'child',
-    label: 'Chaild Panel',
+    label: 'Child Panel',
     roles: ['user'],
   },
   {
