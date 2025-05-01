@@ -6,9 +6,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import Link from 'next/link';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export default function ServiceViewModal({ selected, setIsOpen, isOpen }: any) {
+export default function ServiceViewModal({
+  selected,
+  setIsOpen,
+  isOpen,
+  mode,
+}: any) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger></DialogTrigger>
@@ -23,6 +29,14 @@ export default function ServiceViewModal({ selected, setIsOpen, isOpen }: any) {
               }} /* This is a dangerous method, use with caution. */
             ></span>
           </DialogDescription>
+          {mode === 'create' && (
+            <Link
+              href={`/dashboard/user/new-order?sId=${selected?.id}`}
+              className="text-blue-500 hover:underline"
+            >
+              Create Order
+            </Link>
+          )}
         </DialogHeader>
       </DialogContent>
     </Dialog>

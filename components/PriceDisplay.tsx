@@ -20,7 +20,7 @@ export function PriceDisplay({
     return <Skeleton className={`h-6 w-20 ${className}`} />;
   }
 
-  let displayAmount = amount;
+  let displayAmount = originalCurrency === 'USD' ? amount : amount * rate;
   let displayCurrency = originalCurrency;
 
   if (currency !== originalCurrency) {
@@ -30,7 +30,7 @@ export function PriceDisplay({
 
   return (
     <span className={className}>
-      {displayCurrency === 'USD' ? '$' : '৳'} {displayAmount.toFixed(2)}
+      {displayCurrency === 'USD' ? '$' : '৳'} {displayAmount.toFixed(4)}
     </span>
   );
 }

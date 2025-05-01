@@ -1,0 +1,9 @@
+model FavrouteCat {
+  id        String    @id @default(cuid())
+  name      String
+  userId    String
+  services  Service[]
+  user      User      @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}

@@ -36,7 +36,9 @@ export function CurrencyProvider({
         setIsLoading(true);
         const response = await fetch('/api/exchange-rate');
         const data = await response.json();
-        setRate(data.rate || 121.52); // Fallback to 121.52 if API fails
+        if (response.ok) {
+          setRate(data.rate || 121.52); // Fallback rate
+        }
       } catch (error) {
         console.error('Failed to fetch exchange rate:', error);
         setRate(121.52); // Fallback rate

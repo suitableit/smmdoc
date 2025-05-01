@@ -1,7 +1,6 @@
 import CategoriesTable from '@/components/admin/categories/categoriesTable';
 import BreadCrumb from '@/components/shared/BreadCrumb';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -11,7 +10,7 @@ export default function page() {
     { title: 'All Categories', link: '/dashboard/admin/categories' },
   ];
   return (
-    <ScrollArea className="h-full">
+    <div className="h-full">
       <div className="flex items-center justify-between py-1">
         <BreadCrumb items={breadcrumbItems} />
         <Button asChild variant="default" size="sm">
@@ -27,6 +26,6 @@ export default function page() {
       <div className="flex flex-col items-center justify-center py-10">
         <CategoriesTable />
       </div>
-    </ScrollArea>
+    </div>
   );
 }

@@ -11,11 +11,13 @@ model User {
   role                  Role                   @default(user)
   emailVerified         DateTime?
   image                 String?
-  currency              String                 @default("BDT")
+  currency              String                 @default("USD")
+  dollarRate            Float                  @default(121.45)
   accounts              Account[]
   sessions              Session[]
   apiKeys               ApiKey[]
   Category              Category[]
+  favouriteCat          FavrouteCat[]
   services              Service[]
   newOrders             NewOrder[]
   addFunds              AddFund[]

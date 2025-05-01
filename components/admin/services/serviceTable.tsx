@@ -19,8 +19,10 @@ import { Fragment, useState } from 'react';
 import { toast } from 'sonner';
 import { mutate } from 'swr';
 import ServiceViewModal from './serviceViewModal';
+import { useCurrentUser } from '@/hooks/use-current-user';
 
 export default function ServiceTable() {
+  const user = useCurrentUser();
   const { data, error, isLoading } = useGetServices();
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState({});
@@ -97,7 +99,7 @@ export default function ServiceTable() {
               <TableCell>
                 <PriceDisplay
                   amount={service?.rate}
-                  originalCurrency={'BDT'}
+                  originalCurrency={user?.currency || ('USD' as any)}
                   className=" font-bold"
                 />
               </TableCell>

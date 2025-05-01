@@ -6,8 +6,13 @@ model NewOrder {
   link       String
   qty        Int
   price      Float
+  usdPrice   Float
+  bdtPrice   Float
+  currency   String
   avg_time   String
   status     String   @default("pending")
+  startCount Int      @default(0)
+  remains    Int      @default(0)
   category   Category @relation(fields: [categoryId], references: [id])
   service    Service  @relation(fields: [serviceId], references: [id])
   user       User     @relation(fields: [userId], references: [id])

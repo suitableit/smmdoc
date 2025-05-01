@@ -10,6 +10,7 @@ export const useGetCategories = () => {
       refreshInterval: 0,
     }
   );
+
   return {
     data,
     error,
