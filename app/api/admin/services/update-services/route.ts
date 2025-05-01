@@ -20,6 +20,7 @@ export async function PUT(request: Request) {
       rate,
       min_order,
       max_order,
+      perqty,
       avg_time,
       updateText,
     } = body;
@@ -42,6 +43,7 @@ export async function PUT(request: Request) {
         rate: Number(rate),
         min_order: Number(min_order),
         max_order: Number(max_order),
+        perqty: Number(perqty),
         avg_time: avg_time,
         updateText: updateText,
       },

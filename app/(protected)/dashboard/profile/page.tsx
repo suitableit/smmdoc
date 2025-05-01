@@ -1,16 +1,23 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
 import ButtonLoader from '@/components/button-loader';
 import { PasswordInput } from '@/components/passwordInput';
 import { Switch } from '@/components/ui/switch';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { generateApiKeys, getApiKey } from '@/lib/actions/apiKey';
 import { changePassword } from '@/lib/actions/changPassword';
+import { getUserDetails } from '@/lib/actions/getUser';
 import { toggleTwoFactor } from '@/lib/actions/login';
+import { setUserDetails } from '@/lib/slice/userDetails';
 import { PasswordForm, passwordSchema } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
 interface ApiKey {
   key: string;
@@ -22,6 +29,20 @@ interface ApiKey {
 
 const ProfilePage = () => {
   const user = useCurrentUser();
+  const { rate } = useCurrency();
+  const dispatch = useDispatch();
+  const userData = useSelector((state: any) => state.userDetails);
+  async function fetchUser() {
+    const userDetails = await getUserDetails();
+    if (userDetails) {
+      dispatch(setUserDetails(userDetails));
+      return userDetails;
+    }
+  }
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
   const [apiKey, setApiKey] = useState<ApiKey | null>(null);
   const [twoFactor, setTwoFactor] = useState<boolean>(false);
 
@@ -56,7 +77,6 @@ const ProfilePage = () => {
         toast.error(res.error);
       }
     } catch (error) {
-      console.log('Error updating password:', error);
       toast.error('Password update failed!');
     } finally {
       setIsLoading(false);
@@ -107,6 +127,8 @@ const ProfilePage = () => {
     }
   };
 
+  console.log('User Data:', userData);
+
   return (
     <div className="space-y-6">
       {/* Profile and Stats */}
@@ -138,20 +160,27 @@ const ProfilePage = () => {
 
         {/* Stats Grid */}
         <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[
-            { title: 'Current Bal', value: '$500' },
-            { title: 'Total Spent', value: '$912' },
-            { title: 'Pending Orders', value: '02' },
-            { title: 'Completed Orders', value: '19' },
-          ].map(({ title, value }) => (
-            <div
-              key={title}
-              className="p-4 border rounded-xl shadow text-center"
-            >
-              <p className="text-sm text-gray-600">{title}</p>
-              <p className="text-xl lg:text-2xl lg:mt-1 font-bold">{value}</p>
-            </div>
-          ))}
+          <div className="p-4 border rounded-xl shadow text-center">
+            <p className="text-sm text-gray-600">Current Balance</p>
+            {/* <p className="text-xl lg:text-2xl lg:mt-1 font-bold"></p> */}
+            {userData?.addFunds[0]?.amount ? (
+              <p className="text-xl lg:text-2xl lg:mt-1 font-bold">
+                {userData?.currency === 'USD'
+                  ? `$${userData?.addFunds[0]?.amount}`
+                  : `৳${(userData?.addFunds[0]?.amount * (rate || 1)).toFixed(
+                      2
+                    )}`}
+              </p>
+            ) : (
+              <p className="text-xl lg:text-2xl lg:mt-1 font-bold">৳0.00</p>
+            )}
+          </div>
+          {/* <div className="p-4 border rounded-xl shadow text-center">
+            <p className="text-sm text-gray-600">Total Orders</p>
+            <p className="text-xl lg:text-2xl lg:mt-1 font-bold">
+              {userData?.orders?.length || 0}
+            </p>
+          </div> */}
         </div>
       </div>
 

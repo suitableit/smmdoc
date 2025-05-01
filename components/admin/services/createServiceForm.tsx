@@ -20,7 +20,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import SelectMe from '@/components/ui/select';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import axiosInstance from '@/lib/axiosInstance';
 import {
@@ -74,7 +73,11 @@ export function CreateServiceForm() {
                 <FormItem>
                   <FormLabel>Category Name</FormLabel>
                   <FormControl>
-                    <SelectMe {...field} disabled={isPending}>
+                    <select
+                      className="w-full h-10 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                      {...field}
+                      disabled={isPending}
+                    >
                       <option value={''} hidden>
                         Select Service Category
                       </option>
@@ -83,7 +86,7 @@ export function CreateServiceForm() {
                           {category?.category_name}
                         </option>
                       ))}
-                    </SelectMe>
+                    </select>
                   </FormControl>
                   <FormDescription></FormDescription>
                   <FormMessage className="-mt-3" />
@@ -132,10 +135,37 @@ export function CreateServiceForm() {
               name="rate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Service Rate</FormLabel>
+                  <FormLabel>
+                    Service Rate (
+                    <span className="text-red-500">Always USD Price Input</span>
+                    )
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Service Rate"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormDescription></FormDescription>
+                  <FormMessage className="-mt-3" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="perqty"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Per Quantity (
+                    <span className="text-red-500">Like 1000 per 5 usd</span>)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="1000 per 5 usd"
                       {...field}
                       disabled={isPending}
                     />
@@ -185,6 +215,7 @@ export function CreateServiceForm() {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="avg_time"

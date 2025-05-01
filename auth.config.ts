@@ -56,6 +56,7 @@ export default {
       if (token.role && session.user) {
         session.user.role = token.role as Role;
         session.user.isTwoFactorEnabled = token.isTwoFactorEnabled;
+        session.user.currency = token.currency;
       }
       return session;
     },
@@ -65,6 +66,7 @@ export default {
       if (!existingUser) return token;
       token.role = existingUser.role;
       token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
+      token.currency = existingUser.currency;
       return token;
     },
   },

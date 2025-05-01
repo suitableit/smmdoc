@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       rate,
       max_order,
       min_order,
+      perqty,
       avg_time,
     } = validedFields.data;
     await db.service.create({
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
         rate: Number(rate),
         max_order: Number(max_order),
         min_order: Number(min_order),
+        perqty: Number(perqty),
         avg_time: avg_time,
         userId: user?.id ?? '',
       },

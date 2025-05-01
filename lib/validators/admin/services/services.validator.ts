@@ -27,6 +27,13 @@ const createServiceSchema = z.object({
       (value) => !isNaN(Number(value)) && Number(value) > 0,
       'Maximum order must be a positive number'
     ),
+  perqty: z
+    .string()
+    .nonempty('Per quantity is required')
+    .refine(
+      (value) => !isNaN(Number(value)) && Number(value) > 0,
+      'Per quantity must be a positive number'
+    ),
   avg_time: z.string().nonempty('Average time is required'),
   categoryId: z.string().nonempty('Category ID is required'),
   updateText: z.optional(z.string()),
@@ -40,6 +47,7 @@ const createServiceDefaultValues: CreateServiceSchema = {
   rate: '',
   min_order: '',
   max_order: '',
+  perqty: '',
   avg_time: '',
   categoryId: '',
   updateText: '',

@@ -1,5 +1,4 @@
 import BreadCrumb from '@/components/shared/BreadCrumb';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
 export default async function page() {
@@ -8,7 +7,7 @@ export default async function page() {
   ];
 
   return (
-    <ScrollArea className="h-full">
+    <div className="h-full">
       <div className="flex items-center justify-between py-1">
         <BreadCrumb items={breadcrumbItems} />
       </div>
@@ -17,6 +16,6 @@ export default async function page() {
         {/* <ServiceTable /> */}
         <h1 className="text-2xl font-bold">All Orders Here</h1>
       </div>
-    </ScrollArea>
+    </div>
   );
 }

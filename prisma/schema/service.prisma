@@ -1,20 +1,23 @@
 model Service {
-  id          String     @id @default(cuid())
-  name        String
-  rate        Float
-  min_order   Int
-  max_order   Int
-  avg_time    String
-  description String     @db.Text
-  updateText  String?    @db.Text
-  userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  categoryId  String
-  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  newOrders   NewOrder[]
-  status      String     @default("active")
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id            String       @id @default(cuid())
+  name          String
+  rate          Float
+  perqty        Int          @default(1)
+  min_order     Int
+  max_order     Int
+  avg_time      String
+  description   String       @db.Text
+  updateText    String?      @db.Text
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String
+  category      Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  favrouteCat   FavrouteCat? @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
+  favrouteCatId String?
+  newOrders     NewOrder[]
+  status        String       @default("active")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@index([userId])
 }

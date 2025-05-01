@@ -18,7 +18,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import SelectMe from '@/components/ui/select';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
@@ -28,13 +27,12 @@ import {
   AddFundSchema,
 } from '@/lib/validators/user/addFundValidator';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { FaExchangeAlt } from 'react-icons/fa';
 
 export function AddFundForm() {
   const user = useCurrentUser();
-  const userId = user?.id || '';
   const [isPending, startTransition] = useTransition();
   const { currency: globalCurrency, rate: globalRate } = useCurrency();
 
@@ -42,6 +40,26 @@ export function AddFundForm() {
   const [activeCurrency, setActiveCurrency] = useState<'USD' | 'BDT'>(
     globalCurrency
   );
+  const form = useForm<AddFundSchema>({
+    mode: 'all',
+    resolver: zodResolver(addFundSchema),
+    defaultValues: addFundDefaultValues,
+  });
+  // change active currency based on global currency real-time
+  useEffect(() => {
+    setActiveCurrency(globalCurrency);
+    // also update toggle currency button
+    const newCurrency = globalCurrency === user?.currency ? 'USD' : 'BDT';
+    setActiveCurrency(newCurrency);
+    // reset form values based on new currency
+    form.setValue('amountUSD', '0', { shouldValidate: true });
+    form.setValue('amountBDT', '0', { shouldValidate: true });
+    form.setValue('amountBDTConverted', '0', { shouldValidate: true });
+    setTotalAmount({
+      amount: 0,
+      currency: newCurrency,
+    });
+  }, [globalCurrency, form, user]);
 
   // Use the global rate instead of local rate fetching
   const rate = globalRate;
@@ -50,20 +68,21 @@ export function AddFundForm() {
   const toggleCurrency = () => {
     const newCurrency = activeCurrency === 'USD' ? 'BDT' : 'USD';
     setActiveCurrency(newCurrency);
+    // reset form values based on new currency
+    form.setValue('amountUSD', '0', { shouldValidate: true });
+    form.setValue('amountBDT', '0', { shouldValidate: true });
+    form.setValue('amountBDTConverted', '0', { shouldValidate: true });
+    setTotalAmount({
+      amount: 0,
+      currency: newCurrency,
+    });
   };
-  // const { isLoading: rateLoading } = useExchangeRate();
   const [totalAmount, setTotalAmount] = useState<{
     amount: number;
     currency: 'USD' | 'BDT';
   }>({
     amount: 0,
     currency: 'BDT',
-  });
-
-  const form = useForm<AddFundSchema>({
-    mode: 'all',
-    resolver: zodResolver(addFundSchema),
-    defaultValues: addFundDefaultValues,
   });
 
   const calculateTotalAmount = (value: string) => {
@@ -86,18 +105,6 @@ export function AddFundForm() {
     }
   };
 
-  const handleBDTChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!rate) return;
-    const bdtValue = parseFloat(e.target.value) || 0;
-    const usdValue = bdtValue / rate;
-
-    form.setValue('amountUSD', usdValue.toFixed(2), {
-      shouldValidate: true,
-    });
-
-    calculateTotalAmount(e.target.value);
-  };
-
   const handleUSDChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!rate) return;
     const usdValue = parseFloat(e.target.value) || 0;
@@ -109,22 +116,53 @@ export function AddFundForm() {
     form.setValue('amountBDTConverted', bdtValue.toFixed(2), {
       shouldValidate: true,
     });
+    form.setValue('amount', bdtValue.toFixed(2), {
+      // Update the amount field
+      shouldValidate: true,
+    });
 
     calculateTotalAmount(e.target.value);
   };
 
+  const handleBDTChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!rate) return;
+    const bdtValue = parseFloat(e.target.value) || 0;
+    const usdValue = bdtValue / rate;
+
+    form.setValue('amountUSD', usdValue.toFixed(2), {
+      shouldValidate: true,
+    });
+    form.setValue('amount', bdtValue.toFixed(2), {
+      // Update the amount field
+      shouldValidate: true,
+    });
+
+    calculateTotalAmount(e.target.value);
+  };
+  // Handle form submission
   const onSubmit: SubmitHandler<AddFundSchema> = async (values) => {
     startTransition(async () => {
+      // Convert amount to BDT if the active currency is USD
+      const amountInBDT =
+        activeCurrency === 'USD'
+          ? parseFloat(values.amountUSD || '0') * (rate ?? 1)
+          : parseFloat(values.amountBDT || '0');
+
       const formValues = {
         ...values,
-        amount: values.amountBDT,
-        userId,
+        amount: amountInBDT.toString(), // Send the amount in BDT
+        userId: user?.id,
+        full_Name: user?.name,
+        email: user?.email,
         totalAmount: totalAmount.amount,
         totalCurrency: totalAmount.currency,
       };
-
-      const res = await axiosInstance.post('/api/create-charge', formValues);
+      const res = await axiosInstance.post(
+        '/api/payment/create-charge',
+        formValues
+      );
       if (res.status) {
+        localStorage.setItem('order_id', res.data.order_id);
         window.location.href = res.data.payment_url;
       }
     });
@@ -148,9 +186,15 @@ export function AddFundForm() {
                 <FormItem>
                   <FormLabel>Method</FormLabel>
                   <FormControl>
-                    <SelectMe {...field} disabled={isPending}>
-                      <option value="uddoktapay">Uddokta Pay (Online)</option>
-                    </SelectMe>
+                    <select
+                      className="w-full h-10 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                      {...field}
+                      disabled={isPending}
+                    >
+                      <option value="uddoktapay">
+                        UddoktaPay (Online Payment Gateway)
+                      </option>
+                    </select>
                   </FormControl>
                   <FormMessage className="-mt-3" />
                 </FormItem>
@@ -257,26 +301,6 @@ export function AddFundForm() {
               )}
             </div>
 
-            {/* Total Amount Display */}
-            <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Total Amount:</span>
-                <span className="text-lg font-bold">
-                  {totalAmount.amount.toFixed(2)} {totalAmount.currency}
-                </span>
-              </div>
-              {totalAmount.currency === 'BDT' && rate && (
-                <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                  ≈ {(totalAmount.amount / rate).toFixed(2)} USD
-                </div>
-              )}
-              {totalAmount.currency === 'USD' && rate && (
-                <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                  ≈ {(totalAmount.amount * rate).toFixed(2)} BDT
-                </div>
-              )}
-            </div>
-
             <FormField
               control={form.control}
               name="phone"
@@ -297,6 +321,25 @@ export function AddFundForm() {
               )}
             />
 
+            {/* Total Amount Display */}
+            <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Total Amount:</span>
+                <span className="text-lg font-bold">
+                  {totalAmount.amount.toFixed(2)} {totalAmount.currency}
+                </span>
+              </div>
+              {totalAmount.currency === 'BDT' && rate && (
+                <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  ≈ {(totalAmount.amount / rate).toFixed(2)} USD
+                </div>
+              )}
+              {totalAmount.currency === 'USD' && rate && (
+                <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  ≈ {(totalAmount.amount * rate).toFixed(2)} BDT
+                </div>
+              )}
+            </div>
             <Button
               disabled={isPending}
               className="w-full inline-flex items-center cursor-pointer"

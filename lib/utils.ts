@@ -8,6 +8,8 @@ export function cn(...inputs: ClassValue[]) {
 
 export const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+export const revalidate = { next: { revalidate: 3600 } };
+
 export function formatError(error: unknown): string {
   if (error instanceof Error) {
     if (error.name === 'ZodError' && 'errors' in error) {
