@@ -11,7 +11,7 @@ type CurrencyContextType = {
 };
 
 const CurrencyContext = createContext<CurrencyContextType>({
-  currency: 'BDT',
+  currency: 'USD',
   setCurrency: async () => {},
   rate: null,
   isLoading: true,
@@ -25,23 +25,32 @@ export function CurrencyProvider({
   serverCurrency?: 'USD' | 'BDT';
 }) {
   const [currency, setCurrencyState] = useState<'USD' | 'BDT'>(
-    serverCurrency || 'BDT'
+    serverCurrency || 'USD'
   );
-  const [rate, setRate] = useState<number | null>(null);
+  const [rate, setRate] = useState<number | null>(121.45);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchRate = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/exchange-rate');
-        const data = await response.json();
-        if (response.ok) {
-          setRate(data.rate || 121.52); // Fallback rate
+        const response = await fetch('/api/exchange-rate', { 
+          method: 'GET',
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.statusText}`);
         }
+        
+        const data = await response.json();
+        setRate(data.rate || 121.45); // Fallback rate if rate is not in response
       } catch (error) {
         console.error('Failed to fetch exchange rate:', error);
-        setRate(121.52); // Fallback rate
+        setRate(121.45); // Fallback rate
       } finally {
         setIsLoading(false);
       }

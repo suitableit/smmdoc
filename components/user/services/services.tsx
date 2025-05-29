@@ -23,7 +23,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { revalidate } from '@/lib/utils';
 import { SearchIcon, Star } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -71,8 +70,19 @@ export default function UserServiceTable() {
         // First fetch the services
         const response = await fetch(
           `/api/user/services?page=${page}&limit=${limit}&search=${debouncedSearch}`,
-          revalidate
+          {
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          }
         );
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch services: ${response.statusText}`);
+        }
+
         const data = await response.json();
 
         if (!user?.id) {
@@ -86,32 +96,58 @@ export default function UserServiceTable() {
           return;
         }
 
-        // Then fetch favorite status
-        const favResponse = await fetch(
-          `/api/user/services/favorite-status?userId=${user.id}`,
-          revalidate
-        );
-        const favData = await favResponse.json();
-        const favoriteServiceIds = favData.favoriteServiceIds || [];
+        try {
+          // Then fetch favorite status
+          const favResponse = await fetch(
+            `/api/user/services/favorite-status?userId=${user.id}`,
+            {
+              method: 'GET',
+              cache: 'no-store',
+              headers: {
+                'Cache-Control': 'no-cache'
+              }
+            }
+          );
+          
+          if (!favResponse.ok) {
+            throw new Error(`Failed to fetch favorites: ${favResponse.statusText}`);
+          }
+          
+          const favData = await favResponse.json();
+          const favoriteServiceIds = favData.favoriteServiceIds || [];
 
-        // Merge favorite status with services
-        const servicesWithFavorites =
-          data?.data?.map((service: Service) => ({
-            ...service,
-            isFavorite: favoriteServiceIds.includes(service.id),
-          })) || [];
+          // Merge favorite status with services
+          const servicesWithFavorites =
+            data?.data?.map((service: Service) => ({
+              ...service,
+              isFavorite: favoriteServiceIds.includes(service.id),
+            })) || [];
 
-        setServices(servicesWithFavorites);
+          setServices(servicesWithFavorites);
+        } catch (favError) {
+          console.error('Error fetching favorites:', favError);
+          // If favorite fetch fails, still show services without favorites
+          setServices(
+            data?.data?.map((service: Service) => ({
+              ...service,
+              isFavorite: false,
+            })) || []
+          );
+        }
+        
         setTotalPages(data.totalPages || 1);
       } catch (error) {
+        console.error('Error fetching services:', error);
         toast.error('Error fetching services. Please try again later.');
+        setServices([]);
+        setTotalPages(1);
       } finally {
         setLoading(false);
       }
     };
 
     fetchServices();
-  }, [page, debouncedSearch, user?.id]);
+  }, [page, debouncedSearch, user?.id, limit]);
 
   const handlePrevious = () => {
     if (page > 1) setPage(page - 1);
@@ -138,7 +174,9 @@ export default function UserServiceTable() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         },
+        cache: 'no-store',
         body: JSON.stringify({
           serviceId,
           userId: user.id,
