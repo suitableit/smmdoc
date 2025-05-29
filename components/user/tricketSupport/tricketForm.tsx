@@ -1,27 +1,27 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  DefaultValues,
-  tricketSchema,
-  TricketSchema,
+    DefaultValues,
+    tricketSchema,
+    TricketSchema,
 } from '@/lib/validators/user/tricketsValidator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TriangleAlert } from 'lucide-react';
@@ -115,7 +115,7 @@ export default function TricketForm() {
                 )}
               />
               <Button className="w-full" type="submit">
-                Submit Tricket
+                Submit Ticket
               </Button>
             </form>
           </Form>

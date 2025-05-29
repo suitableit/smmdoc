@@ -3,14 +3,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuShortcut,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { logout } from '@/lib/actions/logout';
 import Link from 'next/link';
@@ -24,11 +24,11 @@ export function Menu({ user }: any) {
             <AvatarImage
               src={
                 user?.photo ||
-                'https://res.cloudinary.com/ddxqljriw/image/upload/v1711623691/samples/man-portrait.jpg'
+                '/user-placeholder.jpg'
               }
-              alt={user?.name}
+              alt={user?.name || 'User'}
             />
-            <AvatarFallback>{'P'}</AvatarFallback>
+            <AvatarFallback>{'U'}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
