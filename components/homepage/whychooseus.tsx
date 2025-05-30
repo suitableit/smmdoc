@@ -1,106 +1,76 @@
-import Image from 'next/image';
-import greatQuality from '../../public/great-quality.png';
-import paymentMethods from '../../public/payment-methods.png';
-import shockingPrice from '../../public/shoking-prices.png';
-import unbelievablePrice from '../../public/unbelievable-prices.png';
+import React from 'react';
+import { 
+  FaDollarSign, 
+  FaBullseye, 
+  FaTrophy, 
+  FaUsers, 
+  FaCogs, 
+  FaHeadset 
+} from 'react-icons/fa';
 
 const WhyChooseUs = () => {
+  const features = [
+    {
+      icon: FaDollarSign,
+      title: 'Unmatched Affordability',
+      description: 'At SMMGen, we take pride in offering the most budget-friendly SMM services. Our competitive prices ensure that businesses of all sizes can get high-quality social media marketing solutions without exceeding their budgets. We are dedicated to delivering exceptional value without compromising quality, making us the perfect choice for cost-conscious yet ambitious brands.'
+    },
+    {
+      icon: FaBullseye,
+      title: 'Customized Strategies',
+      description: 'Every brand is unique, and so should its social media strategy. We at SMMGen specialize in creating tailor-made strategies that match your business goals and target audience. Our personalized approach ensures that each campaign we run is as unique as your brand, maximizing impact and engagement.'
+    },
+    {
+      icon: FaTrophy,
+      title: 'Proven Results',
+      description: 'Our track record speaks to our expertise. With years of experience and many success stories, SMMGen has demonstrated its ability to generate substantial results across various social media platforms. Our clients experience heightened visibility, engagement, and conversions, leading to tangible business growth.'
+    },
+    {
+      icon: FaUsers,
+      title: 'Expert Team',
+      description: 'Our team of social media experts is the backbone of our success. With deep insights into the ever-evolving digital landscape, they bring much knowledge and innovation. Their expertise ensures that your social media presence is vibrant and strategically aligned with the latest trends and best practices.'
+    },
+    {
+      icon: FaCogs,
+      title: 'Comprehensive Service Range',
+      description: 'SMMGen provides a wide array of services encompassing major social media platforms such as Facebook, Instagram, Twitter, YouTube, and more. This comprehensive service spectrum ensures a one-stop solution for all your social media marketing needs, promoting consistency and convenience.'
+    },
+    {
+      icon: FaHeadset,
+      title: 'Dedicated Customer Support',
+      description: 'We focus on creating long-term relationships with our clients. Our committed customer support team is always ready to assist, ensuring your experience with us is smooth and satisfactory. We value your feedback and are committed to continuous improvement, making us a reliable partner in your social media journey.'
+    }
+  ];
+
   return (
-    <section className="main-container py-20 lg:py-28 w-full">
-      {/* titles */}
-      <div className="w-full text-center">
-        <button
-          className="bg-blue text-white dark:text-gray-300 px-8 py-2 rounded-md uppercase"
-          data-aos="fade-down"
-          data-aos-duration="500"
-        >
-          Why Choose Us
-        </button>
-        <h3
-          className="text-3xl lg:text-4xl lg:w-7/12 lg:mx-auto mt-4 dark:text-gray-300"
-          data-aos="fade-down"
-          data-aos-duration="1000"
-        >
-          We are help dominate social media with the largest social media panel
-        </h3>
-      </div>
-      {/* cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mt-8 lg:mt-12 gap-8 text-center">
-        {/* card 1 */}
-        <div
-          className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md p-5 flex flex-col justify-center items-center gap-y-4"
-          data-aos="fade-down"
-          data-aos-duration="500"
-        >
-          <Image
-            src={greatQuality}
-            alt="Great Quality"
-            placeholder="blur"
-            width={200}
-            height={200}
-          />
-          <h4 className="text-center text-2xl font-medium">Great Quality</h4>
-          <p className="text-center">
-            You will be satisfied with SMM services we provide.
-          </p>
+    <section id="whyChooseUs_v2" className="py-24 pb-[120px]">
+      <div className="max-w-[1200px] mx-auto px-4">
+        <div className="text-center mb-12">
+          <h4 className="text-2xl font-bold text-purple-600 mb-2">Why Choose Us?</h4>
+          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            Unparalleled Quality in <br />
+            <span className="text-primary">SMM Service</span> and Customer Satisfaction
+          </h2>
         </div>
-        {/* card 2 */}
-        <div
-          className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md p-5 flex flex-col justify-center items-center gap-y-6"
-          data-aos="fade-down"
-          data-aos-duration="500"
-        >
-          <Image
-            src={paymentMethods}
-            alt="Payment Methods"
-            placeholder="blur"
-            width={200}
-            height={200}
-          />
-          <h4 className="text-center text-2xl font-medium">
-            Many payment methods
-          </h4>
-          <p className="text-center">
-            Enjoy a fantastic selection of payment methods that we offer.
-          </p>
-        </div>
-        {/* card 3 */}
-        <div
-          className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md p-5 flex flex-col justify-center items-center gap-y-6"
-          data-aos="fade-down"
-          data-aos-duration="500"
-        >
-          <Image
-            src={shockingPrice}
-            alt="Shocking Price"
-            placeholder="blur"
-            width={200}
-            height={200}
-          />
-          <h4 className="text-center text-2xl font-medium">Shoking prices</h4>
-          <p className="text-center">
-            You will be satisfied with how cheap our services are.
-          </p>
-        </div>
-        {/* card 4 */}
-        <div
-          className="bg-white dark:bg-gray-500 dark:text-gray-300 shadow rounded-md p-5 flex flex-col justify-center items-center gap-y-6"
-          data-aos="fade-down"
-          data-aos-duration="500"
-        >
-          <Image
-            src={unbelievablePrice}
-            alt="Unbelievable Price"
-            placeholder="blur"
-            width={200}
-            height={200}
-          />
-          <h4 className="text-center text-2xl font-medium">
-            Unbelievable Prices
-          </h4>
-          <p className="text-center">
-            Our prices most reasonable in the market, starting from at $0.001.
-          </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature, index) => {
+            const IconComponent = feature.icon;
+            return (
+              <div 
+                key={index} 
+                className="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full hover:-translate-y-1"
+              >
+                <div className="mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <IconComponent className="w-8 h-8 text-white" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

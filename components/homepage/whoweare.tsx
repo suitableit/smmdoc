@@ -1,61 +1,46 @@
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import whoweareImage from '../../public/who-we-are.png';
+import { FaArrowRight } from 'react-icons/fa';
 
-const WhoWeAre = () => {
+const WhoWeAre: React.FC = () => {
   return (
-    <section className="main-container py-20 lg:py-28 w-full grid grid-cols-1 lg:grid-cols-2 gap-y-4">
-      {/* image */}
-      <Image
-        src={whoweareImage}
-        alt="Who We Are"
-        placeholder="blur"
-        width={500}
-        height={500}
-        className="rounded-lg"
-        data-aos="fade-down"
-        data-aos-duration="500"
-      />
-      {/* card */}
-      <div
-        className="bg-[#f6f9ff] dark:bg-gray-500 dark:text-gray-300 rounded p-6 flex flex-col"
-        data-aos="fade-down"
-        data-aos-duration="500"
-      >
-        <p className="uppercase text-md text-blue dark:text-gray-300 dark:font-semibold">
-          Who we are
-        </p>
-        <h4 className="text-2xl lg:text-3xl lg:font-medium mt-2 mb-4 dark:text-gray-200">
-          What We Offer For Your Succes Brand
-        </h4>
-        <p className="leading-7 dark:text-gray-300">
-          We are active for support only 24 hours a day and seven times a week
-          with all of your demands and services around the day. Dont go anywhere
-          else. We are here ready to serve you and help you with all of your SMM
-          needs. Users or Clients with SMM orders and in need of CHEAP SMM
-          services are more then welcome in our SMM PANEL.
-        </p>
-        <Link
-          href="/sign-in"
-          className="bg-blue text-white w-7/12 2xl:w-4/12 px-2.5 py-2 lg:p-2.5 mt-6 rounded-md text-md font-medium flex items-center justify-center space-x-2"
-        >
-          <span className="dark:text-gray-300">VIEW SERVICES</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-5 h-5"
-          >
-            <path d="M12 19l7-7-7-7" />
-            <path d="M5 12h14" />
-          </svg>
-        </Link>
+    <section id="default_sections_v2" className="about-us pt-[60px] pb-[60px]">
+      <div className="max-w-[1200px] mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Text Content */}
+          <div className="default__text__content">
+            <h4 className="text-2xl font-bold text-primary mb-2">About Us</h4>
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+              Leaders in Social <br />
+              Media <span className="text-primary">Enhancement</span>
+            </h2>
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              At SMMGen, we revolutionize digital success through our budget-friendly and top-notch social media marketing solutions. Since our inception in 2018 in Bangladesh, we have emerged as the preferred choice for the most affordable SMM panels, seamlessly combining cost-effectiveness with outstanding business expansion strategies. Our devoted team is dedicated to delivering tailor-made services that save you money and enhance your online engagement and presence to the fullest. We specialize in transforming your social media channels and provide unparalleled growth opportunities on platforms such as Facebook, YouTube, and more. Join us on this journey of affordable excellence, where each click brings you closer to your audience and propels you a step ahead in the competitive digital world.
+            </p>
+            <Link 
+              href="/about" 
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primary/90 text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+            >
+              <span>Learn More</span>
+              <FaArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Image */}
+          <div className="default_image text-center lg:text-right">
+            <Image
+              src="/cheapest-smmpanel-in-bangladesh.webp"
+              alt="Cheapest SMM Panel in Bangladesh"
+              width={600}
+              height={500}
+              className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg"
+              priority
+            />
+          </div>
+          
+        </div>
       </div>
     </section>
   );

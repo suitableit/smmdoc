@@ -4,12 +4,14 @@ import HowItWorks from '@/components/homepage/howitworks';
 import Platform from '@/components/homepage/platforms';
 import Statistics from '@/components/homepage/stat';
 import WhatPeopleSays from '@/components/homepage/whatpeoplesays';
-import WhatWeOffer from '@/components/homepage/whatweoffer';
 import WhoWeAre from '@/components/homepage/whoweare';
 import WhyChooseUs from '@/components/homepage/whychooseus';
 import { Metadata } from 'next';
+
 export const metadata: Metadata = {
-  title: 'Home',
+  title: 'SMMDOC - our Social Growth Partner',
+  description: 'Discover the cheapest SMM panel in Bangladesh – a cost-effective solution for amazing business growth. Save money, gain new followers, and easily boost your online presence',
+  keywords: 'SMM Panel, Cheapest SMM Panel, SMM Panel Bangladesh, Social Media Marketing, Facebook likes, Instagram followers, YouTube views',
 };
 
 export default function Home() {
@@ -17,13 +19,12 @@ export default function Home() {
     <main>
       <HeroSection />
       <Statistics />
-      <WhyChooseUs />
       <WhoWeAre />
       <Platform />
-      <WhatWeOffer />
+      <WhyChooseUs />
       <HowItWorks />
-      <FAQ />
       <WhatPeopleSays />
+      <FAQ />
     </main>
   );
 }
