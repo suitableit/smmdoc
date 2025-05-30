@@ -1,135 +1,241 @@
-'use client';
+"use client";
+
+import { useState, useEffect } from 'react';
+import React from 'react';
 import Image from 'next/image';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick-theme.css';
-import 'slick-carousel/slick/slick.css';
-import testimonal1 from '../../public/testimonial-1.jpg';
-import testimonal2 from '../../public/testimonial-2.jpg';
-import testimonal3 from '../../public/testimonial-3.jpg';
-import testimonal4 from '../../public/testimonial-4.jpg';
-import testimonal5 from '../../public/testimonial-5.jpg';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
-const testimonials = [
-  {
-    name: 'John Smith',
-    title: 'YouTuber',
-    image: testimonal1,
-    feedback:
-      "After trying several websites who claim to have 'fast delivery', I'm glad I finally found this service. They literally started delivering 5 seconds after my payment!",
-  },
-  {
-    name: 'Jane Doe',
-    title: 'Blogger',
-    image: testimonal2,
-    feedback:
-      'After trying several websites who claim to have fast delivery, Im glad I finally found this service. They literally started delivering 5 seconds after my payment',
-  },
-  {
-    name: 'Michael Lee',
-    title: 'Designer',
-    image: testimonal3,
-    feedback:
-      'After trying several websites who claim to have fast delivery, Im glad I finally found this service. They literally started delivering 5 seconds after my payment.',
-  },
-  {
-    name: 'Salman Bin Abdullah',
-    title: 'Facebook Influencer',
-    image: testimonal4,
-    feedback:
-      'After trying several websites who claim to have fast delivery, Im glad I finally found this service. They literally started delivering 5 seconds after my payment',
-  },
-  {
-    name: 'Jack Smith',
-    title: 'Designer',
-    image: testimonal5,
-    feedback:
-      'After trying several websites who claim to have fast delivery, Im glad I finally found this service. They literally started delivering 5 seconds after my payment',
-  },
-];
-
-const settings = {
-  dots: true,
-  infinite: true,
-  speed: 500,
-  slidesToShow: 3,
-  slidesToScroll: 1,
-  autoplay: true,
-  responsive: [
-    {
-      breakpoint: 1024,
-      settings: {
-        slidesToShow: 3,
-        slidesToScroll: 1,
-      },
-    },
-    {
-      breakpoint: 600,
-      settings: {
-        slidesToShow: 2,
-        slidesToScroll: 1,
-      },
-    },
-    {
-      breakpoint: 480,
-      settings: {
-        slidesToShow: 1,
-        slidesToScroll: 1,
-      },
-    },
-  ],
-};
+interface Testimonial {
+  id: number;
+  name: string;
+  position: string;
+  company: string;
+  content: string;
+  rating: number;
+}
 
 const WhatPeopleSays = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  const testimonials: Testimonial[] = [
+    {
+      id: 1,
+      name: "Tahmid Rahman",
+      position: "CEO",
+      company: "Dhaka Tech Solutions",
+      content: "Teaming up with SMMGen has been a game-changer for our online presence. Their budget-friendly SMM panels have amplified our engagement and notably expanded our customer base. The team's expertise and personalized strategies are precisely what we require. Highly recommended for any business aiming to make a mark on social media!",
+      rating: 5
+    },
+    {
+      id: 2,
+      name: "Priya Singh",
+      position: "Marketing Director",
+      company: "MCA",
+      content: "SMMGen has transformed our social media strategy. Their Instagram and Facebook marketing approach has elevated our brand's visibility to new heights. The results have been outstanding – more engagement, followers, and conversions. Their service is top-notch and incredibly budget-friendly.",
+      rating: 5
+    },
+    {
+      id: 3,
+      name: "Anwar Hussain",
+      position: "Founder",
+      company: "Karachi Digital Studio",
+      content: "As a small business, we sought cost-effective yet impactful social media marketing, and SMMGen delivered beyond our expectations. Their YouTube and TikTok SMM panels have greatly helped increase our online influence. The team's professionalism and quick response to our needs make them a valuable partner.",
+      rating: 5
+    },
+    {
+      id: 4,
+      name: "Sarah Ahmed",
+      position: "Marketing Manager",
+      company: "Creative Agency BD",
+      content: "Working with SMMGen has exceeded our expectations. Their comprehensive social media solutions have helped us achieve remarkable growth across all platforms. The ROI we've seen from their services is exceptional, and their customer support is always responsive and helpful.",
+      rating: 5
+    },
+    {
+      id: 5,
+      name: "Mohammad Ali",
+      position: "Business Owner",
+      company: "Tech Innovations Ltd",
+      content: "SMMGen's expertise in social media marketing is unmatched. They've helped us build a strong online community and significantly increase our brand awareness. Their strategic approach and attention to detail have made them an invaluable partner for our business growth.",
+      rating: 5
+    },
+    {
+      id: 6,
+      name: "Fatima Khan",
+      position: "Digital Marketing Lead",
+      company: "E-commerce Solutions",
+      content: "The results speak for themselves - since partnering with SMMGen, our social media engagement has tripled, and our conversion rates have improved dramatically. Their team understands our industry and delivers tailored solutions that drive real business results.",
+      rating: 5
+    }
+  ];
+
+  const itemsPerPage = 3;
+  const maxSlide = testimonials.length - itemsPerPage;
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+    
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => {
+        const nextSlide = prev + 1;
+        return nextSlide > maxSlide ? 0 : nextSlide;
+      });
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [isAutoPlaying, maxSlide]);
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+    setIsAutoPlaying(false);
+    // Resume auto-play after 10 seconds
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => {
+      const nextSlide = prev + 1;
+      return nextSlide > maxSlide ? 0 : nextSlide;
+    });
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => {
+      const prevSlideIndex = prev - 1;
+      return prevSlideIndex < 0 ? maxSlide : prevSlideIndex;
+    });
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, index) => (
+      <svg
+        key={index}
+        className={`w-4 h-4 ${index < rating ? 'text-primary' : 'text-gray-300'}`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    ));
+  };
+
+  const getCurrentTestimonials = () => {
+    const startIndex = currentSlide * itemsPerPage;
+    return testimonials.slice(startIndex, startIndex + itemsPerPage);
+  };
+
   return (
-    <section className="main-container py-20 lg:py-28 w-full overflow-x-hidden">
-      {/* titles */}
-      <div className="w-full text-center">
-        <h3
-          className="text-3xl lg:text-4xl lg:w-7/12 lg:mx-auto mt-4 font-semibold dark:text-gray-300"
-          data-aos="fade-down"
-          data-aos-duration="500"
-        >
-          What People Say About Us?
-        </h3>
-        <p
-          className="text-xl mt-3 w-full md:w-10/12 lg:w-8/12 mx-auto dark:text-gray-400"
-          data-aos="fade-down"
-          data-aos-duration="1000"
-        >
-          Our service has an extensive customer roster built on years’ worth of
-          trust. Read what our buyers think about our range of service.
-        </p>
-        {/* testimonials */}
-        <div className=" mt-6 lg:mt-12">
-          <Slider {...settings}>
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={index}
-                className="px-6 py-8"
-                data-aos="fade-down"
-                data-aos-duration="500"
-              >
-                <div className="flex justify-center mb-6">
-                  <Image
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    width={80}
-                    height={80}
-                    className="w-20 h-20 rounded-full border-2 border-gray-300"
-                  />
+    <section id="testimonials_v2" className="pt-[60px] pb-[60px] relative">
+      {/* Background Image */}
+      <div className="absolute -top-24 w-full -z-10">
+        <Image
+          src="/smm-penel-testimonial.png"
+          alt="Testimonial Background"
+          width={1920}
+          height={800}
+          className="w-full h-auto opacity-20"
+        />
+      </div>
+
+      <div className="max-w-[1200px] mx-auto px-4">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h4 className="text-2xl font-bold text-primary mb-2">Success Stories</h4>
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900">
+              Transforming <span className="text-primary">Social Media</span> Landscapes
+            </h2>
+          </div>
+          
+          {/* Navigation Buttons */}
+          <div className="hidden md:flex gap-2">
+            <button
+              onClick={prevSlide}
+              className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+              aria-label="Previous testimonial"
+            >
+              <FaChevronLeft className="w-4 h-4 text-gray-600" />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+              aria-label="Next testimonial"
+            >
+              <FaChevronRight className="w-4 h-4 text-gray-600" />
+            </button>
+          </div>
+        </div>
+
+        {/* Testimonials Slider */}
+        <div className="overflow-hidden mb-8">
+          <div 
+            className="flex transition-transform duration-500 ease-in-out"
+            style={{ transform: `translateX(-${currentSlide * (100 / itemsPerPage)}%)` }}
+          >
+            {testimonials.map((testimonial) => (
+              <div key={testimonial.id} className="w-1/3 flex-shrink-0 px-3">
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 h-80 flex flex-col justify-between hover:shadow-2xl transition-shadow duration-300">
+                  <div>
+                    <p className="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-6">
+                      "{testimonial.content}"
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-between items-center mt-auto">
+                    <div>
+                      <h4 className="font-bold text-gray-900 text-sm mb-0">
+                        {testimonial.name}
+                      </h4>
+                      <small className="text-gray-500 text-xs">
+                        ~{testimonial.position} of {testimonial.company}
+                      </small>
+                    </div>
+                    
+                    <div className="flex items-center gap-1 bg-white shadow-sm px-3 py-1 rounded-full">
+                      {renderStars(testimonial.rating)}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-gray-600 dark:text-gray-500 text-lg italic mb-4">
-                  {testimonial.feedback}
-                </p>
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-500">
-                  {testimonial.name}
-                </h3>
-                <p className="text-gray-500 dark:text-gray-600">
-                  {testimonial.title}
-                </p>
               </div>
             ))}
-          </Slider>
+          </div>
+        </div>
+
+        {/* Pagination Dots */}
+        <div className="flex justify-center mt-8 gap-2">
+          {Array.from({ length: maxSlide + 1 }, (_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-3 h-3 rounded-full transition-colors ${
+                currentSlide === index ? 'bg-primary' : 'bg-gray-300'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="flex md:hidden justify-center gap-4 mt-6">
+          <button
+            onClick={prevSlide}
+            className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center"
+            aria-label="Previous testimonial"
+          >
+            <FaChevronLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center"
+            aria-label="Next testimonial"
+          >
+            <FaChevronRight className="w-4 h-4 text-gray-600" />
+          </button>
         </div>
       </div>
     </section>
