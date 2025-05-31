@@ -70,12 +70,14 @@ const FAQ = () => {
   };
 
   return (
-    <section id="faq_v2" className="pt-[60px] pb-[120px]">
+    <section id="faq_v2" className="pt-[60px] pb-[120px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="text-center mb-12">
-          <h4 className="text-2xl font-bold text-primary mb-2">FAQ's</h4>
-          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900">
-            People Also Asked to <span className="text-primary">SMMGen</span>
+          <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
+            FAQ's
+          </h4>
+          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
+            People Also Asked to <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">SMMGen</span>
           </h2>
         </div>
         
@@ -84,20 +86,22 @@ const FAQ = () => {
             {faqData.map((faq, index) => (
               <div 
                 key={faq.id} 
-                className="bg-white rounded-lg shadow-lg border border-gray-200 mb-4"
+                className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 mb-4 hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 group"
               >
                 <button
-                  className={`w-full text-left p-4 font-semibold text-gray-900 hover:bg-gray-50 transition-colors duration-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                    openItem === faq.id ? 'bg-primary/10 text-primary' : ''
+                  className={`w-full text-left p-4 font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all duration-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] ${
+                    openItem === faq.id 
+                      ? 'bg-[#5F1DE8]/10 dark:bg-[#B131F8]/20 text-[#5F1DE8] dark:text-[#B131F8]' 
+                      : ''
                   }`}
                   onClick={() => toggleItem(faq.id)}
                   aria-expanded={openItem === faq.id}
                 >
                   <div className="flex justify-between items-center">
-                    <span className="text-sm lg:text-base pr-4">{faq.question}</span>
+                    <span className="text-sm lg:text-base pr-4 transition-colors duration-200">{faq.question}</span>
                     <svg
-                      className={`w-5 h-5 transform transition-transform duration-200 flex-shrink-0 ${
-                        openItem === faq.id ? 'rotate-180' : ''
+                      className={`w-5 h-5 transform transition-all duration-200 flex-shrink-0 ${
+                        openItem === faq.id ? 'rotate-180 text-[#5F1DE8] dark:text-[#B131F8]' : 'text-gray-500 dark:text-gray-400'
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -110,8 +114,8 @@ const FAQ = () => {
                 
                 {openItem === faq.id && (
                   <div className="px-4 pb-4">
-                    <div className="pt-2 border-t border-gray-200">
-                      <p className="text-gray-600 text-sm leading-relaxed">
+                    <div className="pt-2 border-t border-gray-200 dark:border-gray-600 transition-colors duration-200">
+                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed transition-colors duration-200">
                         {faq.answer}
                       </p>
                     </div>

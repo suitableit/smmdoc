@@ -109,7 +109,7 @@ const Platform = () => {
   ];
 
   const renderIcon = (iconName: string) => {
-    const iconClass = "w-6 h-6 text-primary";
+    const iconClass = "w-6 h-6 text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200";
     
     switch (iconName) {
       case 'facebook':
@@ -144,21 +144,23 @@ const Platform = () => {
   const activePlatform = platforms.find(p => p.id === activeTab) || platforms[0];
 
   return (
-    <section id="our_services" className="bg-white pt-[60px] pb-[60px]">
+    <section id="our_services" className="bg-white dark:bg-[#0d0712] pt-[60px] pb-[60px] transition-colors duration-200">
       <div className="container mx-auto px-4 max-w-[1200px]">
         <div className="text-center mb-12">
-          <h4 className="text-2xl font-bold text-primary mb-2">Our Services</h4>
-          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Comprehensive <span className="text-secondary">SMM</span> Solutions
+          <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
+            Our Services
+          </h4>
+          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
+            Comprehensive <span className="text-[#B131F8] dark:text-[#B131F8] transition-colors duration-200">SMM</span> Solutions
           </h2>
-          <p className="text-gray-600 max-w-3xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto transition-colors duration-200">
             At SMMGen, we revolutionize digital success through our budget-friendly and top-notch social media marketing solutions. Since our inception in 2018 in Bangladesh, we have emerged as the preferred choice for the most affordable SMM panels.
           </p>
         </div>
 
         {/* Platform Tabs */}
         <div className="flex justify-center mb-8">
-          <div className="bg-white p-5 rounded-lg shadow-lg border border-gray-200 max-w-full overflow-x-auto">
+          <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-5 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-w-full overflow-x-auto transition-all duration-200">
             <div className="flex flex-wrap justify-center gap-2 min-w-max">
               {platforms.map((platform) => (
                 <button
@@ -166,8 +168,8 @@ const Platform = () => {
                   onClick={() => setActiveTab(platform.id)}
                   className={`flex items-center gap-2 p-3 rounded-lg border transition-all duration-300 whitespace-nowrap ${
                     activeTab === platform.id
-                      ? 'bg-white border-primary shadow-lg text-gray-900'
-                      : 'border-gray-300 hover:border-primary hover:shadow-md'
+                      ? 'bg-white dark:bg-gray-700/70 border-[#5F1DE8] dark:border-[#B131F8] shadow-lg text-gray-900 dark:text-white'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-[#5F1DE8] dark:hover:border-[#B131F8] hover:shadow-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/30'
                   }`}
                 >
                   {renderIcon(platform.icon)}
@@ -185,28 +187,32 @@ const Platform = () => {
         {/* Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mt-8">
           <div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
               {activePlatform.title}
             </h2>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed transition-colors duration-200">
               {activePlatform.description}
             </p>
             <Link 
               href="/services" 
-              className="bg-gradient-to-r from-purple-600 to-purple-700 inline-block bg-primary text-white font-semibold px-8 py-4 rounded-lg hover:bg-primary/90 transition-all duration-300 hover:-translate-y-1"
+              className="inline-block bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:from-[#4F0FD8] hover:to-[#A121E8] hover:shadow-lg dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
             >
               Our Services
             </Link>
           </div>
           
           <div className="flex justify-end">
-            <Image
-              src="/smm-panel-services.webp"
-              alt="SMM Panel Services"
-              width={500}
-              height={400}
-              className="w-full max-w-md"
-            />
+            <div className="relative group">
+              <Image
+                src="/smm-panel-services.webp"
+                alt="SMM Panel Services"
+                width={500}
+                height={400}
+                className="w-full max-w-md rounded-lg shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl dark:group-hover:shadow-purple-500/10"
+              />
+              {/* Optional: Add a subtle overlay for dark mode */}
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-transparent to-purple-500/5 dark:to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
           </div>
         </div>
       </div>
