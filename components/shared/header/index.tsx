@@ -80,7 +80,7 @@ const Header = () => {
                 href="/about" 
                 className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200 rounded-md hover:bg-gray-50"
               >
-                About Us
+                About
               </Link>
               
               <Link 
@@ -108,7 +108,7 @@ const Header = () => {
                 href="/sign-in" 
                 className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200 rounded-md hover:bg-gray-50"
               >
-                Sign in
+                Sign In
               </Link>
               
               {/* Sign Up Button */}
@@ -204,7 +204,7 @@ const Header = () => {
                 className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-gray-50 font-medium transition-colors rounded-md"
                 onClick={closeMenu}
               >
-                Sign in
+                Sign In
               </Link>
               
               <Link 
@@ -212,7 +212,7 @@ const Header = () => {
                 className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-gray-50 font-medium transition-colors rounded-md"
                 onClick={closeMenu}
               >
-                About Us
+                About
               </Link>
               
               <Link 
