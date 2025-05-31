@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -8,6 +8,31 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('system'); // 'light', 'dark', 'system'
+  const [mounted, setMounted] = useState(false);
+
+  // Handle hydration
+  useEffect(() => {
+    setMounted(true);
+    // Get theme from localStorage or default to system
+    const savedTheme = localStorage.getItem('theme') || 'system';
+    setCurrentTheme(savedTheme);
+    applyTheme(savedTheme);
+  }, []);
+
+  const applyTheme = (theme: string) => {
+    const root = document.documentElement;
+    
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else if (theme === 'light') {
+      root.classList.remove('dark');
+    } else { // system
+      root.classList.remove('dark');
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        root.classList.add('dark');
+      }
+    }
+  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -25,11 +50,17 @@ const Header = () => {
     setIsThemeMenuOpen(false);
   };
 
-  const handleThemeChange = (theme) => {
+  const handleThemeChange = (theme: string) => {
     setCurrentTheme(theme);
     setIsThemeMenuOpen(false);
-    // Here you would typically implement the actual theme switching logic
-    // For example: document.documentElement.setAttribute('data-theme', theme);
+    
+    if (theme === 'system') {
+      localStorage.removeItem('theme');
+    } else {
+      localStorage.setItem('theme', theme);
+    }
+    
+    applyTheme(theme);
   };
 
   const getCurrentThemeIcon = () => {
@@ -56,9 +87,14 @@ const Header = () => {
     }
   };
 
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return null;
+  }
+
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm">
-      <nav className="bg-white">
+    <header className="sticky top-0 z-50 bg-white dark:bg-[#170c21] shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-200">
+      <nav className="bg-white dark:bg-[#170c21]">
         <div className="container mx-auto px-4 max-w-[1200px]">
           <div className="flex items-center justify-between py-3">
             
@@ -78,35 +114,35 @@ const Header = () => {
             <div className="hidden lg:flex items-center space-x-1">            
               <Link 
                 href="/about" 
-                className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] font-medium transition-colors duration-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
                 About
               </Link>
               
               <Link 
                 href="/services" 
-                className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] font-medium transition-colors duration-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
                 Services
               </Link>
               
               <Link 
                 href="/blog" 
-                className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] font-medium transition-colors duration-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
                 Blog
               </Link>
               
               <Link 
                 href="/contact" 
-                className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] font-medium transition-colors duration-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
                 Contact
               </Link>
 
               <Link 
                 href="/sign-in" 
-                className="px-4 py-2 text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] font-medium transition-colors duration-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
                 Sign In
               </Link>
@@ -114,7 +150,7 @@ const Header = () => {
               {/* Sign Up Button */}
               <Link 
                 href="/signup" 
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:from-[#4F0FD8] hover:to-[#A121E8]"
               >
                 <span>Sign Up</span>
               </Link>
@@ -123,7 +159,7 @@ const Header = () => {
               <div className="relative">
                 <button
                   onClick={toggleThemeMenu}
-                  className="p-3 text-gray-700 hover:text-purple-600 hover:bg-gray-50 rounded-md transition-colors duration-200"
+                  className="p-3 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-md transition-colors duration-200"
                   aria-label="Toggle theme"
                 >
                   {getCurrentThemeIcon()}
@@ -131,11 +167,13 @@ const Header = () => {
                 
                 {/* Theme Dropdown */}
                 {isThemeMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-[#2A2D3A] rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                     <button
                       onClick={() => handleThemeChange('light')}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                        currentTheme === 'light' ? 'text-purple-600 bg-purple-50' : 'text-gray-700'
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors ${
+                        currentTheme === 'light' 
+                          ? 'text-[#5F1DE8] bg-[#5F1DE8]/10 dark:bg-[#5F1DE8]/20' 
+                          : 'text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,8 +183,10 @@ const Header = () => {
                     </button>
                     <button
                       onClick={() => handleThemeChange('dark')}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                        currentTheme === 'dark' ? 'text-purple-600 bg-purple-50' : 'text-gray-700'
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors ${
+                        currentTheme === 'dark' 
+                          ? 'text-[#5F1DE8] bg-[#5F1DE8]/10 dark:bg-[#5F1DE8]/20' 
+                          : 'text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,12 +196,14 @@ const Header = () => {
                     </button>
                     <button
                       onClick={() => handleThemeChange('system')}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                        currentTheme === 'system' ? 'text-purple-600 bg-purple-50' : 'text-gray-700'
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors ${
+                        currentTheme === 'system' 
+                          ? 'text-[#5F1DE8] bg-[#5F1DE8]/10 dark:bg-[#5F1DE8]/20' 
+                          : 'text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 00-2-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                       System
                     </button>
@@ -172,7 +214,7 @@ const Header = () => {
 
             {/* Mobile Menu Toggle */}
             <button
-              className="lg:hidden p-2 rounded-md text-gray-700 hover:text-purple-600 hover:bg-gray-50 transition-colors"
+              className="lg:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
               type="button"
               onClick={toggleMenu}
               aria-controls="mobile-menu"
@@ -198,10 +240,10 @@ const Header = () => {
           <div className={`lg:hidden transition-all duration-300 ease-in-out ${
             isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
           }`}>
-            <div className="py-4 space-y-2 border-t border-gray-100">
+            <div className="py-4 space-y-2 border-t border-gray-100 dark:border-gray-700">
               <Link 
                 href="/sign-in" 
-                className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-gray-50 font-medium transition-colors rounded-md"
+                className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md"
                 onClick={closeMenu}
               >
                 Sign In
@@ -209,7 +251,7 @@ const Header = () => {
               
               <Link 
                 href="/about" 
-                className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-gray-50 font-medium transition-colors rounded-md"
+                className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md"
                 onClick={closeMenu}
               >
                 About
@@ -217,7 +259,7 @@ const Header = () => {
               
               <Link 
                 href="/services" 
-                className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-gray-50 font-medium transition-colors rounded-md"
+                className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md"
                 onClick={closeMenu}
               >
                 Services
@@ -225,7 +267,7 @@ const Header = () => {
               
               <Link 
                 href="/blog" 
-                className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-gray-50 font-medium transition-colors rounded-md"
+                className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md"
                 onClick={closeMenu}
               >
                 Blog
@@ -233,7 +275,7 @@ const Header = () => {
               
               <Link 
                 href="/contact" 
-                className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-gray-50 font-medium transition-colors rounded-md"
+                className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md"
                 onClick={closeMenu}
               >
                 Contact Us
@@ -243,7 +285,7 @@ const Header = () => {
               <div className="pt-2">
                 <Link 
                   href="/signup" 
-                  className="block w-full px-4 py-3 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition-colors text-center"
+                  className="block w-full px-4 py-3 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold rounded-md hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-200 text-center"
                   onClick={closeMenu}
                 >
                   Sign Up
@@ -251,15 +293,15 @@ const Header = () => {
               </div>
 
               {/* Mobile Theme Toggle */}
-              <div className="pt-2 border-t border-gray-100">
-                <div className="px-4 py-2 text-sm text-gray-500 font-medium">Theme</div>
+              <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 font-medium">Theme</div>
                 <div className="flex gap-2 px-4">
                   <button
                     onClick={() => handleThemeChange('light')}
                     className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
                       currentTheme === 'light' 
-                        ? 'bg-purple-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-[#5F1DE8] text-white' 
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,8 +313,8 @@ const Header = () => {
                     onClick={() => handleThemeChange('dark')}
                     className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
                       currentTheme === 'dark' 
-                        ? 'bg-purple-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-[#5F1DE8] text-white' 
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,12 +326,12 @@ const Header = () => {
                     onClick={() => handleThemeChange('system')}
                     className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
                       currentTheme === 'system' 
-                        ? 'bg-purple-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-[#5F1DE8] text-white' 
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 00-2-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     System
                   </button>
@@ -303,7 +345,7 @@ const Header = () => {
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/20 lg:hidden z-40"
+          className="fixed inset-0 bg-black/20 dark:bg-black/40 lg:hidden z-40"
           onClick={closeMenu}
         />
       )}

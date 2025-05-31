@@ -7,6 +7,24 @@
 :root {
   --primary: #5F1DE8;
   --secondary: #B131F8;
+  /* Header theme variables */
+  --header-bg: #ffffff;
+  --header-text: #374151;
+  --header-text-hover: #5F1DE8;
+  --header-border: #e5e7eb;
+  --dropdown-bg: #ffffff;
+  --dropdown-hover: rgba(249, 250, 251, 1);
+}
+
+/* Enhanced dark mode variables with your specified background */
+.dark {
+  --header-bg: #170c21;
+  --header-text: #e5e7eb;
+  --header-text-hover: #B131F8;
+  --header-border: #374151;
+  --dropdown-bg: #2A2033;
+  --dropdown-hover: rgba(107, 114, 128, 0.5);
+  --content-bg: #170d20;
 }
 
 .text-primary {
@@ -42,6 +60,17 @@ main,
   color: #000000;
 }
 
+/* Dark mode content background and text color */
+.dark .main-content, 
+.dark .content-section, 
+.dark main, 
+.dark .page-content, 
+.dark .dashboard-content,
+.dark .h-full:not(.sidebar):not(.bg-[#170c21]) {
+  background-color: #0d0712;
+  color: #e5e7eb;
+}
+
 /* Apply Nunito to form elements, cards, and other UI components */
 .card, 
 .form, 
@@ -52,6 +81,20 @@ button:not(.sidebar button):not(.bg-[#1B1E2F] button),
 .dialog, 
 .modal {
   font-family: 'Nunito', sans-serif;
+}
+
+/* Dark mode for form elements and UI components */
+.dark .card, 
+.dark .form, 
+.dark input, 
+.dark textarea, 
+.dark select, 
+.dark button:not(.sidebar button):not(.bg-[#170c21] button), 
+.dark .dialog, 
+.dark .modal {
+  background-color: #0d0712;
+  color: #e5e7eb;
+  border-color: #374151;
 }
 
 /* Apply Nunito to all text elements except in sidebar */
@@ -68,6 +111,21 @@ a:not(.sidebar a):not(.bg-[#1B1E2F] a),
 li:not(.sidebar li):not(.bg-[#1B1E2F] li):not(.nav-item) {
   font-family: 'Nunito', sans-serif;
   color: #000000;
+}
+
+/* Dark mode text elements */
+.dark p:not(.sidebar p):not(.bg-[#170c21] p), 
+.dark h1:not(.sidebar h1):not(.bg-[#170c21] h1), 
+.dark h2:not(.sidebar h2):not(.bg-[#170c21] h2), 
+.dark h3:not(.sidebar h3):not(.bg-[#170c21] h3), 
+.dark h4:not(.sidebar h4):not(.bg-[#170c21] h4), 
+.dark h5:not(.sidebar h5):not(.bg-[#170c21] h5), 
+.dark h6:not(.sidebar h6):not(.bg-[#170c21] h6),
+.dark span:not(.sidebar span):not(.bg-[#170c21] span), 
+.dark div:not(.sidebar div):not(.bg-[#170c21] div):not(.section-title):not(.nav-link),
+.dark a:not(.sidebar a):not(.bg-[#170c21] a),
+.dark li:not(.sidebar li):not(.bg-[#170c21] li):not(.nav-item) {
+  color: #e5e7eb;
 }
 
 .jodit-wysiwyg {
@@ -363,6 +421,108 @@ li:not(.sidebar li):not(.bg-[#1B1E2F] li):not(.nav-item) {
   }
 }
 
+/* Header specific styles for better theme consistency */
+.header-theme-transition {
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+/* Custom scrollbar for dark mode dropdowns */
+.dark .theme-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dark .theme-dropdown::-webkit-scrollbar-track {
+  background: #2A2033;
+}
+
+.dark .theme-dropdown::-webkit-scrollbar-thumb {
+  background: #4B5563;
+  border-radius: 3px;
+}
+
+.dark .theme-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #6B7280;
+}
+
+/* Ensure proper logo visibility in dark mode */
+.dark .header-logo {
+  filter: brightness(1.1) contrast(1.05);
+}
+
+/* Enhanced mobile menu animations */
+@media (max-width: 1023px) {
+  .mobile-menu-enter {
+    animation: slideDown 0.3s ease-out forwards;
+  }
+  
+  .mobile-menu-exit {
+    animation: slideUp 0.3s ease-in forwards;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 24rem;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    max-height: 24rem;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Theme button focus states for accessibility */
+.theme-button:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Improved shadow for dark mode header */
+.dark .header-shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Better gradient hover effects */
+.gradient-button-hover {
+  transition: all 0.3s ease;
+}
+
+.gradient-button-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(95, 29, 232, 0.3);
+}
+
+.dark .gradient-button-hover:hover {
+  box-shadow: 0 10px 25px rgba(177, 49, 248, 0.4);
+}
+
+/* Mobile theme selector improvements */
+@media (max-width: 767px) {
+  .mobile-theme-buttons {
+    gap: 0.375rem;
+  }
+  
+  .mobile-theme-button {
+    min-height: 2.5rem;
+    font-size: 0.8rem;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -392,11 +552,11 @@ li:not(.sidebar li):not(.bg-[#1B1E2F] li):not(.nav-item) {
     --radius: 0.5rem;
   }
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 264 65% 4%; /* #0d0712 content background */
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 264 65% 4%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 264 65% 4%;
     --popover-foreground: 0 0% 98%;
     --primary: 264 84% 51%;
     --primary-foreground: 0 0% 98%;
@@ -565,4 +725,3 @@ body {
     font-size: 0.875rem;
   }
 }
-

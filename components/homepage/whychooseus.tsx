@@ -43,13 +43,15 @@ const WhyChooseUs = () => {
   ];
 
   return (
-    <section id="whyChooseUs_v2" className="py-24 pb-[120px]">
+    <section id="whyChooseUs_v2" className="py-24 pb-[120px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="text-center mb-12">
-          <h4 className="text-2xl font-bold text-purple-600 mb-2">Why Choose Us?</h4>
-          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+          <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
+            Why Choose Us?
+          </h4>
+          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
             Unparalleled Quality in <br />
-            <span className="text-primary">SMM Service</span> and Customer Satisfaction
+            <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">SMM Service</span> and Customer Satisfaction
           </h2>
         </div>
         
@@ -59,15 +61,19 @@ const WhyChooseUs = () => {
             return (
               <div 
                 key={index} 
-                className="bg-white p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full hover:-translate-y-1"
+                className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 h-full hover:-translate-y-1 group"
               >
                 <div className="mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#5F1DE8] to-[#B131F8] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
                     <IconComponent className="w-8 h-8 text-white" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 transition-colors duration-200">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed transition-colors duration-200">
+                  {feature.description}
+                </p>
               </div>
             );
           })}

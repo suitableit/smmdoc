@@ -115,7 +115,11 @@ const WhatPeopleSays = () => {
     return Array.from({ length: 5 }, (_, index) => (
       <svg
         key={index}
-        className={`w-4 h-4 ${index < rating ? 'text-primary' : 'text-gray-300'}`}
+        className={`w-4 h-4 transition-colors duration-200 ${
+          index < rating 
+            ? 'text-[#5F1DE8] dark:text-[#B131F8]' 
+            : 'text-gray-300 dark:text-gray-600'
+        }`}
         fill="currentColor"
         viewBox="0 0 20 20"
       >
@@ -130,14 +134,16 @@ const WhatPeopleSays = () => {
   };
 
   return (
-    <section id="testimonials_v2" className="pt-[60px] pb-[60px] relative">
+    <section id="testimonials_v2" className="pt-[60px] pb-[60px] relative bg-white dark:bg-[#0d0712] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h4 className="text-2xl font-bold text-primary mb-2">Success Stories</h4>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900">
-              Transforming <span className="text-primary">Social Media</span> Landscapes
+            <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
+              Success Stories
+            </h4>
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
+              Transforming <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">Social Media</span> Landscapes
             </h2>
           </div>
           
@@ -145,17 +151,17 @@ const WhatPeopleSays = () => {
           <div className="hidden md:flex gap-2">
             <button
               onClick={prevSlide}
-              className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="w-10 h-10 rounded-full bg-white dark:bg-gray-800/70 shadow-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-all duration-200 group"
               aria-label="Previous testimonial"
             >
-              <FaChevronLeft className="w-4 h-4 text-gray-600" />
+              <FaChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-[#5F1DE8] dark:group-hover:text-[#B131F8] transition-colors duration-200" />
             </button>
             <button
               onClick={nextSlide}
-              className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="w-10 h-10 rounded-full bg-white dark:bg-gray-800/70 shadow-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-all duration-200 group"
               aria-label="Next testimonial"
             >
-              <FaChevronRight className="w-4 h-4 text-gray-600" />
+              <FaChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-[#5F1DE8] dark:group-hover:text-[#B131F8] transition-colors duration-200" />
             </button>
           </div>
         </div>
@@ -168,24 +174,24 @@ const WhatPeopleSays = () => {
           >
             {testimonials.map((testimonial) => (
               <div key={testimonial.id} className="w-1/3 flex-shrink-0 px-3">
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 h-80 flex flex-col justify-between hover:shadow-2xl transition-shadow duration-300">
+                <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 h-80 flex flex-col justify-between hover:shadow-2xl dark:hover:shadow-lg dark:hover:shadow-purple-500/10 transition-all duration-300 group hover:-translate-y-1">
                   <div>
-                    <p className="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-6">
+                    <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm leading-relaxed line-clamp-6 transition-colors duration-200">
                       "{testimonial.content}"
                     </p>
                   </div>
                   
                   <div className="flex justify-between items-center mt-auto">
                     <div>
-                      <h4 className="font-bold text-gray-900 text-sm mb-0">
+                      <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-0 transition-colors duration-200">
                         {testimonial.name}
                       </h4>
-                      <small className="text-gray-500 text-xs">
+                      <small className="text-gray-500 dark:text-gray-400 text-xs transition-colors duration-200">
                         ~{testimonial.position} of {testimonial.company}
                       </small>
                     </div>
                     
-                    <div className="flex items-center gap-1 bg-white shadow-sm px-3 py-1 rounded-full">
+                    <div className="flex items-center gap-1 bg-white dark:bg-gray-700/50 shadow-sm px-3 py-1 rounded-full border border-gray-100 dark:border-gray-600 transition-all duration-200">
                       {renderStars(testimonial.rating)}
                     </div>
                   </div>
@@ -201,8 +207,10 @@ const WhatPeopleSays = () => {
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-colors ${
-                currentSlide === index ? 'bg-primary' : 'bg-gray-300'
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                currentSlide === index 
+                  ? 'bg-[#5F1DE8] dark:bg-[#B131F8] scale-110' 
+                  : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -213,17 +221,17 @@ const WhatPeopleSays = () => {
         <div className="flex md:hidden justify-center gap-4 mt-6">
           <button
             onClick={prevSlide}
-            className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-white dark:bg-gray-800/70 shadow-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-all duration-200 group"
             aria-label="Previous testimonial"
           >
-            <FaChevronLeft className="w-4 h-4 text-gray-600" />
+            <FaChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-[#5F1DE8] dark:group-hover:text-[#B131F8] transition-colors duration-200" />
           </button>
           <button
             onClick={nextSlide}
-            className="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-white dark:bg-gray-800/70 shadow-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-all duration-200 group"
             aria-label="Next testimonial"
           >
-            <FaChevronRight className="w-4 h-4 text-gray-600" />
+            <FaChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-[#5F1DE8] dark:group-hover:text-[#B131F8] transition-colors duration-200" />
           </button>
         </div>
       </div>
