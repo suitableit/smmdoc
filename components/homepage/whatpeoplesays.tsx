@@ -131,17 +131,6 @@ const WhatPeopleSays = () => {
 
   return (
     <section id="testimonials_v2" className="pt-[60px] pb-[60px] relative">
-      {/* Background Image */}
-      <div className="absolute -top-24 w-full -z-10">
-        <Image
-          src="/smm-penel-testimonial.png"
-          alt="Testimonial Background"
-          width={1920}
-          height={800}
-          className="w-full h-auto opacity-20"
-        />
-      </div>
-
       <div className="max-w-[1200px] mx-auto px-4">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
