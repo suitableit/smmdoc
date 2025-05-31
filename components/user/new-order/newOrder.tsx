@@ -6,19 +6,19 @@
 import { PriceDisplayAnother } from '@/components/PriceDisplayAnother';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useGetCategories } from '@/hooks/categories-fetch';
@@ -34,7 +34,8 @@ import { toast } from 'sonner';
 export default function NewOrder() {
   const user = useCurrentUser();
   const searchParams = useSearchParams();
-  const serviceIdFromUrl = searchParams.get('sId');
+  const serviceIdFromUrl = searchParams.get('sId') || searchParams.get('serviceId');
+  const categoryIdFromUrl = searchParams.get('categoryId');
   const [servicesData, setServicesData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -75,11 +76,12 @@ export default function NewOrder() {
   useEffect(() => {
     if (user?.id) {
       axiosInstance
-        .get('/api/user/services/favorites')
+        .get(`/api/user/services/favorites?userId=${user.id}`)
         .then((res) => {
           setFavoriteCategories(res?.data?.data || []);
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('Error fetching favorite categories:', error);
           toast.error('Error fetching favorite categories');
         });
     }
@@ -197,6 +199,18 @@ export default function NewOrder() {
     }
     setIsInitializing(false);
   };
+  // Initialize with category from URL if provided
+  useEffect(() => {
+    if (categoryIdFromUrl && combinedCategories.length > 0 && !selectedCategory) {
+      const categoryExists = combinedCategories.find(
+        (cat: any) => cat.id === categoryIdFromUrl
+      );
+      if (categoryExists) {
+        setSelectedCategory(categoryIdFromUrl);
+      }
+    }
+  }, [categoryIdFromUrl, combinedCategories, selectedCategory]);
+
   // Initialize with service from URL if provided
   useEffect(() => {
     if (serviceIdFromUrl && !selectedService && category?.data) {

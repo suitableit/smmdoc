@@ -3,33 +3,34 @@
 import ButtonLoader from '@/components/button-loader';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
 import {
-  addFundDefaultValues,
-  addFundSchema,
-  AddFundSchema,
+    addFundDefaultValues,
+    addFundSchema,
+    AddFundSchema,
 } from '@/lib/validators/user/addFundValidator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { FaExchangeAlt } from 'react-icons/fa';
+import { toast } from 'sonner';
 
 export function AddFundForm() {
   const user = useCurrentUser();
@@ -68,13 +69,17 @@ export function AddFundForm() {
   const toggleCurrency = () => {
     const newCurrency = activeCurrency === 'USD' ? 'BDT' : 'USD';
     setActiveCurrency(newCurrency);
-    // reset form values based on new currency
+    
+    // Reset form values based on new currency
     form.setValue('amountUSD', '0', { shouldValidate: true });
     form.setValue('amountBDT', '0', { shouldValidate: true });
     form.setValue('amountBDTConverted', '0', { shouldValidate: true });
+    form.setValue('amount', '0', { shouldValidate: true });
+    
+    // Always set the total amount in BDT for payment processing
     setTotalAmount({
       amount: 0,
-      currency: newCurrency,
+      currency: 'BDT',
     });
   };
   const [totalAmount, setTotalAmount] = useState<{
@@ -96,11 +101,18 @@ export function AddFundForm() {
         amount: bdtValue,
         currency: 'BDT',
       });
+      // Update the form values
+      form.setValue('amount', bdtValue.toString(), {
+        shouldValidate: true,
+      });
     } else {
-      const usdValue = numericValue / rate;
       setTotalAmount({
         amount: numericValue,
         currency: 'BDT',
+      });
+      // Update the form values
+      form.setValue('amount', numericValue.toString(), {
+        shouldValidate: true,
       });
     }
   };
@@ -121,7 +133,11 @@ export function AddFundForm() {
       shouldValidate: true,
     });
 
-    calculateTotalAmount(e.target.value);
+    // Update total amount state
+    setTotalAmount({
+      amount: bdtValue,
+      currency: 'BDT'
+    });
   };
 
   const handleBDTChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,33 +153,88 @@ export function AddFundForm() {
       shouldValidate: true,
     });
 
-    calculateTotalAmount(e.target.value);
+    // Update total amount state
+    setTotalAmount({
+      amount: bdtValue,
+      currency: 'BDT'
+    });
   };
+  
   // Handle form submission
   const onSubmit: SubmitHandler<AddFundSchema> = async (values) => {
     startTransition(async () => {
-      // Convert amount to BDT if the active currency is USD
-      const amountInBDT =
-        activeCurrency === 'USD'
-          ? parseFloat(values.amountUSD || '0') * (rate ?? 1)
-          : parseFloat(values.amountBDT || '0');
+      try {
+        // Calculate the amount in BDT regardless of active currency
+        const amountInBDT =
+          activeCurrency === 'USD'
+            ? parseFloat(values.amountUSD || '0') * (rate ?? 1)
+            : parseFloat(values.amountBDT || '0');
 
-      const formValues = {
-        ...values,
-        amount: amountInBDT.toString(), // Send the amount in BDT
-        userId: user?.id,
-        full_Name: user?.name,
-        email: user?.email,
-        totalAmount: totalAmount.amount,
-        totalCurrency: totalAmount.currency,
-      };
-      const res = await axiosInstance.post(
-        '/api/payment/create-charge',
-        formValues
-      );
-      if (res.status) {
-        localStorage.setItem('order_id', res.data.order_id);
-        window.location.href = res.data.payment_url;
+        // Ensure we have all required fields
+        if (!user?.name || !user?.email || !values.phone || amountInBDT <= 0) {
+          toast.error('সকল প্রয়োজনীয় তথ্য পূরণ করুন');
+          return;
+        }
+
+        // Ensure minimum amount is at least 10 BDT
+        const minAmount = 10;
+        const finalAmount = Math.round(amountInBDT);
+        if (finalAmount < minAmount) {
+          toast.error(`সর্বনিম্ন পরিমাণ ${minAmount} BDT হতে হবে`);
+          return;
+        }
+
+        // Create payment data
+        const formValues = {
+          method: 'uddoktapay', // Fixed method name
+          amount: finalAmount.toString(), // Round to avoid decimal issues
+          userId: user?.id,
+          full_Name: user?.name || 'John Doe', // Fallback name
+          email: user?.email || 'customer@example.com', // Fallback email
+          phone: values.phone.replace(/\D/g, ''), // Remove non-digit characters
+        };
+        
+        toast.loading('পেমেন্ট প্রসেস চলছে...');
+        
+        // Send to our new payment API endpoint
+        const res = await axiosInstance.post(
+          '/api/payment/create-charge',
+          formValues
+        );
+        
+        if (res.data && res.data.payment_url) {
+          // Store order ID in localStorage for later retrieval
+          if (res.data.order_id) {
+            localStorage.setItem('order_id', res.data.order_id);
+          }
+          
+          // Store invoice ID in localStorage
+          if (res.data.invoice_id) {
+            localStorage.setItem('invoice_id', res.data.invoice_id);
+            // Also store the amount for reference
+            localStorage.setItem('payment_amount', finalAmount.toString());
+            console.log('Stored invoice ID in localStorage:', res.data.invoice_id);
+          }
+          
+          toast.dismiss();
+          toast.success('Redirecting to payment page...');
+
+          // Add a small delay before redirecting to ensure localStorage is updated
+          setTimeout(() => {
+            // Redirect to the payment gateway with invoice_id as parameter
+            const paymentUrl = new URL(res.data.payment_url);
+            paymentUrl.searchParams.set('invoice_id', res.data.invoice_id);
+            window.location.href = paymentUrl.toString();
+          }, 500);
+        } else {
+          toast.dismiss();
+          toast.error('Payment processing failed. Please try again.  ');
+          console.error('Invalid response from payment gateway');
+        }
+      } catch (error) {
+        toast.dismiss();
+        toast.error('Payment processing failed. Please try again.');
+        console.error('Payment error:', error);
       }
     });
   };

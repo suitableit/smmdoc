@@ -8,16 +8,16 @@ export default function Social() {
     await signIn(provider, { callbackUrl: DEFAULT_SIGN_IN_REDIRECT });
   };
   return (
-    <div className="mt-2 w-full mb-1">
+    <div className="mt-1 w-full mb-1">
       <Button
-        size="lg"
-        className="w-full cursor-pointer"
+        size="sm"
+        className="w-full cursor-pointer h-8 text-sm"
         variant="outline"
         onClick={() => {
           handleClick("google");
         }}
       >
-        <FcGoogle className="h-8 w-8" />
+        <FcGoogle className="h-5 w-5" />
       </Button>
     </div>
   );

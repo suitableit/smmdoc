@@ -23,13 +23,13 @@ export default function ProtectedLayout({
       {/* Right side content with header and main content */}
       <div className={`flex flex-col w-full transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-[80px]' : 'lg:ml-[280px]'}`}>
         {/* Top header bar */}
-        <div className={`fixed top-0 right-0 z-40 transition-all duration-300 ${sidebarCollapsed ? 'lg:w-[calc(100%-80px)]' : 'lg:w-[calc(100%-280px)]'} w-full bg-white dark:bg-slate-800 border-b`}>
+        <div className={`fixed top-0 right-0 z-40 transition-all duration-300 ${sidebarCollapsed ? 'lg:w-[calc(100%-80px)]' : 'lg:w-[calc(100%-280px)]'} w-full bg-white dark:bg-slate-800`}>
           <Header />
         </div>
         
         {/* Main content area */}
         <main className="w-full mt-16">
-          <div className={isDashboard ? 'p-0' : 'p-2 md:p-3 lg:p-4'}> 
+          <div className={isDashboard ? 'p-0' : 'pt-1 px-2 pb-2 md:pt-2 md:px-3 md:pb-3 lg:pt-2 lg:px-4 lg:pb-4'}> 
             <div className="flex items-center justify-between lg:hidden mb-2">
               <div className="flex items-center">
                 <MobileSidebar />

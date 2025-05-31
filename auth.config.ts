@@ -34,7 +34,13 @@ export default {
       // Allow OAuth without email verification
       if (account?.provider !== 'credentials') return true;
       const existingUser = await getUserById(user.id);
-      if (!existingUser || !existingUser.emailVerified) return false;
+      if (!existingUser) return false;
+      
+      // Check if email is verified
+      if (!existingUser.emailVerified) {
+        return false;
+      }
+      
       // Todo: Add 2FA check here
       if (existingUser.isTwoFactorEnabled) {
         const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
@@ -68,6 +74,13 @@ export default {
       token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
       token.currency = existingUser.currency;
       return token;
+    },
+    async redirect({ url, baseUrl }: any) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
   },
 } satisfies NextAuthConfig;

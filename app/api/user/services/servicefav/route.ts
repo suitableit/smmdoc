@@ -13,52 +13,42 @@ export async function POST(req: Request) {
       );
     }
 
-    // Find the user's Favorites category
-    const favoritesCategory = await db.favrouteCat.findFirst({
+    // Check if the service exists
+    const serviceExists = await db.service.findUnique({
+      where: { id: serviceId },
+    });
+
+    if (!serviceExists) {
+      return NextResponse.json(
+        { error: 'Service not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if the user exists
+    const userExists = await db.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!userExists) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if the service is already favorited
+    const existingFavorite = await db.favoriteService.findUnique({
       where: {
-        userId,
-        name: 'Favorites',
-      },
-      include: {
-        services: {
-          where: {
-            id: serviceId,
-          },
-          select: {
-            id: true,
-          },
+        userId_serviceId: {
+          userId,
+          serviceId,
         },
       },
     });
 
-    if (!favoritesCategory) {
-      // If the category doesn't exist, create it
-      const newCategory = await db.favrouteCat.create({
-        data: {
-          userId,
-          name: 'Favorites',
-          services: {
-            connect: { id: serviceId },
-          },
-        },
-      });
-      return NextResponse.json(
-        {
-          message: 'Created favorites category and added service',
-          isFavorite: true,
-          newCategoryId: newCategory.id,
-        },
-        { status: 201 }
-      );
-    }
-
     if (action === 'add') {
-      // Check if already favorited
-      const isAlreadyFavorited = favoritesCategory.services.some(
-        (service) => service.id === serviceId
-      );
-
-      if (isAlreadyFavorited) {
+      if (existingFavorite) {
         return NextResponse.json(
           { message: 'Already in favorites', isFavorite: true },
           { status: 200 }
@@ -66,12 +56,10 @@ export async function POST(req: Request) {
       }
 
       // Add to favorites
-      await db.favrouteCat.update({
-        where: { id: favoritesCategory.id },
+      await db.favoriteService.create({
         data: {
-          services: {
-            connect: { id: serviceId },
-          },
+          userId,
+          serviceId,
         },
       });
 
@@ -80,12 +68,19 @@ export async function POST(req: Request) {
         { status: 200 }
       );
     } else if (action === 'remove') {
+      if (!existingFavorite) {
+        return NextResponse.json(
+          { message: 'Not in favorites', isFavorite: false },
+          { status: 200 }
+        );
+      }
+
       // Remove from favorites
-      await db.favrouteCat.update({
-        where: { id: favoritesCategory.id },
-        data: {
-          services: {
-            disconnect: { id: serviceId },
+      await db.favoriteService.delete({
+        where: {
+          userId_serviceId: {
+            userId,
+            serviceId,
           },
         },
       });

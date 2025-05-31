@@ -13,7 +13,14 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        nunito: ['var(--font-nunito)', 'sans-serif'],
+      },
+      textColor: {
+        DEFAULT: '#000000',
+      },
       colors: {
+        mainColor: '#5F1DE8',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

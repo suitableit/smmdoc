@@ -1,5 +1,9 @@
 import VerifyEmail from "./verify-email";
 
 export default function page() {
-  return <VerifyEmail />;
+  return (
+    <div className="w-full max-w-xl mx-auto">
+      <VerifyEmail />
+    </div>
+  );
 }

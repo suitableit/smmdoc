@@ -1,19 +1,15 @@
-import BreadCrumb from '@/components/shared/BreadCrumb';
-import { Separator } from '@/components/ui/separator';
-import TricketForm from '@/components/user/tricketSupport/tricketForm';
+// import BreadCrumb from '@/components/shared/BreadCrumb';
+import TicketsClient from './client';
 
-export default function page() {
-  const breadcrumbItems = [
-    { title: 'Submit Ticket', link: '/dashboard/user/trickets' },
-  ];
+export default function TicketsPage() {
+  // const breadcrumbItems = [
+  //   { title: 'Tickets', link: '/dashboard/user/trickets' },
+  // ];
   return (
     <div className="h-full">
-      <div className="flex items-center justify-between py-1">
-        <BreadCrumb items={breadcrumbItems} />
-      </div>
-      <Separator />
-      <div className="py-10">
-        <TricketForm />
+      <div className="flex flex-col py-6">
+        <h1 className="text-2xl font-bold mb-6">Tickets</h1>
+        <TicketsClient />
       </div>
     </div>
   );

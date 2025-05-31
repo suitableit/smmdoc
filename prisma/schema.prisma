@@ -1,0 +1,51 @@
+model AddFund {
+  id             String    @id @default(cuid())
+  invoice_id     String    @unique
+  amount         Float
+  spent_amount   Float
+  fee            Float?
+  email          String
+  name           String?
+  status         String?   @default("Processing") // Default status is Processing for user view
+  admin_status   String?   @default("Pending")    // Add admin_status field with default Pending
+  order_id       String?
+  method         String?
+  payment_method String?
+  sender_number  String?
+  transaction_id String?
+  date           DateTime?
+  paid_at        DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model User {
+  id                    String                 @id @default(cuid())
+  username              String?                @unique
+  name                  String?
+  password              String?
+  email                 String?                @unique
+  role                  Role                   @default(user)
+  emailVerified         DateTime?
+  image                 String?
+  currency              String                 @default("USD")
+  dollarRate            Float                  @default(121.45)
+  balance               Float                  @default(0)
+  accounts              Account[]
+  sessions              Session[]
+  apiKeys               ApiKey[]
+  Category              Category[]
+  favouriteCat          FavrouteCat[]
+  favoriteServices      FavoriteService[]
+  services              Service[]
+  newOrders             NewOrder[]
+  addFunds              AddFund[]
+  isTwoFactorEnabled    Boolean                @default(false)
+  twoFactorConfirmation TwoFactorConfirmation?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+}

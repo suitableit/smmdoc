@@ -24,6 +24,7 @@ export { signInDefaultValues, signInSchema, type SignInSchema };
 
 const signUpSchema = z
   .object({
+    username: z.string().nonempty('Username is required'),
     name: z.string().nonempty('Name is required'),
     email: z
       .string()
@@ -46,6 +47,7 @@ const signUpSchema = z
 type SignUpSchema = z.infer<typeof signUpSchema>;
 
 const signUpDefaultValues: SignUpSchema = {
+  username: '',
   name: '',
   email: '',
   password: '',
@@ -97,9 +99,10 @@ const passwordSchema = z
 type PasswordForm = z.infer<typeof passwordSchema>;
 
 export {
-  newPasswordDefaultValues,
-  newPasswordSchema,
-  passwordSchema,
-  type NewPasswordSchema,
-  type PasswordForm,
+    newPasswordDefaultValues,
+    newPasswordSchema,
+    passwordSchema,
+    type NewPasswordSchema,
+    type PasswordForm
 };
+

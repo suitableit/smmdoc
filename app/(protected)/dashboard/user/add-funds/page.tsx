@@ -1,18 +1,14 @@
-import BreadCrumb from '@/components/shared/BreadCrumb';
-import { Separator } from '@/components/ui/separator';
+// import BreadCrumb from '@/components/shared/BreadCrumb';
 import { AddFundForm } from '@/components/user/addFund/addFunds';
 
 export default function page() {
-  const breadcrumbItems = [
-    { title: 'Add Fund', link: '/dashboard/user/add-funds' },
-  ];
+  // const breadcrumbItems = [
+  //   { title: 'Add Funds', link: '/dashboard/user/add-funds' },
+  // ];
   return (
     <div className="h-full">
-      <div className="flex items-center justify-between py-1">
-        <BreadCrumb items={breadcrumbItems} />
-      </div>
-      <Separator />
-      <div className="flex flex-col py-10">
+      <div className="flex flex-col py-6">
+        <h1 className="text-2xl font-bold mb-6">Add Funds</h1>
         <AddFundForm />
       </div>
     </div>

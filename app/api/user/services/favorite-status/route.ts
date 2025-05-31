@@ -13,18 +13,16 @@ export async function GET(req: Request) {
   }
 
   try {
-    const favCategories = await db.favrouteCat.findMany({
+    const favoriteServices = await db.favoriteService.findMany({
       where: { userId },
       select: {
-        services: {
-          select: { id: true },
-        },
+        serviceId: true,
       },
     });
 
-    const favoriteServiceIds = favCategories
-      .flatMap((category) => category.services)
-      .map((service) => service.id);
+    const favoriteServiceIds = favoriteServices.map(
+      (favorite) => favorite.serviceId
+    );
 
     return NextResponse.json({ favoriteServiceIds });
   } catch (error) {

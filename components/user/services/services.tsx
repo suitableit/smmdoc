@@ -37,6 +37,7 @@ interface Service {
   description: string;
   category: {
     category_name: string;
+    id: string;
   };
   isFavorite?: boolean;
 }
@@ -51,6 +52,7 @@ export default function UserServiceTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [groupedServices, setGroupedServices] = useState<Record<string, Service[]>>({});
 
   const limit = 50;
 
@@ -86,12 +88,22 @@ export default function UserServiceTable() {
         const data = await response.json();
 
         if (!user?.id) {
-          setServices(
-            data?.data?.map((service: Service) => ({
-              ...service,
-              isFavorite: false,
-            })) || []
-          );
+          const servicesData = data?.data?.map((service: Service) => ({
+            ...service,
+            isFavorite: false,
+          })) || [];
+          
+          setServices(servicesData);
+          // Group services by category
+          const grouped = servicesData.reduce((acc: Record<string, Service[]>, service: Service) => {
+            const categoryName = service.category?.category_name || 'Uncategorized';
+            if (!acc[categoryName]) {
+              acc[categoryName] = [];
+            }
+            acc[categoryName].push(service);
+            return acc;
+          }, {});
+          setGroupedServices(grouped);
           setTotalPages(data.totalPages || 1);
           return;
         }
@@ -124,15 +136,38 @@ export default function UserServiceTable() {
             })) || [];
 
           setServices(servicesWithFavorites);
+          
+          // Group services by category
+          const grouped = servicesWithFavorites.reduce((acc: Record<string, Service[]>, service: Service) => {
+            const categoryName = service.category?.category_name || 'Uncategorized';
+            if (!acc[categoryName]) {
+              acc[categoryName] = [];
+            }
+            acc[categoryName].push(service);
+            return acc;
+          }, {});
+          setGroupedServices(grouped);
+          
         } catch (favError) {
           console.error('Error fetching favorites:', favError);
           // If favorite fetch fails, still show services without favorites
-          setServices(
-            data?.data?.map((service: Service) => ({
-              ...service,
-              isFavorite: false,
-            })) || []
-          );
+          const servicesData = data?.data?.map((service: Service) => ({
+            ...service,
+            isFavorite: false,
+          })) || [];
+          
+          setServices(servicesData);
+          
+          // Group services by category
+          const grouped = servicesData.reduce((acc: Record<string, Service[]>, service: Service) => {
+            const categoryName = service.category?.category_name || 'Uncategorized';
+            if (!acc[categoryName]) {
+              acc[categoryName] = [];
+            }
+            acc[categoryName].push(service);
+            return acc;
+          }, {});
+          setGroupedServices(grouped);
         }
         
         setTotalPages(data.totalPages || 1);
@@ -140,6 +175,7 @@ export default function UserServiceTable() {
         console.error('Error fetching services:', error);
         toast.error('Error fetching services. Please try again later.');
         setServices([]);
+        setGroupedServices({});
         setTotalPages(1);
       } finally {
         setLoading(false);
@@ -194,6 +230,20 @@ export default function UserServiceTable() {
               : service
           )
         );
+        
+        // Update grouped services as well
+        setGroupedServices((prevGrouped) => {
+          const newGrouped = { ...prevGrouped };
+          Object.keys(newGrouped).forEach((categoryName) => {
+            newGrouped[categoryName] = newGrouped[categoryName].map((service) =>
+              service.id === serviceId
+                ? { ...service, isFavorite: !service.isFavorite }
+                : service
+            );
+          });
+          return newGrouped;
+        });
+        
         toast.success(data.message);
       } else {
         throw new Error(data.error || 'Failed to update favorite status');
@@ -201,6 +251,42 @@ export default function UserServiceTable() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'An error occurred');
     }
+  };
+
+  const handleViewDetails = (service: Service) => {
+    setSelected(service);
+    setIsOpen(true);
+  };
+
+  const renderSkeletonRows = () => {
+    return Array.from({ length: 5 }).map((_, i) => (
+      <TableRow key={i}>
+        <TableCell>
+          <Skeleton className="h-4 w-4" />
+        </TableCell>
+        <TableCell>
+          <Skeleton className="h-4 w-[80px]" />
+        </TableCell>
+        <TableCell>
+          <Skeleton className="h-4 w-[200px]" />
+        </TableCell>
+        <TableCell>
+          <Skeleton className="h-4 w-[80px]" />
+        </TableCell>
+        <TableCell>
+          <Skeleton className="h-4 w-[80px]" />
+        </TableCell>
+        <TableCell>
+          <Skeleton className="h-4 w-[80px]" />
+        </TableCell>
+        <TableCell>
+          <Skeleton className="h-4 w-[80px]" />
+        </TableCell>
+        <TableCell>
+          <Skeleton className="h-4 w-[80px]" />
+        </TableCell>
+      </TableRow>
+    ));
   };
 
   return (
@@ -218,135 +304,125 @@ export default function UserServiceTable() {
         />
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Fav</TableHead>
-              <TableHead>ID</TableHead>
-              <TableHead className="text-ellipsis whitespace-nowrap text-wrap w-full max-w-[400px] overflow-hidden">
-                Service
-              </TableHead>
-              <TableHead>Rate/1000</TableHead>
-              <TableHead>Min Order</TableHead>
-              <TableHead>Max Order</TableHead>
-              <TableHead>Avg Time</TableHead>
-              <TableHead className="w-[300px]">Description</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: limit }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-4" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[80px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[200px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[60px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[60px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[60px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[60px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[200px]" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : services?.length > 0 ? (
-              services?.map((service, i) => (
-                <TableRow key={i}>
-                  <TableCell className="text-center">
-                    <Star
-                      className={`h-4 w-4 cursor-pointer ${
-                        service.isFavorite
-                          ? 'text-yellow-500 fill-yellow-500'
-                          : 'text-gray-300'
-                      }`}
-                      onClick={() => toggleFavorite(service.id)}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{i + 1}</TableCell>
-                  <TableCell className="text-ellipsis whitespace-nowrap text-wrap w-full max-w-[400px] overflow-hidden">
-                    {service.name}
-                  </TableCell>
-                  <TableCell>
-                    <PriceDisplay
-                      amount={service.rate}
-                      originalCurrency={user?.currency || ('USD' as any)}
-                      className="font-bold"
-                    />
-                  </TableCell>
-                  <TableCell>{service.min_order}</TableCell>
-                  <TableCell>{service.max_order}</TableCell>
-                  <TableCell>{service.avg_time}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="text-blue-500 hover:text-blue-700"
-                      onClick={() => {
-                        setSelected(service);
-                        setIsOpen(true);
-                      }}
-                    >
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
+      {loading ? (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4">
-                  No services found
-                </TableCell>
+                <TableHead>Fav</TableHead>
+                <TableHead>ID</TableHead>
+                <TableHead>Service</TableHead>
+                <TableHead>Rate per 1000</TableHead>
+                <TableHead>Min order</TableHead>
+                <TableHead>Max order</TableHead>
+                <TableHead>Average time</TableHead>
+                <TableHead>Action</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {renderSkeletonRows()}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        Object.entries(groupedServices).map(([categoryName, categoryServices]) => (
+          <div key={categoryName} className="mb-6">
+            <div className="bg-purple-600 text-white font-medium py-2 px-4 rounded-t-md">
+              {categoryName}
+            </div>
+            <div className="rounded-b-md border border-t-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fav</TableHead>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Service</TableHead>
+                    <TableHead>Rate per 1000</TableHead>
+                    <TableHead>Min order</TableHead>
+                    <TableHead>Max order</TableHead>
+                    <TableHead>Average time</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categoryServices.map((service) => (
+                    <TableRow key={service.id}>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => toggleFavorite(service.id)}
+                        >
+                          <Star
+                            className={`h-4 w-4 ${
+                              service.isFavorite
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        </Button>
+                      </TableCell>
+                      <TableCell>{service.id}</TableCell>
+                      <TableCell className="font-medium">
+                        {service.name}
+                      </TableCell>
+                      <TableCell>
+                        <PriceDisplay amount={service.rate} originalCurrency={'USD'} />
+                      </TableCell>
+                      <TableCell>{service.min_order}</TableCell>
+                      <TableCell>{service.max_order}</TableCell>
+                      <TableCell>{service.avg_time}</TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewDetails(service)}
+                        >
+                          Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        ))
+      )}
 
-      <Pagination className="mt-4">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              href="#"
-              onClick={handlePrevious}
-              isActive={!(page === 1 || loading)}
-            />
-          </PaginationItem>
-          <PaginationItem>
-            <span className="text-sm">
-              Page {page} of {totalPages}
-            </span>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext
-              href="#"
-              onClick={handleNext}
-              isActive={!(page === totalPages || loading)}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={handlePrevious}
+                  className={page === 1 ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+              <PaginationItem>
+                <span className="text-sm">
+                  Page {page} of {totalPages}
+                </span>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext
+                  onClick={handleNext}
+                  className={
+                    page === totalPages ? 'pointer-events-none opacity-50' : ''
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {isOpen && selected && (
         <ServiceViewModal
-          selected={selected}
-          setIsOpen={setIsOpen}
           isOpen={isOpen}
-          mode="create"
+          setIsOpen={setIsOpen}
+          service={selected}
         />
       )}
     </Fragment>

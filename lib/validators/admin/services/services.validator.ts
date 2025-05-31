@@ -56,5 +56,6 @@ const createServiceDefaultValues: CreateServiceSchema = {
 export {
   createServiceDefaultValues,
   createServiceSchema,
-  type CreateServiceSchema,
+  type CreateServiceSchema
 };
+

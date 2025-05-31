@@ -2,17 +2,17 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import axiosInstance from '@/lib/axiosInstance';
 
-import { Pencil, Trash } from 'lucide-react';
+import { Loader2, Pencil, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { mutate } from 'swr';
@@ -56,9 +56,14 @@ export default function CategoriesTable() {
       </div>
     ));
   };
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return (
+    <div className="flex flex-col items-center justify-center p-5 text-center z-50 bg-white dark:bg-mainColor rounded-lg shadow-lg">
+      <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+      <p className="text-sm text-muted-foreground">Loading categories...</p>
+    </div>
+  );
   if (error) return <div>Error: {error}</div>;
-  if (!data) return <div>No data</div>;
+  if (!data) return <div>No categories found</div>;
   if (!data.success) return <div>{data.error}</div>;
   if (data.data.length === 0) return <div>No categories found</div>;
   return (

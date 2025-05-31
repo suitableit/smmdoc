@@ -7,14 +7,16 @@ import { SessionProvider } from 'next-auth/react';
 
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { getUserCurrency } from '@/lib/actions/currency';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist_Mono, Nunito } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
 import StoreProvider from './StoreProvider';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const nunito = Nunito({
   subsets: ['latin'],
+  variable: '--font-nunito',
+  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
@@ -28,7 +30,7 @@ export const metadata: Metadata = {
     default: `${APP_NAME}`,
   },
   description: `${APP_DESCRIPTION}`,
-  metadataBase: new URL(APP_URL || ''),
+  metadataBase: new URL(APP_URL || 'http://localhost:3001'),
 };
 
 export default async function RootLayout({
@@ -45,7 +47,7 @@ export default async function RootLayout({
           <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
         </head>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${nunito.variable} font-nunito antialiased text-black`}
         >
           <StoreProvider>
             <ThemeProvider
@@ -57,7 +59,9 @@ export default async function RootLayout({
               <NextTopLoader />
               <Toaster richColors position="bottom-right" />
               <CurrencyProvider serverCurrency={serverCurrency}>
-                {children}
+                <div className="non-sidebar-content font-nunito text-black">
+                  {children}
+                </div>
               </CurrencyProvider>
             </ThemeProvider>
           </StoreProvider>

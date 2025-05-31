@@ -6,7 +6,7 @@ interface InfoCardProps {
   value: string | number;
   description?: string;
   icon?: React.ReactNode;
-  iconColor?: 'purple' | 'blue' | 'green' | 'red' | 'orange' | 'indigo';
+  iconColor?: 'purple' | 'blue' | 'green' | 'red' | 'orange' | 'indigo' | 'mainColor';
   className?: string;
 }
 
@@ -15,7 +15,7 @@ export const InfoCard: React.FC<InfoCardProps> = ({
   value,
   description,
   icon,
-  iconColor = 'blue',
+  iconColor = 'mainColor',
   className,
 }) => {
   const iconColorClasses = {
@@ -25,6 +25,7 @@ export const InfoCard: React.FC<InfoCardProps> = ({
     red: 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400',
     orange: 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400',
     indigo: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400',
+    mainColor: 'bg-mainColor/10 text-mainColor dark:bg-mainColor/20 dark:text-mainColor',
   };
 
   return (

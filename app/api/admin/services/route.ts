@@ -1,49 +1,156 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { currentUser } from '@/lib/actions/auth';
+import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { createServiceSchema } from '@/lib/validators/admin/services/services.validator';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
-  const user = await currentUser();
+export async function GET(request: Request) {
   try {
-    const validedFields = createServiceSchema.safeParse(await request.json());
-    if (!validedFields.success) {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search') || '';
+    const skip = (page - 1) * limit;
+    const whereClause = search
+      ? {
+          OR: [
+            {
+              name: {
+                contains: search,
+                mode: 'insensitive',
+              },
+            },
+            {
+              description: {
+                contains: search,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        }
+      : {};
+
+    const [services, total] = await Promise.all([
+      db.service.findMany({
+        where: whereClause,
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          category: true,
+        },
+      }),
+      db.service.count({ where: whereClause }),
+    ]);
+    
+    return NextResponse.json(
+      {
+        data: services || [],
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error in services API:", error);
+    // Return empty data array instead of error to avoid crashing the client
+    return NextResponse.json(
+      {
+        data: [],
+        total: 0,
+        page: 1,
+        totalPages: 1,
+        message: 'Error fetching services',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 200 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = await auth();
+    if (!session || !session.user) {
       return NextResponse.json(
-        { success: false, error: 'Invalid Fields!' },
+        {
+          error: 'Unauthorized',
+          data: null,
+          success: false,
+        },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    if (!body) {
+      return NextResponse.json(
+        {
+          error: 'Service data is required',
+          data: null,
+          success: false,
+        },
         { status: 400 }
       );
     }
+
     const {
+      categoryId,
       name,
       description,
-      categoryId,
       rate,
-      max_order,
       min_order,
+      max_order,
       perqty,
       avg_time,
-    } = validedFields.data;
-    await db.service.create({
+      updateText,
+    } = body;
+
+    if (!categoryId || !name) {
+      return NextResponse.json(
+        {
+          error: 'Category ID and name are required',
+          data: null,
+          success: false,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Create the service in the database
+    const newService = await db.service.create({
       data: {
-        name: name,
-        description: description,
-        categoryId: categoryId,
+        categoryId,
+        name,
+        description,
         rate: Number(rate),
-        max_order: Number(max_order),
         min_order: Number(min_order),
+        max_order: Number(max_order),
         perqty: Number(perqty),
-        avg_time: avg_time,
-        userId: user?.id ?? '',
+        avg_time,
+        updateText,
+        userId: session.user.id,
       },
     });
+
     return NextResponse.json(
-      { success: true, data: null, error: null, message: 'Service Created!' },
+      {
+        error: null,
+        message: 'Service created successfully',
+        data: newService,
+        success: true,
+      },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error) {
+    console.error("Error creating service:", error);
     return NextResponse.json(
-      { success: false, data: null, error: error.message },
+      {
+        error: 'Failed to create service: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        data: null,
+        success: false,
+      },
       { status: 500 }
     );
   }

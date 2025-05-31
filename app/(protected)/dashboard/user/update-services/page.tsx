@@ -1,19 +1,15 @@
-import BreadCrumb from '@/components/shared/BreadCrumb';
-import { Separator } from '@/components/ui/separator';
-import UpdateServiceTable from '@/components/user/services/updateService/updateServiceTable';
+// import BreadCrumb from '@/components/shared/BreadCrumb';
+import UpdateServicesClient from './client';
 
-export default function page() {
-  const breadcrumbItems = [
-    { title: 'Update Services', link: '/dashboard/user/update-services' },
-  ];
+export default function UpdateServicesPage() {
+  // const breadcrumbItems = [
+  //   { title: 'Update Services', link: '/dashboard/user/update-services' },
+  // ];
   return (
     <div className="h-full">
-      <div className="flex items-center justify-between py-1">
-        <BreadCrumb items={breadcrumbItems} />
-      </div>
-      <Separator />
-      <div className=" py-10">
-        <UpdateServiceTable />
+      <div className="flex flex-col py-6">
+        <h1 className="text-2xl font-bold mb-6">Update Services</h1>
+        <UpdateServicesClient />
       </div>
     </div>
   );

@@ -1,41 +1,26 @@
 model AddFund {
-  id             String    @id @default(cuid())
-  invoice_id     String    @unique
-  amount         Float
-  spent_amount   Float
-  fee            Float?
-  email          String
-  name           String?
-  status         String?
-  order_id       String?
-  method         String?
-  payment_method String?
-  sender_number  String?
-  transaction_id String?
-  date           DateTime?
-  paid_at        DateTime  @default(now())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @default(now()) @updatedAt
-  userId         String
-  user           User      @relation(fields: [userId], references: [id])
+  id               String                    @id @default(cuid())
+  invoice_id       String                    @unique
+  amount           Float
+  email            String
+  name             String?
+  status           String?                   @default("Processing")
+  order_id         String?
+  method           String?
+  payment_method   String?
+  sender_number    String?
+  transaction_id   String?
+  date             DateTime?
+  paid_at          DateTime                  @default(now())
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @default(now()) @updatedAt
+  userId           String
+  fee              Float?
+  spent_amount     Float
+  admin_status     String?                   @default("Pending")
+  transaction_type AddFund_transaction_type? @default(deposit)
+  reference_id     String?                   @db.VarChar(255)
+  user             User                      @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
-
-// full_name: 'Monir Hossain',
-// email: 'monirhossain6163@gmail.com',
-// amount: '1.00',
-// fee: '0.00',
-// charged_amount: '1.00',
-// invoice_id: 'BDgdWGbkBUmkjOyYab1x',
-// metadata: {
-//   user_id: 'cm8pj4ui20000vbgstcvxkesy',
-//   order_id: 1745481406,
-//   method: 'uddoktapay',
-//   amount: '1'
-// },
-// payment_method: 'bkash',
-// sender_number: '01776808499',
-// transaction_id: 'CDO7LHZBHB',
-// date: '2025-04-24 13:58:30',
-// status: 'COMPLETED'

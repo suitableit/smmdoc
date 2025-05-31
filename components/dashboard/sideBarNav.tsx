@@ -1,62 +1,67 @@
 'use client';
-import { navItems } from '@/data/side-nav-items';
+import { adminNavItems, navItems } from '@/data/side-nav-items';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as FaIcons from 'react-icons/fa';
 
+interface NavItem {
+  title: string;
+  href: string;
+  icon: string;
+  label: string;
+  roles: string[];
+  badge?: string;
+  statusColor?: string;
+  disabled?: boolean;
+}
+
+interface NavSections {
+  [key: string]: NavItem[];
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default function SideBarNav({ collapsed = false, user, setOpen = () => {} }: any) {
-  const path = usePathname();
+  const path = usePathname() || '';
+  const isAdmin = user?.data?.role === 'admin';
   
-  // Filter items based on user role
-  const filteredItems = navItems.filter((item: any) => 
+  // Get items based on user role
+  const items = isAdmin ? adminNavItems : navItems.filter((item: any) => 
     item.roles.includes(user?.data?.role || 'user')
   );
   
-  // Group items into categories
-  const coreItems = filteredItems.filter(item => 
-    ['Dashboard'].includes(item.title)
-  );
+  // Group admin items into sections
+  const adminSections: NavSections = {
+    dashboard: items.filter(item => ['Dashboard'].includes(item.title)),
+    orders: items.filter(item => ['All Orders', 'Refill Order & Cancel Tasks'].includes(item.title)),
+    services: items.filter(item => ['All Services', 'Create Service', 'Manage Categories', 'Create Category', 'Modify Bulk Services', 'Sort by Category', 'Synchronize Logs'].includes(item.title)),
+    users: items.filter(item => ['User List', 'Admins', 'User Activity Logs', 'KYC Approvals'].includes(item.title)),
+    funds: items.filter(item => ['Funds Management', 'Add User Fund', 'All Transactions', 'Update Price'].includes(item.title)),
+    support: items.filter(item => ['All Tickets', 'AI Tickets', 'Human Tickets'].includes(item.title)),
+    analytics: items.filter(item => ['Sales Report', 'Trending Services', 'Export Data'].includes(item.title)),
+    api: items.filter(item => ['API Management', 'Categories API', 'Services API', 'Funds API'].includes(item.title)),
+    reseller: items.filter(item => ['Child Panels', 'Commission Settings', 'Reseller Requests'].includes(item.title)),
+    settings: items.filter(item => ['General Settings', 'Appearance', 'Email Settings', 'SEO Settings', 'Integrations'].includes(item.title)),
+    security: items.filter(item => ['Security Logs', 'Access Control'].includes(item.title)),
+    account: items.filter(item => ['Account Settings', 'Logout'].includes(item.title)),
+  };
+
+  // Group user items into sections
+  const userSections: NavSections = {
+    core: items.filter(item => ['Dashboard'].includes(item.title)),
+    orders: items.filter(item => ['New Order', 'Mass Order', 'My Orders', 'Order History'].includes(item.title)),
+    services: items.filter(item => ['All Services', 'Favorite Services'].includes(item.title)),
+    funds: items.filter(item => ['Add Fund', 'Transactions'].includes(item.title)),
+    support: items.filter(item => ['Support Ticket', 'Ticket History', 'Contact Support', 'FAQ'].includes(item.title)),
+    integrations: items.filter(item => ['API Integration', 'Child Panel'].includes(item.title)),
+    more: items.filter(item => ['Affiliate Program', 'Terms'].includes(item.title)),
+    account: items.filter(item => ['Account Settings', 'Logout'].includes(item.title)),
+  };
   
-  const orderItems = filteredItems.filter(item => 
-    ['New Order', 'Mass Order', 'My Orders', 'Order History'].includes(item.title)
-  );
+  const sections = isAdmin ? adminSections : userSections;
   
-  const serviceItems = filteredItems.filter(item => 
-    ['All Services', 'Favorite Services'].includes(item.title)
-  );
-  
-  const fundsItems = filteredItems.filter(item => 
-    ['Add Fund', 'Transactions'].includes(item.title)
-  );
-  
-  const supportItems = filteredItems.filter(item => 
-    ['Support Ticket', 'Ticket History', 'Contact Support', 'FAQ'].includes(item.title)
-  );
-  
-  const integrationItems = filteredItems.filter(item => 
-    ['API Integration', 'Child Panel'].includes(item.title)
-  );
-  
-  const moreItems = filteredItems.filter(item => 
-    ['Affiliates', 'Terms'].includes(item.title)
-  );
-  
-  const accountItems = filteredItems.filter(item => 
-    ['Account Settings', 'Logout'].includes(item.title)
-  );
-  
-  // Admin specific items
-  const adminItems = filteredItems.filter(item => 
-    ['Categories', 'Services', 'Orders', 'Users', 'Settings'].includes(item.title) && 
-    item.roles.includes('admin')
-  );
-  
-  const isActive = (itemPath: string, itemPath2?: string) => {
-    return path === itemPath || 
-           (itemPath2 && path === itemPath2) ||
-           path.startsWith(itemPath + '/');
+  const isActive = (itemPath: string) => {
+    return path === itemPath || path.startsWith(itemPath + '/');
   };
 
   // Render the React icon dynamically
@@ -65,41 +70,42 @@ export default function SideBarNav({ collapsed = false, user, setOpen = () => {}
     return Icon ? <Icon /> : null;
   };
   
-  const renderNavSection = (title: string, items: any[]) => {
+  const renderNavSection = (title: string, items: NavItem[]) => {
     if (!items.length) return null;
     
     return (
       <div className={`nav-section ${collapsed ? 'mb-0 px-0' : 'mb-4 px-2'}`}>
         {title && (
-          <p className={`section-title ${collapsed ? 'opacity-0 pointer-events-none' : ''} text-[11px] text-white/50 tracking-[1px] mx-4 my-2 whitespace-nowrap capitalize`} style={{textTransform: 'capitalize'}}>{title}</p>
+          <p className={`section-title ${collapsed ? 'opacity-0 pointer-events-none' : ''} text-[11px] text-white/50 tracking-[1px] mx-4 my-2 whitespace-nowrap uppercase font-semibold`}>{title}</p>
         )}
         <ul className={`nav-links ${collapsed ? 'px-1' : 'px-3'} ${collapsed ? 'space-y-0' : 'space-y-1'}`}>
           {items.map((item, index) => {
-            const active = isActive(item.href, item.href2);
+            const active = isActive(item.href);
             
             return (
-              <li key={index} className={`nav-item relative ${collapsed ? 'rounded-md my-0' : 'rounded-md mb-1'}`}>
+              <li key={index} className={`nav-item relative ${collapsed ? 'rounded-md my-0' : 'rounded-lg mb-1'}`}>
                 {active && !collapsed && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-r-md"></div>
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#5F1DE8] rounded-r-md"></div>
                 )}
                 <Link 
                   href={item.disabled ? '/' : item.href}
                   className={cn(
                     collapsed 
                       ? "nav-link flex justify-center items-center text-white/70 hover:text-white py-3 relative transition-all duration-300"
-                      : "nav-link flex items-center text-white/70 hover:text-white px-3 py-3 hover:bg-white/5 rounded-md transition-all duration-300 relative",
+                      : "nav-link flex items-center text-white/70 hover:text-white px-3 py-2.5 hover:bg-white/5 rounded-lg transition-all duration-300 relative hover:shadow-sm",
                     active && (collapsed 
-                      ? "active text-white before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] before:rounded-r before:bg-gradient-to-b before:from-indigo-500 before:to-blue-400" 
-                      : "active bg-white/10 text-white before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] before:rounded-r before:bg-gradient-to-b before:from-indigo-500 before:to-blue-400"),
+                      ? "active text-white before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] before:rounded-r before:bg-[#5F1DE8]" 
+                      : "active bg-[#5F1DE8]/10 text-white before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] before:rounded-r before:bg-[#5F1DE8]"),
+                    isAdmin && "font-medium",
                     item.disabled && "opacity-50 pointer-events-none"
                   )}
                   onClick={() => setOpen(false)}
                   title={collapsed ? item.title : undefined}
                 >
-                  <span className={`text-[20px] min-w-[24px] flex justify-center ${!collapsed && 'mr-3'} ${active ? 'text-indigo-400' : ''}`}>
+                  <span className={`text-[18px] min-w-[24px] flex justify-center ${!collapsed && 'mr-3'} ${active ? 'text-[#5F1DE8]' : isAdmin ? 'text-purple-400' : ''}`}>
                     {renderIcon(item.icon)}
                   </span>
-                  <span className={`transition-all whitespace-nowrap overflow-hidden text-[14px] font-normal ${collapsed ? 'opacity-0 w-0' : ''}`}>
+                  <span className={`transition-all whitespace-nowrap overflow-hidden text-[14px] ${isAdmin ? 'font-medium' : 'font-normal'} ${collapsed ? 'opacity-0 w-0' : ''}`}>
                     {item.title}
                   </span>
                   {item.badge && (
@@ -122,15 +128,33 @@ export default function SideBarNav({ collapsed = false, user, setOpen = () => {}
   
   return (
     <div className="sidebar-nav-container py-1">
-      {renderNavSection('', coreItems)}
-      {renderNavSection(collapsed ? '' : 'Orders', orderItems)}
-      {renderNavSection(collapsed ? '' : 'Services', serviceItems)}
-      {renderNavSection(collapsed ? '' : 'Fund', fundsItems)}
-      {renderNavSection(collapsed ? '' : 'Support', supportItems)}
-      {renderNavSection(collapsed ? '' : 'Integrations', integrationItems)}
-      {renderNavSection(collapsed ? '' : 'More', moreItems)}
-      {renderNavSection(collapsed ? '' : 'Account', accountItems)}
-      {user?.data?.role === 'admin' && renderNavSection(collapsed ? '' : 'Administration', adminItems)}
+      {isAdmin ? (
+        <>
+          {renderNavSection('', sections.dashboard)}
+          {renderNavSection('Orders', sections.orders)}
+          {renderNavSection('Services', sections.services)}
+          {renderNavSection('Users', sections.users)}
+          {renderNavSection('Funds', sections.funds)}
+          {renderNavSection('Support', sections.support)}
+          {renderNavSection('Analytics', sections.analytics)}
+          {renderNavSection('API', sections.api)}
+          {renderNavSection('Reseller', sections.reseller)}
+          {renderNavSection('Settings', sections.settings)}
+          {renderNavSection('Security', sections.security)}
+          {renderNavSection('Account', sections.account)}
+        </>
+      ) : (
+        <>
+          {renderNavSection('', sections.core)}
+          {renderNavSection('Orders', sections.orders)}
+          {renderNavSection('Services', sections.services)}
+          {renderNavSection('Fund', sections.funds)}
+          {renderNavSection('Support', sections.support)}
+          {renderNavSection('Integrations', sections.integrations)}
+          {renderNavSection('More', sections.more)}
+          {renderNavSection('Account', sections.account)}
+        </>
+      )}
     </div>
   );
 }

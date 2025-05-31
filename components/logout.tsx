@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 export default function LogoutButton() {
   const signOut = async () => {
     await logout();
+    window.location.reload();
   };
   return (
     <Button className="cursor-pointer" variant="outline" onClick={signOut}>
