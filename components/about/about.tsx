@@ -96,7 +96,7 @@ const About: React.FC = () => {
       title: 'Discord SMM Panel',
       description: 'Community building and interaction.',
       alt: 'discord smm panel'
-    },
+    }, 
     {
       icon: '/images/pinterest-smm-panel.png',
       title: 'Pinterest SMM Panel',
