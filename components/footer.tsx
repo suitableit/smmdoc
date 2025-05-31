@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
-  FaFacebook, 
+  FaFacebookF, 
   FaTelegram, 
   FaWhatsapp,
   FaEnvelope,
@@ -16,7 +16,7 @@ const Footer = () => {
   const socialLinks = [
     {
       name: 'Facebook',
-      icon: FaFacebook,
+      icon: FaFacebookF,
       url: '#'
     },
     {

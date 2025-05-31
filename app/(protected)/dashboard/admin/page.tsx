@@ -13,7 +13,6 @@ import {
 import { CheckIcon, ClockIcon, DollarSign, RefreshCcw, ShoppingCart, Users, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
-// টাইপ ডেফিনিশন
 type Order = {
   id: string;
   usdPrice: number;

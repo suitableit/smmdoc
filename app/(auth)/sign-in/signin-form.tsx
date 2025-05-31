@@ -168,7 +168,7 @@ export default function SignInForm() {
           ) : showTwoFactor ? (
             'Confirm'
           ) : (
-            'Sign in'
+            'Sign In'
           )}
         </button>
       </form>
