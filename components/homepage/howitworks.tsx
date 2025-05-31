@@ -39,7 +39,6 @@ const HowItWorks: React.FC = () => {
 
   return (
     <section className="py-0 pb-[60px]">
-      {/* Header Section with Purple Background */}
       <div className="bg-purple-600 py-20">
         <div className="container mx-auto px-4 text-center max-w-7xl">
           <h2 
