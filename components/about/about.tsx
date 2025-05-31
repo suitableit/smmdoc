@@ -77,7 +77,7 @@ const About: React.FC = () => {
       icon: '/images/tiktok-smm-panel.png',
       title: 'TikTok SMM Panel',
       description: 'Tapping into viral marketing.',
-      alt: 'tiktok smm panel'
+      alt: 'tiktok smm panel' 
     },
     {
       icon: '/images/telegram-smm-panel.png',
