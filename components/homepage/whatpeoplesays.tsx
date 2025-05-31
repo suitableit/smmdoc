@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import React from 'react';
-import Image from 'next/image';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 interface Testimonial {
@@ -167,13 +166,13 @@ const WhatPeopleSays = () => {
         </div>
 
         {/* Testimonials Slider */}
-        <div className="overflow-hidden mb-8">
+        <div className="overflow-hidden mb-8 -mx-4">
           <div 
             className="flex transition-transform duration-500 ease-in-out"
             style={{ transform: `translateX(-${currentSlide * (100 / itemsPerPage)}%)` }}
           >
             {testimonials.map((testimonial) => (
-              <div key={testimonial.id} className="w-1/3 flex-shrink-0 px-3">
+              <div key={testimonial.id} className="w-1/3 flex-shrink-0 px-4">
                 <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 h-80 flex flex-col justify-between hover:shadow-2xl dark:hover:shadow-lg dark:hover:shadow-purple-500/10 transition-all duration-300 group hover:-translate-y-1">
                   <div>
                     <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm leading-relaxed line-clamp-6 transition-colors duration-200">
@@ -201,16 +200,16 @@ const WhatPeopleSays = () => {
           </div>
         </div>
 
-        {/* Pagination Dots */}
-        <div className="flex justify-center mt-8 gap-2">
+        {/* Pagination Dots with Shadow */}
+        <div className="flex justify-center mt-8 gap-3">
           {Array.from({ length: maxSlide + 1 }, (_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 currentSlide === index 
-                  ? 'bg-[#5F1DE8] dark:bg-[#B131F8] scale-110' 
-                  : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                  ? 'bg-[#5F1DE8] dark:bg-[#B131F8] scale-110 shadow-lg shadow-[#5F1DE8]/40 dark:shadow-[#B131F8]/40' 
+                  : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 shadow-md hover:shadow-lg hover:scale-105'
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -233,7 +232,7 @@ const WhatPeopleSays = () => {
           >
             <FaChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-[#5F1DE8] dark:group-hover:text-[#B131F8] transition-colors duration-200" />
           </button>
-        </div>
+          </div>
       </div>
     </section>
   );
