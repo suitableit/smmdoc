@@ -38,3 +38,4 @@ const DefaultValues: TricketSchema = {
 };
 
 export { DefaultValues, tricketSchema, type TricketSchema };
+

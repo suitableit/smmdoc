@@ -1,7 +1,7 @@
 'use client';
 import axiosInstance from '@/lib/axiosInstance';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function PaymentSuccess() {
@@ -9,10 +9,12 @@ export default function PaymentSuccess() {
   const [status, setStatus] = useState<
     'LOADING' | 'SUCCESS' | 'ALREADY_VERIFIED' | 'FAILED' | 'MISSING'
   >('LOADING');
-  const searchParams = useSearchParams();
-  const orderId = searchParams.get('invoice_id') || '';
+  const searchParamsObj = useSearchParams();
+  const router = useRouter();
+  const orderId = searchParamsObj?.get('invoice_id') || '';
 
   const hasVerifiedRef = useRef(false);
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (orderId && !hasVerifiedRef.current) {
@@ -23,7 +25,23 @@ export default function PaymentSuccess() {
       toast.error('❌ Invoice ID is missing. Please contact support.');
       setStatus('MISSING');
     }
+
+    // Cleanup function
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
   }, [orderId]);
+
+  useEffect(() => {
+    // Redirect to transactions page after successful verification
+    if (status === 'SUCCESS' || status === 'ALREADY_VERIFIED') {
+      redirectTimeoutRef.current = setTimeout(() => {
+        router.push('/dashboard/user/transactions?status=success&transaction=' + invoiceId);
+      }, 2000); // 2 second delay to show success message
+    }
+  }, [status, router, invoiceId]);
 
   const verifyAndSavePayment = async (invoice_id: string) => {
     try {
@@ -57,25 +75,44 @@ export default function PaymentSuccess() {
       </p>
 
       {status === 'LOADING' && (
-        <p className="text-blue-500 mt-4">Verifying payment...</p>
+        <div className="mt-4">
+          <div className="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent text-blue-500 rounded-full" role="status" aria-label="loading"></div>
+          <p className="text-blue-500 mt-2">Verifying payment...</p>
+        </div>
       )}
       {status === 'SUCCESS' && (
-        <p className="text-green-600 mt-4">
-          ✅ Your payment has been verified and recorded.
-        </p>
+        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mt-4 rounded">
+          <p className="flex items-center">
+            <span className="text-xl mr-2">✅</span>
+            <span>Your payment has been verified and recorded successfully!</span>
+          </p>
+          <p className="mt-2 text-sm">Redirecting to transactions page...</p>
+        </div>
       )}
       {status === 'ALREADY_VERIFIED' && (
-        <p className="text-orange-500 mt-4">
-          ℹ️ This payment was already verified.
-        </p>
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mt-4 rounded">
+          <p className="flex items-center">
+            <span className="text-xl mr-2">ℹ️</span>
+            <span>This payment was already verified.</span>
+          </p>
+          <p className="mt-2 text-sm">Redirecting to transactions page...</p>
+        </div>
       )}
       {status === 'FAILED' && (
-        <p className="text-red-600 mt-4">
-          ❌ Verification failed. Please contact support.
-        </p>
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mt-4 rounded">
+          <p className="flex items-center">
+            <span className="text-xl mr-2">❌</span>
+            <span>Verification failed. Please contact support.</span>
+          </p>
+        </div>
       )}
       {status === 'MISSING' && (
-        <p className="text-red-600 mt-4">❌ No invoice ID found in the URL.</p>
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mt-4 rounded">
+          <p className="flex items-center">
+            <span className="text-xl mr-2">❌</span>
+            <span>No invoice ID found in the URL.</span>
+          </p>
+        </div>
       )}
     </div>
   );

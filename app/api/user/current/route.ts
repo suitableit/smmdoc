@@ -24,6 +24,9 @@ export async function GET() {
         role: true,
         image: true,
         currency: true,
+        balance: true,
+        total_deposit: true,
+        total_spent: true,
         createdAt: true,
         emailVerified: true,
         isTwoFactorEnabled: true,
@@ -49,4 +52,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-} 
+}

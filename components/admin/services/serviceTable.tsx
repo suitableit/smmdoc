@@ -4,22 +4,22 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
 import { useGetServices } from '@/hooks/service-fetch';
+import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
-import { Pencil, Trash } from 'lucide-react';
+import { Loader2, Pencil, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { Fragment, useState } from 'react';
 import { toast } from 'sonner';
 import { mutate } from 'swr';
 import ServiceViewModal from './serviceViewModal';
-import { useCurrentUser } from '@/hooks/use-current-user';
 
 export default function ServiceTable() {
   const user = useCurrentUser();
@@ -63,7 +63,12 @@ export default function ServiceTable() {
       </div>
     ));
   };
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return (
+    <div className="flex flex-col items-center justify-center p-5 text-center z-50 bg-white dark:bg-mainColor rounded-lg shadow-lg">
+      <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+      <p className="text-sm text-muted-foreground">Loading services...</p>
+    </div>
+  );
   if (error) return <div>Error: {error}</div>;
   if (!data) return <div>No data</div>;
   return (

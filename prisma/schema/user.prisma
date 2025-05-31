@@ -1,10 +1,6 @@
-enum Role {
-  user
-  admin
-}
-
 model User {
   id                    String                 @id @default(cuid())
+  username              String?                @unique
   name                  String?
   password              String?
   email                 String?                @unique
@@ -12,39 +8,42 @@ model User {
   emailVerified         DateTime?
   image                 String?
   currency              String                 @default("USD")
-  dollarRate            Float                  @default(121.45)
-  accounts              Account[]
-  sessions              Session[]
-  apiKeys               ApiKey[]
-  Category              Category[]
-  favouriteCat          FavrouteCat[]
-  services              Service[]
-  newOrders             NewOrder[]
-  addFunds              AddFund[]
   isTwoFactorEnabled    Boolean                @default(false)
-  twoFactorConfirmation TwoFactorConfirmation?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
+  dollarRate            Float                  @default(121.45)
+  balance               Float                  @default(0)
+  total_deposit         Float                  @default(0) @db.Float
+  total_spent           Float                  @default(0) @db.Float
+  accounts              Account?
+  addFunds              AddFund[]
+  apiKeys               ApiKey[]
+  Category              Category[]
+  favoriteServices      FavoriteService[]
+  favouriteCat          FavrouteCat[]
+  newOrders             NewOrder[]
+  services              Service[]
+  sessions              Session[]
+  twoFactorConfirmation TwoFactorConfirmation?
 }
 
 model Account {
-  id                       String  @id @default(cuid())
-  userId                   String  @unique
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
   type                     String
   provider                 String
   providerAccountId        String
-  refresh_token            String? @db.Text
-  access_token             String? @db.Text
+  refresh_token            String?  @db.Text
+  access_token             String?  @db.Text
   expires_at               Int?
   token_type               String?
   scope                    String?
-  id_token                 String? @db.Text
+  id_token                 String?  @db.Text
   session_state            String?
   refresh_token_expires_in Int?
-  user                     User?   @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  user                     User     @relation(fields: [userId], references: [id])
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -55,10 +54,9 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
@@ -98,12 +96,10 @@ model TwoFactorToken {
 
 model TwoFactorConfirmation {
   id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([userId])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ApiKey {
@@ -113,4 +109,11 @@ model ApiKey {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   User      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "ApiKey_userId_fkey")
+}
+
+enum Role {
+  user
+  admin
 }

@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 
@@ -13,6 +14,9 @@ interface ServiceTileProps {
   href?: string;
   onClick?: () => void;
   className?: string;
+  image?: string;
+  name?: string;
+  discount?: number;
 }
 
 export const ServiceTile: React.FC<ServiceTileProps> = ({
@@ -26,6 +30,9 @@ export const ServiceTile: React.FC<ServiceTileProps> = ({
   href,
   onClick,
   className,
+  image,
+  name,
+  discount,
 }) => {
   const bgColorClasses = {
     purple: 'bg-gradient-to-br from-purple-500 to-purple-600',
@@ -38,12 +45,21 @@ export const ServiceTile: React.FC<ServiceTileProps> = ({
 
   const CardContent = () => (
     <>
-      <div className={cn("h-24 flex items-center justify-center", bgColorClasses[bgColor])}>
-        {icon && (
-          <div className="text-white text-4xl">
-            {icon}
-          </div>
-        )}
+      <div className="relative group">
+        <div className="aspect-square overflow-hidden rounded-lg">
+          <Image
+            src={image || '/images/service-placeholder.jpg'}
+            alt={name || title}
+            width={300}
+            height={300}
+            className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
+          />
+          {discount && discount > 0 && (
+            <div className="absolute top-3 right-3 bg-mainColor/20 text-white text-xs rounded-full px-2 py-1">
+              -{discount}%
+            </div>
+          )}
+        </div>
         {badge && (
           <div className="absolute top-3 right-3 bg-black/20 text-white text-xs rounded-full px-2 py-1">
             {badge}

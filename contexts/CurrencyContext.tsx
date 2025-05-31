@@ -8,6 +8,7 @@ type CurrencyContextType = {
   setCurrency: (currency: 'USD' | 'BDT') => Promise<void>;
   rate: number | null;
   isLoading: boolean;
+  formatCurrency: (amount: number) => string;
 };
 
 const CurrencyContext = createContext<CurrencyContextType>({
@@ -15,6 +16,7 @@ const CurrencyContext = createContext<CurrencyContextType>({
   setCurrency: async () => {},
   rate: null,
   isLoading: true,
+  formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
 });
 
 export function CurrencyProvider({
@@ -79,9 +81,18 @@ export function CurrencyProvider({
     }
   };
 
+  const formatCurrency = (amount: number): string => {
+    if (currency === 'BDT' && rate) {
+      const amountInBDT = amount * rate;
+      return `৳${amountInBDT.toFixed(2)}`;
+    } else {
+      return `$${amount.toFixed(2)}`;
+    }
+  };
+
   return (
     <CurrencyContext.Provider
-      value={{ currency, setCurrency, rate, isLoading }}
+      value={{ currency, setCurrency, rate, isLoading, formatCurrency }}
     >
       {children}
     </CurrencyContext.Provider>

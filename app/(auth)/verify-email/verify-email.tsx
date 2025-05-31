@@ -2,14 +2,6 @@
 'use client';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-} from '@/components/ui/card';
 import { verificationConfirm } from '@/lib/actions/verification';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -49,32 +41,75 @@ export default function VerifyEmail() {
 
   if (!token)
     return (
-      <Card className="w-[400px] text-center p-2">
-        <CardHeader>Confirm your verification</CardHeader>
-        <CardContent>
+      <div className="bg-white w-full p-8 rounded-2xl shadow-lg border border-gray-200">
+        <div className="mb-6">
+          <h2 className="text-2xl text-center font-bold text-gray-900 mb-2">
+            Confirm your verification
+          </h2>
+          <p className="text-gray-600 text-center">
+            Verification token is required.
+          </p>
+        </div>
+        
+        <div className="space-y-5 text-center">
           <FormError message="Missing token" />
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button asChild variant={'destructive'} className="animate-pulse">
-            <Link href="/sign-in">Go back to sign in</Link>
-          </Button>
-        </CardFooter>
-      </Card>
+          
+          <button className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg transition-all duration-300 animate-pulse">
+            <Link href="/sign-in" className="block w-full h-full">
+              Go back to sign in
+            </Link>
+          </button>
+        </div>
+
+        <div className="text-center mt-4">
+          <p className="text-gray-600">
+            Need help?{' '}
+            <Link href="/support" className="text-purple-600 hover:underline">
+              Contact support
+            </Link>
+          </p>
+        </div>
+      </div>
     );
 
   return (
-    <Card className="w-[400px] text-center p-2">
-      <CardHeader>Confirm your verification</CardHeader>
-      <CardContent>{!error && !success && <BeatLoader />}</CardContent>
-      <CardDescription>
-        {!success && <FormError message={error} />}
-        <FormSuccess message={success} />
-      </CardDescription>
-      <CardFooter className="flex justify-center">
-        <Button asChild variant={'destructive'} className="animate-pulse">
-          <Link href="/sign-in">Go back to sign in</Link>
-        </Button>
-      </CardFooter>
-    </Card>
+    <div className="bg-white w-full p-8 rounded-2xl shadow-lg border border-gray-200">
+      <div className="mb-6">
+        <h2 className="text-2xl text-center font-bold text-gray-900 mb-2">
+          Confirm your verification
+        </h2>
+        <p className="text-gray-600 text-center">
+          {!error && !success && "We are verifying your email. This may take a moment..."}
+          {success && "Your email has been verified. You can now sign in to your account."}
+          {error && "There was an issue verifying your email."}
+        </p>
+      </div>
+      
+      <div className="space-y-5 text-center">
+        {!error && !success && (
+          <div className="flex justify-center py-4">
+            <BeatLoader color="#9333ea" />
+          </div>
+        )}
+        
+        {error && <FormError message={error} />}
+        {success && <FormSuccess message={success} />}
+        
+        <button className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg transition-all duration-300 animate-pulse">
+          <Link href="/sign-in" className="block w-full h-full">
+            Go back to sign in
+          </Link>
+        </button>
+      </div>
+
+      <div className="text-center mt-4">
+        <p className="text-gray-600">
+          Need help?{' '}
+          <Link href="https://wa.me/+8801723139610" target="_blank" className="text-purple-600 hover:underline">
+            Contact support
+          </Link>
+        </p>
+      </div>
+    </div>
   );
 }

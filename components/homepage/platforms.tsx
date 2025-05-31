@@ -193,7 +193,7 @@ const Platform = () => {
             </p>
             <Link 
               href="/services" 
-              className="inline-block bg-primary text-white font-semibold px-8 py-4 rounded-lg hover:bg-primary/90 transition-all duration-300 hover:-translate-y-1"
+              className="bg-gradient-to-r from-purple-600 to-purple-700 inline-block bg-primary text-white font-semibold px-8 py-4 rounded-lg hover:bg-primary/90 transition-all duration-300 hover:-translate-y-1"
             >
               Our Services
             </Link>

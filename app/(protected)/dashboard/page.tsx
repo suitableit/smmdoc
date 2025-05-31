@@ -4,38 +4,45 @@ import ModernOrderForm from '@/components/modern-order-form';
 import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import useCurrency from '@/hooks/useCurrency';
+import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   FaBuffer,
-  FaDiscord,
-  FaFacebook,
-  FaGlobe,
-  FaInstagram,
-  FaLinkedin,
   FaMoneyBillWave,
-  FaPlus,
-  FaSearch,
   FaShoppingBag,
-  FaSpotify,
-  FaStar,
-  FaTelegram,
-  FaTiktok,
-  FaTwitter,
   FaUser,
-  FaWallet,
-  FaYoutube
+  FaWallet
 } from "react-icons/fa";
 
 export default function DashboardPage() {
   const user = useCurrentUser();
   const { currency } = useCurrency();
+  const router = useRouter();
   const [activeForm, setActiveForm] = useState<'newOrder' | 'massOrder' | 'customOrder' | 'subscriptionOrder' | null>(null);
   const [darkMode, setDarkMode] = useState(false);
+
+  // Fetch user stats from API
+  const { data: userStatsResponse, error, isLoading } = useGetUserStatsQuery();
+  const userStats = userStatsResponse?.data;
+
+  // User data from API or fallback to 0
+  const balance = userStats?.balance || 0;
+  const totalSpend = userStats?.totalSpent || 0;
+  const totalOrders = userStats?.totalOrders || 0;
 
   // Toggle form display with animation
   const toggleForm = (form: 'newOrder' | 'massOrder' | 'customOrder' | 'subscriptionOrder') => {
     setActiveForm(activeForm === form ? null : form);
+  };
+
+  const handleCategoryClick = (categoryId: string | null) => {
+    if (categoryId) {
+      router.push(`/dashboard/user/new-order?categoryId=${categoryId}`);
+    } else {
+      router.push('/dashboard/user/new-order');
+    }
   };
 
   // Toggle dark/light mode
@@ -62,26 +69,7 @@ export default function DashboardPage() {
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
 
-  // Mock data for demonstration
-  const balance = 0;
-  const totalSpend = 0;
-  const totalOrders = 0;
-
-  // Social media platforms with updated icons
-  const platforms = [
-    { name: 'Everything', icon: <FaBuffer size={24} />, color: 'bg-gradient-to-r from-purple-700 to-purple-500' },
-    { name: 'Instagram', icon: <FaInstagram size={24} />, color: 'bg-gradient-to-r from-pink-600 to-pink-400' },
-    { name: 'Facebook', icon: <FaFacebook size={24} />, color: 'bg-gradient-to-r from-blue-600 to-blue-400' },
-    { name: 'YouTube', icon: <FaYoutube size={24} />, color: 'bg-gradient-to-r from-red-600 to-red-400' },
-    { name: 'Twitter', icon: <FaTwitter size={24} />, color: 'bg-gradient-to-r from-blue-400 to-blue-300' },
-    { name: 'Spotify', icon: <FaSpotify size={24} />, color: 'bg-gradient-to-r from-green-600 to-green-400' },
-    { name: 'TikTok', icon: <FaTiktok size={24} />, color: 'bg-gradient-to-r from-gray-800 to-gray-600' },
-    { name: 'Telegram', icon: <FaTelegram size={24} />, color: 'bg-gradient-to-r from-blue-500 to-blue-300' },
-    { name: 'LinkedIn', icon: <FaLinkedin size={24} />, color: 'bg-gradient-to-r from-blue-800 to-blue-600' },
-    { name: 'Discord', icon: <FaDiscord size={24} />, color: 'bg-gradient-to-r from-indigo-600 to-indigo-400' },
-    { name: 'Website Traffic', icon: <FaGlobe size={24} />, color: 'bg-gradient-to-r from-purple-500 to-purple-300' },
-    { name: 'Others', icon: <FaPlus size={24} />, color: 'bg-gradient-to-r from-gray-700 to-gray-500' }
-  ];
+  // Note: Social media platforms section has been moved to new-order page
 
   // Featured service
   const featuredService = {
@@ -185,27 +173,7 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      {/* Services Categories */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-6">
-        {platforms.map((platform, index) => (
-          <motion.button 
-            key={platform.name}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.05 }}
-            className={`${platform.color} text-white p-3 rounded-lg flex flex-col items-center justify-center h-20 shadow-md`}
-          >
-            <div className="mb-1">{platform.icon}</div>
-            <div className="text-xs font-medium">{platform.name}</div>
-          </motion.button>
-        ))}
-      </motion.div>
+      {/* Social media platforms section moved to new-order page */}
 
       {/* Order Buttons */}
       <motion.div 
@@ -301,125 +269,6 @@ export default function DashboardPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Featured Service - Only show if no form is active */}
-      {!activeForm && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.4 }}
-          className="mt-5"
-        >
-          <div className="bg-gradient-to-r from-purple-600 to-purple-400 text-white p-4 rounded-t-lg shadow-md">
-            <div className="flex justify-between items-center">
-              <span className="font-medium flex items-center">
-                <FaStar className="text-yellow-300 mr-2" /> 
-                {featuredService.id}
-              </span>
-              <span>{featuredService.name} - {featuredService.price}</span>
-            </div>
-          </div>
-
-          <div className={`p-6 rounded-b-lg shadow-md space-y-5 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border border-gray-200'}`}>
-            <div>
-              <h3 className={`font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Example Link</h3>
-              <div className="flex items-center bg-gradient-to-r from-red-50 to-red-100 p-3 rounded-lg border border-red-200">
-                <div className="bg-gradient-to-r from-red-500 to-red-400 rounded-full h-10 w-10 flex items-center justify-center text-white mr-3 shadow-md">
-                  🔗
-                </div>
-                <span className={`${darkMode ? 'text-gray-200' : 'text-gray-600'}`}>-</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <h3 className={`font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Start Time</h3>
-                <div className="flex items-center bg-gradient-to-r from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200">
-                  <div className="bg-gradient-to-r from-blue-500 to-blue-400 rounded-full h-10 w-10 flex items-center justify-center text-white mr-3 shadow-md">
-                    ⏱️
-                  </div>
-                  <span className={`${darkMode ? 'text-gray-200' : 'text-gray-600'}`}>-</span>
-                </div>
-              </div>
-              <div>
-                <h3 className={`font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Speed</h3>
-                <div className="flex items-center bg-gradient-to-r from-purple-50 to-purple-100 p-3 rounded-lg border border-purple-200">
-                  <div className="bg-gradient-to-r from-purple-500 to-purple-400 rounded-full h-10 w-10 flex items-center justify-center text-white mr-3 shadow-md">
-                    ⚡
-                  </div>
-                  <span className={`${darkMode ? 'text-gray-200' : 'text-gray-600'}`}>-</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <h3 className={`font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Guarantee</h3>
-                <div className="flex items-center bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
-                  <div className="bg-gradient-to-r from-green-500 to-green-400 rounded-full h-10 w-10 flex items-center justify-center text-white mr-3 shadow-md">
-                    ✓
-                  </div>
-                  <span className={`${darkMode ? 'text-gray-200' : 'text-gray-600'}`}>-</span>
-                </div>
-              </div>
-              <div>
-                <h3 className={`font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Average Time</h3>
-                <div className="flex items-center bg-gradient-to-r from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200">
-                  <div className="bg-gradient-to-r from-blue-500 to-blue-400 rounded-full h-10 w-10 flex items-center justify-center text-white mr-3 shadow-md">
-                    ⏰
-                  </div>
-                  <span className={`${darkMode ? 'text-gray-200' : 'text-gray-600'}`}>Not enough data</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className={`font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>More Details</h3>
-              <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200`}>
-                <p className="mb-1">Viewing Time: 15 minutes</p>
-                <p className="mb-1">Instant / 0-5 Mins</p>
-                <p className="mb-1">Non Drop</p>
-                <p className="mb-1">Max Speed</p>
-                <p className="mb-1">Example Link: Facebook Live Video Link (All Live Video Link Acceptable)</p>
-                <p className={`mt-3 text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                  NOTE:<br />
-                  * The system will increase by 90%-120% of the amount ordered.<br />
-                  * If you don't run live video link, our system will automatically canceled your order.
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Search Bar - Moved below */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
-        className="relative mt-8 mb-5">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <FaSearch className="text-gray-500" />
-        </div>
-        <input 
-          type="search" 
-          className={`block w-full pl-12 pr-4 py-3 border ${darkMode 
-            ? 'border-gray-700 bg-gray-800 text-white placeholder-gray-400' 
-            : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} 
-            rounded-lg leading-5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 shadow-sm`} 
-          placeholder="Search" 
-        />
-      </motion.div>
-
-      {/* Footer - Moved below */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.5 }}
-        className="mt-4 text-center text-sm text-gray-500"
-      >
-        <a href="#" className="hover:underline">Contact us</a> | <a href="#" className="hover:underline">FAQ</a>
-      </motion.div>
     </div>
   );
 }

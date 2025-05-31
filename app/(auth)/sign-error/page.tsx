@@ -1,5 +1,9 @@
 import ErrorCard from "./error-card";
 
 export default function page() {
-  return <ErrorCard />;
+  return (
+    <div className="w-full max-w-xl mx-auto">
+      <ErrorCard />
+    </div>
+  );
 }

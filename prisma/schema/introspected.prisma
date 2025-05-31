@@ -1,0 +1,6 @@
+enum AddFund_transaction_type {
+  deposit
+  withdrawal
+  purchase
+  refund
+}

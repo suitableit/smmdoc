@@ -15,10 +15,12 @@ import { toggleTwoFactor } from '@/lib/actions/login';
 import { setUserDetails } from '@/lib/slice/userDetails';
 import { PasswordForm, passwordSchema } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Copy } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
+
 interface ApiKey {
   key: string;
   createdAt: Date;
@@ -58,11 +60,13 @@ const ProfilePage = () => {
     resolver: zodResolver(passwordSchema),
   });
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(apiKey?.key || '').then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+  const copyToClipboard = (key: ApiKey | null) => {
+    if (key) {
+      navigator.clipboard.writeText(key.key).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      });
+    }
   };
 
   // Handle password change
@@ -250,7 +254,7 @@ const ProfilePage = () => {
           <h3>Two-factor authentication</h3>
           <p className="text-sm text-gray-500">
             Email-based option to add an extra layer of protection to your
-            account. When signing in you’ll need to enter a code that will be
+            account. When signing in you'll need to enter a code that will be
             sent to your email address.
           </p>
         </div>
@@ -276,14 +280,19 @@ const ProfilePage = () => {
           />
           <div className="flex gap-2">
             {/* Copy Button */}
-            <button
-              onClick={copyToClipboard}
-              disabled={!apiKey}
-              title="Copy API Key"
-              className="px-3 py-2 bg-gray-200 text-sm rounded-md hover:bg-gray-300 transition dark:text-white dark:bg-gray-700 dark:hover:bg-gray-600"
-            >
-              📋 Copy
-            </button>
+            <div className="group relative">
+              <button
+                type="button"
+                onClick={() => copyToClipboard(apiKey)}
+                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 flex items-center gap-1"
+              >
+                <Copy className="h-3 w-3" />
+                Copy
+              </button>
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-transform bg-mainColor text-white text-xs rounded py-1 px-2 z-10 whitespace-nowrap">
+                {copied ? "Copied!" : "Copy to clipboard"}
+              </div>
+            </div>
 
             {/* Regenerate Button with tooltip */}
             <div className="relative group">
@@ -298,12 +307,6 @@ const ProfilePage = () => {
               </div>
             </div>
           </div>
-          {/* Copied Tooltip */}
-          {copied && (
-            <span className="text-green-600 text-xs absolute right-0 -bottom-5 animate-pulse">
-              Copied!
-            </span>
-          )}
           {/* Created Date */}
           {apiKey?.key && (
             <span className="absolute -bottom-6 text-xs mb-1">

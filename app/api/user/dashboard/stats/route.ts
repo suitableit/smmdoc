@@ -13,10 +13,14 @@ export async function GET() {
       );
     }
     
-    // Get user with funds
+    // Get user with all necessary fields
     const user = await db.user.findUnique({
       where: { id: session.user.id },
-      include: {
+      select: {
+        balance: true,
+        total_deposit: true,
+        total_spent: true,
+        currency: true,
         addFunds: true,
       }
     });
@@ -28,37 +32,15 @@ export async function GET() {
       );
     }
     
-    // Calculate user balance
-    const userBalance = user.addFunds.reduce((acc, fund) => acc + (fund.amount || 0), 0);
+    // Use the actual balance field from the database
+    const userBalance = user.balance || 0;
+    const totalDeposit = user.total_deposit || 0;
+    const totalSpent = user.total_spent || 0;
     
     // Get total orders by user
     const totalOrders = await db.newOrder.count({
       where: { userId: session.user.id }
     });
-    
-    // Get total spent
-    const orders = await db.newOrder.findMany({
-      where: {
-        userId: session.user.id,
-        status: {
-          in: ['completed', 'processing']
-        }
-      },
-      select: {
-        usdPrice: true,
-        bdtPrice: true,
-        currency: true
-      }
-    });
-    
-    // Calculate total spent based on user's currency
-    const totalSpent = orders.reduce((acc, order) => {
-      if (user.currency === 'USD') {
-        return acc + order.usdPrice;
-      } else {
-        return acc + order.bdtPrice;
-      }
-    }, 0);
     
     // Get orders by status
     const pendingOrders = await db.newOrder.count({
@@ -89,76 +71,96 @@ export async function GET() {
       }
     });
     
-    // Get recent orders
+    // Get recent orders with service and category details
     const recentOrders = await db.newOrder.findMany({
-      where: {
-        userId: session.user.id
-      },
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'desc' },
       take: 5,
-      orderBy: {
-        createdAt: 'desc'
-      },
       include: {
         service: {
           select: {
-            name: true
-          }
-        },
-        category: {
-          select: {
-            category_name: true
+            name: true,
+            category: {
+              select: {
+                category_name: true
+              }
+            }
           }
         }
       }
     });
-    
-    // Get favorite categories
-    const favoriteCategories = await db.favrouteCat.findMany({
+
+    // Get favorite categories with services
+    const favoriteCategories = await db.category.findMany({
       where: {
-        userId: session.user.id
+        services: {
+          some: {
+            newOrders: {
+              some: {
+                userId: session.user.id
+              }
+            }
+          }
+        }
       },
-      take: 5,
       include: {
         services: {
+          take: 3,
           select: {
             id: true,
             name: true
-          },
-          take: 3
-        }
-      }
-    });
-    
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          balance: userBalance,
-          currency: user.currency,
-          dollarRate: user.dollarRate,
-          totalOrders,
-          totalSpent,
-          recentOrders,
-          favoriteCategories,
-          ordersByStatus: {
-            pending: pendingOrders,
-            processing: processingOrders,
-            completed: completedOrders,
-            cancelled: cancelledOrders
           }
         }
       },
-      { status: 200 }
-    );
+      take: 5
+    });
+
+    // Get recent transactions
+    const recentTransactions = await db.addFund.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+    
+    // Return all stats
+    return NextResponse.json({
+      success: true,
+      data: {
+        balance: userBalance,
+        totalDeposit: totalDeposit,
+        totalSpent: totalSpent,
+        totalOrders,
+        ordersByStatus: {
+          pending: pendingOrders,
+          processing: processingOrders,
+          completed: completedOrders,
+          cancelled: cancelledOrders
+        },
+        recentOrders: recentOrders.map(order => ({
+          id: order.id,
+          status: order.status,
+          bdtPrice: order.bdtPrice,
+          createdAt: order.createdAt,
+          service: {
+            name: order.service.name
+          },
+          category: {
+            category_name: order.service.category.category_name
+          }
+        })),
+        favoriteCategories: favoriteCategories.map(category => ({
+          id: category.id,
+          name: category.category_name,
+          services: category.services
+        })),
+        recentTransactions
+      }
+    });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching user stats:", error);
     return NextResponse.json(
-      {
-        success: false,
-        message: 'Error fetching dashboard stats',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { success: false, message: 'Failed to fetch user stats', error: String(error) },
       { status: 500 }
     );
   }
-} 
+}
