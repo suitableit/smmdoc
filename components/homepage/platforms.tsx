@@ -208,10 +208,10 @@ const Platform = () => {
                 alt="SMM Panel Services"
                 width={500}
                 height={400}
-                className="w-full max-w-md rounded-lg shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl dark:group-hover:shadow-purple-500/10"
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg transition-all duration-300"
               />
               {/* Optional: Add a subtle overlay for dark mode */}
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-transparent to-purple-500/5 dark:to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg transition-all duration-300"></div>
             </div>
           </div>
         </div>
