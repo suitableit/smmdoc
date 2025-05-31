@@ -9,7 +9,6 @@ export const authRoutes = [
 export const publicRoutes = [
   '/',
   '/about',
-  '/services',
   '/blog',
   '/contact',
   '/new-password',

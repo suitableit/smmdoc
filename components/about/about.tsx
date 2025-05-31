@@ -3,27 +3,43 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { 
+  FaArrowRight, 
+  FaFacebookF, 
+  FaInstagram, 
+  FaTwitter, 
+  FaYoutube, 
+  FaLinkedinIn, 
+  FaTiktok, 
+  FaTelegramPlane, 
+  FaSpotify, 
+  FaDiscord, 
+  FaPinterestP, 
+  FaSoundcloud, 
+  FaGlobe 
+} from 'react-icons/fa';
 
 interface ServiceCardProps {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   description: string;
-  alt: string;
 }
 
-const ServiceCard: React.FC<ServiceCardProps> = ({ icon, title, description, alt }) => (
-  <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-    <div className="flex justify-center mb-4">
-      <Image 
-        src={icon} 
-        alt={alt} 
-        width={64} 
-        height={64} 
-        className="w-16 h-16 object-contain"
-      />
+const ServiceCard: React.FC<ServiceCardProps> = ({ icon, title, description }) => (
+  <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 h-full hover:-translate-y-1 group">
+    <div className="mb-4">
+      <div className="w-16 h-16 bg-gradient-to-br from-[#5F1DE8] to-[#B131F8] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+        <div className="text-white text-2xl">
+          {icon}
+        </div>
+      </div>
     </div>
-    <h3 className="text-xl font-semibold text-gray-800 text-center mb-2">{title}</h3>
-    <p className="text-gray-600 text-center">{description}</p>
+    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 transition-colors duration-200">
+      {title}
+    </h3>
+    <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed transition-colors duration-200">
+      {description}
+    </p>
   </div>
 );
 
@@ -34,8 +50,8 @@ interface SectionProps {
 }
 
 const Section: React.FC<SectionProps> = ({ children, className = '', bgColor = 'gray' }) => (
-  <section className={`py-16 ${bgColor === 'white' ? 'bg-white' : 'bg-gray-50'} ${className}`}>
-    <div className="container mx-auto px-4">
+  <section className={`pt-[60px] pb-[60px] bg-white dark:bg-[#0d0712] transition-colors duration-200 ${className}`}>
+    <div className="max-w-[1200px] mx-auto px-4">
       {children}
     </div>
   </section>
@@ -44,94 +60,82 @@ const Section: React.FC<SectionProps> = ({ children, className = '', bgColor = '
 const About: React.FC = () => {
   const services = [
     {
-      icon: '/images/facebook-smm-panel.png',
+      icon: <FaFacebookF />,
       title: 'Facebook SMM Panel',
-      description: 'Maximizing engagement and reach.',
-      alt: 'facebook smm panel'
+      description: 'Maximizing engagement and reach.'
     },
     {
-      icon: '/images/instagram-smm-panel.png',
+      icon: <FaInstagram />,
       title: 'Instagram SMM Panel',
-      description: 'Enhancing visibility and follower growth.',
-      alt: 'instagram smm panel'
+      description: 'Enhancing visibility and follower growth.'
     },
     {
-      icon: '/images/twitter-smm-panel.png',
+      icon: <FaTwitter />,
       title: 'Twitter SMM Panel',
-      description: 'Building influence and brand recognition.',
-      alt: 'twitter smm panel'
+      description: 'Building influence and brand recognition.'
     },
     {
-      icon: '/images/youtube-smm-panel.png',
+      icon: <FaYoutube />,
       title: 'YouTube SMM Panel',
-      description: 'Increasing views and subscriber numbers.',
-      alt: 'youtube smm panel'
+      description: 'Increasing views and subscriber numbers.'
     },
     {
-      icon: '/images/linkedin-smm-panel.png',
+      icon: <FaLinkedinIn />,
       title: 'LinkedIn SMM Panel',
-      description: 'Professional networking and lead generation.',
-      alt: 'linkedin smm panel'
+      description: 'Professional networking and lead generation.'
     },
     {
-      icon: '/images/tiktok-smm-panel.png',
+      icon: <FaTiktok />,
       title: 'TikTok SMM Panel',
-      description: 'Tapping into viral marketing.',
-      alt: 'tiktok smm panel' 
+      description: 'Tapping into viral marketing.'
     },
     {
-      icon: '/images/telegram-smm-panel.png',
+      icon: <FaTelegramPlane />,
       title: 'Telegram SMM Panel',
-      description: 'Expanding messaging and community engagement.',
-      alt: 'telegram smm panel'
+      description: 'Expanding messaging and community engagement.'
     },
     {
-      icon: '/images/spotify-smm-panel.png',
+      icon: <FaSpotify />,
       title: 'Spotify SMM Panel',
-      description: 'Boosting music streaming and artist visibility.',
-      alt: 'spotify smm panel'
+      description: 'Boosting music streaming and artist visibility.'
     },
     {
-      icon: '/images/discord-smm-panel.png',
+      icon: <FaDiscord />,
       title: 'Discord SMM Panel',
-      description: 'Community building and interaction.',
-      alt: 'discord smm panel'
+      description: 'Community building and interaction.'
     }, 
     {
-      icon: '/images/pinterest-smm-panel.png',
+      icon: <FaPinterestP />,
       title: 'Pinterest SMM Panel',
-      description: 'Driving traffic through visual content.',
-      alt: 'pinterest smm panel'
+      description: 'Driving traffic through visual content.'
     },
     {
-      icon: '/images/soundcloud-smm-panel.png',
+      icon: <FaSoundcloud />,
       title: 'SoundCloud SMM Panel',
-      description: 'Enhancing audio content reach.',
-      alt: 'soundcloud smm panel'
+      description: 'Enhancing audio content reach.'
     },
     {
-      icon: '/images/website-smm-panel.png',
+      icon: <FaGlobe />,
       title: 'Website Traffic',
-      description: 'Improving online visibility and digital footfall.',
-      alt: 'website smm panel'
+      description: 'Improving online visibility and digital footfall.'
     }
   ];
 
   return (
     <div className="min-h-screen">
       {/* Hero/Banner Section */}
-      <Section className="py-20" bgColor="gray">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <Section className="pt-[80px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <h4 className="text-lg font-medium text-blue-600 uppercase tracking-wide">
+            <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
               Company Overview
             </h4>
-            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-              <span className="text-blue-600">SMMGen:</span> Pioneering
-              Social Media Marketing
+            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
+              <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">SMMGen:</span> Pioneering
+              Social Media <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">Marketing</span>
               in Bangladesh and Beyond
             </h1>
-            <div className="space-y-4 text-gray-700 text-lg leading-relaxed">
+            <div className="space-y-4 text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
               <p>
                 Founded in 2018, SMMGen has swiftly risen to prominence as a leading provider of social
                 media marketing (SMM) services in Bangladesh and neighboring regions. With a focus on
@@ -151,45 +155,51 @@ const About: React.FC = () => {
             </div>
             <Link 
               href="/signup" 
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-300"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
             >
-              Get Started
+              <span>Get Started</span>
+              <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
-          <div className="flex justify-center lg:justify-end">
-            <Image
-              src="/images/smmgen-about-us.webp"
-              alt="smmgen about us"
-              width={600}
-              height={400}
-              className="w-full max-w-lg h-auto rounded-lg shadow-lg"
-            />
+          <div className="text-center lg:text-right">
+            <div className="relative group">
+              <Image
+                src="/smmgen-about-us.webp"
+                alt="smmgen about us"
+                width={600}
+                height={400}
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg shadow-lg transition-all duration-300"
+                priority
+              />
+            </div>
           </div>
         </div>
       </Section>
 
       {/* Mission Section */}
-      <Section bgColor="white">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="order-2 lg:order-1">
-            <Image
-              src="/images/smm-panel-mission.webp"
-              alt="smm panel mission"
-              width={500}
-              height={400}
-              className="w-full h-auto rounded-lg shadow-lg"
-            />
+      <Section>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="order-2 lg:order-1 text-center lg:text-left">
+            <div className="relative group">
+              <Image
+                src="/smm-panel-mission.webp"
+                alt="smm panel mission"
+                width={600}
+                height={500}
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg shadow-lg transition-all duration-300"
+              />
+            </div>
           </div>
           <div className="order-1 lg:order-2 space-y-6">
-            <h4 className="text-lg font-medium text-blue-600 uppercase tracking-wide">
+            <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
               Mission
             </h4>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
               Empowering Businesses
-              with Affordable Social
-              Media Strategies
+              with Affordable <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">Social
+              Media</span> Strategies
             </h2>
-            <p className="text-gray-700 text-lg leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
               Our mission at SMMGen is straightforward – to provide high-quality, cost-effective
               social media marketing services that drive business growth and enhance online
               visibility. We are committed to helping businesses in Bangladesh and beyond to unlock
@@ -199,26 +209,27 @@ const About: React.FC = () => {
             </p>
             <Link 
               href="/" 
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-300"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
             >
-              Learn More
+              <span>Learn More</span>
+              <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
         </div>
       </Section>
 
       {/* Vision Section */}
-      <Section bgColor="gray">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <Section>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <h4 className="text-lg font-medium text-blue-600 uppercase tracking-wide">
+            <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
               Vision
             </h4>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
               Shaping the Future of
-              Digital Marketing
+              <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200"> Digital Marketing</span>
             </h2>
-            <p className="text-gray-700 text-lg leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
               Our vision extends beyond just being a service provider. We aim to be the harbinger of
               innovation in social media marketing, constantly adapting to the ever-evolving digital
               landscape. We envision a world where every business, regardless of its size, has equal
@@ -227,44 +238,49 @@ const About: React.FC = () => {
             </p>
             <Link 
               href="/signup" 
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-300"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
             >
-              Get Started
+              <span>Get Started</span>
+              <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
-          <div>
-            <Image
-              src="/images/smm-panel-in-bd.webp"
-              alt="smm panel in bd"
-              width={500}
-              height={400}
-              className="w-full h-auto rounded-lg shadow-lg"
-            />
+          <div className="text-center lg:text-right">
+            <div className="relative group">
+              <Image
+                src="/smm-panel-in-bd.webp"
+                alt="smm panel in bd"
+                width={600}
+                height={500}
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg shadow-lg transition-all duration-300"
+              />
+            </div>
           </div>
         </div>
       </Section>
 
       {/* Team Section */}
-      <Section bgColor="white">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="order-2 lg:order-1">
-            <Image
-              src="/images/vision-banner-image.webp"
-              alt="smmpanel vision banner"
-              width={500}
-              height={400}
-              className="w-full h-auto rounded-lg shadow-lg"
-            />
+      <Section>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="order-2 lg:order-1 text-center lg:text-left">
+            <div className="relative group">
+              <Image
+                src="/vision-banner-image.webp"
+                alt="smmpanel vision banner"
+                width={600}
+                height={500}
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg shadow-lg transition-all duration-300"
+              />
+            </div>
           </div>
           <div className="order-1 lg:order-2 space-y-6">
-            <h4 className="text-lg font-medium text-blue-600 uppercase tracking-wide">
+            <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
               Our Team
             </h4>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-              A Blend of Expertise and
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
+              A Blend of <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">Expertise</span> and
               Innovation
             </h2>
-            <p className="text-gray-700 text-lg leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
               The strength of SMMGen lies in our diverse team of professionals. Comprising seasoned
               digital marketers, creative strategists, and tech-savvy innovators, our team brings a
               wealth of experience and fresh perspectives to the table. We foster a culture of
@@ -274,25 +290,26 @@ const About: React.FC = () => {
             </p>
             <Link 
               href="/signup" 
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-300"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
             >
-              Get Started
+              <span>Get Started</span>
+              <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
         </div>
       </Section>
 
       {/* Services Section */}
-      <Section bgColor="gray">
+      <Section>
         <div className="text-center mb-16">
-          <h4 className="text-lg font-medium text-blue-600 uppercase tracking-wide mb-4">
+          <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
             Our Services
           </h4>
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-6">
+          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-6 transition-colors duration-200">
             Comprehensive Solutions for <br />
-            Every <span className="text-blue-600">Social Media</span> Need
+            Every <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">Social Media</span> Need
           </h2>
-          <p className="text-gray-700 text-lg leading-relaxed max-w-3xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-3xl mx-auto transition-colors duration-200">
             At SMMGen, we offer a broad spectrum of social media marketing services. <br /> Our
             solutions are designed to cater to the unique requirements of each platform:
           </p>
@@ -305,36 +322,36 @@ const About: React.FC = () => {
               icon={service.icon}
               title={service.title}
               description={service.description}
-              alt={service.alt}
             />
           ))}
         </div>
 
         <div className="text-center">
-          <p className="text-gray-700 text-lg mb-6 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-300 text-lg mb-6 max-w-2xl mx-auto transition-colors duration-200">
             Each service is backed by thorough research and tailored strategies, <br />ensuring
             optimal results and client satisfaction.
           </p>
           <Link 
             href="/services" 
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-300"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
           >
-            Our All Services
+            <span>Our All Services</span>
+            <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </div>
       </Section>
 
       {/* CTA Section */}
-      <Section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+      <Section className="bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white">
         <div className="text-center max-w-4xl mx-auto">
-          <h4 className="text-lg font-medium text-blue-200 uppercase tracking-wide mb-4">
+          <h4 className="text-2xl font-bold text-purple-200 mb-2 transition-colors duration-200">
             Get In Touch
           </h4>
-          <h2 className="text-3xl lg:text-4xl font-bold leading-tight mb-6">
+          <h2 className="text-4xl lg:text-5xl font-bold leading-tight mb-6">
             Connect with Us for <span className="text-yellow-300">Unparalleled <br />
             SMM </span>Solutions
           </h2>
-          <p className="text-blue-100 text-lg leading-relaxed mb-8">
+          <p className="text-purple-100 text-lg leading-relaxed mb-8">
             Embark on your journey to social media success with SMMGen. Reach out to us for a
             consultation, to explore our services, or to start a partnership that transforms your
             digital presence. Our team is ready to assist you with tailored solutions that align
@@ -343,25 +360,26 @@ const About: React.FC = () => {
           </p>
           <Link 
             href="/contact-us" 
-            className="inline-block bg-white text-blue-600 hover:bg-gray-100 font-semibold px-8 py-3 rounded-lg transition-colors duration-300"
+            className="inline-flex items-center gap-2 bg-white text-[#5F1DE8] hover:bg-gray-100 font-semibold px-8 py-4 rounded-lg transition-all duration-300 hover:-translate-y-1"
           >
-            Contact Us
+            <span>Contact Us</span>
+            <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </div>
       </Section>
 
       {/* Why Different Section */}
-      <Section bgColor="white">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <Section>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <h4 className="text-lg font-medium text-blue-600 uppercase tracking-wide">
+            <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
               Why We Are Different from Others
             </h4>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-              Innovative, Affordable,
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
+              Innovative, <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">Affordable</span>,
               and Client-Focused
             </h2>
-            <p className="text-gray-700 text-lg leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
               What sets SMMGen apart is our commitment to affordability without compromising on
               quality. We offer the cheapest SMM panels in the region, making high-quality social
               media marketing accessible to all. Our innovative approach, coupled with personalized
@@ -371,19 +389,22 @@ const About: React.FC = () => {
             </p>
             <Link 
               href="/signup" 
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-300"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
             >
-              Get Started
+              <span>Get Started</span>
+              <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
-          <div>
-            <Image
-              src="/images/smm-panel-in-bangladesh.webp"
-              alt="smm panel in bangladesh"
-              width={500}
-              height={400}
-              className="w-full h-auto rounded-lg shadow-lg"
-            />
+          <div className="text-center lg:text-right">
+            <div className="relative group">
+              <Image
+                src="/smm-panel-in-bangladesh.webp"
+                alt="smm panel in bangladesh"
+                width={600}
+                height={500}
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg shadow-lg transition-all duration-300"
+              />
+            </div>
           </div>
         </div>
       </Section>
