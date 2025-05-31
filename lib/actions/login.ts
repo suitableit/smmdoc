@@ -39,7 +39,7 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
       subject: 'Email Verification',
       html: `<a href="${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken?.token}">Click here to verify your email</a>`,
     });
-    return { success: false, error: 'Email not verified! We have sent a new verification email. Please check your inbox and verify your email before signing in.' };
+    return { success: true, message: 'Confirmation email sent!' };
   }
 
   // Todo: Add 2FA check here
@@ -85,12 +85,8 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
   }
 
   try {
-    await signIn('credentials', { 
-      email, 
-      password,
-      redirect: false 
-    });
-    return { success: true, message: 'Logged in successfully!' };
+    await signIn('credentials', { email, password });
+    return { success: true, message: 'Logged in!' };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -100,7 +96,7 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
           return { success: false, error: 'Something went wrong!' };
       }
     }
-    return { success: false, error: 'Login failed!' };
+    throw error;
   }
 };
 

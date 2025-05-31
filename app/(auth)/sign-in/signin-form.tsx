@@ -14,49 +14,40 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { FaUser, FaLock } from 'react-icons/fa';
+import { FaLock, FaUser } from 'react-icons/fa';
 
 export default function SignInForm() {
   const searchParams = useSearchParams();
-  const [urlError, setUrlError] = useState(
-    searchParams.get('error') === 'OAuthAccountNotLinked'
+  let urlError =
+    searchParams?.get('error') === 'OAuthAccountNotLinked'
       ? 'Email already in use with different provider!'
-      : ''
-  );
+      : '';
   const [showTwoFactor, setShowTwoFactor] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
-  const [rememberMe, setRememberMe] = useState<boolean>(false);
-  
   const form = useForm<SignInSchema>({
     mode: 'all',
     resolver: zodResolver(signInSchema),
     defaultValues: signInDefaultValues,
   });
-
   const onSubmit: SubmitHandler<SignInSchema> = async (values) => {
     setError('');
     setSuccess('');
-    setUrlError('');
-    
+    urlError = '';
     startTransition(() => {
-      login(values)
-        .then((data) => {
-          if (data?.error) {
-            setError(data.error);
-          }
-          if (data?.message) {
-            setSuccess(data.message);
-          }
-          if (data?.twoFactor) {
-            setShowTwoFactor(true);
-          }
-        })
-        .catch((err) => {
-          setError('An unexpected error occurred. Please try again.');
-          console.error('Sign in error:', err);
-        });
+      login(values).then((data) => {
+        console.log(data);
+        if (data?.error) {
+          setError(data.error);
+        }
+        if (data?.message) {
+          setSuccess(data.message);
+        }
+        if (data?.twoFactor) {
+          setShowTwoFactor(true);
+        }
+      });
     });
   };
 
@@ -70,11 +61,14 @@ export default function SignInForm() {
           Enter your details below to sign in.
         </p>
       </div>
-      
+
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         {showTwoFactor ? (
           <div>
-            <label htmlFor="code" className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200">
+            <label
+              htmlFor="code"
+              className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200"
+            >
               2FA Code
             </label>
             <div className="relative">
@@ -91,13 +85,18 @@ export default function SignInForm() {
               />
             </div>
             {form.formState.errors.code && (
-              <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">{form.formState.errors.code.message}</p>
+              <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
+                {form.formState.errors.code.message}
+              </p>
             )}
           </div>
         ) : (
           <>
             <div>
-              <label htmlFor="email" className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200">
+              <label
+                htmlFor="email"
+                className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200"
+              >
                 Username of Email
               </label>
               <div className="relative">
@@ -114,12 +113,17 @@ export default function SignInForm() {
                 />
               </div>
               {form.formState.errors.email && (
-                <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">{form.formState.errors.email.message}</p>
+                <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
+                  {form.formState.errors.email.message}
+                </p>
               )}
             </div>
-            
+
             <div>
-              <label htmlFor="password" className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200">
+              <label
+                htmlFor="password"
+                className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200"
+              >
                 Password
               </label>
               <div className="relative">
@@ -136,19 +140,24 @@ export default function SignInForm() {
                 />
               </div>
               {form.formState.errors.password && (
-                <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">{form.formState.errors.password.message}</p>
+                <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
+                  {form.formState.errors.password.message}
+                </p>
               )}
             </div>
-            
+
             <div className="flex items-center">
               <input
                 type="checkbox"
                 id="remember"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                // checked={rememberMe}
+                // onChange={(e) => setRememberMe(e.target.checked)}
                 className="h-4 w-4 text-[#5F1DE8] focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 transition-colors duration-200"
               />
-              <label htmlFor="remember" className="ml-2 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+              <label
+                htmlFor="remember"
+                className="ml-2 text-gray-700 dark:text-gray-300 transition-colors duration-200"
+              >
                 Remember me
               </label>
             </div>
@@ -157,19 +166,13 @@ export default function SignInForm() {
 
         <FormError message={error || urlError} />
         <FormSuccess message={success} />
-        
+
         <button
           type="submit"
           disabled={isPending}
           className="w-full bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? (
-            <ButtonLoader />
-          ) : showTwoFactor ? (
-            'Confirm'
-          ) : (
-            'Sign In'
-          )}
+          {isPending ? <ButtonLoader /> : showTwoFactor ? 'Confirm' : 'Sign In'}
         </button>
       </form>
 
@@ -179,13 +182,19 @@ export default function SignInForm() {
           <div className="text-center mt-4">
             <p className="text-gray-600 dark:text-gray-300 transition-colors duration-200">
               Lost Your Password?{' '}
-              <Link href="/reset-password" className="text-[#5F1DE8] dark:text-[#B131F8] hover:underline transition-colors duration-200">
+              <Link
+                href="/reset-password"
+                className="text-[#5F1DE8] dark:text-[#B131F8] hover:underline transition-colors duration-200"
+              >
                 Reset now
               </Link>
             </p>
             <p className="text-gray-600 dark:text-gray-300 transition-colors duration-200">
               New Here?{' '}
-              <Link href="/sign-up" className="text-[#5F1DE8] dark:text-[#B131F8] hover:underline transition-colors duration-200">
+              <Link
+                href="/sign-up"
+                className="text-[#5F1DE8] dark:text-[#B131F8] hover:underline transition-colors duration-200"
+              >
                 Create an account
               </Link>
             </p>
