@@ -37,44 +37,44 @@ interface Category {
 const recentPosts: BlogPost[] = [
   {
     id: '1',
-    title: 'How to Create Engaging Content for Social Media',
-    excerpt: 'Learn the secrets of creating content that drives engagement...',
+    title: 'Lorem Ipsum Dolor Sit Amet Consectetur',
+    excerpt: 'Sed do eiusmod tempor incididunt ut labore et dolore magna...',
     date: '2024-05-28',
     readTime: '5 min read',
-    image: '/api/placeholder/300/200',
-    slug: 'engaging-content-social-media'
+    image: 'https://picsum.photos/300/200?random=1',
+    slug: 'lorem-ipsum-dolor-sit'
   },
   {
     id: '2',
-    title: 'Instagram Marketing Strategies for 2024',
-    excerpt: 'Discover the latest Instagram marketing trends and tactics...',
+    title: 'Ut Enim Ad Minim Veniam Quis Nostrud',
+    excerpt: 'Exercitation ullamco laboris nisi ut aliquip ex ea commodo...',
     date: '2024-05-25',
     readTime: '7 min read',
-    image: '/api/placeholder/300/200',
-    slug: 'instagram-marketing-2024'
+    image: 'https://picsum.photos/300/200?random=2',
+    slug: 'ut-enim-ad-minim'
   },
   {
     id: '3',
-    title: 'TikTok Growth Hacks That Actually Work',
-    excerpt: 'Proven strategies to grow your TikTok following organically...',
+    title: 'Duis Aute Irure Dolor In Reprehenderit',
+    excerpt: 'Voluptate velit esse cillum dolore eu fugiat nulla pariatur...',
     date: '2024-05-22',
     readTime: '6 min read',
-    image: '/api/placeholder/300/200',
-    slug: 'tiktok-growth-hacks'
+    image: 'https://picsum.photos/300/200?random=3',
+    slug: 'duis-aute-irure-dolor'
   }
 ];
 
 const categories: Category[] = [
-  { name: 'Social Media Marketing', count: 24, slug: 'social-media-marketing' },
-  { name: 'Content Strategy', count: 18, slug: 'content-strategy' },
-  { name: 'Instagram Tips', count: 15, slug: 'instagram-tips' },
-  { name: 'TikTok Marketing', count: 12, slug: 'tiktok-marketing' },
-  { name: 'Facebook Advertising', count: 10, slug: 'facebook-advertising' }
+  { name: 'Lorem Ipsum Category', count: 24, slug: 'lorem-ipsum-category' },
+  { name: 'Dolor Sit Amet', count: 18, slug: 'dolor-sit-amet' },
+  { name: 'Consectetur Adipiscing', count: 15, slug: 'consectetur-adipiscing' },
+  { name: 'Elit Sed Do', count: 12, slug: 'elit-sed-do' },
+  { name: 'Eiusmod Tempor', count: 10, slug: 'eiusmod-tempor' }
 ];
 
 const popularTags = [
-  'Social Media', 'Marketing', 'Instagram', 'TikTok', 'Content Creation',
-  'Engagement', 'Followers', 'Branding', 'Analytics', 'Growth'
+  'Lorem', 'Ipsum', 'Dolor', 'Sit', 'Amet',
+  'Consectetur', 'Adipiscing', 'Elit', 'Sed', 'Do'
 ];
 
 // Sidebar Components
@@ -182,18 +182,18 @@ const TrendingWidget: React.FC = () => (
     <div className="space-y-3">
       <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700">
         <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 transition-colors duration-200">
-          AI in Social Media Marketing
+          Lorem Ipsum Dolor Sit Amet
         </h4>
         <p className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200">
-          How artificial intelligence is revolutionizing social media strategies
+          Consectetur adipiscing elit sed do eiusmod tempor incididunt
         </p>
       </div>
       <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700">
         <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 transition-colors duration-200">
-          Video Content Trends 2024
+          Ut Labore Et Dolore Magna
         </h4>
         <p className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200">
-          The rise of short-form video content across platforms
+          Aliqua ut enim ad minim veniam quis nostrud exercitation
         </p>
       </div>
     </div>
@@ -212,13 +212,13 @@ const BlogPost: React.FC = () => {
               {/* Article Header */}
               <div className="p-8">
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight transition-colors duration-200">
-                  What Are the Best Ways to Increase Social Media Followers?
+                  Lorem Ipsum Dolor Sit Amet Consectetur Adipiscing Elit
                 </h1>
                 
                 <div className="flex flex-wrap items-center text-gray-600 dark:text-gray-300 mb-6 gap-4">
                   <div className="flex items-center">
                     <FaUser className="w-5 h-5 mr-2 text-[#5F1DE8] dark:text-[#B131F8]" />
-                    <span>SMMGen Team</span>
+                    <span>Lorem Team</span>
                   </div>
                   <div className="flex items-center">
                     <FaCalendarAlt className="w-5 h-5 mr-2 text-[#5F1DE8] dark:text-[#B131F8]" />
@@ -233,8 +233,8 @@ const BlogPost: React.FC = () => {
                 {/* Featured Image */}
                 <div className="mb-8">
                   <Image
-                    src="/api/placeholder/800/400"
-                    alt="Social Media Followers Growth"
+                    src="https://picsum.photos/800/400?random=10"
+                    alt="Lorem Ipsum Featured Image"
                     width={800}
                     height={400}
                     className="w-full h-64 object-cover rounded-lg"
@@ -244,83 +244,83 @@ const BlogPost: React.FC = () => {
                 {/* Article Content */}
                 <div className="prose prose-lg max-w-none">
                   <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-6 transition-colors duration-200">
-                    Gaining a good number of social media followers is essential for developing a powerful online presence and reaching a wider audience. It can improve interaction, raise brand awareness, and create opportunities for growth. Effective follower-gaining requires knowing your audience. You have to produce content that resonates with them and establish genuine connections. By being consistent and taking an organized approach, you can develop an enthusiastic following that promotes and strengthens your brand or message.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
                   </p>
 
                   <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-8 transition-colors duration-200">
-                    We, SMMGen, are here to answer your question, &apos;What Are the Best Ways to Increase Social Media Followers?&apos;
+                    Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
                   </p>
 
                   <h2 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6 transition-colors duration-200">
-                    What Are the Best Ways to Increase Social Media Followers? Explained
+                    Sed Ut Perspiciatis Unde Omnis Iste Natus Error
                   </h2>
 
                   <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-8 transition-colors duration-200">
-                    You need to invest time to increase your social media followers. You have to follow certain strategies to gain them. What Are the Best Ways to Increase Social Media Followers? Let&apos;s dive in.
+                    Sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
                   </p>
 
                   {/* Strategy Cards */}
                   <div className="space-y-8">
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border-l-4 border-blue-500 transition-colors duration-200">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">1. Post Consistently</h3>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">1. Nemo Enim Ipsam Voluptatem</h3>
                       <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200">
-                        Increasing your social media followers requires regular posting. It reminds your viewers of you and keeps them interested. Regular posting increases the chance that others will see your content. Furthermore, consistency shows your reliability and activity. Thus, it increases credibility. If new viewers see you frequently in their feed, they could be more inclined to follow you, and existing followers will be waiting for your content.
+                        Quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.
                       </p>
                     </div>
 
                     <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border-l-4 border-green-500 transition-colors duration-200">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">2. Go for Influencer Marketing</h3>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">2. Sed Quia Non Numquam Eius</h3>
                       <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200">
-                        A large number of people follow influencers. These content creators create content for you that has their own unique touch when your brand works with them. Their followers are always interacting with it once they post it. It increases the visibility of your brand. Furthermore, influencers are vital for their followers. It gains credibility since they post about you. It&apos;s likely that their fans will know about you. In the current setting, this is among the most effective follower-growing techniques.
+                        Modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur.
                       </p>
                     </div>
 
                     <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border-l-4 border-purple-500 transition-colors duration-200">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">3. Use Hashtags while Posting</h3>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">3. Quis Autem Vel Eum Iure</h3>
                       <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200">
-                        Using hashtags is important for increasing your followers. It expands the content&apos;s reach beyond your current audience and improves discoverability. High traffic and engagement rates are made possible by hashtags. Participating in a trending hashtag increases the visibility of your material. It facilitates quick contact with potential clients. Additionally, by enabling visitors interested in the specified themes to find your posts, hashtags help you organize your information and make it searchable.
+                        Reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur. At vero eos et accusamus et iusto odio dignissimos ducimus.
                       </p>
                     </div>
 
                     <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-2xl p-6 border-l-4 border-yellow-500 transition-colors duration-200">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">4. Contests and Giveaways</h3>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">4. Qui Blanditiis Praesentium</h3>
                       <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200">
-                        Giveaways and contests are effective ways to quickly gain new followers. To help spread information, you can invite people to follow you, tag friends, or share your content. Giveaways naturally draw attention since everyone loves the possibility of winning something. Contests can help you create an engaged and active audience. It rapidly increases your reach and number of followers. To get a good number of followers, make sure that the reward is premium.
+                        Voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga.
                       </p>
                     </div>
 
                     <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-2xl p-6 border-l-4 border-red-500 transition-colors duration-200">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">5. Try Out Paid Advertising</h3>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">5. Et Harum Quidem Rerum</h3>
                       <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200">
-                        Another effective strategy to gain followers is to use paid advertisements on Facebook, Instagram, and TikTok. These advertisements increase engagement, lead generation, and revenues. This allows you to target advertisements according to geography, interest, and demographics. The advertisements reach the intended audience in this way. Before advertising, you can also conduct A/B testing. Social media advertisements are cheap and generate positive results. Additionally, you can utilize a variety of data to determine how effective the advertisements are.
+                        Facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus.
                       </p>
                     </div>
 
                     <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 rounded-2xl p-6 border-l-4 border-indigo-500 transition-colors duration-200">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">6. Post Good Quality Content</h3>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">6. Temporibus Autem Quibus</h3>
                       <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200">
-                        Your strongest weapon is your content. Never sacrifice the quality of the content you produce. Follow the newest challenges, soundtracks, and trends. It contributes to a brand&apos;s increased reputation. Having quality content will help you differentiate yourself from your rivals. Followers will come to you naturally if you have a great social media presence. It promotes conversion as well. Superior content demonstrates your professionalism, dependability, and sincerity.
+                        Dam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur.
                       </p>
                     </div>
 
                     <div className="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 rounded-2xl p-6 border-l-4 border-pink-500 transition-colors duration-200">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">7. Create Reels</h3>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">7. Aut Perferendis Doloribus</h3>
                       <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200">
-                        Everyone is drawn to reels because of its dynamic format and wide audience. On social media sites, it is more visible. Instagram, for instance, allows users to add reels to their &apos;Explore&apos; pages and feeds. As a result, the reach is expanded. It also displays your brand&apos;s individuality. Make use of captivating effects, transitions, and soundtracks for your reels. It helps you remain current. Discoverability rises as a result of the increased likelihood of accessing the explore page.
+                        Asperiores repellat molestiae non recusandae. Ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet.
                       </p>
                     </div>
 
                     <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/20 dark:to-gray-700/20 rounded-2xl p-6 border-l-4 border-gray-500 transition-colors duration-200">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">8. Invest in Social Media Marketing Panels</h3>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">8. Nam Libero Tempore</h3>
                       <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200">
-                        Before placing an order, a customer verifies the brand&apos;s legitimacy. When the number of followers or likes is low, they start to hesitate. Customers believe a page is trustworthy when they see that the number of likes and follows is adequate. Panels for social media marketing let you purchase a few things. You can purchase followers using SMM panels. You have the option of both international and country-specific genuine followers.
+                        Cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis.
                       </p>
                     </div>
 
                     <div className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 rounded-2xl p-6 border-l-4 border-teal-500 transition-colors duration-200">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">9. Interact with People</h3>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">9. Itaque Earum Rerum</h3>
                       <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200">
-                        Maintaining contact with clients fosters a sense of reliability. When a customer leaves a comment on your site, appropriately address their questions. Thank them if they are complimenting your stuff. Show them politeness if they message you. Reach is increased through customer engagement. They feel included when a brand posts feedback from customers. Add stickers or polls to your story to encourage audience participation. When you intend to launch a new product line, get their opinions.
+                        Hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. Qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias.
                       </p>
                     </div>
                   </div>
@@ -328,22 +328,22 @@ const BlogPost: React.FC = () => {
                   <div className="mt-12 p-6 bg-gradient-to-r from-[#5F1DE8]/10 to-[#B131F8]/10 dark:from-[#5F1DE8]/20 dark:to-[#B131F8]/20 rounded-2xl border border-[#5F1DE8]/20 dark:border-[#B131F8]/20">
                     <p className="text-gray-800 dark:text-gray-200 transition-colors duration-200">
                       <strong>Learn More:</strong>{' '}
-                      <Link href="/blog/measure-social-media-marketing-performance" className="text-[#5F1DE8] dark:text-[#B131F8] hover:underline transition-colors duration-200">
-                        How to Measure Social Media Marketing Performance?
+                      <Link href="/blog/lorem-ipsum-dolor" className="text-[#5F1DE8] dark:text-[#B131F8] hover:underline transition-colors duration-200">
+                        Excepteur Sint Occaecat Cupidatat Non Proident?
                       </Link>
                     </p>
                   </div>
 
                   <h2 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white mt-12 mb-6 transition-colors duration-200">Conclusion</h2>
                   <p className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200">
-                    Time, consistency, and an extensive understanding of your target demographic are necessary for developing a substantial social media following. Your follower base can be gradually expanded by focusing on excellent content, real interaction, and trend adaptation. Analyzing your data regularly helps you to modify your approach and react to what works best. Meaningful connections and long-term success on your social media channels can result from building an authentic, active community.
+                    Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.
                   </p>
                 </div>
 
                 {/* Tags */}
                 <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex flex-wrap gap-2">
-                    {['Social Media', 'Marketing', 'Followers', 'Growth', 'Strategy'].map((tag) => (
+                    {['Lorem', 'Ipsum', 'Dolor', 'Sit', 'Amet'].map((tag) => (
                       <span
                         key={tag}
                         className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-[#5F1DE8]/10 to-[#B131F8]/10 text-[#5F1DE8] dark:text-[#B131F8] text-sm rounded-full hover:from-[#5F1DE8]/20 hover:to-[#B131F8]/20 transition-all duration-200 cursor-pointer"
@@ -357,10 +357,10 @@ const BlogPost: React.FC = () => {
 
                 {/* Call to Action */}
                 <div className="mt-8 p-6 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-2xl text-white">
-                  <h3 className="text-xl font-bold mb-2">Ready to Boost Your Social Media Presence?</h3>
-                  <p className="mb-4 text-purple-100">Join thousands of businesses growing their followers with SMMGen&apos;s proven strategies.</p>
+                  <h3 className="text-xl font-bold mb-2">Ready to Lorem Ipsum Dolor Sit?</h3>
+                  <p className="mb-4 text-purple-100">Join thousands of users experiencing consectetur adipiscing elit with our proven methods.</p>
                   <Link 
-                    href="/signup" 
+                    href="/services" 
                     className="inline-flex items-center gap-2 bg-white text-[#5F1DE8] hover:bg-gray-100 font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:-translate-y-1"
                   >
                     <span>Get Started Today</span>

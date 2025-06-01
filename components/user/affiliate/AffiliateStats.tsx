@@ -1,7 +1,7 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { Coins, Copy, Percent, Users } from 'lucide-react';
+import { FaUsers, FaCopy, FaPercent, FaCoins, FaChartLine, FaDollarSign, FaMousePointer } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -82,31 +82,32 @@ export default function AffiliateStats() {
       {/* Top stats with icons */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Username */}
-        <div className="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
-          <div className="bg-purple-600 rounded-full p-3">
-            <Users className="h-6 w-6 text-white" />
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center space-x-4 transition-colors duration-200">
+          <div className="w-12 h-12 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
+            <FaUsers className="h-6 w-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Username</p>
-            <p className="font-medium">{user?.name || ''}</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Username</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">{user?.name || ''}</p>
           </div>
         </div>
 
         {/* Referral Link */}
-        <div className="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
-          <div className="bg-purple-600 rounded-full p-3">
-            <Copy className="h-6 w-6 text-white" />
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center space-x-4 transition-colors duration-200">
+          <div className="w-12 h-12 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
+            <FaCopy className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-gray-500">Referral link</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Referral link</p>
             <div className="flex items-center">
-              <p className="truncate font-medium">{referralLink || 'Login to generate your referral link'}</p>
+              <p className="truncate text-lg font-semibold text-gray-900 dark:text-white">{referralLink || 'Login to generate your referral link'}</p>
               {referralLink && (
                 <button 
                   onClick={copyToClipboard} 
-                  className="ml-2 text-purple-600 hover:text-purple-800"
+                  className="ml-2 text-[#5F1DE8] hover:text-[#B131F8] dark:text-[#B131F8] dark:hover:text-[#5F1DE8] transition-colors duration-200"
+                  title={copied ? 'Copied!' : 'Copy link'}
                 >
-                  <Copy className="h-4 w-4" />
+                  <FaCopy className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -114,24 +115,24 @@ export default function AffiliateStats() {
         </div>
 
         {/* Commission Rate */}
-        <div className="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
-          <div className="bg-purple-600 rounded-full p-3">
-            <Percent className="h-6 w-6 text-white" />
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center space-x-4 transition-colors duration-200">
+          <div className="w-12 h-12 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
+            <FaPercent className="h-6 w-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Commission rate</p>
-            <p className="font-medium">{stats.commissionRate}</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Commission rate</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">{stats.commissionRate}</p>
           </div>
         </div>
 
         {/* Minimum Payout */}
-        <div className="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
-          <div className="bg-purple-600 rounded-full p-3">
-            <Coins className="h-6 w-6 text-white" />
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center space-x-4 transition-colors duration-200">
+          <div className="w-12 h-12 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
+            <FaCoins className="h-6 w-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Minimum payout</p>
-            <p className="font-medium">{stats.minimumPayout}</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Minimum payout</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">{stats.minimumPayout}</p>
           </div>
         </div>
       </div>
@@ -139,41 +140,71 @@ export default function AffiliateStats() {
       {/* Stats boxes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Visits */}
-        <div className="bg-white rounded-lg border p-4">
-          <p className="text-gray-500">Visits</p>
-          <p className="text-xl font-medium">{stats.visits}</p>
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
+              <FaMousePointer className="h-4 w-4 text-white" />
+            </div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Visits</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.visits}</p>
         </div>
 
         {/* Registrations */}
-        <div className="bg-white rounded-lg border p-4">
-          <p className="text-gray-500">Registrations</p>
-          <p className="text-xl font-medium">{stats.registrations}</p>
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
+              <FaUsers className="h-4 w-4 text-white" />
+            </div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Registrations</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.registrations}</p>
         </div>
 
         {/* Referrals */}
-        <div className="bg-white rounded-lg border p-4">
-          <p className="text-gray-500">Referrals</p>
-          <p className="text-xl font-medium">{stats.referrals}</p>
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
+              <FaUsers className="h-4 w-4 text-white" />
+            </div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Referrals</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.referrals}</p>
         </div>
 
         {/* Conversion Rate */}
-        <div className="bg-white rounded-lg border p-4">
-          <p className="text-gray-500">Conversion rate</p>
-          <p className="text-xl font-medium">{stats.conversionRate}</p>
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
+              <FaChartLine className="h-4 w-4 text-white" />
+            </div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Conversion rate</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.conversionRate}</p>
         </div>
 
         {/* Total Earnings */}
-        <div className="bg-white rounded-lg border p-4">
-          <p className="text-gray-500">Total earnings</p>
-          <p className="text-xl font-medium">{stats.totalEarnings}</p>
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
+              <FaDollarSign className="h-4 w-4 text-white" />
+            </div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total earnings</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalEarnings}</p>
         </div>
 
         {/* Available Earnings */}
-        <div className="bg-white rounded-lg border p-4">
-          <p className="text-gray-500">Available earnings</p>
-          <p className="text-xl font-medium">{stats.availableEarnings}</p>
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
+              <FaCoins className="h-4 w-4 text-white" />
+            </div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Available earnings</p>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.availableEarnings}</p>
         </div>
       </div>
     </div>
   );
-} 
+}

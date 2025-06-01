@@ -26,7 +26,7 @@ const Statistics: React.FC = () => {
     },
     {
       icon: <FaShareAlt className="w-10 h-10 text-white" />,
-      title: "Paid to Affiliate User",
+      title: "Paid to Affiliate Users",
       count: "236,456"
     }
   ];

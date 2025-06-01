@@ -74,7 +74,7 @@ const Header = () => {
   };
 
   return (
-    <nav className="h-16 flex items-center justify-between px-4 relative bg-white dark:backdrop-blur-xl dark:bg-gradient-to-r dark:from-slate-900/95 dark:via-purple-900/90 dark:to-slate-900/95 border-t-2 border-t-purple-500 dark:border-t-purple-400 shadow-sm dark:shadow-2xl dark:shadow-purple-500/20">
+    <nav className="h-20 flex items-center justify-between px-8 relative bg-white dark:backdrop-blur-xl dark:bg-gradient-to-r dark:from-slate-900/95 dark:via-purple-900/90 dark:to-slate-900/95 border-t-2 border-t-purple-500 dark:border-t-purple-400 shadow-sm dark:shadow-2xl dark:shadow-purple-500/20">
       {/* 3D Glow Effect - Only in Dark Mode */}
       <div className="hidden dark:block absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10 blur-xl"></div>
       <div className="hidden dark:block absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>

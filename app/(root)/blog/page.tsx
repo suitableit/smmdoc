@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: 'https://smmgen.com/blog',
+    canonical: 'https://smmdoc.com/blog',
   },
 };
 

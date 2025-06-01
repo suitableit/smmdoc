@@ -29,7 +29,7 @@ export default function ProtectedLayout({
         
         {/* Main content area */}
         <main className="w-full mt-16">
-          <div className={isDashboard ? 'p-0' : 'pt-1 px-2 pb-2 md:pt-2 md:px-3 md:pb-3 lg:pt-2 lg:px-4 lg:pb-4'}> 
+          <div className={isDashboard ? 'p-0' : 'px-8 py-8 bg-[#f1f2f6] dark:bg-[#232333]'}> 
             <div className="flex items-center justify-between lg:hidden mb-2">
               <div className="flex items-center">
                 <MobileSidebar />
