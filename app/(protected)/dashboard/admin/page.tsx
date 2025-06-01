@@ -106,7 +106,7 @@ export default function AdminDashboard() {
   };
 
   if (loading) {
-    return <div className="p-6">লোড হচ্ছে...</div>;
+    return <div className="p-6">Loading...</div>;
   }
 
   return (

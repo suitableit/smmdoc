@@ -162,13 +162,13 @@ const About: React.FC = () => {
             </Link>
           </div>
           <div className="text-center lg:text-right">
-            <div className="relative group">
+            <div className="relative">
               <Image
                 src="/smmgen-about-us.webp"
                 alt="smmgen about us"
                 width={600}
                 height={400}
-                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg shadow-lg transition-all duration-300"
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg"
                 priority
               />
             </div>
@@ -180,13 +180,13 @@ const About: React.FC = () => {
       <Section>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1 text-center lg:text-left">
-            <div className="relative group">
+            <div className="relative">
               <Image
                 src="/smm-panel-mission.webp"
                 alt="smm panel mission"
                 width={600}
                 height={500}
-                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg shadow-lg transition-all duration-300"
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg"
               />
             </div>
           </div>
@@ -245,13 +245,13 @@ const About: React.FC = () => {
             </Link>
           </div>
           <div className="text-center lg:text-right">
-            <div className="relative group">
+            <div className="relative">
               <Image
                 src="/smm-panel-in-bd.webp"
                 alt="smm panel in bd"
                 width={600}
                 height={500}
-                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg shadow-lg transition-all duration-300"
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg"
               />
             </div>
           </div>
@@ -262,13 +262,13 @@ const About: React.FC = () => {
       <Section>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1 text-center lg:text-left">
-            <div className="relative group">
+            <div className="relative">
               <Image
                 src="/vision-banner-image.webp"
                 alt="smmpanel vision banner"
                 width={600}
                 height={500}
-                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg shadow-lg transition-all duration-300"
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg"
               />
             </div>
           </div>
@@ -396,13 +396,13 @@ const About: React.FC = () => {
             </Link>
           </div>
           <div className="text-center lg:text-right">
-            <div className="relative group">
+            <div className="relative">
               <Image
                 src="/smm-panel-in-bangladesh.webp"
                 alt="smm panel in bangladesh"
                 width={600}
                 height={500}
-                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg shadow-lg transition-all duration-300"
+                className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg"
               />
             </div>
           </div>
