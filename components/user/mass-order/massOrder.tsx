@@ -2,10 +2,12 @@
 
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
+import { useGetUserStatsQuery, dashboardApi } from '@/lib/services/dashboardApi';
+import axiosInstance from '@/lib/axiosInstance';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import {
   FaExternalLinkAlt,
   FaInfoCircle,
@@ -208,8 +210,9 @@ const InstructionsPanel: React.FC = () => {
 export default function MassOrder() {
   const user = useCurrentUser();
   const router = useRouter();
+  const dispatch = useDispatch();
   const { currency, rate: currencyRate } = useCurrency();
-  const { data: userStatsResponse } = useGetUserStatsQuery({});
+  const { data: userStatsResponse, refetch: refetchUserStats } = useGetUserStatsQuery({});
   const userStats = userStatsResponse?.data;
   
   const [activeTab, setActiveTab] = useState<'newOrder' | 'massOrder'>('massOrder');
@@ -236,7 +239,7 @@ export default function MassOrder() {
   };
 
   // Parse and validate the orders text
-  const parseOrders = (text: string) => {
+  const parseOrders = async (text: string) => {
     if (!text.trim()) {
       setTotalOrders(0);
       setTotalPrice(0);
@@ -247,22 +250,22 @@ export default function MassOrder() {
     let validLines = 0;
     let totalAmount = 0;
 
-    lines.forEach(line => {
+    // Process each line to validate format
+    for (const line of lines) {
       const parts = line.trim().split('|');
       if (parts.length >= 3) {
         const serviceId = parts[0].trim();
         const link = parts[1].trim();
         const quantity = parseInt(parts[2].trim(), 10);
 
-        // Placeholder price calculation
-        const price = 0.5; // Placeholder price per 1000 units
-        
-        if (!isNaN(quantity) && serviceId && link) {
+        if (!isNaN(quantity) && serviceId && link && link.startsWith('http')) {
           validLines++;
-          totalAmount += (price * quantity / 1000);
+          // Use placeholder price for now - real validation will happen on submit
+          const placeholderPrice = 0.5; // Placeholder price per 1000 units
+          totalAmount += (placeholderPrice * quantity / 1000);
         }
       }
-    });
+    }
 
     setTotalOrders(validLines);
     setTotalPrice(totalAmount);
@@ -270,23 +273,92 @@ export default function MassOrder() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (totalOrders === 0) {
       toast.error("No valid orders found. Please check your input format.");
       return;
     }
 
+    // Check user balance
+    const userBalance = userStats?.balance || 0;
+    if (userBalance < totalPrice) {
+      toast.error(`Insufficient balance. Available: ${userBalance.toFixed(2)}, Required: ${totalPrice.toFixed(2)}`);
+      return;
+    }
+
     setIsSubmitting(true);
-    
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success(`Successfully submitted ${totalOrders} orders!`);
-      setOrders('');
-      setTotalOrders(0);
-      setTotalPrice(0);
-    } catch (error) {
-      toast.error("Failed to submit orders. Please try again.");
+      // Parse orders into API format
+      const lines = orders.trim().split('\n');
+      const orderArray = [];
+
+      for (const line of lines) {
+        const parts = line.trim().split('|');
+        if (parts.length >= 3) {
+          const serviceId = parts[0].trim();
+          const link = parts[1].trim();
+          const quantity = parseInt(parts[2].trim(), 10);
+
+          if (!isNaN(quantity) && serviceId && link && link.startsWith('http')) {
+            // Fetch service details to get categoryId
+            try {
+              const serviceResponse = await axiosInstance.get(`/api/user/services/serviceById?svId=${serviceId}`);
+              const service = serviceResponse.data.data;
+
+              if (service && service.categoryId) {
+                orderArray.push({
+                  serviceId: serviceId,
+                  link: link,
+                  qty: quantity,
+                  categoryId: service.categoryId
+                });
+              } else {
+                toast.error(`Service ${serviceId} not found or invalid`);
+                continue;
+              }
+            } catch (error) {
+              toast.error(`Failed to validate service ${serviceId}`);
+              continue;
+            }
+          }
+        }
+      }
+
+      if (orderArray.length === 0) {
+        toast.error("No valid orders to submit.");
+        return;
+      }
+
+      // Generate a unique batch ID for this mass order
+      const batchId = `MO-${Date.now()}-${user?.id?.slice(-4)}`;
+
+      // Submit to mass order API
+      const response = await axiosInstance.post('/api/user/mass-orders', {
+        orders: orderArray,
+        batchId: batchId
+      });
+
+      if (response.data.success) {
+        toast.success(`Successfully created ${response.data.summary.ordersCreated} orders!`);
+
+        // Invalidate user stats to refresh balance
+        dispatch(dashboardApi.util.invalidateTags(['UserStats']));
+
+        // Also manually refetch user stats for immediate update
+        refetchUserStats();
+
+        // Reset form
+        setOrders('');
+        setTotalOrders(0);
+        setTotalPrice(0);
+      } else {
+        toast.error(response.data.message || 'Failed to create orders');
+      }
+    } catch (error: any) {
+      console.error('Error creating mass orders:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create orders';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -402,7 +474,26 @@ export default function MassOrder() {
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       />
                     </div>
-                    
+
+                    {/* Order Summary */}
+                    {totalOrders > 0 && (
+                      <div className="bg-blue-50 dark:bg-slate-700/50 rounded-lg p-4 border border-blue-200 dark:border-slate-600">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-blue-700 dark:text-blue-300">Valid Orders:</span>
+                          <span className="font-semibold text-blue-900 dark:text-blue-100">{totalOrders}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm mt-2">
+                          <span className="text-blue-700 dark:text-blue-300">Estimated Cost:</span>
+                          <span className="font-semibold text-blue-900 dark:text-blue-100">
+                            {formatCurrency(totalPrice)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                          * Final price will be calculated based on actual service rates
+                        </div>
+                      </div>
+                    )}
+
                     <Button3D
                       type="submit"
                       variant="primary"
@@ -411,7 +502,7 @@ export default function MassOrder() {
                       loading={isSubmitting}
                       className="w-full"
                     >
-                      {isSubmitting ? 'Processing...' : 'Submit'}
+                      {isSubmitting ? 'Processing...' : `Submit ${totalOrders} Orders`}
                     </Button3D>
                     </form>
                   </div>

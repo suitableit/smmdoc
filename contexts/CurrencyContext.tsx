@@ -9,6 +9,7 @@ type CurrencyContextType = {
   rate: number | null;
   isLoading: boolean;
   formatCurrency: (amount: number) => string;
+  convertAmount: (amount: number) => number;
 };
 
 const CurrencyContext = createContext<CurrencyContextType>({
@@ -17,6 +18,7 @@ const CurrencyContext = createContext<CurrencyContextType>({
   rate: null,
   isLoading: true,
   formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
+  convertAmount: (amount: number) => amount,
 });
 
 export function CurrencyProvider({
@@ -90,9 +92,16 @@ export function CurrencyProvider({
     }
   };
 
+  const convertAmount = (amount: number): number => {
+    if (currency === 'BDT' && rate) {
+      return amount * rate;
+    }
+    return amount;
+  };
+
   return (
     <CurrencyContext.Provider
-      value={{ currency, setCurrency, rate, isLoading, formatCurrency }}
+      value={{ currency, setCurrency, rate, isLoading, formatCurrency, convertAmount }}
     >
       {children}
     </CurrencyContext.Provider>

@@ -35,7 +35,12 @@ export default {
       // Allow OAuth without email verification
       if (account?.provider !== 'credentials') return true;
       const existingUser = await getUserById(user.id);
-      if (!existingUser || !existingUser.emailVerified) return false;
+      if (!existingUser) return false;
+
+      // Temporarily allow sign-in without email verification for development
+      // TODO: Re-enable email verification requirement in production
+      // if (!existingUser.emailVerified) return false;
+
       // Todo: Add 2FA check here
       if (existingUser.isTwoFactorEnabled) {
         const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
@@ -58,6 +63,9 @@ export default {
         session.user.role = token.role as Role;
         session.user.isTwoFactorEnabled = token.isTwoFactorEnabled;
         session.user.currency = token.currency;
+        session.user.name = token.name;
+        session.user.username = token.username;
+        session.user.email = token.email;
       }
       return session;
     },
@@ -68,6 +76,9 @@ export default {
       token.role = existingUser.role;
       token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
       token.currency = existingUser.currency;
+      token.name = existingUser.name;
+      token.username = existingUser.username;
+      token.email = existingUser.email;
       return token;
     },
   },

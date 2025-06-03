@@ -5,24 +5,30 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
-    const whereClause = search
-      ? {
-          OR: [
-            {
-              name: {
-                contains: search,
-                lte: 'insensitive',
+    
+    // Base where clause - only return active services
+    const whereClause = {
+      status: 'active', // Only return active services
+      ...(search
+        ? {
+            OR: [
+              {
+                name: {
+                  contains: search,
+                  lte: 'insensitive',
+                },
               },
-            },
-            {
-              description: {
-                contains: search,
-                lte: 'insensitive',
+              {
+                description: {
+                  contains: search,
+                  lte: 'insensitive',
+                },
               },
-            },
-          ],
-        }
-      : {};
+            ],
+          }
+        : {})
+    };
+    
     const [services] = await Promise.all([
       db.service.findMany({
         where: whereClause,

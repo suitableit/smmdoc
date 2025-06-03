@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as FaIcons from 'react-icons/fa';
+import { useMemo } from 'react';
 
 interface NavItem {
   title: string;
@@ -16,7 +17,31 @@ interface NavItem {
   disabled?: boolean;
 }
 
-interface NavSections {
+interface AdminSections {
+  dashboard: NavItem[];
+  orders: NavItem[];
+  services: NavItem[];
+  users: NavItem[];
+  funds: NavItem[];
+  support: NavItem[];
+  analytics: NavItem[];
+  api: NavItem[];
+  reseller: NavItem[];
+  settings: NavItem[];
+  security: NavItem[];
+  account: NavItem[];
+  [key: string]: NavItem[];
+}
+
+interface UserSections {
+  core: NavItem[];
+  orders: NavItem[];
+  services: NavItem[];
+  funds: NavItem[];
+  support: NavItem[];
+  integrations: NavItem[];
+  more: NavItem[];
+  account: NavItem[];
   [key: string]: NavItem[];
 }
 
@@ -25,53 +50,60 @@ export default function SideBarNav({ collapsed = false, user, setOpen = () => {}
   const path = usePathname() || '';
   const isAdmin = user?.data?.role === 'admin';
   
-  // Get items based on user role
-  const items = isAdmin ? adminNavItems : navItems.filter((item: any) => 
-    item.roles.includes(user?.data?.role || 'user')
-  );
+  // Memoize items based on user role to prevent unnecessary recalculations
+  const items = useMemo(() => {
+    return isAdmin 
+      ? adminNavItems 
+      : navItems.filter((item: any) => item.roles.includes(user?.data?.role || 'user'));
+  }, [isAdmin, user?.data?.role]);
   
-  // Group admin items into sections
-  const adminSections: NavSections = {
-    dashboard: items.filter(item => ['Dashboard'].includes(item.title)),
-    orders: items.filter(item => ['All Orders', 'Refill Order & Cancel Tasks'].includes(item.title)),
-    services: items.filter(item => ['All Services', 'Create Service', 'Manage Categories', 'Create Category', 'Modify Bulk Services', 'Sort by Category', 'Synchronize Logs'].includes(item.title)),
-    users: items.filter(item => ['User List', 'Admins', 'User Activity Logs', 'KYC Approvals'].includes(item.title)),
-    funds: items.filter(item => ['Funds Management', 'Add User Fund', 'All Transactions', 'Update Price'].includes(item.title)),
-    support: items.filter(item => ['All Tickets', 'AI Tickets', 'Human Tickets'].includes(item.title)),
-    analytics: items.filter(item => ['Sales Report', 'Trending Services', 'Export Data'].includes(item.title)),
-    api: items.filter(item => ['API Management', 'Categories API', 'Services API', 'Funds API'].includes(item.title)),
-    reseller: items.filter(item => ['Child Panels', 'Commission Settings', 'Reseller Requests'].includes(item.title)),
-    settings: items.filter(item => ['General Settings', 'Appearance', 'Email Settings', 'SEO Settings', 'Integrations'].includes(item.title)),
-    security: items.filter(item => ['Security Logs', 'Access Control'].includes(item.title)),
-    account: items.filter(item => ['Account Settings', 'Logout'].includes(item.title)),
-  };
-
-  // Group user items into sections
-  const userSections: NavSections = {
-    core: items.filter(item => ['Dashboard'].includes(item.title)),
-    orders: items.filter(item => ['New Order', 'Mass Order', 'My Orders', 'Order History'].includes(item.title)),
-    services: items.filter(item => ['All Services', 'Favorite Services'].includes(item.title)),
-    funds: items.filter(item => ['Add Fund', 'Transactions'].includes(item.title)),
-    support: items.filter(item => ['Support Ticket', 'Ticket History', 'Contact Support', 'FAQ'].includes(item.title)),
-    integrations: items.filter(item => ['API Integration', 'Child Panel'].includes(item.title)),
-    more: items.filter(item => ['Affiliate Program', 'Terms'].includes(item.title)),
-    account: items.filter(item => ['Account Settings', 'Logout'].includes(item.title)),
-  };
-  
-  const sections = isAdmin ? adminSections : userSections;
+  // Memoize sections to prevent unnecessary recalculations on each render
+  const sections = useMemo<AdminSections | UserSections>(() => {
+    if (isAdmin) {
+      // Group admin items into sections
+      return {
+        dashboard: items.filter(item => ['Dashboard'].includes(item.title)),
+        orders: items.filter(item => ['All Orders', 'Refill Order & Cancel Tasks'].includes(item.title)),
+        services: items.filter(item => ['All Services', 'Create Service', 'Manage Categories', 'Create Category', 'Modify Bulk Services', 'Sort by Category', 'Synchronize Logs'].includes(item.title)),
+        users: items.filter(item => ['User List', 'Admins', 'User Activity Logs', 'KYC Approvals'].includes(item.title)),
+        funds: items.filter(item => ['Funds Management', 'Add User Fund', 'All Transactions', 'Update Price'].includes(item.title)),
+        support: items.filter(item => ['All Tickets', 'AI Tickets', 'Human Tickets'].includes(item.title)),
+        analytics: items.filter(item => ['Sales Report', 'Trending Services', 'Export Data'].includes(item.title)),
+        api: items.filter(item => ['API Management', 'Categories API', 'Services API', 'Funds API'].includes(item.title)),
+        reseller: items.filter(item => ['Child Panels', 'Commission Settings', 'Reseller Requests'].includes(item.title)),
+        settings: items.filter(item => ['General Settings', 'Appearance', 'Email Settings', 'SEO Settings', 'Integrations'].includes(item.title)),
+        security: items.filter(item => ['Security Logs', 'Access Control'].includes(item.title)),
+        account: items.filter(item => ['Account Settings', 'Logout'].includes(item.title)),
+      } as AdminSections;
+    } else {
+      // Group user items into sections
+      return {
+        core: items.filter(item => ['Dashboard'].includes(item.title)),
+        orders: items.filter(item => ['New Order', 'Mass Order', 'My Orders', 'Order History'].includes(item.title)),
+        services: items.filter(item => ['All Services', 'Favorite Services'].includes(item.title)),
+        funds: items.filter(item => ['Add Fund', 'Transactions'].includes(item.title)),
+        support: items.filter(item => ['Support Ticket', 'Ticket History', 'Contact Support', 'FAQ'].includes(item.title)),
+        integrations: items.filter(item => ['API Integration', 'Child Panel'].includes(item.title)),
+        more: items.filter(item => ['Affiliate Program', 'Terms'].includes(item.title)),
+        account: items.filter(item => ['Account Settings', 'Logout'].includes(item.title)),
+      } as UserSections;
+    }
+  }, [isAdmin, items]);
   
   const isActive = (itemPath: string) => {
     return path === itemPath || path.startsWith(itemPath + '/');
   };
 
-  // Render the React icon dynamically
-  const renderIcon = (iconName: string) => {
-    const Icon = (FaIcons as any)[iconName];
-    return Icon ? <Icon /> : null;
-  };
+  // Memoize the icon rendering function to prevent unnecessary re-renders
+  const renderIcon = useMemo(() => {
+    return (iconName: string) => {
+      const Icon = (FaIcons as any)[iconName];
+      return Icon ? <Icon /> : null;
+    };
+  }, []);
   
-  const renderNavSection = (title: string, items: NavItem[]) => {
-    if (!items.length) return null;
+  const renderNavSection = (title: string, sectionItems: NavItem[]) => {
+    if (!sectionItems || !sectionItems.length) return null;
     
     return (
       <div className={`nav-section ${collapsed ? 'mb-0 px-0' : 'mb-4 px-2'}`}>
@@ -79,7 +111,7 @@ export default function SideBarNav({ collapsed = false, user, setOpen = () => {}
           <p className={`section-title ${collapsed ? 'opacity-0 pointer-events-none' : ''} text-[11px] text-white/50 tracking-[1px] mx-4 my-2 whitespace-nowrap uppercase font-semibold`}>{title}</p>
         )}
         <ul className={`nav-links ${collapsed ? 'px-1' : 'px-3'} ${collapsed ? 'space-y-0' : 'space-y-1'}`}>
-          {items.map((item, index) => {
+          {sectionItems.map((item, index) => {
             const active = isActive(item.href);
             
             return (
@@ -126,33 +158,41 @@ export default function SideBarNav({ collapsed = false, user, setOpen = () => {}
     );
   };
   
+  // Return null if user data is not available yet
+  if (!user) return null;
+  
+  // Helper function to safely access sections
+  const getSectionItems = (sectionKey: string): NavItem[] => {
+    return (sections as any)[sectionKey] || [];
+  };
+  
   return (
     <div className="sidebar-nav-container py-1">
       {isAdmin ? (
         <>
-          {renderNavSection('', sections.dashboard)}
-          {renderNavSection('Orders', sections.orders)}
-          {renderNavSection('Services', sections.services)}
-          {renderNavSection('Users', sections.users)}
-          {renderNavSection('Funds', sections.funds)}
-          {renderNavSection('Support', sections.support)}
-          {renderNavSection('Analytics', sections.analytics)}
-          {renderNavSection('API', sections.api)}
-          {renderNavSection('Reseller', sections.reseller)}
-          {renderNavSection('Settings', sections.settings)}
-          {renderNavSection('Security', sections.security)}
-          {renderNavSection('Account', sections.account)}
+          {renderNavSection('', getSectionItems('dashboard'))}
+          {renderNavSection('Orders', getSectionItems('orders'))}
+          {renderNavSection('Services', getSectionItems('services'))}
+          {renderNavSection('Users', getSectionItems('users'))}
+          {renderNavSection('Funds', getSectionItems('funds'))}
+          {renderNavSection('Support', getSectionItems('support'))}
+          {renderNavSection('Analytics', getSectionItems('analytics'))}
+          {renderNavSection('API', getSectionItems('api'))}
+          {renderNavSection('Reseller', getSectionItems('reseller'))}
+          {renderNavSection('Settings', getSectionItems('settings'))}
+          {renderNavSection('Security', getSectionItems('security'))}
+          {renderNavSection('Account', getSectionItems('account'))}
         </>
       ) : (
         <>
-          {renderNavSection('', sections.core)}
-          {renderNavSection('Orders', sections.orders)}
-          {renderNavSection('Services', sections.services)}
-          {renderNavSection('Fund', sections.funds)}
-          {renderNavSection('Support', sections.support)}
-          {renderNavSection('Integrations', sections.integrations)}
-          {renderNavSection('More', sections.more)}
-          {renderNavSection('Account', sections.account)}
+          {renderNavSection('', getSectionItems('core'))}
+          {renderNavSection('Orders', getSectionItems('orders'))}
+          {renderNavSection('Services', getSectionItems('services'))}
+          {renderNavSection('Fund', getSectionItems('funds'))}
+          {renderNavSection('Support', getSectionItems('support'))}
+          {renderNavSection('Integrations', getSectionItems('integrations'))}
+          {renderNavSection('More', getSectionItems('more'))}
+          {renderNavSection('Account', getSectionItems('account'))}
         </>
       )}
     </div>

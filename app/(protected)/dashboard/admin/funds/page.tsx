@@ -2,6 +2,7 @@
 
 import AddUserFund from '@/components/admin/funds/AddUserFund';
 import AllTransactions from '@/components/admin/funds/AllTransactions';
+import PendingTransactions from '@/components/admin/funds/PendingTransactions';
 import UpdatePrice from '@/components/admin/funds/UpdatePrice';
 import BreadCrumb from '@/components/shared/BreadCrumb';
 import { Separator } from '@/components/ui/separator';
@@ -26,12 +27,16 @@ export default function AdminFundsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="all-transactions" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="pending-transactions" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="pending-transactions">Pending Transactions</TabsTrigger>
           <TabsTrigger value="all-transactions">All Transactions</TabsTrigger>
           <TabsTrigger value="add-user-fund">Add User Fund</TabsTrigger>
           <TabsTrigger value="update-price">Update Price</TabsTrigger>
         </TabsList>
+        <TabsContent value="pending-transactions">
+          <PendingTransactions />
+        </TabsContent>
         <TabsContent value="all-transactions">
           <AllTransactions />
         </TabsContent>

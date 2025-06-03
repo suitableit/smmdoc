@@ -23,17 +23,21 @@ import {
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { useGetUserStatsQuery, dashboardApi } from '@/lib/services/dashboardApi';
 import axiosInstance from '@/lib/axiosInstance';
 import axios from 'axios';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { BsExclamationCircleFill } from 'react-icons/bs';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'sonner';
 
 export default function NewOrder() {
   const user = useCurrentUser();
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const dispatch = useDispatch();
+  const { data: userStatsResponse, refetch: refetchUserStats } = useGetUserStatsQuery();
   const serviceIdFromUrl = searchParams.get('sId') || searchParams.get('serviceId');
   const categoryIdFromUrl = searchParams.get('categoryId');
   const [servicesData, setServicesData] = useState<any[]>([]);
@@ -56,6 +60,7 @@ export default function NewOrder() {
   const [categoriesWithServices, setCategoriesWithServices] = useState<any[]>(
     []
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch price and per quantity values for the selected service
   const selected = services?.find((s) => s.id === selectedService);
@@ -64,12 +69,12 @@ export default function NewOrder() {
   // Get currency rate
   const { rate: currencyRate, currency } = useCurrency();
 
-  // Calculate total price
+  // Calculate total price (matching API calculation: (rate * qty) / 1000)
   let totalPrice = 0;
   if (user?.currency === 'USD') {
-    totalPrice = (price / perQty) * qty;
+    totalPrice = (price * qty) / 1000;
   } else {
-    totalPrice = (price / perQty) * qty * (currencyRate || 121.52);
+    totalPrice = ((price * qty) / 1000) * (currencyRate || 121.52);
   }
 
   // Fetch favorite categories
@@ -323,36 +328,108 @@ export default function NewOrder() {
   // Handle form submission
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // check if user has enough balance
-    const userBalance =
-      userData?.currency === 'USD'
-        ? `${userData?.addFunds[0]?.amount}`
-        : `${(userData?.addFunds[0]?.amount * (currencyRate || 121.52)).toFixed(
-            4
-          )}`;
 
-    const userBalanceAmount = parseFloat(userBalance.replace(/,/g, ''));
-    totalPrice = parseFloat(totalPrice.toFixed(4));
-    if (userBalanceAmount < totalPrice) {
-      toast.error('Insufficient balance to create this order');
+    // Validation checks
+    if (!selectedService) {
+      toast.error('Please select a service');
       return;
     }
 
-    // Check if quantity is valid
+    if (!link || !link.startsWith('http')) {
+      toast.error('Please enter a valid link starting with http or https');
+      return;
+    }
+
     if (qty < 1) {
       toast.error('Please enter a valid quantity');
       return;
     }
-    // Check if link is valid
-    if (!link || !link.startsWith('https')) {
-      toast.error('Please enter a valid link');
+
+    const minOrder = selected?.min_order || 0;
+    const maxOrder = selected?.max_order || 0;
+
+    if (qty < minOrder) {
+      toast.error(`Minimum order quantity is ${minOrder}`);
       return;
     }
-    if (!link || !qty || !price) {
-      toast.error('Please fill all the fields');
+
+    if (qty > maxOrder) {
+      toast.error(`Maximum order quantity is ${maxOrder}`);
       return;
     }
-    console.log('Order Data:', orderData);
+
+    // Check if user has enough balance
+    // Use real-time balance from API, fallback to Redux store, then user object
+    const userBalanceAmount = userStatsResponse?.data?.balance || userData?.balance || user?.balance || 0;
+    const finalTotalPrice = parseFloat(totalPrice.toFixed(4));
+
+    if (userBalanceAmount < finalTotalPrice) {
+      toast.error(`Insufficient balance to create this order. Available: ${userBalanceAmount.toFixed(2)}, Required: ${finalTotalPrice.toFixed(2)}`);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Prepare order data for API (expects array format)
+      // Calculate USD and BDT prices to match API calculation
+      const usdPrice = (price * qty) / 1000;
+      const bdtPrice = usdPrice * (currencyRate || 121.52);
+
+      // Debug log to verify price calculation
+      console.log('Price Calculation Debug:', {
+        serviceRate: price,
+        quantity: qty,
+        usdPrice: usdPrice,
+        bdtPrice: bdtPrice,
+        finalTotalPrice: finalTotalPrice,
+        userCurrency: user?.currency
+      });
+
+      const orderPayload = [{
+        link,
+        qty,
+        price: finalTotalPrice,
+        usdPrice: usdPrice,
+        bdtPrice: bdtPrice,
+        currency: user?.currency,
+        serviceId: selectedService,
+        categoryId: selectedCategory,
+        userId: user?.id,
+        avg_time: selected?.avg_time || '',
+      }];
+
+      // Submit order to API
+      const response = await axiosInstance.post('/api/user/create-orders', orderPayload);
+
+      if (response.data.success) {
+        toast.success('Order created successfully!');
+
+        // Invalidate user stats to refresh balance
+        dispatch(dashboardApi.util.invalidateTags(['UserStats']));
+
+        // Also manually refetch user stats for immediate update
+        refetchUserStats();
+
+        // Reset form
+        setLink('');
+        setQty(0);
+        setSelectedService('');
+        setSelectedCategory('');
+        setSearch('');
+
+        // Optionally redirect to orders page
+        // router.push('/dashboard/user/my-orders');
+      } else {
+        toast.error(response.data.message || 'Failed to create order');
+      }
+    } catch (error: any) {
+      console.error('Error creating order:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create order';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle search select
@@ -616,8 +693,7 @@ export default function NewOrder() {
             {/* Price */}
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="price">
-                Charge ({selected?.perQty} per ={' '}
-                {user?.currency === 'USD' ? '$' : '৳'})
+                Charge (per 1000 = {user?.currency === 'USD' ? '$' : '৳'}{price.toFixed(2)})
               </Label>
               <div className="">
                 <input
@@ -626,14 +702,10 @@ export default function NewOrder() {
                   readOnly
                   disabled
                   className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-70"
-                  // value always shows bdt
                   value={
                     user?.currency === 'USD'
-                      ? `$ ${((price * qty) / perQty).toFixed(4)}`
-                      : `৳ ${(
-                          (price * qty * (currencyRate || 121.52)) /
-                          perQty
-                        ).toFixed(4)}`
+                      ? `$ ${totalPrice.toFixed(4)}`
+                      : `৳ ${totalPrice.toFixed(4)}`
                   }
                   placeholder="Charge"
                   required
@@ -643,8 +715,13 @@ export default function NewOrder() {
 
             {/* Submit Button */}
             <div className="flex flex-col space-y-1.5">
-              <Button className="w-full" variant="default" type="submit">
-                Create Order
+              <Button
+                className="w-full"
+                variant="default"
+                type="submit"
+                disabled={isSubmitting || !selectedService || !link || qty < 1}
+              >
+                {isSubmitting ? 'Creating Order...' : 'Create Order'}
               </Button>
             </div>
           </div>

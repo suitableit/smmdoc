@@ -38,18 +38,23 @@ export default function SignInForm() {
     setSuccess('');
     urlError = '';
     startTransition(() => {
-      login(values).then((data) => {
-        console.log(data);
-        if (data?.error) {
-          setError(data.error);
-        }
-        if (data?.message) {
-          setSuccess(data.message);
-        }
-        if (data?.twoFactor) {
-          setShowTwoFactor(true);
-        }
-      });
+      login(values)
+        .then((data) => {
+          console.log(data);
+          if (data?.error) {
+            setError(data.error);
+          }
+          if (data?.message) {
+            setSuccess(data.message);
+          }
+          if (data?.twoFactor) {
+            setShowTwoFactor(true);
+          }
+        })
+        .catch((err) => {
+          console.error('Login error:', err);
+          setError('An unexpected error occurred. Please try again.');
+        });
     });
   };
 

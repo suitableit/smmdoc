@@ -117,26 +117,51 @@ export default function AllTransactions() {
     fetchTransactions();
   };
 
-  const handleStatusChange = async (transactionId: string, newStatus: string) => {
+  const handleApprove = async (transactionId: string) => {
     try {
-      await axiosInstance.put(`/api/admin/funds/${transactionId}/status`, {
-        status: newStatus
-      });
-      
-      // Update local state to reflect the change
-      setTransactions(prevTransactions => 
-        prevTransactions.map(transaction => 
-          transaction.id === transactionId 
-            ? { ...transaction, admin_status: newStatus, status: newStatus === 'Success' ? 'Success' : transaction.status } 
-            : transaction
-        )
-      );
-      
-      // Show success message (you can implement a toast notification here)
-      alert(`Transaction status updated to ${newStatus}`);
+      const response = await axiosInstance.post(`/api/admin/funds/${transactionId}/approve`);
+
+      if (response.data.success) {
+        // Update local state to reflect the change
+        setTransactions(prevTransactions =>
+          prevTransactions.map(transaction =>
+            transaction.id === transactionId
+              ? { ...transaction, admin_status: 'approved', status: 'Success' }
+              : transaction
+          )
+        );
+
+        alert('Transaction approved successfully!');
+      }
     } catch (error) {
-      console.error('Error updating transaction status:', error);
-      alert('Failed to update transaction status');
+      console.error('Error approving transaction:', error);
+      alert('Failed to approve transaction');
+    }
+  };
+
+  const handleCancel = async (transactionId: string) => {
+    if (!confirm('Are you sure you want to cancel this transaction? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.post(`/api/admin/funds/${transactionId}/cancel`);
+
+      if (response.data.success) {
+        // Update local state to reflect the change
+        setTransactions(prevTransactions =>
+          prevTransactions.map(transaction =>
+            transaction.id === transactionId
+              ? { ...transaction, admin_status: 'cancelled', status: 'Cancelled' }
+              : transaction
+          )
+        );
+
+        alert('Transaction cancelled successfully!');
+      }
+    } catch (error) {
+      console.error('Error cancelling transaction:', error);
+      alert('Failed to cancel transaction');
     }
   };
 
@@ -227,33 +252,30 @@ export default function AllTransactions() {
                       <TableCell>{transaction.payment_method || transaction.method || 'N/A'}</TableCell>
                       <TableCell>{getStatusBadge(transaction.admin_status)}</TableCell>
                       <TableCell>
-                        {transaction.admin_status === 'Pending' && (
+                        {(transaction.admin_status === 'Pending' || transaction.admin_status === 'pending') && (
                           <div className="flex space-x-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
+                            <Button
+                              size="sm"
+                              variant="outline"
                               className="bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20"
-                              onClick={() => handleStatusChange(transaction.id, 'Success')}
+                              onClick={() => handleApprove(transaction.id)}
+                              title="Approve transaction and add funds to user account"
                             >
                               <CheckCircle className="h-3 w-3 mr-1" /> Approve
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
+                            <Button
+                              size="sm"
+                              variant="outline"
                               className="bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20"
-                              onClick={() => handleStatusChange(transaction.id, 'Cancelled')}
+                              onClick={() => handleCancel(transaction.id)}
+                              title="Cancel transaction and notify user"
                             >
                               <XCircle className="h-3 w-3 mr-1" /> Cancel
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="bg-purple-500/10 text-purple-500 border-purple-500/20 hover:bg-purple-500/20"
-                              onClick={() => handleStatusChange(transaction.id, 'Suspicious')}
-                            >
-                              <AlertCircle className="h-3 w-3 mr-1" /> Mark Suspicious
-                            </Button>
                           </div>
+                        )}
+                        {(transaction.admin_status !== 'Pending' && transaction.admin_status !== 'pending') && (
+                          <span className="text-gray-500 text-sm">No actions available</span>
                         )}
                       </TableCell>
                     </TableRow>

@@ -99,9 +99,9 @@ export async function POST(req: NextRequest) {
           user_id: session.user.id,
           order_id: order_id,
       },
-        redirect_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/user/success?invoice_id=${invoice_id}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/user/transactions?status=cancelled`,
-        webhook_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/payment/webhook`,
+        redirect_url: `http://localhost:3000/payment/uddoktapay-verify?invoice_id=${invoice_id}&amount=${amount}`,
+        cancel_url: `http://localhost:3000/dashboard/user/transactions?status=cancelled`,
+        webhook_url: `http://localhost:3000/api/payment/webhook`,
     };
 
     console.log('Payment data being sent:', JSON.stringify(paymentData, null, 2));
