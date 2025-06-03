@@ -1277,17 +1277,6 @@ export default function AdminDashboard() {
           </button>
         </div>
       </div>
-
-      <footer className="text-center text-gray-500 text-sm mt-10 p-6 bg-gradient-to-r from-gray-100 to-blue-100 rounded-lg border border-gray-200">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <Crown className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-bold text-gray-700">SMM Matrix</span>
-        </div>
-        <p className="text-gray-600">Copyrights © 2025 All Rights Reserved By SMM Matrix</p>
-        <p className="text-xs text-gray-500 mt-1">Powered by Advanced Analytics & Modern Design</p>
-      </footer>
     </div>
   );
 }

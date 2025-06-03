@@ -1,6 +1,5 @@
 "use client";
 
-import ModernOrderForm from '@/components/modern-order-form';
 import { Button } from '@/components/ui/button';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -31,7 +30,6 @@ export default function DashboardPage() {
   const user = useCurrentUser();
   const { currency, rate: currencyRate } = useCurrency();
   const router = useRouter();
-  const [activeForm, setActiveForm] = useState<'newOrder' | 'massOrder' | 'customOrder' | 'subscriptionOrder' | null>(null);
   const [darkMode, setDarkMode] = useState(false);
 
   // Fetch user stats from API
@@ -55,11 +53,6 @@ export default function DashboardPage() {
     const convertedAmount = currency === 'BDT' ? amount : amount / (currencyRate || 121.52);
     const symbol = currency === 'USD' ? '$' : '৳';
     return `${symbol}${convertedAmount.toFixed(2)}`;
-  };
-
-  // Toggle form display with animation
-  const toggleForm = (form: 'newOrder' | 'massOrder' | 'customOrder' | 'subscriptionOrder') => {
-    setActiveForm(activeForm === form ? null : form);
   };
 
   const handleCategoryClick = (categoryId: string | null) => {
@@ -243,103 +236,6 @@ export default function DashboardPage() {
           </motion.div>
         </div>
       </div>
-
-      {/* Social media platforms section moved to new-order page */}
-
-      {/* Order Buttons */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-        className="flex flex-wrap gap-3 mb-5">
-        <Button 
-          onClick={() => toggleForm('newOrder')} 
-          className={`px-5 py-2.5 rounded-lg ${activeForm === 'newOrder' 
-            ? 'bg-gradient-to-r from-purple-700 to-purple-500' 
-            : 'bg-gradient-to-r from-purple-600 to-purple-400'} 
-            text-white flex items-center shadow-md hover:shadow-lg transition-all duration-300`}
-        >
-          <FaShoppingBag className="mr-2" /> New Order
-        </Button>
-        <Button 
-          onClick={() => toggleForm('massOrder')} 
-          className={`px-5 py-2.5 rounded-lg ${activeForm === 'massOrder' 
-            ? 'bg-gradient-to-r from-gray-800 to-gray-700' 
-            : 'bg-gradient-to-r from-gray-700 to-gray-600'} 
-            text-white flex items-center shadow-md hover:shadow-lg transition-all duration-300`}
-        >
-          <FaBuffer className="mr-2" /> Mass Order
-        </Button>
-        <Button 
-          onClick={() => toggleForm('customOrder')} 
-          className={`px-5 py-2.5 rounded-lg ${activeForm === 'customOrder' 
-            ? 'bg-gradient-to-r from-blue-700 to-blue-500' 
-            : 'bg-gradient-to-r from-blue-600 to-blue-400'} 
-            text-white flex items-center shadow-md hover:shadow-lg transition-all duration-300`}
-        >
-          <FaWallet className="mr-2" /> Custom Order
-        </Button>
-        <Button 
-          onClick={() => toggleForm('subscriptionOrder')} 
-          className={`px-5 py-2.5 rounded-lg ${activeForm === 'subscriptionOrder' 
-            ? 'bg-gradient-to-r from-green-700 to-green-500' 
-            : 'bg-gradient-to-r from-green-600 to-green-400'} 
-            text-white flex items-center shadow-md hover:shadow-lg transition-all duration-300`}
-        >
-          <FaMoneyBillWave className="mr-2" /> Subscription
-        </Button>
-      </motion.div>
-
-      {/* Active Form Display */}
-      <AnimatePresence>
-        {activeForm === 'newOrder' && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mt-2 overflow-hidden"
-          >
-            <ModernOrderForm type="new" darkMode={darkMode} />
-          </motion.div>
-        )}
-
-        {activeForm === 'massOrder' && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mt-2 overflow-hidden"
-          >
-            <ModernOrderForm type="mass" darkMode={darkMode} />
-          </motion.div>
-        )}
-        
-        {activeForm === 'customOrder' && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mt-2 overflow-hidden"
-          >
-            <ModernOrderForm type="custom" darkMode={darkMode} />
-          </motion.div>
-        )}
-        
-        {activeForm === 'subscriptionOrder' && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mt-2 overflow-hidden"
-          >
-            <ModernOrderForm type="subscription" darkMode={darkMode} />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Enhanced Statistics Section */}
       <motion.div 

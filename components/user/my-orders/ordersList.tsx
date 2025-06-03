@@ -8,7 +8,6 @@ import useCurrency from '@/hooks/useCurrency';
 import { useGetUserOrdersQuery } from '@/lib/services/userOrderApi';
 import moment from 'moment';
 import { useMemo, useState } from 'react';
-import { BounceLoader } from 'react-spinners';
 
 export default function OrdersList() {
   const [page, setPage] = useState(1);
@@ -52,14 +51,6 @@ export default function OrdersList() {
         return 'bg-gray-500';
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex h-60 items-center justify-center">
-        <BounceLoader color="#36d7b7" />
-      </div>
-    );
-  }
 
   if (error) {
     return <div className="text-red-500">Error loading orders!</div>;
@@ -178,8 +169,7 @@ export default function OrdersList() {
       </div>
 
       {/* Pagination */}
-      {pagination.totalPages > 0 && (
-        <div className="flex items-center justify-between mt-4">
+      {pagination.totalPages > 0 && (         <div className="flex items-center justify-between mt-4">
           <div className="text-sm text-gray-600">
             Total: {pagination.total} orders | Page {pagination.page} / {pagination.totalPages}
           </div>
@@ -205,4 +195,4 @@ export default function OrdersList() {
       )}
     </div>
   );
-} 
+}
