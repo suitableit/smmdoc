@@ -25,6 +25,10 @@ import {
   FaMoon,
   FaDesktop,
   FaChevronUp,
+  FaBars,
+  FaTimes,
+  FaShoppingCart,
+  FaTicketAlt,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -71,8 +75,8 @@ const ThemeToggle = () => {
 
   if (!mounted) {
     return (
-      <div className="h-10 w-10 rounded-lg bg-white dark:bg-[#2a2b40] border border-gray-200 dark:border-gray-600 flex items-center justify-center animate-pulse">
-        <div className="h-5 w-5 bg-gray-200 dark:bg-gray-600 rounded"></div>
+      <div className="h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center animate-pulse" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
+        <div className="h-5 w-5 rounded" style={{ backgroundColor: 'var(--header-border)' }}></div>
       </div>
     );
   }
@@ -89,11 +93,11 @@ const ThemeToggle = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="h-10 w-10 rounded-lg bg-white dark:bg-[#2a2b40] border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 group">
-          <CurrentIcon className="h-5 w-5 text-gray-600 dark:text-gray-300 group-hover:text-[#5F1DE8] dark:group-hover:text-[#B131F8] transition-colors duration-200" />
+        <button className="h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 group" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
+          <CurrentIcon className="h-5 w-5 transition-colors duration-200" style={{ color: 'var(--header-text-hover)' }} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40 bg-white dark:bg-[#2a2b40] border border-gray-200 dark:border-gray-700 shadow-sm">
+      <DropdownMenuContent align="end" className="w-40 theme-dropdown header-theme-transition shadow-sm" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
         <div className="p-1">
           {themeOptions.map((option) => {
             const IconComponent = option.icon;
@@ -105,9 +109,13 @@ const ThemeToggle = () => {
                 onClick={() => setTheme(option.key)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
                   isActive 
-                    ? 'bg-[#5F1DE8] text-white shadow-sm' 
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-[#5F1DE8] dark:hover:text-[#B131F8]'
+                    ? 'text-white shadow-sm' 
+                    : 'hover:opacity-80'
                 }`}
+                style={{
+                  backgroundColor: isActive ? 'var(--primary)' : 'transparent',
+                  color: isActive ? 'white' : 'var(--header-text)'
+                }}
               >
                 <IconComponent className={`h-4 w-4 transition-colors duration-200 ${
                   isActive ? 'text-white' : ''
@@ -125,35 +133,19 @@ const ThemeToggle = () => {
 // Enhanced Mobile Menu Toggle Button
 const MobileMenuToggle = ({ isMenuOpen, toggleMenu }: { isMenuOpen: boolean; toggleMenu: () => void }) => (
   <button
-    className="lg:hidden h-10 w-10 rounded-lg bg-white dark:bg-[#2a2b40] border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 group"
+    className="lg:hidden h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 group"
+    style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}
     type="button"
     onClick={toggleMenu}
     aria-controls="mobile-menu"
     aria-expanded={isMenuOpen}
     aria-label="Toggle navigation menu"
   >
-    <svg
-      className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-[#5F1DE8] dark:group-hover:text-[#B131F8] transition-colors duration-200"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      {isMenuOpen ? (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M6 18L18 6M6 6l12 12"
-        />
-      ) : (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M4 6h16M4 12h16M4 18h16"
-        />
-      )}
-    </svg>
+    {isMenuOpen ? (
+      <FaTimes className="w-5 h-5 transition-colors duration-200" style={{ color: 'var(--header-text-hover)' }} />
+    ) : (
+      <FaBars className="w-5 h-5 transition-colors duration-200" style={{ color: 'var(--header-text-hover)' }} />
+    )}
   </button>
 );
 
@@ -240,10 +232,10 @@ const Menu = ({ user }: { user: any }) => {
           />
           
           {/* Menu Content with updated styling */}
-          <div className="absolute right-0 mt-2 w-80 z-50 bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
+          <div className="absolute right-0 mt-2 w-80 z-50 header-theme-transition rounded-lg shadow-sm transition-colors duration-200" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
             
             {/* User Info Section */}
-            <div className="p-6 bg-[#f1f2f6] dark:bg-[#2a2b40]">
+            <div className="p-6" style={{ backgroundColor: 'var(--dropdown-hover)' }}>
               <div className="flex items-center space-x-4 mb-4">
                 <Avatar className="h-14 w-14 ring-3 ring-[#5F1DE8]/20">
                   <AvatarImage
@@ -255,10 +247,10 @@ const Menu = ({ user }: { user: any }) => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white truncate">
+                  <h3 className="text-xl font-bold truncate" style={{ color: 'var(--header-text)' }}>
                     {user?.username || user?.name || 'User Name'}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300 truncate">
+                  <p className="truncate" style={{ color: 'var(--header-text)', opacity: 0.7 }}>
                     {user?.email || 'user@example.com'}
                   </p>
                   <span className="inline-flex items-center px-2 py-1 rounded-lg text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 mt-1">
@@ -268,7 +260,7 @@ const Menu = ({ user }: { user: any }) => {
               </div>
               
               {/* Balance Card */}
-              <div className="bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg p-4 text-white">
+              <div className="rounded-lg p-4 text-white" style={{ background: `linear-gradient(to right, var(--primary), var(--secondary))` }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <FaWallet className="h-5 w-5" />
@@ -295,12 +287,12 @@ const Menu = ({ user }: { user: any }) => {
                   key={index}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className="w-full px-6 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 flex items-center space-x-3 group block"
+                  className="w-full px-6 py-3 text-left hover:opacity-80 transition-colors duration-200 flex items-center space-x-3 group block"
                 >
-                  <div className="p-2 rounded-lg bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] group-hover:from-[#4F0FD8] group-hover:to-[#A121E8] transition-colors duration-200">
+                  <div className="p-2 rounded-lg group-hover:opacity-80 transition-colors duration-200" style={{ background: `linear-gradient(to right, var(--primary), var(--secondary))` }}>
                     <item.icon className="h-4 w-4 text-white" />
                   </div>
-                  <span className="font-semibold text-[#5F1DE8] dark:text-[#B131F8] group-hover:text-[#4F0FD8] dark:group-hover:text-[#A121E8] transition-colors duration-200">
+                  <span className="font-semibold transition-colors duration-200" style={{ color: 'var(--header-text)' }}>
                     {item.label}
                   </span>
                 </Link>
@@ -308,7 +300,7 @@ const Menu = ({ user }: { user: any }) => {
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
+            <div style={{ borderTop: `1px solid var(--header-border)` }}></div>
 
             {/* Logout Button */}
             <div className="p-2">
@@ -387,7 +379,7 @@ const Header = () => {
   };
 
   return (
-    <nav className="h-20 flex items-center justify-between px-8 bg-white dark:bg-[#232333] border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+    <nav className="h-20 flex items-center justify-between px-8 header-theme-transition" style={{ backgroundColor: 'var(--header-bg)', borderBottom: `1px solid var(--header-border)`, color: 'var(--header-text)' }}>
       
       {/* Search Bar with + icon beside it */}
       <div className="hidden md:flex items-center gap-3 flex-grow max-w-md">
@@ -398,27 +390,28 @@ const Header = () => {
           <input
             type="search"
             placeholder="Search..."
-            className="w-full h-full pl-10 pr-4 bg-white dark:bg-[#2a2b40] border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] transition-colors duration-200"
+            className="w-full h-full pl-10 pr-4 header-theme-transition rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-colors duration-200"
+            style={{ backgroundColor: 'var(--dropdown-bg)', color: 'var(--header-text)', border: `1px solid var(--header-border)` }}
           />
         </div>
         
         {/* Quick Create Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="h-10 w-10 rounded-lg bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] flex items-center justify-center text-white shadow-sm hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 hover:-translate-y-0.5 flex-shrink-0">
+            <button className="h-10 w-10 rounded-lg text-white shadow-sm hover:shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 flex-shrink-0 flex items-center justify-center" style={{ background: `linear-gradient(to right, var(--primary), var(--secondary))` }}>
               <FaPlus className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-[#2a2b40] border border-gray-200 dark:border-gray-700 shadow-sm">
+          <DropdownMenuContent align="end" className="w-48 header-theme-transition shadow-sm" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/user/new-order" className="flex items-center gap-3 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50 px-4 py-3">
-                <i className="ri-shopping-cart-2-line text-lg text-blue-500"></i>
+              <Link href="/dashboard/user/new-order" className="flex items-center gap-3 hover:opacity-80 px-4 py-3" style={{ color: 'var(--header-text)' }}>
+                <FaShoppingCart className="text-lg text-blue-500" />
                 <span className="font-medium">New Order</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/user/trickets" className="flex items-center gap-3 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50 px-4 py-3">
-                <i className="ri-ticket-2-line text-lg text-purple-500"></i>
+              <Link href="/dashboard/user/trickets" className="flex items-center gap-3 hover:opacity-80 px-4 py-3" style={{ color: 'var(--header-text)' }}>
+                <FaTicketAlt className="text-lg text-purple-500" />
                 <span className="font-medium">Support Ticket</span>
               </Link>
             </DropdownMenuItem>
@@ -432,34 +425,39 @@ const Header = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button 
-                className="h-10 px-4 rounded-lg bg-white dark:bg-[#2a2b40] border border-gray-200 dark:border-gray-600 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 group min-w-[80px] flex-shrink-0"
+                className="h-10 px-4 rounded-lg header-theme-transition flex items-center gap-2 hover:opacity-80 transition-all duration-200 group min-w-[80px] flex-shrink-0"
+                style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}
                 disabled={isLoading}
               >
-                <span className="text-lg font-bold text-gray-700 dark:text-gray-300 group-hover:text-[#5F1DE8] dark:group-hover:text-[#B131F8] transition-colors duration-200">
+                <span className="text-lg font-bold transition-colors duration-200" style={{ color: 'var(--header-text)' }}>
                   {currency === 'USD' ? '$' : '৳'}
                 </span>
-                <span className="font-medium text-gray-900 dark:text-white group-hover:text-[#5F1DE8] dark:group-hover:text-[#B131F8] transition-colors duration-200">
+                <span className="font-medium transition-colors duration-200" style={{ color: 'var(--header-text)' }}>
                   {currency}
                 </span>
-                <FaChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400 group-hover:text-[#5F1DE8] dark:group-hover:text-[#B131F8] transition-colors duration-200" />
+                <FaChevronDown className="w-4 h-4 transition-colors duration-200" style={{ color: 'var(--header-text)', opacity: 0.7 }} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-[#2a2b40] border border-gray-200 dark:border-gray-700 shadow-sm">
+            <DropdownMenuContent align="end" className="w-48 header-theme-transition shadow-sm" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
               <div className="p-1">
                 <button
                   onClick={() => handleCurrencyChange('BDT')}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
                     currency === 'BDT' 
-                      ? 'bg-[#5F1DE8] text-white shadow-sm' 
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-[#5F1DE8] dark:hover:text-[#B131F8]'
+                      ? 'text-white shadow-sm' 
+                      : 'hover:opacity-80'
                   }`}
+                  style={{
+                    backgroundColor: currency === 'BDT' ? 'var(--primary)' : 'transparent',
+                    color: currency === 'BDT' ? 'white' : 'var(--header-text)'
+                  }}
                 >
-                  <span className={`text-lg font-bold min-w-[24px] ${currency === 'BDT' ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                  <span className={`text-lg font-bold min-w-[24px] ${currency === 'BDT' ? 'text-white' : ''}`} style={{ color: currency === 'BDT' ? 'white' : 'var(--header-text)' }}>
                     ৳
                   </span>
                   <div className="flex flex-col">
                     <span className="font-medium text-sm">BDT</span>
-                    <span className={`text-xs ${currency === 'BDT' ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <span className={`text-xs ${currency === 'BDT' ? 'text-white/80' : ''}`} style={{ color: currency === 'BDT' ? 'rgba(255,255,255,0.8)' : 'var(--header-text)', opacity: currency === 'BDT' ? 1 : 0.7 }}>
                       Bangladeshi Taka
                     </span>
                   </div>
@@ -468,16 +466,20 @@ const Header = () => {
                   onClick={() => handleCurrencyChange('USD')}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
                     currency === 'USD' 
-                      ? 'bg-[#5F1DE8] text-white shadow-sm' 
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-[#5F1DE8] dark:hover:text-[#B131F8]'
+                      ? 'text-white shadow-sm' 
+                      : 'hover:opacity-80'
                   }`}
+                  style={{
+                    backgroundColor: currency === 'USD' ? 'var(--primary)' : 'transparent',
+                    color: currency === 'USD' ? 'white' : 'var(--header-text)'
+                  }}
                 >
-                  <span className={`text-lg font-bold min-w-[24px] ${currency === 'USD' ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                  <span className={`text-lg font-bold min-w-[24px] ${currency === 'USD' ? 'text-white' : ''}`} style={{ color: currency === 'USD' ? 'white' : 'var(--header-text)' }}>
                     $
                   </span>
                   <div className="flex flex-col">
                     <span className="font-medium text-sm">USD</span>
-                    <span className={`text-xs ${currency === 'USD' ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <span className={`text-xs ${currency === 'USD' ? 'text-white/80' : ''}`} style={{ color: currency === 'USD' ? 'rgba(255,255,255,0.8)' : 'var(--header-text)', opacity: currency === 'USD' ? 1 : 0.7 }}>
                       US Dollar
                     </span>
                   </div>
@@ -487,7 +489,7 @@ const Header = () => {
           </DropdownMenu>
           {rate && !isLoading && (
             <div className="flex items-center h-10">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300 hidden sm:inline">
+              <span className="text-sm font-medium hidden sm:inline" style={{ color: 'var(--header-text)' }}>
                 1USD ≈ {rate.toFixed(2)}BDT
               </span>
             </div>
@@ -497,7 +499,8 @@ const Header = () => {
         {/* Balance display with wallet icon */}
         <Link 
           href="/dashboard/user/add-funds" 
-          className={`flex items-center gap-2 h-10 ${isRefreshing ? 'animate-pulse' : ''} bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white rounded-lg px-4 hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 hover:-translate-y-0.5 group flex-shrink-0`}
+          className={`flex items-center gap-2 h-10 ${isRefreshing ? 'animate-pulse' : ''} text-white rounded-lg px-4 shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 group flex-shrink-0`}
+          style={{ background: `linear-gradient(to right, var(--primary), var(--secondary))` }}
         >
           <FaWallet className="text-white group-hover:animate-bounce" />
           <span className="font-bold">
@@ -508,20 +511,20 @@ const Header = () => {
         {/* Notification dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="h-10 w-10 rounded-lg bg-white dark:bg-[#2a2b40] border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 flex-shrink-0">
-              <FaBell className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            <button className="h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 flex-shrink-0" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
+              <FaBell className="h-4 w-4" style={{ color: 'var(--header-text)' }} />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 bg-white dark:bg-[#2a2b40] border border-gray-200 dark:border-gray-700 shadow-sm">
-            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Notifications</h3>
+          <DropdownMenuContent align="end" className="w-80 header-theme-transition shadow-sm" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
+            <div className="flex justify-between items-center p-4" style={{ borderBottom: `1px solid var(--header-border)` }}>
+              <h3 className="text-xl font-bold" style={{ color: 'var(--header-text)' }}>Notifications</h3>
               <button className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">Mark all as read</button>
             </div>
             <div className="flex flex-col p-6 items-center justify-center text-center">
-              <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center mb-3">
-                <FaBell className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: 'var(--dropdown-hover)' }}>
+                <FaBell className="h-6 w-6" style={{ color: 'var(--header-text)', opacity: 0.5 }} />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 font-medium">No notifications found</p>
+              <p className="font-medium" style={{ color: 'var(--header-text)', opacity: 0.7 }}>No notifications found</p>
             </div>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -79,7 +79,7 @@ export default function SideBarNav({ collapsed = false, user, setOpen = () => {}
       // Group user items into sections
       return {
         core: items.filter(item => ['Dashboard'].includes(item.title)),
-        orders: items.filter(item => ['New Order', 'Mass Order', 'My Orders', 'Order History'].includes(item.title)),
+        orders: items.filter(item => ['New Order', 'Mass Order', 'My Orders'].includes(item.title)),
         services: items.filter(item => ['All Services', 'Favorite Services'].includes(item.title)),
         funds: items.filter(item => ['Add Fund', 'Transactions'].includes(item.title)),
         support: items.filter(item => ['Support Ticket', 'Ticket History', 'Contact Support', 'FAQ'].includes(item.title)),

@@ -1,27 +1,33 @@
+'use client';
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
-'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Copy, User, Shield, Key, DollarSign, Eye, EyeOff, Clock, Globe, Camera } from 'lucide-react';
+import { Copy, User, Shield, Key, DollarSign, Eye, EyeOff, Clock, Globe, Camera, CheckCircle, X } from 'lucide-react';
 
 // Mock components and hooks for demonstration
-const ButtonLoader = () => <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>;
+const ButtonLoader = () => <div className="loading-spinner"></div>;
+
+// Toast/Twist Message Component using CSS classes
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`toast toast-${type} toast-enter`}>
+    {type === 'success' && <CheckCircle className="toast-icon" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="toast-close">
+      <X className="toast-close-icon" />
+    </button>
+  </div>
+);
 
 const Switch = ({ checked, onCheckedChange, onClick, title }: any) => (
   <button
     onClick={onClick}
     title={title}
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-      checked ? 'bg-[#5F1DE8]' : 'bg-gray-300 dark:bg-gray-600'
-    }`}
+    className={`switch ${checked ? 'switch-checked' : 'switch-unchecked'}`}
   >
-    <span
-      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-        checked ? 'translate-x-6' : 'translate-x-1'
-      }`}
-    />
+    <span className="switch-thumb" />
   </button>
 );
 
@@ -29,7 +35,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, any>(({ className, ...p
   const [showPassword, setShowPassword] = useState(false);
   
   return (
-    <div className="relative">
+    <div className="password-input-container">
       <input
         type={showPassword ? "text" : "password"}
         className={className}
@@ -39,7 +45,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, any>(({ className, ...p
       <button
         type="button"
         onClick={() => setShowPassword(!showPassword)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+        className="password-toggle"
       >
         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </button>
@@ -84,6 +90,7 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [selectedTimezone, setSelectedTimezone] = useState('21600');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
   const [formData, setFormData] = useState({
     currentPass: '',
     newPass: '',
@@ -107,10 +114,17 @@ const ProfilePage = () => {
     { value: '-18000', label: '(UTC -5:00) Eastern Standard Time, Western Caribbean Standard Time' },
   ];
 
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000); // Auto hide after 4 seconds
+  };
+
   const copyToClipboard = (key: ApiKey | null) => {
     if (key) {
       navigator.clipboard.writeText(key.key).then(() => {
         setCopied(true);
+        showToast('API key copied to clipboard!', 'success');
         setTimeout(() => setCopied(false), 1500);
       });
     }
@@ -122,35 +136,49 @@ const ProfilePage = () => {
     setTimeout(() => {
       setIsLoading(false);
       setFormData({ currentPass: '', newPass: '', confirmNewPass: '' });
-      alert('Password changed successfully!');
+      showToast('Password changed successfully!', 'success');
     }, 1000);
   };
 
   const handleTwoFactorToggle = async () => {
     const nextState = !twoFactor;
     setTwoFactor(nextState);
-    alert(`Two-factor authentication ${nextState ? 'enabled' : 'disabled'}.`);
+    showToast(
+      `Two-factor authentication ${nextState ? 'enabled' : 'disabled'} successfully!`, 
+      'success'
+    );
   };
 
   const handleApiKeyGeneration = async () => {
     setApiKey({
-      key: 'sk_test_' + Math.random().toString(36).substring(2),
+      key: 'smmdoc_' + Math.random().toString(36).substring(2),
       createdAt: new Date(),
       updatedAt: new Date(),
       id: Math.random().toString(),
       userId: '1'
     });
-    alert('API Key generated successfully!');
+    showToast('API key generated successfully!', 'success');
   };
 
   return (
-    <div className="min-h-screen bg-[#f1f2f6] dark:bg-[#232333] transition-colors duration-200">
-      <div className="mx-auto">
+    <div className="page-container">
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </div>
+      
+      <div className="page-content">
         
         {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Account Settings</h1>
-          <p className="text-gray-600 dark:text-gray-300">Manage your account information and security settings</p>
+        <div className="page-header">
+          <h1 className="page-title">Account Settings</h1>
+          <p className="page-description">Manage your account information and security settings</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -159,126 +187,110 @@ const ProfilePage = () => {
           <div className="space-y-6">
             
             {/* Account Information Card */}
-            <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Account Information</h3>
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <User />
+                </div>
+                <h3 className="card-title">Account Information</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="form-group">
+                  <label className="form-label">Username</label>
+                  <input
+                    type="text"
+                    value={user?.name || 'msrjihad'}
+                    readOnly
+                    className="form-input"
+                  />
                 </div>
                 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      value={user?.name || 'msrjihad'}
-                      readOnly
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#151428] border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={user?.email || 'msrjihad@gmail.com'}
-                      readOnly
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-[#151428] border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none"
-                    />
-                  </div>
-                  
-                  <button className="bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 hover:-translate-y-0.5">
-                    Change Email
-                  </button>
+                <div className="form-group">
+                  <label className="form-label">Email</label>
+                  <input
+                    type="email"
+                    value={user?.email || 'msrjihad@gmail.com'}
+                    readOnly
+                    className="form-input"
+                  />
                 </div>
+                
+                <button className="btn btn-primary">
+                  Change Email
+                </button>
               </div>
             </div>
 
             {/* User Profile Picture Card */}
-            <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                    <Camera className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Profile Picture</h3>
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <Camera />
                 </div>
-                
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="relative">
-                    <div className="w-24 h-24 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                      {user?.name?.charAt(0) || 'M'}
-                    </div>
-                    <button className="absolute bottom-0 right-0 w-8 h-8 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center border-2 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                      <Camera className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                    </button>
+                <h3 className="card-title">Profile Picture</h3>
+              </div>
+              
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <div className="profile-picture">
+                    {user?.name?.charAt(0) || 'M'}
                   </div>
-                  <button className="bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-6 py-2 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 hover:-translate-y-0.5">
-                    Upload Photo
+                  <button className="profile-picture-edit">
+                    <Camera className="w-4 h-4" />
                   </button>
                 </div>
+                <button className="btn btn-primary">
+                  Upload Photo
+                </button>
               </div>
             </div>
 
             {/* Change Password Card */}
-            <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Change Password</h3>
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <Shield />
+                </div>
+                <h3 className="card-title">Change Password</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="form-group">
+                  <label className="form-label">Current Password</label>
+                  <PasswordInput
+                    value={formData.currentPass}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, currentPass: e.target.value }))}
+                    className="form-input"
+                  />
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Current Password
-                    </label>
-                    <PasswordInput
-                      value={formData.currentPass}
-                      onChange={(e: any) => setFormData(prev => ({ ...prev, currentPass: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-[#151428] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] transition-colors duration-200"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      New Password
-                    </label>
-                    <PasswordInput
-                      value={formData.newPass}
-                      onChange={(e: any) => setFormData(prev => ({ ...prev, newPass: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-[#151428] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] transition-colors duration-200"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Confirm New Password
-                    </label>
-                    <PasswordInput
-                      value={formData.confirmNewPass}
-                      onChange={(e: any) => setFormData(prev => ({ ...prev, confirmNewPass: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-[#151428] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] transition-colors duration-200"
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={isLoading}
-                    className="w-full bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
-                  >
-                    {isLoading ? <ButtonLoader /> : 'Change Password'}
-                  </button>
+                <div className="form-group">
+                  <label className="form-label">New Password</label>
+                  <PasswordInput
+                    value={formData.newPass}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, newPass: e.target.value }))}
+                    className="form-input"
+                  />
                 </div>
+
+                <div className="form-group">
+                  <label className="form-label">Confirm New Password</label>
+                  <PasswordInput
+                    value={formData.confirmNewPass}
+                    onChange={(e: any) => setFormData(prev => ({ ...prev, confirmNewPass: e.target.value }))}
+                    className="form-input"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="btn btn-primary w-full"
+                >
+                  {isLoading ? <ButtonLoader /> : 'Change Password'}
+                </button>
               </div>
             </div>
 
@@ -288,93 +300,85 @@ const ProfilePage = () => {
           <div className="space-y-6">
             
             {/* Two Factor Auth Card */}
-            <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">2FA</h3>
+            <div className="card card-padding">
+              <div className="card-header mb-4">
+                <div className="card-icon">
+                  <Shield />
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Two-factor authentication
-                    </label>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Email-based option to add an extra layer of protection to your account. When signing in you'll need to enter a code that will be sent to your email address.
-                    </p>
-                  </div>
-                  <div className="ml-4">
-                    <Switch
-                      checked={twoFactor}
-                      onCheckedChange={setTwoFactor}
-                      onClick={handleTwoFactorToggle}
-                      title={`${twoFactor ? 'Disable' : 'Enable'} Two-Factor Authentication`}
-                    />
-                  </div>
+                <h3 className="card-title">2FA</h3>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <label className="form-label">Two-factor authentication</label>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    Email-based option to add an extra layer of protection to your account. When signing in you'll need to enter a code that will be sent to your email address.
+                  </p>
+                </div>
+                <div className="ml-4">
+                  <Switch
+                    checked={twoFactor}
+                    onCheckedChange={setTwoFactor}
+                    onClick={handleTwoFactorToggle}
+                    title={`${twoFactor ? 'Disable' : 'Enable'} Two-Factor Authentication`}
+                  />
                 </div>
               </div>
             </div>
 
             {/* API Keys Card */}
-            <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                    <Key className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">API Keys</h3>
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <Key />
                 </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      API Key
-                    </label>
-                    <div className="flex flex-col gap-3">
-                      <div className="relative">
-                        <input
-                          type="text"
-                          readOnly
-                          value={apiKey?.key || '********************************'}
-                          className="w-full px-4 py-3 bg-gray-50 dark:bg-[#151428] border border-gray-200 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 focus:outline-none font-mono text-sm"
-                        />
-                        
-                        {/* Responsive timestamp positioning */}
-                        {apiKey?.key && (
-                          <div className="mt-2 lg:absolute lg:-bottom-6 lg:left-0 lg:mt-0">
-                            <small className="text-xs text-gray-500 dark:text-gray-400">
-                              Created: {new Date(apiKey?.createdAt).toLocaleString('en-US', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </small>
-                          </div>
-                        )}
-                      </div>
+                <h3 className="card-title">API Keys</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="form-label mb-2">API Key</label>
+                  <div className="api-key-container">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        readOnly
+                        value={apiKey?.key || '********************************'}
+                        className="form-input api-key-input"
+                      />
                       
-                      <div className="flex gap-2 lg:mt-6">
-                        <button
-                          type="button"
-                          onClick={() => copyToClipboard(apiKey)}
-                          className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 flex items-center justify-center gap-2"
-                        >
-                          <Copy className="h-4 w-4" />
-                          {copied ? 'Copied!' : 'Copy'}
-                        </button>
-                        
-                        <button
-                          onClick={handleApiKeyGeneration}
-                          className="flex-1 px-4 py-3 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 hover:-translate-y-0.5 font-medium"
-                        >
-                          {apiKey ? 'Generate New' : 'Generate'}
-                        </button>
-                      </div>
+                      {/* Responsive timestamp positioning */}
+                      {apiKey?.key && (
+                        <div className="api-key-timestamp">
+                          <small>
+                            Created: {new Date(apiKey?.createdAt).toLocaleString('en-US', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </small>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="api-key-buttons">
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(apiKey)}
+                        className="btn btn-secondary flex items-center justify-center gap-2"
+                      >
+                        <Copy className="h-4 w-4" />
+                        {copied ? 'Copied!' : 'Copy'}
+                      </button>
+                      
+                      <button
+                        onClick={handleApiKeyGeneration}
+                        className="btn btn-primary"
+                      >
+                        {apiKey ? 'Generate New' : 'Generate'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -382,70 +386,62 @@ const ProfilePage = () => {
             </div>
 
             {/* Timezone Card */}
-            <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Timezone</h3>
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <Clock />
                 </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Select Timezone
-                    </label>
-                    <select
-                      value={selectedTimezone}
-                      onChange={(e) => setSelectedTimezone(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-[#151428] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] transition-colors duration-200"
-                    >
-                      {timezones.map((tz) => (
-                        <option key={tz.value} value={tz.value}>
-                          {tz.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <button className="bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 hover:-translate-y-0.5">
-                    Save Timezone
-                  </button>
+                <h3 className="card-title">Timezone</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="form-group">
+                  <label className="form-label">Select Timezone</label>
+                  <select
+                    value={selectedTimezone}
+                    onChange={(e) => setSelectedTimezone(e.target.value)}
+                    className="form-select"
+                  >
+                    {timezones.map((tz) => (
+                      <option key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+                <button className="btn btn-primary">
+                  Save Timezone
+                </button>
               </div>
             </div>
 
             {/* Change Language Card */}
-            <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                    <Globe className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Change Language</h3>
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <Globe />
                 </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Select Language
-                    </label>
-                    <select
-                      value={selectedLanguage}
-                      onChange={(e) => setSelectedLanguage(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-[#151428] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] transition-colors duration-200"
-                    >
-                      {languages.map((lang) => (
-                        <option key={lang.value} value={lang.value}>
-                          {lang.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <button className="bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-6 py-3 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 hover:-translate-y-0.5">
-                    Save Language
-                  </button>
+                <h3 className="card-title">Change Language</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="form-group">
+                  <label className="form-label">Select Language</label>
+                  <select
+                    value={selectedLanguage}
+                    onChange={(e) => setSelectedLanguage(e.target.value)}
+                    className="form-select"
+                  >
+                    {languages.map((lang) => (
+                      <option key={lang.value} value={lang.value}>
+                        {lang.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+                <button className="btn btn-primary">
+                  Save Language
+                </button>
               </div>
             </div>
 

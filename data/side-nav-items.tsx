@@ -30,13 +30,6 @@ export const navItems = [
     label: 'My Orders',
     roles: ['user'],
   },
-  {
-    title: 'Order History',
-    href: '/dashboard/user/order-history',
-    icon: 'FaHistory',
-    label: 'Order History',
-    roles: ['user'],
-  },
   
   // Services items
   {
