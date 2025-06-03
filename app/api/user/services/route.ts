@@ -8,24 +8,29 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
     const skip = (page - 1) * limit;
-    const whereClause = search
-      ? {
-          OR: [
-            {
-              name: {
-                contains: search,
-                mode: 'insensitive',
+    
+    // Base where clause - only return active services
+    const whereClause = {
+      status: 'active', // Only return active services
+      ...(search
+        ? {
+            OR: [
+              {
+                name: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
               },
-            },
-            {
-              description: {
-                contains: search,
-                mode: 'insensitive',
+              {
+                description: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
               },
-            },
-          ],
-        }
-      : {};
+            ],
+          }
+        : {})
+    };
 
     const [services, total] = await Promise.all([
       db.service.findMany({

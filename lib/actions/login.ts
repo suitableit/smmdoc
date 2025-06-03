@@ -88,15 +88,22 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
     await signIn('credentials', { email, password });
     return { success: true, message: 'Logged in!' };
   } catch (error) {
+    console.error('Login error details:', error);
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
           return { success: false, error: 'Invalid Credentials!' };
+        case 'CallbackRouteError':
+          return { success: false, error: 'Authentication callback error. Please try again.' };
+        case 'AccessDenied':
+          return { success: false, error: 'Access denied. Please verify your email or contact support.' };
         default:
-          return { success: false, error: 'Something went wrong!' };
+          console.error('Unknown AuthError type:', error.type);
+          return { success: false, error: `Authentication error: ${error.type}` };
       }
     }
-    throw error;
+    console.error('Non-AuthError during login:', error);
+    return { success: false, error: 'An unexpected error occurred. Please try again.' };
   }
 };
 

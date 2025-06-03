@@ -7,6 +7,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
 import { setUserDetails } from '@/lib/slice/userDetails';
+import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
@@ -164,7 +165,9 @@ const Menu = ({ user }: { user: any }) => {
   const userData = useSelector((state: any) => state.userDetails);
   
   // Get balance directly from Redux store
-  const balance = userData?.balance || 0;
+  // Get balance from API for real-time data
+  const { data: userStatsResponse } = useGetUserStatsQuery();
+  const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
   
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
@@ -253,7 +256,7 @@ const Menu = ({ user }: { user: any }) => {
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white truncate">
-                    {user?.name || 'User Name'}
+                    {user?.username || user?.name || 'User Name'}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 truncate">
                     {user?.email || 'user@example.com'}
@@ -337,7 +340,9 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Get balance directly from Redux store
-  const balance = userData?.balance || 0;
+  // Get balance from API for real-time data
+  const { data: userStatsResponse } = useGetUserStatsQuery();
+  const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
   
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
@@ -367,10 +372,10 @@ const Header = () => {
   useEffect(() => {
     fetchUser();
     
-    // Refresh user data every 10 seconds to sync with sidebar
+    // Refresh user data every 30 seconds to sync with sidebar
     const intervalId = setInterval(() => {
       fetchUser();
-    }, 10000);
+    }, 30000);
     
     return () => clearInterval(intervalId);
   }, []);

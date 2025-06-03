@@ -14,6 +14,7 @@ interface UserData {
   success: boolean;
   data?: {
     name?: string;
+    username?: string;
     balance?: number;
     role?: string;
   };
@@ -72,9 +73,13 @@ export default function SideBar({ collapsed: externalCollapsed, setCollapsed: se
   
   useEffect(() => {
     // Fetch user data on client side
-    const fetchUser = async () => {
+    const fetchUser = async (isInitialLoad = false) => {
       try {
-        setLoading(true);
+        // Only show loading indicator on initial load
+        if (isInitialLoad) {
+          setLoading(true);
+        }
+        
         const response = await fetch('/api/user/current');
         const userData = await response.json();
         
@@ -86,16 +91,18 @@ export default function SideBar({ collapsed: externalCollapsed, setCollapsed: se
       } catch (error) {
         console.error('Error fetching user data:', error);
       } finally {
+        // Always turn off loading after fetch completes
         setLoading(false);
       }
     };
     
-    fetchUser();
+    // Initial fetch with loading indicator
+    fetchUser(true);
     
-    // Refresh user data every 10 seconds to sync balance
+    // Refresh user data every 30 seconds to sync balance, but without showing loading indicator
     const intervalId = setInterval(() => {
-      fetchUser();
-    }, 10000);
+      fetchUser(false);
+    }, 30000);
     
     return () => clearInterval(intervalId);
   }, []);
@@ -148,7 +155,7 @@ export default function SideBar({ collapsed: externalCollapsed, setCollapsed: se
               </div>
               <div className="flex-1 min-w-0">
                 <div className="username font-medium text-white flex items-center text-sm">
-                  <span className="hover:text-cyan-300 transition-colors duration-300 truncate max-w-[130px]">{user?.data?.name || 'User'}</span>
+                  <span className="hover:text-cyan-300 transition-colors duration-300 truncate max-w-[130px]">{user?.data?.username || user?.data?.name || 'User'}</span>
                   {user?.data?.role === 'admin' && (
                     <FaCrown className="ml-1 text-yellow-400 text-xs animate-bounce-slow flex-shrink-0" />
                   )}

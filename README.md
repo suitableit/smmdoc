@@ -1,1 +1,0 @@
-SMMDOC - Your Social Growth Partner

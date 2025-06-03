@@ -29,7 +29,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { FaExchangeAlt } from 'react-icons/fa';
+import { FaExchangeAlt, FaWallet } from 'react-icons/fa';
 import { toast } from 'sonner';
 
 export function AddFundForm() {
@@ -208,12 +208,16 @@ export function AddFundForm() {
             localStorage.setItem('order_id', res.data.order_id);
           }
           
-          // Store invoice ID in localStorage
+          // Store payment session in localStorage for fallback
           if (res.data.invoice_id) {
-            localStorage.setItem('invoice_id', res.data.invoice_id);
-            // Also store the amount for reference
-            localStorage.setItem('payment_amount', finalAmount.toString());
-            console.log('Stored invoice ID in localStorage:', res.data.invoice_id);
+            const paymentSession = {
+              invoice_id: res.data.invoice_id,
+              amount: finalAmount.toString(),
+              user_id: user?.id,
+              timestamp: Date.now()
+            };
+            localStorage.setItem('uddoktapay_session', JSON.stringify(paymentSession));
+            console.log('Stored payment session:', paymentSession);
           }
           
           toast.dismiss();
@@ -240,187 +244,263 @@ export function AddFundForm() {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto mt-10 p-4 shadow-md bg-white dark:bg-gray-800">
-      <CardHeader>
-        <CardTitle>Add Funds</CardTitle>
-        <CardDescription>
-          Fill in the details to add funds to your account.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-            <FormField
-              control={form.control}
-              name="method"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Method</FormLabel>
-                  <FormControl>
-                    <select
-                      className="w-full h-10 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
-                      {...field}
-                      disabled={isPending}
-                    >
-                      <option value="uddoktapay">
-                        UddoktaPay (Online Payment Gateway)
-                      </option>
-                    </select>
-                  </FormControl>
-                  <FormMessage className="-mt-3" />
-                </FormItem>
-              )}
-            />
+    <div className="w-full max-w-2xl mx-auto space-y-6">
+      {/* Header Section */}
+      <div className="bg-gradient-to-br from-primary via-primary/90 to-secondary rounded-2xl p-6 shadow-2xl border border-white/10 backdrop-blur-sm relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
+        <div className="relative z-10">
+          <h1 className="text-2xl font-bold mb-2 drop-shadow-sm text-gray-900 dark:text-white">Add Funds</h1>
+        <p className="text-gray-700 dark:text-white/90 drop-shadow-sm">Choose your preferred currency and amount to add to your account</p>
+        </div>
+      </div>
 
-            <div className="flex flex-col lg:flex-row gap-3 items-end">
-              {activeCurrency === 'USD' ? (
-                <FormField
-                  control={form.control}
-                  name="amountUSD"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Amount, USD</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter USD amount"
-                          className="input"
+      {/* Main Form Card */}
+      <Card className="bg-card/95 backdrop-blur-sm border border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-2xl overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/2 to-secondary/2"></div>
+        <CardHeader className="pb-4 relative z-10">
+          <CardTitle className="text-xl text-foreground font-semibold">Payment Details</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Fill in the details to add funds to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6 relative z-10">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Payment Method */}
+              <FormField
+                control={form.control}
+                name="method"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-foreground">Payment Method</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <select
+                          className="w-full h-12 border border-border/30 rounded-xl px-4 bg-background/80 backdrop-blur-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-300 shadow-lg hover:shadow-xl focus:shadow-xl hover:bg-background/90"
                           {...field}
                           disabled={isPending}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleUSDChange(e);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage className="-mt-3" />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <FormField
-                  control={form.control}
-                  name="amountBDT"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Amount, BDT</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter BDT amount"
-                          className="input"
-                          {...field}
-                          disabled={isPending}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handleBDTChange(e);
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage className="-mt-3" />
-                    </FormItem>
-                  )}
-                />
-              )}
+                        >
+                          <option value="uddoktapay">
+                            UddoktaPay (Online Payment Gateway)
+                          </option>
+                        </select>
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 pointer-events-none"></div>
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-destructive text-xs" />
+                  </FormItem>
+                )}
+              />
 
-              <button
-                type="button"
-                onClick={toggleCurrency}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                disabled={isPending}
-                title={`Switch to ${activeCurrency === 'USD' ? 'BDT' : 'USD'}`}
-              >
-                <FaExchangeAlt className="text-gray-500 dark:text-gray-400" />
-              </button>
-
-              {activeCurrency === 'USD' ? (
-                <FormField
-                  control={form.control}
-                  name="amountBDTConverted"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Converted Amount, BDT</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          className="input"
-                          {...field}
-                          disabled
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <FormField
-                  control={form.control}
-                  name="amountUSD"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Converted Amount, USD</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          className="input"
-                          {...field}
-                          disabled
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
-
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Phone Number"
-                      className="input"
-                      {...field}
-                      disabled={isPending}
+              {/* Amount Section */}
+              <div className="bg-gradient-to-br from-muted/20 to-muted/40 rounded-xl p-4 space-y-4 border border-border/30 shadow-inner backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-secondary/3"></div>
+                <div className="flex items-center justify-between relative z-10">
+                  <h3 className="font-semibold text-foreground">Amount Details</h3>
+                  <div className="text-xs text-muted-foreground bg-background/50 px-2 py-1 rounded-lg backdrop-blur-sm">
+                    Rate: 1 USD = {rate} BDT
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 relative z-10">
+                  {activeCurrency === 'USD' ? (
+                    <FormField
+                      control={form.control}
+                      name="amountUSD"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-foreground">Amount (USD)</FormLabel>
+                          <FormControl>
+                            <div className="relative group">
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                className="h-12 pl-8 bg-background/80 backdrop-blur-sm border-border/30 focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-300 shadow-lg hover:shadow-xl focus:shadow-xl rounded-xl group-hover:bg-background/90"
+                                {...field}
+                                disabled={isPending}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  handleUSDChange(e);
+                                }}
+                              />
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary font-semibold text-sm">$</span>
+                              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 pointer-events-none"></div>
+                            </div>
+                          </FormControl>
+                          <FormMessage className="text-destructive text-xs" />
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormMessage className="-mt-3" />
-                </FormItem>
-              )}
-            />
+                  ) : (
+                    <FormField
+                      control={form.control}
+                      name="amountBDT"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-foreground">Amount (BDT)</FormLabel>
+                          <FormControl>
+                            <div className="relative group">
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                className="h-12 pl-8 bg-background/80 backdrop-blur-sm border-border/30 focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-300 shadow-lg hover:shadow-xl focus:shadow-xl rounded-xl group-hover:bg-background/90"
+                                {...field}
+                                disabled={isPending}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  handleBDTChange(e);
+                                }}
+                              />
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary font-semibold text-sm">৳</span>
+                              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 pointer-events-none"></div>
+                            </div>
+                          </FormControl>
+                          <FormMessage className="text-destructive text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
-            {/* Total Amount Display */}
-            <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Total Amount:</span>
-                <span className="text-lg font-bold">
-                  {totalAmount.amount.toFixed(2)} {totalAmount.currency}
-                </span>
+                  {/* Currency Toggle */}
+                  <div className="flex items-end relative z-10">
+                    <button
+                      type="button"
+                      onClick={toggleCurrency}
+                      className="h-12 px-4 bg-gradient-to-br from-primary/10 to-secondary/10 hover:from-primary/20 hover:to-secondary/20 border border-primary/30 rounded-xl transition-all duration-300 flex items-center justify-center group shadow-lg hover:shadow-xl backdrop-blur-sm relative overflow-hidden"
+                      disabled={isPending}
+                      title={`Switch to ${activeCurrency === 'USD' ? 'BDT' : 'USD'}`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <FaExchangeAlt className="text-primary group-hover:rotate-180 transition-transform duration-300 relative z-10" />
+                      <span className="ml-2 text-sm font-semibold text-primary relative z-10">
+                        {activeCurrency === 'USD' ? 'BDT' : 'USD'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Converted Amount Display */}
+                <div className="bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl border border-border/30 shadow-lg backdrop-blur-sm relative overflow-hidden p-4">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5"></div>
+                  <div className="relative z-10">
+                    <div className="text-sm text-muted-foreground mb-2 font-medium">Converted Amount</div>
+                    {activeCurrency === 'USD' ? (
+                      <FormField
+                        control={form.control}
+                        name="amountBDTConverted"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <div className="relative">
+                                <Input
+                                  type="text"
+                                  className="h-10 pl-8 bg-background/80 border border-border/30 text-primary font-bold"
+                                  {...field}
+                                  disabled
+                                  placeholder="0.00 BDT"
+                                />
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm font-bold">৳</span>
+                              </div>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    ) : (
+                      <FormField
+                        control={form.control}
+                        name="amountUSD"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <div className="relative">
+                                <Input
+                                  type="text"
+                                  className="h-10 pl-8 bg-background/80 border border-border/30 text-primary font-bold"
+                                  {...field}
+                                  disabled
+                                  placeholder="0.00 USD"
+                                />
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary text-sm font-bold">$</span>
+                              </div>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
-              {totalAmount.currency === 'BDT' && rate && (
-                <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                  ≈ {(totalAmount.amount / rate).toFixed(2)} USD
+
+              {/* Phone Number Field */}
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem className="relative z-10">
+                    <FormLabel className="text-sm font-medium text-foreground">Phone Number</FormLabel>
+                    <FormControl>
+                      <div className="relative group">
+                        <Input
+                          type="tel"
+                          placeholder="Enter your phone number"
+                          className="h-12 bg-background/80 backdrop-blur-sm border-border/30 focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all duration-300 shadow-lg hover:shadow-xl focus:shadow-xl rounded-xl group-hover:bg-background/90"
+                          {...field}
+                          disabled={isPending}
+                        />
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 pointer-events-none"></div>
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-destructive text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Total Amount Summary */}
+              <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl p-6 border border-primary/20 shadow-xl backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                <div className="relative z-10 flex justify-between items-center mb-2">
+                  <span className="text-sm font-semibold text-foreground">Total Amount:</span>
+                  <span className="text-xl font-bold text-primary bg-background/20 px-4 py-2 rounded-lg backdrop-blur-sm">
+                    {totalAmount.amount.toFixed(2)} {totalAmount.currency}
+                  </span>
                 </div>
-              )}
-              {totalAmount.currency === 'USD' && rate && (
-                <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                  ≈ {(totalAmount.amount * rate).toFixed(2)} BDT
+                {totalAmount.currency === 'BDT' && rate && (
+                  <div className="text-sm text-muted-foreground relative z-10">
+                    ≈ ${(totalAmount.amount / rate).toFixed(2)} USD
+                  </div>
+                )}
+                {totalAmount.currency === 'USD' && rate && (
+                  <div className="text-sm text-muted-foreground relative z-10">
+                    ≈ ৳{(totalAmount.amount * rate).toFixed(2)} BDT
+                  </div>
+                )}
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isPending || !form.formState.isValid}
+                className="w-full h-14 bg-gradient-to-br from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-black dark:text-white font-bold transition-all duration-300 disabled:opacity-50 shadow-xl hover:shadow-2xl rounded-xl relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative z-10">
+                  {isPending ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Processing...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <FaWallet className="text-lg" />
+                      Add Funds
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <Button
-              disabled={isPending}
-              className="w-full inline-flex items-center cursor-pointer"
-              type="submit"
-            >
-              {isPending ? <ButtonLoader /> : 'Add Funds'}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

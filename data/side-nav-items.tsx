@@ -213,6 +213,20 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
+    title: 'Order Status',
+    href: '/dashboard/admin/orders/status',
+    icon: 'FaChartLine',
+    label: 'Order Status',
+    roles: ['admin'],
+  },
+  {
+    title: 'Refill Orders',
+    href: '/dashboard/admin/orders/refill',
+    icon: 'FaRedo',
+    label: 'Refill Orders',
+    roles: ['admin'],
+  },
+  {
     title: 'Refill Order & Cancel Tasks',
     href: '/dashboard/admin/orders/refill-cancel',
     icon: 'FaUndo',
@@ -328,6 +342,13 @@ export const adminNavItems = [
     href: '/dashboard/admin/funds?tab=update-price',
     icon: 'FaUndo',
     label: 'Update Price',
+    roles: ['admin'],
+  },
+  {
+    title: 'Payment Testing',
+    href: '/dashboard/admin/payment-testing',
+    icon: 'FaFlask',
+    label: 'Payment Testing',
     roles: ['admin'],
   },
 

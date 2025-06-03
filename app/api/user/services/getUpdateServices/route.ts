@@ -9,6 +9,8 @@ export async function GET(request: Request) {
     const search = searchParams.get('search') || '';
     const skip = (page - 1) * limit;
     const whereClause = {
+      // Only return active services
+      status: 'active',
       ...(search
         ? {
             OR: [

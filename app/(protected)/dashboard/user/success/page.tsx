@@ -93,26 +93,20 @@ export default function SuccessPage() {
           
         } else if (data.status === 'PENDING') {
           setStatus('processing');
-          setMessage('Your payment is being processed. We will notify you when it completes.');
-          toast.info('Payment is being processed...', {
-            duration: 4000,
-            description: 'Please wait while we verify your payment'
+          setMessage('Your payment is being processed and requires manual verification. You will be notified once approved.');
+          toast.info('Payment requires manual verification', {
+            duration: 6000,
+            description: 'Your transaction is pending admin approval. Please wait for confirmation.'
           });
-          
-          // Retry verification after 3 seconds if we haven't reached max attempts
-          if (verifyAttemptsRef.current < maxVerifyAttempts) {
-            setTimeout(() => {
-              verifyPaymentWithId(id);
-            }, 3000);
-          } else {
-            // Redirect to transactions page with processing status after max attempts
-            setTimeout(() => {
-              if (!hasRedirectedRef.current) {
-                hasRedirectedRef.current = true;
-                router.push(`/dashboard/user/transactions?status=pending&transaction=${id}`);
-              }
-            }, 2000);
-          }
+
+          // For pending payments, redirect to transactions page immediately
+          // Don't retry verification as it requires manual admin approval
+          setTimeout(() => {
+            if (!hasRedirectedRef.current) {
+              hasRedirectedRef.current = true;
+              router.push(`/dashboard/user/transactions?status=pending&transaction=${id}`);
+            }
+          }, 4000);
         } else {
           setStatus('error');
           setMessage(data.message || 'There was a problem with your payment.');
@@ -210,7 +204,7 @@ export default function SuccessPage() {
           </div>
           <CardTitle className="text-2xl">
             {status === 'success' && 'Payment Successful!'}
-            {status === 'processing' && 'Payment Processing'}
+            {status === 'processing' && 'Payment Under Review'}
             {status === 'error' && 'Payment Failed'}
             {status === 'verifying' && 'Verifying Payment'}
           </CardTitle>
@@ -219,12 +213,12 @@ export default function SuccessPage() {
           </CardDescription>
           {status === 'success' && (
             <p className="text-sm text-green-600 mt-2">
-              You will be redirected to the transactions page in a few seconds...
+              Funds have been added to your account. You will be redirected to the transactions page in a few seconds...
             </p>
           )}
           {status === 'processing' && (
             <p className="text-sm text-yellow-600 mt-2">
-              Your payment status is being verified, please wait...
+              Your payment is pending admin approval. You will receive an email notification once it's processed.
             </p>
           )}
           {status === 'error' && (
