@@ -1,260 +1,327 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import * as z from 'zod';
+import { 
+  FaEnvelope, 
+  FaPhone, 
+  FaClock, 
+  FaTicketAlt, 
+  FaQuestionCircle, 
+  FaPaperPlane,
+  FaSpinner,
+  FaCheckCircle,
+  FaTimes,
+  FaHeadset,
+  FaFileUpload
+} from 'react-icons/fa';
 
-// Define form schema
-const contactFormSchema = z.object({
-  subject: z.string().min(5, {
-    message: 'Subject must be at least 5 characters.',
-  }),
-  category: z.string({
-    required_error: 'Please select a category.',
-  }),
-  message: z.string().min(20, {
-    message: 'Message must be at least 20 characters.',
-  }),
-  attachments: z.instanceof(FileList).optional(),
-});
-
-type ContactFormValues = z.infer<typeof contactFormSchema>;
+// Toast Component
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+    type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+    type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
+    'bg-yellow-50 border-yellow-200 text-yellow-800'
+  }`}>
+    <div className="flex items-center space-x-2">
+      {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+        <FaTimes className="w-3 h-3" />
+      </button>
+    </div>
+  </div>
+);
 
 export default function ContactSupportPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const user = useCurrentUser();
-  
-  // Initialize form
-  const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactFormSchema),
-    defaultValues: {
-      subject: '',
-      category: '',
-      message: '',
-    },
+  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [formData, setFormData] = useState({
+    subject: '',
+    category: '',
+    message: '',
+    attachments: null as FileList | null
   });
+  const user = useCurrentUser();
+
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
   
   // Handle form submission
-  const onSubmit = async (data: ContactFormValues) => {
+  const handleSubmit = async () => {
+    // Basic validation
+    if (!formData.subject || formData.subject.length < 5) {
+      showToast('Subject must be at least 5 characters', 'error');
+      return;
+    }
+    
+    if (!formData.category) {
+      showToast('Please select a category', 'error');
+      return;
+    }
+    
+    if (!formData.message || formData.message.length < 20) {
+      showToast('Message must be at least 20 characters', 'error');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // In a real app, this would be an API call
-      // const response = await fetch('/api/support/contact', {
-      //   method: 'POST',
-      //   body: JSON.stringify(data),
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      // });
-      
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Show success message
-      toast.success('Your message has been sent successfully!', {
-        description: 'We will get back to you as soon as possible.',
-      });
+      showToast('Your message has been sent successfully! We will get back to you as soon as possible.', 'success');
       
       // Reset form
-      form.reset();
+      setFormData({
+        subject: '',
+        category: '',
+        message: '',
+        attachments: null
+      });
     } catch (error) {
       console.error('Error submitting contact form:', error);
-      toast.error('Failed to send message', {
-        description: 'Please try again later or contact us through alternative means.',
-      });
+      showToast('Failed to send message. Please try again later.', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleInputChange = (field: string, value: string | FileList | null) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
   
   return (
-    <div className="container mx-auto p-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Contact Support</CardTitle>
-            <CardDescription>Send us a message and we'll get back to you as soon as possible.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="subject"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Subject</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter the subject of your inquiry" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="technical">Technical Support</SelectItem>
-                          <SelectItem value="billing">Billing & Payments</SelectItem>
-                          <SelectItem value="orders">Order Issues</SelectItem>
-                          <SelectItem value="account">Account Management</SelectItem>
-                          <SelectItem value="api">API & Integration</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="message"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Message</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Please describe your issue in detail" 
-                          className="min-h-[150px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Include any relevant details that might help us resolve your issue faster.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="attachments"
-                  render={({ field: { value, onChange, ...field } }) => (
-                    <FormItem>
-                      <FormLabel>Attachments (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="file"
-                          multiple
-                          {...field}
-                          onChange={(event) => {
-                            onChange(event.target.files);
-                          }}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        You can upload screenshots or other relevant files (max 5MB each).
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+    <div className="page-container">
+      {/* Toast Container */}
+      {toastMessage && (
+        <Toast 
+          message={toastMessage.message} 
+          type={toastMessage.type} 
+          onClose={() => setToastMessage(null)} 
+        />
+      )}
+      
+      <div className="page-content">
+        {/* Page Header */}
+        <div className="page-header">
+          <h1 className="page-title">Contact Support</h1>
+          <p className="page-description">Send us a message and we'll get back to you as soon as possible</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Contact Form */}
+          <div className="lg:col-span-2">
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaHeadset />
+                </div>
+                <h3 className="card-title">Send Message</h3>
+              </div>
+
+              <div className="space-y-6">
+                {/* Username */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="username">Username</label>
+                  <input
+                    type="text"
+                    id="username"
+                    className="form-input"
+                    value={user?.name || user?.username || 'Guest User'}
+                    readOnly
+                    disabled
+                    style={{ backgroundColor: '#f9fafb', color: '#6b7280' }}
+                  />
+                </div>
+
+                {/* Subject */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="subject">Subject</label>
+                  <input
+                    type="text"
+                    id="subject"
+                    className="form-input"
+                    placeholder="Enter the subject of your inquiry"
+                    value={formData.subject}
+                    onChange={(e) => handleInputChange('subject', e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Category */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="category">Category</label>
+                  <select
+                    id="category"
+                    className="form-select"
+                    value={formData.category}
+                    onChange={(e) => handleInputChange('category', e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>Select a category</option>
+                    <option value="technical">Technical Support</option>
+                    <option value="billing">Billing & Payments</option>
+                    <option value="orders">Order Issues</option>
+                    <option value="account">Account Management</option>
+                    <option value="api">API & Integration</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                {/* Message */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="message">Message</label>
+                  <textarea
+                    id="message"
+                    className="form-input"
+                    placeholder="Please describe your issue in detail"
+                    rows={6}
+                    value={formData.message}
+                    onChange={(e) => handleInputChange('message', e.target.value)}
+                    required
+                  />
+                  <small className="text-xs text-gray-500 mt-1">
+                    Include any relevant details that might help us resolve your issue faster.
+                  </small>
+                </div>
+
+                {/* Attachments */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="attachments">
+                    <FaFileUpload className="inline mr-2" />
+                    Attachments (Optional)
+                  </label>
+                  <input
+                    type="file"
+                    id="attachments"
+                    className="form-input"
+                    multiple
+                    onChange={(e) => handleInputChange('attachments', e.target.files)}
+                  />
+                  <small className="text-xs text-gray-500 mt-1">
+                    You can upload screenshots or other relevant files (max 5MB each).
+                  </small>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="btn btn-primary w-full"
+                >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <FaSpinner className="animate-spin mr-2 w-4 h-4" />
                       Sending...
                     </>
                   ) : (
-                    'Send Message'
+                    <>
+                      <FaPaperPlane className="mr-2 w-4 h-4" />
+                      Send Message
+                    </>
                   )}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-        
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="font-medium text-sm">Email</h3>
-                <p className="text-muted-foreground">support@smmcompany.com</p>
+                </button>
               </div>
-              <div>
-                <h3 className="font-medium text-sm">Phone</h3>
-                <p className="text-muted-foreground">+1 (555) 123-4567</p>
+            </div>
+          </div>
+
+          {/* Right Column - Contact Info & Links */}
+          <div className="space-y-6">
+            
+            {/* Contact Information Card */}
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaEnvelope />
+                </div>
+                <h3 className="card-title">Contact Information</h3>
               </div>
-              <div>
-                <h3 className="font-medium text-sm">Hours</h3>
-                <p className="text-muted-foreground">24/7 Support</p>
+              
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                    <FaEnvelope className="text-blue-600 text-sm" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 text-sm">Email</h4>
+                    <p className="text-gray-600 text-sm">support@smmcompany.com</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                    <FaPhone className="text-green-600 text-sm" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 text-sm">Phone</h4>
+                    <p className="text-gray-600 text-sm">+1 (555) 123-4567</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                    <FaClock className="text-purple-600 text-sm" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 text-sm">Hours</h4>
+                    <p className="text-gray-600 text-sm">24/7 Support</p>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Support Tickets</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                For ongoing issues, you can also create a support ticket and track its progress.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" asChild>
-                <a href="/dashboard/user/trickets">View My Tickets</a>
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Frequently Asked Questions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Check our FAQ section for quick answers to common questions.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" asChild>
-                <a href="/dashboard/user/faq">View FAQs</a>
-              </Button>
-            </CardFooter>
-          </Card>
+            </div>
+
+            {/* Support Tickets Card */}
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaTicketAlt />
+                </div>
+                <h3 className="card-title">Support Tickets</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  For ongoing issues, you can also create a support ticket and track its progress.
+                </p>
+                <a href="/dashboard/user/tickets" className="btn btn-secondary w-full inline-flex items-center justify-center">
+                  <FaTicketAlt className="mr-2 w-4 h-4" />
+                  View My Tickets
+                </a>
+              </div>
+            </div>
+
+            {/* FAQ Card */}
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaQuestionCircle />
+                </div>
+                <h3 className="card-title">Frequently Asked Questions</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Check our FAQ section for quick answers to common questions.
+                </p>
+                <a href="/dashboard/user/faqs" className="btn btn-secondary w-full inline-flex items-center justify-center">
+                  <FaQuestionCircle className="mr-2 w-4 h-4" />
+                  View FAQs
+                </a>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>

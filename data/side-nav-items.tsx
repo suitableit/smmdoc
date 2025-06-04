@@ -87,10 +87,10 @@ export const navItems = [
     roles: ['user'],
   },
   {
-    title: 'FAQ',
-    href: '/dashboard/user/faq',
+    title: 'FAQs',
+    href: '/dashboard/user/faqs',
     icon: 'FaQuestionCircle',
-    label: 'FAQ',
+    label: 'FAQs',
     roles: ['user'],
   },
   

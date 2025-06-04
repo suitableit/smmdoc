@@ -82,7 +82,7 @@ export default function SideBarNav({ collapsed = false, user, setOpen = () => {}
         orders: items.filter(item => ['New Order', 'Mass Order', 'My Orders'].includes(item.title)),
         services: items.filter(item => ['All Services', 'Favorite Services'].includes(item.title)),
         funds: items.filter(item => ['Add Fund', 'Transactions'].includes(item.title)),
-        support: items.filter(item => ['Support Ticket', 'Ticket History', 'Contact Support', 'FAQ'].includes(item.title)),
+        support: items.filter(item => ['Support Ticket', 'Ticket History', 'Contact Support', 'FAQs'].includes(item.title)),
         integrations: items.filter(item => ['API Integration', 'Child Panel'].includes(item.title)),
         more: items.filter(item => ['Affiliate Program', 'Terms'].includes(item.title)),
         account: items.filter(item => ['Account Settings', 'Logout'].includes(item.title)),
