@@ -1,28 +1,35 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { Input } from '@/components/ui/input';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { revalidate } from '@/lib/utils';
-import { SearchIcon } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { 
+  FaSearch, 
+  FaSpinner, 
+  FaExclamationTriangle,
+  FaCheckCircle, 
+  FaTimes,
+  FaClipboardList
+} from 'react-icons/fa';
+
+// Toast Component
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+    type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+    type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
+    'bg-yellow-50 border-yellow-200 text-yellow-800'
+  }`}>
+    <div className="flex items-center space-x-2">
+      {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+        <FaTimes className="w-3 h-3" />
+      </button>
+    </div>
+  </div>
+);
 
 interface Service {
   id: string;
@@ -39,8 +46,15 @@ export default function UpdateServiceTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
 
   const limit = 50;
+
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -66,10 +80,10 @@ export default function UpdateServiceTable() {
           setServices(data.data);
           setTotalPages(data.totalPages);
         } else {
-          toast.error(data.message || 'Error fetching services');
+          showToast(data.message || 'Error fetching services', 'error');
         }
       } catch (error) {
-        toast.error('Error fetching services. Please try again later.');
+        showToast('Error fetching services. Please try again later.', 'error');
       } finally {
         setLoading(false);
       }
@@ -86,115 +100,169 @@ export default function UpdateServiceTable() {
     if (page < totalPages) setPage(page + 1);
   };
 
-  return (
-    <Fragment>
-      <div className="relative mb-4">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <SearchIcon className="h-4 w-4 text-gray-400" />
+  const renderSkeletonRows = () => {
+    return Array.from({ length: 5 }).map((_, i) => (
+      <tr key={i} className="border-b border-gray-100">
+        <td className="py-3 px-4">
+          <div className="w-8 h-4 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-3 px-4">
+          <div className="w-48 h-4 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-3 px-4">
+          <div className="w-32 h-4 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-3 px-4">
+          <div className="w-40 h-4 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+      </tr>
+    ));
+  };
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <div className="page-header">
+            <h1 className="page-title">Service Updates</h1>
+            <p className="page-description">Latest updates and changes to services</p>
+          </div>
+
+          <div className="card card-padding">
+            <div className="text-center py-8 flex flex-col items-center">
+              <FaSpinner className="text-4xl text-blue-500 mb-4 animate-spin" />
+              <div className="text-lg font-medium">Loading service updates...</div>
+            </div>
+          </div>
         </div>
-        <Input
-          type="search"
-          placeholder="Search services..."
-          className="pl-10"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-container">
+      {/* Toast Container */}
+      {toastMessage && (
+        <Toast 
+          message={toastMessage.message} 
+          type={toastMessage.type} 
+          onClose={() => setToastMessage(null)} 
         />
+      )}
+      
+      <div className="page-content">
+        {/* Page Header */}
+        <div className="page-header">
+          <h1 className="page-title">Service Updates</h1>
+          <p className="page-description">Latest updates and changes to services</p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="card card-padding mb-6">
+          <div className="form-group mb-0">
+            <label className="form-label">Search Service Updates</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <FaSearch className="w-4 h-4 text-gray-500" />
+              </div>
+              <input
+                type="search"
+                placeholder="Search services..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="form-input pl-10"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Services Table */}
+        <div className="card">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 max-w-[400px]">Service</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 w-[300px]">Update</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  renderSkeletonRows()
+                ) : services?.length > 0 ? (
+                  services?.map((service, i) => (
+                    <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <span className="text-sm font-medium text-gray-900">{i + 1}</span>
+                      </td>
+                      <td className="py-3 px-4 max-w-[400px]">
+                        <div className="font-medium text-gray-900 truncate" title={service.name}>
+                          {service.name}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-gray-700">
+                          {new Intl.DateTimeFormat('en', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                            hour12: false,
+                            timeZone: 'Asia/Dhaka',
+                          }).format(new Date(service.updatedAt))}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 w-[300px]">
+                        <div className="text-sm text-gray-700 truncate" title={service.updateText}>
+                          {service.updateText}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <FaClipboardList className="text-4xl text-gray-400 mb-4" />
+                        <div className="text-lg font-medium">No service updates found</div>
+                        <div className="text-sm">Try adjusting your search criteria</div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="card card-padding mt-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handlePrevious}
+                  disabled={page === 1 || loading}
+                  className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={page === totalPages || loading}
+                  className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead className="text-ellipsis whitespace-nowrap text-wrap w-full max-w-[400px] overflow-hidden">
-                Service
-              </TableHead>
-
-              <TableHead>Date</TableHead>
-              <TableHead className="w-[300px]">Update</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: limit }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-4" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[80px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[200px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[60px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[60px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[60px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[60px]" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-[200px]" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : services?.length > 0 ? (
-              services?.map((service, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-medium">{i + 1}</TableCell>
-                  <TableCell className="text-ellipsis whitespace-nowrap text-wrap w-full max-w-[400px] overflow-hidden">
-                    {service.name}
-                  </TableCell>
-                  <TableCell>
-                    {new Intl.DateTimeFormat('en', {
-                      dateStyle: 'full',
-                      hour12: false,
-                      timeZone: 'Asia/Dhaka',
-                    }).format(new Date(service.updatedAt))}
-                  </TableCell>
-                  <TableCell>{service.updateText}</TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-4">
-                  No services found
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Pagination className="mt-4">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              href="#"
-              onClick={handlePrevious}
-              isActive={!(page === 1 || loading)}
-            />
-          </PaginationItem>
-          <PaginationItem>
-            <span className="text-sm">
-              Page {page} of {totalPages}
-            </span>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext
-              href="#"
-              onClick={handleNext}
-              isActive={!(page === totalPages || loading)}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
-    </Fragment>
+    </div>
   );
 }

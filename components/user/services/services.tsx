@@ -4,28 +4,37 @@
 
 import ServiceViewModal from '@/components/admin/services/serviceViewModal';
 import { PriceDisplay } from '@/components/PriceDisplay';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { SearchIcon, Star } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { 
+  FaSearch, 
+  FaStar, 
+  FaRegStar, 
+  FaEye, 
+  FaSpinner, 
+  FaExclamationTriangle,
+  FaCheckCircle, 
+  FaTimes,
+  FaClipboardList
+} from 'react-icons/fa';
+
+// Toast Component
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+    type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+    type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
+    'bg-yellow-50 border-yellow-200 text-yellow-800'
+  }`}>
+    <div className="flex items-center space-x-2">
+      {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+        <FaTimes className="w-3 h-3" />
+      </button>
+    </div>
+  </div>
+);
 
 interface Service {
   id: string;
@@ -53,8 +62,15 @@ export default function UserServiceTable() {
   const [totalPages, setTotalPages] = useState(1);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [groupedServices, setGroupedServices] = useState<Record<string, Service[]>>({});
+  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
 
   const limit = 50;
+
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -173,7 +189,7 @@ export default function UserServiceTable() {
         setTotalPages(data.totalPages || 1);
       } catch (error) {
         console.error('Error fetching services:', error);
-        toast.error('Error fetching services. Please try again later.');
+        showToast('Error fetching services. Please try again later.', 'error');
         setServices([]);
         setGroupedServices({});
         setTotalPages(1);
@@ -195,7 +211,7 @@ export default function UserServiceTable() {
 
   const toggleFavorite = async (serviceId: string) => {
     if (!user?.id) {
-      toast.error('You need to be logged in to favorite services');
+      showToast('You need to be logged in to favorite services', 'error');
       return;
     }
 
@@ -244,12 +260,12 @@ export default function UserServiceTable() {
           return newGrouped;
         });
         
-        toast.success(data.message);
+        showToast(data.message, 'success');
       } else {
         throw new Error(data.error || 'Failed to update favorite status');
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'An error occurred');
+      showToast(error instanceof Error ? error.message : 'An error occurred', 'error');
     }
   };
 
@@ -260,164 +276,215 @@ export default function UserServiceTable() {
 
   const renderSkeletonRows = () => {
     return Array.from({ length: 5 }).map((_, i) => (
-      <TableRow key={i}>
-        <TableCell>
-          <Skeleton className="h-4 w-4" />
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-4 w-[80px]" />
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-4 w-[200px]" />
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-4 w-[80px]" />
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-4 w-[80px]" />
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-4 w-[80px]" />
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-4 w-[80px]" />
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-4 w-[80px]" />
-        </TableCell>
-      </TableRow>
+      <tr key={i} className="border-b border-gray-100">
+        <td className="py-3 px-4">
+          <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-3 px-4">
+          <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-3 px-4">
+          <div className="w-48 h-4 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-3 px-4">
+          <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-3 px-4">
+          <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-3 px-4">
+          <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-3 px-4">
+          <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+        <td className="py-3 px-4">
+          <div className="w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
+        </td>
+      </tr>
     ));
   };
 
-  return (
-    <Fragment>
-      <div className="relative mb-4">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <SearchIcon className="h-4 w-4 text-gray-400" />
-        </div>
-        <Input
-          type="search"
-          placeholder="Search services..."
-          className="pl-10"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <div className="page-header">
+            <h1 className="page-title">Services</h1>
+            <p className="page-description">Browse and manage available services</p>
+          </div>
 
-      {loading ? (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fav</TableHead>
-                <TableHead>ID</TableHead>
-                <TableHead>Service</TableHead>
-                <TableHead>Rate per 1000</TableHead>
-                <TableHead>Min order</TableHead>
-                <TableHead>Max order</TableHead>
-                <TableHead>Average time</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {renderSkeletonRows()}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        Object.entries(groupedServices).map(([categoryName, categoryServices]) => (
-          <div key={categoryName} className="mb-6">
-            <div className="bg-purple-600 text-white font-medium py-2 px-4 rounded-t-md">
-              {categoryName}
-            </div>
-            <div className="rounded-b-md border border-t-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fav</TableHead>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Rate per 1000</TableHead>
-                    <TableHead>Min order</TableHead>
-                    <TableHead>Max order</TableHead>
-                    <TableHead>Average time</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {categoryServices.map((service) => (
-                    <TableRow key={service.id}>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => toggleFavorite(service.id)}
-                        >
-                          <Star
-                            className={`h-4 w-4 ${
-                              service.isFavorite
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        </Button>
-                      </TableCell>
-                      <TableCell>{service.id}</TableCell>
-                      <TableCell className="font-medium">
-                        {service.name}
-                      </TableCell>
-                      <TableCell>
-                        <PriceDisplay amount={service.rate} originalCurrency={'USD'} />
-                      </TableCell>
-                      <TableCell>{service.min_order}</TableCell>
-                      <TableCell>{service.max_order}</TableCell>
-                      <TableCell>{service.avg_time}</TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleViewDetails(service)}
-                        >
-                          Details
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <div className="card card-padding">
+            <div className="text-center py-8 flex flex-col items-center">
+              <FaSpinner className="text-4xl text-blue-500 mb-4 animate-spin" />
+              <div className="text-lg font-medium">Loading services...</div>
             </div>
           </div>
-        ))
-      )}
-
-      {totalPages > 1 && (
-        <div className="mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={handlePrevious}
-                  className={page === 1 ? 'pointer-events-none opacity-50' : ''}
-                />
-              </PaginationItem>
-              <PaginationItem>
-                <span className="text-sm">
-                  Page {page} of {totalPages}
-                </span>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext
-                  onClick={handleNext}
-                  className={
-                    page === totalPages ? 'pointer-events-none opacity-50' : ''
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
         </div>
-      )}
+      </div>
+    );
+  }
 
+  return (
+    <div className="page-container">
+      {/* Toast Container */}
+      {toastMessage && (
+        <Toast 
+          message={toastMessage.message} 
+          type={toastMessage.type} 
+          onClose={() => setToastMessage(null)} 
+        />
+      )}
+      
+      <div className="page-content">
+        {/* Page Header */}
+        <div className="page-header">
+          <h1 className="page-title">Services</h1>
+          <p className="page-description">Browse and manage available services</p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="card card-padding mb-6">
+          <div className="form-group mb-0">
+            <label className="form-label">Search Services</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <FaSearch className="w-4 h-4 text-gray-500" />
+              </div>
+              <input
+                type="search"
+                placeholder="Search services..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="form-input pl-10"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Services by Category */}
+        {Object.keys(groupedServices).length > 0 ? (
+          <div className="card">
+            {/* Single Table Header */}
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Fav</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Service</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Rate per 1000</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Min order</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Max order</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Average time</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(groupedServices).map(([categoryName, categoryServices]) => (
+                    <Fragment key={categoryName}>
+                      {/* Category Row */}
+                      <tr>
+                        <td colSpan={8} className="py-0">
+                          <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white font-medium py-3 px-6 shadow-lg">
+                            <h3 className="text-lg font-semibold">{categoryName}</h3>
+                          </div>
+                        </td>
+                      </tr>
+                      
+                      {/* Category Services */}
+                      {categoryServices.map((service) => (
+                        <tr key={service.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            <button
+                              onClick={() => toggleFavorite(service.id)}
+                              className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
+                              title={service.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                            >
+                              {service.isFavorite ? (
+                                <FaStar className="w-4 h-4 text-yellow-500" />
+                              ) : (
+                                <FaRegStar className="w-4 h-4 text-gray-400 hover:text-yellow-500" />
+                              )}
+                            </button>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-sm font-mono text-gray-700">{service.id}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-gray-900">{service.name}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-sm font-medium text-gray-900">
+                              <PriceDisplay amount={service.rate} originalCurrency={'USD'} />
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-sm text-gray-700">{service.min_order?.toLocaleString()}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-sm text-gray-700">{service.max_order?.toLocaleString()}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-sm text-gray-700">{service.avg_time || 'N/A'}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <button
+                              onClick={() => handleViewDetails(service)}
+                              className="flex items-center gap-2 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded hover:bg-blue-50 transition-colors duration-200"
+                            >
+                              <FaEye className="w-3 h-3" />
+                              Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="card card-padding">
+            <div className="text-center py-8 flex flex-col items-center">
+              <FaClipboardList className="text-4xl text-gray-400 mb-4" />
+              <div className="text-lg font-medium">No services found</div>
+              <div className="text-sm text-gray-500">Try adjusting your search criteria</div>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="card card-padding">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handlePrevious}
+                  disabled={page === 1}
+                  className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={page === totalPages}
+                  className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Service Details Modal */}
       {isOpen && selected && (
         <ServiceViewModal
           isOpen={isOpen}
@@ -425,6 +492,6 @@ export default function UserServiceTable() {
           service={selected}
         />
       )}
-    </Fragment>
+    </div>
   );
 }

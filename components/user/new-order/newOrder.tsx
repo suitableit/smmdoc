@@ -4,22 +4,6 @@
 'use client';
 
 import { PriceDisplayAnother } from '@/components/PriceDisplayAnother';
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import { useCurrentUser } from '@/hooks/use-current-user';
@@ -28,9 +12,172 @@ import axiosInstance from '@/lib/axiosInstance';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { BsExclamationCircleFill } from 'react-icons/bs';
+import { 
+  FaSearch, 
+  FaInfoCircle, 
+  FaCheckCircle, 
+  FaTimes, 
+  FaSpinner,
+  FaLink,
+  FaClock,
+  FaShieldAlt,
+  FaTachometerAlt,
+  FaChartLine,
+  FaHashtag,
+  FaTelegramPlane,
+  FaShoppingCart,
+  FaBoxes
+} from 'react-icons/fa';
 import { useSelector, useDispatch } from 'react-redux';
-import { toast } from 'sonner';
+
+// Toast Component
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+    type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+    type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
+    'bg-yellow-50 border-yellow-200 text-yellow-800'
+  }`}>
+    <div className="flex items-center space-x-2">
+      {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+        <FaTimes className="w-3 h-3" />
+      </button>
+    </div>
+  </div>
+);
+
+// Service Details Card Component
+const ServiceDetailsCard = ({ selectedService, services }: { selectedService: string; services: any[] }) => {
+  const selected = services?.find((s) => s.id === selectedService);
+  
+  if (!selected) {
+    return (
+      <div className="card card-padding">
+        <div className="text-center py-8">
+          <FaInfoCircle className="mx-auto text-4xl text-gray-400 mb-4" />
+          <p className="text-gray-500">Select a service to view details</p>
+        </div>
+      </div>
+    );
+  }
+
+  function decodeHTML(html: string) {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = html;
+    return txt.value;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Service Header */}
+      <div className="card" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)', color: 'white', padding: '24px' }}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
+            <FaHashtag className="inline mr-1" />
+            {selected.id}
+          </div>
+        </div>
+        <h3 className="text-lg font-bold leading-tight">
+          {selected.name}
+        </h3>
+        <div className="text-sm opacity-90 mt-2">
+          Max {selected.max_order || 'N/A'} ~ NO REFILL ~ {selected.avg_time || 'N/A'} ~ INSTANT - ${selected.rate || '0.00'} per 1000
+        </div>
+      </div>
+
+      {/* Service Details */}
+      <div className="card card-padding">
+        <div className="grid grid-cols-2 gap-4">
+          {/* Example Link */}
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Example Link</h4>
+            <div className="flex items-center text-gray-600">
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                <FaLink className="text-red-600 text-sm" />
+              </div>
+              <span className="text-sm">-</span>
+            </div>
+          </div>
+
+          {/* Speed */}
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Speed</h4>
+            <div className="flex items-center text-gray-600">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                <FaTachometerAlt className="text-purple-600 text-sm" />
+              </div>
+              <span className="text-sm">-</span>
+            </div>
+          </div>
+
+          {/* Start Time */}
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Start Time</h4>
+            <div className="flex items-center text-gray-600">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                <FaClock className="text-blue-600 text-sm" />
+              </div>
+              <span className="text-sm">-</span>
+            </div>
+          </div>
+
+          {/* Average Time */}
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Average Time</h4>
+            <div className="flex items-center text-gray-600">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                <FaClock className="text-blue-600 text-sm" />
+              </div>
+              <span className="text-sm">{selected.avg_time || 'Not enough data'}</span>
+            </div>
+          </div>
+
+          {/* Guarantee */}
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Guarantee</h4>
+            <div className="flex items-center text-gray-600">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                <FaShieldAlt className="text-green-600 text-sm" />
+              </div>
+              <span className="text-sm text-red-600">✕</span>
+            </div>
+          </div>
+        </div>
+
+        {/* More Details */}
+        <div className="mt-6">
+          <h4 className="font-medium text-gray-900 mb-2">More Details</h4>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div 
+              className="text-sm text-gray-700 leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: decodeHTML(selected.description || 'No additional details available.')
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Service Stats */}
+        <div className="mt-6 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-900">{selected.min_order || 0}</div>
+            <div className="text-xs text-gray-500">Min Order</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-900">{selected.max_order || 0}</div>
+            <div className="text-xs text-gray-500">Max Order</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-900">${selected.rate || '0.00'}</div>
+            <div className="text-xs text-gray-500">Per 1000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function NewOrder() {
   const user = useCurrentUser();
@@ -44,6 +191,8 @@ export default function NewOrder() {
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  
   const {
     data: category,
     error: categoryError,
@@ -57,10 +206,14 @@ export default function NewOrder() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [favoriteCategories, setFavoriteCategories] = useState<any[]>([]);
   const [combinedCategories, setCombinedCategories] = useState<any[]>([]);
-  const [categoriesWithServices, setCategoriesWithServices] = useState<any[]>(
-    []
-  );
+  const [categoriesWithServices, setCategoriesWithServices] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   // Fetch price and per quantity values for the selected service
   const selected = services?.find((s) => s.id === selectedService);
@@ -87,10 +240,11 @@ export default function NewOrder() {
         })
         .catch((error) => {
           console.error('Error fetching favorite categories:', error);
-          toast.error('Error fetching favorite categories');
+          showToast('Error fetching favorite categories', 'error');
         });
     }
   }, [user?.id]);
+
   // Check which favorite categories have services
   useEffect(() => {
     const checkFavoriteCategories = async () => {
@@ -168,7 +322,7 @@ export default function NewOrder() {
             handleServiceSelection(fetchedServices);
           })
           .catch(() => {
-            toast.error('Error fetching favorite category services');
+            showToast('Error fetching favorite category services', 'error');
           });
       } else {
         // Fetch services from regular category
@@ -182,7 +336,7 @@ export default function NewOrder() {
             handleServiceSelection(fetchedServices);
           })
           .catch(() => {
-            toast.error('Error fetching services');
+            showToast('Error fetching services', 'error');
           });
       }
     }
@@ -204,6 +358,7 @@ export default function NewOrder() {
     }
     setIsInitializing(false);
   };
+
   // Initialize with category from URL if provided
   useEffect(() => {
     if (categoryIdFromUrl && combinedCategories.length > 0 && !selectedCategory) {
@@ -251,7 +406,7 @@ export default function NewOrder() {
         setSearch(service.name);
       }
     } catch (error) {
-      toast.error('Error fetching service details');
+      showToast('Error fetching service details', 'error');
     }
   };
 
@@ -264,7 +419,7 @@ export default function NewOrder() {
       const fetchedServices = res?.data?.data || [];
       setServicesData(fetchedServices);
     } catch (error) {
-      toast.error('Error fetching services');
+      showToast('Error fetching services', 'error');
     }
   }
 
@@ -303,45 +458,25 @@ export default function NewOrder() {
     return txt.value;
   }
 
-  const orderData = {
-    link,
-    qty,
-    price: parseFloat(totalPrice.toFixed(4)),
-    currencyWisePrice: {
-      USD:
-        user?.currency === 'USD'
-          ? totalPrice
-          : totalPrice / (currencyRate || 121.52),
-      BDT:
-        user?.currency === 'USD'
-          ? totalPrice * (currencyRate || 121.52)
-          : totalPrice,
-      currency: user?.currency,
-    },
-    serviceId: selectedService,
-    categoryId: selectedCategory,
-    userId: user?.id,
-    avg_time: selected?.avg_time || '',
-  };
-
   const userData = useSelector((state: any) => state.userDetails);
+
   // Handle form submission
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Validation checks
     if (!selectedService) {
-      toast.error('Please select a service');
+      showToast('Please select a service', 'error');
       return;
     }
 
     if (!link || !link.startsWith('http')) {
-      toast.error('Please enter a valid link starting with http or https');
+      showToast('Please enter a valid link starting with http or https', 'error');
       return;
     }
 
     if (qty < 1) {
-      toast.error('Please enter a valid quantity');
+      showToast('Please enter a valid quantity', 'error');
       return;
     }
 
@@ -349,12 +484,12 @@ export default function NewOrder() {
     const maxOrder = selected?.max_order || 0;
 
     if (qty < minOrder) {
-      toast.error(`Minimum order quantity is ${minOrder}`);
+      showToast(`Minimum order quantity is ${minOrder}`, 'error');
       return;
     }
 
     if (qty > maxOrder) {
-      toast.error(`Maximum order quantity is ${maxOrder}`);
+      showToast(`Maximum order quantity is ${maxOrder}`, 'error');
       return;
     }
 
@@ -364,7 +499,7 @@ export default function NewOrder() {
     const finalTotalPrice = parseFloat(totalPrice.toFixed(4));
 
     if (userBalanceAmount < finalTotalPrice) {
-      toast.error(`Insufficient balance to create this order. Available: ${userBalanceAmount.toFixed(2)}, Required: ${finalTotalPrice.toFixed(2)}`);
+      showToast(`Insufficient balance to create this order. Available: ${userBalanceAmount.toFixed(2)}, Required: ${finalTotalPrice.toFixed(2)}`, 'error');
       return;
     }
 
@@ -403,7 +538,7 @@ export default function NewOrder() {
       const response = await axiosInstance.post('/api/user/create-orders', orderPayload);
 
       if (response.data.success) {
-        toast.success('Order created successfully!');
+        showToast('Order created successfully!', 'success');
 
         // Invalidate user stats to refresh balance
         dispatch(dashboardApi.util.invalidateTags(['UserStats']));
@@ -421,12 +556,12 @@ export default function NewOrder() {
         // Optionally redirect to orders page
         // router.push('/dashboard/user/my-orders');
       } else {
-        toast.error(response.data.message || 'Failed to create order');
+        showToast(response.data.message || 'Failed to create order', 'error');
       }
     } catch (error: any) {
       console.error('Error creating order:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Failed to create order';
-      toast.error(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -446,288 +581,273 @@ export default function NewOrder() {
     }
   };
 
-  if (categoryError) return <div>Error loading</div>;
-  if (categoryLoading) return <div>Loading...</div>;
-  if (!category) return <div>No data available</div>;
+  if (categoryError) {
+    return (
+      <div className="page-container">
+        <div className="page-content">Error loading</div>
+      </div>
+    );
+  }
+
+  if (categoryLoading) {
+    return (
+      <div className="page-container">
+        <div className="page-content">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!category) {
+    return (
+      <div className="page-container">
+        <div className="page-content">No data available</div>
+      </div>
+    );
+  }
 
   return (
-    <Card className="w-full max-w-2xl space-y-4 gap-0">
-      <CardHeader>
-        <CardTitle>Create Order</CardTitle>
-        <CardDescription></CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={onSubmit}>
-          <div className="grid w-full items-center gap-4">
-            {/* Search Input with Dropdown */}
-            <div className="relative" ref={searchRef}>
-              <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                <svg
-                  className="w-4 h-4 text-gray-500"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-                  />
-                </svg>
-              </div>
-              <input
-                type="search"
-                id="default-search"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setShowDropdown(true);
-                }}
-                onFocus={() => setShowDropdown(true)}
-                className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Search services..."
-                autoComplete="off"
-              />
+    <div className="page-container">
+      {/* Toast Container */}
+      {toastMessage && (
+        <Toast 
+          message={toastMessage.message} 
+          type={toastMessage.type} 
+          onClose={() => setToastMessage(null)} 
+        />
+      )}
+      
+      <div className="page-content">
+        {/* Page Header */}
+        <div className="page-header">
+          <h1 className="page-title">Create Order</h1>
+          <p className="page-description">Create a new order for your social media services</p>
+        </div>
 
-              {/* Search Dropdown */}
-              {showDropdown && servicesData.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {servicesData.map((service) => (
-                    <div
-                      key={service.id}
-                      className="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                      onClick={() =>
-                        handleSearchSelect(service.id, service.categoryId)
-                      }
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">{service.name}</span>
-                        {/* <span className="text-xs text-gray-500">
-                          {service.category_name}
-                        </span> */}
-                      </div>
-                      {/* <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-                        {service.description && decodeHTML(service.description)}
-                      </div> */}
-                    </div>
-                  ))}
-                </div>
-              )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+          {/* Left Column - Order Form */}
+          <div className="w-full space-y-4 lg:space-y-6">
+            {/* Tab Navigation */}
+            <div className="card" style={{ padding: '8px' }}>
+              <div className="flex space-x-2">
+                <button
+                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25"
+                >
+                  <FaShoppingCart className="mr-2 w-4 h-4" />
+                  New Order
+                </button>
+                <button
+                  onClick={() => router.push('/dashboard/user/mass-order')}
+                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600"
+                >
+                  <FaBoxes className="mr-2 w-4 h-4" />
+                  Mass Order
+                </button>
+              </div>
             </div>
 
-            {/* Combined Category Dropdown */}
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="category">Category</Label>
-              <select
-                id="category"
-                className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                value={selectedCategory}
-                onChange={(e) => {
-                  setSelectedCategory(e.target.value);
-                  setSelectedService('');
-                  setQty(0);
-                }}
-              >
-                <option value="" disabled>
-                  Select a category
-                </option>
-                {/* Only show favorites group if there are favorite categories with services */}
-                {categoriesWithServices.some((cat) => cat.isFavorite) && (
-                  <optgroup label="Favorites">
-                    {categoriesWithServices
-                      .filter((cat) => cat.isFavorite)
-                      .map((favCat) => (
-                        <option key={`fav-${favCat.id}`} value={favCat.id}>
-                          {favCat.category_name}
-                        </option>
-                      ))}
-                  </optgroup>
-                )}
-                {/* Regular categories */}
-                <optgroup label="All Categories">
-                  {categoriesWithServices
-                    .filter((cat) => !cat.isFavorite)
-                    .map((cat: any) => (
-                      <option key={`reg-${cat.id}`} value={cat.id}>
-                        {cat.category_name}
+            <div className="card card-padding w-full max-w-full">
+              <form onSubmit={onSubmit} className="space-y-4 w-full max-w-full">
+                
+                {/* Search Input with Dropdown */}
+                <div className="form-group w-full">
+                  <label className="form-label">Search Services</label>
+                  <div className="relative w-full" ref={searchRef}>
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                      <FaSearch className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                    </div>
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(e) => {
+                        setSearch(e.target.value);
+                        setShowDropdown(true);
+                      }}
+                      onFocus={() => setShowDropdown(true)}
+                      className="form-input pl-12"
+                      placeholder="Search services..."
+                      autoComplete="off"
+                      style={{ width: '100%', minWidth: '0' }}
+                    />
+
+                    {/* Search Dropdown */}
+                    {showDropdown && servicesData.length > 0 && (
+                      <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
+                        {servicesData.map((service) => (
+                          <div
+                            key={service.id}
+                            className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                            onClick={() =>
+                              handleSearchSelect(service.id, service.categoryId)
+                            }
+                          >
+                            <div className="flex justify-between items-center w-full">
+                              <span className="text-sm text-gray-900 truncate pr-2 flex-1">{service.name}</span>
+                              <span className="text-xs text-gray-500 flex-shrink-0">${service.rate || '0.00'}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Combined Category Dropdown */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="category">Category</label>
+                  <select
+                    id="category"
+                    className="form-select"
+                    value={selectedCategory}
+                    onChange={(e) => {
+                      setSelectedCategory(e.target.value);
+                      setSelectedService('');
+                      setQty(0);
+                    }}
+                  >
+                    <option value="" disabled>
+                      Select a category
+                    </option>
+                    {/* Only show favorites group if there are favorite categories with services */}
+                    {categoriesWithServices.some((cat) => cat.isFavorite) && (
+                      <optgroup label="Favorites">
+                        {categoriesWithServices
+                          .filter((cat) => cat.isFavorite)
+                          .map((favCat) => (
+                            <option key={`fav-${favCat.id}`} value={favCat.id}>
+                              {favCat.category_name}
+                            </option>
+                          ))}
+                      </optgroup>
+                    )}
+                    {/* Regular categories */}
+                    <optgroup label="All Categories">
+                      {categoriesWithServices
+                        .filter((cat) => !cat.isFavorite)
+                        .map((cat: any) => (
+                          <option key={`reg-${cat.id}`} value={cat.id}>
+                            {cat.category_name}
+                          </option>
+                        ))}
+                    </optgroup>
+                  </select>
+                </div>
+
+                {/* Service Dropdown */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="services">Services</label>
+                  <select
+                    id="services"
+                    className="form-select"
+                    value={selectedService}
+                    onChange={(e) => {
+                      setSelectedService(e.target.value);
+                      setQty(0);
+                    }}
+                    disabled={!selectedCategory || services.length === 0}
+                    required
+                  >
+                    {services?.map((service: any) => (
+                      <option
+                        key={service.id}
+                        value={service.id}
+                      >
+                        {service.name} - ${service.rate || '0.00'}
                       </option>
                     ))}
-                </optgroup>
-              </select>
-            </div>
+                  </select>
+                </div>
 
-            {/* Service Dropdown */}
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="services">Services</Label>
+                {/* Link */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="link">Link</label>
+                  <input
+                    type="url"
+                    id="link"
+                    className="form-input"
+                    placeholder="https://example.com"
+                    required
+                    value={link}
+                    onChange={(e) => setLink(e.target.value)}
+                    pattern="https?://.+"
+                  />
+                </div>
 
-              <select
-                id="services"
-                className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                value={selectedService}
-                onChange={(e) => {
-                  setSelectedService(e.target.value);
-                  setQty(0);
-                }}
-                disabled={!selectedCategory || services.length === 0}
-                required
-              >
-                {/* <option value="">Select a service</option> */}
-                {services?.map((service: any, i) => (
-                  <option
-                    style={{
-                      backgroundColor:
-                        selectedService === service.id ? '#e0f7fa' : 'white',
-                      color: selectedService === service.id ? '#000' : '#000',
-                    }}
-                    key={service.id}
-                    value={service.id}
-                  >
-                    {/* {service.id} - */}
-                    {service.name} -{' '}
-                    <PriceDisplayAnother
-                      amount={service.rate}
-                      originalCurrency={user?.currency || ('USD' as any)}
-                      className="text-current bg-gray-50 px-2 rounded"
-                    />{' '}
-                  </option>
-                ))}
-              </select>
-            </div>
+                {/* Quantity */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="qty">Quantity</label>
+                  <input
+                    type="number"
+                    id="qty"
+                    className="form-input"
+                    placeholder="Enter Quantity"
+                    onChange={(e) =>
+                      e.target.value ? setQty(parseInt(e.target.value)) : setQty(0)
+                    }
+                    min={
+                      services?.find((s) => s.id === selectedService)?.min_order ||
+                      0
+                    }
+                    max={
+                      services?.find((s) => s.id === selectedService)?.max_order ||
+                      0
+                    }
+                    value={qty || ''}
+                  />
+                  <small className="text-xs text-gray-500 mt-1">
+                    Min:{' '}
+                    {services?.find((s) => s.id === selectedService)?.min_order ||
+                      0}{' '}
+                    - Max:{' '}
+                    {services?.find((s) => s.id === selectedService)?.max_order ||
+                      0}
+                  </small>
+                </div>
 
-            {/* Service Description */}
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="description">Description</Label>
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: decodeHTML(
-                    services?.find((s) => s.id === selectedService)
-                      ?.description || ''
-                  ),
-                }}
-                className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                id="description"
-              ></div>
-            </div>
+                {/* Price */}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="price">
+                    Charge (per 1000 = {user?.currency === 'USD' ? '$' : '৳'}{price.toFixed(2)})
+                  </label>
+                  <input
+                    type="text"
+                    id="price"
+                    readOnly
+                    disabled
+                    className="form-input disabled:opacity-70 font-semibold"
+                    value={
+                      user?.currency === 'USD'
+                        ? `$ ${totalPrice.toFixed(4)}`
+                        : `৳ ${totalPrice.toFixed(4)}`
+                    }
+                    placeholder="Charge"
+                  />
+                </div>
 
-            {/* Link */}
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="link">Link</Label>
-              <input
-                type="url"
-                id="link"
-                className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="https://example.com"
-                required
-                onChange={(e) => setLink(e.target.value)}
-                pattern="https?://.+"
-              />
-            </div>
-
-            {/* Quantity */}
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="qty">Quantity</Label>
-              <input
-                type="number"
-                id="qty"
-                className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter Quantity"
-                onChange={(e) =>
-                  e.target.value ? setQty(parseInt(e.target.value)) : setQty(0)
-                }
-                min={
-                  services?.find((s) => s.id === selectedService)?.min_order ||
-                  0
-                }
-                max={
-                  services?.find((s) => s.id === selectedService)?.max_order ||
-                  0
-                }
-                value={qty}
-              />
-              <span className="text-xs">
-                Min:{' '}
-                {services?.find((s) => s.id === selectedService)?.min_order ||
-                  0}{' '}
-                - Max:{' '}
-                {services?.find((s) => s.id === selectedService)?.max_order ||
-                  0}
-              </span>
-            </div>
-
-            {/* Average Time */}
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="avg_time">
-                Average time
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <BsExclamationCircleFill className="text-gray-500 ms-1" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs text-justify w-48">
-                        The average completion time is calculated based on the
-                        completion times of the latest orders.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </Label>
-              <input
-                type="text"
-                id="avg_time"
-                readOnly
-                disabled
-                className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-70"
-                value={
-                  services?.find((s) => s.id === selectedService)?.avg_time ||
-                  ''
-                }
-                placeholder="Average time"
-                required
-              />
-            </div>
-
-            {/* Price */}
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="price">
-                Charge (per 1000 = {user?.currency === 'USD' ? '$' : '৳'}{price.toFixed(2)})
-              </Label>
-              <div className="">
-                <input
-                  type="text"
-                  id="price"
-                  readOnly
-                  disabled
-                  className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-70"
-                  value={
-                    user?.currency === 'USD'
-                      ? `$ ${totalPrice.toFixed(4)}`
-                      : `৳ ${totalPrice.toFixed(4)}`
-                  }
-                  placeholder="Charge"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex flex-col space-y-1.5">
-              <Button
-                className="w-full"
-                variant="default"
-                type="submit"
-                disabled={isSubmitting || !selectedService || !link || qty < 1}
-              >
-                {isSubmitting ? 'Creating Order...' : 'Create Order'}
-              </Button>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !selectedService || !link || qty < 1}
+                  className="btn btn-primary w-full"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <FaSpinner className="animate-spin mr-2 w-4 h-4" />
+                      Creating Order...
+                    </>
+                  ) : (
+                    'Create Order'
+                  )}
+                </button>
+              </form>
             </div>
           </div>
-        </form>
-      </CardContent>
-      <CardFooter className="w-full flex justify-between"></CardFooter>
-    </Card>
+
+          {/* Right Column - Service Details */}
+          <div className="space-y-6">
+            <ServiceDetailsCard selectedService={selectedService} services={services} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

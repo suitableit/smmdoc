@@ -1,17 +1,13 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
-import { AlertCircle, CheckCircle, Clock, Search } from 'lucide-react';
+import { 
+  FaCheckCircle, 
+  FaClock, 
+  FaExclamationTriangle, 
+  FaEye,
+  FaSearch
+} from 'react-icons/fa';
 
 type Transaction = {
   id: string;
@@ -34,58 +30,81 @@ interface TransactionsListProps {
 export function TransactionsList({ transactions, onViewDetails }: TransactionsListProps) {
   if (!transactions.length) {
     return (
-      <div className="text-center py-10">
-        <div className="flex justify-center">
-          <Search className="h-12 w-12 text-gray-300 dark:text-gray-600" />
+      <div className="card card-padding">
+        <div className="text-center py-8 flex flex-col items-center">
+          <FaSearch className="text-4xl text-gray-400 mb-4" />
+          <div className="text-lg font-medium">No transactions found</div>
+          <div className="text-sm text-gray-500">You haven't made any transactions yet.</div>
         </div>
-        <h3 className="mt-4 text-lg font-medium">No transactions found</h3>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          You haven't made any transactions yet.
-        </p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-md border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Transaction ID</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Method</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transactions.map((transaction) => (
-            <TableRow key={transaction.id}>
-              <TableCell className="font-medium">
-                {formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })}
-              </TableCell>
-              <TableCell>{transaction.transaction_id || 'N/A'}</TableCell>
-              <TableCell>{transaction.amount} BDT</TableCell>
-              <TableCell>
-                {transaction.payment_method || transaction.method || 'UddoktaPay'}
-              </TableCell>
-              <TableCell>
-                <StatusBadge status={transaction.status} />
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onViewDetails(transaction.invoice_id)}
-                >
-                  View
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="card">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50">
+              <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Date and Time</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Transaction ID</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Amount</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Method</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-900">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transactions.map((transaction, index) => (
+              <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
+                <td className="py-3 px-4">
+                  <span className="text-sm font-medium text-gray-900">
+                    {index + 1}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm text-gray-700">
+                    {new Intl.DateTimeFormat('en', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                      hour12: false,
+                      timeZone: 'Asia/Dhaka',
+                    }).format(new Date(transaction.createdAt))}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm font-mono text-gray-700">
+                    {transaction.transaction_id || 'N/A'}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm font-medium text-gray-900">
+                    {transaction.amount} BDT
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm text-gray-700">
+                    {transaction.payment_method || transaction.method || 'UddoktaPay'}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <StatusBadge status={transaction.status} />
+                </td>
+                <td className="py-3 px-4 text-right">
+                  <button
+                    onClick={() => onViewDetails(transaction.invoice_id)}
+                    className="flex items-center gap-2 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded hover:bg-blue-50 transition-colors duration-200 ml-auto"
+                  >
+                    <FaEye className="w-3 h-3" />
+                    View
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -94,37 +113,37 @@ function StatusBadge({ status }: { status: Transaction['status'] }) {
   switch (status) {
     case 'Success':
       return (
-        <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">
-          <CheckCircle className="h-3.5 w-3.5 mr-1" />
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+          <FaCheckCircle className="w-3 h-3 mr-1" />
           Success
-        </Badge>
+        </span>
       );
     case 'Processing':
       return (
-        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800">
-          <Clock className="h-3.5 w-3.5 mr-1" />
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+          <FaClock className="w-3 h-3 mr-1" />
           Processing
-        </Badge>
+        </span>
       );
     case 'Cancelled':
       return (
-        <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
-          <AlertCircle className="h-3.5 w-3.5 mr-1" />
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+          <FaExclamationTriangle className="w-3 h-3 mr-1" />
           Cancelled
-        </Badge>
+        </span>
       );
     case 'Failed':
       return (
-        <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800">
-          <AlertCircle className="h-3.5 w-3.5 mr-1" />
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+          <FaExclamationTriangle className="w-3 h-3 mr-1" />
           Failed
-        </Badge>
+        </span>
       );
     default:
       return (
-        <Badge variant="outline">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
           {status}
-        </Badge>
+        </span>
       );
   }
-} 
+}

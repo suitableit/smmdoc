@@ -1,26 +1,61 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Clock } from 'lucide-react';
-import { Suspense } from 'react';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from 'react';
+import { FaClock, FaWhatsapp, FaTelegram, FaEnvelope, FaReceipt, FaPhone, FaInfoCircle, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
+
+// Mock hook for demonstration
+const useSearchParams = () => {
+  return {
+    get: (key: string) => {
+      const params = {
+        invoice_id: 'INV-123456789',
+        amount: '500.00',
+        transaction_id: 'TRX-987654321'
+      };
+      return params[key as keyof typeof params] || null;
+    }
+  };
+};
+
+const useRouter = () => {
+  return {
+    push: (path: string) => {
+      console.log(`Navigating to: ${path}`);
+    }
+  };
+};
+
+// Toast Component
+const Toast = ({ message, type = 'info', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`toast toast-${type} toast-enter`}>
+    {type === 'info' && <FaInfoCircle className="toast-icon" />}
+    {type === 'pending' && <FaClock className="toast-icon" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="toast-close">
+      <FaTimes className="toast-close-icon" />
+    </button>
+  </div>
+);
 
 function PaymentPendingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [countdown, setCountdown] = useState(5);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
   
   const invoice_id = searchParams.get('invoice_id');
   const amount = searchParams.get('amount');
   const transaction_id = searchParams.get('transaction_id');
 
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
+
   useEffect(() => {
     // Show pending toast
-    toast.info('Payment is being processed and requires manual verification. You will be notified once approved.', {
-      position: 'top-right',
-      duration: 5000,
-    });
+    showToast('Payment is being processed and requires manual verification. You will be notified once approved.', 'info');
 
     // Countdown timer
     const timer = setInterval(() => {
@@ -46,139 +81,194 @@ function PaymentPendingContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          {/* Pending Icon */}
-          <div className="mx-auto w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mb-6">
-            <Clock className="w-12 h-12 text-yellow-600" />
-          </div>
+    <div className="page-container">
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </div>
 
-          {/* Pending Message */}
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Pending</h1>
-          <p className="text-gray-600 mb-6">
-            Payment is being processed and requires manual verification. You will be notified once approved.
-          </p>
+      <div className="page-content">
+        {/* Page Header */}
+        <div className="page-header">
+          <h1 className="page-title">Payment Pending</h1>
+          <p className="page-description">Your payment is being processed and under review</p>
+        </div>
 
-          {/* Payment Details */}
-          <div className="bg-yellow-50 rounded-lg p-4 mb-6 text-left">
-            <h3 className="text-lg font-semibold text-yellow-800 mb-3">Payment Details</h3>
-            <div className="space-y-2">
-              {invoice_id && (
-                <div className="flex justify-between">
-                  <span className="text-yellow-700">Order ID:</span>
-                  <span className="font-mono text-sm text-yellow-900">{invoice_id}</span>
-                </div>
-              )}
-              {amount && (
-                <div className="flex justify-between">
-                  <span className="text-yellow-700">Amount:</span>
-                  <span className="font-bold text-yellow-900">৳ {amount}</span>
-                </div>
-              )}
-              {transaction_id && (
-                <div className="flex justify-between">
-                  <span className="text-yellow-700">Transaction ID:</span>
-                  <span className="font-mono text-sm text-yellow-900">{transaction_id}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-yellow-700">Status:</span>
-                <span className="font-bold text-yellow-900">⏳ Pending Review</span>
-              </div>
+        {/* Main Pending Card */}
+        <div className="card card-padding">
+          <div className="text-center">
+            {/* Pending Icon */}
+            <div className="pending-icon">
+              <FaClock />
             </div>
-          </div>
 
-          {/* Information Message */}
-          <div className="bg-blue-50 rounded-lg p-4 mb-6">
-            <h4 className="font-semibold text-blue-800 mb-2">What happens next?</h4>
-            <ul className="text-blue-700 text-sm text-left space-y-1">
-              <li>• Our admin team will review your payment</li>
-              <li>• You will receive an email notification once approved</li>
-              <li>• Funds will be added to your account automatically</li>
-              <li>• This usually takes 1-24 hours</li>
-            </ul>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            <button
-              onClick={handleViewTransactions}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-200"
-            >
-              View Transactions
-            </button>
-            
-            <button
-              onClick={handleContactSupport}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md transition duration-200"
-            >
-              Contact Support
-            </button>
-          </div>
-
-          {/* Auto Redirect Notice */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              Automatically redirecting to transactions in {countdown} seconds...
+            {/* Pending Message */}
+            <h2 className="card-title text-center">Payment Under Review</h2>
+            <p className="text-center" style={{ color: '#64748b', marginBottom: '1.5rem' }}>
+              Your payment is being processed and requires manual verification. You will be notified once approved.
             </p>
+
+            {/* Payment Details */}
+            {(invoice_id || amount || transaction_id) && (
+              <div className="details-grid">
+                <h3 className="font-semibold" style={{ color: '#1e293b', marginBottom: '1rem' }}>
+                  Payment Details
+                </h3>
+                
+                {invoice_id && (
+                  <div className="detail-row">
+                    <span className="detail-label">Order ID:</span>
+                    <span className="detail-value">{invoice_id}</span>
+                  </div>
+                )}
+                
+                {amount && (
+                  <div className="detail-row">
+                    <span className="detail-label">Amount:</span>
+                    <span className="detail-value">${amount}</span>
+                  </div>
+                )}
+                
+                {transaction_id && (
+                  <div className="detail-row">
+                    <span className="detail-label">Transaction ID:</span>
+                    <span className="detail-value">{transaction_id}</span>
+                  </div>
+                )}
+                
+                <div className="detail-row">
+                  <span className="detail-label">Status:</span>
+                  <span className="status-pending">
+                    <FaClock />
+                    Pending Review
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Info Box */}
+            <div className="info-box">
+              <h4 className="font-semibold" style={{ color: '#1e40af', marginBottom: '0.5rem' }}>
+                What happens next?
+              </h4>
+              <ul className="info-list">
+                <li>• Our admin team will review your payment</li>
+                <li>• You will receive an email notification once approved</li>
+                <li>• Funds will be added to your account automatically</li>
+                <li>• This usually takes 1-24 hours</li>
+              </ul>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-4">
+              <button
+                onClick={handleViewTransactions}
+                className="btn btn-primary"
+              >
+                <FaReceipt style={{ marginRight: '0.5rem' }} />
+                View Transactions
+              </button>
+              
+              <button
+                onClick={handleContactSupport}
+                className="btn btn-secondary"
+              >
+                <FaWhatsapp style={{ marginRight: '0.5rem' }} />
+                Contact Support
+              </button>
+            </div>
+
+            {/* Auto Redirect Notice */}
+            <div className="countdown">
+              <p>Automatically redirecting to transactions in {countdown} seconds...</p>
+            </div>
           </div>
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-6 bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Important Notes</h3>
-          <ul className="text-sm text-gray-600 space-y-2">
-            <li className="flex items-start">
-              <span className="text-yellow-500 mr-2">•</span>
-              Your payment is being manually verified for security
+        {/* Important Notes Card */}
+        <div className="card card-padding">
+          <div className="card-header">
+            <div className="card-icon">
+              <FaExclamationTriangle />
+            </div>
+            <h3 className="card-title">Important Notes</h3>
+          </div>
+          
+          <ul className="features-list">
+            <li className="feature-item">
+              <FaClock className="feature-icon" />
+              <span>Your payment is being manually verified for security</span>
             </li>
-            <li className="flex items-start">
-              <span className="text-yellow-500 mr-2">•</span>
-              Please ensure your transaction details are correct
+            <li className="feature-item">
+              <FaClock className="feature-icon" />
+              <span>Please ensure your transaction details are correct</span>
             </li>
-            <li className="flex items-start">
-              <span className="text-yellow-500 mr-2">•</span>
-              You will receive email confirmation once approved
+            <li className="feature-item">
+              <FaClock className="feature-icon" />
+              <span>You will receive email confirmation once approved</span>
             </li>
-            <li className="flex items-start">
-              <span className="text-yellow-500 mr-2">•</span>
-              Contact support if you have any questions
+            <li className="feature-item">
+              <FaClock className="feature-icon" />
+              <span>Contact support if you have any questions</span>
             </li>
           </ul>
         </div>
 
-        {/* Support Info */}
-        <div className="mt-6 bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Need Help?</h3>
-          <p className="text-sm text-gray-600 mb-4">
+        {/* Support Card */}
+        <div className="card card-padding">
+          <div className="card-header">
+            <div className="card-icon">
+              <FaPhone />
+            </div>
+            <h3 className="card-title">Need Help?</h3>
+          </div>
+          
+          <p style={{ color: '#64748b', marginBottom: '1rem', fontSize: '0.875rem' }}>
             If you have any questions about your payment, feel free to contact our support team:
           </p>
-          <div className="grid grid-cols-1 gap-3">
+          
+          <div className="support-grid">
             <a 
               href="https://wa.me/+8801723139610" 
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center bg-green-100 hover:bg-green-200 text-green-700 py-2 px-4 rounded-md transition duration-200"
+              className="support-card whatsapp"
             >
-              <span className="mr-2">📱</span>
-              WhatsApp: +8801723139610
+              <FaWhatsapp className="support-card-icon" />
+              <div>
+                <div className="support-card-title">WhatsApp</div>
+                <div className="support-card-subtitle">+8801723139610</div>
+              </div>
             </a>
+            
             <a 
               href="https://t.me/Smmdoc" 
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-4 rounded-md transition duration-200"
+              className="support-card telegram"
             >
-              <span className="mr-2">💬</span>
-              Telegram: @Smmdoc
+              <FaTelegram className="support-card-icon" />
+              <div>
+                <div className="support-card-title">Telegram</div>
+                <div className="support-card-subtitle">@Smmdoc</div>
+              </div>
             </a>
+            
             <a 
               href="mailto:support@example.com"
-              className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-md transition duration-200"
+              className="support-card email"
             >
-              <span className="mr-2">📧</span>
-              Email Support
+              <FaEnvelope className="support-card-icon" />
+              <div>
+                <div className="support-card-title">Email</div>
+                <div className="support-card-subtitle">support@example.com</div>
+              </div>
             </a>
           </div>
         </div>
@@ -188,16 +278,5 @@ function PaymentPendingContent() {
 }
 
 export default function PaymentPendingPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    }>
-      <PaymentPendingContent />
-    </Suspense>
-  );
+  return <PaymentPendingContent />;
 }
