@@ -1,13 +1,37 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import axiosInstance from '@/lib/axiosInstance';
-import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { 
+  FaCheckCircle, 
+  FaClock, 
+  FaExclamationTriangle, 
+  FaSpinner,
+  FaEye,
+  FaPlus,
+  FaCheckDouble,
+  FaTimes
+} from 'react-icons/fa';
+
+// Toast Component
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+    type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+    type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
+    'bg-yellow-50 border-yellow-200 text-yellow-800'
+  }`}>
+    <div className="flex items-center space-x-2">
+      {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+        <FaTimes className="w-3 h-3" />
+      </button>
+    </div>
+  </div>
+);
 
 export default function SuccessPage() {
   const [status, setStatus] = useState<'verifying' | 'success' | 'processing' | 'error'>('verifying');
@@ -15,12 +39,19 @@ export default function SuccessPage() {
   const [amount, setAmount] = useState<number | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const invoiceId = searchParams?.get('invoice_id');
   const hasRedirectedRef = useRef(false);
   const verifyAttemptsRef = useRef(0);
   const maxVerifyAttempts = 3;
+
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 5000);
+  };
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -48,7 +79,7 @@ export default function SuccessPage() {
     const verifyPaymentWithId = async (id: string) => {
       try {
         // Call our verification API
-        toast.loading('Verifying payment...', { id: 'payment-verify' });
+        showToast('Verifying payment...', 'pending');
         
         // Retrieve order ID from localStorage if it exists
         const storedOrderId = localStorage.getItem('order_id');
@@ -65,7 +96,6 @@ export default function SuccessPage() {
         const data = response.data;
         
         console.log("Payment verification response:", data);
-        toast.dismiss('payment-verify');
         
         if (data.status === 'COMPLETED') {
           setStatus('success');
@@ -73,10 +103,7 @@ export default function SuccessPage() {
           if (data.payment?.amount) {
             setAmount(data.payment.amount);
           }
-          toast.success('Payment successful! Funds added to your account.', {
-            duration: 5000,
-            description: `Amount: ${data.payment?.amount || 'N/A'} BDT`
-          });
+          showToast(`Payment successful! Funds added to your account. Amount: ${data.payment?.amount || 'N/A'} BDT`, 'success');
           
           // Clean up localStorage after successful payment
           localStorage.removeItem('invoice_id');
@@ -94,10 +121,7 @@ export default function SuccessPage() {
         } else if (data.status === 'PENDING') {
           setStatus('processing');
           setMessage('Your payment is being processed and requires manual verification. You will be notified once approved.');
-          toast.info('Payment requires manual verification', {
-            duration: 6000,
-            description: 'Your transaction is pending admin approval. Please wait for confirmation.'
-          });
+          showToast('Payment requires manual verification. Your transaction is pending admin approval.', 'info');
 
           // For pending payments, redirect to transactions page immediately
           // Don't retry verification as it requires manual admin approval
@@ -111,10 +135,7 @@ export default function SuccessPage() {
           setStatus('error');
           setMessage(data.message || 'There was a problem with your payment.');
           setErrorDetails(data.error || 'An issue occurred during payment processing. The payment may have been canceled or there was a processing error.');
-          toast.error('Payment failed!', {
-            duration: 5000,
-            description: 'Please try again or contact support'
-          });
+          showToast('Payment failed! Please try again or contact support', 'error');
           
           // Clean up localStorage after failed payment
           localStorage.removeItem('invoice_id');
@@ -131,11 +152,7 @@ export default function SuccessPage() {
         }
       } catch (error) {
         console.error('Error verifying payment:', error);
-        toast.dismiss('payment-verify');
-        toast.error('Payment verification error!', {
-          duration: 5000,
-          description: 'Unable to verify payment status. Please contact support.'
-        });
+        showToast('Payment verification error! Unable to verify payment status. Please contact support.', 'error');
         setStatus('error');
         setMessage('An error occurred while verifying your payment.');
         setErrorDetails('There was a problem connecting to the server or invalid payment information was provided. Please contact support.');
@@ -165,136 +182,175 @@ export default function SuccessPage() {
   }, [router]);
 
   return (
-    <div className="container mx-auto py-10">
-      <Card className="w-full max-w-2xl mx-auto shadow-md bg-white dark:bg-gray-800 overflow-hidden">
-        <CardHeader className={`text-center pb-2 ${
-          status === 'success' 
-            ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' 
-            : status === 'processing' 
-              ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20' 
-              : status === 'error' 
-                ? 'bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20' 
-                : 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20'
-        }`}>
-          <div className="mx-auto mb-4">
+    <div className="page-container">
+      {/* Toast Container */}
+      {toastMessage && (
+        <Toast 
+          message={toastMessage.message} 
+          type={toastMessage.type} 
+          onClose={() => setToastMessage(null)} 
+        />
+      )}
+      
+      <div className="page-content">
+        <div className="max-w-2xl mx-auto">
+          {/* Status Card */}
+          <div className="card card-padding text-center">
+            {/* Status Icon */}
+            <div className="mb-6">
+              {status === 'success' && (
+                <div className="relative inline-flex">
+                  <div className="absolute inset-0 bg-green-200 rounded-full animate-ping opacity-75"></div>
+                  <div className="relative w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                    <FaCheckCircle className="w-10 h-10 text-green-600" />
+                  </div>
+                </div>
+              )}
+              {status === 'processing' && (
+                <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+                  <FaClock className="w-10 h-10 text-yellow-600 animate-pulse" />
+                </div>
+              )}
+              {status === 'error' && (
+                <div className="relative inline-flex">
+                  <div className="absolute inset-0 bg-red-200 rounded-full animate-pulse opacity-75"></div>
+                  <div className="relative w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                    <FaExclamationTriangle className="w-10 h-10 text-red-600" />
+                  </div>
+                </div>
+              )}
+              {status === 'verifying' && (
+                <div className="relative w-20 h-20 mx-auto">
+                  <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
+                  <div className="absolute inset-2 border-4 border-t-blue-600 rounded-full animate-spin"></div>
+                  <div className="absolute inset-4 border-4 border-t-blue-800 border-l-blue-800 rounded-full animate-spin"></div>
+                </div>
+              )}
+            </div>
+
+            {/* Status Title */}
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              {status === 'success' && 'Payment Successful!'}
+              {status === 'processing' && 'Payment Under Review'}
+              {status === 'error' && 'Payment Failed'}
+              {status === 'verifying' && 'Verifying Payment'}
+            </h1>
+
+            {/* Status Message */}
+            <p className="text-lg text-gray-600 mb-4">{message}</p>
+
+            {/* Additional Status Info */}
             {status === 'success' && (
-              <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-green-100 dark:bg-green-900/30 animate-ping opacity-75"></div>
-                <CheckCircle className="h-20 w-20 text-green-500 relative z-10" />
-              </div>
+              <p className="text-sm text-green-600 mb-6">
+                Funds have been added to your account. You will be redirected to the transactions page in a few seconds...
+              </p>
             )}
             {status === 'processing' && (
-              <div className="relative">
-                <Clock className="h-20 w-20 text-yellow-500 animate-pulse" />
-        </div>
-      )}
-            {status === 'error' && (
-              <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-red-100 dark:bg-red-900/30 animate-pulse opacity-75"></div>
-                <AlertCircle className="h-20 w-20 text-red-500 relative z-10" />
-        </div>
-      )}
-            {status === 'verifying' && (
-              <div className="relative flex items-center justify-center">
-                <div className="h-20 w-20 border-4 border-dashed rounded-full border-blue-500 animate-spin opacity-30"></div>
-                <div className="absolute h-16 w-16 border-t-4 border-blue-600 rounded-full animate-spin"></div>
-                <div className="absolute h-12 w-12 border-t-4 border-l-4 border-blue-700 rounded-full animate-spin"></div>
-        </div>
-      )}
-          </div>
-          <CardTitle className="text-2xl">
-            {status === 'success' && 'Payment Successful!'}
-            {status === 'processing' && 'Payment Under Review'}
-            {status === 'error' && 'Payment Failed'}
-            {status === 'verifying' && 'Verifying Payment'}
-          </CardTitle>
-          <CardDescription className="text-lg mt-2">
-            {message}
-          </CardDescription>
-          {status === 'success' && (
-            <p className="text-sm text-green-600 mt-2">
-              Funds have been added to your account. You will be redirected to the transactions page in a few seconds...
-            </p>
-          )}
-          {status === 'processing' && (
-            <p className="text-sm text-yellow-600 mt-2">
-              Your payment is pending admin approval. You will receive an email notification once it's processed.
-            </p>
-          )}
-          {status === 'error' && (
-            <p className="text-sm text-red-600 mt-2">
-              You will be redirected to the transactions page in a few seconds...
-            </p>
-          )}
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            {/* Payment Details */}
-            {(status === 'success' || status === 'processing') && (
-              <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
-                <h3 className="text-lg font-medium mb-2">Payment Details</h3>
-                <div className="space-y-2">
-                  {invoiceId && (
-                    <p className="text-sm">
-                      <span className="font-medium">Invoice ID:</span> {invoiceId}
-                    </p>
-                  )}
-                  {orderId && (
-                    <p className="text-sm">
-                      <span className="font-medium">Order ID:</span> {orderId}
-                    </p>
-                  )}
-                  {amount !== null && (
-                    <p className="text-sm">
-                      <span className="font-medium">Amount:</span> {amount} BDT
-                    </p>
-                  )}
-                  <p className="text-sm">
-                    <span className="font-medium">Status:</span>{' '}
-                    <span className={`${status === 'success' ? 'text-green-600 dark:text-green-400' : status === 'processing' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {status === 'success' ? 'Completed' : status === 'processing' ? 'Processing' : 'Failed'}
-                    </span>
-                  </p>
-                </div>
-        </div>
-      )}
-            
-            {status === 'error' && (
-              <div className="border border-red-200 rounded-lg p-4 bg-red-50 dark:bg-red-900/20">
-                <h3 className="text-lg font-medium mb-2 text-red-800 dark:text-red-300">Error Details</h3>
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  {errorDetails || 'There was a problem processing your payment. Please try again or contact our support team.'}
-                </p>
-                {invoiceId && (
-                  <div className="mt-3 pt-3 border-t border-red-200">
-                    <p className="text-sm text-red-700">
-                      <span className="font-medium">Invoice ID:</span> {invoiceId}
-          </p>
-        </div>
-      )}
-              </div>
+              <p className="text-sm text-yellow-600 mb-6">
+                Your payment is pending admin approval. You will receive an email notification once it's processed.
+              </p>
             )}
-            
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-              <Button asChild variant="outline" className="transition-all duration-200 hover:scale-105">
-                <Link href="/dashboard/user/transactions">
-                  View Transactions
-                </Link>
-              </Button>
-              <Button asChild className={`bg-gradient-to-r transition-all duration-200 hover:scale-105 ${
-                status === 'error' 
-                  ? 'from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700'
-                  : 'from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
-              }`}>
-                <Link href="/dashboard/user/add-funds">
-                  {status === 'error' ? 'Try Again' : 'Add More Funds'}
-                </Link>
-              </Button>
-            </div>
+            {status === 'error' && (
+              <p className="text-sm text-red-600 mb-6">
+                You will be redirected to the transactions page in a few seconds...
+              </p>
+            )}
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Payment Details */}
+          {(status === 'success' || status === 'processing') && (
+            <div className="card card-padding mt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <FaCheckDouble className="text-blue-600" />
+                Payment Details
+              </h3>
+              <div className="space-y-3">
+                {invoiceId && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="font-medium text-gray-700">Invoice ID:</span>
+                    <span className="text-sm font-mono text-gray-900">{invoiceId}</span>
+                  </div>
+                )}
+                {orderId && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="font-medium text-gray-700">Order ID:</span>
+                    <span className="text-sm font-mono text-gray-900">{orderId}</span>
+                  </div>
+                )}
+                {amount !== null && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="font-medium text-gray-700">Amount:</span>
+                    <span className="text-lg font-semibold text-gray-900">{amount} BDT</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center py-2">
+                  <span className="font-medium text-gray-700">Status:</span>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    status === 'success' 
+                      ? 'bg-green-100 text-green-800 border border-green-200'
+                      : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                  }`}>
+                    {status === 'success' ? (
+                      <>
+                        <FaCheckCircle className="w-3 h-3 mr-1" />
+                        Completed
+                      </>
+                    ) : (
+                      <>
+                        <FaClock className="w-3 h-3 mr-1" />
+                        Processing
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error Details */}
+          {status === 'error' && (
+            <div className="card card-padding mt-6 border-red-200 bg-red-50">
+              <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center gap-2">
+                <FaExclamationTriangle className="text-red-600" />
+                Error Details
+              </h3>
+              <p className="text-sm text-red-700 mb-4">
+                {errorDetails || 'There was a problem processing your payment. Please try again or contact our support team.'}
+              </p>
+              {invoiceId && (
+                <div className="pt-3 border-t border-red-200">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-red-700">Invoice ID:</span>
+                    <span className="text-sm font-mono text-red-800">{invoiceId}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <Link
+              href="/dashboard/user/transactions"
+              className="btn btn-secondary flex items-center justify-center gap-2"
+            >
+              <FaEye className="w-4 h-4" />
+              View Transactions
+            </Link>
+            <Link
+              href="/dashboard/user/add-funds"
+              className={`btn flex items-center justify-center gap-2 ${
+                status === 'error' 
+                  ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
+                  : 'btn-primary'
+              }`}
+            >
+              <FaPlus className="w-4 h-4" />
+              {status === 'error' ? 'Try Again' : 'Add More Funds'}
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

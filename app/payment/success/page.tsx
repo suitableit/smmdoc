@@ -1,26 +1,60 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { CheckCircle } from 'lucide-react';
-import { Suspense } from 'react';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from 'react';
+import { FaCheckCircle, FaWhatsapp, FaTelegram, FaEnvelope, FaReceipt, FaWallet, FaArrowRight, FaTimes } from 'react-icons/fa';
+
+// Mock hook for demonstration
+const useSearchParams = () => {
+  return {
+    get: (key: string) => {
+      const params = {
+        invoice_id: 'INV-123456789',
+        amount: '500.00',
+        transaction_id: 'TRX-987654321'
+      };
+      return params[key as keyof typeof params] || null;
+    }
+  };
+};
+
+const useRouter = () => {
+  return {
+    push: (path: string) => {
+      console.log(`Navigating to: ${path}`);
+    }
+  };
+};
+
+// Toast Component
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`toast toast-${type} toast-enter`}>
+    {type === 'success' && <FaCheckCircle className="toast-icon" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="toast-close">
+      <FaTimes className="toast-close-icon" />
+    </button>
+  </div>
+);
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [countdown, setCountdown] = useState(5);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
   
   const invoice_id = searchParams.get('invoice_id');
   const amount = searchParams.get('amount');
   const transaction_id = searchParams.get('transaction_id');
 
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
+
   useEffect(() => {
     // Show success toast
-    toast.success('Payment successful! Funds have been added to your account.', {
-      position: 'top-right',
-      duration: 5000,
-    });
+    showToast('Payment successful! Funds have been added to your account.', 'success');
 
     // Countdown timer
     const timer = setInterval(() => {
@@ -46,117 +80,164 @@ function PaymentSuccessContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          {/* Success Icon */}
-          <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
-            <CheckCircle className="w-12 h-12 text-green-600" />
-          </div>
+    <div className="page-container">
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </div>
 
-          {/* Success Message */}
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
-          <p className="text-gray-600 mb-6">
-            Payment successful! Funds have been added to your account.
-          </p>
+      <div className="page-content">
+        {/* Page Header */}
+        <div className="page-header">
+          <h1 className="page-title">Payment Successful!</h1>
+          <p className="page-description">Your transaction has been completed successfully</p>
+        </div>
 
-          {/* Payment Details */}
-          <div className="bg-green-50 rounded-lg p-4 mb-6 text-left">
-            <h3 className="text-lg font-semibold text-green-800 mb-3">Payment Details</h3>
-            <div className="space-y-2">
-              {invoice_id && (
-                <div className="flex justify-between">
-                  <span className="text-green-700">Order ID:</span>
-                  <span className="font-mono text-sm text-green-900">{invoice_id}</span>
-                </div>
-              )}
-              {amount && (
-                <div className="flex justify-between">
-                  <span className="text-green-700">Amount:</span>
-                  <span className="font-bold text-green-900">৳ {amount}</span>
-                </div>
-              )}
-              {transaction_id && (
-                <div className="flex justify-between">
-                  <span className="text-green-700">Transaction ID:</span>
-                  <span className="font-mono text-sm text-green-900">{transaction_id}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-green-700">Status:</span>
-                <span className="font-bold text-green-900">✓ Completed</span>
-              </div>
+        {/* Main Success Card */}
+        <div className="card card-padding">
+          <div className="text-center">
+            {/* Success Icon */}
+            <div className="success-icon">
+              <FaCheckCircle />
             </div>
-          </div>
 
-          {/* Success Message */}
-          <div className="bg-blue-50 rounded-lg p-4 mb-6">
-            <p className="text-blue-800 text-sm">
-              Funds have been added to your account. You will be redirected to the transactions page in a few seconds...
+            {/* Success Message */}
+            <h2 className="card-title text-center">Payment Completed!</h2>
+            <p className="text-center" style={{ color: '#64748b', marginBottom: '1.5rem' }}>
+              Funds have been successfully added to your account.
             </p>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            <button
-              onClick={handleViewTransactions}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-200"
-            >
-              View Transactions
-            </button>
-            
-            <button
-              onClick={handleAddMoreFunds}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-md transition duration-200"
-            >
-              Add More Funds
-            </button>
-          </div>
+            {/* Payment Details */}
+            {(invoice_id || amount || transaction_id) && (
+              <div className="details-grid">
+                <h3 className="font-semibold" style={{ color: '#1e293b', marginBottom: '1rem' }}>
+                  Payment Details
+                </h3>
+                
+                {invoice_id && (
+                  <div className="detail-row">
+                    <span className="detail-label">Order ID:</span>
+                    <span className="detail-value">{invoice_id}</span>
+                  </div>
+                )}
+                
+                {amount && (
+                  <div className="detail-row">
+                    <span className="detail-label">Amount:</span>
+                    <span className="detail-value">${amount}</span>
+                  </div>
+                )}
+                
+                {transaction_id && (
+                  <div className="detail-row">
+                    <span className="detail-label">Transaction ID:</span>
+                    <span className="detail-value">{transaction_id}</span>
+                  </div>
+                )}
+                
+                <div className="detail-row">
+                  <span className="detail-label">Status:</span>
+                  <span className="status-success">
+                    <FaCheckCircle />
+                    Completed
+                  </span>
+                </div>
+              </div>
+            )}
 
-          {/* Auto Redirect Notice */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              Automatically redirecting in {countdown} seconds...
-            </p>
+            {/* Info Box */}
+            <div className="info-box">
+              <p className="info-text">
+                Your account balance has been updated. You will be redirected to the transactions page in a few seconds...
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-4">
+              <button
+                onClick={handleViewTransactions}
+                className="btn btn-primary"
+              >
+                <FaReceipt style={{ marginRight: '0.5rem' }} />
+                View Transactions
+                <FaArrowRight style={{ marginLeft: '0.5rem' }} />
+              </button>
+              
+              <button
+                onClick={handleAddMoreFunds}
+                className="btn btn-secondary"
+              >
+                <FaWallet style={{ marginRight: '0.5rem' }} />
+                Add More Funds
+              </button>
+            </div>
+
+            {/* Auto Redirect Notice */}
+            <div className="countdown">
+              <p>Automatically redirecting in {countdown} seconds...</p>
+            </div>
           </div>
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-6 bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">What's Next?</h3>
-          <ul className="text-sm text-gray-600 space-y-2">
-            <li className="flex items-start">
-              <span className="text-green-500 mr-2">•</span>
-              Your account balance has been updated
+        {/* What's Next Card */}
+        <div className="card card-padding">
+          <div className="card-header">
+            <div className="card-icon">
+              <FaReceipt />
+            </div>
+            <h3 className="card-title">What's Next?</h3>
+          </div>
+          
+          <ul className="features-list">
+            <li className="feature-item">
+              <FaCheckCircle className="feature-icon" />
+              <span>Your account balance has been updated</span>
             </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-2">•</span>
-              You can now place orders using your balance
+            <li className="feature-item">
+              <FaCheckCircle className="feature-icon" />
+              <span>You can now place orders using your balance</span>
             </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-2">•</span>
-              Check your email for payment confirmation
+            <li className="feature-item">
+              <FaCheckCircle className="feature-icon" />
+              <span>Check your email for payment confirmation</span>
             </li>
-            <li className="flex items-start">
-              <span className="text-green-500 mr-2">•</span>
-              View transaction history anytime in your dashboard
+            <li className="feature-item">
+              <FaCheckCircle className="feature-icon" />
+              <span>View transaction history anytime in your dashboard</span>
             </li>
           </ul>
         </div>
 
-        {/* Support Info */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-500 mb-2">Need help?</p>
-          <div className="flex justify-center space-x-4 text-sm">
-            <a href="https://wa.me/+8801723139610" className="text-green-600 hover:text-green-700">
-              WhatsApp
-            </a>
-            <a href="https://t.me/Smmdoc" className="text-blue-600 hover:text-blue-700">
-              Telegram
-            </a>
-            <a href="mailto:support@example.com" className="text-gray-600 hover:text-gray-700">
-              Email
-            </a>
+        {/* Support Card */}
+        <div className="card card-padding">
+          <div className="text-center">
+            <h3 className="font-semibold" style={{ color: '#1e293b', marginBottom: '1rem' }}>
+              Need Help?
+            </h3>
+            <p style={{ color: '#64748b', marginBottom: '1rem', fontSize: '0.875rem' }}>
+              Our support team is here to assist you
+            </p>
+            
+            <div className="support-links">
+              <a href="https://wa.me/+8801723139610" className="support-link">
+                <FaWhatsapp />
+                WhatsApp
+              </a>
+              <a href="https://t.me/Smmdoc" className="support-link">
+                <FaTelegram />
+                Telegram
+              </a>
+              <a href="mailto:support@example.com" className="support-link">
+                <FaEnvelope />
+                Email
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -165,16 +246,5 @@ function PaymentSuccessContent() {
 }
 
 export default function PaymentSuccessPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    }>
-      <PaymentSuccessContent />
-    </Suspense>
-  );
+  return <PaymentSuccessContent />;
 }
