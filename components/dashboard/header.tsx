@@ -2,33 +2,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
-import { setUserDetails } from '@/lib/slice/userDetails';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
+import { setUserDetails } from '@/lib/slice/userDetails';
+import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
-import { 
-  FaWallet,
-  FaFileContract, 
-  FaMoneyBillWave, 
-  FaSignOutAlt, 
-  FaUserCog,
-  FaChevronDown,
+import {
+  FaBars,
   FaBell,
+  FaChevronDown,
+  FaDesktop,
+  FaFileContract,
+  FaMoneyBillWave,
+  FaMoon,
   FaPlus,
   FaSearch,
-  FaSun,
-  FaMoon,
-  FaDesktop,
-  FaChevronUp,
-  FaBars,
-  FaTimes,
   FaShoppingCart,
+  FaSignOutAlt,
+  FaSun,
   FaTicketAlt,
+  FaTimes,
+  FaUserCog,
+  FaWallet,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -40,16 +38,24 @@ import {
 import MobileSidebar from './mobile-siderbar';
 
 // Enhanced Avatar Components with proper responsiveness
-const Avatar = ({ className, children }: { className: string; children: React.ReactNode }) => (
-  <div className={`relative rounded-full overflow-hidden flex-shrink-0 ${className}`}>
+const Avatar = ({
+  className,
+  children,
+}: {
+  className: string;
+  children: React.ReactNode;
+}) => (
+  <div
+    className={`relative rounded-full overflow-hidden flex-shrink-0 ${className}`}
+  >
     {children}
   </div>
 );
 
 const AvatarImage = ({ src, alt }: { src: string; alt: string }) => (
-  <img 
-    src={src} 
-    alt={alt} 
+  <img
+    src={src}
+    alt={alt}
     className="w-full h-full object-cover"
     onError={(e) => {
       // Hide image if it fails to load, fallback will show
@@ -75,8 +81,17 @@ const ThemeToggle = () => {
 
   if (!mounted) {
     return (
-      <div className="h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center animate-pulse" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
-        <div className="h-5 w-5 rounded" style={{ backgroundColor: 'var(--header-border)' }}></div>
+      <div
+        className="h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center animate-pulse"
+        style={{
+          backgroundColor: 'var(--dropdown-bg)',
+          border: `1px solid var(--header-border)`,
+        }}
+      >
+        <div
+          className="h-5 w-5 rounded"
+          style={{ backgroundColor: 'var(--header-border)' }}
+        ></div>
       </div>
     );
   }
@@ -87,39 +102,56 @@ const ThemeToggle = () => {
     { key: 'system', label: 'System', icon: FaDesktop },
   ];
 
-  const currentTheme = themeOptions.find(option => option.key === theme) || themeOptions[0];
+  const currentTheme =
+    themeOptions.find((option) => option.key === theme) || themeOptions[0];
   const CurrentIcon = currentTheme.icon;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 group" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
-          <CurrentIcon className="h-5 w-5 transition-colors duration-200" style={{ color: 'var(--header-text-hover)' }} />
+        <button
+          className="h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 group"
+          style={{
+            backgroundColor: 'var(--dropdown-bg)',
+            border: `1px solid var(--header-border)`,
+          }}
+        >
+          <CurrentIcon
+            className="h-5 w-5 transition-colors duration-200"
+            style={{ color: 'var(--header-text-hover)' }}
+          />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40 theme-dropdown header-theme-transition shadow-sm" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
+      <DropdownMenuContent
+        align="end"
+        className="w-40 theme-dropdown header-theme-transition shadow-sm"
+        style={{
+          backgroundColor: 'var(--dropdown-bg)',
+          border: `1px solid var(--header-border)`,
+        }}
+      >
         <div className="p-1">
           {themeOptions.map((option) => {
             const IconComponent = option.icon;
             const isActive = theme === option.key;
-            
+
             return (
               <button
                 key={option.key}
                 onClick={() => setTheme(option.key)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
-                  isActive 
-                    ? 'text-white shadow-sm' 
-                    : 'hover:opacity-80'
+                  isActive ? 'text-white shadow-sm' : 'hover:opacity-80'
                 }`}
                 style={{
                   backgroundColor: isActive ? 'var(--primary)' : 'transparent',
-                  color: isActive ? 'white' : 'var(--header-text)'
+                  color: isActive ? 'white' : 'var(--header-text)',
                 }}
               >
-                <IconComponent className={`h-4 w-4 transition-colors duration-200 ${
-                  isActive ? 'text-white' : ''
-                }`} />
+                <IconComponent
+                  className={`h-4 w-4 transition-colors duration-200 ${
+                    isActive ? 'text-white' : ''
+                  }`}
+                />
                 <span className="font-medium text-sm">{option.label}</span>
               </button>
             );
@@ -131,10 +163,19 @@ const ThemeToggle = () => {
 };
 
 // Enhanced Mobile Menu Toggle Button
-const MobileMenuToggle = ({ isMenuOpen, toggleMenu }: { isMenuOpen: boolean; toggleMenu: () => void }) => (
+const MobileMenuToggle = ({
+  isMenuOpen,
+  toggleMenu,
+}: {
+  isMenuOpen: boolean;
+  toggleMenu: () => void;
+}) => (
   <button
     className="lg:hidden h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 group"
-    style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}
+    style={{
+      backgroundColor: 'var(--dropdown-bg)',
+      border: `1px solid var(--header-border)`,
+    }}
     type="button"
     onClick={toggleMenu}
     aria-controls="mobile-menu"
@@ -142,9 +183,15 @@ const MobileMenuToggle = ({ isMenuOpen, toggleMenu }: { isMenuOpen: boolean; tog
     aria-label="Toggle navigation menu"
   >
     {isMenuOpen ? (
-      <FaTimes className="w-5 h-5 transition-colors duration-200" style={{ color: 'var(--header-text-hover)' }} />
+      <FaTimes
+        className="w-5 h-5 transition-colors duration-200"
+        style={{ color: 'var(--header-text-hover)' }}
+      />
     ) : (
-      <FaBars className="w-5 h-5 transition-colors duration-200" style={{ color: 'var(--header-text-hover)' }} />
+      <FaBars
+        className="w-5 h-5 transition-colors duration-200"
+        style={{ color: 'var(--header-text-hover)' }}
+      />
     )}
   </button>
 );
@@ -155,19 +202,20 @@ const Menu = ({ user }: { user: any }) => {
   const [loading, setLoading] = useState(true);
   const { currency, rate } = useCurrency();
   const userData = useSelector((state: any) => state.userDetails);
-  
+
   // Get balance directly from Redux store
   // Get balance from API for real-time data
   const { data: userStatsResponse } = useGetUserStatsQuery();
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
-  
+
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
-    const convertedAmount = currency === 'BDT' ? amount : amount / (rate || 121.52);
+    const convertedAmount =
+      currency === 'BDT' ? amount : amount / (rate || 121.52);
     const symbol = currency === 'USD' ? '$' : '৳';
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
-  
+
   useEffect(() => {
     // Simulate loading
     const timer = setTimeout(() => setLoading(false), 1000);
@@ -178,23 +226,23 @@ const Menu = ({ user }: { user: any }) => {
     {
       href: '/dashboard/profile',
       icon: FaUserCog,
-      label: 'Profile Settings'
+      label: 'Profile Settings',
     },
     {
       href: '/dashboard/user/add-funds',
       icon: FaMoneyBillWave,
-      label: 'Add Funds'
+      label: 'Add Funds',
     },
     {
       href: '/dashboard/user/transactions',
       icon: FaWallet,
-      label: 'Transactions'
+      label: 'Transactions',
     },
     {
       href: '/terms',
       icon: FaFileContract,
-      label: 'Terms & Conditions'
-    }
+      label: 'Terms & Conditions',
+    },
   ];
 
   const handleLogout = async () => {
@@ -226,16 +274,24 @@ const Menu = ({ user }: { user: any }) => {
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40" 
+          <div
+            className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          
+
           {/* Menu Content with updated styling */}
-          <div className="absolute right-0 mt-2 w-80 z-50 header-theme-transition rounded-lg shadow-sm transition-colors duration-200" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
-            
+          <div
+            className="absolute right-0 mt-2 w-80 z-50 header-theme-transition rounded-lg shadow-sm transition-colors duration-200"
+            style={{
+              backgroundColor: 'var(--dropdown-bg)',
+              border: `1px solid var(--header-border)`,
+            }}
+          >
             {/* User Info Section */}
-            <div className="p-6" style={{ backgroundColor: 'var(--dropdown-hover)' }}>
+            <div
+              className="p-6"
+              style={{ backgroundColor: 'var(--dropdown-hover)' }}
+            >
               <div className="flex items-center space-x-4 mb-4">
                 <Avatar className="h-14 w-14 ring-3 ring-[#5F1DE8]/20">
                   <AvatarImage
@@ -247,10 +303,16 @@ const Menu = ({ user }: { user: any }) => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-xl font-bold truncate" style={{ color: 'var(--header-text)' }}>
+                  <h3
+                    className="text-xl font-bold truncate"
+                    style={{ color: 'var(--header-text)' }}
+                  >
                     {user?.username || user?.name || 'User Name'}
                   </h3>
-                  <p className="truncate" style={{ color: 'var(--header-text)', opacity: 0.7 }}>
+                  <p
+                    className="truncate"
+                    style={{ color: 'var(--header-text)', opacity: 0.7 }}
+                  >
                     {user?.email || 'user@example.com'}
                   </p>
                   <span className="inline-flex items-center px-2 py-1 rounded-lg text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 mt-1">
@@ -258,9 +320,14 @@ const Menu = ({ user }: { user: any }) => {
                   </span>
                 </div>
               </div>
-              
+
               {/* Balance Card */}
-              <div className="rounded-lg p-4 text-white" style={{ background: `linear-gradient(to right, var(--primary), var(--secondary))` }}>
+              <div
+                className="rounded-lg p-4 text-white"
+                style={{
+                  background: `linear-gradient(to right, var(--primary), var(--secondary))`,
+                }}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <FaWallet className="h-5 w-5" />
@@ -289,10 +356,18 @@ const Menu = ({ user }: { user: any }) => {
                   onClick={() => setIsOpen(false)}
                   className="w-full px-6 py-3 text-left hover:opacity-80 transition-colors duration-200 flex items-center space-x-3 group block"
                 >
-                  <div className="p-2 rounded-lg group-hover:opacity-80 transition-colors duration-200" style={{ background: `linear-gradient(to right, var(--primary), var(--secondary))` }}>
+                  <div
+                    className="p-2 rounded-lg group-hover:opacity-80 transition-colors duration-200"
+                    style={{
+                      background: `linear-gradient(to right, var(--primary), var(--secondary))`,
+                    }}
+                  >
                     <item.icon className="h-4 w-4 text-white" />
                   </div>
-                  <span className="font-semibold transition-colors duration-200" style={{ color: 'var(--header-text)' }}>
+                  <span
+                    className="font-semibold transition-colors duration-200"
+                    style={{ color: 'var(--header-text)' }}
+                  >
                     {item.label}
                   </span>
                 </Link>
@@ -330,23 +405,24 @@ const Header = () => {
   const userData = useSelector((state: any) => state.userDetails);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
+
   // Get balance directly from Redux store
   // Get balance from API for real-time data
   const { data: userStatsResponse } = useGetUserStatsQuery();
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
-  
+
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
-    const convertedAmount = currency === 'BDT' ? amount : amount / (rate || 121.52);
+    const convertedAmount =
+      currency === 'BDT' ? amount : amount / (rate || 121.52);
     const symbol = currency === 'USD' ? '$' : '৳';
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
-  
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-  
+
   async function fetchUser() {
     try {
       setIsRefreshing(true);
@@ -355,23 +431,23 @@ const Header = () => {
         dispatch(setUserDetails(userDetails));
       }
     } catch (error) {
-      console.error("Error fetching user details:", error);
+      console.error('Error fetching user details:', error);
     } finally {
       setIsRefreshing(false);
     }
   }
-  
+
   useEffect(() => {
     fetchUser();
-    
+
     // Refresh user data every 30 seconds to sync with sidebar
     const intervalId = setInterval(() => {
       fetchUser();
     }, 30000);
-    
+
     return () => clearInterval(intervalId);
   }, []);
-  
+
   const handleCurrencyChange = async (newCurrency: 'USD' | 'BDT') => {
     await setCurrency(newCurrency);
     // refresh the page to apply the new currency
@@ -379,8 +455,14 @@ const Header = () => {
   };
 
   return (
-    <nav className="h-20 flex items-center justify-between px-8 header-theme-transition" style={{ backgroundColor: 'var(--header-bg)', borderBottom: `1px solid var(--header-border)`, color: 'var(--header-text)' }}>
-      
+    <nav
+      className="h-20 flex items-center justify-between px-8 header-theme-transition"
+      style={{
+        backgroundColor: 'var(--header-bg)',
+        borderBottom: `1px solid var(--header-border)`,
+        color: 'var(--header-text)',
+      }}
+    >
       {/* Search Bar with + icon beside it */}
       <div className="hidden md:flex items-center gap-3 flex-grow max-w-md">
         <div className="relative w-full h-10 flex items-center">
@@ -391,26 +473,50 @@ const Header = () => {
             type="search"
             placeholder="Search..."
             className="w-full h-full pl-10 pr-4 header-theme-transition rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-colors duration-200"
-            style={{ backgroundColor: 'var(--dropdown-bg)', color: 'var(--header-text)', border: `1px solid var(--header-border)` }}
+            style={{
+              backgroundColor: 'var(--dropdown-bg)',
+              color: 'var(--header-text)',
+              border: `1px solid var(--header-border)`,
+            }}
           />
         </div>
-        
+
         {/* Quick Create Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="h-10 w-10 rounded-lg text-white shadow-sm hover:shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 flex-shrink-0 flex items-center justify-center" style={{ background: `linear-gradient(to right, var(--primary), var(--secondary))` }}>
+            <button
+              className="h-10 w-10 rounded-lg text-white shadow-sm hover:shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 flex-shrink-0 flex items-center justify-center"
+              style={{
+                background: `linear-gradient(to right, var(--primary), var(--secondary))`,
+              }}
+            >
               <FaPlus className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 header-theme-transition shadow-sm" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
+          <DropdownMenuContent
+            align="end"
+            className="w-48 header-theme-transition shadow-sm"
+            style={{
+              backgroundColor: 'var(--dropdown-bg)',
+              border: `1px solid var(--header-border)`,
+            }}
+          >
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/user/new-order" className="flex items-center gap-3 hover:opacity-80 px-4 py-3" style={{ color: 'var(--header-text)' }}>
+              <Link
+                href="/dashboard/user/new-order"
+                className="flex items-center gap-3 hover:opacity-80 px-4 py-3"
+                style={{ color: 'var(--header-text)' }}
+              >
                 <FaShoppingCart className="text-lg text-blue-500" />
                 <span className="font-medium">New Order</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/user/trickets" className="flex items-center gap-3 hover:opacity-80 px-4 py-3" style={{ color: 'var(--header-text)' }}>
+              <Link
+                href="/dashboard/user/support-ticket"
+                className="flex items-center gap-3 hover:opacity-80 px-4 py-3"
+                style={{ color: 'var(--header-text)' }}
+              >
                 <FaTicketAlt className="text-lg text-purple-500" />
                 <span className="font-medium">Support Ticket</span>
               </Link>
@@ -418,46 +524,85 @@ const Header = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      
+
       <div className="flex items-center gap-4 ml-auto">
         {/* Modern currency switcher */}
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button 
+              <button
                 className="h-10 px-4 rounded-lg header-theme-transition flex items-center gap-2 hover:opacity-80 transition-all duration-200 group min-w-[80px] flex-shrink-0"
-                style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}
+                style={{
+                  backgroundColor: 'var(--dropdown-bg)',
+                  border: `1px solid var(--header-border)`,
+                }}
                 disabled={isLoading}
               >
-                <span className="text-lg font-bold transition-colors duration-200" style={{ color: 'var(--header-text)' }}>
+                <span
+                  className="text-lg font-bold transition-colors duration-200"
+                  style={{ color: 'var(--header-text)' }}
+                >
                   {currency === 'USD' ? '$' : '৳'}
                 </span>
-                <span className="font-medium transition-colors duration-200" style={{ color: 'var(--header-text)' }}>
+                <span
+                  className="font-medium transition-colors duration-200"
+                  style={{ color: 'var(--header-text)' }}
+                >
                   {currency}
                 </span>
-                <FaChevronDown className="w-4 h-4 transition-colors duration-200" style={{ color: 'var(--header-text)', opacity: 0.7 }} />
+                <FaChevronDown
+                  className="w-4 h-4 transition-colors duration-200"
+                  style={{ color: 'var(--header-text)', opacity: 0.7 }}
+                />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 header-theme-transition shadow-sm" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
+            <DropdownMenuContent
+              align="end"
+              className="w-48 header-theme-transition shadow-sm"
+              style={{
+                backgroundColor: 'var(--dropdown-bg)',
+                border: `1px solid var(--header-border)`,
+              }}
+            >
               <div className="p-1">
                 <button
                   onClick={() => handleCurrencyChange('BDT')}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
-                    currency === 'BDT' 
-                      ? 'text-white shadow-sm' 
+                    currency === 'BDT'
+                      ? 'text-white shadow-sm'
                       : 'hover:opacity-80'
                   }`}
                   style={{
-                    backgroundColor: currency === 'BDT' ? 'var(--primary)' : 'transparent',
-                    color: currency === 'BDT' ? 'white' : 'var(--header-text)'
+                    backgroundColor:
+                      currency === 'BDT' ? 'var(--primary)' : 'transparent',
+                    color: currency === 'BDT' ? 'white' : 'var(--header-text)',
                   }}
                 >
-                  <span className={`text-lg font-bold min-w-[24px] ${currency === 'BDT' ? 'text-white' : ''}`} style={{ color: currency === 'BDT' ? 'white' : 'var(--header-text)' }}>
+                  <span
+                    className={`text-lg font-bold min-w-[24px] ${
+                      currency === 'BDT' ? 'text-white' : ''
+                    }`}
+                    style={{
+                      color:
+                        currency === 'BDT' ? 'white' : 'var(--header-text)',
+                    }}
+                  >
                     ৳
                   </span>
                   <div className="flex flex-col">
                     <span className="font-medium text-sm">BDT</span>
-                    <span className={`text-xs ${currency === 'BDT' ? 'text-white/80' : ''}`} style={{ color: currency === 'BDT' ? 'rgba(255,255,255,0.8)' : 'var(--header-text)', opacity: currency === 'BDT' ? 1 : 0.7 }}>
+                    <span
+                      className={`text-xs ${
+                        currency === 'BDT' ? 'text-white/80' : ''
+                      }`}
+                      style={{
+                        color:
+                          currency === 'BDT'
+                            ? 'rgba(255,255,255,0.8)'
+                            : 'var(--header-text)',
+                        opacity: currency === 'BDT' ? 1 : 0.7,
+                      }}
+                    >
                       Bangladeshi Taka
                     </span>
                   </div>
@@ -465,21 +610,41 @@ const Header = () => {
                 <button
                   onClick={() => handleCurrencyChange('USD')}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
-                    currency === 'USD' 
-                      ? 'text-white shadow-sm' 
+                    currency === 'USD'
+                      ? 'text-white shadow-sm'
                       : 'hover:opacity-80'
                   }`}
                   style={{
-                    backgroundColor: currency === 'USD' ? 'var(--primary)' : 'transparent',
-                    color: currency === 'USD' ? 'white' : 'var(--header-text)'
+                    backgroundColor:
+                      currency === 'USD' ? 'var(--primary)' : 'transparent',
+                    color: currency === 'USD' ? 'white' : 'var(--header-text)',
                   }}
                 >
-                  <span className={`text-lg font-bold min-w-[24px] ${currency === 'USD' ? 'text-white' : ''}`} style={{ color: currency === 'USD' ? 'white' : 'var(--header-text)' }}>
+                  <span
+                    className={`text-lg font-bold min-w-[24px] ${
+                      currency === 'USD' ? 'text-white' : ''
+                    }`}
+                    style={{
+                      color:
+                        currency === 'USD' ? 'white' : 'var(--header-text)',
+                    }}
+                  >
                     $
                   </span>
                   <div className="flex flex-col">
                     <span className="font-medium text-sm">USD</span>
-                    <span className={`text-xs ${currency === 'USD' ? 'text-white/80' : ''}`} style={{ color: currency === 'USD' ? 'rgba(255,255,255,0.8)' : 'var(--header-text)', opacity: currency === 'USD' ? 1 : 0.7 }}>
+                    <span
+                      className={`text-xs ${
+                        currency === 'USD' ? 'text-white/80' : ''
+                      }`}
+                      style={{
+                        color:
+                          currency === 'USD'
+                            ? 'rgba(255,255,255,0.8)'
+                            : 'var(--header-text)',
+                        opacity: currency === 'USD' ? 1 : 0.7,
+                      }}
+                    >
                       US Dollar
                     </span>
                   </div>
@@ -489,42 +654,84 @@ const Header = () => {
           </DropdownMenu>
           {rate && !isLoading && (
             <div className="flex items-center h-10">
-              <span className="text-sm font-medium hidden sm:inline" style={{ color: 'var(--header-text)' }}>
+              <span
+                className="text-sm font-medium hidden sm:inline"
+                style={{ color: 'var(--header-text)' }}
+              >
                 1USD ≈ {rate.toFixed(2)}BDT
               </span>
             </div>
           )}
         </div>
-        
+
         {/* Balance display with wallet icon */}
-        <Link 
-          href="/dashboard/user/add-funds" 
-          className={`flex items-center gap-2 h-10 ${isRefreshing ? 'animate-pulse' : ''} text-white rounded-lg px-4 shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 group flex-shrink-0`}
-          style={{ background: `linear-gradient(to right, var(--primary), var(--secondary))` }}
+        <Link
+          href="/dashboard/user/add-funds"
+          className={`flex items-center gap-2 h-10 ${
+            isRefreshing ? 'animate-pulse' : ''
+          } text-white rounded-lg px-4 shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 group flex-shrink-0`}
+          style={{
+            background: `linear-gradient(to right, var(--primary), var(--secondary))`,
+          }}
         >
           <FaWallet className="text-white group-hover:animate-bounce" />
-          <span className="font-bold">
-            {formatCurrency(balance)}
-          </span>
+          <span className="font-bold">{formatCurrency(balance)}</span>
         </Link>
 
         {/* Notification dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 flex-shrink-0" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
-              <FaBell className="h-4 w-4" style={{ color: 'var(--header-text)' }} />
+            <button
+              className="h-10 w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 flex-shrink-0"
+              style={{
+                backgroundColor: 'var(--dropdown-bg)',
+                border: `1px solid var(--header-border)`,
+              }}
+            >
+              <FaBell
+                className="h-4 w-4"
+                style={{ color: 'var(--header-text)' }}
+              />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 header-theme-transition shadow-sm" style={{ backgroundColor: 'var(--dropdown-bg)', border: `1px solid var(--header-border)` }}>
-            <div className="flex justify-between items-center p-4" style={{ borderBottom: `1px solid var(--header-border)` }}>
-              <h3 className="text-xl font-bold" style={{ color: 'var(--header-text)' }}>Notifications</h3>
-              <button className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">Mark all as read</button>
+          <DropdownMenuContent
+            align="end"
+            className="w-80 header-theme-transition shadow-sm"
+            style={{
+              backgroundColor: 'var(--dropdown-bg)',
+              border: `1px solid var(--header-border)`,
+            }}
+          >
+            <div
+              className="flex justify-between items-center p-4"
+              style={{ borderBottom: `1px solid var(--header-border)` }}
+            >
+              <h3
+                className="text-xl font-bold"
+                style={{ color: 'var(--header-text)' }}
+              >
+                Notifications
+              </h3>
+              <button className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                Mark all as read
+              </button>
             </div>
             <div className="flex flex-col p-6 items-center justify-center text-center">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: 'var(--dropdown-hover)' }}>
-                <FaBell className="h-6 w-6" style={{ color: 'var(--header-text)', opacity: 0.5 }} />
+              <div
+                className="w-12 h-12 rounded-lg flex items-center justify-center mb-3"
+                style={{ backgroundColor: 'var(--dropdown-hover)' }}
+              >
+                <FaBell
+                  className="h-6 w-6"
+                  style={{ color: 'var(--header-text)', opacity: 0.5 }}
+                />
               </div>
-              <p className="font-medium" style={{ color: 'var(--header-text)', opacity: 0.7 }}>No notifications found</p>
+              <p
+                className="font-medium"
+                style={{ color: 'var(--header-text)', opacity: 0.7 }}
+              >
+                No notifications found
+              </p>
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -535,15 +742,13 @@ const Header = () => {
         </div>
 
         {/* User Menu */}
-        <div className="flex items-center">
-          {user && <Menu user={user} />}
-        </div>
-        
+        <div className="flex items-center">{user && <Menu user={user} />}</div>
+
         {/* Mobile Menu Toggle */}
         <div className="flex items-center">
           <MobileMenuToggle isMenuOpen={isMenuOpen} toggleMenu={toggleMenu} />
         </div>
-        
+
         {/* Legacy Mobile Sidebar - keeping for compatibility */}
         <div className="hidden lg:hidden">
           <MobileSidebar />

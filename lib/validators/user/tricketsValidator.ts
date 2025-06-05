@@ -1,6 +1,6 @@
 import z from 'zod';
 
-const tricketSchema = z.object({
+const ticketchema = z.object({
   subject: z
     .string()
     .nonempty('Subject is required!')
@@ -29,13 +29,12 @@ const tricketSchema = z.object({
     ),
 });
 
-type TricketSchema = z.infer<typeof tricketSchema>;
+type ticketchema = z.infer<typeof ticketchema>;
 
-const DefaultValues: TricketSchema = {
+const DefaultValues: ticketchema = {
   subject: '',
   message: '',
   file: undefined,
 };
 
-export { DefaultValues, tricketSchema, type TricketSchema };
-
+export { DefaultValues, ticketchema, type ticketchema };

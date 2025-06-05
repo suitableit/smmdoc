@@ -2,28 +2,41 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useState } from 'react';
-import { 
-  FaEnvelope, 
-  FaPhone, 
-  FaClock, 
-  FaTicketAlt, 
-  FaQuestionCircle, 
-  FaPaperPlane,
-  FaSpinner,
+import {
   FaCheckCircle,
-  FaTimes,
+  FaClock,
+  FaEnvelope,
+  FaFileUpload,
   FaHeadset,
-  FaFileUpload
+  FaPaperPlane,
+  FaPhone,
+  FaQuestionCircle,
+  FaSpinner,
+  FaTicketAlt,
+  FaTimes,
 } from 'react-icons/fa';
 
 // Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
-    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-    type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-    type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
-    'bg-yellow-50 border-yellow-200 text-yellow-800'
-  }`}>
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div
+    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+      type === 'success'
+        ? 'bg-green-50 border-green-200 text-green-800'
+        : type === 'error'
+        ? 'bg-red-50 border-red-200 text-red-800'
+        : type === 'info'
+        ? 'bg-blue-50 border-blue-200 text-blue-800'
+        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+    }`}
+  >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
@@ -36,21 +49,27 @@ const Toast = ({ message, type = 'success', onClose }: { message: string; type?:
 
 export default function ContactSupportPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
   const [formData, setFormData] = useState({
     subject: '',
     category: '',
     message: '',
-    attachments: null as FileList | null
+    attachments: null as FileList | null,
   });
   const user = useCurrentUser();
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
-  
+
   // Handle form submission
   const handleSubmit = async () => {
     // Basic validation
@@ -58,32 +77,35 @@ export default function ContactSupportPage() {
       showToast('Subject must be at least 5 characters', 'error');
       return;
     }
-    
+
     if (!formData.category) {
       showToast('Please select a category', 'error');
       return;
     }
-    
+
     if (!formData.message || formData.message.length < 20) {
       showToast('Message must be at least 20 characters', 'error');
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       // Show success message
-      showToast('Your message has been sent successfully! We will get back to you as soon as possible.', 'success');
-      
+      showToast(
+        'Your message has been sent successfully! We will get back to you as soon as possible.',
+        'success'
+      );
+
       // Reset form
       setFormData({
         subject: '',
         category: '',
         message: '',
-        attachments: null
+        attachments: null,
       });
     } catch (error) {
       console.error('Error submitting contact form:', error);
@@ -93,29 +115,34 @@ export default function ContactSupportPage() {
     }
   };
 
-  const handleInputChange = (field: string, value: string | FileList | null) => {
-    setFormData(prev => ({
+  const handleInputChange = (
+    field: string,
+    value: string | FileList | null
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
-  
+
   return (
     <div className="page-container">
       {/* Toast Container */}
       {toastMessage && (
-        <Toast 
-          message={toastMessage.message} 
-          type={toastMessage.type} 
-          onClose={() => setToastMessage(null)} 
+        <Toast
+          message={toastMessage.message}
+          type={toastMessage.type}
+          onClose={() => setToastMessage(null)}
         />
       )}
-      
+
       <div className="page-content">
         {/* Page Header */}
         <div className="page-header">
           <h1 className="page-title">Contact Support</h1>
-          <p className="page-description">Send us a message and we'll get back to you as soon as possible</p>
+          <p className="page-description">
+            Send us a message and we'll get back to you as soon as possible
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -132,7 +159,9 @@ export default function ContactSupportPage() {
               <div className="space-y-6">
                 {/* Username */}
                 <div className="form-group">
-                  <label className="form-label" htmlFor="username">Username</label>
+                  <label className="form-label" htmlFor="username">
+                    Username
+                  </label>
                   <input
                     type="text"
                     id="username"
@@ -146,29 +175,39 @@ export default function ContactSupportPage() {
 
                 {/* Subject */}
                 <div className="form-group">
-                  <label className="form-label" htmlFor="subject">Subject</label>
+                  <label className="form-label" htmlFor="subject">
+                    Subject
+                  </label>
                   <input
                     type="text"
                     id="subject"
                     className="form-input"
                     placeholder="Enter the subject of your inquiry"
                     value={formData.subject}
-                    onChange={(e) => handleInputChange('subject', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange('subject', e.target.value)
+                    }
                     required
                   />
                 </div>
 
                 {/* Category */}
                 <div className="form-group">
-                  <label className="form-label" htmlFor="category">Category</label>
+                  <label className="form-label" htmlFor="category">
+                    Category
+                  </label>
                   <select
                     id="category"
                     className="form-select"
                     value={formData.category}
-                    onChange={(e) => handleInputChange('category', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange('category', e.target.value)
+                    }
                     required
                   >
-                    <option value="" disabled>Select a category</option>
+                    <option value="" disabled>
+                      Select a category
+                    </option>
                     <option value="technical">Technical Support</option>
                     <option value="billing">Billing & Payments</option>
                     <option value="orders">Order Issues</option>
@@ -180,18 +219,23 @@ export default function ContactSupportPage() {
 
                 {/* Message */}
                 <div className="form-group">
-                  <label className="form-label" htmlFor="message">Message</label>
+                  <label className="form-label" htmlFor="message">
+                    Message
+                  </label>
                   <textarea
                     id="message"
                     className="form-input"
                     placeholder="Please describe your issue in detail"
                     rows={6}
                     value={formData.message}
-                    onChange={(e) => handleInputChange('message', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange('message', e.target.value)
+                    }
                     required
                   />
                   <small className="text-xs text-gray-500 mt-1">
-                    Include any relevant details that might help us resolve your issue faster.
+                    Include any relevant details that might help us resolve your
+                    issue faster.
                   </small>
                 </div>
 
@@ -206,10 +250,13 @@ export default function ContactSupportPage() {
                     id="attachments"
                     className="form-input"
                     multiple
-                    onChange={(e) => handleInputChange('attachments', e.target.files)}
+                    onChange={(e) =>
+                      handleInputChange('attachments', e.target.files)
+                    }
                   />
                   <small className="text-xs text-gray-500 mt-1">
-                    You can upload screenshots or other relevant files (max 5MB each).
+                    You can upload screenshots or other relevant files (max 5MB
+                    each).
                   </small>
                 </div>
 
@@ -238,7 +285,6 @@ export default function ContactSupportPage() {
 
           {/* Right Column - Contact Info & Links */}
           <div className="space-y-6">
-            
             {/* Contact Information Card */}
             <div className="card card-padding">
               <div className="card-header">
@@ -247,7 +293,7 @@ export default function ContactSupportPage() {
                 </div>
                 <h3 className="card-title">Contact Information</h3>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
@@ -255,7 +301,7 @@ export default function ContactSupportPage() {
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900 text-sm">Email</h4>
-                    <p className="text-gray-600 text-sm">support@smmcompany.com</p>
+                    <p className="text-gray-600 text-sm">support@smmdoc.com</p>
                   </div>
                 </div>
 
@@ -281,22 +327,26 @@ export default function ContactSupportPage() {
               </div>
             </div>
 
-            {/* Support Tickets Card */}
+            {/* Support Ticket Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
                   <FaTicketAlt />
                 </div>
-                <h3 className="card-title">Support Tickets</h3>
+                <h3 className="card-title">Support Ticket</h3>
               </div>
-              
+
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  For ongoing issues, you can also create a support ticket and track its progress.
+                  For ongoing issues, you can also create a support ticket and
+                  track its progress.
                 </p>
-                <a href="/dashboard/user/tickets" className="btn btn-secondary w-full inline-flex items-center justify-center">
+                <a
+                  href="/dashboard/user/Ticket"
+                  className="btn btn-secondary w-full inline-flex items-center justify-center"
+                >
                   <FaTicketAlt className="mr-2 w-4 h-4" />
-                  View My Tickets
+                  View My Ticket
                 </a>
               </div>
             </div>
@@ -309,18 +359,20 @@ export default function ContactSupportPage() {
                 </div>
                 <h3 className="card-title">Frequently Asked Questions</h3>
               </div>
-              
+
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
                   Check our FAQ section for quick answers to common questions.
                 </p>
-                <a href="/dashboard/user/faqs" className="btn btn-secondary w-full inline-flex items-center justify-center">
+                <a
+                  href="/dashboard/user/faqs"
+                  className="btn btn-secondary w-full inline-flex items-center justify-center"
+                >
                   <FaQuestionCircle className="mr-2 w-4 h-4" />
                   View FAQs
                 </a>
               </div>
             </div>
-
           </div>
         </div>
       </div>

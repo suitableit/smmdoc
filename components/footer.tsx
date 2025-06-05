@@ -1,13 +1,11 @@
-import React from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  FaFacebookF, 
-  FaTelegram, 
-  FaWhatsapp,
+import Link from 'next/link';
+import React from 'react';
+import {
   FaEnvelope,
-  FaHeart,
-  FaPhone
+  FaFacebookF,
+  FaTelegram,
+  FaWhatsapp,
 } from 'react-icons/fa';
 
 const Footer = () => {
@@ -17,18 +15,18 @@ const Footer = () => {
     {
       name: 'Facebook',
       icon: FaFacebookF,
-      url: '#'
+      url: '#',
     },
     {
       name: 'WhatsApp',
       icon: FaWhatsapp,
-      url: '#'
+      url: '#',
     },
     {
       name: 'Telegram',
       icon: FaTelegram,
-      url: '#'
-    }
+      url: '#',
+    },
   ];
 
   const companyLinks = [
@@ -36,14 +34,14 @@ const Footer = () => {
     { name: 'Blog', href: '/blog' },
     { name: 'Services', href: '/services' },
     { name: 'About Us', href: '/about' },
-    { name: 'Contact Us', href: '/contact' }
+    { name: 'Contact Us', href: '/contact' },
   ];
 
   const supportLinks = [
-    { name: 'Tickets Support', href: '/support' },
+    { name: 'Ticket Support', href: '/support' },
     { name: 'Contact Us', href: '/contact' },
     { name: 'WhatsApp Community', href: '#' },
-    { name: 'Telegram Channel', href: '#' }
+    { name: 'Telegram Channel', href: '#' },
   ];
 
   const serviceLinks = [
@@ -52,7 +50,7 @@ const Footer = () => {
     { name: 'Twitter Services', href: '/services/twitter' },
     { name: 'Telegram Services', href: '/services/telegram' },
     { name: 'YouTube Services', href: '/services/youtube' },
-    { name: 'TikTok Services', href: '/services/tiktok' }
+    { name: 'TikTok Services', href: '/services/tiktok' },
   ];
 
   const bottomLinks = [
@@ -77,7 +75,6 @@ const Footer = () => {
 
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
           {/* Company Info */}
           <div className="lg:col-span-4 pr-8">
             <div className="footer_txt">
@@ -91,17 +88,20 @@ const Footer = () => {
                 />
               </Link>
               <p className="text-white text-sm leading-relaxed mb-4">
-                Boost your online presence today with our Cheap SMM Panel – the ultimate solution for social media success! Smmdoc is a SMM Panel with more then 3 years on the market and 21 Orders processed successfully until now!
+                Boost your online presence today with our Cheap SMM Panel – the
+                ultimate solution for social media success! Smmdoc is a SMM
+                Panel with more then 3 years on the market and 21 Orders
+                processed successfully until now!
               </p>
-              
+
               {/* Social Links */}
               <ul className="social_media_links flex gap-2 list-none p-0 m-0">
                 {socialLinks.map((social, index) => {
                   const IconComponent = social.icon;
                   return (
                     <li key={index}>
-                      <Link 
-                        href={social.url} 
+                      <Link
+                        href={social.url}
                         className="social_link w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-[#5F1DE8] dark:hover:bg-[#B131F8] hover:text-white transition-all duration-300 text-slate-900 group"
                         aria-label={social.name}
                       >
@@ -117,14 +117,13 @@ const Footer = () => {
           {/* Links Sections */}
           <div className="lg:col-span-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              
               {/* Company Links */}
               <div className="footer_link_wrap">
                 <h4 className="text-xl font-bold text-white mb-4">Company</h4>
                 <ul className="footer_menu list-none p-0 m-0">
                   {companyLinks.map((link, index) => (
                     <li key={index}>
-                      <Link 
+                      <Link
                         href={link.href}
                         className="footer_menu_item block text-white font-semibold text-base py-1 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
                       >
@@ -141,7 +140,7 @@ const Footer = () => {
                 <ul className="footer_menu list-none p-0 m-0">
                   {supportLinks.map((link, index) => (
                     <li key={index}>
-                      <Link 
+                      <Link
                         href={link.href}
                         className="footer_menu_item block text-white font-semibold text-base py-1 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
                       >
@@ -163,8 +162,8 @@ const Footer = () => {
                   <div className="icon w-8 h-8 bg-white rounded-full flex items-center justify-center group hover:bg-[#5F1DE8] dark:hover:bg-[#B131F8] transition-colors duration-200">
                     <FaWhatsapp className="w-4 h-4 text-slate-900 group-hover:text-white transition-colors duration-200" />
                   </div>
-                  <Link 
-                    href="https://wa.me/8801723139610" 
+                  <Link
+                    href="https://wa.me/8801723139610"
                     className="footer_menu_item text-white font-semibold text-sm hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -176,8 +175,8 @@ const Footer = () => {
                   <div className="icon w-8 h-8 bg-white rounded-full flex items-center justify-center group hover:bg-[#5F1DE8] dark:hover:bg-[#B131F8] transition-colors duration-200">
                     <FaEnvelope className="w-4 h-4 text-slate-900 group-hover:text-white transition-colors duration-200" />
                   </div>
-                  <Link 
-                    href="mailto:support@smmdoc.com" 
+                  <Link
+                    href="mailto:support@smmdoc.com"
                     className="footer_menu_item text-white font-semibold text-sm hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
                   >
                     support@smmdoc.com
@@ -194,15 +193,19 @@ const Footer = () => {
             <div>
               <p className="text-white text-sm text-center lg:text-left">
                 © {currentYear} All Rights Reserved by{' '}
-                <Link href="/" className="text-white font-bold hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300">
+                <Link
+                  href="/"
+                  className="text-white font-bold hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
+                >
                   SMMDOC
-                </Link>.
+                </Link>
+                .
               </p>
             </div>
             <div className="footer_links_middle flex flex-wrap justify-center gap-4 text-sm">
               {bottomLinks.map((link, index) => (
                 <React.Fragment key={index}>
-                  <Link 
+                  <Link
                     href={link.href}
                     className="text-white font-semibold hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
                   >
@@ -217,14 +220,15 @@ const Footer = () => {
             <div className="text-center lg:text-right">
               <p className="text-white text-sm">
                 Developed by{' '}
-                <Link 
-                  href="https://www.suitableit.com" 
+                <Link
+                  href="https://www.suitableit.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white font-bold hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
                 >
                   Suitable IT
-                </Link>.
+                </Link>
+                .
               </p>
             </div>
           </div>

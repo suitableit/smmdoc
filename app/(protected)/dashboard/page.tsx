@@ -1,34 +1,60 @@
-"use client";
+'use client';
 
-import { useCurrentUser } from '@/hooks/use-current-user';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCurrentUser } from '@/hooks/use-current-user';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
-import { useRouter } from 'next/navigation';
 import {
-  FaUser,
-  FaWallet,
-  FaShoppingBag,
-  FaDollarSign,
-  FaChartLine,
-  FaCheckCircle,
-  FaClock,
-  FaTimesCircle,
-  FaExclamationTriangle,
-  FaTicketAlt,
-  FaHistory,
-  FaEye,
-  FaCalendarAlt,
-  FaPlus
-} from "react-icons/fa";
+  AlertTriangle,
+  CheckCircle,
+  ClipboardList,
+  Clock,
+  DollarSign,
+  ExternalLink,
+  Eye,
+  History,
+  Plus,
+  ShoppingBag,
+  Ticket,
+  TrendingUp,
+  User,
+  Wallet,
+  X,
+  XCircle,
+} from 'lucide-react';
+import moment from 'moment';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-export default function DashboardPage() {
+// Toast Component
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div className={`toast toast-${type} toast-enter`}>
+    {type === 'success' && <CheckCircle className="toast-icon" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="toast-close">
+      <X className="toast-close-icon" />
+    </button>
+  </div>
+);
+
+const DashboardPage = () => {
   const user = useCurrentUser();
   const { currency, rate: currencyRate } = useCurrency();
   const router = useRouter();
-
-  // Fetch user stats from API
   const { data: userStatsResponse, error, isLoading } = useGetUserStatsQuery();
   const userStats = userStatsResponse?.data;
+
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
 
   // Get recent orders from user stats
   const userOrders = userStats?.recentOrders || [];
@@ -44,7 +70,8 @@ export default function DashboardPage() {
 
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
-    const convertedAmount = currency === 'BDT' ? amount : amount / (currencyRate || 121.52);
+    const convertedAmount =
+      currency === 'BDT' ? amount : amount / (currencyRate || 121.52);
     const symbol = currency === 'USD' ? '$' : '৳';
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
@@ -57,42 +84,93 @@ export default function DashboardPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  // Get badge color based on status
+  const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'processing': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'pending':
+        return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800';
+      case 'processing':
+        return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800';
+      case 'completed':
+        return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800';
+      case 'cancelled':
+        return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800';
+      case 'failed':
+        return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800';
+      case 'partial':
+        return 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 border border-orange-200 dark:border-orange-800';
+      default:
+        return 'bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-800';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'completed': return <FaCheckCircle className="w-4 h-4" />;
-      case 'processing': return <FaClock className="w-4 h-4" />;
-      case 'pending': return <FaExclamationTriangle className="w-4 h-4" />;
-      case 'cancelled': return <FaTimesCircle className="w-4 h-4" />;
-      default: return <FaClock className="w-4 h-4" />;
+      case 'completed':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'processing':
+        return <Clock className="w-4 h-4" />;
+      case 'pending':
+        return <AlertTriangle className="w-4 h-4" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <Clock className="w-4 h-4" />;
     }
+  };
+
+  // Show toast notification
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const formatDate = (dateString: string) => {
+    return {
+      date: moment(dateString).format('DD/MM/YYYY'),
+      time: moment(dateString).format('HH:mm'),
+    };
   };
 
   return (
     <div className="px-8 py-8 bg-[#f1f2f6] dark:bg-[#232333]">
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </div>
+
       <div className="page-content">
+        {/* Page Header */}
+        <div className="page-header">
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-description">
+            Welcome back! Here's an overview of your account and recent
+            activity.
+          </p>
+        </div>
 
-
-        {/* User Info Cards */}
+        {/* User Information Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           {/* User ID Card */}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <FaUser />
+                <User />
               </div>
               <div>
                 <h3 className="card-title">User ID</h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>#{user?.id || "N/A"}</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  #{user?.id || 'N/A'}
+                </p>
               </div>
             </div>
           </div>
@@ -101,11 +179,13 @@ export default function DashboardPage() {
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <FaUser />
+                <User />
               </div>
               <div>
                 <h3 className="card-title">Username</h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{user?.username || user?.email?.split('@')[0] || "User"}</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {user?.username || user?.email?.split('@')[0] || 'User'}
+                </p>
               </div>
             </div>
           </div>
@@ -114,34 +194,38 @@ export default function DashboardPage() {
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <FaUser />
+                <User />
               </div>
               <div>
                 <h3 className="card-title">Full Name</h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{user?.name || "User"}</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {user?.name || 'User'}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Financial Statistics Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           {/* Balance Card */}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <FaWallet />
+                <Wallet />
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Balance</h3>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(balance)}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatCurrency(balance)}
+                </p>
               </div>
               <div className="ml-4">
-                <button 
+                <button
                   onClick={() => router.push('/dashboard/user/add-funds')}
                   className="btn btn-primary flex items-center gap-2"
                 >
-                  <FaPlus className="w-4 h-4" />
+                  <Plus className="w-4 h-4" />
                   Add
                 </button>
               </div>
@@ -152,11 +236,13 @@ export default function DashboardPage() {
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <FaShoppingBag />
+                <ShoppingBag />
               </div>
               <div>
                 <h3 className="card-title">Total Orders</h3>
-                <p className="text-2xl font-bold text-blue-600">{totalOrders}</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {totalOrders}
+                </p>
               </div>
             </div>
           </div>
@@ -165,157 +251,313 @@ export default function DashboardPage() {
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <FaDollarSign />
+                <DollarSign />
               </div>
               <div>
                 <h3 className="card-title">Total Spend</h3>
-                <p className="text-2xl font-bold text-purple-600">{formatCurrency(totalSpend)}</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {formatCurrency(totalSpend)}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Statistics Overview */}
-        <div className="card card-padding mb-6">
-          <div className="card-header mb-4">
-            <div className="card-icon">
-              <FaChartLine />
-            </div>
-            <h3 className="card-title">Statistics Overview</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Completed Orders */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-green-600 font-semibold">Completed</div>
-                  <div className="text-2xl font-bold text-green-700">{completedOrders}</div>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Left Column - Statistics Overview */}
+          <div className="xl:col-span-2 space-y-6">
+            {/* Statistics Overview */}
+            <div className="card card-padding">
+              <div className="card-header mb-4">
+                <div className="card-icon">
+                  <TrendingUp />
                 </div>
-                <FaCheckCircle className="text-green-500 w-8 h-8" />
+                <h3 className="card-title">Statistics Overview</h3>
               </div>
-            </div>
-            
-            {/* Processing Orders */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-blue-600 font-semibold">Processing</div>
-                  <div className="text-2xl font-bold text-blue-700">{processingOrders}</div>
-                </div>
-                <FaClock className="text-blue-500 w-8 h-8" />
-              </div>
-            </div>
-            
-            {/* Pending Orders */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-yellow-600 font-semibold">Pending</div>
-                  <div className="text-2xl font-bold text-yellow-700">{pendingOrders}</div>
-                </div>
-                <FaExclamationTriangle className="text-yellow-500 w-8 h-8" />
-              </div>
-            </div>
-            
-            {/* Cancelled Orders */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-red-600 font-semibold">Cancelled</div>
-                  <div className="text-2xl font-bold text-red-700">{cancelledOrders}</div>
-                </div>
-                <FaTimesCircle className="text-red-500 w-8 h-8" />
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Support Tickets Section */}
-        <div className="card card-padding mb-6">
-          <div className="card-header mb-4">
-            <div className="card-icon">
-              <FaTicketAlt />
-            </div>
-            <h3 className="card-title">Support Tickets</h3>
-            <div className="ml-auto">
-              <button className="btn btn-secondary flex items-center gap-2">
-                <FaEye className="w-4 h-4" />
-                View All
-              </button>
-            </div>
-          </div>
-          
-          <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
-            <FaTicketAlt className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
-            <div className="text-lg font-medium mb-2">No support tickets found</div>
-            <div className="text-sm">You haven't created any support tickets yet.</div>
-          </div>
-        </div>
-
-        {/* Order History Section */}
-        <div className="card card-padding">
-          <div className="card-header mb-4">
-            <div className="card-icon">
-              <FaHistory />
-            </div>
-            <h3 className="card-title">Recent Orders</h3>
-            <div className="ml-auto">
-              <button 
-                onClick={() => router.push('/dashboard/user/my-orders')}
-                className="btn btn-secondary flex items-center gap-2"
-              >
-                <FaEye className="w-4 h-4" />
-                View All Orders
-              </button>
-            </div>
-          </div>
-          
-          {userOrders.length > 0 ? (
-            <div className="space-y-3">
-              {userOrders.map((order: any) => (
-                <div key={order.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                {/* Completed Orders */}
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {getStatusIcon(order.status)}
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {order.service?.name || 'Service'}
-                        </div>
-                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                          Order #{order.id.slice(-8)} • {formatCurrency(order.bdtPrice || 0)}
-                        </div>
+                    <div>
+                      <div className="text-green-600 dark:text-green-400 font-semibold">
+                        Completed
+                      </div>
+                      <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                        {completedOrders}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize border ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                      <div className="text-xs mt-1 flex items-center" style={{ color: 'var(--text-muted)' }}>
-                        <FaCalendarAlt className="inline mr-1 w-3 h-3" />
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
+                    <CheckCircle className="text-green-500 w-8 h-8" />
                   </div>
                 </div>
-              ))}
+
+                {/* Processing Orders */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-blue-600 dark:text-blue-400 font-semibold">
+                        Processing
+                      </div>
+                      <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                        {processingOrders}
+                      </div>
+                    </div>
+                    <Clock className="text-blue-500 w-8 h-8" />
+                  </div>
+                </div>
+
+                {/* Pending Orders */}
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-yellow-600 dark:text-yellow-400 font-semibold">
+                        Pending
+                      </div>
+                      <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                        {pendingOrders}
+                      </div>
+                    </div>
+                    <AlertTriangle className="text-yellow-500 w-8 h-8" />
+                  </div>
+                </div>
+
+                {/* Cancelled Orders */}
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-red-600 dark:text-red-400 font-semibold">
+                        Cancelled
+                      </div>
+                      <div className="text-2xl font-bold text-red-700 dark:text-red-300">
+                        {cancelledOrders}
+                      </div>
+                    </div>
+                    <XCircle className="text-red-500 w-8 h-8" />
+                  </div>
+                </div>
+              </div>
             </div>
-          ) : (
-            <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
-              <FaShoppingBag className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
-              <div className="text-lg font-medium mb-2">No orders found</div>
-              <div className="text-sm mb-4">You haven't placed any orders yet.</div>
-              <button 
-                onClick={() => router.push('/dashboard/user/new-order')}
-                className="btn btn-primary flex items-center gap-2 mx-auto"
+
+            {/* Order History Section */}
+            <div className="card card-padding">
+              <div className="card-header mb-4">
+                <div className="card-icon">
+                  <History />
+                </div>
+                <h3 className="card-title">Recent Orders</h3>
+                <div className="ml-auto">
+                  <button
+                    onClick={() => router.push('/dashboard/user/my-orders')}
+                    className="btn btn-secondary flex items-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    View All Orders
+                  </button>
+                </div>
+              </div>
+
+              {userOrders.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-200 dark:border-gray-700">
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                          ID
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                          Date
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                          Link
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                          Charge
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                          Quantity
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                          Service
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userOrders.map((order: any) => {
+                        const dateTime = formatDate(order.createdAt);
+                        return (
+                          <tr
+                            key={order.id}
+                            className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                          >
+                            <td className="py-3 px-4">
+                              <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                                #{order.id.substring(0, 8)}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                {dateTime.date}
+                              </span>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                {dateTime.time}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="max-w-[120px]">
+                                <a
+                                  href={order.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs flex items-center hover:underline"
+                                  title={order.link}
+                                >
+                                  <span className="truncate mr-1">
+                                    {order.link?.replace(/^https?:\/\//, '') ||
+                                      'N/A'}
+                                  </span>
+                                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                </a>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {currency === 'USD'
+                                  ? `$${order.usdPrice?.toFixed(2) || '0.00'}`
+                                  : `৳${order.bdtPrice?.toFixed(2) || '0.00'}`}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {order.qty?.toLocaleString() || 0}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 max-w-[200px]">
+                              <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {order.service?.name || 'N/A'}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {order.category?.category_name || 'N/A'}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(
+                                  order.status
+                                )}`}
+                              >
+                                {order.status}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div
+                  className="text-center py-8"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <ClipboardList
+                    className="w-16 h-16 mx-auto mb-4"
+                    style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                  />
+                  <div className="text-lg font-medium mb-2">
+                    No orders found
+                  </div>
+                  <div className="text-sm mb-4">
+                    You haven't placed any orders yet.
+                  </div>
+                  <button
+                    onClick={() => router.push('/dashboard/user/new-order')}
+                    className="btn btn-primary flex items-center gap-2 mx-auto"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Your First Order
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Support Ticket */}
+          <div className="space-y-6">
+            {/* Support Ticket Section */}
+            <div className="card card-padding">
+              <div className="card-header mb-4">
+                <div className="card-icon">
+                  <Ticket />
+                </div>
+                <h3 className="card-title">Support Ticke</h3>
+                <div className="ml-auto">
+                  <button className="btn btn-secondary flex items-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    View All
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className="text-center py-8"
+                style={{ color: 'var(--text-muted)' }}
               >
-                <FaPlus className="w-4 h-4" />
-                Create Your First Order
-              </button>
+                <Ticket
+                  className="w-16 h-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                />
+                <div className="text-lg font-medium mb-2">
+                  No support Ticket found
+                </div>
+                <div className="text-sm">
+                  You haven't created any support Ticket yet.
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* Quick Actions */}
+            <div className="card card-padding">
+              <div className="card-header mb-4">
+                <div className="card-icon">
+                  <Plus />
+                </div>
+                <h3 className="card-title">Quick Actions</h3>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => router.push('/dashboard/user/new-order')}
+                  className="btn btn-primary w-full flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Order
+                </button>
+
+                <button
+                  onClick={() => router.push('/dashboard/user/add-funds')}
+                  className="btn btn-secondary w-full flex items-center justify-center gap-2"
+                >
+                  <Wallet className="w-4 h-4" />
+                  Add Funds
+                </button>
+
+                <button
+                  onClick={() => router.push('/dashboard/user/my-orders')}
+                  className="btn btn-secondary w-full flex items-center justify-center gap-2"
+                >
+                  <History className="w-4 h-4" />
+                  Order History
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default DashboardPage;

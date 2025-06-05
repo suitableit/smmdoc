@@ -7,7 +7,7 @@ export const navItems = [
     label: 'Dashboard',
     roles: ['admin', 'user'],
   },
-  
+
   // Orders items
   {
     title: 'New Order',
@@ -30,7 +30,7 @@ export const navItems = [
     label: 'My Orders',
     roles: ['user'],
   },
-  
+
   // Services items
   {
     title: 'All Services',
@@ -46,7 +46,7 @@ export const navItems = [
     label: 'Favorite Services',
     roles: ['user'],
   },
-  
+
   // Funds items
   {
     title: 'Add Fund',
@@ -62,21 +62,21 @@ export const navItems = [
     label: 'Transactions',
     roles: ['user'],
   },
-  
+
   // Support items
   {
     title: 'Support Ticket',
-    href: '/dashboard/user/trickets',
+    href: '/dashboard/user/support-ticket',
     icon: 'FaTicketAlt',
     label: 'Support Ticket',
     statusColor: 'green',
     roles: ['user'],
   },
   {
-    title: 'Ticket History',
-    href: '/dashboard/user/trickets/history',
+    title: 'Tickets History',
+    href: '/dashboard/user/tickets-history',
     icon: 'FaListAlt',
-    label: 'Ticket History',
+    label: 'Tickets History',
     roles: ['user'],
   },
   {
@@ -93,7 +93,7 @@ export const navItems = [
     label: 'FAQs',
     roles: ['user'],
   },
-  
+
   // Integrations items
   {
     title: 'API Integration',
@@ -109,7 +109,7 @@ export const navItems = [
     label: 'Child Panel',
     roles: ['user'],
   },
-  
+
   // More items
   {
     title: 'Affiliate Program',
@@ -125,7 +125,7 @@ export const navItems = [
     label: 'Terms',
     roles: ['user'],
   },
-  
+
   // Account items
   {
     title: 'Account Settings',
@@ -347,24 +347,24 @@ export const adminNavItems = [
 
   // Support Section
   {
-    title: 'All Tickets',
-    href: '/dashboard/admin/tickets',
+    title: 'All Ticket',
+    href: '/dashboard/admin/Ticket',
     icon: 'FaTicketAlt',
-    label: 'All Tickets',
+    label: 'All Ticket',
     roles: ['admin'],
   },
   {
-    title: 'AI Tickets',
-    href: '/dashboard/admin/tickets/ai',
+    title: 'AI Ticket',
+    href: '/dashboard/admin/Ticket/ai',
     icon: 'FaRobot',
-    label: 'AI Tickets',
+    label: 'AI Ticket',
     roles: ['admin'],
   },
   {
-    title: 'Human Tickets',
-    href: '/dashboard/admin/tickets/human',
+    title: 'Human Ticket',
+    href: '/dashboard/admin/Ticket/human',
     icon: 'FaHeadset',
-    label: 'Human Tickets',
+    label: 'Human Ticket',
     roles: ['admin'],
   },
 
