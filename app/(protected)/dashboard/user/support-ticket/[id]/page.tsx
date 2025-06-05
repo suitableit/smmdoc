@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
@@ -43,14 +43,14 @@ export default function TicketDetailsPage() {
   const [sending, setSending] = useState(false);
 
   // const breadcrumbItems = [
-  //   { title: 'Tickets', link: '/dashboard/user/trickets' },
-  //   { title: 'Ticket Details', link: `/dashboard/user/trickets/${params.id}` },
+  //   { title: 'Ticket', link: '/dashboard/user/ticket' },
+  //   { title: 'Ticket Details', link: `/dashboard/user/ticket/${params.id}` },
   // ];
 
   useEffect(() => {
     const fetchTicket = async () => {
       try {
-        const response = await fetch(`/api/tickets/${params.id}`);
+        const response = await fetch(`/api/Ticket/${params.id}`);
         if (response.ok) {
           const data = await response.json();
           setTicket(data);
@@ -75,7 +75,7 @@ export default function TicketDetailsPage() {
 
     setSending(true);
     try {
-      const response = await fetch(`/api/tickets/${params.id}/messages`, {
+      const response = await fetch(`/api/Ticket/${params.id}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,10 +87,14 @@ export default function TicketDetailsPage() {
 
       if (response.ok) {
         const message = await response.json();
-        setTicket(prev => prev ? {
-          ...prev,
-          messages: [...prev.messages, message]
-        } : null);
+        setTicket((prev) =>
+          prev
+            ? {
+                ...prev,
+                messages: [...prev.messages, message],
+              }
+            : null
+        );
         setNewMessage('');
         toast.success('Message sent successfully');
       } else {
@@ -152,16 +156,21 @@ export default function TicketDetailsPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Ticket Details</h1>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/user/trickets/history" className="flex items-center gap-2">
+            <Link
+              href="/dashboard/user/tickets-history"
+              className="flex items-center gap-2"
+            >
               <ArrowLeft className="h-4 w-4" />
-              Back to Tickets
+              Back to Ticket
             </Link>
           </Button>
         </div>
         <Card className="w-full mx-auto max-w-6xl font-nunito">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-black font-nunito">Ticket #{params.id}</CardTitle>
+              <CardTitle className="text-black font-nunito">
+                Ticket #{params.id}
+              </CardTitle>
               <Badge className="font-nunito">Open</Badge>
             </div>
             <CardDescription className="text-black font-nunito">
@@ -175,10 +184,11 @@ export default function TicketDetailsPage() {
                   My order hasn't been delivered yet. Please check.
                 </p>
               </div>
-              
+
               <div className="bg-primary/10 p-4 rounded-lg ml-8">
                 <p className="text-sm text-black font-nunito">
-                  Dear customer, your order is being processed. It will be delivered soon.
+                  Dear customer, your order is being processed. It will be
+                  delivered soon.
                 </p>
                 <p className="text-xs text-black mt-2 font-nunito">
                   Support Team - March 20, 2024
@@ -191,9 +201,7 @@ export default function TicketDetailsPage() {
                 placeholder="Write your reply..."
                 className="min-h-[100px] text-black font-nunito"
               />
-              <Button className="w-full font-nunito">
-                Send Reply
-              </Button>
+              <Button className="w-full font-nunito">Send Reply</Button>
             </div>
           </CardContent>
         </Card>

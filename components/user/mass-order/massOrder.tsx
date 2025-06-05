@@ -2,40 +2,58 @@
 
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useGetUserStatsQuery, dashboardApi } from '@/lib/services/dashboardApi';
 import axiosInstance from '@/lib/axiosInstance';
+import {
+  dashboardApi,
+  useGetUserStatsQuery,
+} from '@/lib/services/dashboardApi';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import {
+  FaBoxes,
+  FaCheckCircle,
   FaExternalLinkAlt,
   FaInfoCircle,
+  FaLayerGroup,
   FaMoneyBillWave,
   FaShoppingBag,
+  FaShoppingCart,
   FaSpinner,
+  FaTimes,
   FaUser,
   FaWallet,
-  FaShoppingCart,
-  FaBoxes,
-  FaLayerGroup,
-  FaCheckCircle,
-  FaTimes
 } from 'react-icons/fa';
-import { toast } from 'sonner';
+import { useDispatch } from 'react-redux';
 
 // Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
-    type === 'success' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200' :
-    type === 'error' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' :
-    type === 'info' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200' :
-    'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
-  }`}>
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div
+    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+      type === 'success'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+        : type === 'error'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
+        : type === 'info'
+        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
+    }`}
+  >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded">
+      <button
+        onClick={onClose}
+        className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"
+      >
         <FaTimes className="w-3 h-3" />
       </button>
     </div>
@@ -50,7 +68,12 @@ interface StatsCardProps {
   colorTheme?: string;
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon, colorTheme = 'blue' }) => {
+const StatsCard: React.FC<StatsCardProps> = ({
+  title,
+  value,
+  icon,
+  colorTheme = 'blue',
+}) => {
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md">
       <div className="flex items-center justify-between">
@@ -58,13 +81,19 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon, colorTheme = 
           <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
           <p className="text-2xl font-bold text-gray-900">{value}</p>
         </div>
-        <div className={`text-3xl ${
-          colorTheme === 'blue' ? 'text-blue-500' :
-          colorTheme === 'green' ? 'text-green-500' :
-          colorTheme === 'orange' ? 'text-orange-500' :
-          colorTheme === 'purple' ? 'text-purple-500' :
-          'text-gray-500'
-        }`}>
+        <div
+          className={`text-3xl ${
+            colorTheme === 'blue'
+              ? 'text-blue-500'
+              : colorTheme === 'green'
+              ? 'text-green-500'
+              : colorTheme === 'orange'
+              ? 'text-orange-500'
+              : colorTheme === 'purple'
+              ? 'text-purple-500'
+              : 'text-gray-500'
+          }`}
+        >
           {icon}
         </div>
       </div>
@@ -87,41 +116,39 @@ const InstructionsPanel: React.FC = () => {
         </div>
         <h3 className="card-title">How Mass Order works?</h3>
       </div>
-      
+
       <div className="space-y-4 text-gray-700 text-sm leading-relaxed">
         <p>
-          You put the service ID followed by | followed by the link 
-          followed by | followed by quantity on each line to get 
-          the service ID of a service please check here:
+          You put the service ID followed by | followed by the link followed by
+          | followed by quantity on each line to get the service ID of a service
+          please check here:
         </p>
-        
-        <a 
-          href="https://smmgen.com/services" 
-          target="_blank" 
+
+        <a
+          href="https://smmdoc.com/services"
+          target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
         >
-          https://smmgen.com/services
+          https://smmdoc.com/services
           <FaExternalLinkAlt className="ml-2 text-xs" />
         </a>
-        
+
         <p>
-          Let's say you want to use the Mass Order to add 
-          Instagram Followers to your 3 accounts: abcd, asdf, qwer
+          Let's say you want to use the Mass Order to add Instagram Followers to
+          your 3 accounts: abcd, asdf, qwer
         </p>
-        
+
         <p>
-          From the Services List, the service ID for this service 
-          "Instagram Followers [100% Real - 30 Days Guarantee- 
-          NEW SERVICE" is 3740
+          From the Services List, the service ID for this service "Instagram
+          Followers [100% Real - 30 Days Guarantee- NEW SERVICE" is 3740
         </p>
-        
+
         <p>
-          Let's say you want to add 1000 followers for each 
-          account, the output will be like this: ID|Link|Quantity 
-          or in this example:
+          Let's say you want to add 1000 followers for each account, the output
+          will be like this: ID|Link|Quantity or in this example:
         </p>
-        
+
         <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm border shadow-sm">
           <div className="text-green-400 space-y-1">
             <div>3740|abcd|1000</div>
@@ -141,34 +168,44 @@ export default function MassOrder() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { currency, rate: currencyRate } = useCurrency();
-  const { data: userStatsResponse, refetch: refetchUserStats } = useGetUserStatsQuery({});
+  const { data: userStatsResponse, refetch: refetchUserStats } =
+    useGetUserStatsQuery({});
   const userStats = userStatsResponse?.data;
-  
-  const [activeTab, setActiveTab] = useState<'newOrder' | 'massOrder'>('massOrder');
+
+  const [activeTab, setActiveTab] = useState<'newOrder' | 'massOrder'>(
+    'massOrder'
+  );
   const [orders, setOrders] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
-  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
 
   // User data from API or fallback with proper currency formatting
   const balance = userStats?.balance || 0;
   const totalSpend = userStats?.totalSpent || 0;
   const totalOrdersCount = userStats?.totalOrders || 0;
-  
+
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
-  
+
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
-    const convertedAmount = currency === 'BDT' ? amount : amount / (currencyRate || 121.52);
+    const convertedAmount =
+      currency === 'BDT' ? amount : amount / (currencyRate || 121.52);
     const symbol = currency === 'USD' ? '$' : '৳';
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
-  
+
   // Handle New Order navigation
   const handleNewOrderClick = () => {
     router.push('/dashboard/user/new-order');
@@ -198,7 +235,7 @@ export default function MassOrder() {
           validLines++;
           // Use placeholder price for now - real validation will happen on submit
           const placeholderPrice = 0.5; // Placeholder price per 1000 units
-          totalAmount += (placeholderPrice * quantity / 1000);
+          totalAmount += (placeholderPrice * quantity) / 1000;
         }
       }
     }
@@ -211,14 +248,22 @@ export default function MassOrder() {
     e.preventDefault();
 
     if (totalOrders === 0) {
-      showToast("No valid orders found. Please check your input format.", 'error');
+      showToast(
+        'No valid orders found. Please check your input format.',
+        'error'
+      );
       return;
     }
 
     // Check user balance
     const userBalance = userStats?.balance || 0;
     if (userBalance < totalPrice) {
-      showToast(`Insufficient balance. Available: ${userBalance.toFixed(2)}, Required: ${totalPrice.toFixed(2)}`, 'error');
+      showToast(
+        `Insufficient balance. Available: ${userBalance.toFixed(
+          2
+        )}, Required: ${totalPrice.toFixed(2)}`,
+        'error'
+      );
       return;
     }
 
@@ -236,10 +281,17 @@ export default function MassOrder() {
           const link = parts[1].trim();
           const quantity = parseInt(parts[2].trim(), 10);
 
-          if (!isNaN(quantity) && serviceId && link && link.startsWith('http')) {
+          if (
+            !isNaN(quantity) &&
+            serviceId &&
+            link &&
+            link.startsWith('http')
+          ) {
             // Fetch service details to get categoryId
             try {
-              const serviceResponse = await axiosInstance.get(`/api/user/services/serviceById?svId=${serviceId}`);
+              const serviceResponse = await axiosInstance.get(
+                `/api/user/services/serviceById?svId=${serviceId}`
+              );
               const service = serviceResponse.data.data;
 
               if (service && service.categoryId) {
@@ -247,7 +299,7 @@ export default function MassOrder() {
                   serviceId: serviceId,
                   link: link,
                   qty: quantity,
-                  categoryId: service.categoryId
+                  categoryId: service.categoryId,
                 });
               } else {
                 showToast(`Service ${serviceId} not found or invalid`, 'error');
@@ -262,7 +314,7 @@ export default function MassOrder() {
       }
 
       if (orderArray.length === 0) {
-        showToast("No valid orders to submit.", 'error');
+        showToast('No valid orders to submit.', 'error');
         return;
       }
 
@@ -272,11 +324,14 @@ export default function MassOrder() {
       // Submit to mass order API
       const response = await axiosInstance.post('/api/user/mass-orders', {
         orders: orderArray,
-        batchId: batchId
+        batchId: batchId,
       });
 
       if (response.data.success) {
-        showToast(`Successfully created ${response.data.summary.ordersCreated} orders!`, 'success');
+        showToast(
+          `Successfully created ${response.data.summary.ordersCreated} orders!`,
+          'success'
+        );
 
         // Invalidate user stats to refresh balance
         dispatch(dashboardApi.util.invalidateTags(['UserStats']));
@@ -293,7 +348,10 @@ export default function MassOrder() {
       }
     } catch (error: any) {
       console.error('Error creating mass orders:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to create orders';
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to create orders';
       showToast(errorMessage, 'error');
     } finally {
       setIsSubmitting(false);
@@ -304,22 +362,24 @@ export default function MassOrder() {
     <div className="page-container">
       {/* Toast Container */}
       {toastMessage && (
-        <Toast 
-          message={toastMessage.message} 
-          type={toastMessage.type} 
-          onClose={() => setToastMessage(null)} 
+        <Toast
+          message={toastMessage.message}
+          type={toastMessage.type}
+          onClose={() => setToastMessage(null)}
         />
       )}
-      
+
       <div className="page-content">
         {/* Page Header */}
         <div className="page-header">
           <h1 className="page-title">Mass Order</h1>
-          <p className="page-description">Create multiple orders at once with bulk order management</p>
+          <p className="page-description">
+            Create multiple orders at once with bulk order management
+          </p>
         </div>
 
         {/* Header Stats Cards */}
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -399,10 +459,12 @@ export default function MassOrder() {
                     </div>
                     <h3 className="card-title">Bulk Order Entry</h3>
                   </div>
-                  
+
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="form-group">
-                      <label className="form-label">Order Format: service_id | link | quantity</label>
+                      <label className="form-label">
+                        Order Format: service_id | link | quantity
+                      </label>
                       <textarea
                         placeholder="3740|https://instagram.com/username|1000"
                         value={orders}
@@ -421,17 +483,22 @@ export default function MassOrder() {
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div className="flex justify-between">
                             <span className="text-blue-700">Valid Orders:</span>
-                            <span className="font-semibold text-blue-900">{totalOrders}</span>
+                            <span className="font-semibold text-blue-900">
+                              {totalOrders}
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-blue-700">Estimated Cost:</span>
+                            <span className="text-blue-700">
+                              Estimated Cost:
+                            </span>
                             <span className="font-semibold text-blue-900">
                               {formatCurrency(totalPrice)}
                             </span>
                           </div>
                         </div>
                         <div className="text-xs text-blue-600 mt-2">
-                          * Final price will be calculated based on actual service rates
+                          * Final price will be calculated based on actual
+                          service rates
                         </div>
                       </div>
                     )}

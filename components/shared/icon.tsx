@@ -52,7 +52,7 @@ export const Icons = {
   login: LogIn,
   logout: LogOut,
   close: X,
-  trickets: Headset,
+  ticket: Headset,
   category: CopyPlus,
   services: DatabaseZap,
   cart: ShoppingCart,

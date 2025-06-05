@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-export const ticketSchema = z.object({
+export const Ticketchema = z.object({
   subject: z.string().min(5, {
     message: 'Subject must be at least 5 characters',
   }),
@@ -10,10 +10,10 @@ export const ticketSchema = z.object({
   file: z.any().optional(),
 });
 
-export type TicketSchema = z.infer<typeof ticketSchema>;
+export type Ticketchema = z.infer<typeof Ticketchema>;
 
-export const DefaultValues: Partial<TicketSchema> = {
+export const DefaultValues: Partial<Ticketchema> = {
   subject: '',
   message: '',
   file: undefined,
-}; 
+};

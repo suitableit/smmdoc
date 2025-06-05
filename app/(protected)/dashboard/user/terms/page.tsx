@@ -1,14 +1,14 @@
 'use client';
 
-import { 
-  FaFileContract, 
-  FaUserShield, 
-  FaExclamationTriangle, 
-  FaGavel,
-  FaCreditCard,
-  FaUserCheck,
+import {
   FaBan,
-  FaInfoCircle
+  FaCreditCard,
+  FaExclamationTriangle,
+  FaFileContract,
+  FaGavel,
+  FaInfoCircle,
+  FaUserCheck,
+  FaUserShield,
 } from 'react-icons/fa';
 
 export default function TermsPage() {
@@ -20,8 +20,8 @@ export default function TermsPage() {
       content: [
         'By accessing and using our social media marketing services, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.',
         'If you do not agree with any part of these terms, you must not use our services.',
-        'We reserve the right to modify these terms at any time without prior notice.'
-      ]
+        'We reserve the right to modify these terms at any time without prior notice.',
+      ],
     },
     {
       id: 'services',
@@ -31,8 +31,8 @@ export default function TermsPage() {
         'We provide social media marketing services including but not limited to followers, likes, views, comments, and engagement for various social media platforms.',
         'All services are delivered through automated systems and third-party providers.',
         'Service delivery times may vary depending on the platform and service type.',
-        'We do not guarantee specific results or outcomes from our services.'
-      ]
+        'We do not guarantee specific results or outcomes from our services.',
+      ],
     },
     {
       id: 'user-responsibilities',
@@ -40,11 +40,11 @@ export default function TermsPage() {
       icon: <FaUserShield />,
       content: [
         'You must provide accurate and complete information when placing orders.',
-        'You are responsible for ensuring your social media accounts comply with the respective platform\'s terms of service.',
+        "You are responsible for ensuring your social media accounts comply with the respective platform's terms of service.",
         'You must not use our services for illegal, harmful, or fraudulent purposes.',
         'You agree not to resell our services without proper authorization.',
-        'You must keep your account credentials secure and confidential.'
-      ]
+        'You must keep your account credentials secure and confidential.',
+      ],
     },
     {
       id: 'payment-terms',
@@ -55,8 +55,8 @@ export default function TermsPage() {
         'We accept various payment methods as displayed on our platform.',
         'All transactions are processed securely through trusted payment gateways.',
         'Refunds are subject to our refund policy and specific service conditions.',
-        'You are responsible for any transaction fees charged by payment processors.'
-      ]
+        'You are responsible for any transaction fees charged by payment processors.',
+      ],
     },
     {
       id: 'prohibited-activities',
@@ -68,8 +68,8 @@ export default function TermsPage() {
         'Creating multiple accounts to abuse promotions or discounts.',
         'Sharing account access with unauthorized parties.',
         'Using our services in ways that violate social media platform policies.',
-        'Engaging in fraudulent activities or chargebacks without valid reasons.'
-      ]
+        'Engaging in fraudulent activities or chargebacks without valid reasons.',
+      ],
     },
     {
       id: 'disclaimers',
@@ -80,8 +80,8 @@ export default function TermsPage() {
         'We do not guarantee that services will meet your specific requirements.',
         'We are not responsible for any actions taken by social media platforms against your accounts.',
         'Service delivery may be affected by platform updates, policy changes, or technical issues.',
-        'We reserve the right to refuse service to any user at our discretion.'
-      ]
+        'We reserve the right to refuse service to any user at our discretion.',
+      ],
     },
     {
       id: 'liability',
@@ -92,8 +92,8 @@ export default function TermsPage() {
         'Our total liability shall not exceed the amount paid for the specific service in question.',
         'We are not responsible for any losses resulting from account suspensions or bans.',
         'Users assume all risks associated with using social media marketing services.',
-        'We shall not be liable for any damages arising from service interruptions or delays.'
-      ]
+        'We shall not be liable for any damages arising from service interruptions or delays.',
+      ],
     },
     {
       id: 'termination',
@@ -104,9 +104,9 @@ export default function TermsPage() {
         'Users may terminate their account at any time by contacting our support team.',
         'Upon termination, all pending orders will be processed according to our refund policy.',
         'We reserve the right to retain certain information as required by law or for business purposes.',
-        'Termination does not relieve users of their obligation to pay for services already provided.'
-      ]
-    }
+        'Termination does not relieve users of their obligation to pay for services already provided.',
+      ],
+    },
   ];
 
   return (
@@ -116,7 +116,8 @@ export default function TermsPage() {
         <div className="page-header">
           <h1 className="page-title">Terms of Service</h1>
           <p className="page-description">
-            Please read these terms carefully before using our social media marketing services
+            Please read these terms carefully before using our social media
+            marketing services
           </p>
         </div>
 
@@ -129,7 +130,9 @@ export default function TermsPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Last Updated</h3>
-                <p className="text-sm text-gray-600">These terms were last updated on January 1, 2025</p>
+                <p className="text-sm text-gray-600">
+                  These terms were last updated on January 1, 2025
+                </p>
               </div>
             </div>
             <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
@@ -143,15 +146,13 @@ export default function TermsPage() {
           {termsData.map((section, index) => (
             <div key={section.id} className="card card-padding">
               <div className="card-header mb-4">
-                <div className="card-icon">
-                  {section.icon}
-                </div>
+                <div className="card-icon">{section.icon}</div>
                 <h3 className="card-title">{section.title}</h3>
                 <span className="ml-auto bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
                   Section {index + 1}
                 </span>
               </div>
-              
+
               <div className="space-y-3">
                 {section.content.map((paragraph, idx) => (
                   <p key={idx} className="text-gray-700 leading-relaxed">
@@ -171,24 +172,29 @@ export default function TermsPage() {
             </div>
             <h3 className="card-title">Questions About These Terms?</h3>
           </div>
-          
+
           <div className="space-y-4">
             <p className="text-gray-700">
-              If you have any questions about these Terms of Service, please don't hesitate to contact us.
+              If you have any questions about these Terms of Service, please
+              don't hesitate to contact us.
             </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Email Support</h4>
-                <p className="text-sm text-gray-600">support@smmcompany.com</p>
+                <h4 className="font-semibold text-gray-900 mb-2">
+                  Email Support
+                </h4>
+                <p className="text-sm text-gray-600">support@smmdoc.com</p>
               </div>
-              
+
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Response Time</h4>
+                <h4 className="font-semibold text-gray-900 mb-2">
+                  Response Time
+                </h4>
                 <p className="text-sm text-gray-600">Within 24 hours</p>
               </div>
             </div>
-            
+
             <div className="flex gap-4">
               <a href="/dashboard/user/contact" className="btn btn-primary">
                 Contact Support
@@ -205,10 +211,14 @@ export default function TermsPage() {
           <div className="flex items-start">
             <FaExclamationTriangle className="text-yellow-600 mt-1 mr-3 flex-shrink-0" />
             <div>
-              <h4 className="font-semibold text-yellow-800 mb-2">Important Notice</h4>
+              <h4 className="font-semibold text-yellow-800 mb-2">
+                Important Notice
+              </h4>
               <p className="text-yellow-700 text-sm leading-relaxed">
-                By continuing to use our services, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. 
-                If you do not agree with these terms, please discontinue use of our services immediately.
+                By continuing to use our services, you acknowledge that you have
+                read, understood, and agree to be bound by these Terms of
+                Service. If you do not agree with these terms, please
+                discontinue use of our services immediately.
               </p>
             </div>
           </div>
