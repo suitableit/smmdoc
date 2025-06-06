@@ -1,10 +1,10 @@
 'use client';
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
 } from '@/components/ui/sheet';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { MenuIcon } from 'lucide-react';
@@ -28,14 +28,15 @@ export default function MobileSidebar() {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const { currency, rate } = useCurrency();
-  
+
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
-    const convertedAmount = currency === 'BDT' ? amount : amount / (rate || 121.52);
+    const convertedAmount =
+      currency === 'BDT' ? amount : amount / (rate || 121.52);
     const symbol = currency === 'USD' ? '$' : '৳';
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
-  
+
   useEffect(() => {
     // Fetch user data on client side
     const fetchUser = async (isInitialLoad = false) => {
@@ -44,10 +45,10 @@ export default function MobileSidebar() {
         if (isInitialLoad) {
           setLoading(true);
         }
-        
+
         const response = await fetch('/api/user/current');
         const userData = await response.json();
-        
+
         if (userData.success) {
           setUser(userData);
         } else {
@@ -60,18 +61,18 @@ export default function MobileSidebar() {
         setLoading(false);
       }
     };
-    
+
     // Initial fetch with loading indicator
     fetchUser(true);
-    
+
     // Refresh user data every 30 seconds to sync balance, but without showing loading indicator
     const intervalId = setInterval(() => {
       fetchUser(false);
     }, 30000);
-    
+
     return () => clearInterval(intervalId);
   }, []);
-  
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -80,7 +81,10 @@ export default function MobileSidebar() {
           <MenuIcon className="h-5 w-5" />
         </button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0 bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white">
+      <SheetContent
+        side="left"
+        className="p-0 bg-gradient-to-br from-[#0f172a] to-[#1e293b] text-white"
+      >
         <SheetHeader className="p-4 border-b border-slate-700/50">
           <SheetTitle className="text-white flex items-center">
             <div className="logo bg-gradient-to-br from-blue-600 to-teal-400 rounded-md w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg relative overflow-hidden">
@@ -90,7 +94,7 @@ export default function MobileSidebar() {
             <span className="ml-3">SMM Panel</span>
           </SheetTitle>
         </SheetHeader>
-        
+
         {/* User Info Section */}
         {!loading && user && (
           <div className="user-info py-3 px-3 hover:bg-white/10 transition-all duration-300 cursor-pointer rounded-md mx-2 my-2 border-b border-slate-700/30">
@@ -102,7 +106,9 @@ export default function MobileSidebar() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="username font-medium text-white flex items-center text-sm">
-                  <span className="hover:text-cyan-300 transition-colors duration-300 truncate max-w-[130px]">{user?.data?.username || user?.data?.name || 'User'}</span>
+                  <span className="hover:text-cyan-300 transition-colors duration-300 truncate max-w-[130px]">
+                    {user?.data?.username || user?.data?.name || 'User'}
+                  </span>
                 </div>
                 <div className="balance flex items-center text-emerald-400 text-xs font-semibold mt-0.5">
                   <FaWallet className="mr-1 text-xs" />
@@ -114,7 +120,7 @@ export default function MobileSidebar() {
             </div>
           </div>
         )}
-        
+
         <div className="py-2">
           {loading ? (
             <div className="flex justify-center items-center h-20">
@@ -124,7 +130,7 @@ export default function MobileSidebar() {
             <SideBarNav user={user} setOpen={setOpen} />
           )}
         </div>
-        
+
         {/* Add styles for text gradient */}
         <style jsx global>{`
           .text-gradient-to-r {
@@ -132,7 +138,7 @@ export default function MobileSidebar() {
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
           }
-          
+
           @keyframes gradient {
             0% {
               background-position: 0% 50%;
@@ -144,12 +150,12 @@ export default function MobileSidebar() {
               background-position: 0% 50%;
             }
           }
-          
+
           .animate-gradient {
             background-size: 200% 200%;
             animation: gradient 5s ease infinite;
           }
-          
+
           .glow-effect {
             box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
           }

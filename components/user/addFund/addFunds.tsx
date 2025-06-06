@@ -179,6 +179,7 @@ export function AddFundForm() {
               invoice_id: res.data.invoice_id,
               amount: finalAmount.toString(),
               user_id: user?.id,
+              phone: values.phone.replace(/\D/g, ''),
               timestamp: Date.now()
             };
             localStorage.setItem('uddoktapay_session', JSON.stringify(paymentSession));
@@ -235,12 +236,12 @@ export function AddFundForm() {
                     <input
                       type="number"
                       placeholder="0.00"
-                      className="form-input pl-8"
+                      className="form-input pl-14"
                       disabled={isPending}
                       value={form.watch('amountUSD') || ''}
                       onChange={handleUSDChange}
                     />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 font-semibold">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-semibold">$</span>
                   </div>
                 </div>
               ) : (
@@ -250,12 +251,12 @@ export function AddFundForm() {
                     <input
                       type="number"
                       placeholder="0.00"
-                      className="form-input pl-8"
+                      className="form-input pl-14"
                       disabled={isPending}
                       value={form.watch('amountBDT') || ''}
                       onChange={handleBDTChange}
                     />
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 font-semibold">৳</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-semibold">৳</span>
                   </div>
                 </div>
               )}
@@ -284,23 +285,23 @@ export function AddFundForm() {
                 <div className="relative">
                   <input
                     type="text"
-                    className="form-input pl-8 font-bold text-blue-600"
+                    className="form-input pl-14 font-bold text-blue-600"
                     disabled
                     placeholder="0.00 BDT"
                     value={form.watch('amountBDTConverted') || '0.00'}
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 font-bold">৳</span>
+                  <span className="absolute left-4   top-1/2 -translate-y-1/2 text-blue-600 font-bold">৳</span>
                 </div>
               ) : (
                 <div className="relative">
                   <input
                     type="text"
-                    className="form-input pl-8 font-bold text-blue-600"
+                    className="form-input pl-14 font-bold text-blue-600"
                     disabled
                     placeholder="0.00 USD"
                     value={form.watch('amountUSD') || '0.00'}
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-600 font-bold">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold">$</span>
                 </div>
               )}
             </div>

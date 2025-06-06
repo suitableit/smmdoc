@@ -61,41 +61,71 @@ export async function GET(req: NextRequest) {
       take: 50 // Limit for performance
     });
 
-    // Simulate refill and cancel tasks
-    // In a real implementation, these would come from dedicated tables
-    const tasks = orders.slice(0, 10).map((order, index) => {
-      const isCancel = index % 3 === 0; // Every 3rd item is a cancel request
-      const statuses = ['pending', 'processing', 'completed', 'cancelled'];
-      const status = statuses[index % statuses.length];
-      
-      return {
-        id: `${isCancel ? 'cancel' : 'refill'}_${order.id}_${Date.now() + index}`,
-        originalOrderId: order.id,
-        originalOrder: order,
-        type: isCancel ? 'cancel' : 'refill',
-        status: status,
-        reason: isCancel ? 'User requested cancellation' : 'Service delivery incomplete',
-        refillType: !isCancel ? (index % 2 === 0 ? 'full' : 'remaining') : undefined,
-        refundType: isCancel ? (index % 2 === 0 ? 'full' : 'partial') : undefined,
-        customQuantity: !isCancel && index % 3 === 0 ? Math.floor(order.qty * 0.5) : undefined,
-        customRefundAmount: isCancel && index % 3 === 0 ? order.price * 0.8 : undefined,
-        processedBy: status !== 'pending' ? session.user.email : undefined,
-        createdAt: new Date(Date.now() - (index * 24 * 60 * 60 * 1000)).toISOString(), // Spread over days
-        updatedAt: new Date(Date.now() - (index * 12 * 60 * 60 * 1000)).toISOString(),
-      };
-    });
+    // Create refill and cancel tasks based on order status
+    const tasks = [];
+
+    for (const order of orders) {
+      // Create refill tasks for completed/partial orders
+      if (['completed', 'partial'].includes(order.status) && order.service.status === 'active') {
+        tasks.push({
+          id: `refill_${order.id}`,
+          originalOrderId: order.id,
+          originalOrder: order,
+          type: 'refill' as const,
+          status: 'pending' as const,
+          reason: order.status === 'partial' ? 'Partial delivery - refill remaining quantity' : 'Service delivery completed - refill available',
+          refillType: order.status === 'partial' ? 'remaining' : 'full',
+          customQuantity: order.status === 'partial' ? order.remains : order.qty,
+          processedBy: undefined,
+          createdAt: new Date(order.updatedAt).toISOString(),
+          updatedAt: new Date(order.updatedAt).toISOString(),
+        });
+      }
+
+      // Create cancel tasks for pending/processing/in_progress orders
+      if (['pending', 'processing', 'in_progress'].includes(order.status)) {
+        const progress = order.qty > 0 ? ((order.qty - order.remains) / order.qty) * 100 : 0;
+        let refundType = 'full';
+        let customRefundAmount = order.price;
+
+        if (order.status === 'processing' && progress > 0) {
+          refundType = 'partial';
+          customRefundAmount = order.price * 0.8; // 80% refund if processing started
+        } else if (order.status === 'in_progress') {
+          refundType = 'partial';
+          customRefundAmount = order.price * Math.max(0.5, (100 - progress) / 100); // Proportional refund
+        }
+
+        tasks.push({
+          id: `cancel_${order.id}`,
+          originalOrderId: order.id,
+          originalOrder: order,
+          type: 'cancel' as const,
+          status: 'pending' as const,
+          reason: `Order cancellation requested - Status: ${order.status}`,
+          refundType,
+          customRefundAmount,
+          processedBy: undefined,
+          createdAt: new Date(order.createdAt).toISOString(),
+          updatedAt: new Date(order.updatedAt).toISOString(),
+        });
+      }
+    }
 
     // Calculate statistics
+    const cancelTasks = tasks.filter(t => t.type === 'cancel');
+    const refillTasks = tasks.filter(t => t.type === 'refill');
+
     const stats = {
-      totalCancellations: tasks.filter(t => t.type === 'cancel').length,
-      pendingCancellations: tasks.filter(t => t.type === 'cancel' && t.status === 'pending').length,
-      completedCancellations: tasks.filter(t => t.type === 'cancel' && t.status === 'completed').length,
-      refundProcessed: tasks.filter(t => t.type === 'cancel' && ['completed', 'refunded'].includes(t.status)).length,
-      totalRefillRequests: tasks.filter(t => t.type === 'refill').length,
-      pendingRefills: tasks.filter(t => t.type === 'refill' && t.status === 'pending').length,
-      completedRefills: tasks.filter(t => t.type === 'refill' && t.status === 'completed').length,
-      totalRefundAmount: tasks
-        .filter(t => t.type === 'cancel' && ['completed', 'refunded'].includes(t.status))
+      totalCancellations: cancelTasks.length,
+      pendingCancellations: cancelTasks.filter(t => t.status === 'pending').length,
+      completedCancellations: cancelTasks.filter(t => t.status === 'completed').length,
+      refundProcessed: cancelTasks.filter(t => ['completed', 'refunded'].includes(t.status)).length,
+      totalRefillRequests: refillTasks.length,
+      pendingRefills: refillTasks.filter(t => t.status === 'pending').length,
+      completedRefills: refillTasks.filter(t => t.status === 'completed').length,
+      totalRefundAmount: cancelTasks
+        .filter(t => ['completed', 'refunded'].includes(t.status))
         .reduce((sum, t) => sum + (t.customRefundAmount || t.originalOrder.price), 0),
     };
 

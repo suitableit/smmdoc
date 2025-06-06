@@ -18,6 +18,7 @@ model AddFund {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @default(now()) @updatedAt
   userId         String
+  currency       String?   @default("BDT")        // Add currency field with default BDT
   user           User      @relation(fields: [userId], references: [id])
 
   @@index([userId])

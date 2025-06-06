@@ -16,9 +16,11 @@ import { useEffect, useState } from 'react';
 interface Transaction {
   id: string;
   date?: Date;
+  createdAt?: string;
   user?: {
     name?: string;
     email?: string;
+    currency?: string;
   };
   transaction_id?: string;
   amount: number;
@@ -27,6 +29,9 @@ interface Transaction {
   status: string;
   admin_status: string;
   userId?: string;
+  sender_number?: string;
+  phone?: string;
+  currency?: string;
 }
 
 export default function AllTransactions() {
@@ -36,7 +41,18 @@ export default function AllTransactions() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, currency, rate } = useCurrency();
+
+  // Helper function to format currency based on selected currency
+  const formatTransactionCurrency = (amount: number, transactionCurrency?: string, userCurrency?: string) => {
+    // Transactions are stored in BDT, so we need to convert if USD is selected
+    if (currency === 'USD' && rate) {
+      const amountInUSD = amount / rate;
+      return `$${amountInUSD.toFixed(2)}`;
+    } else {
+      return `৳${amount.toFixed(2)}`;
+    }
+  };
 
   useEffect(() => {
     fetchTransactions();
@@ -57,54 +73,7 @@ export default function AllTransactions() {
       setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      // Set mock data if API fails
-      const mockTransactions = [
-        {
-          id: 'TRX-1001',
-          date: new Date(),
-          user: { name: 'John Doe', email: 'john@example.com' },
-          transaction_id: 'PAY123456789',
-          amount: 50.00,
-          payment_method: 'bKash',
-          status: 'Success',
-          admin_status: 'Success',
-          userId: 'user-123'
-        },
-        {
-          id: 'TRX-1002',
-          date: new Date(),
-          user: { name: 'Jane Smith', email: 'jane@example.com' },
-          transaction_id: 'PAY987654321',
-          amount: 100.00,
-          payment_method: 'Nagad',
-          status: 'Processing',
-          admin_status: 'Pending',
-          userId: 'user-456'
-        },
-        {
-          id: 'TRX-1003',
-          date: new Date(),
-          user: { name: 'Bob Johnson', email: 'bob@example.com' },
-          transaction_id: 'PAY456789123',
-          amount: 75.00,
-          payment_method: 'Rocket',
-          status: 'Cancelled',
-          admin_status: 'Cancelled',
-          userId: 'user-789'
-        },
-        {
-          id: 'TRX-1004',
-          date: new Date(),
-          user: { name: 'Alice Brown', email: 'alice@example.com' },
-          transaction_id: 'PAY789123456',
-          amount: 200.00,
-          payment_method: 'bKash',
-          status: 'Processing',
-          admin_status: 'Suspicious',
-          userId: 'user-012'
-        }
-      ];
-      setTransactions(mockTransactions);
+      setTransactions([]);
       setTotalPages(1);
     } finally {
       setLoading(false);
@@ -235,6 +204,7 @@ export default function AllTransactions() {
                   <TableHead>Transaction ID</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Method</TableHead>
+                  <TableHead>Phone Number</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -244,12 +214,22 @@ export default function AllTransactions() {
                   transactions.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell>
-                        {transaction.date ? format(new Date(transaction.date), 'MMM dd, yyyy') : 'N/A'}
+                        {transaction.date ? format(new Date(transaction.date), 'MMM dd, yyyy') :
+                         transaction.createdAt ? format(new Date(transaction.createdAt), 'MMM dd, yyyy') : 'N/A'}
                       </TableCell>
                       <TableCell>{transaction.user?.name || 'Unknown'}</TableCell>
                       <TableCell>{transaction.transaction_id || 'N/A'}</TableCell>
-                      <TableCell>{formatCurrency(transaction.amount)}</TableCell>
-                      <TableCell>{transaction.payment_method || transaction.method || 'N/A'}</TableCell>
+                      <TableCell>{formatTransactionCurrency(transaction.amount, transaction.currency, transaction.user?.currency)}</TableCell>
+                      <TableCell>
+                        <span className="capitalize">
+                          {transaction.payment_method || transaction.method || 'uddoktapay'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">
+                          {transaction.sender_number || transaction.phone || 'N/A'}
+                        </span>
+                      </TableCell>
                       <TableCell>{getStatusBadge(transaction.admin_status)}</TableCell>
                       <TableCell>
                         {(transaction.admin_status === 'Pending' || transaction.admin_status === 'pending') && (
@@ -282,7 +262,7 @@ export default function AllTransactions() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10">
+                    <TableCell colSpan={8} className="text-center py-10">
                       No transactions found
                     </TableCell>
                   </TableRow>

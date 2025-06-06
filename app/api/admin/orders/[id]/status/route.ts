@@ -231,6 +231,86 @@ export async function PUT(
   }
 }
 
+// PATCH /api/admin/orders/:id/status - Simple status update (for frontend compatibility)
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await auth();
+
+    // Check if user is authenticated and is an admin
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized access. Admin privileges required.',
+          success: false,
+          data: null
+        },
+        { status: 401 }
+      );
+    }
+
+    const { id } = params;
+    const { status } = await req.json();
+
+    // Validate status
+    const validStatuses = ['pending', 'processing', 'in_progress', 'completed', 'partial', 'cancelled', 'refunded'];
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid status. Must be one of: ' + validStatuses.join(', '),
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
+    // Update order status
+    const updatedOrder = await db.newOrder.update({
+      where: { id },
+      data: {
+        status,
+        updatedAt: new Date()
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        service: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: updatedOrder,
+      message: `Order status updated to ${status}`,
+      error: null
+    });
+
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to update order status: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        success: false,
+        data: null
+      },
+      { status: 500 }
+    );
+  }
+}
+
 // GET /api/admin/orders/:id/status - Get order status history (if implemented)
 export async function GET(
   req: NextRequest,

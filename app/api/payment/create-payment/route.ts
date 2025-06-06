@@ -53,14 +53,15 @@ export async function POST(req: NextRequest) {
           order_id,
           method: body.method,
           userId: session.user.id,
+          currency: "BDT", // Store currency as BDT since amounts are in BDT
         },
       });
       
       console.log("Payment record created:", payment);
       
       // Get the success and cancel URLs from the request or use defaults
-      const success_url = body.success_url || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/user/success`;
-      const cancel_url = body.cancel_url || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/user/transactions?status=cancelled`;
+      const success_url = body.success_url || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/transactions/success`;
+      const cancel_url = body.cancel_url || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/transactions?status=cancelled`;
       
       // Create a UddoktaPay sandbox URL for testing
       // In a real implementation, you would call the UddoktaPay API here

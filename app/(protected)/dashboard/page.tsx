@@ -4,23 +4,23 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import {
-  AlertTriangle,
-  CheckCircle,
-  ClipboardList,
-  Clock,
-  DollarSign,
-  ExternalLink,
-  Eye,
-  History,
-  Plus,
-  ShoppingBag,
-  Ticket,
-  TrendingUp,
-  User,
-  Wallet,
-  X,
-  XCircle,
-} from 'lucide-react';
+  FaExclamationTriangle,
+  FaCheckCircle,
+  FaClipboardList,
+  FaClock,
+  FaDollarSign,
+  FaExternalLinkAlt,
+  FaEye,
+  FaHistory,
+  FaPlus,
+  FaShoppingBag,
+  FaTicketAlt,
+  FaChartLine,
+  FaUser,
+  FaWallet,
+  FaTimes,
+  FaTimesCircle,
+} from 'react-icons/fa';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -36,10 +36,10 @@ const Toast = ({
   onClose: () => void;
 }) => (
   <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <CheckCircle className="toast-icon" />}
+    {type === 'success' && <FaCheckCircle className="toast-icon" />}
     <span className="font-medium">{message}</span>
     <button onClick={onClose} className="toast-close">
-      <X className="toast-close-icon" />
+      <FaTimes className="toast-close-icon" />
     </button>
   </div>
 );
@@ -107,15 +107,15 @@ const DashboardPage = () => {
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case 'completed':
-        return <CheckCircle className="w-4 h-4" />;
+        return <FaCheckCircle className="w-4 h-4" />;
       case 'processing':
-        return <Clock className="w-4 h-4" />;
+        return <FaClock className="w-4 h-4" />;
       case 'pending':
-        return <AlertTriangle className="w-4 h-4" />;
+        return <FaExclamationTriangle className="w-4 h-4" />;
       case 'cancelled':
-        return <XCircle className="w-4 h-4" />;
+        return <FaTimesCircle className="w-4 h-4" />;
       default:
-        return <Clock className="w-4 h-4" />;
+        return <FaClock className="w-4 h-4" />;
     }
   };
 
@@ -164,7 +164,7 @@ const DashboardPage = () => {
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <User />
+                <FaUser />
               </div>
               <div>
                 <h3 className="card-title">User ID</h3>
@@ -179,7 +179,7 @@ const DashboardPage = () => {
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <User />
+                <FaUser />
               </div>
               <div>
                 <h3 className="card-title">Username</h3>
@@ -194,7 +194,7 @@ const DashboardPage = () => {
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <User />
+                <FaUser />
               </div>
               <div>
                 <h3 className="card-title">Full Name</h3>
@@ -212,7 +212,7 @@ const DashboardPage = () => {
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <Wallet />
+                <FaWallet />
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Balance</h3>
@@ -225,7 +225,7 @@ const DashboardPage = () => {
                   onClick={() => router.push('/dashboard/user/add-funds')}
                   className="btn btn-primary flex items-center gap-2"
                 >
-                  <Plus className="w-4 h-4" />
+                  <FaPlus className="w-4 h-4" />
                   Add
                 </button>
               </div>
@@ -236,7 +236,7 @@ const DashboardPage = () => {
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <ShoppingBag />
+                <FaShoppingBag />
               </div>
               <div>
                 <h3 className="card-title">Total Orders</h3>
@@ -251,7 +251,7 @@ const DashboardPage = () => {
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
-                <DollarSign />
+                <FaDollarSign />
               </div>
               <div>
                 <h3 className="card-title">Total Spend</h3>
@@ -270,7 +270,7 @@ const DashboardPage = () => {
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
-                  <TrendingUp />
+                  <FaChartLine />
                 </div>
                 <h3 className="card-title">Statistics Overview</h3>
               </div>
@@ -287,7 +287,7 @@ const DashboardPage = () => {
                         {completedOrders}
                       </div>
                     </div>
-                    <CheckCircle className="text-green-500 w-8 h-8" />
+                    <FaCheckCircle className="text-green-500 w-8 h-8" />
                   </div>
                 </div>
 
@@ -302,7 +302,7 @@ const DashboardPage = () => {
                         {processingOrders}
                       </div>
                     </div>
-                    <Clock className="text-blue-500 w-8 h-8" />
+                    <FaClock className="text-blue-500 w-8 h-8" />
                   </div>
                 </div>
 
@@ -317,7 +317,7 @@ const DashboardPage = () => {
                         {pendingOrders}
                       </div>
                     </div>
-                    <AlertTriangle className="text-yellow-500 w-8 h-8" />
+                    <FaExclamationTriangle className="text-yellow-500 w-8 h-8" />
                   </div>
                 </div>
 
@@ -332,7 +332,7 @@ const DashboardPage = () => {
                         {cancelledOrders}
                       </div>
                     </div>
-                    <XCircle className="text-red-500 w-8 h-8" />
+                    <FaTimesCircle className="text-red-500 w-8 h-8" />
                   </div>
                 </div>
               </div>
@@ -342,7 +342,7 @@ const DashboardPage = () => {
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
-                  <History />
+                  <FaHistory />
                 </div>
                 <h3 className="card-title">Recent Orders</h3>
                 <div className="ml-auto">
@@ -350,7 +350,7 @@ const DashboardPage = () => {
                     onClick={() => router.push('/dashboard/user/my-orders')}
                     className="btn btn-secondary flex items-center gap-2"
                   >
-                    <Eye className="w-4 h-4" />
+                    <FaEye className="w-4 h-4" />
                     View All Orders
                   </button>
                 </div>
@@ -418,7 +418,7 @@ const DashboardPage = () => {
                                     {order.link?.replace(/^https?:\/\//, '') ||
                                       'N/A'}
                                   </span>
-                                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                  <FaExternalLinkAlt className="w-3 h-3 flex-shrink-0" />
                                 </a>
                               </div>
                             </td>
@@ -462,7 +462,7 @@ const DashboardPage = () => {
                   className="text-center py-8"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  <ClipboardList
+                  <FaClipboardList
                     className="w-16 h-16 mx-auto mb-4"
                     style={{ color: 'var(--text-muted)', opacity: 0.5 }}
                   />
@@ -476,7 +476,7 @@ const DashboardPage = () => {
                     onClick={() => router.push('/dashboard/user/new-order')}
                     className="btn btn-primary flex items-center gap-2 mx-auto"
                   >
-                    <Plus className="w-4 h-4" />
+                    <FaPlus className="w-4 h-4" />
                     Create Your First Order
                   </button>
                 </div>
@@ -490,12 +490,12 @@ const DashboardPage = () => {
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
-                  <Ticket />
+                  <FaTicketAlt />
                 </div>
-                <h3 className="card-title">Support Ticke</h3>
+                <h3 className="card-title">Support Ticket</h3>
                 <div className="ml-auto">
                   <button className="btn btn-secondary flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
+                    <FaEye className="w-4 h-4" />
                     View All
                   </button>
                 </div>
@@ -505,7 +505,7 @@ const DashboardPage = () => {
                 className="text-center py-8"
                 style={{ color: 'var(--text-muted)' }}
               >
-                <Ticket
+                <FaTicketAlt
                   className="w-16 h-16 mx-auto mb-4"
                   style={{ color: 'var(--text-muted)', opacity: 0.5 }}
                 />
@@ -522,7 +522,7 @@ const DashboardPage = () => {
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
-                  <Plus />
+                  <FaPlus />
                 </div>
                 <h3 className="card-title">Quick Actions</h3>
               </div>
@@ -532,7 +532,7 @@ const DashboardPage = () => {
                   onClick={() => router.push('/dashboard/user/new-order')}
                   className="btn btn-primary w-full flex items-center justify-center gap-2"
                 >
-                  <Plus className="w-4 h-4" />
+                  <FaPlus className="w-4 h-4" />
                   New Order
                 </button>
 
@@ -540,7 +540,7 @@ const DashboardPage = () => {
                   onClick={() => router.push('/dashboard/user/add-funds')}
                   className="btn btn-secondary w-full flex items-center justify-center gap-2"
                 >
-                  <Wallet className="w-4 h-4" />
+                  <FaWallet className="w-4 h-4" />
                   Add Funds
                 </button>
 
@@ -548,7 +548,7 @@ const DashboardPage = () => {
                   onClick={() => router.push('/dashboard/user/my-orders')}
                   className="btn btn-secondary w-full flex items-center justify-center gap-2"
                 >
-                  <History className="w-4 h-4" />
+                  <FaHistory className="w-4 h-4" />
                   Order History
                 </button>
               </div>

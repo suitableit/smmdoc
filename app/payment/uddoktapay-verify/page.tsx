@@ -32,6 +32,10 @@ function UddoktaPayVerifyContent() {
           setPaymentSession(session);
           invoice_id = session.invoice_id;
           amount = session.amount;
+          // Auto-populate phone number if available
+          if (session.phone) {
+            setPhone(session.phone);
+          }
         } catch (error) {
           console.error('Error parsing stored session:', error);
         }
@@ -93,11 +97,11 @@ function UddoktaPayVerifyContent() {
       if (response.ok) {
         if (data.status === 'COMPLETED') {
           // Success - redirect to success page
-          const successUrl = `/payment/success?invoice_id=${currentInvoiceId}&amount=${currentAmount}&transaction_id=${transactionId}`;
+          const successUrl = `/payment/success?invoice_id=${currentInvoiceId}&amount=${currentAmount}&transaction_id=${transactionId}&phone=${phone}`;
           router.push(successUrl);
         } else if (data.status === 'PENDING') {
           // Pending - redirect to pending page
-          const pendingUrl = `/payment/pending?invoice_id=${currentInvoiceId}&amount=${currentAmount}&transaction_id=${transactionId}`;
+          const pendingUrl = `/payment/pending?invoice_id=${currentInvoiceId}&amount=${currentAmount}&transaction_id=${transactionId}&phone=${phone}`;
           router.push(pendingUrl);
         } else {
           // Cancelled/Failed
