@@ -5,34 +5,39 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/admin/orders/stats - Get order statistics for admin dashboard
 export async function GET(req: NextRequest) {
   try {
+    console.log('Stats API called');
     const session = await auth();
-    
+    console.log('Stats session:', session?.user?.email, session?.user?.role);
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
+      console.log('Stats unauthorized access attempt');
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null
         },
         { status: 401 }
       );
     }
     
     const { searchParams } = new URL(req.url);
-    const period = searchParams.get('period') || '30'; // days
+    const period = searchParams.get('period') || 'all'; // days or 'all'
     const userId = searchParams.get('userId'); // optional filter by user
-    
-    const periodDays = parseInt(period);
-    const startDate = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
-    
+
     // Build where clause
-    const whereClause: any = {
-      createdAt: {
+    const whereClause: any = {};
+
+    // Only add date filter if period is not 'all'
+    if (period !== 'all') {
+      const periodDays = parseInt(period);
+      const startDate = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
+      whereClause.createdAt = {
         gte: startDate
-      }
-    };
-    
+      };
+    }
+
     if (userId) {
       whereClause.userId = userId;
     }
@@ -73,20 +78,33 @@ export async function GET(req: NextRequest) {
         }
       }),
       
-      // Daily order trends (last 30 days)
-      db.$queryRaw`
-        SELECT 
-          DATE(createdAt) as date,
-          COUNT(*) as orders,
-          SUM(price) as revenue,
-          COUNT(DISTINCT userId) as unique_users
-        FROM NewOrder 
-        WHERE createdAt >= ${startDate}
-        ${userId ? db.$queryRaw`AND userId = ${userId}` : db.$queryRaw``}
-        GROUP BY DATE(createdAt)
-        ORDER BY date DESC
-        LIMIT 30
-      `,
+      // Daily order trends (last 30 days or all time)
+      period === 'all' ?
+        db.$queryRaw`
+          SELECT
+            DATE(createdAt) as date,
+            COUNT(*) as orders,
+            SUM(price) as revenue,
+            COUNT(DISTINCT userId) as unique_users
+          FROM NewOrder
+          ${userId ? db.$queryRaw`WHERE userId = ${userId}` : db.$queryRaw``}
+          GROUP BY DATE(createdAt)
+          ORDER BY date DESC
+          LIMIT 30
+        ` :
+        db.$queryRaw`
+          SELECT
+            DATE(createdAt) as date,
+            COUNT(*) as orders,
+            SUM(price) as revenue,
+            COUNT(DISTINCT userId) as unique_users
+          FROM NewOrder
+          WHERE createdAt >= ${new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000)}
+          ${userId ? db.$queryRaw`AND userId = ${userId}` : db.$queryRaw``}
+          GROUP BY DATE(createdAt)
+          ORDER BY date DESC
+          LIMIT 30
+        `,
       
       // Top services by order count
       db.newOrder.groupBy({
@@ -192,38 +210,52 @@ export async function GET(req: NextRequest) {
       };
     });
     
-    // Calculate growth rates (compare with previous period)
-    const previousPeriodStart = new Date(startDate.getTime() - periodDays * 24 * 60 * 60 * 1000);
-    const previousPeriodStats = await db.newOrder.aggregate({
-      where: {
-        createdAt: {
-          gte: previousPeriodStart,
-          lt: startDate
+    // Calculate growth rates (compare with previous period) - only if period is specified
+    let orderGrowth = 0;
+    let revenueGrowth = 0;
+    let periodInfo: any = {
+      type: period === 'all' ? 'all-time' : 'period',
+      endDate: new Date().toISOString()
+    };
+
+    if (period !== 'all') {
+      const periodDays = parseInt(period);
+      const startDate = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
+      const previousPeriodStart = new Date(startDate.getTime() - periodDays * 24 * 60 * 60 * 1000);
+
+      periodInfo.days = periodDays;
+      periodInfo.startDate = startDate.toISOString();
+
+      const previousPeriodStats = await db.newOrder.aggregate({
+        where: {
+          createdAt: {
+            gte: previousPeriodStart,
+            lt: startDate
+          },
+          ...(userId && { userId })
         },
-        ...(userId && { userId })
-      },
-      _count: {
-        id: true
-      },
-      _sum: {
-        price: true
-      }
-    });
-    
-    const orderGrowth = previousPeriodStats._count.id > 0 
-      ? ((totalStats._count.id - previousPeriodStats._count.id) / previousPeriodStats._count.id) * 100
-      : 0;
-      
-    const revenueGrowth = (previousPeriodStats._sum.price || 0) > 0 
-      ? (((totalStats._sum.price || 0) - (previousPeriodStats._sum.price || 0)) / (previousPeriodStats._sum.price || 0)) * 100
-      : 0;
-    
+        _count: {
+          id: true
+        },
+        _sum: {
+          price: true
+        }
+      });
+
+      orderGrowth = previousPeriodStats._count.id > 0
+        ? ((totalStats._count.id - previousPeriodStats._count.id) / previousPeriodStats._count.id) * 100
+        : 0;
+
+      revenueGrowth = (previousPeriodStats._sum.price || 0) > 0
+        ? (((totalStats._sum.price || 0) - (previousPeriodStats._sum.price || 0)) / (previousPeriodStats._sum.price || 0)) * 100
+        : 0;
+    }
+
+    console.log('Total stats:', totalStats);
+    console.log('Status stats:', statusStats);
+
     const statistics = {
-      period: {
-        days: periodDays,
-        startDate: startDate.toISOString(),
-        endDate: new Date().toISOString()
-      },
+      period: periodInfo,
       overview: {
         totalOrders: totalStats._count.id,
         totalRevenue: totalStats._sum.price || 0,

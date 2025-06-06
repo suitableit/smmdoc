@@ -2,10 +2,33 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import axiosInstance from '@/lib/axiosInstance';
-import { AlertCircle, CheckCircle, Clock, XCircle, Users, DollarSign, Phone, Calendar, Settings } from 'lucide-react';
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Phone,
+  Settings,
+  Users,
+  XCircle,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -27,16 +50,20 @@ interface PendingTransactionNotificationsProps {
   refreshInterval?: number;
 }
 
-export default function PendingTransactionNotifications({ 
-  refreshInterval = 30000 // 30 seconds default
+export default function PendingTransactionNotifications({
+  refreshInterval = 30000, // 30 seconds default
 }: PendingTransactionNotificationsProps) {
-  const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
+  const [pendingTransactions, setPendingTransactions] = useState<
+    PendingTransaction[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
 
   const fetchPendingTransactions = async () => {
     try {
-      const response = await axiosInstance.get('/api/admin/funds/pending?limit=5');
+      const response = await axiosInstance.get(
+        '/api/admin/funds/pending?limit=5'
+      );
       if (response.data.success) {
         setPendingTransactions(response.data.data.transactions);
         setTotalCount(response.data.data.totalCount);
@@ -50,24 +77,29 @@ export default function PendingTransactionNotifications({
 
   useEffect(() => {
     fetchPendingTransactions();
-    
+
     // Set up polling for new pending transactions
     const interval = setInterval(fetchPendingTransactions, refreshInterval);
-    
+
     return () => clearInterval(interval);
   }, [refreshInterval]);
 
   const handleApprove = async (transactionId: string) => {
     try {
-      const response = await axiosInstance.post(`/api/admin/funds/${transactionId}/approve`);
-      
+      const response = await axiosInstance.post(
+        `/api/admin/funds/${transactionId}/approve`
+      );
+
       if (response.data.success) {
         // Remove from pending list
-        setPendingTransactions(prev => prev.filter(t => t.id !== transactionId));
-        setTotalCount(prev => prev - 1);
-        
+        setPendingTransactions((prev) =>
+          prev.filter((t) => t.id !== transactionId)
+        );
+        setTotalCount((prev) => prev - 1);
+
         toast.success('Transaction approved successfully!', {
-          description: 'User has been notified and funds have been added to their account.',
+          description:
+            'User has been notified and funds have been added to their account.',
         });
       }
     } catch (error) {
@@ -77,18 +109,26 @@ export default function PendingTransactionNotifications({
   };
 
   const handleCancel = async (transactionId: string) => {
-    if (!confirm('Are you sure you want to cancel this transaction? This action cannot be undone.')) {
+    if (
+      !confirm(
+        'Are you sure you want to cancel this transaction? This action cannot be undone.'
+      )
+    ) {
       return;
     }
-    
+
     try {
-      const response = await axiosInstance.post(`/api/admin/funds/${transactionId}/cancel`);
-      
+      const response = await axiosInstance.post(
+        `/api/admin/funds/${transactionId}/cancel`
+      );
+
       if (response.data.success) {
         // Remove from pending list
-        setPendingTransactions(prev => prev.filter(t => t.id !== transactionId));
-        setTotalCount(prev => prev - 1);
-        
+        setPendingTransactions((prev) =>
+          prev.filter((t) => t.id !== transactionId)
+        );
+        setTotalCount((prev) => prev - 1);
+
         toast.success('Transaction cancelled successfully!', {
           description: 'User has been notified about the cancellation.',
         });
@@ -141,7 +181,9 @@ export default function PendingTransactionNotifications({
               <CheckCircle className="h-12 w-12 text-white" />
             </div>
             <p className="text-gray-600 font-medium">No pending transactions</p>
-            <p className="text-sm text-gray-500">All transactions are up to date</p>
+            <p className="text-sm text-gray-500">
+              All transactions are up to date
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -188,8 +230,8 @@ export default function PendingTransactionNotifications({
               </TableHeader>
               <TableBody>
                 {pendingTransactions.map((transaction) => (
-                  <TableRow 
-                    key={transaction.id} 
+                  <TableRow
+                    key={transaction.id}
                     className="hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 transition-all duration-200"
                   >
                     <TableCell>
@@ -204,7 +246,9 @@ export default function PendingTransactionNotifications({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <span className="font-bold text-green-700">{transaction.amount}</span>
+                        <span className="font-bold text-green-700">
+                          {transaction.amount}
+                        </span>
                         <span className="text-sm text-gray-600">BDT</span>
                       </div>
                     </TableCell>
@@ -248,11 +292,15 @@ export default function PendingTransactionNotifications({
                 ))}
               </TableBody>
             </Table>
-            
+
             {totalCount > pendingTransactions.length && (
               <div className="text-center p-4 bg-gradient-to-r from-orange-50 to-red-50">
-                <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105" size="sm" asChild>
-                  <a href="/dashboard/admin/funds">
+                <Button
+                  className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  size="sm"
+                  asChild
+                >
+                  <a href="/admin/funds">
                     View All {totalCount} Pending Transactions
                   </a>
                 </Button>

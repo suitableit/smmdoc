@@ -43,7 +43,7 @@ export default function DashboardLayout({
     // If user is admin, render admin dashboard, otherwise render user dashboard
     if (user.role === 'ADMIN' || user.role === 'admin') {
       // Import is done dynamically to avoid server/client mismatch
-      const AdminDashboard = require('./admin/page').default;
+      const AdminDashboard = require('../admin/page').default;
       return <AdminDashboard />;
     }
   }

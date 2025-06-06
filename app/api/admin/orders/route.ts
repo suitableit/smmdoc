@@ -5,15 +5,18 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/admin/orders - Get all orders with pagination and filtering
 export async function GET(req: NextRequest) {
   try {
+    console.log('Admin orders API called');
     const session = await auth();
-    
+    console.log('Session:', session?.user?.email, session?.user?.role);
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
+      console.log('Unauthorized access attempt');
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null
         },
         { status: 401 }
       );
@@ -62,6 +65,17 @@ export async function GET(req: NextRequest) {
       ];
     }
     
+    console.log('Fetching orders with whereClause:', whereClause);
+
+    // Test database connection first
+    try {
+      await db.$connect();
+      console.log('Database connected successfully');
+    } catch (dbError) {
+      console.error('Database connection failed:', dbError);
+      throw new Error('Database connection failed');
+    }
+
     // Get orders with related data
     const [orders, totalCount] = await Promise.all([
       db.newOrder.findMany({
@@ -99,6 +113,8 @@ export async function GET(req: NextRequest) {
       }),
       db.newOrder.count({ where: whereClause })
     ]);
+
+    console.log('Orders found:', orders.length, 'Total count:', totalCount);
     
     // Calculate pagination info
     const totalPages = Math.ceil(totalCount / limit);

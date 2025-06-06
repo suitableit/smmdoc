@@ -1,5 +1,6 @@
 'use client';
-import { adminNavItems, navItems } from '@/data/side-nav-items';
+import { userNavItems } from '@/data/sidebar-nav/user-nav-items';
+import { adminNavItems } from '@/data/sidebar-nav/admin-nav-items';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -58,7 +59,7 @@ export default function SideBarNav({
   const items = useMemo(() => {
     return isAdmin
       ? adminNavItems
-      : navItems.filter((item: any) =>
+      : userNavItems.filter((item: any) =>
           item.roles.includes(user?.data?.role || 'user')
         );
   }, [isAdmin, user?.data?.role]);
@@ -70,7 +71,7 @@ export default function SideBarNav({
       return {
         dashboard: items.filter((item) => ['Dashboard'].includes(item.title)),
         orders: items.filter((item) =>
-          ['All Orders', 'Refill Order & Cancel Tasks'].includes(item.title)
+          ['All Orders', 'Refill Orders', 'Refill Order & Cancel Tasks'].includes(item.title)
         ),
         services: items.filter((item) =>
           [
@@ -94,9 +95,10 @@ export default function SideBarNav({
         funds: items.filter((item) =>
           [
             'Funds Management',
-            'Add User Fund',
+            'Add User Funds',
             'All Transactions',
             'Update Price',
+            'Payment Testing',
           ].includes(item.title)
         ),
         support: items.filter((item) =>
@@ -147,7 +149,7 @@ export default function SideBarNav({
           ['All Services', 'Favorite Services'].includes(item.title)
         ),
         funds: items.filter((item) =>
-          ['Add Fund', 'Transactions'].includes(item.title)
+          ['Add Funds', 'Transactions'].includes(item.title)
         ),
         support: items.filter((item) =>
           [

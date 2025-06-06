@@ -55,6 +55,9 @@ export default function SideBar({ collapsed: externalCollapsed, setCollapsed: se
   const [loading, setLoading] = useState(true);
   const { currency, rate } = useCurrency();
   
+  // Check if user is admin
+  const isAdmin = user?.data?.role === 'admin';
+  
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
     const convertedAmount = currency === 'BDT' ? amount : amount / (rate || 121.52);
@@ -135,8 +138,8 @@ export default function SideBar({ collapsed: externalCollapsed, setCollapsed: se
         </button>
       </div>
       
-      {/* User Info Section with Card Design */}
-      {!loading && user && (
+      {/* User Info Section with Card Design - Only show for non-admin users */}
+      {!loading && user && !isAdmin && (
         <div className={`p-3 ${collapsed ? '' : 'mx-2 my-3'}`}>
           <div className={`card card-padding border border-slate-700/50`} style={{ backgroundColor: '#1B1E2F', color: '#f8fafc' }}>
             {collapsed ? (
@@ -180,7 +183,7 @@ export default function SideBar({ collapsed: externalCollapsed, setCollapsed: se
       )}
       
       {/* Sidebar Navigation */}
-      <div className="sidebar-nav mt-0 overflow-y-auto overflow-x-hidden h-[calc(100%-10rem)]">
+      <div className={`sidebar-nav mt-0 overflow-y-auto overflow-x-hidden ${isAdmin ? 'h-[calc(100%-6rem)]' : 'h-[calc(100%-10rem)]'}`}>
         {loading ? (
           <div className="flex justify-center items-center h-20">
             <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-blue-500"></div>

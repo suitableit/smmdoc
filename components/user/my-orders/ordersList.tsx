@@ -75,7 +75,7 @@ export default function OrdersList() {
   const statusFilters = [
     { key: 'all', label: 'All', icon: FaList, color: 'bg-gray-600 hover:bg-gray-700' },
     { key: 'pending', label: 'Pending', icon: FaClock, color: 'bg-gray-600 hover:bg-gray-700' },
-    { key: 'processing', label: 'In progress', icon: FaSpinner, color: 'bg-gray-600 hover:bg-gray-700' },
+    { key: 'in_progress', label: 'In progress', icon: FaSpinner, color: 'bg-gray-600 hover:bg-gray-700' },
     { key: 'completed', label: 'Completed', icon: FaCheck, color: 'bg-gray-600 hover:bg-gray-700' },
     { key: 'partial', label: 'Partial', icon: FaCircleNotch, color: 'bg-gray-600 hover:bg-gray-700' },
     { key: 'processing', label: 'Processing', icon: FaRss, color: 'bg-gray-600 hover:bg-gray-700' },
@@ -90,6 +90,8 @@ export default function OrdersList() {
         return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800';
       case 'processing':
         return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800';
+      case 'in_progress':
+        return 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800';
       case 'completed':
         return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800';
       case 'cancelled':

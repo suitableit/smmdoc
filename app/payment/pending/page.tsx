@@ -10,7 +10,8 @@ const useSearchParams = () => {
       const params = {
         invoice_id: 'INV-123456789',
         amount: '500.00',
-        transaction_id: 'TRX-987654321'
+        transaction_id: 'TRX-987654321',
+        phone: '01712345678'
       };
       return params[key as keyof typeof params] || null;
     }
@@ -21,6 +22,8 @@ const useRouter = () => {
   return {
     push: (path: string) => {
       console.log(`Navigating to: ${path}`);
+      // Actual navigation for browser
+      window.location.href = path;
     }
   };
 };
@@ -40,12 +43,12 @@ const Toast = ({ message, type = 'info', onClose }: { message: string; type?: 's
 function PaymentPendingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [countdown, setCountdown] = useState(5);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
-  
+
   const invoice_id = searchParams.get('invoice_id');
   const amount = searchParams.get('amount');
   const transaction_id = searchParams.get('transaction_id');
+  const phone = searchParams.get('phone');
 
   // Show toast notification
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'info') => {
@@ -54,26 +57,28 @@ function PaymentPendingContent() {
   };
 
   useEffect(() => {
-    // Show pending toast
-    showToast('Payment is being processed and requires manual verification. You will be notified once approved.', 'info');
+    // Show pending toast only once when component mounts
+    setToast({
+      message: 'Payment is being processed and requires manual verification. You will be notified once approved.',
+      type: 'info'
+    });
 
-    // Countdown timer
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          router.push('/dashboard/user/transactions');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // Auto-hide toast after 5 seconds
+    const toastTimer = setTimeout(() => setToast(null), 5000);
 
-    return () => clearInterval(timer);
-  }, [router]);
+    return () => clearTimeout(toastTimer);
+  }, []); // Empty dependency array to run only once
 
   const handleViewTransactions = () => {
-    router.push('/dashboard/user/transactions');
+    // Pass the pending transaction details as URL parameters
+    const params = new URLSearchParams();
+    if (invoice_id) params.set('invoice_id', invoice_id);
+    if (amount) params.set('amount', amount);
+    if (transaction_id) params.set('transaction_id', transaction_id);
+    if (phone) params.set('phone', phone);
+
+    const url = `/dashboard/user/transactions${params.toString() ? '?' + params.toString() : ''}`;
+    router.push(url);
   };
 
   const handleContactSupport = () => {
@@ -174,7 +179,7 @@ function PaymentPendingContent() {
                 <FaReceipt style={{ marginRight: '0.5rem' }} />
                 View Transactions
               </button>
-              
+
               <button
                 onClick={handleContactSupport}
                 className="btn btn-secondary"
@@ -182,11 +187,6 @@ function PaymentPendingContent() {
                 <FaWhatsapp style={{ marginRight: '0.5rem' }} />
                 Contact Support
               </button>
-            </div>
-
-            {/* Auto Redirect Notice */}
-            <div className="countdown">
-              <p>Automatically redirecting to transactions in {countdown} seconds...</p>
             </div>
           </div>
         </div>

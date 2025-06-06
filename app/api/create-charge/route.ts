@@ -11,8 +11,8 @@ export async function POST(req: Request) {
       email: 'userEmail@gmail.com',
       amount: '100',
       metadata: { user_id: '10', order_id: '50' },
-      redirect_url: 'http://localhost:3000/dashboard/success',
-      cancel_url: '/cancel',
+      redirect_url: '/transactions/success',
+      cancel_url: '/transactions/cancel',
       webhook_url: '/ipn',
     };
 

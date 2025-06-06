@@ -1,0 +1,1415 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { 
+  FaSearch, 
+  FaFilter, 
+  FaDownload, 
+  FaSync, 
+  FaBox, 
+  FaClock, 
+  FaCheckCircle, 
+  FaDollarSign,
+  FaEllipsisH,
+  FaEye,
+  FaPlay,
+  FaTimesCircle,
+  FaExclamationCircle,
+  FaTrash,
+  FaExternalLinkAlt,
+  FaUser,
+  FaTimes
+} from 'react-icons/fa';
+
+// Toast Component
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`toast toast-${type} toast-enter`}>
+    {type === 'success' && <FaCheckCircle className="toast-icon" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="toast-close">
+      <FaTimes className="toast-close-icon" />
+    </button>
+  </div>
+);
+
+// Define interfaces for type safety
+interface Order {
+  id: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    username?: string;
+    currency: string;
+  };
+  service: {
+    id: string;
+    name: string;
+    rate: number;
+    min_order: number;
+    max_order: number;
+  };
+  category: {
+    id: string;
+    category_name: string;
+  };
+  qty: number;
+  price: number;
+  charge: number;
+  profit: number;
+  usdPrice: number;
+  bdtPrice: number;
+  currency: string;
+  status: 'pending' | 'processing' | 'in_progress' | 'completed' | 'partial' | 'cancelled' | 'refunded';
+  createdAt: string;
+  updatedAt: string;
+  link: string;
+  startCount: number;
+  remains: number;
+  avg_time: string;
+  seller: string;
+  mode: string;
+}
+
+interface OrderStats {
+  totalOrders: number;
+  pendingOrders: number;
+  processingOrders: number;
+  completedOrders: number;
+  totalRevenue: number;
+  todayOrders: number;
+  statusBreakdown: Record<string, number>;
+}
+
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+const AdminOrdersPage = () => {
+  // State management
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [stats, setStats] = useState<OrderStats>({
+    totalOrders: 0, // Use real data, not mock
+    pendingOrders: 0,
+    processingOrders: 0,
+    completedOrders: 0,
+    totalRevenue: 0,
+    todayOrders: 0,
+    statusBreakdown: {}
+  });
+
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  
+  // New state for action modals
+  const [editStartCountDialog, setEditStartCountDialog] = useState<{ open: boolean; orderId: string; currentCount: number }>({
+    open: false,
+    orderId: '',
+    currentCount: 0
+  });
+  const [newStartCount, setNewStartCount] = useState('');
+  const [updateStatusDialog, setUpdateStatusDialog] = useState<{ open: boolean; orderId: string; currentStatus: string }>({
+    open: false,
+    orderId: '',
+    currentStatus: ''
+  });
+  const [newStatus, setNewStatus] = useState('');
+  const [markPartialDialog, setMarkPartialDialog] = useState<{ open: boolean; orderId: string }>({
+    open: false,
+    orderId: ''
+  });
+  const [notGoingAmount, setNotGoingAmount] = useState('');
+
+  // Calculate status counts from current orders data
+  const calculateStatusCounts = (ordersData: Order[]) => {
+    const counts = {
+      pending: 0,
+      processing: 0,
+      completed: 0,
+      partial: 0,
+      cancelled: 0,
+      in_progress: 0,
+      refunded: 0
+    };
+
+    ordersData.forEach(order => {
+      if (order.status && counts.hasOwnProperty(order.status)) {
+        counts[order.status as keyof typeof counts]++;
+      }
+    });
+
+    return {
+      pending: counts.pending,
+      processing: counts.processing + counts.in_progress, // Combine processing and in_progress
+      completed: counts.completed,
+      partial: counts.partial,
+      cancelled: counts.cancelled + counts.refunded // Combine cancelled and refunded
+    };
+  };
+
+  // Fetch all orders to calculate real status counts
+  const fetchAllOrdersForCounts = async () => {
+    try {
+      console.log('Fetching all orders for status counts...');
+      const response = await fetch('/api/admin/orders?limit=1000'); // Get more orders for accurate counts
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const allOrders = result.data;
+        const statusCounts = calculateStatusCounts(allOrders);
+        
+        console.log('Calculated status counts:', statusCounts);
+        
+        setStats(prev => ({
+          ...prev,
+          pendingOrders: statusCounts.pending,
+          processingOrders: statusCounts.processing,
+          completedOrders: statusCounts.completed,
+          statusBreakdown: {
+            ...prev.statusBreakdown,
+            pending: statusCounts.pending,
+            processing: statusCounts.processing,
+            completed: statusCounts.completed,
+            partial: statusCounts.partial,
+            cancelled: statusCounts.cancelled
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching orders for counts:', error);
+    }
+  };
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const queryParams = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+        ...(searchTerm && { search: searchTerm }),
+      });
+
+      const response = await fetch(`/api/admin/orders?${queryParams}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setOrders(result.data || []);
+        setPagination(result.pagination || {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false
+        });
+      } else {
+        toast && showToast(result.error || 'Failed to fetch orders', 'error');
+        setOrders([]);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      showToast('Error fetching orders', 'error');
+      setOrders([]);
+      setPagination({
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      console.log('Fetching stats from API...'); // Debug log
+      const response = await fetch('/api/admin/orders/stats?period=all');
+      console.log('Stats API response status:', response.status); // Debug log
+      
+      const result = await response.json();
+      console.log('Stats API full response:', result); // Debug log
+
+      if (result.success) {
+        const data = result.data;
+        console.log('Stats API data:', data); // Debug log
+        
+        // Build status breakdown object from array
+        const statusBreakdown: Record<string, number> = {};
+        if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
+          data.statusBreakdown.forEach((item: any) => {
+            statusBreakdown[item.status] = item.count || 0;
+          });
+        }
+
+        const processedStats = {
+          totalOrders: data.overview?.totalOrders || pagination.total, // Use pagination total as fallback
+          pendingOrders: statusBreakdown.pending || 0,
+          processingOrders: statusBreakdown.processing || 0,
+          completedOrders: statusBreakdown.completed || 0,
+          totalRevenue: data.overview?.totalRevenue || 0,
+          todayOrders: data.dailyTrends?.[0]?.orders || 0,
+          statusBreakdown: statusBreakdown
+        };
+
+        console.log('Processed Stats:', processedStats); // Debug log
+        setStats(processedStats);
+      } else {
+        console.error('Stats API error:', result.error);
+        // Use pagination total as fallback
+        setStats({
+          totalOrders: pagination.total,
+          pendingOrders: 0,
+          processingOrders: 0,
+          completedOrders: 0,
+          totalRevenue: 0,
+          todayOrders: 0,
+          statusBreakdown: {}
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      // Use pagination total as fallback
+      setStats({
+        totalOrders: pagination.total,
+        pendingOrders: 0,
+        processingOrders: 0,
+        completedOrders: 0,
+        totalRevenue: 0,
+        todayOrders: 0,
+        statusBreakdown: {}
+      });
+    }
+  };
+
+  // Handle search with debouncing - only update table, not whole page
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Don't reset page to 1, just refetch with current filters
+      fetchOrders();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Load data on component mount and when filters change
+  useEffect(() => {
+    fetchOrders();
+  }, [pagination.page, pagination.limit, statusFilter]);
+
+  useEffect(() => {
+    fetchStats();
+    fetchAllOrdersForCounts(); // Get real status counts
+  }, []);
+
+  // Update stats when pagination data changes (real total orders)
+  useEffect(() => {
+    if (pagination.total > 0) {
+      setStats(prev => ({
+        ...prev,
+        totalOrders: pagination.total
+      }));
+    }
+  }, [pagination.total]);
+
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // Utility functions
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <FaClock className="h-3 w-3 text-yellow-500" />;
+      case 'processing':
+      case 'in_progress':
+        return <FaPlay className="h-3 w-3 text-blue-500" />;
+      case 'completed':
+        return <FaCheckCircle className="h-3 w-3 text-green-500" />;
+      case 'cancelled':
+      case 'refunded':
+        return <FaTimesCircle className="h-3 w-3 text-red-500" />;
+      case 'partial':
+        return <FaExclamationCircle className="h-3 w-3 text-orange-500" />;
+      default:
+        return <FaClock className="h-3 w-3 text-gray-500" />;
+    }
+  };
+
+  const calculateProgress = (qty: number, remains: number) => {
+    return qty > 0 ? Math.round(((qty - remains) / qty) * 100) : 0;
+  };
+
+  const handleSelectAll = () => {
+    if (selectedOrders.length === orders.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(orders.map((order) => order.id));
+    }
+  };
+
+  const handleSelectOrder = (orderId: string) => {
+    setSelectedOrders((prev) =>
+      prev.includes(orderId)
+        ? prev.filter((id) => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const handleViewOrder = (orderId: string) => {
+    window.open(`/admin/orders/${orderId}`, '_blank');
+  };
+
+  const handleRefresh = () => {
+    fetchOrders();
+    fetchStats();
+    fetchAllOrdersForCounts(); // Refresh status counts too
+    showToast('Orders refreshed successfully!', 'success');
+  };
+
+  const handleExport = () => {
+    showToast('Export started! Download will begin shortly.', 'info');
+  };
+
+  // Handle order deletion
+  const handleDeleteOrder = async (orderId: string) => {
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast('Order deleted successfully', 'success');
+        fetchOrders();
+        fetchStats();
+        setDeleteDialogOpen(false);
+        setOrderToDelete(null);
+      } else {
+        showToast(result.error || 'Failed to delete order', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      showToast('Error deleting order', 'error');
+    }
+  };
+
+  // Handle order status update
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast(`Order status updated to ${newStatus}`, 'success');
+        fetchOrders();
+        fetchStats();
+        fetchAllOrdersForCounts();
+      } else {
+        showToast(result.error || 'Failed to update order status', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      showToast('Error updating order status', 'error');
+    }
+  };
+
+  // Handle edit start count
+  const handleEditStartCount = async (orderId: string, startCount: number) => {
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/start-count`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ startCount: startCount }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast('Start count updated successfully', 'success');
+        fetchOrders();
+        setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 });
+        setNewStartCount('');
+      } else {
+        showToast(result.error || 'Failed to update start count', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating start count:', error);
+      showToast('Error updating start count', 'error');
+    }
+  };
+
+  // Handle mark as partial
+  const handleMarkPartial = async (orderId: string, notGoingAmount: string) => {
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/partial`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          status: 'partial',
+          notGoingAmount: notGoingAmount 
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast('Order marked as partial', 'success');
+        fetchOrders();
+        fetchStats();
+        fetchAllOrdersForCounts();
+        setMarkPartialDialog({ open: false, orderId: '' });
+        setNotGoingAmount('');
+      } else {
+        showToast(result.error || 'Failed to mark order as partial', 'error');
+      }
+    } catch (error) {
+      console.error('Error marking order as partial:', error);
+      showToast('Error marking order as partial', 'error');
+    }
+  };
+
+  // Open mark partial dialog
+  const openMarkPartialDialog = (orderId: string) => {
+    setMarkPartialDialog({ open: true, orderId });
+    setNotGoingAmount('');
+  };
+
+  // Open edit start count dialog
+  const openEditStartCountDialog = (orderId: string, currentCount: number) => {
+    setEditStartCountDialog({ open: true, orderId, currentCount });
+    setNewStartCount(currentCount.toString());
+  };
+
+  // Open update status dialog
+  const openUpdateStatusDialog = (orderId: string, currentStatus: string) => {
+    setUpdateStatusDialog({ open: true, orderId, currentStatus });
+    setNewStatus(currentStatus);
+  };
+
+  if (loading && orders.length === 0) {
+    return (
+      <div className="page-container">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex items-center gap-2">
+            <FaSync className="h-5 w-5 animate-spin text-blue-500" />
+            <span className="text-lg font-medium">Loading orders...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-container">
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </div>
+
+      <div className="page-content">
+        {/* Page Header */}
+        <div className="page-header mb-6">
+          <div>
+            <h1 className="page-title">Orders Management</h1>
+            <p className="page-description mb-4">Manage and monitor all customer orders</p>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleRefresh}
+              className="btn btn-secondary flex items-center gap-2"
+              disabled={loading}
+            >
+              <FaSync className={loading ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+            <button 
+              onClick={handleExport}
+              className="btn btn-primary flex items-center gap-2"
+            >
+              <FaDownload />
+              Export
+            </button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="card card-padding">
+            <div className="card-header mb-4">
+              <div className="card-icon">
+                <FaBox />
+              </div>
+              <div>
+                <h3 className="card-title">Total Orders</h3>
+                <p className="text-2xl font-bold text-blue-600">
+                  {stats.totalOrders}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="card card-padding">
+            <div className="card-header mb-4">
+              <div className="card-icon">
+                <FaClock />
+              </div>
+              <div>
+                <h3 className="card-title">Pending Orders</h3>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {stats.pendingOrders}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="card card-padding">
+            <div className="card-header mb-4">
+              <div className="card-icon">
+                <FaCheckCircle />
+              </div>
+              <div>
+                <h3 className="card-title">Completed Orders</h3>
+                <p className="text-2xl font-bold text-green-600">
+                  {stats.completedOrders}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="card card-padding">
+            <div className="card-header mb-4">
+              <div className="card-icon">
+                <FaDollarSign />
+              </div>
+              <div>
+                <h3 className="card-title">Total Revenue</h3>
+                <p className="text-2xl font-bold text-purple-600">
+                  ${stats.totalRevenue.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter Buttons and Search Bar */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          {/* Left: Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                statusFilter === 'all'
+                  ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              All
+              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                statusFilter === 'all' ? 'bg-white/20' : 'bg-purple-100 text-purple-700'
+              }`}>
+                {stats.totalOrders}
+              </span>
+            </button>
+            <button
+              onClick={() => setStatusFilter('pending')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                statusFilter === 'pending'
+                  ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Pending
+              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                statusFilter === 'pending' ? 'bg-white/20' : 'bg-yellow-100 text-yellow-700'
+              }`}>
+                {stats.pendingOrders}
+              </span>
+            </button>
+            <button
+              onClick={() => setStatusFilter('processing')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                statusFilter === 'processing'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Processing
+              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                statusFilter === 'processing' ? 'bg-white/20' : 'bg-blue-100 text-blue-700'
+              }`}>
+                {stats.processingOrders}
+              </span>
+            </button>
+            <button
+              onClick={() => setStatusFilter('completed')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                statusFilter === 'completed'
+                  ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Completed
+              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                statusFilter === 'completed' ? 'bg-white/20' : 'bg-green-100 text-green-700'
+              }`}>
+                {stats.completedOrders}
+              </span>
+            </button>
+            <button
+              onClick={() => setStatusFilter('partial')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                statusFilter === 'partial'
+                  ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Partial
+              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                statusFilter === 'partial' ? 'bg-white/20' : 'bg-orange-100 text-orange-700'
+              }`}>
+                {stats.statusBreakdown?.partial || 0}
+              </span>
+            </button>
+            <button
+              onClick={() => setStatusFilter('cancelled')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                statusFilter === 'cancelled'
+                  ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Cancelled
+              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                statusFilter === 'cancelled' ? 'bg-white/20' : 'bg-red-100 text-red-700'
+              }`}>
+                {stats.statusBreakdown?.cancelled || 0}
+              </span>
+            </button>
+          </div>
+
+          {/* Right: Search Bar with Filter Dropdown */}
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="relative flex-1 md:min-w-[300px]">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+              <input
+                type="text"
+                placeholder="Search orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-input pl-10 pr-4"
+              />
+            </div>
+            <select className="form-select min-w-[120px]">
+              <option value="id">Order ID</option>
+              <option value="url">Order URL</option>
+              <option value="username">Username</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Orders Table */}
+        <div className="card">
+          <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
+            <div className="flex items-center gap-2 flex-1">
+              <div className="card-icon">
+                <FaBox />
+              </div>
+              <h3 className="card-title">Orders List ({pagination.total})</h3>
+              <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
+                Manage Orders
+              </span>
+            </div>
+            {selectedOrders.length > 0 && (
+              <div className="flex items-center gap-2 mt-4">
+                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {selectedOrders.length} selected
+                </span>
+                <button className="btn btn-primary flex items-center gap-2">
+                  <FaTrash />
+                  Delete Selected
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div style={{ padding: '0 24px' }}>
+            {orders.length === 0 ? (
+              <div className="text-center py-12">
+                <FaBox className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                  No information was found for you.
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  No orders match your current filters or no orders exist yet.
+                </p>
+              </div>
+            ) : (
+              <React.Fragment>
+                {/* Desktop Table View - Hidden on mobile */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full text-sm min-w-[1200px]">
+                    <thead className="sticky top-0 bg-white border-b z-10">
+                      <tr>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedOrders.length === orders.length && orders.length > 0}
+                            onChange={handleSelectAll}
+                            className="rounded border-gray-300 w-4 h-4"
+                          />
+                        </th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>User</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Charge</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Profit</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Link</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Seller</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Start</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Quantity</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Service</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Remains</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Date</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Mode</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map((order) => (
+                        <tr key={order.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                          <td className="p-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedOrders.includes(order.id)}
+                              onChange={() => handleSelectOrder(order.id)}
+                              className="rounded border-gray-300 w-4 h-4"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              #{order.id ? order.id.slice(-8) : 'null'}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {order.user?.username || order.user?.email?.split('@')[0] || order.user?.name || 'null'}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-right">
+                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                                ${order.charge ? order.charge.toFixed(2) : '0.00'}
+                              </div>
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                {order.currency || 'null'}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-right">
+                              <div className="font-semibold text-sm text-green-600">
+                                ${order.profit ? order.profit.toFixed(2) : '0.00'}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="max-w-28">
+                              {order.link ? (
+                                <div className="flex items-center gap-1">
+                                  <a
+                                    href={order.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 text-xs truncate flex-1"
+                                  >
+                                    {order.link.length > 18
+                                      ? order.link.substring(0, 18) + '...'
+                                      : order.link}
+                                  </a>
+                                  <button
+                                    onClick={() => window.open(order.link, '_blank')}
+                                    className="text-blue-500 hover:text-blue-700 p-1 flex-shrink-0"
+                                    title="Open link in new tab"
+                                  >
+                                    <FaExternalLinkAlt className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>null</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                              {order.seller || 'null'}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                              {order.startCount ? order.startCount.toLocaleString() : 'null'}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-right">
+                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                                {order.qty ? order.qty.toLocaleString() : 'null'}
+                              </div>
+                              <div className="text-xs text-green-600">
+                                {order.qty && order.remains ? (order.qty - order.remains).toLocaleString() : '0'} delivered
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div>
+                              <div className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
+                                #{order.service?.id || 'null'}
+                              </div>
+                              <div className="font-medium text-sm truncate max-w-44" style={{ color: 'var(--text-primary)' }}>
+                                {order.service?.name || 'null'}
+                              </div>
+                              <div className="text-xs truncate max-w-44" style={{ color: 'var(--text-muted)' }}>
+                                {order.category?.category_name || 'null'}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
+                              {getStatusIcon(order.status)}
+                              <span className="text-xs font-medium capitalize">
+                                {order.status ? order.status.replace('_', ' ') : 'null'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="space-y-1">
+                              <div className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                                {order.qty && order.remains ? calculateProgress(order.qty, order.remains) : 0}%
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                <div
+                                  className="bg-gradient-to-r from-blue-500 to-green-500 h-1.5 rounded-full transition-all duration-300"
+                                  style={{
+                                    width: `${order.qty && order.remains ? calculateProgress(order.qty, order.remains) : 0}%`,
+                                  }}
+                                />
+                              </div>
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                {order.remains || 'null'} left
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div>
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'null'}
+                              </div>
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                {order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : 'null'}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className={`text-xs font-medium px-2 py-1 rounded ${
+                              order.mode === 'Auto' 
+                                ? 'bg-green-100 text-green-800' 
+                                : order.mode === 'Manual'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {order.mode || 'null'}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1">
+                              <button 
+                                onClick={() => handleViewOrder(order.id)}
+                                className="btn btn-secondary p-2"
+                                title="View Order Details"
+                              >
+                                <FaEye className="h-3 w-3" />
+                              </button>
+                              
+                              {/* 3 Dot Menu */}
+                              <div className="relative">
+                                <button 
+                                  className="btn btn-secondary p-2" 
+                                  title="More Actions"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
+                                    dropdown.classList.toggle('hidden');
+                                  }}
+                                >
+                                  <FaEllipsisH className="h-3 w-3" />
+                                </button>
+                                
+                                {/* Dropdown Menu */}
+                                <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                                  <div className="py-1">
+                                    <button
+                                      onClick={() => {
+                                        openEditStartCountDialog(order.id, order.startCount || 0);
+                                        const dropdown = document.querySelector('.absolute.right-0') as HTMLElement;
+                                        dropdown?.classList.add('hidden');
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                    >
+                                      <FaEye className="h-3 w-3" />
+                                      Edit Start Count
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        openMarkPartialDialog(order.id);
+                                        const dropdown = document.querySelector('.absolute.right-0') as HTMLElement;
+                                        dropdown?.classList.add('hidden');
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                    >
+                                      <FaExclamationCircle className="h-3 w-3" />
+                                      Mark Partial
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        openUpdateStatusDialog(order.id, order.status);
+                                        const dropdown = document.querySelector('.absolute.right-0') as HTMLElement;
+                                        dropdown?.classList.add('hidden');
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                    >
+                                      <FaSync className="h-3 w-3" />
+                                      Update Order Status
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View - Visible on tablet and mobile */}
+                <div className="lg:hidden">
+                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
+                    {orders.map((order) => (
+                      <div key={order.id} className="card card-padding border-l-4 border-blue-500 mb-4">
+                        {/* Header with ID and Actions */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedOrders.includes(order.id)}
+                              onChange={() => handleSelectOrder(order.id)}
+                              className="rounded border-gray-300 w-4 h-4"
+                            />
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              #{order.id ? order.id.slice(-8) : 'null'}
+                            </div>
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
+                              {getStatusIcon(order.status)}
+                              <span className="text-xs font-medium capitalize">
+                                {order.status ? order.status.replace('_', ' ') : 'null'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button 
+                              onClick={() => handleViewOrder(order.id)}
+                              className="btn btn-secondary p-2"
+                              title="View Order Details"
+                            >
+                              <FaEye className="h-3 w-3" />
+                            </button>
+                            
+                            {/* 3 Dot Menu for Mobile */}
+                            <div className="relative">
+                              <button 
+                                className="btn btn-secondary p-2" 
+                                title="More Actions"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
+                                  dropdown.classList.toggle('hidden');
+                                }}
+                              >
+                                <FaEllipsisH className="h-3 w-3" />
+                              </button>
+                              
+                              {/* Dropdown Menu */}
+                              <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                                <div className="py-1">
+                                  <button
+                                    onClick={() => {
+                                      openEditStartCountDialog(order.id, order.startCount || 0);
+                                      const dropdown = document.querySelector('.absolute.right-0') as HTMLElement;
+                                      dropdown?.classList.add('hidden');
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                  >
+                                    <FaEye className="h-3 w-3" />
+                                    Edit Start Count
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      openMarkPartialDialog(order.id);
+                                      const dropdown = document.querySelector('.absolute.right-0') as HTMLElement;
+                                      dropdown?.classList.add('hidden');
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                  >
+                                    <FaExclamationCircle className="h-3 w-3" />
+                                    Mark Partial
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      openUpdateStatusDialog(order.id, order.status);
+                                      const dropdown = document.querySelector('.absolute.right-0') as HTMLElement;
+                                      dropdown?.classList.add('hidden');
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                  >
+                                    <FaSync className="h-3 w-3" />
+                                    Update Order Status
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* User Info */}
+                        <div className="flex items-center justify-between mb-4 pb-4 border-b">
+                          <div>
+                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                              User
+                            </div>
+                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {order.user?.username || order.user?.email?.split('@')[0] || order.user?.name || 'null'}
+                            </div>
+                          </div>
+                          <div className={`text-xs font-medium px-2 py-1 rounded ${
+                            order.mode === 'Auto' 
+                              ? 'bg-green-100 text-green-800' 
+                              : order.mode === 'Manual'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {order.mode || 'null'}
+                          </div>
+                        </div>
+
+                        {/* Service Info */}
+                        <div className="mb-4">
+                          <div className="font-mono text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                            #{order.service?.id || 'null'}
+                          </div>
+                          <div className="font-medium text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                            {order.service?.name || 'null'}
+                          </div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {order.category?.category_name || 'null'} • Provider: {order.seller || 'null'}
+                          </div>
+                          {order.link ? (
+                            <div className="flex items-center gap-1 mt-1">
+                              <a
+                                href={order.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-xs flex-1 truncate"
+                              >
+                                {order.link.length > 38
+                                  ? order.link.substring(0, 38) + '...'
+                                  : order.link}
+                              </a>
+                              <button
+                                onClick={() => window.open(order.link, '_blank')}
+                                className="text-blue-500 hover:text-blue-700 p-1 flex-shrink-0"
+                                title="Open link in new tab"
+                              >
+                                <FaExternalLinkAlt className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs mt-1 block" style={{ color: 'var(--text-muted)' }}>null</span>
+                          )}
+                        </div>
+
+                        {/* Financial Info */}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                              Charge
+                            </div>
+                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              ${order.charge ? order.charge.toFixed(2) : '0.00'} {order.currency || 'null'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                              Profit
+                            </div>
+                            <div className="font-semibold text-sm text-green-600">
+                              ${order.profit ? order.profit.toFixed(2) : '0.00'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Quantity and Progress Info */}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                              Quantity
+                            </div>
+                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {order.qty ? order.qty.toLocaleString() : 'null'}
+                            </div>
+                            <div className="text-xs text-green-600">
+                              {order.qty && order.remains ? (order.qty - order.remains).toLocaleString() : '0'} delivered
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                              Start Count
+                            </div>
+                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {order.startCount ? order.startCount.toLocaleString() : 'null'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mb-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                              Progress
+                            </span>
+                            <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                              {order.qty && order.remains ? calculateProgress(order.qty, order.remains) : 0}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${order.qty && order.remains ? calculateProgress(order.qty, order.remains) : 0}%`,
+                              }}
+                            />
+                          </div>
+                          <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                            {order.remains || 'null'} remaining
+                          </div>
+                        </div>
+
+                        {/* Date */}
+                        <div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            Date: {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'null'}
+                          </div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            Time: {order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : 'null'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between pt-4 border-t" style={{ padding: '16px 24px 24px 24px' }}>
+                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                    {Math.min(pagination.page * pagination.limit, pagination.total)}{' '}
+                    of {pagination.total} orders
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                      disabled={!pagination.hasPrev}
+                      className="btn btn-secondary"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Page {pagination.page} of {pagination.totalPages}
+                    </span>
+                    <button
+                      onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
+                      disabled={!pagination.hasNext}
+                      className="btn btn-secondary"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mark Partial Dialog */}
+                {markPartialDialog.open && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4">Mark as Partial</h3>
+                      <div className="mb-4">
+                        <label className="form-label mb-2">Not going amount</label>
+                        <input
+                          type="text"
+                          value={notGoingAmount}
+                          onChange={(e) => setNotGoingAmount(e.target.value)}
+                          className="form-input w-full"
+                          placeholder="Enter not going amount"
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => {
+                            setMarkPartialDialog({ open: false, orderId: '' });
+                            setNotGoingAmount('');
+                          }}
+                          className="btn btn-secondary"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleMarkPartial(markPartialDialog.orderId, notGoingAmount)}
+                          className="btn btn-primary"
+                        >
+                          Update
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Edit Start Count Dialog */}
+                {editStartCountDialog.open && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4">Edit Start Count</h3>
+                      <div className="mb-4">
+                        <label className="form-label mb-2">New Start Count</label>
+                        <input
+                          type="number"
+                          value={newStartCount}
+                          onChange={(e) => setNewStartCount(e.target.value)}
+                          className="form-input w-full"
+                          placeholder="Enter new start count"
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => {
+                            setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 });
+                            setNewStartCount('');
+                          }}
+                          className="btn btn-secondary"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleEditStartCount(editStartCountDialog.orderId, parseInt(newStartCount) || 0)}
+                          className="btn btn-primary"
+                        >
+                          Update
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Update Status Dialog */}
+                {updateStatusDialog.open && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4">Update Order Status</h3>
+                      <div className="mb-4">
+                        <label className="form-label mb-2">Select New Status</label>
+                        <select
+                          value={newStatus}
+                          onChange={(e) => setNewStatus(e.target.value)}
+                          className="form-select w-full"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="processing">Processing</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="completed">Completed</option>
+                          <option value="partial">Partial</option>
+                          <option value="cancelled">Cancelled</option>
+                          <option value="refunded">Refunded</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => {
+                            setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' });
+                            setNewStatus('');
+                          }}
+                          className="btn btn-secondary"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleStatusUpdate(updateStatusDialog.orderId, newStatus);
+                            setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' });
+                            setNewStatus('');
+                          }}
+                          className="btn btn-primary"
+                        >
+                          Update
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminOrdersPage;

@@ -12,7 +12,7 @@ interface TransactionEmailData {
 export const emailTemplates = {
   // User notification emails
   paymentSuccess: (data: TransactionEmailData) => ({
-    subject: "Payment Successful - Funds Added to Your Account",
+    subject: 'Payment Successful - Funds Added to Your Account',
     html: `
       <!DOCTYPE html>
       <html>
@@ -33,7 +33,9 @@ export const emailTemplates = {
           
           <!-- Content -->
           <div style="padding: 40px 30px;">
-            <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Dear ${data.userName},</h2>
+            <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Dear ${
+              data.userName
+            },</h2>
             <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
               Great news! Your payment has been successfully processed and funds have been added to your account. You can now use these funds to place orders on our platform.
             </p>
@@ -44,11 +46,15 @@ export const emailTemplates = {
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Transaction ID:</td>
-                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.transactionId}</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.transactionId
+                  }</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Amount:</td>
-                  <td style="padding: 8px 0; color: #22c55e; font-weight: bold; font-size: 18px;">${data.amount} ${data.currency || 'BDT'}</td>
+                  <td style="padding: 8px 0; color: #22c55e; font-weight: bold; font-size: 18px;">${
+                    data.amount
+                  } ${data.currency || 'BDT'}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Status:</td>
@@ -56,14 +62,18 @@ export const emailTemplates = {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Date:</td>
-                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.date}</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.date
+                  }</td>
                 </tr>
               </table>
             </div>
             
             <!-- Call to Action -->
             <div style="text-align: center; margin: 40px 0;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/user/transactions" 
+              <a href="${
+                process.env.NEXT_PUBLIC_APP_URL
+              }/dashboard/user/transactions" 
                  style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
                 View Transaction History
               </a>
@@ -88,11 +98,11 @@ export const emailTemplates = {
         </div>
       </body>
       </html>
-    `
+    `,
   }),
 
   paymentCancelled: (data: TransactionEmailData) => ({
-    subject: "Payment Cancelled - Transaction Not Approved",
+    subject: 'Payment Cancelled - Transaction Not Approved',
     html: `
       <!DOCTYPE html>
       <html>
@@ -113,7 +123,9 @@ export const emailTemplates = {
           
           <!-- Content -->
           <div style="padding: 40px 30px;">
-            <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Dear ${data.userName},</h2>
+            <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Dear ${
+              data.userName
+            },</h2>
             <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
               We regret to inform you that your payment could not be verified and has been cancelled by our admin team.
             </p>
@@ -124,11 +136,15 @@ export const emailTemplates = {
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Transaction ID:</td>
-                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.transactionId}</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.transactionId
+                  }</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Amount:</td>
-                  <td style="padding: 8px 0; color: #ef4444; font-weight: bold; font-size: 18px;">${data.amount} ${data.currency || 'BDT'}</td>
+                  <td style="padding: 8px 0; color: #ef4444; font-weight: bold; font-size: 18px;">${
+                    data.amount
+                  } ${data.currency || 'BDT'}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Status:</td>
@@ -136,7 +152,9 @@ export const emailTemplates = {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Date:</td>
-                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.date}</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.date
+                  }</td>
                 </tr>
               </table>
             </div>
@@ -175,12 +193,12 @@ export const emailTemplates = {
         </div>
       </body>
       </html>
-    `
+    `,
   }),
 
   // Admin notification emails
   adminPendingTransaction: (data: TransactionEmailData) => ({
-    subject: "Pending Payment Requires Manual Review",
+    subject: 'Pending Payment Requires Manual Review',
     html: `
       <!DOCTYPE html>
       <html>
@@ -211,42 +229,58 @@ export const emailTemplates = {
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">User:</td>
-                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.userName} (${data.userEmail})</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.userName
+                  } (${data.userEmail})</td>
                 </tr>
-                ${data.userId ? `
+                ${
+                  data.userId
+                    ? `
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">User ID:</td>
                   <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.userId}</td>
                 </tr>
-                ` : ''}
+                `
+                    : ''
+                }
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Transaction ID:</td>
-                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.transactionId}</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.transactionId
+                  }</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Amount:</td>
-                  <td style="padding: 8px 0; color: #f59e0b; font-weight: bold; font-size: 18px;">${data.amount} ${data.currency || 'BDT'}</td>
+                  <td style="padding: 8px 0; color: #f59e0b; font-weight: bold; font-size: 18px;">${
+                    data.amount
+                  } ${data.currency || 'BDT'}</td>
                 </tr>
-                ${data.phone ? `
+                ${
+                  data.phone
+                    ? `
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Phone:</td>
                   <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.phone}</td>
                 </tr>
-                ` : ''}
+                `
+                    : ''
+                }
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Status:</td>
                   <td style="padding: 8px 0; color: #f59e0b; font-weight: bold;">⏳ Pending Manual Review</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Date:</td>
-                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.date}</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.date
+                  }</td>
                 </tr>
               </table>
             </div>
             
             <!-- Call to Action -->
             <div style="text-align: center; margin: 40px 0;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/admin/funds" 
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/funds" 
                  style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
                 Review Transaction
               </a>
@@ -266,11 +300,11 @@ export const emailTemplates = {
         </div>
       </body>
       </html>
-    `
+    `,
   }),
 
   adminAutoApproved: (data: TransactionEmailData) => ({
-    subject: "New Payment Received - Auto Approved",
+    subject: 'New Payment Received - Auto Approved',
     html: `
       <!DOCTYPE html>
       <html>
@@ -301,21 +335,31 @@ export const emailTemplates = {
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">User:</td>
-                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.userName} (${data.userEmail})</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.userName
+                  } (${data.userEmail})</td>
                 </tr>
-                ${data.userId ? `
+                ${
+                  data.userId
+                    ? `
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">User ID:</td>
                   <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.userId}</td>
                 </tr>
-                ` : ''}
+                `
+                    : ''
+                }
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Transaction ID:</td>
-                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.transactionId}</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.transactionId
+                  }</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Amount:</td>
-                  <td style="padding: 8px 0; color: #22c55e; font-weight: bold; font-size: 18px;">${data.amount} ${data.currency || 'BDT'}</td>
+                  <td style="padding: 8px 0; color: #22c55e; font-weight: bold; font-size: 18px;">${
+                    data.amount
+                  } ${data.currency || 'BDT'}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Status:</td>
@@ -323,7 +367,9 @@ export const emailTemplates = {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Date:</td>
-                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${data.date}</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.date
+                  }</td>
                 </tr>
               </table>
             </div>
@@ -342,6 +388,6 @@ export const emailTemplates = {
         </div>
       </body>
       </html>
-    `
-  })
+    `,
+  }),
 };

@@ -81,9 +81,12 @@ export async function POST(req: NextRequest) {
           email: session.user.email || "",
           name: session.user.name || "",
           status: "Processing", // Initial status
+          admin_status: "pending", // Set admin status to pending
           order_id,
           method: body.method || "uddoktapay",
+          sender_number: body.phone, // Store phone number
           userId: session.user.id,
+          currency: "BDT", // Store currency as BDT since amounts are in BDT
         },
       });
       

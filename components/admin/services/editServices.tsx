@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
+import React from 'react';
 import ButtonLoader from '@/components/button-loader';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,25 +37,36 @@ import { useEffect, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { mutate } from 'swr';
+import { 
+  FaEdit,
+  FaSpinner,
+  FaCheck,
+  FaExclamationTriangle,
+  FaSave
+} from 'react-icons/fa';
 
 export function EditServiceForm() {
   const isDark = useTheme().theme === 'dark';
   const { id } = useParams();
   const { push } = useRouter();
   const { data, error, isLoading } = useGetCategories();
+  
   // fetch service data
   const {
     data: serviceData,
     error: serviceError,
     isLoading: serviceLoading,
   } = useGetServicesId(id as string);
+  
   const [isPending, startTransition] = useTransition();
   const form = useForm<CreateServiceSchema>({
     mode: 'all',
     resolver: zodResolver(createServiceSchema),
     defaultValues: createServiceDefaultValues,
   });
+  
   const { reset } = form;
+  
   useEffect(() => {
     if (serviceData?.data && data?.data) {
       reset({
@@ -82,35 +94,63 @@ export function EditServiceForm() {
           if (res.data.success) {
             toast.success(res.data.message);
             mutate(`/api/admin/services/update-services?id=${id}`);
-            push('/dashboard/admin/services');
+            push('/admin/services');
           } else {
             toast.error(res.data.error);
           }
         });
     });
   };
-  if (isLoading || serviceLoading || !serviceData?.data)
-    return <div>Loading...</div>;
-  if (error || serviceError) return <div>Error: {error}</div>;
-  if (!data || !serviceData) return <div>No data</div>;
+
+  if (isLoading || serviceLoading || !serviceData?.data) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="flex items-center gap-2">
+          <FaSpinner className="h-5 w-5 animate-spin text-blue-500" />
+          <span className="text-lg font-medium">Loading service data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || serviceError) {
+    return (
+      <div className="text-center py-12">
+        <FaExclamationTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+        <p className="text-red-600 font-medium">Error loading service data</p>
+        <p className="text-gray-500 text-sm mt-1">{error || serviceError}</p>
+      </div>
+    );
+  }
+
+  if (!data || !serviceData) {
+    return (
+      <div className="text-center py-12">
+        <FaExclamationTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600 font-medium">No service data available</p>
+        <p className="text-gray-500 text-sm mt-1">Service not found or data unavailable</p>
+      </div>
+    );
+  }
+
   return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <CardTitle></CardTitle>
-        <CardDescription></CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+    <div className="w-full max-w-4xl">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Form Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Category Selection */}
             <FormField
               control={form.control}
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category Name</FormLabel>
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Category Name
+                  </FormLabel>
                   <FormControl>
                     <select
-                      className="w-full h-10 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                      className="form-select w-full"
                       {...field}
                       disabled={isPending}
                     >
@@ -124,37 +164,187 @@ export function EditServiceForm() {
                       ))}
                     </select>
                   </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage className="-mt-3" />
+                  <FormMessage className="text-xs text-red-500" />
                 </FormItem>
               )}
             />
+
+            {/* Service Name */}
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Service Name</FormLabel>
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Service Name
+                  </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Service Name"
+                    <input
+                      type="text"
+                      placeholder="Enter service name"
+                      className="form-input w-full"
                       {...field}
                       disabled={isPending}
                     />
                   </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage className="-mt-3" />
+                  <FormMessage className="text-xs text-red-500" />
                 </FormItem>
               )}
             />
 
+            {/* Service Rate */}
             <FormField
               control={form.control}
-              name="description"
+              name="rate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Service Description</FormLabel>
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Service Rate <span className="text-red-500">(Always USD Price)</span>
+                  </FormLabel>
                   <FormControl>
+                    <input
+                      type="text"
+                      placeholder="Enter service rate"
+                      className="form-input w-full"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Per Quantity */}
+            <FormField
+              control={form.control}
+              name="perqty"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Per Quantity <span className="text-red-500">(Like 1000 per 5 USD)</span>
+                  </FormLabel>
+                  <FormControl>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="1000"
+                      className="form-input w-full"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Minimum Order */}
+            <FormField
+              control={form.control}
+              name="min_order"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Minimum Order
+                  </FormLabel>
+                  <FormControl>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="Enter minimum order"
+                      className="form-input w-full"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Maximum Order */}
+            <FormField
+              control={form.control}
+              name="max_order"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Maximum Order
+                  </FormLabel>
+                  <FormControl>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="Enter maximum order"
+                      className="form-input w-full"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Average Time */}
+            <FormField
+              control={form.control}
+              name="avg_time"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Average Time
+                  </FormLabel>
+                  <FormControl>
+                    <input
+                      type="text"
+                      placeholder="Enter average time (e.g., 24-48 hours)"
+                      className="form-input w-full"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Update Text */}
+            <FormField
+              control={form.control}
+              name="updateText"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Update Text
+                  </FormLabel>
+                  <FormControl>
+                    <input
+                      type="text"
+                      placeholder="Describe the changes made to the service"
+                      className="form-input w-full"
+                      {...field}
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Service Description */}
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  Service Description
+                </FormLabel>
+                <FormControl>
+                  <div className="border border-gray-300 rounded-md overflow-hidden">
                     <JoditEditor
                       value={field.value}
                       onChange={field.onChange}
@@ -163,149 +353,35 @@ export function EditServiceForm() {
                       className={`${isDark ? 'jodit-wysiwyg' : ''}`}
                       onBlur={(newContent) => field.onChange(newContent)}
                     />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage className="-mt-3" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="rate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Service Rate (
-                    <span className="text-red-500">Always USD Price Input</span>
-                    )
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Service Rate"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage className="-mt-3" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="perqty"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Per Quantity (
-                    <span className="text-red-500">Like 1000 per 5 usd</span>)
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="1000 per 5 usd"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage className="-mt-3" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="min_order"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Minimum Order</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="Minimum Order"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage className="-mt-3" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="max_order"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Maximum Order</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="Maximum Order"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage className="-mt-3" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="avg_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Average Time</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Average Time"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage className="-mt-3" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="updateText"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>
-                    Update Text (Describe the changes made to the service)
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Update Text"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormDescription></FormDescription>
-                  <FormMessage className="-mt-3" />
-                </FormItem>
-              )}
-            />
+                  </div>
+                </FormControl>
+                <FormMessage className="text-xs text-red-500" />
+              </FormItem>
+            )}
+          />
 
-            <Button
-              disabled={isPending}
-              className="w-full inline-flex items-center cursor-pointer"
+          {/* Submit Button */}
+          <div className="flex justify-center pt-4">
+            <button
               type="submit"
+              disabled={isPending}
+              className="btn btn-primary flex items-center gap-2 px-8 py-3 text-sm font-medium"
             >
-              {isPending ? <ButtonLoader /> : 'Submit'}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-      <CardFooter className="flex justify-between"></CardFooter>
-    </Card>
+              {isPending ? (
+                <>
+                  <FaSpinner className="h-4 w-4 animate-spin" />
+                  Updating Service...
+                </>
+              ) : (
+                <>
+                  <FaSave className="h-4 w-4" />
+                  Update Service
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 }

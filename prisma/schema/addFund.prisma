@@ -20,6 +20,7 @@ model AddFund {
   admin_status     String?                   @default("Pending")
   transaction_type AddFund_transaction_type? @default(deposit)
   reference_id     String?                   @db.VarChar(255)
+  currency         String?                   @default("BDT") @db.VarChar(3)
   user             User                      @relation(fields: [userId], references: [id])
 
   @@index([userId])

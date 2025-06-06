@@ -24,10 +24,12 @@ interface PendingTransaction {
   updatedAt: string;
   status: string;
   admin_status: string;
+  currency?: string;
   user: {
     id: string;
     name?: string;
     email?: string;
+    currency?: string;
   };
 }
 
@@ -53,7 +55,18 @@ export default function PendingTransactions() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const { currency, convertAmount } = useCurrency();
+  const { currency, convertAmount, rate } = useCurrency();
+
+  // Helper function to format currency based on selected currency
+  const formatTransactionCurrency = (amount: number, transactionCurrency?: string, userCurrency?: string) => {
+    // Transactions are stored in BDT, so we need to convert if USD is selected
+    if (currency === 'USD' && rate) {
+      const amountInUSD = amount / rate;
+      return `$${amountInUSD.toFixed(2)}`;
+    } else {
+      return `৳${amount.toFixed(2)}`;
+    }
+  };
 
   const fetchPendingTransactions = async (page = 1) => {
     try {
@@ -272,7 +285,7 @@ export default function PendingTransactions() {
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">
-                        {currency} {convertAmount(transaction.amount).toFixed(2)}
+                        {formatTransactionCurrency(transaction.amount, transaction.currency, transaction.user?.currency)}
                       </div>
                     </TableCell>
                     <TableCell>

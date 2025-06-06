@@ -70,7 +70,7 @@ export default function EditCategory() {
           if (res.data.success) {
             toast.success(res.data.message);
             mutate(`/api/admin/categories/update-categories?id=${id}`);
-            push('/dashboard/admin/categories');
+            push('/admin/categories');
           } else {
             toast.error(res.data.error);
           }

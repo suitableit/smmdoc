@@ -2,12 +2,12 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import axiosInstance from '@/lib/axiosInstance';
@@ -56,12 +56,13 @@ export default function CategoriesTable() {
       </div>
     ));
   };
-  if (isLoading) return (
-    <div className="flex flex-col items-center justify-center p-5 text-center z-50 bg-white dark:bg-mainColor rounded-lg shadow-lg">
-      <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-      <p className="text-sm text-muted-foreground">Loading categories...</p>
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="flex flex-col items-center justify-center p-5 text-center z-50 bg-white dark:bg-mainColor rounded-lg shadow-lg">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-sm text-muted-foreground">Loading categories...</p>
+      </div>
+    );
   if (error) return <div>Error: {error}</div>;
   if (!data) return <div>No categories found</div>;
   if (!data.success) return <div>{data.error}</div>;
@@ -107,7 +108,7 @@ export default function CategoriesTable() {
                   asChild
                   className="text-blue-500 hover:text-blue-700"
                 >
-                  <Link href={`/dashboard/admin/categories/${cat?.id}`}>
+                  <Link href={`/admin/categories/${cat?.id}`}>
                     <Pencil className="h-4 w-4" />
                   </Link>
                 </Button>

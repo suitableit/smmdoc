@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
         order_id: `ADMIN-${Date.now()}`,
         date: new Date(),
         userId: userId,
+        currency: 'USD', // Admin added funds are in USD
       },
     });
     
