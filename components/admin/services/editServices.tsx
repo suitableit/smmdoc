@@ -30,7 +30,6 @@ import {
   CreateServiceSchema,
 } from '@/lib/validators/admin/services/services.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
-import JoditEditor from 'jodit-react';
 import { useTheme } from 'next-themes';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useTransition } from 'react';
@@ -344,16 +343,12 @@ export function EditServiceForm() {
                   Service Description
                 </FormLabel>
                 <FormControl>
-                  <div className="border border-gray-300 rounded-md overflow-hidden">
-                    <JoditEditor
-                      value={field.value}
-                      onChange={field.onChange}
-                      tabIndex={1}
-                      ref={field.ref}
-                      className={`${isDark ? 'jodit-wysiwyg' : ''}`}
-                      onBlur={(newContent) => field.onChange(newContent)}
-                    />
-                  </div>
+                  <textarea
+                    placeholder="Enter service description"
+                    className="form-input w-full min-h-[120px] resize-y"
+                    {...field}
+                    disabled={isPending}
+                  />
                 </FormControl>
                 <FormMessage className="text-xs text-red-500" />
               </FormItem>

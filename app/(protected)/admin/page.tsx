@@ -1,6 +1,5 @@
 'use client';
 
-import PendingTransactionNotifications from '@/components/admin/notifications/PendingTransactionNotifications';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -12,36 +11,68 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import axiosInstance from '@/lib/axiosInstance';
 import {
-  Activity,
-  Award,
-  BarChart3,
-  Calendar,
-  CheckIcon,
-  Clock,
-  ClockIcon,
-  Crown,
-  DollarSign,
-  Edit,
-  Eye,
-  Mail,
-  MessageSquare,
-  Phone,
-  PieChart,
-  RefreshCcw,
-  Settings,
-  Shield,
-  ShoppingCart,
-  Star,
-  Target,
-  TrendingUp,
-  User,
-  UserCheck,
-  UserPlus,
-  Users,
-  XIcon,
-} from 'lucide-react';
+  FaChartBar,
+  FaCalendar,
+  FaCheckCircle,
+  FaClock,
+  FaCrown,
+  FaDollarSign,
+  FaEdit,
+  FaEye,
+  FaEnvelope,
+  FaCommentDots,
+  FaPhone,
+  FaChartPie,
+  FaRedo,
+  FaCog,
+  FaShieldAlt,
+  FaShoppingCart,
+  FaStar,
+  FaBullseye,
+  FaTrendUp,
+  FaUser,
+  FaUserCheck,
+  FaUserPlus,
+  FaUsers,
+  FaTimes,
+  FaTimesCircle,
+  FaExclamationTriangle,
+  FaChartLine,
+  FaAward,
+  FaWallet,
+  FaSync,
+  FaArrowRight,
+  FaEllipsisH,
+} from 'react-icons/fa';
 import { useEffect, useState } from 'react';
+import moment from 'moment';
+import { toast } from 'sonner';
+
+// Toast Component
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`toast toast-${type} toast-enter`}>
+    {type === 'success' && <FaCheckCircle className="toast-icon" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="toast-close">
+      <FaTimes className="toast-close-icon" />
+    </button>
+  </div>
+);
+
+interface PendingTransaction {
+  id: string;
+  userId: string;
+  username?: string;
+  amount: number;
+  transactionId?: string;
+  senderNumber?: string;
+  status: string;
+  method?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
 
 type Order = {
   id: string;
@@ -95,6 +126,12 @@ export default function AdminDashboard() {
   });
 
   const [loading, setLoading] = useState(true);
+  
+  // Pending Transactions State
+  const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
+  const [totalTransactionCount, setTotalTransactionCount] = useState(0);
+  const [customToast, setCustomToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -115,1395 +152,1062 @@ export default function AdminDashboard() {
     fetchStats();
   }, []);
 
+  // Fetch Pending Transactions
+  const fetchPendingTransactions = async () => {
+    try {
+      const response = await axiosInstance.get('/api/transactions');
+      
+      // The API returns an array directly
+      if (Array.isArray(response.data)) {
+        // Filter only pending transactions
+        const pending = response.data.filter((transaction: PendingTransaction) => 
+          transaction.status === 'pending'
+        );
+        
+        // Store total count before slicing
+        setTotalTransactionCount(pending.length);
+        
+        // Show only the latest 3 transactions
+        setPendingTransactions(pending.slice(0, 3));
+      } else {
+        setPendingTransactions([]);
+        setTotalTransactionCount(0);
+      }
+    } catch (error) {
+      console.error('Error fetching pending transactions:', error);
+      setPendingTransactions([]);
+      setTotalTransactionCount(0);
+    } finally {
+      setTransactionsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingTransactions();
+
+    // Set up polling for new pending transactions
+    const interval = setInterval(fetchPendingTransactions, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setCustomToast({ message, type });
+    setTimeout(() => setCustomToast(null), 4000);
+  };
+
+  const handleApprove = async (transactionId: string) => {
+    try {
+      const response = await axiosInstance.patch(`/api/transactions/${transactionId}`, {
+        status: 'approved'
+      });
+
+      if (response.status === 200) {
+        // Remove from pending list
+        setPendingTransactions((prev) => prev.filter((t) => t.id !== transactionId));
+        setTotalTransactionCount((prev) => prev - 1);
+
+        showToast('Transaction approved successfully!', 'success');
+      }
+    } catch (error) {
+      console.error('Error approving transaction:', error);
+      showToast('Failed to approve transaction', 'error');
+    }
+  };
+
+  const handleCancel = async (transactionId: string) => {
+    if (!confirm('Are you sure you want to cancel this transaction? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.patch(`/api/transactions/${transactionId}`, {
+        status: 'cancelled'
+      });
+
+      if (response.status === 200) {
+        // Remove from pending list
+        setPendingTransactions((prev) => prev.filter((t) => t.id !== transactionId));
+        setTotalTransactionCount((prev) => prev - 1);
+
+        showToast('Transaction cancelled successfully!', 'success');
+      }
+    } catch (error) {
+      console.error('Error cancelling transaction:', error);
+      showToast('Failed to cancel transaction', 'error');
+    }
+  };
+
+  const handleRefreshTransactions = () => {
+    fetchPendingTransactions();
+    showToast('Transactions refreshed successfully!', 'success');
+  };
+
   // Function to format currency based on selected currency
   const formatCurrency = (amount: number) => {
     // Admin stats are stored in BDT, so we need to convert if USD is selected
     if (currency === 'USD' && rate) {
       const amountInUSD = amount / rate;
-      return `$${amountInUSD.toFixed(0)}`;
+      return `$${amountInUSD.toFixed(2)}`;
     } else {
-      return `৳${amount.toFixed(0)}`;
+      return `৳${amount.toFixed(2)}`;
     }
   };
 
   // Function to format date
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    return {
+      date: moment(dateString).format('DD/MM/YYYY'),
+      time: moment(dateString).format('HH:mm'),
+    };
   };
 
   if (loading) {
-    return <div className="p-6">Loading...</div>;
+    return <div className="px-8 py-8 bg-[#f1f2f6] dark:bg-[#232333]">Loading...</div>;
   }
 
   return (
-    <div className="p-6 space-y-8">
-      {/* Statistics Boxes - Section 1 */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
-            <BarChart3 className="h-6 w-6 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Statistics Overview
-          </h2>
-        </div>
+    <div className="page-content">
+      {/* Toast Container */}
+      <div className="toast-container">
+        {customToast && (
+          <Toast 
+            message={customToast.message} 
+            type={customToast.type} 
+            onClose={() => setCustomToast(null)} 
+          />
+        )}
+      </div>
 
+      {/* Statistics Overview - Section 1 */}
+      <div className="mb-6">
         {/* First Row Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-blue-50 to-indigo-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-3xl font-bold text-gray-800">
-                    {stats.totalUsers || 1}
-                  </p>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                </div>
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-xs text-green-600 font-medium">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaUsers />
+              </div>
+              <div className="flex-1">
+                <h3 className="card-title">Total Users</h3>
+                <p className="text-2xl font-bold text-blue-600">
+                  {stats.totalUsers || 1}
+                </p>
+                <p className="text-xs text-green-600 font-medium mt-1">
                   +12% from last month
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Users className="h-7 w-7 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-emerald-50 to-green-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-3xl font-bold text-gray-800">
-                    {formatCurrency(stats.totalRevenue || 0)}
-                  </p>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                </div>
-                <p className="text-sm font-medium text-gray-600">
-                  Total Balance
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaDollarSign />
+              </div>
+              <div className="flex-1">
+                <h3 className="card-title">Total Balance</h3>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatCurrency(stats.totalRevenue || 0)}
                 </p>
-                <p className="text-xs text-green-600 font-medium">
+                <p className="text-xs text-green-600 font-medium mt-1">
                   +8% from last month
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <DollarSign className="h-7 w-7 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-purple-50 to-violet-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-violet-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-3xl font-bold text-gray-800">
-                    {stats.totalOrders || 0}
-                  </p>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                </div>
-                <p className="text-sm font-medium text-gray-600">
-                  Total Orders
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaShoppingCart />
+              </div>
+              <div className="flex-1">
+                <h3 className="card-title">Total Orders</h3>
+                <p className="text-2xl font-bold text-purple-600">
+                  {stats.totalOrders || 0}
                 </p>
-                <p className="text-xs text-green-600 font-medium">
+                <p className="text-xs text-green-600 font-medium mt-1">
                   +15% from last month
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-purple-500 to-violet-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <ShoppingCart className="h-7 w-7 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-orange-50 to-amber-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-3xl font-bold text-gray-800">
-                    {formatCurrency(stats.totalRevenue || 0)}
-                  </p>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                </div>
-                <p className="text-sm font-medium text-gray-600">
-                  Total Payments
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaBullseye />
+              </div>
+              <div className="flex-1">
+                <h3 className="card-title">Total Payments</h3>
+                <p className="text-2xl font-bold text-orange-600">
+                  {formatCurrency(stats.totalRevenue || 0)}
                 </p>
-                <p className="text-xs text-green-600 font-medium">
+                <p className="text-xs text-green-600 font-medium mt-1">
                   +22% from last month
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Target className="h-7 w-7 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Second Row Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-cyan-50 to-blue-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-3xl font-bold text-gray-800">
-                    {formatCurrency(stats.totalPayment || 0)}
-                  </p>
-                  <Calendar className="h-4 w-4 text-blue-500" />
-                </div>
-                <p className="text-sm font-medium text-gray-600">
-                  Last 30 Days
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaChartLine />
+              </div>
+              <div className="flex-1">
+                <h3 className="card-title">Last 30 Days</h3>
+                <p className="text-2xl font-bold text-cyan-600">
+                  {formatCurrency(stats.totalRevenue || 0)}
                 </p>
-                <p className="text-xs text-blue-600 font-medium">
+                <p className="text-xs text-cyan-600 font-medium mt-1">
                   Monthly Revenue
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Activity className="h-7 w-7 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-rose-50 to-pink-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-3xl font-bold text-gray-800">
-                    {formatCurrency(stats.totalRevenue || 0)}
-                  </p>
-                  <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                </div>
-                <p className="text-sm font-medium text-gray-600">
-                  Today Profit
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaAward />
+              </div>
+              <div className="flex-1">
+                <h3 className="card-title">Today Profit</h3>
+                <p className="text-2xl font-bold text-rose-600">
+                  {formatCurrency(stats.totalRevenue || 0)}
                 </p>
-                <p className="text-xs text-rose-600 font-medium">
+                <p className="text-xs text-rose-600 font-medium mt-1">
                   Daily Earnings
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Award className="h-7 w-7 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-teal-50 to-emerald-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-3xl font-bold text-gray-800">0</p>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                </div>
-                <p className="text-sm font-medium text-gray-600">
-                  Today's Orders
-                </p>
-                <p className="text-xs text-teal-600 font-medium">
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaShoppingCart />
+              </div>
+              <div className="flex-1">
+                <h3 className="card-title">Today's Orders</h3>
+                <p className="text-2xl font-bold text-teal-600">0</p>
+                <p className="text-xs text-teal-600 font-medium mt-1">
                   Fresh Orders
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-teal-500 to-emerald-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <ShoppingCart className="h-7 w-7 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-indigo-50 to-purple-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-3xl font-bold text-gray-800">0</p>
-                  <UserPlus className="h-4 w-4 text-indigo-500" />
-                </div>
-                <p className="text-sm font-medium text-gray-600">
-                  New Users Today
-                </p>
-                <p className="text-xs text-indigo-600 font-medium">
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaUserPlus />
+              </div>
+              <div className="flex-1">
+                <h3 className="card-title">New Users Today</h3>
+                <p className="text-2xl font-bold text-indigo-600">0</p>
+                <p className="text-xs text-indigo-600 font-medium mt-1">
                   Fresh Registrations
                 </p>
               </div>
-              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <UserPlus className="h-7 w-7 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Quick Actions - Section 2 */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-2 rounded-lg">
-            <Settings className="h-6 w-6 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Quick Actions
-          </h2>
-        </div>
-
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white to-purple-50 shadow-xl hover:shadow-2xl transition-all duration-300">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500"></div>
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <a
-                href="/admin/funds"
-                className="group relative overflow-hidden p-6 border-0 rounded-xl bg-gradient-to-br from-emerald-50 to-green-100 hover:from-emerald-100 hover:to-green-200 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="text-center relative z-10">
-                  <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300 mx-auto w-fit mb-4">
-                    <DollarSign className="h-8 w-8 text-white" />
-                  </div>
-                  <p className="font-bold text-gray-800 text-lg mb-2">
-                    Manage Funds
-                  </p>
-                  <p className="text-sm text-gray-600">View all transactions</p>
-                </div>
-              </a>
-              <a
-                href="/admin/users"
-                className="group relative overflow-hidden p-6 border-0 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-100 hover:from-blue-100 hover:to-indigo-200 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="text-center relative z-10">
-                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300 mx-auto w-fit mb-4">
-                    <Users className="h-8 w-8 text-white" />
-                  </div>
-                  <p className="font-bold text-gray-800 text-lg mb-2">
-                    Manage Users
-                  </p>
-                  <p className="text-sm text-gray-600">User management</p>
-                </div>
-              </a>
-              <a
-                href="/admin/orders"
-                className="group relative overflow-hidden p-6 border-0 rounded-xl bg-gradient-to-br from-amber-50 to-yellow-100 hover:from-amber-100 hover:to-yellow-200 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="text-center relative z-10">
-                  <div className="bg-gradient-to-br from-amber-500 to-yellow-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300 mx-auto w-fit mb-4">
-                    <ShoppingCart className="h-8 w-8 text-white" />
-                  </div>
-                  <p className="font-bold text-gray-800 text-lg mb-2">
-                    Manage Orders
-                  </p>
-                  <p className="text-sm text-gray-600">View all orders</p>
-                </div>
-              </a>
-              <a
-                href="/admin/services"
-                className="group relative overflow-hidden p-6 border-0 rounded-xl bg-gradient-to-br from-rose-50 to-pink-100 hover:from-rose-100 hover:to-pink-200 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="text-center relative z-10">
-                  <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-4 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300 mx-auto w-fit mb-4">
-                    <Settings className="h-8 w-8 text-white" />
-                  </div>
-                  <p className="font-bold text-gray-800 text-lg mb-2">
-                    Manage Services
-                  </p>
-                  <p className="text-sm text-gray-600">Service management</p>
-                </div>
-              </a>
+      <div className="mb-6">
+        <div className="card card-padding">
+          <div className="card-header mb-4">
+            <div className="card-icon">
+              <FaCog />
             </div>
-          </CardContent>
-        </Card>
+            <h3 className="card-title">Quick Actions</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a
+              href="/admin/funds"
+              className="btn btn-primary w-full flex items-center justify-center gap-2"
+            >
+              <FaDollarSign className="h-4 w-4" />
+              Manage Funds
+            </a>
+            <a
+              href="/admin/users"
+              className="btn btn-secondary w-full flex items-center justify-center gap-2"
+            >
+              <FaUsers className="h-4 w-4" />
+              Manage Users
+            </a>
+            <a
+              href="/admin/orders"
+              className="btn btn-secondary w-full flex items-center justify-center gap-2"
+            >
+              <FaShoppingCart className="h-4 w-4" />
+              Manage Orders
+            </a>
+            <a
+              href="/admin/services"
+              className="btn btn-secondary w-full flex items-center justify-center gap-2"
+            >
+              <FaCog className="h-4 w-4" />
+              Manage Services
+            </a>
+          </div>
+        </div>
       </div>
 
       {/* Pending Transactions - Section 3 */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-orange-500 to-red-600 p-2 rounded-lg">
-            <Clock className="h-6 w-6 text-white" />
+      <div className="mb-6">
+        <div className="card">
+          <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2 flex-1">
+                <div className="card-icon">
+                  <FaClock />
+                </div>
+                <h3 className="card-title">
+                  Pending Transactions
+                  {totalTransactionCount > 0 && (
+                    <span className="ml-2 bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
+                      {totalTransactionCount}
+                    </span>
+                  )}
+                </h3>
+              </div>
+              <button 
+                onClick={handleRefreshTransactions}
+                className="btn btn-secondary flex items-center gap-2"
+                disabled={transactionsLoading}
+              >
+                <FaSync className={transactionsLoading ? 'animate-spin' : ''} />
+                Refresh
+              </button>
+            </div>
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-            Pending Transactions
-          </h2>
-        </div>
 
-        <PendingTransactionNotifications />
+          <div style={{ padding: '0 24px' }}>
+            {transactionsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="flex items-center gap-2">
+                  <FaSync className="h-5 w-5 animate-spin text-blue-500" />
+                  <span className="text-lg font-medium">Loading transactions...</span>
+                </div>
+              </div>
+            ) : pendingTransactions.length === 0 ? (
+              <div className="text-center py-12">
+                <FaCheckCircle className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                  No pending transactions
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  All transactions are up to date
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-white border-b z-10">
+                      <tr>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Username</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Date and Time</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Transaction ID</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Amount</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Phone Number</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Method</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
+                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingTransactions.map((transaction) => (
+                        <tr key={transaction.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                          <td className="p-3">
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              #{transaction.id.slice(-8)}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {transaction.username || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <div>
+                              <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                                {new Date(transaction.createdAt).toLocaleDateString()}
+                              </div>
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                {new Date(transaction.createdAt).toLocaleTimeString()}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {transaction.transactionId || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              ${transaction.amount.toFixed(2)}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {transaction.senderNumber || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                              {transaction.method || 'BDT'}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 rounded-full w-fit">
+                              <FaClock className="h-3 w-3 text-yellow-600" />
+                              <span className="text-xs font-medium text-yellow-800">
+                                Pending
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() => handleApprove(transaction.id)}
+                                className="btn btn-primary flex items-center gap-2"
+                              >
+                                <FaCheckCircle className="h-3 w-3" />
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleCancel(transaction.id)}
+                                className="btn btn-secondary flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white border-red-500"
+                              >
+                                <FaTimesCircle className="h-3 w-3" />
+                                Cancel
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="lg:hidden">
+                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
+                    {pendingTransactions.map((transaction) => (
+                      <div key={transaction.id} className="card card-padding border-l-4 border-yellow-500 mb-4">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              #{transaction.id.slice(-8)}
+                            </div>
+                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {transaction.username || 'N/A'}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 rounded-full">
+                            <FaClock className="h-3 w-3 text-yellow-600" />
+                            <span className="text-xs font-medium text-yellow-800">
+                              Pending
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Transaction ID */}
+                        <div className="mb-4 pb-4 border-b">
+                          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                            Transaction ID
+                          </div>
+                          <div className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>
+                            {transaction.transactionId || 'N/A'}
+                          </div>
+                        </div>
+
+                        {/* Financial Info */}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                              Amount
+                            </div>
+                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              ${transaction.amount.toFixed(2)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                              Phone
+                            </div>
+                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {transaction.senderNumber || 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Method */}
+                        <div className="mb-4">
+                          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                            Method
+                          </div>
+                          <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                            {transaction.method || 'BDT'}
+                          </div>
+                        </div>
+
+                        {/* Date */}
+                        <div className="mb-4">
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            Date: {new Date(transaction.createdAt).toLocaleDateString()}
+                          </div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            Time: {new Date(transaction.createdAt).toLocaleTimeString()}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleApprove(transaction.id)}
+                            className="btn btn-primary flex-1 flex items-center justify-center gap-2"
+                          >
+                            <FaCheckCircle className="h-3 w-3" />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleCancel(transaction.id)}
+                            className="btn btn-secondary flex-1 flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white border-red-500"
+                          >
+                            <FaTimesCircle className="h-3 w-3" />
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* View More Button */}
+          {totalTransactionCount > 0 && (
+            <div className="flex justify-center p-4 border-t bg-gray-50">
+              <button 
+                className="btn btn-primary flex items-center gap-2"
+                onClick={() => window.location.href = '/funds?tab=all-transactions'}
+              >
+                <FaEye className="h-4 w-4" />
+                View More Pending Transactions
+                {totalTransactionCount > 3 && (
+                  <span className="text-xs px-2 py-0.5 bg-white/20 rounded-full">
+                    +{totalTransactionCount - 3}
+                  </span>
+                )}
+                <FaArrowRight className="h-3 w-3 ml-1" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Recent Orders & Statistics Charts - Section 3 */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-2 rounded-lg">
-            <PieChart className="h-6 w-6 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-            Recent Orders & Analytics
-          </h2>
-        </div>
-
+      <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white to-blue-50 shadow-xl hover:shadow-2xl transition-all duration-300">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-              <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Recent Orders
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex flex-wrap gap-2 mb-6">
-                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <CheckIcon className="h-3 w-3 mr-1" />
-                    Completed
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <RefreshCcw className="h-3 w-3 mr-1" />
-                    Processing
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <ClockIcon className="h-3 w-3 mr-1" />
-                    Pending
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <Activity className="h-3 w-3 mr-1" />
-                    In Progress
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <Target className="h-3 w-3 mr-1" />
-                    Partial
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <XIcon className="h-3 w-3 mr-1" />
-                    Canceled
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <RefreshCcw className="h-3 w-3 mr-1" />
-                    Refunded
-                  </Badge>
+            <div className="card card-padding">
+              <div className="card-header mb-4">
+                <div className="card-icon">
+                  <FaChartBar />
                 </div>
+                <h3 className="card-title">Recent Orders</h3>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
+                  <FaCheckCircle className="h-3 w-3 mr-1" />
+                  Completed
+                </Badge>
+                <Badge className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                  <FaRedo className="h-3 w-3 mr-1" />
+                  Processing
+                </Badge>
+                <Badge className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800">
+                  <FaClock className="h-3 w-3 mr-1" />
+                  Pending
+                </Badge>
+                <Badge className="bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 border border-orange-200 dark:border-orange-800">
+                  <FaChartLine className="h-3 w-3 mr-1" />
+                  In Progress
+                </Badge>
+                <Badge className="bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800">
+                  <FaBullseye className="h-3 w-3 mr-1" />
+                  Partial
+                </Badge>
+                <Badge className="bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-800">
+                  <FaTimes className="h-3 w-3 mr-1" />
+                  Canceled
+                </Badge>
+                <Badge className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800">
+                  <FaRedo className="h-3 w-3 mr-1" />
+                  Refunded
+                </Badge>
+              </div>
 
-                <div className="h-[300px] flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border-2 border-dashed border-gray-300">
-                  {stats.recentOrders && stats.recentOrders.length > 0 ? (
-                    <div className="text-center">
-                      <BarChart3 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 font-medium">
-                        Interactive Chart will be displayed here
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Real-time order analytics
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <PieChart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 font-medium">
-                        No recent orders to display
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Charts will appear when data is available
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              <div className="h-[300px] flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                {stats.recentOrders && stats.recentOrders.length > 0 ? (
+                  <div className="text-center" style={{ color: 'var(--text-muted)' }}>
+                    <FaChartBar className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                    <p className="text-lg font-medium mb-2">
+                      Interactive Chart will be displayed here
+                    </p>
+                    <p className="text-sm">
+                      Real-time order analytics
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center" style={{ color: 'var(--text-muted)' }}>
+                    <FaChartPie className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                    <p className="text-lg font-medium mb-2">
+                      No recent orders to display
+                    </p>
+                    <p className="text-sm">
+                      Charts will appear when data is available
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div>
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white to-purple-50 shadow-xl hover:shadow-2xl transition-all duration-300">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500"></div>
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5" />
-                  Statistics
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex flex-wrap gap-2 mb-6">
-                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <CheckIcon className="h-3 w-3 mr-1" />
-                    Complete
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <RefreshCcw className="h-3 w-3 mr-1" />
-                    Processing
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <ClockIcon className="h-3 w-3 mr-1" />
-                    Pending
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <Activity className="h-3 w-3 mr-1" />
-                    In Progress
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <Target className="h-3 w-3 mr-1" />
-                    Partial
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <XIcon className="h-3 w-3 mr-1" />
-                    Canceled
-                  </Badge>
-                  <Badge className="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 transition-all duration-200 cursor-pointer transform hover:scale-105">
-                    <RefreshCcw className="h-3 w-3 mr-1" />
-                    Refunded
-                  </Badge>
+            <div className="card card-padding">
+              <div className="card-header mb-4">
+                <div className="card-icon">
+                  <FaChartPie />
                 </div>
+                <h3 className="card-title">Statistics</h3>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
+                  <FaCheckCircle className="h-3 w-3 mr-1" />
+                  Complete
+                </Badge>
+                <Badge className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                  <FaRedo className="h-3 w-3 mr-1" />
+                  Processing
+                </Badge>
+                <Badge className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800">
+                  <FaClock className="h-3 w-3 mr-1" />
+                  Pending
+                </Badge>
+              </div>
 
-                <div className="h-[200px] flex items-center justify-center bg-gradient-to-br from-gray-50 to-purple-50 rounded-xl border-2 border-dashed border-gray-300">
-                  <div className="text-center">
-                    <PieChart className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-600 font-medium text-sm">
-                      Statistics chart
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Real-time data visualization
-                    </p>
-                  </div>
+              <div className="h-[200px] flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="text-center" style={{ color: 'var(--text-muted)' }}>
+                  <FaChartPie className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                  <p className="text-sm font-medium">
+                    Statistics chart
+                  </p>
+                  <p className="text-xs">
+                    Real-time data visualization
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Last 30 Days Orders - Section 3 */}
-      <div className="mb-8">
+      {/* Last 30 Days Orders - Section 4 */}
+      <div className="mb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-orange-500 to-red-600 p-2 rounded-lg">
-            <Calendar className="h-6 w-6 text-white" />
+          <div className="card-icon">
+            <FaCalendar />
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-            Last 30 Days Orders
-          </h2>
+          <h2 className="card-title text-2xl">Last 30 Days Orders</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-blue-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-blue-100 p-1 rounded-full group-hover:bg-blue-200 transition-colors duration-300">
-                    <TrendingUp className="h-3 w-3 text-blue-600" />
-                  </div>
-                </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-blue-800 transition-colors duration-300">
+                <div className="text-blue-600 dark:text-blue-400 font-semibold">
                   Total Orders
-                </p>
-                <p className="text-xs text-blue-600 font-medium">
-                  All time orders
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <ShoppingCart className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/20 to-green-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-green-600"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-emerald-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-emerald-100 p-1 rounded-full group-hover:bg-emerald-200 transition-colors duration-300">
-                    <CheckIcon className="h-3 w-3 text-emerald-600" />
-                  </div>
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-emerald-800 transition-colors duration-300">
+                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                  0
+                </div>
+              </div>
+              <FaShoppingCart className="text-blue-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-green-600 dark:text-green-400 font-semibold">
                   Completed
-                </p>
-                <p className="text-xs text-emerald-600 font-medium">
-                  Successfully finished
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <CheckIcon className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-600/20 to-orange-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-orange-600"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-amber-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-amber-100 p-1 rounded-full group-hover:bg-amber-200 transition-colors duration-300">
-                    <RefreshCcw className="h-3 w-3 text-amber-600 animate-spin" />
-                  </div>
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-amber-800 transition-colors duration-300">
+                <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                  0
+                </div>
+              </div>
+              <FaCheckCircle className="text-green-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-yellow-600 dark:text-yellow-400 font-semibold">
                   Processing
-                </p>
-                <p className="text-xs text-amber-600 font-medium">
-                  Currently in progress
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <RefreshCcw className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-600"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-cyan-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-cyan-100 p-1 rounded-full group-hover:bg-cyan-200 transition-colors duration-300">
-                    <ClockIcon className="h-3 w-3 text-cyan-600" />
-                  </div>
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-cyan-800 transition-colors duration-300">
+                <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                  0
+                </div>
+              </div>
+              <FaRedo className="text-yellow-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-cyan-600 dark:text-cyan-400 font-semibold">
                   Pending
-                </p>
-                <p className="text-xs text-cyan-600 font-medium">
-                  Awaiting processing
-                </p>
+                </div>
+                <div className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
+                  0
+                </div>
               </div>
-              <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <ClockIcon className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+              <FaClock className="text-cyan-500 w-5 h-5" />
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-violet-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-purple-600"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
+          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-violet-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-violet-100 p-1 rounded-full group-hover:bg-violet-200 transition-colors duration-300">
-                    <Activity className="h-3 w-3 text-violet-600" />
-                  </div>
-                </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-violet-800 transition-colors duration-300">
+                <div className="text-purple-600 dark:text-purple-400 font-semibold">
                   In Progress
-                </p>
-                <p className="text-xs text-violet-600 font-medium">
-                  Active processing
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-violet-500 to-purple-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <Activity className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-blue-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-blue-600"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-indigo-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-indigo-100 p-1 rounded-full group-hover:bg-indigo-200 transition-colors duration-300">
-                    <Target className="h-3 w-3 text-indigo-600" />
-                  </div>
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-indigo-800 transition-colors duration-300">
+                <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                  0
+                </div>
+              </div>
+              <FaChartLine className="text-purple-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-indigo-600 dark:text-indigo-400 font-semibold">
                   Partial
-                </p>
-                <p className="text-xs text-indigo-600 font-medium">
-                  Partially completed
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-indigo-500 to-blue-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <Target className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-red-50 via-rose-50 to-pink-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-rose-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-600"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-red-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-red-100 p-1 rounded-full group-hover:bg-red-200 transition-colors duration-300">
-                    <XIcon className="h-3 w-3 text-red-600" />
-                  </div>
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-red-800 transition-colors duration-300">
+                <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
+                  0
+                </div>
+              </div>
+              <FaBullseye className="text-indigo-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-red-600 dark:text-red-400 font-semibold">
                   Canceled
-                </p>
-                <p className="text-xs text-red-600 font-medium">
-                  Order canceled
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-red-500 to-rose-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <XIcon className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-pink-50 via-rose-50 to-red-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-600/20 to-rose-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-rose-600"></div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-pink-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-pink-100 p-1 rounded-full group-hover:bg-pink-200 transition-colors duration-300">
-                    <RefreshCcw className="h-3 w-3 text-pink-600" />
-                  </div>
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-pink-800 transition-colors duration-300">
+                <div className="text-2xl font-bold text-red-700 dark:text-red-300">
+                  0
+                </div>
+              </div>
+              <FaTimes className="text-red-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-pink-600 dark:text-pink-400 font-semibold">
                   Refunded
-                </p>
-                <p className="text-xs text-pink-600 font-medium">
-                  Money returned
-                </p>
+                </div>
+                <div className="text-2xl font-bold text-pink-700 dark:text-pink-300">
+                  0
+                </div>
               </div>
-              <div className="bg-gradient-to-br from-pink-500 to-rose-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <RefreshCcw className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+              <FaRedo className="text-pink-500 w-5 h-5" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Support Ticket - Section 4 */}
-      <div className="mb-8">
+      {/* Support Ticket - Section 5 */}
+      <div className="mb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-2 rounded-lg">
-            <MessageSquare className="h-6 w-6 text-white" />
+          <div className="card-icon">
+            <FaCommentDots />
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-            Support Ticket
-          </h2>
+          <h2 className="card-title text-2xl">Support Ticket</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-            <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">
-              ACTIVE
-            </div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-blue-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-blue-100 p-1 rounded-full group-hover:bg-blue-200 transition-colors duration-300">
-                    <RefreshCcw className="h-3 w-3 text-blue-600 animate-spin" />
-                  </div>
-                </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-blue-800 transition-colors duration-300">
+                <div className="text-blue-600 dark:text-blue-400 font-semibold">
                   Processing
-                </p>
-                <p className="text-xs text-blue-600 font-medium">
-                  Being handled
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <RefreshCcw className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-600/20 to-yellow-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-yellow-600"></div>
-            <div className="absolute top-2 right-2 bg-amber-500 text-white text-xs px-2 py-1 rounded-full font-semibold animate-bounce">
-              WAIT
-            </div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-amber-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-amber-100 p-1 rounded-full group-hover:bg-amber-200 transition-colors duration-300">
-                    <ClockIcon className="h-3 w-3 text-amber-600" />
-                  </div>
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-amber-800 transition-colors duration-300">
+                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                  0
+                </div>
+              </div>
+              <FaRedo className="text-blue-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-yellow-600 dark:text-yellow-400 font-semibold">
                   Pending
-                </p>
-                <p className="text-xs text-amber-600 font-medium">
-                  Awaiting response
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-amber-500 to-yellow-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <ClockIcon className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/20 to-green-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-green-600"></div>
-            <div className="absolute top-2 right-2 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">
-              REPLY
-            </div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-emerald-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-emerald-100 p-1 rounded-full group-hover:bg-emerald-200 transition-colors duration-300">
-                    <MessageSquare className="h-3 w-3 text-emerald-600" />
-                  </div>
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-emerald-800 transition-colors duration-300">
+                <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                  0
+                </div>
+              </div>
+              <FaClock className="text-yellow-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-green-600 dark:text-green-400 font-semibold">
                   Replied
-                </p>
-                <p className="text-xs text-emerald-600 font-medium">
-                  Response sent
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <MessageSquare className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-600/20 to-cyan-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-cyan-600"></div>
-            <div className="absolute top-2 right-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
-              SOLVE
-            </div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-teal-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-teal-100 p-1 rounded-full group-hover:bg-teal-200 transition-colors duration-300">
-                    <CheckIcon className="h-3 w-3 text-teal-600" />
-                  </div>
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-teal-800 transition-colors duration-300">
+                <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                  0
+                </div>
+              </div>
+              <FaCommentDots className="text-green-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-teal-600 dark:text-teal-400 font-semibold">
                   Answered
-                </p>
-                <p className="text-xs text-teal-600 font-medium">
-                  Solution provided
-                </p>
+                </div>
+                <div className="text-2xl font-bold text-teal-700 dark:text-teal-300">
+                  0
+                </div>
               </div>
-              <div className="bg-gradient-to-br from-teal-500 to-cyan-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <CheckIcon className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
+              <FaCheckCircle className="text-teal-500 w-5 h-5" />
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-red-50 via-rose-50 to-pink-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-rose-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-rose-600"></div>
-            <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
-              STOP
-            </div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-red-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-red-100 p-1 rounded-full group-hover:bg-red-200 transition-colors duration-300">
-                    <XIcon className="h-3 w-3 text-red-600" />
-                  </div>
-                </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-red-800 transition-colors duration-300">
+                <div className="text-red-600 dark:text-red-400 font-semibold">
                   Canceled
-                </p>
-                <p className="text-xs text-red-600 font-medium">
-                  Request canceled
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-red-500 to-rose-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <XIcon className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-pink-50 via-rose-50 to-red-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-pink-600/20 to-rose-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-rose-600"></div>
-            <div className="absolute top-2 right-2 bg-pink-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
-              BACK
-            </div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-pink-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-pink-100 p-1 rounded-full group-hover:bg-pink-200 transition-colors duration-300">
-                    <RefreshCcw className="h-3 w-3 text-pink-600" />
-                  </div>
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-pink-800 transition-colors duration-300">
-                  Refunded
-                </p>
-                <p className="text-xs text-pink-600 font-medium">
-                  Money returned
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-pink-500 to-rose-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <RefreshCcw className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-gray-50 via-slate-50 to-zinc-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-600/20 to-slate-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-500 to-slate-600"></div>
-            <div className="absolute top-2 right-2 bg-gray-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
-              DONE
-            </div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-gray-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-gray-100 p-1 rounded-full group-hover:bg-gray-200 transition-colors duration-300">
-                    <CheckIcon className="h-3 w-3 text-gray-600" />
-                  </div>
+                <div className="text-2xl font-bold text-red-700 dark:text-red-300">
+                  0
                 </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-gray-800 transition-colors duration-300">
-                  Closed
-                </p>
-                <p className="text-xs text-gray-600 font-medium">
-                  Issue resolved
-                </p>
               </div>
-              <div className="bg-gradient-to-br from-gray-500 to-slate-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <CheckIcon className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-600/20 to-amber-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-amber-600"></div>
-            <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-semibold animate-bounce">
-              WAIT
+              <FaTimes className="text-red-500 w-5 h-5" />
             </div>
-            <CardContent className="p-6 flex items-center justify-between relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-4xl font-bold text-gray-800 group-hover:text-orange-700 transition-colors duration-300">
-                    0
-                  </p>
-                  <div className="bg-orange-100 p-1 rounded-full group-hover:bg-orange-200 transition-colors duration-300">
-                    <ClockIcon className="h-3 w-3 text-orange-600" />
-                  </div>
-                </div>
-                <p className="text-sm font-semibold text-gray-700 group-hover:text-orange-800 transition-colors duration-300">
-                  Pending
-                </p>
-                <p className="text-xs text-orange-600 font-medium">
-                  Needs attention
-                </p>
-              </div>
-              <div className="bg-gradient-to-br from-orange-500 to-amber-600 p-4 rounded-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <ClockIcon className="h-8 w-8 text-white" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Top Bestsellers */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-2 rounded-lg">
-            <Star className="h-6 w-6 text-white" />
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            Top Bestsellers
-          </h2>
-        </div>
 
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white via-gray-50 to-purple-50 shadow-2xl">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-600"></div>
-          <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4">
-            <CardTitle className="text-white font-bold text-lg flex items-center gap-2">
-              <Star className="h-5 w-5" />
-              Top Bestsellers Dashboard
-            </CardTitle>
-            <p className="text-indigo-100 text-sm">
-              Most popular services and products
-            </p>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gradient-to-r from-gray-50 to-purple-50 border-b-2 border-purple-200">
-                  <TableHead className="font-bold text-gray-800 py-4">
-                    <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-indigo-600" />
-                      ID
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-bold text-gray-800">
-                    <div className="flex items-center gap-2">
-                      <Star className="h-4 w-4 text-purple-600" />
-                      Name
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-bold text-gray-800">
-                    <div className="flex items-center gap-2">
-                      <ShoppingCart className="h-4 w-4 text-blue-600" />
-                      Total Order
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-bold text-gray-800">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-green-600" />
-                      Total Quantity
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-bold text-gray-800">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-orange-600" />
-                      Provider
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-bold text-gray-800">
-                    <div className="flex items-center gap-2">
-                      <Settings className="h-4 w-4 text-gray-600" />
-                      Action
-                    </div>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow className="group hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 transition-all duration-300">
-                  <TableCell className="text-center py-8" colSpan={6}>
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center">
-                        <Star className="h-8 w-8 text-purple-500" />
-                      </div>
-                      <p className="text-purple-600 font-semibold text-lg">
-                        No data available
-                      </p>
-                      <p className="text-gray-500 text-sm">
-                        Bestseller data will appear here once orders are placed
-                      </p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+          <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-pink-600 dark:text-pink-400 font-semibold">
+                  Refunded
+                </div>
+                <div className="text-2xl font-bold text-pink-700 dark:text-pink-300">
+                  0
+                </div>
+              </div>
+              <FaRedo className="text-pink-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-gray-600 dark:text-gray-400 font-semibold">
+                  Closed
+                </div>
+                <div className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                  0
+                </div>
+              </div>
+              <FaCheckCircle className="text-gray-500 w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-orange-600 dark:text-orange-400 font-semibold">
+                  Pending
+                </div>
+                <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
+                  0
+                </div>
+              </div>
+              <FaClock className="text-orange-500 w-5 h-5" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Latest Users - Section 5 */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-2 rounded-lg">
-            <UserCheck className="h-6 w-6 text-white" />
+      <div className="mb-6">
+        <div className="card card-padding">
+          <div className="card-header mb-4">
+            <div className="card-icon">
+              <FaUsers />
+            </div>
+            <h3 className="card-title">Latest Users</h3>
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-            Latest Users
-          </h2>
-        </div>
-
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white via-gray-50 to-blue-50 shadow-2xl">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-600"></div>
-          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 p-4">
-            <CardTitle className="text-white font-bold text-lg flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              User Management Dashboard
-            </CardTitle>
-            <p className="text-green-100 text-sm">
-              Monitor and manage user registrations
-            </p>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50 border-b-2 border-green-200">
-                  <TableHead className="font-bold text-gray-800 py-4">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-green-600" />
+                      <FaUser className="h-4 w-4 text-green-600" />
                       Username
                     </div>
-                  </TableHead>
-                  <TableHead className="font-bold text-gray-800">
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-blue-600" />
+                      <FaEnvelope className="h-4 w-4 text-blue-600" />
                       Email
                     </div>
-                  </TableHead>
-                  <TableHead className="font-bold text-gray-800">
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-purple-600" />
+                      <FaPhone className="h-4 w-4 text-purple-600" />
                       Phone
                     </div>
-                  </TableHead>
-                  <TableHead className="font-bold text-gray-800">
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-yellow-600" />
+                      <FaDollarSign className="h-4 w-4 text-yellow-600" />
                       Balance
                     </div>
-                  </TableHead>
-                  <TableHead className="font-bold text-gray-800">
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-orange-600" />
+                      <FaShieldAlt className="h-4 w-4 text-orange-600" />
                       Status
                     </div>
-                  </TableHead>
-                  <TableHead className="font-bold text-gray-800">
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     <div className="flex items-center gap-2">
-                      <Settings className="h-4 w-4 text-gray-600" />
+                      <FaCog className="h-4 w-4 text-gray-600" />
                       Action
                     </div>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow className="group hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all duration-300 border-b border-gray-100">
-                  <TableCell className="font-semibold py-4">
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                         M
                       </div>
                       <div>
-                        <p className="font-bold text-gray-800 group-hover:text-green-700 transition-colors duration-300">
+                        <p className="font-bold text-gray-800 dark:text-gray-200">
                           munna
                         </p>
-                        <p className="text-xs text-gray-500">Premium User</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Premium User</p>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="group-hover:text-blue-700 transition-colors duration-300">
+                  </td>
+                  <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-blue-500" />
+                      <FaEnvelope className="h-4 w-4 text-blue-500" />
                       <span className="text-sm">alsoadmunna@gmail.com</span>
                     </div>
-                  </TableCell>
-                  <TableCell className="group-hover:text-purple-700 transition-colors duration-300">
+                  </td>
+                  <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-purple-500" />
+                      <FaPhone className="h-4 w-4 text-purple-500" />
                       <span className="text-sm font-medium">1770001527</span>
                     </div>
-                  </TableCell>
-                  <TableCell className="group-hover:text-yellow-700 transition-colors duration-300">
+                  </td>
+                  <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-yellow-500" />
-                      <span className="text-sm font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                      <FaDollarSign className="h-4 w-4 text-yellow-500" />
+                      <span className="text-sm font-bold text-yellow-600">
                         0 USD
                       </span>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  </td>
+                  <td className="py-3 px-4">
+                    <Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
                       <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                         Active
                       </div>
                     </Badge>
-                  </TableCell>
-                  <TableCell>
+                  </td>
+                  <td className="py-3 px-4">
                     <div className="flex gap-2">
-                      <button className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
+                      <button className="btn btn-secondary btn-sm flex items-center gap-1">
+                        <FaEye className="h-3 w-3" />
                         View
                       </button>
-                      <button className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-1 rounded-lg text-sm font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-1">
-                        <Edit className="h-3 w-3" />
+                      <button className="btn btn-secondary btn-sm flex items-center gap-1">
+                        <FaEdit className="h-3 w-3" />
                         Edit
                       </button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-
-            <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-4 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-green-600" />
-                  Showing 1 of 1 users
-                </p>
-                <button className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  View All Users
-                </button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Top Users - Section 6 */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-purple-500 to-pink-600 p-2 rounded-lg">
-            <Crown className="h-6 w-6 text-white" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Top Users
-          </h2>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-purple-50 via-pink-50 to-rose-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-600"></div>
-            <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
-              <Crown className="h-3 w-3" />
-              #1
-            </div>
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-all duration-500">
-                  M
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-gray-800 group-hover:text-purple-700 transition-colors duration-300">
-                    munna
-                  </h3>
-                  <p className="text-sm text-gray-600 group-hover:text-pink-600 transition-colors duration-300">
-                    VIP Customer
-                  </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Total Spent
-                    </span>
-                  </div>
-                  <span className="font-bold text-green-600">$0</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Orders
-                    </span>
-                  </div>
-                  <span className="font-bold text-blue-600">0</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <Award className="h-4 w-4 text-purple-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Rank
-                    </span>
-                  </div>
-                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-600 text-white border-0">
-                    Premium
-                  </Badge>
-                </div>
-              </div>
-
-              <button className="w-full mt-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
-                <Eye className="h-4 w-4" />
-                View Profile
+          <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700 mt-4 rounded-b-lg">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                <FaUsers className="h-4 w-4 text-green-600" />
+                Showing 1 of 1 users
+              </p>
+              <button className="btn btn-primary flex items-center gap-2">
+                <FaUserPlus className="h-4 w-4" />
+                View All Users
               </button>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-            <div className="absolute top-2 right-2 bg-gradient-to-r from-gray-400 to-gray-600 text-white text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
-              <Award className="h-3 w-3" />
-              #2
             </div>
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-all duration-500">
-                  U
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-700 transition-colors duration-300">
-                    User 2
-                  </h3>
-                  <p className="text-sm text-gray-600 group-hover:text-indigo-600 transition-colors duration-300">
-                    Gold Member
-                  </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-gray-300" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Total Spent
-                    </span>
-                  </div>
-                  <span className="font-bold text-green-600">$0</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Orders
-                    </span>
-                  </div>
-                  <span className="font-bold text-blue-600">0</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <Award className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Rank
-                    </span>
-                  </div>
-                  <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0">
-                    Gold
-                  </Badge>
-                </div>
-              </div>
-
-              <button className="w-full mt-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-2 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
-                <Eye className="h-4 w-4" />
-                View Profile
-              </button>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/20 to-green-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-green-600"></div>
-            <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-400 to-yellow-600 text-white text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
-              <Target className="h-3 w-3" />
-              #3
-            </div>
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-all duration-500">
-                  U
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-gray-800 group-hover:text-emerald-700 transition-colors duration-300">
-                    User 3
-                  </h3>
-                  <p className="text-sm text-gray-600 group-hover:text-green-600 transition-colors duration-300">
-                    Silver Member
-                  </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <Star className="h-4 w-4 text-gray-300" />
-                    <Star className="h-4 w-4 text-gray-300" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Total Spent
-                    </span>
-                  </div>
-                  <span className="font-bold text-green-600">$0</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Orders
-                    </span>
-                  </div>
-                  <span className="font-bold text-blue-600">0</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <Award className="h-4 w-4 text-emerald-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Rank
-                    </span>
-                  </div>
-                  <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0">
-                    Silver
-                  </Badge>
-                </div>
-              </div>
-
-              <button className="w-full mt-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white py-2 rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
-                <Eye className="h-4 w-4" />
-                View Profile
-              </button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-6 text-center">
-          <button className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2 mx-auto">
-            <Crown className="h-5 w-5" />
-            View All Top Users
-          </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-  

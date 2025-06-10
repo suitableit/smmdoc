@@ -43,7 +43,7 @@ export const adminNavItems = [
   },
   {
     title: 'Create Service',
-    href: '/admin/services/create-services',
+    href: '/admin/services/create-service',
     icon: 'FaPlusCircle',
     label: 'Create Service',
     roles: ['admin'],

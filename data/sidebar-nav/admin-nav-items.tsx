@@ -50,7 +50,7 @@ export const adminNavItems = [
   },
   {
     title: 'Create Service',
-    href: '/admin/services/create-services',
+    href: '/admin/services/create-service',
     icon: 'FaPlusCircle',
     label: 'Create Service',
     roles: ['admin'],
@@ -93,10 +93,10 @@ export const adminNavItems = [
 
   // Users Section
   {
-    title: 'User List',
+    title: 'Users List',
     href: '/admin/users',
     icon: 'FaUsers',
-    label: 'User List',
+    label: 'Users List',
     roles: ['admin'],
   },
   {

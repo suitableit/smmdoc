@@ -149,15 +149,6 @@ const DashboardPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-description">
-            Welcome back! Here's an overview of your account and recent
-            activity.
-          </p>
-        </div>
-
         {/* User Information Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           {/* User ID Card */}
@@ -287,7 +278,7 @@ const DashboardPage = () => {
                         {completedOrders}
                       </div>
                     </div>
-                    <FaCheckCircle className="text-green-500 w-8 h-8" />
+                    <FaCheckCircle className="text-green-500 w-5 h-5" />
                   </div>
                 </div>
 
@@ -302,7 +293,7 @@ const DashboardPage = () => {
                         {processingOrders}
                       </div>
                     </div>
-                    <FaClock className="text-blue-500 w-8 h-8" />
+                    <FaClock className="text-blue-500 w-5 h-5" />
                   </div>
                 </div>
 
@@ -317,7 +308,7 @@ const DashboardPage = () => {
                         {pendingOrders}
                       </div>
                     </div>
-                    <FaExclamationTriangle className="text-yellow-500 w-8 h-8" />
+                    <FaExclamationTriangle className="text-yellow-500 w-5 h-5" />
                   </div>
                 </div>
 
@@ -332,7 +323,7 @@ const DashboardPage = () => {
                         {cancelledOrders}
                       </div>
                     </div>
-                    <FaTimesCircle className="text-red-500 w-8 h-8" />
+                    <FaTimesCircle className="text-red-500 w-5 h-5" />
                   </div>
                 </div>
               </div>
