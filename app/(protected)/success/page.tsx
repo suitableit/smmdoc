@@ -4,25 +4,37 @@ import axiosInstance from '@/lib/axiosInstance';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { 
-  FaCheckCircle, 
-  FaClock, 
-  FaExclamationTriangle, 
-  FaSpinner,
+import {
+  FaCheckCircle,
+  FaCheckDouble,
+  FaClock,
+  FaExclamationTriangle,
   FaEye,
   FaPlus,
-  FaCheckDouble,
-  FaTimes
+  FaTimes,
 } from 'react-icons/fa';
 
 // Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
-    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-    type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-    type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
-    'bg-yellow-50 border-yellow-200 text-yellow-800'
-  }`}>
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div
+    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+      type === 'success'
+        ? 'bg-green-50 border-green-200 text-green-800'
+        : type === 'error'
+        ? 'bg-red-50 border-red-200 text-red-800'
+        : type === 'info'
+        ? 'bg-blue-50 border-blue-200 text-blue-800'
+        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+    }`}
+  >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
@@ -34,12 +46,17 @@ const Toast = ({ message, type = 'success', onClose }: { message: string; type?:
 );
 
 export default function SuccessPage() {
-  const [status, setStatus] = useState<'verifying' | 'success' | 'processing' | 'error'>('verifying');
+  const [status, setStatus] = useState<
+    'verifying' | 'success' | 'processing' | 'error'
+  >('verifying');
   const [message, setMessage] = useState('Verifying payment...');
   const [amount, setAmount] = useState<number | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const invoiceId = searchParams?.get('invoice_id');
@@ -48,7 +65,10 @@ export default function SuccessPage() {
   const maxVerifyAttempts = 3;
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 5000);
   };
@@ -57,30 +77,40 @@ export default function SuccessPage() {
     const verifyPayment = async () => {
       // First check URL parameters
       const urlParams = new URLSearchParams(window.location.search);
-      const urlInvoiceId = urlParams.get('invoice_id') || urlParams.get('invoiceId') || urlParams.get('transaction_id');
-      
+      const urlInvoiceId =
+        urlParams.get('invoice_id') ||
+        urlParams.get('invoiceId') ||
+        urlParams.get('transaction_id');
+
       // Then check localStorage
       const storedInvoiceId = localStorage.getItem('invoice_id');
-      
+
       // Use URL parameter first, then localStorage, then prop
       const finalInvoiceId = urlInvoiceId || storedInvoiceId || invoiceId;
-      
+
       if (finalInvoiceId) {
-        console.log("Using invoice ID:", finalInvoiceId, "from:", urlInvoiceId ? 'URL' : storedInvoiceId ? 'localStorage' : 'prop');
+        console.log(
+          'Using invoice ID:',
+          finalInvoiceId,
+          'from:',
+          urlInvoiceId ? 'URL' : storedInvoiceId ? 'localStorage' : 'prop'
+        );
         verifyPaymentWithId(finalInvoiceId);
       } else {
         // No invoice ID found anywhere
         setStatus('error');
         setMessage('Invalid payment information. No invoice ID found.');
-        setErrorDetails('Cannot verify payment without an invoice ID. Please try again or contact our support team.');
+        setErrorDetails(
+          'Cannot verify payment without an invoice ID. Please try again or contact our support team.'
+        );
       }
     };
-    
+
     const verifyPaymentWithId = async (id: string) => {
       try {
         // Call our verification API
         showToast('Verifying payment...', 'pending');
-        
+
         // Retrieve order ID from localStorage if it exists
         const storedOrderId = localStorage.getItem('order_id');
         if (storedOrderId) {
@@ -88,93 +118,119 @@ export default function SuccessPage() {
           // Clear it after we've retrieved it
           localStorage.removeItem('order_id');
         }
-        
+
         verifyAttemptsRef.current += 1;
-        
-        console.log("Verifying payment with invoice ID:", id);
-        const response = await axiosInstance.get(`/api/payment/verify-payment?invoice_id=${id}`);
+
+        console.log('Verifying payment with invoice ID:', id);
+        const response = await axiosInstance.get(
+          `/api/payment/verify-payment?invoice_id=${id}`
+        );
         const data = response.data;
-        
-        console.log("Payment verification response:", data);
-        
+
+        console.log('Payment verification response:', data);
+
         if (data.status === 'COMPLETED') {
           setStatus('success');
-          setMessage('Payment successful! Funds have been added to your account.');
+          setMessage(
+            'Payment successful! Funds have been added to your account.'
+          );
           if (data.payment?.amount) {
             setAmount(data.payment.amount);
           }
-          showToast(`Payment successful! Funds added to your account. Amount: ${data.payment?.amount || 'N/A'} BDT`, 'success');
-          
+          showToast(
+            `Payment successful! Funds added to your account. Amount: ${
+              data.payment?.amount || 'N/A'
+            } BDT`,
+            'success'
+          );
+
           // Clean up localStorage after successful payment
           localStorage.removeItem('invoice_id');
           localStorage.removeItem('payment_amount');
           localStorage.removeItem('order_id');
-          
+
           // Set a timeout before redirecting to transactions page
           setTimeout(() => {
             if (!hasRedirectedRef.current) {
               hasRedirectedRef.current = true;
-              router.push(`/dashboard/user/transactions?status=success&transaction=${id}`);
+              router.push(`/transactions?status=success&transaction=${id}`);
             }
           }, 4000);
-          
         } else if (data.status === 'PENDING') {
           setStatus('processing');
-          setMessage('Your payment is being processed and requires manual verification. You will be notified once approved.');
-          showToast('Payment requires manual verification. Your transaction is pending admin approval.', 'info');
+          setMessage(
+            'Your payment is being processed and requires manual verification. You will be notified once approved.'
+          );
+          showToast(
+            'Payment requires manual verification. Your transaction is pending admin approval.',
+            'info'
+          );
 
           // For pending payments, redirect to transactions page immediately
           // Don't retry verification as it requires manual admin approval
           setTimeout(() => {
             if (!hasRedirectedRef.current) {
               hasRedirectedRef.current = true;
-              router.push(`/dashboard/user/transactions?status=pending&transaction=${id}`);
+              router.push(`/transactions?status=pending&transaction=${id}`);
             }
           }, 4000);
         } else {
           setStatus('error');
           setMessage(data.message || 'There was a problem with your payment.');
-          setErrorDetails(data.error || 'An issue occurred during payment processing. The payment may have been canceled or there was a processing error.');
-          showToast('Payment failed! Please try again or contact support', 'error');
-          
+          setErrorDetails(
+            data.error ||
+              'An issue occurred during payment processing. The payment may have been canceled or there was a processing error.'
+          );
+          showToast(
+            'Payment failed! Please try again or contact support',
+            'error'
+          );
+
           // Clean up localStorage after failed payment
           localStorage.removeItem('invoice_id');
           localStorage.removeItem('payment_amount');
           localStorage.removeItem('order_id');
-          
+
           // Redirect to transactions page with failed status
           setTimeout(() => {
             if (!hasRedirectedRef.current) {
               hasRedirectedRef.current = true;
-              router.push(`/dashboard/user/transactions?status=failed&transaction=${id}`);
+              router.push(`/transactions?status=failed&transaction=${id}`);
             }
           }, 3000);
         }
       } catch (error) {
         console.error('Error verifying payment:', error);
-        showToast('Payment verification error! Unable to verify payment status. Please contact support.', 'error');
+        showToast(
+          'Payment verification error! Unable to verify payment status. Please contact support.',
+          'error'
+        );
         setStatus('error');
         setMessage('An error occurred while verifying your payment.');
-        setErrorDetails('There was a problem connecting to the server or invalid payment information was provided. Please contact support.');
-        
+        setErrorDetails(
+          'There was a problem connecting to the server or invalid payment information was provided. Please contact support.'
+        );
+
         // Clean up localStorage after error
         localStorage.removeItem('invoice_id');
         localStorage.removeItem('payment_amount');
         localStorage.removeItem('order_id');
-        
+
         // Redirect to transactions page with failed status after error
         setTimeout(() => {
           if (!hasRedirectedRef.current) {
             hasRedirectedRef.current = true;
-            router.push(`/dashboard/user/transactions?status=failed&transaction=${id || 'unknown'}`);
+            router.push(
+              `/transactions?status=failed&transaction=${id || 'unknown'}`
+            );
           }
         }, 3000);
       }
     };
-    
+
     // Verify payment when component mounts
     verifyPayment();
-    
+
     // Cleanup function for redirects
     return () => {
       hasRedirectedRef.current = true;
@@ -185,13 +241,13 @@ export default function SuccessPage() {
     <div className="page-container">
       {/* Toast Container */}
       {toastMessage && (
-        <Toast 
-          message={toastMessage.message} 
-          type={toastMessage.type} 
-          onClose={() => setToastMessage(null)} 
+        <Toast
+          message={toastMessage.message}
+          type={toastMessage.type}
+          onClose={() => setToastMessage(null)}
         />
       )}
-      
+
       <div className="page-content">
         <div className="max-w-2xl mx-auto">
           {/* Status Card */}
@@ -242,17 +298,20 @@ export default function SuccessPage() {
             {/* Additional Status Info */}
             {status === 'success' && (
               <p className="text-sm text-green-600 mb-6">
-                Funds have been added to your account. You will be redirected to the transactions page in a few seconds...
+                Funds have been added to your account. You will be redirected to
+                the transactions page in a few seconds...
               </p>
             )}
             {status === 'processing' && (
               <p className="text-sm text-yellow-600 mb-6">
-                Your payment is pending admin approval. You will receive an email notification once it's processed.
+                Your payment is pending admin approval. You will receive an
+                email notification once it's processed.
               </p>
             )}
             {status === 'error' && (
               <p className="text-sm text-red-600 mb-6">
-                You will be redirected to the transactions page in a few seconds...
+                You will be redirected to the transactions page in a few
+                seconds...
               </p>
             )}
           </div>
@@ -267,29 +326,39 @@ export default function SuccessPage() {
               <div className="space-y-3">
                 {invoiceId && (
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="font-medium text-gray-700">Invoice ID:</span>
-                    <span className="text-sm font-mono text-gray-900">{invoiceId}</span>
+                    <span className="font-medium text-gray-700">
+                      Invoice ID:
+                    </span>
+                    <span className="text-sm font-mono text-gray-900">
+                      {invoiceId}
+                    </span>
                   </div>
                 )}
                 {orderId && (
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="font-medium text-gray-700">Order ID:</span>
-                    <span className="text-sm font-mono text-gray-900">{orderId}</span>
+                    <span className="text-sm font-mono text-gray-900">
+                      {orderId}
+                    </span>
                   </div>
                 )}
                 {amount !== null && (
                   <div className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="font-medium text-gray-700">Amount:</span>
-                    <span className="text-lg font-semibold text-gray-900">{amount} BDT</span>
+                    <span className="text-lg font-semibold text-gray-900">
+                      {amount} BDT
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between items-center py-2">
                   <span className="font-medium text-gray-700">Status:</span>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    status === 'success' 
-                      ? 'bg-green-100 text-green-800 border border-green-200'
-                      : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                  }`}>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      status === 'success'
+                        ? 'bg-green-100 text-green-800 border border-green-200'
+                        : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                    }`}
+                  >
                     {status === 'success' ? (
                       <>
                         <FaCheckCircle className="w-3 h-3 mr-1" />
@@ -315,13 +384,18 @@ export default function SuccessPage() {
                 Error Details
               </h3>
               <p className="text-sm text-red-700 mb-4">
-                {errorDetails || 'There was a problem processing your payment. Please try again or contact our support team.'}
+                {errorDetails ||
+                  'There was a problem processing your payment. Please try again or contact our support team.'}
               </p>
               {invoiceId && (
                 <div className="pt-3 border-t border-red-200">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-red-700">Invoice ID:</span>
-                    <span className="text-sm font-mono text-red-800">{invoiceId}</span>
+                    <span className="font-medium text-red-700">
+                      Invoice ID:
+                    </span>
+                    <span className="text-sm font-mono text-red-800">
+                      {invoiceId}
+                    </span>
                   </div>
                 </div>
               )}
@@ -331,16 +405,16 @@ export default function SuccessPage() {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
             <Link
-              href="/dashboard/user/transactions"
+              href="/transactions"
               className="btn btn-secondary flex items-center justify-center gap-2"
             >
               <FaEye className="w-4 h-4" />
               View Transactions
             </Link>
             <Link
-              href="/dashboard/user/add-funds"
+              href="/add-funds"
               className={`btn flex items-center justify-center gap-2 ${
-                status === 'error' 
+                status === 'error'
                   ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
                   : 'btn-primary'
               }`}

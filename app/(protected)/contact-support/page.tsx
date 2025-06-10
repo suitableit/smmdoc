@@ -2,6 +2,7 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   FaCheckCircle,
   FaClock,
@@ -48,6 +49,7 @@ const Toast = ({
 );
 
 export default function ContactSupportPage() {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
@@ -68,6 +70,15 @@ export default function ContactSupportPage() {
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Navigation handlers
+  const handleNavigateToTicket = () => {
+    router.push('/support-ticket');
+  };
+
+  const handleNavigateToFAQs = () => {
+    router.push('/faqs');
   };
 
   // Handle form submission
@@ -137,14 +148,6 @@ export default function ContactSupportPage() {
       )}
 
       <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">Contact Support</h1>
-          <p className="page-description">
-            Send us a message and we'll get back to you as soon as possible
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Contact Form */}
           <div className="lg:col-span-2">
@@ -166,7 +169,7 @@ export default function ContactSupportPage() {
                     type="text"
                     id="username"
                     className="form-input"
-                    value={user?.name || user?.username || 'Guest User'}
+                    value={user?.username || user?.username || 'Guest User'}
                     readOnly
                     disabled
                     style={{ backgroundColor: '#f9fafb', color: '#6b7280' }}
@@ -341,13 +344,13 @@ export default function ContactSupportPage() {
                   For ongoing issues, you can also create a support ticket and
                   track its progress.
                 </p>
-                <a
-                  href="/dashboard/user/Ticket"
+                <button
+                  onClick={handleNavigateToTicket}
                   className="btn btn-secondary w-full inline-flex items-center justify-center"
                 >
                   <FaTicketAlt className="mr-2 w-4 h-4" />
                   View My Ticket
-                </a>
+                </button>
               </div>
             </div>
 
@@ -364,13 +367,13 @@ export default function ContactSupportPage() {
                 <p className="text-sm text-gray-600">
                   Check our FAQ section for quick answers to common questions.
                 </p>
-                <a
-                  href="/dashboard/user/faqs"
+                <button
+                  onClick={handleNavigateToFAQs}
                   className="btn btn-secondary w-full inline-flex items-center justify-center"
                 >
                   <FaQuestionCircle className="mr-2 w-4 h-4" />
                   View FAQs
-                </a>
+                </button>
               </div>
             </div>
           </div>

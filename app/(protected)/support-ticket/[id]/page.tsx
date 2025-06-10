@@ -42,11 +42,6 @@ export default function TicketDetailsPage() {
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
 
-  // const breadcrumbItems = [
-  //   { title: 'Ticket', link: '/dashboard/user/ticket' },
-  //   { title: 'Ticket Details', link: `/dashboard/user/ticket/${params.id}` },
-  // ];
-
   useEffect(() => {
     const fetchTicket = async () => {
       try {
@@ -157,7 +152,7 @@ export default function TicketDetailsPage() {
           <h1 className="text-2xl font-bold">Ticket Details</h1>
           <Button variant="outline" size="sm" asChild>
             <Link
-              href="/dashboard/user/tickets-history"
+              href="/support-ticket/history"
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />

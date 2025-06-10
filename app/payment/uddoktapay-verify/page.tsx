@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Suspense } from 'react';
 
 function UddoktaPayVerifyContent() {
   const searchParams = useSearchParams();
@@ -51,7 +50,7 @@ function UddoktaPayVerifyContent() {
       console.log('No invoice_id found, redirecting...');
       toast.error('Invalid payment session');
       setTimeout(() => {
-        router.push('/dashboard/user/add-funds');
+        router.push('/add-funds');
       }, 1000);
     }
   }, [invoice_id, amount, router]);
@@ -88,7 +87,7 @@ function UddoktaPayVerifyContent() {
           invoice_id: currentInvoiceId,
           transaction_id: transactionId,
           phone,
-          response_type: responseType
+          response_type: responseType,
         }),
       });
 
@@ -107,7 +106,7 @@ function UddoktaPayVerifyContent() {
           // Cancelled/Failed
           toast.error('Payment verification failed or was cancelled');
           setTimeout(() => {
-            router.push('/dashboard/user/transactions');
+            router.push('/transactions');
           }, 2000);
         }
       } else {
@@ -129,7 +128,9 @@ function UddoktaPayVerifyContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Invalid Payment Session</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Invalid Payment Session
+          </h1>
           <p className="text-gray-600">Redirecting to add funds page...</p>
         </div>
       </div>
@@ -143,12 +144,26 @@ function UddoktaPayVerifyContent() {
           {/* Header */}
           <div className="text-center mb-6">
             <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-8 h-8 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">UddoktaPay Sandbox</h1>
-            <p className="text-gray-600 mt-2">Verify your payment transaction</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              UddoktaPay Sandbox
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Verify your payment transaction
+            </p>
           </div>
 
           {/* Payment Info */}
@@ -159,7 +174,9 @@ function UddoktaPayVerifyContent() {
             </div>
             <div className="flex justify-between items-center mt-2">
               <span className="text-gray-600">Amount:</span>
-              <span className="font-bold text-lg text-blue-600">৳ {displayAmount}</span>
+              <span className="font-bold text-lg text-blue-600">
+                ৳ {displayAmount}
+              </span>
             </div>
           </div>
 
@@ -213,9 +230,25 @@ function UddoktaPayVerifyContent() {
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Verifying...
                 </div>
@@ -227,11 +260,21 @@ function UddoktaPayVerifyContent() {
 
           {/* Instructions */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">Sandbox Instructions:</h3>
+            <h3 className="text-sm font-medium text-blue-900 mb-2">
+              Sandbox Instructions:
+            </h3>
             <ul className="text-xs text-blue-800 space-y-1">
-              <li>• <strong>Pending:</strong> Payment will require manual admin approval</li>
-              <li>• <strong>Completed:</strong> Payment will be automatically approved and balance added</li>
-              <li>• <strong>Cancelled:</strong> Payment will be marked as failed</li>
+              <li>
+                • <strong>Pending:</strong> Payment will require manual admin
+                approval
+              </li>
+              <li>
+                • <strong>Completed:</strong> Payment will be automatically
+                approved and balance added
+              </li>
+              <li>
+                • <strong>Cancelled:</strong> Payment will be marked as failed
+              </li>
             </ul>
           </div>
         </div>
@@ -242,14 +285,16 @@ function UddoktaPayVerifyContent() {
 
 export default function UddoktaPayVerifyPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading payment verification...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading payment verification...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <UddoktaPayVerifyContent />
     </Suspense>
   );

@@ -305,14 +305,6 @@ axios.post(url, payload)
       )}
 
       <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">API Integration</h1>
-          <p className="page-description">
-            Integrate our services directly into your application using our API
-          </p>
-        </div>
-
         <div className="space-y-6">
           {/* API Key Management Section */}
           <div className="card card-padding">
@@ -1184,7 +1176,7 @@ axios.post(url, payload)
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
-                  href="/dashboard/user/contact"
+                  href="/contact-support"
                   className="btn btn-secondary inline-flex items-center justify-center"
                 >
                   <FaLifeRing className="mr-2 w-4 h-4" />

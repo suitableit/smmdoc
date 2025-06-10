@@ -3,23 +3,36 @@
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { 
-  FaStar, 
-  FaRegStar, 
-  FaEye, 
-  FaTimes, 
+import {
+  FaCheckCircle,
+  FaEye,
+  FaRegStar,
   FaShoppingCart,
-  FaCheckCircle
+  FaStar,
+  FaTimes,
 } from 'react-icons/fa';
 
 // Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
-    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-    type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-    type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
-    'bg-yellow-50 border-yellow-200 text-yellow-800'
-  }`}>
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div
+    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+      type === 'success'
+        ? 'bg-green-50 border-green-200 text-green-800'
+        : type === 'error'
+        ? 'bg-red-50 border-red-200 text-red-800'
+        : type === 'info'
+        ? 'bg-blue-50 border-blue-200 text-blue-800'
+        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+    }`}
+  >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
@@ -31,17 +44,25 @@ const Toast = ({ message, type = 'success', onClose }: { message: string; type?:
 );
 
 // Modal Component
-const Modal = ({ isOpen, onClose, children }: { isOpen: boolean; onClose: () => void; children: React.ReactNode }) => {
+const Modal = ({
+  isOpen,
+  onClose,
+  children,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
         onClick={onClose}
       ></div>
-      
+
       {/* Modal Content */}
       <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         {children}
@@ -68,19 +89,28 @@ interface ServiceCardProps {
   toggleFavorite: (serviceId: string) => void;
 }
 
-export default function ServiceCard({ service, toggleFavorite }: ServiceCardProps) {
+export default function ServiceCard({
+  service,
+  toggleFavorite,
+}: ServiceCardProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
   const router = useRouter();
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
 
   const handleBuyNow = () => {
-    router.push(`/dashboard/user/new-order?sId=${service.id}`);
+    router.push(`/new-order?sId=${service.id}`);
     setIsOpen(false);
   };
 
@@ -103,10 +133,10 @@ export default function ServiceCard({ service, toggleFavorite }: ServiceCardProp
     <>
       {/* Toast Container */}
       {toastMessage && (
-        <Toast 
-          message={toastMessage.message} 
-          type={toastMessage.type} 
-          onClose={() => setToastMessage(null)} 
+        <Toast
+          message={toastMessage.message}
+          type={toastMessage.type}
+          onClose={() => setToastMessage(null)}
         />
       )}
 
@@ -121,7 +151,11 @@ export default function ServiceCard({ service, toggleFavorite }: ServiceCardProp
             <button
               onClick={handleFavoriteToggle}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 flex-shrink-0"
-              title={service.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+              title={
+                service.isFavorite
+                  ? 'Remove from favorites'
+                  : 'Add to favorites'
+              }
             >
               {service.isFavorite ? (
                 <FaStar className="w-5 h-5 text-yellow-500" />
@@ -130,7 +164,7 @@ export default function ServiceCard({ service, toggleFavorite }: ServiceCardProp
               )}
             </button>
           </div>
-          
+
           {/* Service Details */}
           <div className="space-y-3 text-sm mb-4">
             <div className="flex justify-between items-center">
@@ -141,28 +175,34 @@ export default function ServiceCard({ service, toggleFavorite }: ServiceCardProp
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Min order:</span>
-              <span className="font-medium text-gray-900">{service.min_order?.toLocaleString()}</span>
+              <span className="font-medium text-gray-900">
+                {service.min_order?.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Max order:</span>
-              <span className="font-medium text-gray-900">{service.max_order?.toLocaleString()}</span>
+              <span className="font-medium text-gray-900">
+                {service.max_order?.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Average time:</span>
-              <span className="font-medium text-gray-900">{service.avg_time || 'N/A'}</span>
+              <span className="font-medium text-gray-900">
+                {service.avg_time || 'N/A'}
+              </span>
             </div>
           </div>
-          
+
           {/* Description Preview */}
           <div className="text-sm text-gray-600 line-clamp-3">
             {decodeHTML(service.description || 'No description available.')}
           </div>
         </div>
-        
+
         {/* Card Footer */}
         <div className="p-6 pt-0 border-t border-gray-100">
-          <button 
-            onClick={() => setIsOpen(true)} 
+          <button
+            onClick={() => setIsOpen(true)}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200"
           >
             <FaEye className="w-4 h-4" />
@@ -187,30 +227,49 @@ export default function ServiceCard({ service, toggleFavorite }: ServiceCardProp
         {/* Modal Content */}
         <div className="p-6">
           {/* Service Name */}
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{service.name}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            {service.name}
+          </h3>
 
           {/* Service Information Grid */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="space-y-3">
               <div>
-                <span className="text-sm font-medium text-gray-600">Rate per 1000:</span>
+                <span className="text-sm font-medium text-gray-600">
+                  Rate per 1000:
+                </span>
                 <div className="text-sm font-semibold text-gray-900">
-                  <PriceDisplay amount={service.rate} originalCurrency={'USD'} />
+                  <PriceDisplay
+                    amount={service.rate}
+                    originalCurrency={'USD'}
+                  />
                 </div>
               </div>
               <div>
-                <span className="text-sm font-medium text-gray-600">Min order:</span>
-                <div className="text-sm font-semibold text-gray-900">{service.min_order?.toLocaleString()}</div>
+                <span className="text-sm font-medium text-gray-600">
+                  Min order:
+                </span>
+                <div className="text-sm font-semibold text-gray-900">
+                  {service.min_order?.toLocaleString()}
+                </div>
               </div>
             </div>
             <div className="space-y-3">
               <div>
-                <span className="text-sm font-medium text-gray-600">Max order:</span>
-                <div className="text-sm font-semibold text-gray-900">{service.max_order?.toLocaleString()}</div>
+                <span className="text-sm font-medium text-gray-600">
+                  Max order:
+                </span>
+                <div className="text-sm font-semibold text-gray-900">
+                  {service.max_order?.toLocaleString()}
+                </div>
               </div>
               <div>
-                <span className="text-sm font-medium text-gray-600">Average time:</span>
-                <div className="text-sm font-semibold text-gray-900">{service.avg_time || 'N/A'}</div>
+                <span className="text-sm font-medium text-gray-600">
+                  Average time:
+                </span>
+                <div className="text-sm font-semibold text-gray-900">
+                  {service.avg_time || 'N/A'}
+                </div>
               </div>
             </div>
           </div>
@@ -222,12 +281,18 @@ export default function ServiceCard({ service, toggleFavorite }: ServiceCardProp
               {service.category?.category_name || 'Uncategorized'}
             </div>
           </div>
-          
+
           {/* Description */}
           <div className="mb-6">
-            <span className="text-sm font-medium text-gray-600">Description:</span>
+            <span className="text-sm font-medium text-gray-600">
+              Description:
+            </span>
             <div className="mt-2 text-sm text-gray-700 leading-relaxed max-h-32 overflow-y-auto">
-              <div dangerouslySetInnerHTML={{ __html: service.description || 'No description available.' }}></div>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: service.description || 'No description available.',
+                }}
+              ></div>
             </div>
           </div>
         </div>
@@ -241,8 +306,8 @@ export default function ServiceCard({ service, toggleFavorite }: ServiceCardProp
             >
               Close
             </button>
-            <button 
-              onClick={handleBuyNow} 
+            <button
+              onClick={handleBuyNow}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg hover:from-purple-600 hover:to-pink-700 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-200"
             >
               <FaShoppingCart className="w-4 h-4" />

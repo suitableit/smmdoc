@@ -229,12 +229,12 @@ const Menu = ({ user }: { user: any }) => {
       label: 'Profile Settings',
     },
     {
-      href: '/dashboard/user/add-funds',
+      href: '/add-funds',
       icon: FaMoneyBillWave,
       label: 'Add Funds',
     },
     {
-      href: '/dashboard/user/transactions',
+      href: '/transactions',
       icon: FaWallet,
       label: 'Transactions',
     },
@@ -503,7 +503,7 @@ const Header = () => {
           >
             <DropdownMenuItem asChild>
               <Link
-                href="/dashboard/user/new-order"
+                href="/new-order"
                 className="flex items-center gap-3 hover:opacity-80 px-4 py-3"
                 style={{ color: 'var(--header-text)' }}
               >
@@ -513,7 +513,7 @@ const Header = () => {
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link
-                href="/dashboard/user/support-ticket"
+                href="/support-ticket"
                 className="flex items-center gap-3 hover:opacity-80 px-4 py-3"
                 style={{ color: 'var(--header-text)' }}
               >
@@ -666,7 +666,7 @@ const Header = () => {
 
         {/* Balance display with wallet icon */}
         <Link
-          href="/dashboard/user/add-funds"
+          href="/add-funds"
           className={`flex items-center gap-2 h-10 ${
             isRefreshing ? 'animate-pulse' : ''
           } text-white rounded-lg px-4 shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 group flex-shrink-0`}

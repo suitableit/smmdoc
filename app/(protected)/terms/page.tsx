@@ -196,10 +196,10 @@ export default function TermsPage() {
             </div>
 
             <div className="flex gap-4">
-              <a href="/dashboard/user/contact" className="btn btn-primary">
+              <a href="/contact-support" className="btn btn-primary">
                 Contact Support
               </a>
-              <a href="/dashboard/user/faq" className="btn btn-secondary">
+              <a href="/faqs" className="btn btn-secondary">
                 View FAQ
               </a>
             </div>

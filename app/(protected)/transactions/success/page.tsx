@@ -38,7 +38,7 @@ export default function PaymentSuccess() {
     // Redirect to transactions page after successful verification
     if (status === 'SUCCESS' || status === 'ALREADY_VERIFIED') {
       redirectTimeoutRef.current = setTimeout(() => {
-        router.push('/dashboard/user/transactions?status=success&transaction=' + invoiceId);
+        router.push('/transactions?status=success&transaction=' + invoiceId);
       }, 2000); // 2 second delay to show success message
     }
   }, [status, router, invoiceId]);
@@ -76,7 +76,11 @@ export default function PaymentSuccess() {
 
       {status === 'LOADING' && (
         <div className="mt-4">
-          <div className="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent text-blue-500 rounded-full" role="status" aria-label="loading"></div>
+          <div
+            className="animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent text-blue-500 rounded-full"
+            role="status"
+            aria-label="loading"
+          ></div>
           <p className="text-blue-500 mt-2">Verifying payment...</p>
         </div>
       )}
@@ -84,7 +88,9 @@ export default function PaymentSuccess() {
         <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mt-4 rounded">
           <p className="flex items-center">
             <span className="text-xl mr-2">✅</span>
-            <span>Your payment has been verified and recorded successfully!</span>
+            <span>
+              Your payment has been verified and recorded successfully!
+            </span>
           </p>
           <p className="mt-2 text-sm">Redirecting to transactions page...</p>
         </div>

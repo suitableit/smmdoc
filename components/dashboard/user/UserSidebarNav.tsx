@@ -76,7 +76,7 @@ export const userNavItems = [
   },
   {
     title: 'Tickets History',
-    href: '/tickets-history',
+    href: '/support-ticket/history',
     icon: 'FaListAlt',
     label: 'Tickets History',
     roles: ['user'],

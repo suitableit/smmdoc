@@ -1,180 +1,126 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-// import BreadCrumb from '@/components/shared/BreadCrumb';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Eye } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import Link from 'next/link';
-import { toast } from 'sonner';
+import { FaEye } from 'react-icons/fa';
 
-interface Ticket {
+type Ticket = {
   id: string;
   subject: string;
-  status: 'OPEN' | 'CLOSED' | 'PENDING';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  status: 'open' | 'closed' | 'pending';
   createdAt: string;
-  updatedAt: string;
-}
+};
 
-export default function ticketsHistoryPage() {
-  const [Ticket, setTicket] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { data: session } = useSession();
+const dummyTicket: Ticket[] = [
+  {
+    id: '1',
+    subject: 'Order #123 - Issue',
+    status: 'open',
+    createdAt: '2024-03-20',
+  },
+  {
+    id: '2',
+    subject: 'Payment Issue',
+    status: 'closed',
+    createdAt: '2024-03-19',
+  },
+];
 
-  // const breadcrumbItems = [
-  //   { title: 'Tickets History', link: '/dashboard/user/ticket/history' },
-  // ];
+export default function ticketsHistory() {
+  const getStatusBadge = (status: string) => {
+    const baseClasses =
+      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
 
-  useEffect(() => {
-    const fetchTicket = async () => {
-      try {
-        const response = await fetch('/api/Ticket');
-        if (response.ok) {
-          const data = await response.json();
-          setTicket(data);
-        } else {
-          toast.error('Failed to fetch Ticket');
-        }
-      } catch (error) {
-        console.error('Error fetching Ticket:', error);
-        toast.error('Error fetching Ticket');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (session?.user?.id) {
-      fetchTicket();
-    }
-  }, [session]);
-
-  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'OPEN':
-        return 'bg-green-100 text-green-800';
-      case 'CLOSED':
-        return 'bg-gray-100 text-gray-800';
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+      case 'open':
+        return (
+          <span className={`${baseClasses} bg-green-100 text-green-800`}>
+            Open
+          </span>
+        );
+      case 'closed':
+        return (
+          <span className={`${baseClasses} bg-red-100 text-red-800`}>
+            Closed
+          </span>
+        );
+      case 'pending':
+        return (
+          <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>
+            Pending
+          </span>
+        );
       default:
-        return 'bg-gray-100 text-gray-800';
+        return (
+          <span className={`${baseClasses} bg-gray-100 text-gray-800`}>
+            {status}
+          </span>
+        );
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'HIGH':
-        return 'bg-red-100 text-red-800';
-      case 'MEDIUM':
-        return 'bg-orange-100 text-orange-800';
-      case 'LOW':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const handleViewTicket = (ticketId: string) => {
+    // Handle navigation to ticket details
+    console.log(`Navigate to ticket ${ticketId}`);
   };
 
   return (
-    <div className="h-full">
-      <div className="flex flex-col py-6">
-        <h1 className="text-2xl font-bold mb-6">Tickets History</h1>
-        <Card className="w-full mx-auto">
-          <CardHeader>
-            <CardTitle>Your Support Ticket</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-black font-nunito">
-                    Ticket ID
-                  </TableHead>
-                  <TableHead className="text-black font-nunito">
-                    Subject
-                  </TableHead>
-                  <TableHead className="text-black font-nunito">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-black font-nunito">Date</TableHead>
-                  <TableHead className="text-right text-black font-nunito">
-                    Action
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center text-black font-nunito"
+    <div className="w-full mx-auto max-w-6xl mb-10">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <h3 className="text-xl font-semibold text-gray-900 m-0">
+            Tickets History
+          </h3>
+        </div>
+
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="bg-gray-50 px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Ticket ID
+                </th>
+                <th className="bg-gray-50 px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Subject
+                </th>
+                <th className="bg-gray-50 px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="bg-gray-50 px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="bg-gray-50 px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {dummyTicket.map((ticket) => (
+                <tr key={ticket.id}>
+                  <td className="px-4 py-3 border-t border-gray-200 text-sm">
+                    #{ticket.id}
+                  </td>
+                  <td className="px-4 py-3 border-t border-gray-200 text-sm">
+                    {ticket.subject}
+                  </td>
+                  <td className="px-4 py-3 border-t border-gray-200 text-sm">
+                    {getStatusBadge(ticket.status)}
+                  </td>
+                  <td className="px-4 py-3 border-t border-gray-200 text-sm text-gray-600">
+                    {ticket.createdAt}
+                  </td>
+                  <td className="px-4 py-3 border-t border-gray-200 text-sm text-right">
+                    <button
+                      onClick={() => handleViewTicket(ticket.id)}
+                      className="inline-flex items-center justify-center w-8 h-8 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-gray-300 transition-all duration-200"
+                      title="View Ticket"
                     >
-                      Loading Ticket...
-                    </TableCell>
-                  </TableRow>
-                ) : Ticket.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center text-black font-nunito"
-                    >
-                      No information was found for you.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  Ticket.map((ticket) => (
-                    <TableRow key={ticket.id}>
-                      <TableCell className="text-black font-nunito">
-                        #{ticket.id}
-                      </TableCell>
-                      <TableCell className="text-black font-nunito">
-                        {ticket.subject}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            ticket.status === 'OPEN'
-                              ? 'default'
-                              : ticket.status === 'CLOSED'
-                              ? 'destructive'
-                              : 'secondary'
-                          }
-                          className="font-nunito"
-                        >
-                          {ticket.status === 'OPEN'
-                            ? 'Open'
-                            : ticket.status === 'CLOSED'
-                            ? 'Closed'
-                            : 'Pending'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-black font-nunito">
-                        {new Date(ticket.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/dashboard/user/ticket/${ticket.id}`}>
-                            <Eye className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                      <FaEye className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
