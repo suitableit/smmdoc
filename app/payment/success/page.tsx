@@ -1,11 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { FaCheckCircle, FaWhatsapp, FaTelegram, FaEnvelope, FaReceipt, FaWallet, FaArrowRight, FaTimes } from 'react-icons/fa';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import {
+  FaArrowRight,
+  FaCheckCircle,
+  FaEnvelope,
+  FaReceipt,
+  FaTelegram,
+  FaTimes,
+  FaWallet,
+  FaWhatsapp,
+} from 'react-icons/fa';
 
 // Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
   <div className={`toast toast-${type} toast-enter`}>
     {type === 'success' && <FaCheckCircle className="toast-icon" />}
     <span className="font-medium">{message}</span>
@@ -18,7 +35,10 @@ const Toast = ({ message, type = 'success', onClose }: { message: string; type?:
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
 
   const invoice_id = searchParams?.get('invoice_id');
   const amount = searchParams?.get('amount');
@@ -29,7 +49,7 @@ function PaymentSuccessContent() {
     // Show success toast only once when component mounts
     setToast({
       message: 'Payment successful! Funds have been added to your account.',
-      type: 'success'
+      type: 'success',
     });
 
     // Auto-hide toast after 5 seconds
@@ -47,12 +67,14 @@ function PaymentSuccessContent() {
     if (phone) params.set('phone', phone);
     params.set('status', 'success'); // Mark as successful transaction
 
-    const url = `/dashboard/user/transactions${params.toString() ? '?' + params.toString() : ''}`;
+    const url = `/transactions${
+      params.toString() ? '?' + params.toString() : ''
+    }`;
     router.push(url);
   };
 
   const handleAddMoreFunds = () => {
-    router.push('/dashboard/user/add-funds');
+    router.push('/add-funds');
   };
 
   return (
@@ -60,10 +82,10 @@ function PaymentSuccessContent() {
       {/* Toast Container */}
       <div className="toast-container">
         {toast && (
-          <Toast 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => setToast(null)} 
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
           />
         )}
       </div>
@@ -72,7 +94,9 @@ function PaymentSuccessContent() {
         {/* Page Header */}
         <div className="page-header">
           <h1 className="page-title">Payment Successful!</h1>
-          <p className="page-description">Your transaction has been completed successfully</p>
+          <p className="page-description">
+            Your transaction has been completed successfully
+          </p>
         </div>
 
         {/* Main Success Card */}
@@ -85,14 +109,20 @@ function PaymentSuccessContent() {
 
             {/* Success Message */}
             <h2 className="card-title text-center">Payment Completed!</h2>
-            <p className="text-center" style={{ color: '#64748b', marginBottom: '1.5rem' }}>
+            <p
+              className="text-center"
+              style={{ color: '#64748b', marginBottom: '1.5rem' }}
+            >
               Funds have been successfully added to your account.
             </p>
 
             {/* Payment Details */}
             {(invoice_id || amount || transaction_id || phone) && (
               <div className="details-grid">
-                <h3 className="font-semibold" style={{ color: '#1e293b', marginBottom: '1rem' }}>
+                <h3
+                  className="font-semibold"
+                  style={{ color: '#1e293b', marginBottom: '1rem' }}
+                >
                   Payment Details
                 </h3>
 
@@ -137,7 +167,8 @@ function PaymentSuccessContent() {
             {/* Info Box */}
             <div className="info-box">
               <p className="info-text">
-                Your account balance has been updated successfully. You can now use your funds to place orders.
+                Your account balance has been updated successfully. You can now
+                use your funds to place orders.
               </p>
             </div>
 
@@ -171,7 +202,7 @@ function PaymentSuccessContent() {
             </div>
             <h3 className="card-title">What's Next?</h3>
           </div>
-          
+
           <ul className="features-list">
             <li className="feature-item">
               <FaCheckCircle className="feature-icon" />
@@ -195,13 +226,22 @@ function PaymentSuccessContent() {
         {/* Support Card */}
         <div className="card card-padding">
           <div className="text-center">
-            <h3 className="font-semibold" style={{ color: '#1e293b', marginBottom: '1rem' }}>
+            <h3
+              className="font-semibold"
+              style={{ color: '#1e293b', marginBottom: '1rem' }}
+            >
               Need Help?
             </h3>
-            <p style={{ color: '#64748b', marginBottom: '1rem', fontSize: '0.875rem' }}>
+            <p
+              style={{
+                color: '#64748b',
+                marginBottom: '1rem',
+                fontSize: '0.875rem',
+              }}
+            >
               Our support team is here to assist you
             </p>
-            
+
             <div className="support-links">
               <a href="https://wa.me/+8801723139610" className="support-link">
                 <FaWhatsapp />
@@ -225,14 +265,16 @@ function PaymentSuccessContent() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading payment details...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading payment details...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <PaymentSuccessContent />
     </Suspense>
   );

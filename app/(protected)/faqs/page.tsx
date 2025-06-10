@@ -135,12 +135,6 @@ const FAQPage = () => {
   return (
     <div className="page-container">
       <div className="page-content">
-        
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">Frequently Asked Questions</h1>
-          <p className="page-description">Find answers to common questions about our services</p>
-        </div>
 
         {/* Main FAQ Card */}
         <div className="card card-padding">

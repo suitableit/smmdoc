@@ -86,7 +86,7 @@ export default function ExploreServicesPage() {
               badge={service.badge}
               icon={<i className="ri-shopping-cart-2-line"></i>}
               bgColor={['purple', 'blue', 'green', 'red', 'orange', 'indigo'][Math.floor(Math.random() * 6)]}
-              href={`/dashboard/user/new-order?service=${service.id}`}
+              href={`/new-order?service=${service.id}`}
             />
           ))}
         </GridLayout>

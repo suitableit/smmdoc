@@ -78,9 +78,9 @@ const DashboardPage = () => {
 
   const handleCategoryClick = (categoryId: string | null) => {
     if (categoryId) {
-      router.push(`/dashboard/user/new-order?categoryId=${categoryId}`);
+      router.push(`/new-order?categoryId=${categoryId}`);
     } else {
-      router.push('/dashboard/user/new-order');
+      router.push('/new-order');
     }
   };
 
@@ -213,7 +213,7 @@ const DashboardPage = () => {
               </div>
               <div className="ml-4">
                 <button
-                  onClick={() => router.push('/dashboard/user/add-funds')}
+                  onClick={() => router.push('/add-funds')}
                   className="btn btn-primary flex items-center gap-2"
                 >
                   <FaPlus className="w-4 h-4" />
@@ -263,7 +263,7 @@ const DashboardPage = () => {
                 <div className="card-icon">
                   <FaChartLine />
                 </div>
-                <h3 className="card-title">Statistics Overview</h3>
+                <h3 className="card-title">Order Statistics Overview</h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -338,7 +338,7 @@ const DashboardPage = () => {
                 <h3 className="card-title">Recent Orders</h3>
                 <div className="ml-auto">
                   <button
-                    onClick={() => router.push('/dashboard/user/my-orders')}
+                    onClick={() => router.push('/my-orders')}
                     className="btn btn-secondary flex items-center gap-2"
                   >
                     <FaEye className="w-4 h-4" />
@@ -464,7 +464,7 @@ const DashboardPage = () => {
                     You haven't placed any orders yet.
                   </div>
                   <button
-                    onClick={() => router.push('/dashboard/user/new-order')}
+                    onClick={() => router.push('/new-order')}
                     className="btn btn-primary flex items-center gap-2 mx-auto"
                   >
                     <FaPlus className="w-4 h-4" />
@@ -485,7 +485,10 @@ const DashboardPage = () => {
                 </div>
                 <h3 className="card-title">Support Ticket</h3>
                 <div className="ml-auto">
-                  <button className="btn btn-secondary flex items-center gap-2">
+                  <button
+                    onClick={() => router.push('/support-ticket')}
+                    className="btn btn-secondary flex items-center gap-2"
+                  >
                     <FaEye className="w-4 h-4" />
                     View All
                   </button>
@@ -520,7 +523,7 @@ const DashboardPage = () => {
 
               <div className="space-y-3">
                 <button
-                  onClick={() => router.push('/dashboard/user/new-order')}
+                  onClick={() => router.push('/new-order')}
                   className="btn btn-primary w-full flex items-center justify-center gap-2"
                 >
                   <FaPlus className="w-4 h-4" />
@@ -528,7 +531,7 @@ const DashboardPage = () => {
                 </button>
 
                 <button
-                  onClick={() => router.push('/dashboard/user/add-funds')}
+                  onClick={() => router.push('/add-funds')}
                   className="btn btn-secondary w-full flex items-center justify-center gap-2"
                 >
                   <FaWallet className="w-4 h-4" />
@@ -536,7 +539,7 @@ const DashboardPage = () => {
                 </button>
 
                 <button
-                  onClick={() => router.push('/dashboard/user/my-orders')}
+                  onClick={() => router.push('/my-orders')}
                   className="btn btn-secondary w-full flex items-center justify-center gap-2"
                 >
                   <FaHistory className="w-4 h-4" />

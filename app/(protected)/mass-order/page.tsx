@@ -208,7 +208,7 @@ export default function MassOrder() {
 
   // Handle New Order navigation
   const handleNewOrderClick = () => {
-    router.push('/dashboard/user/new-order');
+    router.push('/new-order');
   };
 
   // Parse and validate the orders text
@@ -370,47 +370,6 @@ export default function MassOrder() {
       )}
 
       <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">Mass Order</h1>
-          <p className="page-description">
-            Create multiple orders at once with bulk order management
-          </p>
-        </div>
-
-        {/* Header Stats Cards */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, staggerChildren: 0.1 }}
-        >
-          <StatsCard
-            title="Username"
-            value={user?.name || 'msrjihad'}
-            icon={<FaUser />}
-            colorTheme="blue"
-          />
-          <StatsCard
-            title="Balance"
-            value={formatCurrency(balance)}
-            icon={<FaWallet />}
-            colorTheme="green"
-          />
-          <StatsCard
-            title="Total Spend"
-            value={formatCurrency(totalSpend)}
-            icon={<FaMoneyBillWave />}
-            colorTheme="orange"
-          />
-          <StatsCard
-            title="Your Orders"
-            value={totalOrdersCount}
-            icon={<FaShoppingBag />}
-            colorTheme="purple"
-          />
-        </motion.div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-6">

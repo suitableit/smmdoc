@@ -554,7 +554,7 @@ export default function NewOrder() {
         setSearch('');
 
         // Optionally redirect to orders page
-        // router.push('/dashboard/user/my-orders');
+        // router.push('/my-orders');
       } else {
         showToast(response.data.message || 'Failed to create order', 'error');
       }
@@ -636,7 +636,7 @@ export default function NewOrder() {
                   New Order
                 </button>
                 <button
-                  onClick={() => router.push('/dashboard/user/mass-order')}
+                  onClick={() => router.push('/mass-order')}
                   className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600"
                 >
                   <FaBoxes className="mr-2 w-4 h-4" />

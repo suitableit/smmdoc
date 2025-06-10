@@ -1,7 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { FaClock, FaWhatsapp, FaTelegram, FaEnvelope, FaReceipt, FaPhone, FaInfoCircle, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
+import {
+  FaClock,
+  FaEnvelope,
+  FaExclamationTriangle,
+  FaInfoCircle,
+  FaPhone,
+  FaReceipt,
+  FaTelegram,
+  FaTimes,
+  FaWhatsapp,
+} from 'react-icons/fa';
 
 // Mock hook for demonstration
 const useSearchParams = () => {
@@ -11,10 +21,10 @@ const useSearchParams = () => {
         invoice_id: 'INV-123456789',
         amount: '500.00',
         transaction_id: 'TRX-987654321',
-        phone: '01712345678'
+        phone: '01712345678',
       };
       return params[key as keyof typeof params] || null;
-    }
+    },
   };
 };
 
@@ -24,12 +34,20 @@ const useRouter = () => {
       console.log(`Navigating to: ${path}`);
       // Actual navigation for browser
       window.location.href = path;
-    }
+    },
   };
 };
 
 // Toast Component
-const Toast = ({ message, type = 'info', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+const Toast = ({
+  message,
+  type = 'info',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
   <div className={`toast toast-${type} toast-enter`}>
     {type === 'info' && <FaInfoCircle className="toast-icon" />}
     {type === 'pending' && <FaClock className="toast-icon" />}
@@ -43,7 +61,10 @@ const Toast = ({ message, type = 'info', onClose }: { message: string; type?: 's
 function PaymentPendingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
 
   const invoice_id = searchParams.get('invoice_id');
   const amount = searchParams.get('amount');
@@ -51,7 +72,10 @@ function PaymentPendingContent() {
   const phone = searchParams.get('phone');
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'info') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'info'
+  ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 5000);
   };
@@ -59,8 +83,9 @@ function PaymentPendingContent() {
   useEffect(() => {
     // Show pending toast only once when component mounts
     setToast({
-      message: 'Payment is being processed and requires manual verification. You will be notified once approved.',
-      type: 'info'
+      message:
+        'Payment is being processed and requires manual verification. You will be notified once approved.',
+      type: 'info',
     });
 
     // Auto-hide toast after 5 seconds
@@ -77,7 +102,9 @@ function PaymentPendingContent() {
     if (transaction_id) params.set('transaction_id', transaction_id);
     if (phone) params.set('phone', phone);
 
-    const url = `/dashboard/user/transactions${params.toString() ? '?' + params.toString() : ''}`;
+    const url = `/transactions${
+      params.toString() ? '?' + params.toString() : ''
+    }`;
     router.push(url);
   };
 
@@ -90,10 +117,10 @@ function PaymentPendingContent() {
       {/* Toast Container */}
       <div className="toast-container">
         {toast && (
-          <Toast 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => setToast(null)} 
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
           />
         )}
       </div>
@@ -102,7 +129,9 @@ function PaymentPendingContent() {
         {/* Page Header */}
         <div className="page-header">
           <h1 className="page-title">Payment Pending</h1>
-          <p className="page-description">Your payment is being processed and under review</p>
+          <p className="page-description">
+            Your payment is being processed and under review
+          </p>
         </div>
 
         {/* Main Pending Card */}
@@ -115,38 +144,45 @@ function PaymentPendingContent() {
 
             {/* Pending Message */}
             <h2 className="card-title text-center">Payment Under Review</h2>
-            <p className="text-center" style={{ color: '#64748b', marginBottom: '1.5rem' }}>
-              Your payment is being processed and requires manual verification. You will be notified once approved.
+            <p
+              className="text-center"
+              style={{ color: '#64748b', marginBottom: '1.5rem' }}
+            >
+              Your payment is being processed and requires manual verification.
+              You will be notified once approved.
             </p>
 
             {/* Payment Details */}
             {(invoice_id || amount || transaction_id) && (
               <div className="details-grid">
-                <h3 className="font-semibold" style={{ color: '#1e293b', marginBottom: '1rem' }}>
+                <h3
+                  className="font-semibold"
+                  style={{ color: '#1e293b', marginBottom: '1rem' }}
+                >
                   Payment Details
                 </h3>
-                
+
                 {invoice_id && (
                   <div className="detail-row">
                     <span className="detail-label">Order ID:</span>
                     <span className="detail-value">{invoice_id}</span>
                   </div>
                 )}
-                
+
                 {amount && (
                   <div className="detail-row">
                     <span className="detail-label">Amount:</span>
                     <span className="detail-value">${amount}</span>
                   </div>
                 )}
-                
+
                 {transaction_id && (
                   <div className="detail-row">
                     <span className="detail-label">Transaction ID:</span>
                     <span className="detail-value">{transaction_id}</span>
                   </div>
                 )}
-                
+
                 <div className="detail-row">
                   <span className="detail-label">Status:</span>
                   <span className="status-pending">
@@ -159,7 +195,10 @@ function PaymentPendingContent() {
 
             {/* Info Box */}
             <div className="info-box">
-              <h4 className="font-semibold" style={{ color: '#1e40af', marginBottom: '0.5rem' }}>
+              <h4
+                className="font-semibold"
+                style={{ color: '#1e40af', marginBottom: '0.5rem' }}
+              >
                 What happens next?
               </h4>
               <ul className="info-list">
@@ -199,7 +238,7 @@ function PaymentPendingContent() {
             </div>
             <h3 className="card-title">Important Notes</h3>
           </div>
-          
+
           <ul className="features-list">
             <li className="feature-item">
               <FaClock className="feature-icon" />
@@ -228,14 +267,21 @@ function PaymentPendingContent() {
             </div>
             <h3 className="card-title">Need Help?</h3>
           </div>
-          
-          <p style={{ color: '#64748b', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            If you have any questions about your payment, feel free to contact our support team:
+
+          <p
+            style={{
+              color: '#64748b',
+              marginBottom: '1rem',
+              fontSize: '0.875rem',
+            }}
+          >
+            If you have any questions about your payment, feel free to contact
+            our support team:
           </p>
-          
+
           <div className="support-grid">
-            <a 
-              href="https://wa.me/+8801723139610" 
+            <a
+              href="https://wa.me/+8801723139610"
               target="_blank"
               rel="noopener noreferrer"
               className="support-card whatsapp"
@@ -246,9 +292,9 @@ function PaymentPendingContent() {
                 <div className="support-card-subtitle">+8801723139610</div>
               </div>
             </a>
-            
-            <a 
-              href="https://t.me/Smmdoc" 
+
+            <a
+              href="https://t.me/Smmdoc"
               target="_blank"
               rel="noopener noreferrer"
               className="support-card telegram"
@@ -259,11 +305,8 @@ function PaymentPendingContent() {
                 <div className="support-card-subtitle">@Smmdoc</div>
               </div>
             </a>
-            
-            <a 
-              href="mailto:support@example.com"
-              className="support-card email"
-            >
+
+            <a href="mailto:support@example.com" className="support-card email">
               <FaEnvelope className="support-card-icon" />
               <div>
                 <div className="support-card-title">Email</div>

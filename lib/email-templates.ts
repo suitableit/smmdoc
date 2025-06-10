@@ -71,9 +71,7 @@ export const emailTemplates = {
             
             <!-- Call to Action -->
             <div style="text-align: center; margin: 40px 0;">
-              <a href="${
-                process.env.NEXT_PUBLIC_APP_URL
-              }/dashboard/user/transactions" 
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/transactions" 
                  style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
                 View Transaction History
               </a>

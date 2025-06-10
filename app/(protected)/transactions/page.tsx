@@ -317,12 +317,6 @@ export default function TransactionsPage() {
       </div>
 
       <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">Transaction History</h1>
-          <p className="page-description">View and manage your payment transactions</p>
-        </div>
-
         <div className="card card-padding">
           <div className="card-header">
             <div className="card-icon">

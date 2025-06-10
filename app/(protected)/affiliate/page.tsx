@@ -102,7 +102,7 @@ function AffiliateStatsCards() {
               Username
             </p>
             <p className="text-lg font-semibold text-gray-900 dark:text-white">
-              {user?.name || ''}
+              {user?.username || user?.email?.split('@')[0] || 'User'}
             </p>
           </div>
         </div>
@@ -111,7 +111,7 @@ function AffiliateStatsCards() {
         <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center space-x-4 transition-colors duration-200">
           <div className="w-12 h-12 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
             <FaCopy className="h-6 w-6 text-white" />
-          </div>
+          </div>  
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
               Referral link
@@ -263,18 +263,6 @@ function AffiliateStatsCards() {
 export default function AffiliateProgram() {
   return (
     <div className="min-h-screen bg-[#f1f2f6] dark:bg-[#232333] transition-colors duration-200">
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        
-        {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Affiliate Program
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Share your referral link and earn commission from each referral
-          </p>
-        </div>
-        
         <div className="space-y-6">
           
           {/* Affiliate Stats Component */}
@@ -365,7 +353,6 @@ export default function AffiliateProgram() {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

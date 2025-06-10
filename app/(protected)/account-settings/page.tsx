@@ -174,13 +174,6 @@ const ProfilePage = () => {
       </div>
       
       <div className="page-content">
-        
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">Account Settings</h1>
-          <p className="page-description">Manage your account information and security settings</p>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Left Column */}

@@ -79,8 +79,7 @@ export default function OrdersList() {
     { key: 'completed', label: 'Completed', icon: FaCheck, color: 'bg-gray-600 hover:bg-gray-700' },
     { key: 'partial', label: 'Partial', icon: FaCircleNotch, color: 'bg-gray-600 hover:bg-gray-700' },
     { key: 'processing', label: 'Processing', icon: FaRss, color: 'bg-gray-600 hover:bg-gray-700' },
-    { key: 'cancelled', label: 'Canceled', icon: FaBan, color: 'bg-gray-600 hover:bg-gray-700' },
-    { key: 'refund', label: 'Refunds', icon: FaUndo, color: 'bg-gray-600 hover:bg-gray-700' }
+    { key: 'cancelled', label: 'Canceled', icon: FaBan, color: 'bg-gray-600 hover:bg-gray-700' }
   ];
 
   // Get badge color based on status
@@ -148,13 +147,7 @@ export default function OrdersList() {
         />
       )}
       
-      <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">My Orders</h1>
-          <p className="page-description">View and manage your order history</p>
-        </div>
-
+      <div className="page-content">  
         {/* Search Bar */}
         <div className="mb-6">
           <form onSubmit={handleSearch} className="flex gap-3">
