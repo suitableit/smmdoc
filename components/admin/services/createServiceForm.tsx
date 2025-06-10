@@ -29,7 +29,6 @@ import {
   CreateServiceSchema,
 } from '@/lib/validators/admin/services/services.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
-import JoditEditor from 'jodit-react';
 import { useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -46,8 +45,14 @@ export function CreateServiceForm() {
   const form = useForm<CreateServiceSchema>({
     mode: 'all',
     resolver: zodResolver(createServiceSchema),
-    defaultValues: createServiceDefaultValues,
+    defaultValues: {
+      ...createServiceDefaultValues,
+      mode: 'manual', // Set default mode to manual
+    },
   });
+
+  // Watch refill field to control readonly state of refill days and display
+  const refillValue = form.watch('refill');
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
     startTransition(() => {
@@ -95,25 +100,51 @@ export function CreateServiceForm() {
   }
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full max-w-6xl">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Form Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Category Selection */}
+            
+            {/* Service Name - 100% width - REQUIRED */}
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Service Name <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <input
+                      type="text"
+                      placeholder="Enter service name"
+                      className="form-input w-full"
+                      {...field}
+                      disabled={isPending}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Service Category - 50% width - REQUIRED */}
             <FormField
               control={form.control}
               name="categoryId"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="md:col-span-1">
                   <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    Category Name
+                    Service Category <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
                     <select
                       className="form-select w-full"
                       {...field}
                       disabled={isPending}
+                      required
                     >
                       <option value={''} hidden>
                         Select Service Category
@@ -130,165 +161,336 @@ export function CreateServiceForm() {
               )}
             />
 
-            {/* Service Name */}
+            {/* Service Type - 50% width - REQUIRED */}
             <FormField
               control={form.control}
-              name="name"
+              name="serviceType"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="md:col-span-1">
                   <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    Service Name
+                    Service Type <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <input
-                      type="text"
-                      placeholder="Enter service name"
-                      className="form-input w-full"
+                    <select
+                      className="form-select w-full"
                       {...field}
                       disabled={isPending}
-                    />
+                      required
+                    >
+                      <option value="">Select Service Type</option>
+                      <option value="followers">Followers</option>
+                      <option value="likes">Likes</option>
+                      <option value="views">Views</option>
+                      <option value="comments">Comments</option>
+                      <option value="shares">Shares</option>
+                      <option value="other">Other</option>
+                    </select>
                   </FormControl>
                   <FormMessage className="text-xs text-red-500" />
                 </FormItem>
               )}
             />
 
-            {/* Service Rate */}
+            {/* Mode - 100% width - REQUIRED with default manual, no "Select Mode" option */}
             <FormField
               control={form.control}
-              name="rate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    Service Rate <span className="text-red-500">(Always USD Price)</span>
-                  </FormLabel>
-                  <FormControl>
-                    <input
-                      type="text"
-                      placeholder="Enter service rate"
-                      className="form-input w-full"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs text-red-500" />
-                </FormItem>
-              )}
-            />
-
-            {/* Per Quantity */}
-            <FormField
-              control={form.control}
-              name="perqty"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    Per Quantity <span className="text-red-500">(Like 1000 per 5 USD)</span>
-                  </FormLabel>
-                  <FormControl>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="1000"
-                      className="form-input w-full"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs text-red-500" />
-                </FormItem>
-              )}
-            />
-
-            {/* Minimum Order */}
-            <FormField
-              control={form.control}
-              name="min_order"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    Minimum Order
-                  </FormLabel>
-                  <FormControl>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="Enter minimum order"
-                      className="form-input w-full"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs text-red-500" />
-                </FormItem>
-              )}
-            />
-
-            {/* Maximum Order */}
-            <FormField
-              control={form.control}
-              name="max_order"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    Maximum Order
-                  </FormLabel>
-                  <FormControl>
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="Enter maximum order"
-                      className="form-input w-full"
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs text-red-500" />
-                </FormItem>
-              )}
-            />
-
-            {/* Average Time */}
-            <FormField
-              control={form.control}
-              name="avg_time"
+              name="mode"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
                   <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    Average Time
+                    Mode <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <select
+                      className="form-select w-full"
+                      {...field}
+                      disabled={isPending}
+                      required
+                    >
+                      <option value="manual">Manual</option>
+                      <option value="auto">Auto (API)</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Service Price - 33% width - special grid - REQUIRED */}
+            <div className="md:col-span-2 grid grid-cols-3 gap-6">
+              <FormField
+                control={form.control}
+                name="rate"
+                render={({ field }) => (
+                  <FormItem className="col-span-1">
+                    <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      Service Price <span className="text-red-500">* (Always USD Price)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <input
+                        type="text"
+                        placeholder="Enter service price"
+                        className="form-input w-full"
+                        {...field}
+                        disabled={isPending}
+                        required
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs text-red-500" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Minimum Order - 33% width - REQUIRED */}
+              <FormField
+                control={form.control}
+                name="min_order"
+                render={({ field }) => (
+                  <FormItem className="col-span-1">
+                    <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      Minimum Order <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="Enter minimum order"
+                        className="form-input w-full"
+                        {...field}
+                        disabled={isPending}
+                        required
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs text-red-500" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Maximum Order - 33% width - REQUIRED */}
+              <FormField
+                control={form.control}
+                name="max_order"
+                render={({ field }) => (
+                  <FormItem className="col-span-1">
+                    <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      Maximum Order <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="Enter maximum order"
+                        className="form-input w-full"
+                        {...field}
+                        disabled={isPending}
+                        required
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs text-red-500" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Refill - 100% width - REQUIRED */}
+            <FormField
+              control={form.control}
+              name="refill"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Refill <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <select
+                      className="form-select w-full"
+                      {...field}
+                      disabled={isPending}
+                      required
+                    >
+                      <option value="off">Off</option>
+                      <option value="on">On</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Refill Days - 50% width (readonly if refill is off) - REQUIRED */}
+            <FormField
+              control={form.control}
+              name="refillDays"
+              render={({ field }) => (
+                <FormItem className="md:col-span-1">
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Refill Days <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
                     <input
-                      type="text"
-                      placeholder="Enter average time (e.g., 24-48 hours)"
+                      type="number"
+                      min={0}
+                      placeholder="Enter refill days"
                       className="form-input w-full"
                       {...field}
-                      disabled={isPending}
+                      disabled={isPending || refillValue === 'off'}
+                      readOnly={refillValue === 'off'}
+                      required
                     />
                   </FormControl>
                   <FormMessage className="text-xs text-red-500" />
                 </FormItem>
               )}
             />
+
+            {/* Refill Display - 50% width (readonly if refill is off) - REQUIRED */}
+            <FormField
+              control={form.control}
+              name="refillDisplay"
+              render={({ field }) => (
+                <FormItem className="md:col-span-1">
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Refill Display (in hours) <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="Enter refill display hours"
+                      className="form-input w-full"
+                      {...field}
+                      disabled={isPending || refillValue === 'off'}
+                      readOnly={refillValue === 'off'}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Cancel - 50% width - REQUIRED */}
+            <FormField
+              control={form.control}
+              name="cancel"
+              render={({ field }) => (
+                <FormItem className="md:col-span-1">
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Cancel <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <select
+                      className="form-select w-full"
+                      {...field}
+                      disabled={isPending}
+                      required
+                    >
+                      <option value="off">Off</option>
+                      <option value="on">On</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Personalized Service - 50% width - REQUIRED */}
+            <FormField
+              control={form.control}
+              name="personalizedService"
+              render={({ field }) => (
+                <FormItem className="md:col-span-1">
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Personalized Service <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <select
+                      className="form-select w-full"
+                      {...field}
+                      disabled={isPending}
+                      required
+                    >
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Order Link - 50% width - REQUIRED */}
+            <FormField
+              control={form.control}
+              name="orderLink"
+              render={({ field }) => (
+                <FormItem className="md:col-span-1">
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Order Link <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <select
+                      className="form-select w-full"
+                      {...field}
+                      disabled={isPending}
+                      required
+                    >
+                      <option value="link">Link</option>
+                      <option value="username">Username</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
+            {/* Service Speed - 50% width - REQUIRED */}
+            <FormField
+              control={form.control}
+              name="serviceSpeed"
+              render={({ field }) => (
+                <FormItem className="md:col-span-1">
+                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Service Speed <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <select
+                      className="form-select w-full"
+                      {...field}
+                      disabled={isPending}
+                      required
+                    >
+                      <option value="">Select Service Speed</option>
+                      <option value="slow">Slow</option>
+                      <option value="sometimes_slow">Sometimes Slow</option>
+                      <option value="normal">Normal</option>
+                      <option value="fast">Fast</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage className="text-xs text-red-500" />
+                </FormItem>
+              )}
+            />
+
           </div>
 
-          {/* Service Description */}
+          {/* Service Description - 100% width - REQUIRED */}
           <FormField
             control={form.control}
             name="description"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  Service Description
+                  Service Description <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
-                  <div className="border border-gray-300 rounded-md overflow-hidden">
-                    <JoditEditor
-                      value={field.value}
-                      onChange={field.onChange}
-                      tabIndex={1}
-                    />
-                  </div>
+                  <textarea
+                    placeholder="Enter service description"
+                    className="form-input w-full min-h-[120px] resize-y"
+                    {...field}
+                    disabled={isPending}
+                    required
+                  />
                 </FormControl>
                 <FormMessage className="text-xs text-red-500" />
               </FormItem>

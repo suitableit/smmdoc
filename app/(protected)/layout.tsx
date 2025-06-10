@@ -28,12 +28,12 @@ export default function ProtectedLayout({
         </div>
         
         {/* Main content area */}
-        <main className="w-full mt-16">
+        <main className="w-full mt-20">
           <div className={isDashboard ? 'p-0' : 'px-8 py-8 bg-[#f1f2f6] dark:bg-[#232333]'}> 
             <div className="flex items-center justify-between lg:hidden mb-2">
               <div className="flex items-center">
                 <MobileSidebar />
-                <span className="ml-3 font-semibold text-lg">SMM Panel</span>
+                <span className="ml-3 font-semibold text-lg">SMMDOC</span>
               </div>
             </div>
             {children}

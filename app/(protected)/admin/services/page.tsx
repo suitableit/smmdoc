@@ -1,33 +1,54 @@
 'use client';
 import ServiceTable from '@/components/admin/services/serviceTable';
-import BreadCrumb from '@/components/shared/BreadCrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import {
-  Activity,
-  BarChart3,
-  Globe,
-  Plus,
-  Settings,
-  Shield,
-  Star,
-  TrendingUp,
-  Users,
-  Zap,
-} from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import {
+  FaCog,
+  FaChartBar,
+  FaGlobe,
+  FaPlus,
+  FaShieldAlt,
+  FaStar,
+  FaArrowUp,
+  FaUsers,
+  FaBolt,
+  FaCheckCircle,
+  FaLayerGroup,
+  FaSpinner,
+  FaArrowDown,
+  FaBuffer,
+  FaSync,
+  FaDownload,
+  FaSearch,
+  FaFilter,
+  FaTimes
+} from 'react-icons/fa';
+
+// Toast Component
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`toast toast-${type} toast-enter`}>
+    {type === 'success' && <FaCheckCircle className="toast-icon" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="toast-close">
+      <FaTimes className="toast-close-icon" />
+    </button>
+  </div>
+);
 
 export default function page() {
   const [stats, setStats] = useState({
     totalServices: 0,
     activeServices: 0,
     inactiveServices: 0,
-    popularServices: 0,
     recentlyAdded: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
 
   useEffect(() => {
     const fetchServiceStats = async () => {
@@ -40,7 +61,6 @@ export default function page() {
               totalServices: 0,
               activeServices: 0,
               inactiveServices: 0,
-              popularServices: 0,
               recentlyAdded: 0,
             }
           );
@@ -55,231 +75,217 @@ export default function page() {
     fetchServiceStats();
   }, []);
 
-  const breadcrumbItems = [
-    { title: 'Services Management', link: '/admin/services' },
-  ];
+  // Handle search with debouncing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Trigger search in ServiceTable component
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const handleRefresh = () => {
+    setLoading(true);
+    // Refresh logic here
+    showToast('Services refreshed successfully!', 'success');
+    setLoading(false);
+  };
+
+  const handleExport = () => {
+    showToast('Export started! Download will begin shortly.', 'info');
+  };
 
   const serviceStats = [
     {
       title: 'Total Services',
       value: stats.totalServices,
-      icon: <Settings className="h-6 w-6" />,
-      gradient: 'from-blue-500 to-blue-600',
-      bgGradient: 'from-blue-50 to-blue-100',
-      darkBgGradient: 'from-blue-900/20 to-blue-800/20',
-      change: '+12%',
-      changeType: 'positive',
+      icon: <FaCog className="h-6 w-6" />,
+      textColor: 'text-blue-600',
     },
     {
       title: 'Active Services',
       value: stats.activeServices,
-      icon: <Activity className="h-6 w-6" />,
-      gradient: 'from-green-500 to-green-600',
-      bgGradient: 'from-green-50 to-green-100',
-      darkBgGradient: 'from-green-900/20 to-green-800/20',
-      change: '+8%',
-      changeType: 'positive',
+      icon: <FaCheckCircle className="h-6 w-6" />,
+      textColor: 'text-green-600',
     },
     {
       title: 'Inactive Services',
       value: stats.inactiveServices,
-      icon: <Shield className="h-6 w-6" />,
-      gradient: 'from-red-500 to-red-600',
-      bgGradient: 'from-red-50 to-red-100',
-      darkBgGradient: 'from-red-900/20 to-red-800/20',
-      change: '-3%',
-      changeType: 'negative',
-    },
-    {
-      title: 'Popular Services',
-      value: stats.popularServices,
-      icon: <Star className="h-6 w-6" />,
-      gradient: 'from-yellow-500 to-yellow-600',
-      bgGradient: 'from-yellow-50 to-yellow-100',
-      darkBgGradient: 'from-yellow-900/20 to-yellow-800/20',
-      change: '+15%',
-      changeType: 'positive',
+      icon: <FaShieldAlt className="h-6 w-6" />,
+      textColor: 'text-red-600',
     },
     {
       title: 'Recently Added',
       value: stats.recentlyAdded,
-      icon: <TrendingUp className="h-6 w-6" />,
-      gradient: 'from-purple-500 to-purple-600',
-      bgGradient: 'from-purple-50 to-purple-100',
-      darkBgGradient: 'from-purple-900/20 to-purple-800/20',
-      change: '+5%',
-      changeType: 'positive',
-    },
-  ];
-
-  const quickActions = [
-    {
-      title: 'Create Service',
-      description: 'Add new service to the platform',
-      icon: <Plus className="h-5 w-5" />,
-      href: '/admin/services/create-services',
-      color: 'bg-blue-500 hover:bg-blue-600',
-    },
-    {
-      title: 'Service Analytics',
-      description: 'View detailed service performance',
-      icon: <BarChart3 className="h-5 w-5" />,
-      href: '/admin/analytics/services',
-      color: 'bg-green-500 hover:bg-green-600',
-    },
-    {
-      title: 'Bulk Import',
-      description: 'Import multiple services at once',
-      icon: <Globe className="h-5 w-5" />,
-      href: '/admin/services/bulk-import',
-      color: 'bg-purple-500 hover:bg-purple-600',
-    },
-    {
-      title: 'Service Settings',
-      description: 'Configure global service settings',
-      icon: <Shield className="h-5 w-5" />,
-      href: '/admin/services/settings',
-      color: 'bg-orange-500 hover:bg-orange-600',
+      icon: <FaArrowUp className="h-6 w-6" />,
+      textColor: 'text-purple-600',
     },
   ];
 
   return (
-    <div className="h-full space-y-6">
-      {/* Header Section */}
-      <div className="flex items-center justify-between py-1">
-        <div>
-          <BreadCrumb items={breadcrumbItems} />
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage and monitor all services on your platform
-          </p>
-        </div>
-        <Button
-          asChild
-          variant="default"
-          size="sm"
-          className="shadow-lg hover:shadow-xl transition-all duration-200"
-        >
-          <Link
-            href="/admin/services/create-services"
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Create Service
-          </Link>
-        </Button>
+    <div className="page-container">
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
       </div>
 
-      <Separator />
+      <div className="page-content">
+        {/* Page Header */}
+        <div className="page-header mb-6">
+          <div>
+            <h1 className="page-title">Services Management</h1>
+            <p className="page-description mb-4">Monitor, manage, and configure all your platform services from one centralized location</p>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleRefresh}
+              className="btn btn-secondary flex items-center gap-2"
+              disabled={loading}
+            >
+              <FaSync className={loading ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+            <button 
+              onClick={handleExport}
+              className="btn btn-primary flex items-center gap-2"
+            >
+              <FaDownload />
+              Export
+            </button>
+            <Link 
+              href="/admin/services/create-service"
+              className="btn btn-primary flex items-center gap-2"
+            >
+              <FaPlus />
+              Create Service
+            </Link>
+          </div>
+        </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {serviceStats.map((stat, index) => (
-          <Card
-            key={index}
-            className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 group"
-          >
-            <div
-              className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} dark:bg-gradient-to-br dark:${stat.darkBgGradient} opacity-50`}
-            />
-            <CardContent className="relative p-6">
-              <div className="flex items-center justify-between">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {serviceStats.map((stat) => (
+            <div key={stat.title} className="card card-padding">
+              <div className="card-header mb-4">
+                <div className="card-icon">
+                  {stat.icon}
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">
-                    {stat.title}
-                  </p>
-                  <div className="text-3xl font-bold text-foreground">
+                  <h3 className="card-title">{stat.title}</h3>
+                  <p className={`text-2xl font-bold ${stat.textColor}`}>
                     {loading ? (
-                      <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+                      <FaSpinner className="h-5 w-5 animate-spin" />
                     ) : (
                       stat.value.toLocaleString()
                     )}
-                  </div>
-                  <div className="flex items-center mt-2">
-                    <span
-                      className={`text-xs font-medium ${
-                        stat.changeType === 'positive'
-                          ? 'text-green-600'
-                          : 'text-red-600'
-                      }`}
-                    >
-                      {stat.change}
-                    </span>
-                    <span className="text-xs text-muted-foreground ml-1">
-                      from last month
-                    </span>
-                  </div>
-                </div>
-                <div
-                  className={`p-3 rounded-full bg-gradient-to-br ${stat.gradient} text-white shadow-lg group-hover:scale-110 transition-transform duration-200`}
-                >
-                  {stat.icon}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Quick Actions */}
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-yellow-500" />
-            Quick Actions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action, index) => (
-              <Link key={index} href={action.href}>
-                <div className="p-4 rounded-lg border border-border hover:border-primary/50 transition-all duration-200 hover:shadow-md group cursor-pointer">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div
-                      className={`p-2 rounded-md ${action.color} text-white group-hover:scale-110 transition-transform duration-200`}
-                    >
-                      {action.icon}
-                    </div>
-                    <h3 className="font-medium text-sm">{action.title}</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {action.description}
                   </p>
                 </div>
-              </Link>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </div>
+          ))}
+        </div>
 
-      {/* Services Table */}
-      <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-blue-500" />
-                All Services
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Complete list of all services with management options
-              </p>
+        {/* Filter Buttons and Search Bar */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          {/* Left: Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                statusFilter === 'all'
+                  ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              All
+              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                statusFilter === 'all' ? 'bg-white/20' : 'bg-purple-100 text-purple-700'
+              }`}>
+                {stats.totalServices}
+              </span>
+            </button>
+            <button
+              onClick={() => setStatusFilter('active')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                statusFilter === 'active'
+                  ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Active
+              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                statusFilter === 'active' ? 'bg-white/20' : 'bg-green-100 text-green-700'
+              }`}>
+                {stats.activeServices}
+              </span>
+            </button>
+            <button
+              onClick={() => setStatusFilter('inactive')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                statusFilter === 'inactive'
+                  ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Inactive
+              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                statusFilter === 'inactive' ? 'bg-white/20' : 'bg-red-100 text-red-700'
+              }`}>
+                {stats.inactiveServices}
+              </span>
+            </button>
+          </div>
+
+          {/* Right: Search Bar with Filter Dropdown */}
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="relative flex-1 md:min-w-[300px]">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+              <input
+                type="text"
+                placeholder="Search services..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-input pl-10 pr-4"
+              />
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-              <Button variant="outline" size="sm">
-                <Users className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
+            <select className="form-select min-w-[120px]">
+              <option value="id">Service ID</option>
+              <option value="name">Service Name</option>
+              <option value="category">Category</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Services Table with new card style */}
+        <div className="card">
+          <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
+            <div className="flex items-center gap-2 flex-1">
+              <div className="card-icon">
+                <FaCog />
+              </div>
+              <h3 className="card-title">Services List ({stats.totalServices})</h3>
+              <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
+                Manage Services
+              </span>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <ServiceTable />
-        </CardContent>
-      </Card>
+          
+          <div style={{ padding: '0 24px' }}>
+            <ServiceTable searchTerm={searchTerm} statusFilter={statusFilter} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
