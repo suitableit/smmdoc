@@ -7,6 +7,7 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import { setUserDetails } from '@/lib/slice/userDetails';
+import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -58,7 +59,6 @@ const AvatarImage = ({ src, alt }: { src: string; alt: string }) => (
     alt={alt}
     className="w-full h-full object-cover"
     onError={(e) => {
-      // Hide image if it fails to load, fallback will show
       e.currentTarget.style.display = 'none';
     }}
   />
@@ -200,10 +200,17 @@ const MobileMenuToggle = ({
 const Menu = ({ user }: { user: any }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { currency, rate } = useCurrency();
   const userData = useSelector((state: any) => state.userDetails);
+  const dispatch = useDispatch();
 
-  // Get balance directly from Redux store
+  // Check if user is admin
+  const isAdmin =
+    user?.role?.toLowerCase() === 'admin' ||
+    user?.userType?.toLowerCase() === 'admin' ||
+    user?.isAdmin === true;
+
   // Get balance from API for real-time data
   const { data: userStatsResponse } = useGetUserStatsQuery();
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
@@ -217,47 +224,86 @@ const Menu = ({ user }: { user: any }) => {
   };
 
   useEffect(() => {
-    // Simulate loading
     const timer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
 
   const menuItems = [
     {
-      href: '/dashboard/profile',
+      href: '/account-settings',
       icon: FaUserCog,
-      label: 'Profile Settings',
+      label: 'Account Settings',
     },
-    {
-      href: '/add-funds',
-      icon: FaMoneyBillWave,
-      label: 'Add Funds',
-    },
-    {
-      href: '/transactions',
-      icon: FaWallet,
-      label: 'Transactions',
-    },
-    {
-      href: '/terms',
-      icon: FaFileContract,
-      label: 'Terms & Conditions',
-    },
+    ...(isAdmin
+      ? []
+      : [
+          {
+            href: '/add-funds',
+            icon: FaMoneyBillWave,
+            label: 'Add Funds',
+          },
+          {
+            href: '/transactions',
+            icon: FaWallet,
+            label: 'Transactions',
+          },
+        ]),
+    ...(isAdmin
+      ? []
+      : [
+          {
+            href: '/terms',
+            icon: FaFileContract,
+            label: 'Terms & Conditions',
+          },
+        ]),
   ];
 
   const handleLogout = async () => {
-    // Add your logout logic here
-    console.log('Logging out...');
-    setIsOpen(false);
+    try {
+      setIsLoggingOut(true);
+      setIsOpen(false);
+
+      dispatch(setUserDetails(null));
+
+      await signOut({
+        callbackUrl: '/',
+        redirect: true,
+      });
+    } catch (error) {
+      console.error('Logout failed:', error);
+      setIsLoggingOut(false);
+
+      try {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        sessionStorage.clear();
+
+        document.cookie.split(';').forEach((c) => {
+          document.cookie = c
+            .replace(/^ +/, '')
+            .replace(
+              /=.*/,
+              '=;expires=' + new Date().toUTCString() + ';path=/'
+            );
+        });
+
+        window.location.href = '/';
+      } catch (fallbackError) {
+        console.error('Fallback logout failed:', fallbackError);
+        window.location.reload();
+      }
+    }
   };
 
   return (
     <div className="relative">
-      {/* Trigger Button */}
       <button
         className="relative focus:outline-none"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="User menu"
+        disabled={isLoggingOut}
       >
         <Avatar className="h-10 w-10 -mb-2">
           <AvatarImage
@@ -270,16 +316,13 @@ const Menu = ({ user }: { user: any }) => {
         </Avatar>
       </button>
 
-      {/* Dropdown Menu */}
       {isOpen && (
         <>
-          {/* Backdrop */}
           <div
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Menu Content with updated styling */}
           <div
             className="absolute right-0 mt-2 w-80 z-50 header-theme-transition rounded-lg shadow-sm transition-colors duration-200"
             style={{
@@ -287,10 +330,9 @@ const Menu = ({ user }: { user: any }) => {
               border: `1px solid var(--header-border)`,
             }}
           >
-            {/* User Info Section */}
             <div
               className="p-6"
-              style={{ backgroundColor: 'var(--dropdown-hover)' }}
+              style={{ backgroundColor: 'rgb(243 243 243)' }}
             >
               <div className="flex items-center space-x-4 mb-4">
                 <Avatar className="h-14 w-14 ring-3 ring-[#5F1DE8]/20">
@@ -315,39 +357,45 @@ const Menu = ({ user }: { user: any }) => {
                   >
                     {user?.email || 'user@example.com'}
                   </p>
-                  <span className="inline-flex items-center px-2 py-1 rounded-lg text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 mt-1">
-                    {user?.role || 'User'}
+                  <span
+                    className={`inline-flex items-center px-2 py-1 rounded-lg text-sm font-medium mt-1 ${
+                      isAdmin
+                        ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                    }`}
+                  >
+                    {isAdmin ? 'Admin' : 'User'}
                   </span>
                 </div>
               </div>
 
-              {/* Balance Card */}
-              <div
-                className="rounded-lg p-4 text-white"
-                style={{
-                  background: `linear-gradient(to right, var(--primary), var(--secondary))`,
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <FaWallet className="h-5 w-5" />
-                    <span className="font-semibold">Account Balance</span>
+              {!isAdmin && (
+                <div
+                  className="rounded-lg p-4 text-white"
+                  style={{
+                    background: `linear-gradient(to right, var(--primary), var(--secondary))`,
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <FaWallet className="h-5 w-5" />
+                      <span className="font-semibold">Account Balance</span>
+                    </div>
+                    <FaChevronDown className="h-4 w-4 opacity-70" />
                   </div>
-                  <FaChevronDown className="h-4 w-4 opacity-70" />
+                  <div className="mt-2">
+                    {loading ? (
+                      <div className="h-6 w-24 bg-white/20 rounded animate-pulse"></div>
+                    ) : (
+                      <p className="text-2xl font-bold">
+                        {formatCurrency(balance)}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="mt-2">
-                  {loading ? (
-                    <div className="h-6 w-24 bg-white/20 rounded animate-pulse"></div>
-                  ) : (
-                    <p className="text-2xl font-bold">
-                      {formatCurrency(balance)}
-                    </p>
-                  )}
-                </div>
-              </div>
+              )}
             </div>
 
-            {/* Menu Items */}
             <div className="py-2">
               {menuItems.map((item, index) => (
                 <Link
@@ -374,20 +422,19 @@ const Menu = ({ user }: { user: any }) => {
               ))}
             </div>
 
-            {/* Separator */}
             <div style={{ borderTop: `1px solid var(--header-border)` }}></div>
 
-            {/* Logout Button */}
             <div className="p-2">
               <button
                 onClick={handleLogout}
-                className="w-full px-6 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200 flex items-center space-x-3 group rounded-lg"
+                disabled={isLoggingOut}
+                className="w-full px-6 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200 flex items-center space-x-3 group rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 group-hover:bg-red-100 dark:group-hover:bg-red-900/30 transition-colors duration-200">
                   <FaSignOutAlt className="h-4 w-4 text-red-500" />
                 </div>
                 <span className="font-semibold text-red-600 dark:text-red-400">
-                  Sign Out
+                  {isLoggingOut ? 'Signing Out...' : 'Sign Out'}
                 </span>
               </button>
             </div>
@@ -406,12 +453,14 @@ const Header = () => {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Get balance directly from Redux store
-  // Get balance from API for real-time data
+  const isAdmin =
+    user?.role?.toLowerCase() === 'admin' ||
+    user?.userType?.toLowerCase() === 'admin' ||
+    user?.isAdmin === true;
+
   const { data: userStatsResponse } = useGetUserStatsQuery();
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
 
-  // Format currency values consistently
   const formatCurrency = (amount: number) => {
     const convertedAmount =
       currency === 'BDT' ? amount : amount / (rate || 121.52);
@@ -440,7 +489,6 @@ const Header = () => {
   useEffect(() => {
     fetchUser();
 
-    // Refresh user data every 30 seconds to sync with sidebar
     const intervalId = setInterval(() => {
       fetchUser();
     }, 30000);
@@ -450,7 +498,6 @@ const Header = () => {
 
   const handleCurrencyChange = async (newCurrency: 'USD' | 'BDT') => {
     await setCurrency(newCurrency);
-    // refresh the page to apply the new currency
     window.location.reload();
   };
 
@@ -463,7 +510,6 @@ const Header = () => {
         color: 'var(--header-text)',
       }}
     >
-      {/* Search Bar with + icon beside it */}
       <div className="hidden md:flex items-center gap-3 flex-grow max-w-md">
         <div className="relative w-full h-10 flex items-center">
           <div className="absolute inset-y-0 left-0 flex items-center pl-4">
@@ -481,7 +527,6 @@ const Header = () => {
           />
         </div>
 
-        {/* Quick Create Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -513,12 +558,12 @@ const Header = () => {
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link
-                href="/support-ticket"
+                href="/support-tickets"
                 className="flex items-center gap-3 hover:opacity-80 px-4 py-3"
                 style={{ color: 'var(--header-text)' }}
               >
                 <FaTicketAlt className="text-lg text-purple-500" />
-                <span className="font-medium">Support Ticket</span>
+                <span className="font-medium">Support Tickets</span>
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -526,7 +571,6 @@ const Header = () => {
       </div>
 
       <div className="flex items-center gap-4 ml-auto">
-        {/* Modern currency switcher */}
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -664,21 +708,21 @@ const Header = () => {
           )}
         </div>
 
-        {/* Balance display with wallet icon */}
-        <Link
-          href="/add-funds"
-          className={`flex items-center gap-2 h-10 ${
-            isRefreshing ? 'animate-pulse' : ''
-          } text-white rounded-lg px-4 shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 group flex-shrink-0`}
-          style={{
-            background: `linear-gradient(to right, var(--primary), var(--secondary))`,
-          }}
-        >
-          <FaWallet className="text-white group-hover:animate-bounce" />
-          <span className="font-bold">{formatCurrency(balance)}</span>
-        </Link>
+        {!isAdmin && (
+          <Link
+            href="/add-funds"
+            className={`flex items-center gap-2 h-10 ${
+              isRefreshing ? 'animate-pulse' : ''
+            } text-white rounded-lg px-4 shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 group flex-shrink-0`}
+            style={{
+              background: `linear-gradient(to right, var(--primary), var(--secondary))`,
+            }}
+          >
+            <FaWallet className="text-white group-hover:animate-bounce" />
+            <span className="font-bold">{formatCurrency(balance)}</span>
+          </Link>
+        )}
 
-        {/* Notification dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -736,20 +780,16 @@ const Header = () => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Enhanced Theme Toggle */}
         <div className="flex items-center">
           <ThemeToggle />
         </div>
 
-        {/* User Menu */}
         <div className="flex items-center">{user && <Menu user={user} />}</div>
 
-        {/* Mobile Menu Toggle */}
         <div className="flex items-center">
           <MobileMenuToggle isMenuOpen={isMenuOpen} toggleMenu={toggleMenu} />
         </div>
 
-        {/* Legacy Mobile Sidebar - keeping for compatibility */}
         <div className="hidden lg:hidden">
           <MobileSidebar />
         </div>

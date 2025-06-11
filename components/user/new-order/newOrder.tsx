@@ -3,41 +3,54 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { PriceDisplayAnother } from '@/components/PriceDisplayAnother';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useGetUserStatsQuery, dashboardApi } from '@/lib/services/dashboardApi';
 import axiosInstance from '@/lib/axiosInstance';
+import {
+  dashboardApi,
+  useGetUserStatsQuery,
+} from '@/lib/services/dashboardApi';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { 
-  FaSearch, 
-  FaInfoCircle, 
-  FaCheckCircle, 
-  FaTimes, 
-  FaSpinner,
-  FaLink,
+import {
+  FaCheckCircle,
   FaClock,
-  FaShieldAlt,
-  FaTachometerAlt,
-  FaChartLine,
   FaHashtag,
-  FaTelegramPlane,
+  FaInfoCircle,
+  FaLayerGroup,
+  FaLink,
+  FaSearch,
+  FaShieldAlt,
   FaShoppingCart,
-  FaBoxes
+  FaSpinner,
+  FaTachometerAlt,
+  FaTimes,
 } from 'react-icons/fa';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 // Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
-    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-    type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-    type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
-    'bg-yellow-50 border-yellow-200 text-yellow-800'
-  }`}>
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div
+    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+      type === 'success'
+        ? 'bg-green-50 border-green-200 text-green-800'
+        : type === 'error'
+        ? 'bg-red-50 border-red-200 text-red-800'
+        : type === 'info'
+        ? 'bg-blue-50 border-blue-200 text-blue-800'
+        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+    }`}
+  >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
@@ -49,9 +62,15 @@ const Toast = ({ message, type = 'success', onClose }: { message: string; type?:
 );
 
 // Service Details Card Component
-const ServiceDetailsCard = ({ selectedService, services }: { selectedService: string; services: any[] }) => {
+const ServiceDetailsCard = ({
+  selectedService,
+  services,
+}: {
+  selectedService: string;
+  services: any[];
+}) => {
   const selected = services?.find((s) => s.id === selectedService);
-  
+
   if (!selected) {
     return (
       <div className="card card-padding">
@@ -72,18 +91,25 @@ const ServiceDetailsCard = ({ selectedService, services }: { selectedService: st
   return (
     <div className="space-y-6">
       {/* Service Header */}
-      <div className="card" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)', color: 'white', padding: '24px' }}>
+      <div
+        className="card"
+        style={{
+          background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+          color: 'white',
+          padding: '24px',
+        }}
+      >
         <div className="flex items-center justify-between mb-4">
           <div className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
             <FaHashtag className="inline mr-1" />
             {selected.id}
           </div>
         </div>
-        <h3 className="text-lg font-bold leading-tight">
-          {selected.name}
-        </h3>
+        <h3 className="text-lg font-bold leading-tight">{selected.name}</h3>
         <div className="text-sm opacity-90 mt-2">
-          Max {selected.max_order || 'N/A'} ~ NO REFILL ~ {selected.avg_time || 'N/A'} ~ INSTANT - ${selected.rate || '0.00'} per 1000
+          Max {selected.max_order || 'N/A'} ~ NO REFILL ~{' '}
+          {selected.avg_time || 'N/A'} ~ INSTANT - ${selected.rate || '0.00'}{' '}
+          per 1000
         </div>
       </div>
 
@@ -130,7 +156,9 @@ const ServiceDetailsCard = ({ selectedService, services }: { selectedService: st
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                 <FaClock className="text-blue-600 text-sm" />
               </div>
-              <span className="text-sm">{selected.avg_time || 'Not enough data'}</span>
+              <span className="text-sm">
+                {selected.avg_time || 'Not enough data'}
+              </span>
             </div>
           </div>
 
@@ -150,10 +178,12 @@ const ServiceDetailsCard = ({ selectedService, services }: { selectedService: st
         <div className="mt-6">
           <h4 className="font-medium text-gray-900 mb-2">More Details</h4>
           <div className="bg-gray-50 rounded-lg p-4">
-            <div 
+            <div
               className="text-sm text-gray-700 leading-relaxed"
               dangerouslySetInnerHTML={{
-                __html: decodeHTML(selected.description || 'No additional details available.')
+                __html: decodeHTML(
+                  selected.description || 'No additional details available.'
+                ),
               }}
             />
           </div>
@@ -162,15 +192,21 @@ const ServiceDetailsCard = ({ selectedService, services }: { selectedService: st
         {/* Service Stats */}
         <div className="mt-6 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">{selected.min_order || 0}</div>
+            <div className="text-lg font-bold text-gray-900">
+              {selected.min_order || 0}
+            </div>
             <div className="text-xs text-gray-500">Min Order</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">{selected.max_order || 0}</div>
+            <div className="text-lg font-bold text-gray-900">
+              {selected.max_order || 0}
+            </div>
             <div className="text-xs text-gray-500">Max Order</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">${selected.rate || '0.00'}</div>
+            <div className="text-lg font-bold text-gray-900">
+              ${selected.rate || '0.00'}
+            </div>
             <div className="text-xs text-gray-500">Per 1000</div>
           </div>
         </div>
@@ -184,15 +220,20 @@ export default function NewOrder() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
-  const { data: userStatsResponse, refetch: refetchUserStats } = useGetUserStatsQuery();
-  const serviceIdFromUrl = searchParams.get('sId') || searchParams.get('serviceId');
+  const { data: userStatsResponse, refetch: refetchUserStats } =
+    useGetUserStatsQuery();
+  const serviceIdFromUrl =
+    searchParams.get('sId') || searchParams.get('serviceId');
   const categoryIdFromUrl = searchParams.get('categoryId');
   const [servicesData, setServicesData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
-  
+  const [toastMessage, setToastMessage] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
+
   const {
     data: category,
     error: categoryError,
@@ -206,11 +247,16 @@ export default function NewOrder() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [favoriteCategories, setFavoriteCategories] = useState<any[]>([]);
   const [combinedCategories, setCombinedCategories] = useState<any[]>([]);
-  const [categoriesWithServices, setCategoriesWithServices] = useState<any[]>([]);
+  const [categoriesWithServices, setCategoriesWithServices] = useState<any[]>(
+    []
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
@@ -361,7 +407,11 @@ export default function NewOrder() {
 
   // Initialize with category from URL if provided
   useEffect(() => {
-    if (categoryIdFromUrl && combinedCategories.length > 0 && !selectedCategory) {
+    if (
+      categoryIdFromUrl &&
+      combinedCategories.length > 0 &&
+      !selectedCategory
+    ) {
       const categoryExists = combinedCategories.find(
         (cat: any) => cat.id === categoryIdFromUrl
       );
@@ -471,7 +521,10 @@ export default function NewOrder() {
     }
 
     if (!link || !link.startsWith('http')) {
-      showToast('Please enter a valid link starting with http or https', 'error');
+      showToast(
+        'Please enter a valid link starting with http or https',
+        'error'
+      );
       return;
     }
 
@@ -495,11 +548,20 @@ export default function NewOrder() {
 
     // Check if user has enough balance
     // Use real-time balance from API, fallback to Redux store, then user object
-    const userBalanceAmount = userStatsResponse?.data?.balance || userData?.balance || user?.balance || 0;
+    const userBalanceAmount =
+      userStatsResponse?.data?.balance ||
+      userData?.balance ||
+      user?.balance ||
+      0;
     const finalTotalPrice = parseFloat(totalPrice.toFixed(4));
 
     if (userBalanceAmount < finalTotalPrice) {
-      showToast(`Insufficient balance to create this order. Available: ${userBalanceAmount.toFixed(2)}, Required: ${finalTotalPrice.toFixed(2)}`, 'error');
+      showToast(
+        `Insufficient balance to create this order. Available: ${userBalanceAmount.toFixed(
+          2
+        )}, Required: ${finalTotalPrice.toFixed(2)}`,
+        'error'
+      );
       return;
     }
 
@@ -518,24 +580,29 @@ export default function NewOrder() {
         usdPrice: usdPrice,
         bdtPrice: bdtPrice,
         finalTotalPrice: finalTotalPrice,
-        userCurrency: user?.currency
+        userCurrency: user?.currency,
       });
 
-      const orderPayload = [{
-        link,
-        qty,
-        price: finalTotalPrice,
-        usdPrice: usdPrice,
-        bdtPrice: bdtPrice,
-        currency: user?.currency,
-        serviceId: selectedService,
-        categoryId: selectedCategory,
-        userId: user?.id,
-        avg_time: selected?.avg_time || '',
-      }];
+      const orderPayload = [
+        {
+          link,
+          qty,
+          price: finalTotalPrice,
+          usdPrice: usdPrice,
+          bdtPrice: bdtPrice,
+          currency: user?.currency,
+          serviceId: selectedService,
+          categoryId: selectedCategory,
+          userId: user?.id,
+          avg_time: selected?.avg_time || '',
+        },
+      ];
 
       // Submit order to API
-      const response = await axiosInstance.post('/api/user/create-orders', orderPayload);
+      const response = await axiosInstance.post(
+        '/api/user/create-orders',
+        orderPayload
+      );
 
       if (response.data.success) {
         showToast('Order created successfully!', 'success');
@@ -560,7 +627,10 @@ export default function NewOrder() {
       }
     } catch (error: any) {
       console.error('Error creating order:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to create order';
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to create order';
       showToast(errorMessage, 'error');
     } finally {
       setIsSubmitting(false);
@@ -609,45 +679,36 @@ export default function NewOrder() {
     <div className="page-container">
       {/* Toast Container */}
       {toastMessage && (
-        <Toast 
-          message={toastMessage.message} 
-          type={toastMessage.type} 
-          onClose={() => setToastMessage(null)} 
+        <Toast
+          message={toastMessage.message}
+          type={toastMessage.type}
+          onClose={() => setToastMessage(null)}
         />
       )}
-      
-      <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">Create Order</h1>
-          <p className="page-description">Create a new order for your social media services</p>
-        </div>
 
+      <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {/* Left Column - Order Form */}
           <div className="w-full space-y-4 lg:space-y-6">
             {/* Tab Navigation */}
             <div className="card" style={{ padding: '8px' }}>
               <div className="flex space-x-2">
-                <button
-                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25"
-                >
+                <button className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25">
                   <FaShoppingCart className="mr-2 w-4 h-4" />
                   New Order
                 </button>
                 <button
-                  onClick={() => router.push('/mass-order')}
+                  onClick={() => router.push('/mass-orders')}
                   className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600"
                 >
-                  <FaBoxes className="mr-2 w-4 h-4" />
-                  Mass Order
+                  <FaLayerGroup className="mr-2 w-4 h-4" />
+                  Mass Orders
                 </button>
               </div>
             </div>
 
             <div className="card card-padding w-full max-w-full">
               <form onSubmit={onSubmit} className="space-y-4 w-full max-w-full">
-                
                 {/* Search Input with Dropdown */}
                 <div className="form-group w-full">
                   <label className="form-label">Search Services</label>
@@ -681,8 +742,12 @@ export default function NewOrder() {
                             }
                           >
                             <div className="flex justify-between items-center w-full">
-                              <span className="text-sm text-gray-900 truncate pr-2 flex-1">{service.name}</span>
-                              <span className="text-xs text-gray-500 flex-shrink-0">${service.rate || '0.00'}</span>
+                              <span className="text-sm text-gray-900 truncate pr-2 flex-1">
+                                {service.name}
+                              </span>
+                              <span className="text-xs text-gray-500 flex-shrink-0">
+                                ${service.rate || '0.00'}
+                              </span>
                             </div>
                           </div>
                         ))}
@@ -693,7 +758,9 @@ export default function NewOrder() {
 
                 {/* Combined Category Dropdown */}
                 <div className="form-group">
-                  <label className="form-label" htmlFor="category">Category</label>
+                  <label className="form-label" htmlFor="category">
+                    Category
+                  </label>
                   <select
                     id="category"
                     className="form-select"
@@ -734,7 +801,9 @@ export default function NewOrder() {
 
                 {/* Service Dropdown */}
                 <div className="form-group">
-                  <label className="form-label" htmlFor="services">Services</label>
+                  <label className="form-label" htmlFor="services">
+                    Services
+                  </label>
                   <select
                     id="services"
                     className="form-select"
@@ -747,10 +816,7 @@ export default function NewOrder() {
                     required
                   >
                     {services?.map((service: any) => (
-                      <option
-                        key={service.id}
-                        value={service.id}
-                      >
+                      <option key={service.id} value={service.id}>
                         {service.name} - ${service.rate || '0.00'}
                       </option>
                     ))}
@@ -759,7 +825,9 @@ export default function NewOrder() {
 
                 {/* Link */}
                 <div className="form-group">
-                  <label className="form-label" htmlFor="link">Link</label>
+                  <label className="form-label" htmlFor="link">
+                    Link
+                  </label>
                   <input
                     type="url"
                     id="link"
@@ -774,39 +842,44 @@ export default function NewOrder() {
 
                 {/* Quantity */}
                 <div className="form-group">
-                  <label className="form-label" htmlFor="qty">Quantity</label>
+                  <label className="form-label" htmlFor="qty">
+                    Quantity
+                  </label>
                   <input
                     type="number"
                     id="qty"
                     className="form-input"
                     placeholder="Enter Quantity"
                     onChange={(e) =>
-                      e.target.value ? setQty(parseInt(e.target.value)) : setQty(0)
+                      e.target.value
+                        ? setQty(parseInt(e.target.value))
+                        : setQty(0)
                     }
                     min={
-                      services?.find((s) => s.id === selectedService)?.min_order ||
-                      0
+                      services?.find((s) => s.id === selectedService)
+                        ?.min_order || 0
                     }
                     max={
-                      services?.find((s) => s.id === selectedService)?.max_order ||
-                      0
+                      services?.find((s) => s.id === selectedService)
+                        ?.max_order || 0
                     }
                     value={qty || ''}
                   />
                   <small className="text-xs text-gray-500 mt-1">
                     Min:{' '}
-                    {services?.find((s) => s.id === selectedService)?.min_order ||
-                      0}{' '}
+                    {services?.find((s) => s.id === selectedService)
+                      ?.min_order || 0}{' '}
                     - Max:{' '}
-                    {services?.find((s) => s.id === selectedService)?.max_order ||
-                      0}
+                    {services?.find((s) => s.id === selectedService)
+                      ?.max_order || 0}
                   </small>
                 </div>
 
                 {/* Price */}
                 <div className="form-group">
                   <label className="form-label" htmlFor="price">
-                    Charge (per 1000 = {user?.currency === 'USD' ? '$' : '৳'}{price.toFixed(2)})
+                    Charge (per 1000 = {user?.currency === 'USD' ? '$' : '৳'}
+                    {price.toFixed(2)})
                   </label>
                   <input
                     type="text"
@@ -826,7 +899,9 @@ export default function NewOrder() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={isSubmitting || !selectedService || !link || qty < 1}
+                  disabled={
+                    isSubmitting || !selectedService || !link || qty < 1
+                  }
                   className="btn btn-primary w-full"
                 >
                   {isSubmitting ? (
@@ -844,7 +919,10 @@ export default function NewOrder() {
 
           {/* Right Column - Service Details */}
           <div className="space-y-6">
-            <ServiceDetailsCard selectedService={selectedService} services={services} />
+            <ServiceDetailsCard
+              selectedService={selectedService}
+              services={services}
+            />
           </div>
         </div>
       </div>

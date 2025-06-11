@@ -1,57 +1,48 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import axiosInstance from '@/lib/axiosInstance';
+import moment from 'moment';
+import { useEffect, useState } from 'react';
 import {
-  FaChartBar,
+  FaArrowRight,
+  FaAward,
+  FaBullseye,
   FaCalendar,
+  FaChartBar,
+  FaChartLine,
+  FaChartPie,
   FaCheckCircle,
   FaClock,
-  FaCrown,
+  FaCog,
+  FaCommentDots,
   FaDollarSign,
   FaEdit,
-  FaEye,
   FaEnvelope,
-  FaCommentDots,
+  FaEye,
   FaPhone,
-  FaChartPie,
   FaRedo,
-  FaCog,
   FaShieldAlt,
   FaShoppingCart,
-  FaStar,
-  FaBullseye,
-  FaTrendUp,
-  FaUser,
-  FaUserCheck,
-  FaUserPlus,
-  FaUsers,
+  FaSync,
   FaTimes,
   FaTimesCircle,
-  FaExclamationTriangle,
-  FaChartLine,
-  FaAward,
-  FaWallet,
-  FaSync,
-  FaArrowRight,
-  FaEllipsisH,
+  FaUser,
+  FaUserPlus,
+  FaUsers,
 } from 'react-icons/fa';
-import { useEffect, useState } from 'react';
-import moment from 'moment';
-import { toast } from 'sonner';
 
 // Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
   <div className={`toast toast-${type} toast-enter`}>
     {type === 'success' && <FaCheckCircle className="toast-icon" />}
     <span className="font-medium">{message}</span>
@@ -126,12 +117,17 @@ export default function AdminDashboard() {
   });
 
   const [loading, setLoading] = useState(true);
-  
+
   // Pending Transactions State
-  const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
+  const [pendingTransactions, setPendingTransactions] = useState<
+    PendingTransaction[]
+  >([]);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [totalTransactionCount, setTotalTransactionCount] = useState(0);
-  const [customToast, setCustomToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [customToast, setCustomToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -156,17 +152,17 @@ export default function AdminDashboard() {
   const fetchPendingTransactions = async () => {
     try {
       const response = await axiosInstance.get('/api/transactions');
-      
+
       // The API returns an array directly
       if (Array.isArray(response.data)) {
         // Filter only pending transactions
-        const pending = response.data.filter((transaction: PendingTransaction) => 
-          transaction.status === 'pending'
+        const pending = response.data.filter(
+          (transaction: PendingTransaction) => transaction.status === 'pending'
         );
-        
+
         // Store total count before slicing
         setTotalTransactionCount(pending.length);
-        
+
         // Show only the latest 3 transactions
         setPendingTransactions(pending.slice(0, 3));
       } else {
@@ -192,20 +188,28 @@ export default function AdminDashboard() {
   }, []);
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setCustomToast({ message, type });
     setTimeout(() => setCustomToast(null), 4000);
   };
 
   const handleApprove = async (transactionId: string) => {
     try {
-      const response = await axiosInstance.patch(`/api/transactions/${transactionId}`, {
-        status: 'approved'
-      });
+      const response = await axiosInstance.patch(
+        `/api/transactions/${transactionId}`,
+        {
+          status: 'approved',
+        }
+      );
 
       if (response.status === 200) {
         // Remove from pending list
-        setPendingTransactions((prev) => prev.filter((t) => t.id !== transactionId));
+        setPendingTransactions((prev) =>
+          prev.filter((t) => t.id !== transactionId)
+        );
         setTotalTransactionCount((prev) => prev - 1);
 
         showToast('Transaction approved successfully!', 'success');
@@ -217,18 +221,27 @@ export default function AdminDashboard() {
   };
 
   const handleCancel = async (transactionId: string) => {
-    if (!confirm('Are you sure you want to cancel this transaction? This action cannot be undone.')) {
+    if (
+      !confirm(
+        'Are you sure you want to cancel this transaction? This action cannot be undone.'
+      )
+    ) {
       return;
     }
 
     try {
-      const response = await axiosInstance.patch(`/api/transactions/${transactionId}`, {
-        status: 'cancelled'
-      });
+      const response = await axiosInstance.patch(
+        `/api/transactions/${transactionId}`,
+        {
+          status: 'cancelled',
+        }
+      );
 
       if (response.status === 200) {
         // Remove from pending list
-        setPendingTransactions((prev) => prev.filter((t) => t.id !== transactionId));
+        setPendingTransactions((prev) =>
+          prev.filter((t) => t.id !== transactionId)
+        );
         setTotalTransactionCount((prev) => prev - 1);
 
         showToast('Transaction cancelled successfully!', 'success');
@@ -264,7 +277,9 @@ export default function AdminDashboard() {
   };
 
   if (loading) {
-    return <div className="px-8 py-8 bg-[#f1f2f6] dark:bg-[#232333]">Loading...</div>;
+    return (
+      <div className="px-8 py-8 bg-[#f1f2f6] dark:bg-[#232333]">Loading...</div>
+    );
   }
 
   return (
@@ -272,10 +287,10 @@ export default function AdminDashboard() {
       {/* Toast Container */}
       <div className="toast-container">
         {customToast && (
-          <Toast 
-            message={customToast.message} 
-            type={customToast.type} 
-            onClose={() => setCustomToast(null)} 
+          <Toast
+            message={customToast.message}
+            type={customToast.type}
+            onClose={() => setCustomToast(null)}
           />
         )}
       </div>
@@ -285,7 +300,7 @@ export default function AdminDashboard() {
         {/* First Row Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaUsers />
               </div>
@@ -302,7 +317,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaDollarSign />
               </div>
@@ -319,7 +334,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaShoppingCart />
               </div>
@@ -336,7 +351,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaBullseye />
               </div>
@@ -356,7 +371,7 @@ export default function AdminDashboard() {
         {/* Second Row Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaChartLine />
               </div>
@@ -373,7 +388,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaAward />
               </div>
@@ -390,7 +405,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaShoppingCart />
               </div>
@@ -405,7 +420,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaUserPlus />
               </div>
@@ -481,7 +496,7 @@ export default function AdminDashboard() {
                   )}
                 </h3>
               </div>
-              <button 
+              <button
                 onClick={handleRefreshTransactions}
                 className="btn btn-secondary flex items-center gap-2"
                 disabled={transactionsLoading}
@@ -497,13 +512,21 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-center py-20">
                 <div className="flex items-center gap-2">
                   <FaSync className="h-5 w-5 animate-spin text-blue-500" />
-                  <span className="text-lg font-medium">Loading transactions...</span>
+                  <span className="text-lg font-medium">
+                    Loading transactions...
+                  </span>
                 </div>
               </div>
             ) : pendingTransactions.length === 0 ? (
               <div className="text-center py-12">
-                <FaCheckCircle className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
-                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                <FaCheckCircle
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   No pending transactions
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
@@ -517,57 +540,130 @@ export default function AdminDashboard() {
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Username</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Date and Time</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Transaction ID</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Amount</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Phone Number</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Method</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
-                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          ID
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Username
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Date and Time
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Transaction ID
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Amount
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Phone Number
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Method
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="text-center p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {pendingTransactions.map((transaction) => (
-                        <tr key={transaction.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                        <tr
+                          key={transaction.id}
+                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                        >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{transaction.id.slice(-8)}
                             </div>
                           </td>
                           <td className="p-3">
-                            <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <span
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {transaction.username || 'N/A'}
                             </span>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                                {new Date(transaction.createdAt).toLocaleDateString()}
+                              <div
+                                className="text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {new Date(
+                                  transaction.createdAt
+                                ).toLocaleDateString()}
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                {new Date(transaction.createdAt).toLocaleTimeString()}
+                              <div
+                                className="text-xs"
+                                style={{ color: 'var(--text-muted)' }}
+                              >
+                                {new Date(
+                                  transaction.createdAt
+                                ).toLocaleTimeString()}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
-                            <span className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <span
+                              className="font-mono text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {transaction.transactionId || 'N/A'}
                             </span>
                           </td>
                           <td className="p-3">
-                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-semibold text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               ${transaction.amount.toFixed(2)}
                             </div>
                           </td>
                           <td className="p-3">
-                            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <span
+                              className="text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {transaction.senderNumber || 'N/A'}
                             </span>
                           </td>
                           <td className="p-3">
-                            <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                            <span
+                              className="text-sm font-medium"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {transaction.method || 'BDT'}
                             </span>
                           </td>
@@ -607,14 +703,20 @@ export default function AdminDashboard() {
                 <div className="lg:hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {pendingTransactions.map((transaction) => (
-                      <div key={transaction.id} className="card card-padding border-l-4 border-yellow-500 mb-4">
+                      <div
+                        key={transaction.id}
+                        className="card card-padding border-l-4 border-yellow-500 mb-4"
+                      >
                         {/* Header */}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{transaction.id.slice(-8)}
                             </div>
-                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {transaction.username || 'N/A'}
                             </div>
                           </div>
@@ -628,10 +730,16 @@ export default function AdminDashboard() {
 
                         {/* Transaction ID */}
                         <div className="mb-4 pb-4 border-b">
-                          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                          <div
+                            className="text-xs font-medium mb-1"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
                             Transaction ID
                           </div>
-                          <div className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>
+                          <div
+                            className="font-mono text-sm"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
                             {transaction.transactionId || 'N/A'}
                           </div>
                         </div>
@@ -639,18 +747,30 @@ export default function AdminDashboard() {
                         {/* Financial Info */}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
-                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
                               Amount
                             </div>
-                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-semibold text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               ${transaction.amount.toFixed(2)}
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
                               Phone
                             </div>
-                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {transaction.senderNumber || 'N/A'}
                             </div>
                           </div>
@@ -658,21 +778,39 @@ export default function AdminDashboard() {
 
                         {/* Method */}
                         <div className="mb-4">
-                          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                          <div
+                            className="text-xs font-medium mb-1"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
                             Method
                           </div>
-                          <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                          <div
+                            className="text-sm"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
                             {transaction.method || 'BDT'}
                           </div>
                         </div>
 
                         {/* Date */}
                         <div className="mb-4">
-                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            Date: {new Date(transaction.createdAt).toLocaleDateString()}
+                          <div
+                            className="text-xs"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            Date:{' '}
+                            {new Date(
+                              transaction.createdAt
+                            ).toLocaleDateString()}
                           </div>
-                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            Time: {new Date(transaction.createdAt).toLocaleTimeString()}
+                          <div
+                            className="text-xs"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            Time:{' '}
+                            {new Date(
+                              transaction.createdAt
+                            ).toLocaleTimeString()}
                           </div>
                         </div>
 
@@ -700,13 +838,15 @@ export default function AdminDashboard() {
               </>
             )}
           </div>
-          
+
           {/* View More Button */}
           {totalTransactionCount > 0 && (
             <div className="flex justify-center p-4 border-t bg-gray-50">
-              <button 
+              <button
                 className="btn btn-primary flex items-center gap-2"
-                onClick={() => window.location.href = '/funds?tab=all-transactions'}
+                onClick={() =>
+                  (window.location.href = '/funds?tab=all-transactions')
+                }
               >
                 <FaEye className="h-4 w-4" />
                 View More Pending Transactions
@@ -733,7 +873,7 @@ export default function AdminDashboard() {
                 </div>
                 <h3 className="card-title">Recent Orders</h3>
               </div>
-              
+
               <div className="flex flex-wrap gap-2 mb-6">
                 <Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
                   <FaCheckCircle className="h-3 w-3 mr-1" />
@@ -767,18 +907,28 @@ export default function AdminDashboard() {
 
               <div className="h-[300px] flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
                 {stats.recentOrders && stats.recentOrders.length > 0 ? (
-                  <div className="text-center" style={{ color: 'var(--text-muted)' }}>
-                    <FaChartBar className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                  <div
+                    className="text-center"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    <FaChartBar
+                      className="h-16 w-16 mx-auto mb-4"
+                      style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                    />
                     <p className="text-lg font-medium mb-2">
                       Interactive Chart will be displayed here
                     </p>
-                    <p className="text-sm">
-                      Real-time order analytics
-                    </p>
+                    <p className="text-sm">Real-time order analytics</p>
                   </div>
                 ) : (
-                  <div className="text-center" style={{ color: 'var(--text-muted)' }}>
-                    <FaChartPie className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                  <div
+                    className="text-center"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    <FaChartPie
+                      className="h-16 w-16 mx-auto mb-4"
+                      style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                    />
                     <p className="text-lg font-medium mb-2">
                       No recent orders to display
                     </p>
@@ -799,7 +949,7 @@ export default function AdminDashboard() {
                 </div>
                 <h3 className="card-title">Statistics</h3>
               </div>
-              
+
               <div className="flex flex-wrap gap-2 mb-6">
                 <Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
                   <FaCheckCircle className="h-3 w-3 mr-1" />
@@ -816,14 +966,16 @@ export default function AdminDashboard() {
               </div>
 
               <div className="h-[200px] flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="text-center" style={{ color: 'var(--text-muted)' }}>
-                  <FaChartPie className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
-                  <p className="text-sm font-medium">
-                    Statistics chart
-                  </p>
-                  <p className="text-xs">
-                    Real-time data visualization
-                  </p>
+                <div
+                  className="text-center"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <FaChartPie
+                    className="h-12 w-12 mx-auto mb-3"
+                    style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                  />
+                  <p className="text-sm font-medium">Statistics chart</p>
+                  <p className="text-xs">Real-time data visualization</p>
                 </div>
               </div>
             </div>
@@ -957,13 +1109,13 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Support Ticket - Section 5 */}
+      {/* Support Tickets - Section 5 */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="card-icon">
             <FaCommentDots />
           </div>
-          <h2 className="card-title text-2xl">Support Ticket</h2>
+          <h2 className="card-title text-2xl">Support Tickets</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -1145,7 +1297,9 @@ export default function AdminDashboard() {
                         <p className="font-bold text-gray-800 dark:text-gray-200">
                           munna
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Premium User</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Premium User
+                        </p>
                       </div>
                     </div>
                   </td>

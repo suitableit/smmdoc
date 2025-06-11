@@ -1,8 +1,8 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import {
   FaCheckCircle,
   FaClock,
@@ -74,7 +74,7 @@ export default function ContactSupportPage() {
 
   // Navigation handlers
   const handleNavigateToTicket = () => {
-    router.push('/support-ticket');
+    router.push('/support-tickets');
   };
 
   const handleNavigateToFAQs = () => {
@@ -330,18 +330,18 @@ export default function ContactSupportPage() {
               </div>
             </div>
 
-            {/* Support Ticket Card */}
+            {/* Support Tickets Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
                   <FaTicketAlt />
                 </div>
-                <h3 className="card-title">Support Ticket</h3>
+                <h3 className="card-title">Support Tickets</h3>
               </div>
 
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  For ongoing issues, you can also create a support ticket and
+                  For ongoing issues, you can also create a Support Tickets and
                   track its progress.
                 </p>
                 <button

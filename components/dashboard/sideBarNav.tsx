@@ -1,6 +1,6 @@
 'use client';
-import { userNavItems } from '@/data/sidebar-nav/user-nav-items';
 import { adminNavItems } from '@/data/sidebar-nav/admin-nav-items';
+import { userNavItems } from '@/data/sidebar-nav/user-nav-items';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -71,7 +71,11 @@ export default function SideBarNav({
       return {
         dashboard: items.filter((item) => ['Dashboard'].includes(item.title)),
         orders: items.filter((item) =>
-          ['All Orders', 'Refill Orders', 'Refill Order & Cancel Tasks'].includes(item.title)
+          [
+            'All Orders',
+            'Refill Orders',
+            'Refill Order & Cancel Tasks',
+          ].includes(item.title)
         ),
         services: items.filter((item) =>
           [
@@ -143,17 +147,19 @@ export default function SideBarNav({
       return {
         core: items.filter((item) => ['Dashboard'].includes(item.title)),
         orders: items.filter((item) =>
-          ['New Order', 'Mass Order', 'My Orders'].includes(item.title)
+          ['New Order', 'Mass Orders', 'My Orders'].includes(item.title)
         ),
         services: items.filter((item) =>
-          ['All Services', 'Favorite Services'].includes(item.title)
+          ['All Services', 'Favorite Services', 'Service Updates'].includes(
+            item.title
+          )
         ),
         funds: items.filter((item) =>
-          ['Add Funds', 'Transactions'].includes(item.title)
+          ['Add Funds', 'Transfer Funds', 'Transactions'].includes(item.title)
         ),
         support: items.filter((item) =>
           [
-            'Support Ticket',
+            'Support Tickets',
             'Tickets History',
             'Contact Support',
             'FAQs',
@@ -173,7 +179,29 @@ export default function SideBarNav({
   }, [isAdmin, items]);
 
   const isActive = (itemPath: string) => {
-    return path === itemPath || path.startsWith(itemPath + '/');
+    // Exact match
+    if (path === itemPath) return true;
+
+    // For root path
+    if (itemPath === '/' && path === '/') return true;
+
+    // Prevent parent routes from being active when on child routes
+    // Only mark as active if this is the most specific match
+    if (path.startsWith(itemPath + '/')) {
+      // Check if any other item has a more specific match
+      const allItems = Object.values(sections).flat() as NavItem[];
+      const hasMoreSpecificMatch = allItems.some((item) => {
+        return (
+          item.href !== itemPath &&
+          item.href.startsWith(itemPath) &&
+          (path === item.href || path.startsWith(item.href + '/'))
+        );
+      });
+
+      return !hasMoreSpecificMatch;
+    }
+
+    return false;
   };
 
   // Memoize the icon rendering function to prevent unnecessary re-renders
@@ -188,19 +216,24 @@ export default function SideBarNav({
     if (!sectionItems || !sectionItems.length) return null;
 
     return (
-      <div className={`nav-section ${collapsed ? 'mb-0 px-0' : 'mb-4 px-2'}`}>
+      <div className={`nav-section ${collapsed ? 'mb-0 px-0' : 'mb-6 px-2'}`}>
         {title && (
           <p
             className={`section-title ${
               collapsed ? 'opacity-0 pointer-events-none' : ''
-            } text-[11px] text-white/50 tracking-[1px] mx-4 my-2 whitespace-nowrap uppercase font-semibold`}
+            } text-xs font-semibold tracking-wider mx-4 my-2.5 whitespace-nowrap uppercase`}
+            style={{
+              color: 'var(--text-muted, rgba(255, 255, 255, 0.5))',
+              fontSize: '11px',
+              letterSpacing: '0.08em',
+            }}
           >
             {title}
           </p>
         )}
         <ul
           className={`nav-links ${collapsed ? 'px-1' : 'px-3'} ${
-            collapsed ? 'space-y-0' : 'space-y-1'
+            collapsed ? 'space-y-1' : 'space-y-1.5'
           }`}
         >
           {sectionItems.map((item, index) => {
@@ -210,66 +243,109 @@ export default function SideBarNav({
               <li
                 key={index}
                 className={`nav-item relative ${
-                  collapsed ? 'rounded-md my-0' : 'rounded-lg mb-1'
+                  collapsed ? 'rounded-lg my-0' : 'rounded-lg mb-1'
                 }`}
               >
                 {active && !collapsed && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#5F1DE8] rounded-r-md"></div>
+                  <div
+                    className="absolute left-0 top-0 bottom-0 w-1 rounded-r-md"
+                    style={{ backgroundColor: 'var(--primary, #5F1DE8)' }}
+                  ></div>
                 )}
                 <Link
                   href={item.disabled ? '/' : item.href}
                   className={cn(
                     collapsed
-                      ? 'nav-link flex justify-center items-center text-white/70 hover:text-white py-3 relative transition-all duration-300'
-                      : 'nav-link flex items-center text-white/70 hover:text-white px-3 py-2.5 hover:bg-white/5 rounded-lg transition-all duration-300 relative hover:shadow-sm',
-                    active &&
-                      (collapsed
-                        ? "active text-white before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] before:rounded-r before:bg-[#5F1DE8]"
-                        : "active bg-[#5F1DE8]/10 text-white before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-[60%] before:w-[3px] before:rounded-r before:bg-[#5F1DE8]"),
-                    isAdmin && 'font-medium',
-                    item.disabled && 'opacity-50 pointer-events-none'
+                      ? 'nav-link flex justify-center items-center py-3 relative transition-all duration-200'
+                      : 'nav-link flex items-center px-3.5 py-2.5 rounded-lg transition-all duration-200 relative',
+                    active
+                      ? collapsed
+                        ? 'active text-white'
+                        : 'active text-white'
+                      : 'text-white/70 hover:text-white',
+                    !active && !collapsed && 'hover:bg-white/5',
+                    active && !collapsed && 'bg-[var(--primary)]/10',
+                    item.disabled &&
+                      'opacity-50 pointer-events-none cursor-not-allowed'
                   )}
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: isAdmin ? '500' : '400',
+                    fontFamily: 'inherit',
+                  }}
                   onClick={() => setOpen(false)}
                   title={collapsed ? item.title : undefined}
                 >
+                  {active && collapsed && (
+                    <div
+                      className="absolute left-0 top-1/2 -translate-y-1/2 h-[60%] w-[3px] rounded-r"
+                      style={{ backgroundColor: 'var(--primary, #5F1DE8)' }}
+                    ></div>
+                  )}
                   <span
-                    className={`text-[18px] min-w-[24px] flex justify-center ${
+                    className={`flex items-center justify-center ${
                       !collapsed && 'mr-3'
-                    } ${
-                      active
-                        ? 'text-[#5F1DE8]'
+                    } transition-colors duration-200`}
+                    style={{
+                      fontSize: '18px',
+                      minWidth: '24px',
+                      color: active
+                        ? 'var(--primary, #5F1DE8)'
                         : isAdmin
-                        ? 'text-purple-400'
-                        : ''
-                    }`}
+                        ? '#c084fc'
+                        : 'currentColor',
+                    }}
                   >
                     {renderIcon(item.icon)}
                   </span>
                   <span
-                    className={`transition-all whitespace-nowrap overflow-hidden text-[14px] ${
-                      isAdmin ? 'font-medium' : 'font-normal'
-                    } ${collapsed ? 'opacity-0 w-0' : ''}`}
+                    className={`transition-all whitespace-nowrap overflow-hidden ${
+                      collapsed ? 'opacity-0 w-0' : ''
+                    }`}
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: isAdmin ? '500' : '400',
+                      lineHeight: '1.5',
+                    }}
                   >
                     {item.title}
                   </span>
                   {item.badge && (
                     <div
-                      className={`badge ml-auto text-[11px] py-0.5 px-1.5 bg-red-500/20 text-red-400 font-medium rounded-md ${
+                      className={`badge ml-auto py-0.5 px-2 font-medium rounded-md transition-all duration-200 ${
                         collapsed ? 'opacity-0 w-0 overflow-hidden' : ''
                       }`}
+                      style={{
+                        fontSize: '11px',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        color: '#f87171',
+                        letterSpacing: '0.025em',
+                      }}
                     >
                       {item.badge}
                     </div>
                   )}
                   {item.statusColor && (
                     <div
-                      className={`status-indicator ml-auto w-2 h-2 rounded-full transition-all duration-300 ${
-                        item.statusColor === 'green'
-                          ? 'bg-green-500 shadow-sm shadow-green-500/50'
-                          : item.statusColor === 'red'
-                          ? 'bg-red-500 shadow-sm shadow-red-500/50'
-                          : 'bg-yellow-500 shadow-sm shadow-yellow-500/50'
-                      } ${collapsed ? 'opacity-0 w-0 overflow-hidden' : ''}`}
+                      className={`status-indicator ml-auto rounded-full transition-all duration-200 ${
+                        collapsed ? 'opacity-0 w-0 overflow-hidden' : ''
+                      }`}
+                      style={{
+                        width: '8px',
+                        height: '8px',
+                        backgroundColor:
+                          item.statusColor === 'green'
+                            ? '#10b981'
+                            : item.statusColor === 'red'
+                            ? '#ef4444'
+                            : '#f59e0b',
+                        boxShadow:
+                          item.statusColor === 'green'
+                            ? '0 0 0 4px rgba(16, 185, 129, 0.1), 0 1px 2px rgba(16, 185, 129, 0.5)'
+                            : item.statusColor === 'red'
+                            ? '0 0 0 4px rgba(239, 68, 68, 0.1), 0 1px 2px rgba(239, 68, 68, 0.5)'
+                            : '0 0 0 4px rgba(245, 158, 11, 0.1), 0 1px 2px rgba(245, 158, 11, 0.5)',
+                      }}
                     ></div>
                   )}
                 </Link>
@@ -290,34 +366,36 @@ export default function SideBarNav({
   };
 
   return (
-    <div className="sidebar-nav-container py-1">
-      {isAdmin ? (
-        <>
-          {renderNavSection('', getSectionItems('dashboard'))}
-          {renderNavSection('Orders', getSectionItems('orders'))}
-          {renderNavSection('Services', getSectionItems('services'))}
-          {renderNavSection('Users', getSectionItems('users'))}
-          {renderNavSection('Funds', getSectionItems('funds'))}
-          {renderNavSection('Support', getSectionItems('support'))}
-          {renderNavSection('Analytics', getSectionItems('analytics'))}
-          {renderNavSection('API', getSectionItems('api'))}
-          {renderNavSection('Reseller', getSectionItems('reseller'))}
-          {renderNavSection('Settings', getSectionItems('settings'))}
-          {renderNavSection('Security', getSectionItems('security'))}
-          {renderNavSection('Account', getSectionItems('account'))}
-        </>
-      ) : (
-        <>
-          {renderNavSection('', getSectionItems('core'))}
-          {renderNavSection('Orders', getSectionItems('orders'))}
-          {renderNavSection('Services', getSectionItems('services'))}
-          {renderNavSection('Fund', getSectionItems('funds'))}
-          {renderNavSection('Support', getSectionItems('support'))}
-          {renderNavSection('Integrations', getSectionItems('integrations'))}
-          {renderNavSection('More', getSectionItems('more'))}
-          {renderNavSection('Account', getSectionItems('account'))}
-        </>
-      )}
+    <div className="sidebar-nav-container">
+      <div className="py-2">
+        {isAdmin ? (
+          <>
+            {renderNavSection('', getSectionItems('dashboard'))}
+            {renderNavSection('Orders', getSectionItems('orders'))}
+            {renderNavSection('Services', getSectionItems('services'))}
+            {renderNavSection('Users', getSectionItems('users'))}
+            {renderNavSection('Funds', getSectionItems('funds'))}
+            {renderNavSection('Support', getSectionItems('support'))}
+            {renderNavSection('Analytics', getSectionItems('analytics'))}
+            {renderNavSection('API', getSectionItems('api'))}
+            {renderNavSection('Reseller', getSectionItems('reseller'))}
+            {renderNavSection('Settings', getSectionItems('settings'))}
+            {renderNavSection('Security', getSectionItems('security'))}
+            {renderNavSection('Account', getSectionItems('account'))}
+          </>
+        ) : (
+          <>
+            {renderNavSection('', getSectionItems('core'))}
+            {renderNavSection('Orders', getSectionItems('orders'))}
+            {renderNavSection('Services', getSectionItems('services'))}
+            {renderNavSection('Fund', getSectionItems('funds'))}
+            {renderNavSection('Support', getSectionItems('support'))}
+            {renderNavSection('Integrations', getSectionItems('integrations'))}
+            {renderNavSection('More', getSectionItems('more'))}
+            {renderNavSection('Account', getSectionItems('account'))}
+          </>
+        )}
+      </div>
     </div>
   );
 }

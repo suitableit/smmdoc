@@ -20,8 +20,8 @@ export async function POST(request: Request) {
         balance: true,
         currency: true,
         dollarRate: true,
-        total_spent: true
-      }
+        total_spent: true,
+      },
     });
 
     if (!user) {
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    // Handle both single order and mass orders
+    // Handle both single order and Mass Orderss
     const isMultipleOrders = Array.isArray(body);
     const orders = isMultipleOrders ? body : [body];
 
@@ -43,7 +43,12 @@ export async function POST(request: Request) {
 
       if (!categoryId || !serviceId || !link || !qty) {
         return NextResponse.json(
-          { success: false, message: 'Missing required fields: categoryId, serviceId, link, qty', data: null },
+          {
+            success: false,
+            message:
+              'Missing required fields: categoryId, serviceId, link, qty',
+            data: null,
+          },
           { status: 400 }
         );
       }
@@ -58,20 +63,28 @@ export async function POST(request: Request) {
           min_order: true,
           max_order: true,
           avg_time: true,
-          status: true
-        }
+          status: true,
+        },
       });
 
       if (!service) {
         return NextResponse.json(
-          { success: false, message: `Service not found: ${serviceId}`, data: null },
+          {
+            success: false,
+            message: `Service not found: ${serviceId}`,
+            data: null,
+          },
           { status: 404 }
         );
       }
 
       if (service.status !== 'active') {
         return NextResponse.json(
-          { success: false, message: `Service is not active: ${service.name}`, data: null },
+          {
+            success: false,
+            message: `Service is not active: ${service.name}`,
+            data: null,
+          },
           { status: 400 }
         );
       }
@@ -79,7 +92,11 @@ export async function POST(request: Request) {
       // Validate quantity limits
       if (qty < service.min_order || qty > service.max_order) {
         return NextResponse.json(
-          { success: false, message: `Quantity for ${service.name} must be between ${service.min_order} and ${service.max_order}`, data: null },
+          {
+            success: false,
+            message: `Quantity for ${service.name} must be between ${service.min_order} and ${service.max_order}`,
+            data: null,
+          },
           { status: 400 }
         );
       }
@@ -90,18 +107,31 @@ export async function POST(request: Request) {
     const processedOrders = [];
 
     for (const orderData of orders) {
-      const { categoryId, serviceId, link, qty, price, usdPrice, bdtPrice, currency, avg_time } = orderData;
+      const {
+        categoryId,
+        serviceId,
+        link,
+        qty,
+        price,
+        usdPrice,
+        bdtPrice,
+        currency,
+        avg_time,
+      } = orderData;
 
       // Get service details for price calculation
       const service = await db.service.findUnique({
         where: { id: serviceId },
-        select: { rate: true, avg_time: true }
+        select: { rate: true, avg_time: true },
       });
 
       // Calculate prices if not provided
       const calculatedUsdPrice = usdPrice || (service!.rate * qty) / 1000;
-      const calculatedBdtPrice = bdtPrice || calculatedUsdPrice * (user.dollarRate || 121.52);
-      const finalPrice = price || (user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice);
+      const calculatedBdtPrice =
+        bdtPrice || calculatedUsdPrice * (user.dollarRate || 121.52);
+      const finalPrice =
+        price ||
+        (user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice);
 
       totalCost += finalPrice;
 
@@ -118,7 +148,7 @@ export async function POST(request: Request) {
         avg_time: avg_time || service!.avg_time,
         status: 'pending',
         remains: parseInt(qty),
-        startCount: 0
+        startCount: 0,
       });
     }
 
@@ -127,8 +157,10 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: `Insufficient balance. Required: ${totalCost.toFixed(2)}, Available: ${user.balance.toFixed(2)}`,
-          data: null
+          message: `Insufficient balance. Required: ${totalCost.toFixed(
+            2
+          )}, Available: ${user.balance.toFixed(2)}`,
+          data: null,
         },
         { status: 400 }
       );
@@ -146,16 +178,16 @@ export async function POST(request: Request) {
               select: {
                 id: true,
                 name: true,
-                rate: true
-              }
+                rate: true,
+              },
             },
             category: {
               select: {
                 id: true,
-                category_name: true
-              }
-            }
-          }
+                category_name: true,
+              },
+            },
+          },
         });
         createdOrders.push(order);
       }
@@ -165,25 +197,28 @@ export async function POST(request: Request) {
         where: { id: session.user.id },
         data: {
           balance: {
-            decrement: totalCost
+            decrement: totalCost,
           },
           total_spent: {
-            increment: totalCost
-          }
-        }
+            increment: totalCost,
+          },
+        },
       });
 
       return createdOrders;
     });
 
     // Log the order creation
-    console.log(`User ${session.user.email} created ${result.length} order(s)`, {
-      userId: session.user.id,
-      orderCount: result.length,
-      totalCost,
-      orderIds: result.map(o => o.id),
-      timestamp: new Date().toISOString()
-    });
+    console.log(
+      `User ${session.user.email} created ${result.length} order(s)`,
+      {
+        userId: session.user.id,
+        orderCount: result.length,
+        totalCost,
+        orderIds: result.map((o) => o.id),
+        timestamp: new Date().toISOString(),
+      }
+    );
 
     return NextResponse.json(
       {
@@ -193,8 +228,8 @@ export async function POST(request: Request) {
         summary: {
           orderCount: result.length,
           totalCost,
-          currency: user.currency
-        }
+          currency: user.currency,
+        },
       },
       { status: 201 }
     );
@@ -204,7 +239,7 @@ export async function POST(request: Request) {
       {
         success: false,
         message: 'Error creating order(s)',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

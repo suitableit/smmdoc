@@ -577,7 +577,7 @@ const AdminOrdersPage = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div className="card card-padding">
-            <div className="card-header mb-4">
+            <div className="card-content">
               <div className="card-icon">
                 <FaBox />
               </div>
@@ -591,7 +591,7 @@ const AdminOrdersPage = () => {
           </div>
 
           <div className="card card-padding">
-            <div className="card-header mb-4">
+            <div className="card-content">
               <div className="card-icon">
                 <FaClock />
               </div>
@@ -605,7 +605,7 @@ const AdminOrdersPage = () => {
           </div>
 
           <div className="card card-padding">
-            <div className="card-header mb-4">
+            <div className="card-content">
               <div className="card-icon">
                 <FaCheckCircle />
               </div>
@@ -619,7 +619,7 @@ const AdminOrdersPage = () => {
           </div>
 
           <div className="card card-padding">
-            <div className="card-header mb-4">
+            <div className="card-content">
               <div className="card-icon">
                 <FaDollarSign />
               </div>

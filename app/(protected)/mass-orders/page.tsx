@@ -3,26 +3,22 @@
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
+import { APP_NAME } from '@/lib/constants';
 import {
   dashboardApi,
   useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  FaBoxes,
   FaCheckCircle,
   FaExternalLinkAlt,
   FaInfoCircle,
   FaLayerGroup,
-  FaMoneyBillWave,
-  FaShoppingBag,
   FaShoppingCart,
   FaSpinner,
   FaTimes,
-  FaUser,
-  FaWallet,
 } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 
@@ -114,7 +110,7 @@ const InstructionsPanel: React.FC = () => {
         <div className="card-icon">
           <FaInfoCircle />
         </div>
-        <h3 className="card-title">How Mass Order works?</h3>
+        <h3 className="card-title">How Mass Orders works?</h3>
       </div>
 
       <div className="space-y-4 text-gray-700 text-sm leading-relaxed">
@@ -135,8 +131,8 @@ const InstructionsPanel: React.FC = () => {
         </a>
 
         <p>
-          Let's say you want to use the Mass Order to add Instagram Followers to
-          your 3 accounts: abcd, asdf, qwer
+          Let's say you want to use the Mass Orders to add Instagram Followers
+          to your 3 accounts: abcd, asdf, qwer
         </p>
 
         <p>
@@ -162,7 +158,7 @@ const InstructionsPanel: React.FC = () => {
   );
 };
 
-// Main Mass Order Component
+// Main Mass Orders Component
 export default function MassOrder() {
   const user = useCurrentUser();
   const router = useRouter();
@@ -183,6 +179,11 @@ export default function MassOrder() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Mass Orders - ${APP_NAME}`;
+  }, []);
 
   // User data from API or fallback with proper currency formatting
   const balance = userStats?.balance || 0;
@@ -318,11 +319,11 @@ export default function MassOrder() {
         return;
       }
 
-      // Generate a unique batch ID for this mass order
+      // Generate a unique batch ID for this Mass Orders
       const batchId = `MO-${Date.now()}-${user?.id?.slice(-4)}`;
 
-      // Submit to mass order API
-      const response = await axiosInstance.post('/api/user/mass-orders', {
+      // Submit to Mass Orders API
+      const response = await axiosInstance.post('/api/user/mass-orderss', {
         orders: orderArray,
         batchId: batchId,
       });
@@ -347,7 +348,7 @@ export default function MassOrder() {
         showToast(response.data.message || 'Failed to create orders', 'error');
       }
     } catch (error: any) {
-      console.error('Error creating mass orders:', error);
+      console.error('Error creating Mass Orderss:', error);
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
@@ -378,108 +379,89 @@ export default function MassOrder() {
               <div className="flex space-x-2">
                 <button
                   onClick={handleNewOrderClick}
-                  className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 ${
-                    activeTab === 'newOrder'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40'
-                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 hover:text-blue-600'
-                  }`}
+                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600"
                 >
                   <FaShoppingCart className="mr-2 w-4 h-4" />
                   New Order
                 </button>
                 <button
                   onClick={() => setActiveTab('massOrder')}
-                  className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 ${
-                    activeTab === 'massOrder'
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40'
-                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600'
-                  }`}
+                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25"
                 >
-                  <FaBoxes className="mr-2 w-4 h-4" />
-                  Mass Order
+                  <FaLayerGroup className="mr-2 w-4 h-4" />
+                  Mass Orders
                 </button>
               </div>
             </div>
 
-            {/* Order Form */}
-            <AnimatePresence mode="wait">
-              {activeTab === 'massOrder' && (
-                <motion.div
-                  key="massOrder"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="card card-padding"
-                >
-                  <div className="card-header">
-                    <div className="card-icon">
-                      <FaLayerGroup />
-                    </div>
-                    <h3 className="card-title">Bulk Order Entry</h3>
+            {/* Order Form - Removed AnimatePresence */}
+            {activeTab === 'massOrder' && (
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaLayerGroup />
+                  </div>
+                  <h3 className="card-title">Bulk Order Entry</h3>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="form-group">
+                    <label className="form-label">
+                      Order Format: service_id | link | quantity
+                    </label>
+                    <textarea
+                      placeholder="3740|https://instagram.com/username|1000"
+                      value={orders}
+                      onChange={(e) => {
+                        setOrders(e.target.value);
+                        parseOrders(e.target.value);
+                      }}
+                      className="form-input font-mono text-sm resize-none"
+                      style={{ height: '256px' }}
+                    />
                   </div>
 
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="form-group">
-                      <label className="form-label">
-                        Order Format: service_id | link | quantity
-                      </label>
-                      <textarea
-                        placeholder="3740|https://instagram.com/username|1000"
-                        value={orders}
-                        onChange={(e) => {
-                          setOrders(e.target.value);
-                          parseOrders(e.target.value);
-                        }}
-                        className="form-input font-mono text-sm resize-none"
-                        style={{ height: '256px' }}
-                      />
-                    </div>
-
-                    {/* Order Summary */}
-                    {totalOrders > 0 && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-blue-700">Valid Orders:</span>
-                            <span className="font-semibold text-blue-900">
-                              {totalOrders}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-blue-700">
-                              Estimated Cost:
-                            </span>
-                            <span className="font-semibold text-blue-900">
-                              {formatCurrency(totalPrice)}
-                            </span>
-                          </div>
+                  {/* Order Summary */}
+                  {totalOrders > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">Valid Orders:</span>
+                          <span className="font-semibold text-blue-900">
+                            {totalOrders}
+                          </span>
                         </div>
-                        <div className="text-xs text-blue-600 mt-2">
-                          * Final price will be calculated based on actual
-                          service rates
+                        <div className="flex justify-between">
+                          <span className="text-blue-700">Estimated Cost:</span>
+                          <span className="font-semibold text-blue-900">
+                            {formatCurrency(totalPrice)}
+                          </span>
                         </div>
                       </div>
-                    )}
+                      <div className="text-xs text-blue-600 mt-2">
+                        * Final price will be calculated based on actual service
+                        rates
+                      </div>
+                    </div>
+                  )}
 
-                    <button
-                      type="submit"
-                      disabled={totalOrders === 0 || isSubmitting}
-                      className="btn btn-primary w-full"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <FaSpinner className="animate-spin mr-2 w-4 h-4" />
-                          Processing...
-                        </>
-                      ) : (
-                        `Submit ${totalOrders} Orders`
-                      )}
-                    </button>
-                  </form>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <button
+                    type="submit"
+                    disabled={totalOrders === 0 || isSubmitting}
+                    className="btn btn-primary w-full"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <FaSpinner className="animate-spin mr-2 w-4 h-4" />
+                        Processing...
+                      </>
+                    ) : (
+                      `Submit ${totalOrders} Orders`
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
 
           {/* Right Column */}

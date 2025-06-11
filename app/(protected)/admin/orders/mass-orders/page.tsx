@@ -87,10 +87,10 @@ export default function AdminMassOrdersPage() {
   const breadcrumbItems = [
     { title: 'Dashboard', link: '/admin' },
     { title: 'Orders', link: '/admin/orders' },
-    { title: 'Mass Orders', link: '/admin/orders/mass-orders' },
+    { title: 'Mass Orderss', link: '/admin/orders/mass-orderss' },
   ];
 
-  // Fetch mass orders data
+  // Fetch Mass Orderss data
   const fetchMassOrders = async () => {
     try {
       setLoading(true);
@@ -102,7 +102,7 @@ export default function AdminMassOrdersPage() {
       });
 
       const response = await fetch(
-        `/api/admin/orders/mass-orders?${queryParams}`
+        `/api/admin/orders/mass-orderss?${queryParams}`
       );
       const result = await response.json();
 
@@ -111,12 +111,12 @@ export default function AdminMassOrdersPage() {
         setPagination(result.pagination);
         setStats(result.stats);
       } else {
-        toast.error(result.error || 'Failed to fetch mass orders');
+        toast.error(result.error || 'Failed to fetch Mass Orderss');
         setMassOrders([]);
       }
     } catch (error) {
-      console.error('Error fetching mass orders:', error);
-      toast.error('Error fetching mass orders');
+      console.error('Error fetching Mass Orderss:', error);
+      toast.error('Error fetching Mass Orderss');
       setMassOrders([]);
     } finally {
       setLoading(false);
@@ -163,7 +163,7 @@ export default function AdminMassOrdersPage() {
         <div className="flex items-center justify-center py-20">
           <div className="flex items-center gap-2">
             <RefreshCw className="h-5 w-5 animate-spin text-purple-500" />
-            <span className="text-lg font-medium">Loading mass orders...</span>
+            <span className="text-lg font-medium">Loading Mass Orderss...</span>
           </div>
         </div>
       </div>
@@ -177,7 +177,7 @@ export default function AdminMassOrdersPage() {
         <div>
           <BreadCrumb items={breadcrumbItems} />
           <p className="text-sm text-muted-foreground mt-1">
-            Manage and monitor mass orders from users
+            Manage and monitor Mass Orderss from users
           </p>
         </div>
         <div className="flex gap-2">
@@ -226,7 +226,7 @@ export default function AdminMassOrdersPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-blue-600 mb-1">
-                    Total Mass Orders
+                    Total Mass Orderss
                   </p>
                   <p className="text-3xl font-bold text-blue-900">
                     {stats.totalMassOrders}
@@ -344,13 +344,13 @@ export default function AdminMassOrdersPage() {
         </CardContent>
       </Card>
 
-      {/* Mass Orders Table */}
+      {/* Mass Orderss Table */}
       <Card className="relative overflow-hidden border-0 bg-white shadow-lg">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               <Package className="h-5 w-5 text-purple-500" />
-              Mass Orders List ({pagination.total})
+              Mass Orderss List ({pagination.total})
             </CardTitle>
           </div>
         </CardHeader>
@@ -362,7 +362,7 @@ export default function AdminMassOrdersPage() {
                 No information was found for you.
               </h3>
               <p className="text-gray-500 text-sm">
-                No mass orders match your current filters or no mass orders
+                No Mass Orderss match your current filters or no Mass Orderss
                 exist yet.
               </p>
             </div>
@@ -372,7 +372,7 @@ export default function AdminMassOrdersPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Mass Order ID</TableHead>
+                      <TableHead>Mass Orders ID</TableHead>
                       <TableHead>User</TableHead>
                       <TableHead className="text-center">
                         Orders Count

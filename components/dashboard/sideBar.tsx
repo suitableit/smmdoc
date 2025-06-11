@@ -24,27 +24,27 @@ interface UserData {
 const adminMenu = [
   {
     title: 'Dashboard',
-    href: '/dashboard/admin',
+    href: '/admin',
     icon: <i className="ri-dashboard-line text-lg"></i>,
   },
   {
     title: 'Categories',
-    href: '/dashboard/admin/categories',
+    href: '/admin/categories',
     icon: <i className="ri-bookmark-line text-lg"></i>,
   },
   {
     title: 'Services',
-    href: '/dashboard/admin/services',
+    href: '/admin/services',
     icon: <i className="ri-service-line text-lg"></i>,
   },
   {
     title: 'Orders',
-    href: '/dashboard/admin/orders',
+    href: '/admin/orders',
     icon: <i className="ri-shopping-cart-2-line text-lg"></i>,
   },
   {
     title: 'Funds',
-    href: '/dashboard/admin/funds',
+    href: '/admin/funds',
     icon: <i className="ri-money-dollar-circle-line text-lg"></i>,
   },
 ];

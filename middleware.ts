@@ -40,10 +40,10 @@ export default auth(async (req) => {
   }
   // admin role can not access user route
   if (
-    nextUrl.pathname.startsWith('/dashboard/user') &&
+    nextUrl.pathname.startsWith('/dashboard') &&
     userRole?.role === 'admin'
   ) {
-    return Response.redirect(new URL('/dashboard', nextUrl));
+    return Response.redirect(new URL('/admin', nextUrl));
   }
 
   // unauthenticated users trying to access a protected route

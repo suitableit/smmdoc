@@ -12,6 +12,8 @@ import {
   FaUsers,
   FaFile,
   FaCheckCircle,
+  FaUser,
+  FaLink,
 } from 'react-icons/fa';
 import { toast } from 'sonner';
 
@@ -90,170 +92,179 @@ function AffiliateStatsCards() {
 
   return (
     <div className="space-y-6">
-      {/* Top stats with icons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Username */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center space-x-4 transition-colors duration-200">
-          <div className="w-12 h-12 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-            <FaUsers className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Username
-            </p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-              {user?.username || user?.email?.split('@')[0] || 'User'}
-            </p>
-          </div>
-        </div>
-
-        {/* Referral Link */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center space-x-4 transition-colors duration-200">
-          <div className="w-12 h-12 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-            <FaCopy className="h-6 w-6 text-white" />
-          </div>  
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Referral link
-            </p>
-            <div className="flex items-center">
-              <p className="truncate text-lg font-semibold text-gray-900 dark:text-white">
-                {referralLink || 'Login to generate your referral link'}
+      {/* User Information Cards - Dashboard Style */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Username Card */}
+        <div className="card card-padding">
+          <div className="card-content">
+            <div className="card-icon">
+              <FaUser />
+            </div>
+            <div>
+              <h3 className="card-title">Username</h3>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                {user?.username || user?.email?.split('@')[0] || 'User'}
               </p>
-              {referralLink && (
-                <button
-                  onClick={copyToClipboard}
-                  className="ml-2 text-[#5F1DE8] hover:text-[#B131F8] dark:text-[#B131F8] dark:hover:text-[#5F1DE8] transition-colors duration-200"
-                  title={copied ? 'Copied!' : 'Copy link'}
-                >
-                  <FaCopy className="h-4 w-4" />
-                </button>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Commission Rate */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center space-x-4 transition-colors duration-200">
-          <div className="w-12 h-12 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-            <FaPercent className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Commission rate
-            </p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-              {stats.commissionRate}
-            </p>
+        {/* Referral Link Card */}
+        <div className="card card-padding">
+          <div className="card-content">
+            <div className="card-icon">
+              <FaLink />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="card-title">Referral Link</h3>
+              <div className="flex items-center">
+                <p className="text-sm truncate" style={{ color: 'var(--text-muted)' }}>
+                  {referralLink ? referralLink.replace('https://', '') : 'Login to generate'}
+                </p>
+                {referralLink && (
+                  <button
+                    onClick={copyToClipboard}
+                    className="ml-2 text-[#5F1DE8] hover:text-[#B131F8] dark:text-[#B131F8] dark:hover:text-[#5F1DE8] transition-colors duration-200"
+                    title={copied ? 'Copied!' : 'Copy link'}
+                  >
+                    <FaCopy className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Minimum Payout */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex items-center space-x-4 transition-colors duration-200">
-          <div className="w-12 h-12 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-            <FaCoins className="h-6 w-6 text-white" />
+        {/* Commission Rate Card */}
+        <div className="card card-padding">
+          <div className="card-content">
+            <div className="card-icon">
+              <FaPercent />
+            </div>
+            <div>
+              <h3 className="card-title">Commission Rate</h3>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                {stats.commissionRate}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Minimum payout
-            </p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-              {stats.minimumPayout}
-            </p>
+        </div>
+
+        {/* Minimum Payout Card */}
+        <div className="card card-padding">
+          <div className="card-content">
+            <div className="card-icon">
+              <FaCoins />
+            </div>
+            <div>
+              <h3 className="card-title">Minimum Payout</h3>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                {stats.minimumPayout}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Stats boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Visits */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-              <FaMousePointer className="h-4 w-4 text-white" />
-            </div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Visits
-            </p>
+      {/* Order Statistics Overview Style Cards */}
+      <div className="card card-padding">
+        <div className="card-header mb-4">
+          <div className="card-icon">
+            <FaChartLine />
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {stats.visits}
-          </p>
+          <h3 className="card-title">Affiliate Statistics Overview</h3>
         </div>
 
-        {/* Registrations */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-              <FaUsers className="h-4 w-4 text-white" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {/* Total Visits */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-blue-600 dark:text-blue-400 font-semibold">
+                  Total Visits
+                </div>
+                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                  {stats.visits}
+                </div>
+              </div>
+              <FaMousePointer className="text-blue-500 w-5 h-5" />
             </div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Registrations
-            </p>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {stats.registrations}
-          </p>
-        </div>
 
-        {/* Referrals */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-              <FaUsers className="h-4 w-4 text-white" />
+          {/* Registrations */}
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-green-600 dark:text-green-400 font-semibold">
+                  Registrations
+                </div>
+                <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                  {stats.registrations}
+                </div>
+              </div>
+              <FaUsers className="text-green-500 w-5 h-5" />
             </div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Referrals
-            </p>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {stats.referrals}
-          </p>
-        </div>
 
-        {/* Conversion Rate */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-              <FaChartLine className="h-4 w-4 text-white" />
+          {/* Referrals */}
+          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-purple-600 dark:text-purple-400 font-semibold">
+                  Referrals
+                </div>
+                <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                  {stats.referrals}
+                </div>
+              </div>
+              <FaUsers className="text-purple-500 w-5 h-5" />
             </div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Conversion rate
-            </p>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {stats.conversionRate}
-          </p>
-        </div>
 
-        {/* Total Earnings */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-              <FaDollarSign className="h-4 w-4 text-white" />
+          {/* Conversion Rate */}
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-orange-600 dark:text-orange-400 font-semibold">
+                  Conversion Rate
+                </div>
+                <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
+                  {stats.conversionRate}
+                </div>
+              </div>
+              <FaChartLine className="text-orange-500 w-5 h-5" />
             </div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Total earnings
-            </p>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {stats.totalEarnings}
-          </p>
-        </div>
 
-        {/* Available Earnings */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 transition-colors duration-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-              <FaCoins className="h-4 w-4 text-white" />
+          {/* Total Earnings */}
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                  Total Earnings
+                </div>
+                <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                  {stats.totalEarnings}
+                </div>
+              </div>
+              <FaDollarSign className="text-emerald-500 w-5 h-5" />
             </div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Available earnings
-            </p>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {stats.availableEarnings}
-          </p>
+
+          {/* Available Earnings */}
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-indigo-600 dark:text-indigo-400 font-semibold">
+                  Available Earnings
+                </div>
+                <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
+                  {stats.availableEarnings}
+                </div>
+              </div>
+              <FaCoins className="text-indigo-500 w-5 h-5" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
