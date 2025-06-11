@@ -12,14 +12,17 @@ interface OrderFormProps {
   darkMode?: boolean;
 }
 
-export default function ModernOrderForm({ type, darkMode = false }: OrderFormProps) {
+export default function ModernOrderForm({
+  type,
+  darkMode = false,
+}: OrderFormProps) {
   const { currency } = useCurrency();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedService, setSelectedService] = useState('');
   const [link, setLink] = useState('');
   const [quantity, setQuantity] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
-  
+
   // Mock data
   const categories = [
     { id: '1', name: 'Facebook - Live Stream Views', icon: '👤' },
@@ -27,34 +30,38 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
     { id: '3', name: 'YouTube - Views', icon: '🎥' },
     { id: '4', name: 'Twitter - Retweets', icon: '🐦' },
   ];
-  
+
   const services = [
-    { 
-      id: '14678', 
-      categoryId: '1', 
+    {
+      id: '14678',
+      categoryId: '1',
       name: 'Facebook Live Stream Viewers | 15 Minutes - $0.549 per 1000',
       price: 0.549,
       minQuantity: 25,
       maxQuantity: 3000,
-      averageTime: '15 minutes'
+      averageTime: '15 minutes',
     },
-    { 
-      id: '14679', 
-      categoryId: '1', 
+    {
+      id: '14679',
+      categoryId: '1',
       name: 'Facebook Live Stream Viewers | 30 Minutes - $0.899 per 1000',
       price: 0.899,
       minQuantity: 25,
       maxQuantity: 5000,
-      averageTime: '30 minutes'
-    }
+      averageTime: '30 minutes',
+    },
   ];
 
   // Filter services based on selected category
-  const filteredServices = services.filter(service => service.categoryId === selectedCategory);
-  
+  const filteredServices = services.filter(
+    (service) => service.categoryId === selectedCategory
+  );
+
   // Get current service details
-  const currentService = services.find(service => service.id === selectedService);
-  
+  const currentService = services.find(
+    (service) => service.id === selectedService
+  );
+
   // Update price when quantity or service changes
   useEffect(() => {
     if (currentService && quantity) {
@@ -67,33 +74,41 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!selectedService || !link || !quantity) {
       alert('Please fill in all required fields');
       return;
     }
-    
-    if (currentService && (quantity < currentService.minQuantity || quantity > currentService.maxQuantity)) {
-      alert(`Quantity must be between ${currentService.minQuantity} and ${currentService.maxQuantity}`);
+
+    if (
+      currentService &&
+      (quantity < currentService.minQuantity ||
+        quantity > currentService.maxQuantity)
+    ) {
+      alert(
+        `Quantity must be between ${currentService.minQuantity} and ${currentService.maxQuantity}`
+      );
       return;
     }
-    
+
     // Submit order logic would go here
-    alert(`Order submitted: Service ID ${selectedService}, Link: ${link}, Quantity: ${quantity}`);
+    alert(
+      `Order submitted: Service ID ${selectedService}, Link: ${link}, Quantity: ${quantity}`
+    );
   };
 
-  // For mass order form
+  // For Mass Orders form
   const [massOrderText, setMassOrderText] = useState('');
-  
+
   const handleMassOrderSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!massOrderText.trim()) {
       alert('Please enter at least one order');
       return;
     }
-    
+
     // Process orders
     const lines = massOrderText.trim().split('\n');
     alert(`${lines.length} orders submitted`);
@@ -101,32 +116,45 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
 
   if (type === 'mass') {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className={`rounded-lg shadow-lg ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+        className={`rounded-lg shadow-lg ${
+          darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+        }`}
       >
         <form onSubmit={handleMassOrderSubmit} className="space-y-4 p-5">
           <div>
-            <Label htmlFor="massOrders" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
-              Mass Orders (One per line)
+            <Label
+              htmlFor="massOrders"
+              className={`text-sm font-medium ${
+                darkMode ? 'text-gray-300' : 'text-gray-700'
+              } mb-2 block`}
+            >
+              Mass Orderss (One per line)
             </Label>
             <textarea
               id="massOrders"
               className={`w-full h-48 p-3 border rounded-lg font-mono ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                darkMode
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                   : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
               }`}
               placeholder="service_id|link|quantity"
               value={massOrderText}
               onChange={(e) => setMassOrderText(e.target.value)}
             ></textarea>
-            <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-2`}>Format: service_id|link|quantity</p>
+            <p
+              className={`text-xs ${
+                darkMode ? 'text-gray-400' : 'text-gray-500'
+              } mt-2`}
+            >
+              Format: service_id|link|quantity
+            </p>
           </div>
-          
-          <Button 
-            type="submit" 
+
+          <Button
+            type="submit"
             className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
           >
             Submit
@@ -135,33 +163,45 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
       </motion.div>
     );
   }
-  
+
   // Custom Order Form
   if (type === 'custom') {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className={`rounded-lg shadow-lg ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+        className={`rounded-lg shadow-lg ${
+          darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+        }`}
       >
         <form onSubmit={handleSubmit} className="space-y-4 p-5">
           <div>
-            <Label htmlFor="customDescription" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+            <Label
+              htmlFor="customDescription"
+              className={`text-sm font-medium ${
+                darkMode ? 'text-gray-300' : 'text-gray-700'
+              } mb-2 block`}
+            >
               Custom Service Description
             </Label>
             <textarea
               id="customDescription"
               className={`w-full h-24 p-3 border rounded-lg ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                darkMode
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                   : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
               }`}
               placeholder="Describe your custom service requirements in detail..."
             ></textarea>
           </div>
-          
+
           <div>
-            <Label htmlFor="customLink" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+            <Label
+              htmlFor="customLink"
+              className={`text-sm font-medium ${
+                darkMode ? 'text-gray-300' : 'text-gray-700'
+              } mb-2 block`}
+            >
               Link
             </Label>
             <Input
@@ -169,31 +209,36 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
               type="url"
               placeholder="https://"
               className={`w-full p-2.5 border rounded-lg ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                darkMode
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                   : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
               }`}
             />
           </div>
-          
+
           <div>
-            <Label htmlFor="customBudget" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+            <Label
+              htmlFor="customBudget"
+              className={`text-sm font-medium ${
+                darkMode ? 'text-gray-300' : 'text-gray-700'
+              } mb-2 block`}
+            >
               Budget ({currency === 'USD' ? '$' : '৳'})
             </Label>
             <Input
               id="customBudget"
               type="number"
               className={`w-full p-2.5 border rounded-lg ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
+                darkMode
+                  ? 'bg-gray-700 border-gray-600 text-white'
                   : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
               }`}
               min={1}
             />
           </div>
-          
-          <Button 
-            type="submit" 
+
+          <Button
+            type="submit"
             className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
           >
             Request Quote
@@ -202,25 +247,32 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
       </motion.div>
     );
   }
-  
+
   // Subscription Order Form
   if (type === 'subscription') {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className={`rounded-lg shadow-lg ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+        className={`rounded-lg shadow-lg ${
+          darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+        }`}
       >
         <form onSubmit={handleSubmit} className="space-y-4 p-5">
           <div>
-            <Label htmlFor="subscriptionCategory" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+            <Label
+              htmlFor="subscriptionCategory"
+              className={`text-sm font-medium ${
+                darkMode ? 'text-gray-300' : 'text-gray-700'
+              } mb-2 block`}
+            >
               Subscription Type
             </Label>
             <select
               id="subscriptionCategory"
               className={`w-full p-2.5 border rounded-lg ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
+                darkMode
+                  ? 'bg-gray-700 border-gray-600 text-white'
                   : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
               }`}
             >
@@ -230,9 +282,14 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
               <option value="autolike">Auto Like & Comment</option>
             </select>
           </div>
-          
+
           <div>
-            <Label htmlFor="subscriptionLink" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+            <Label
+              htmlFor="subscriptionLink"
+              className={`text-sm font-medium ${
+                darkMode ? 'text-gray-300' : 'text-gray-700'
+              } mb-2 block`}
+            >
               Profile/Page URL
             </Label>
             <Input
@@ -240,22 +297,27 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
               type="url"
               placeholder="https://"
               className={`w-full p-2.5 border rounded-lg ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                darkMode
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                   : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
               }`}
             />
           </div>
-          
+
           <div>
-            <Label htmlFor="subscriptionDuration" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+            <Label
+              htmlFor="subscriptionDuration"
+              className={`text-sm font-medium ${
+                darkMode ? 'text-gray-300' : 'text-gray-700'
+              } mb-2 block`}
+            >
               Duration
             </Label>
             <select
               id="subscriptionDuration"
               className={`w-full p-2.5 border rounded-lg ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
+                darkMode
+                  ? 'bg-gray-700 border-gray-600 text-white'
                   : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
               }`}
             >
@@ -266,9 +328,9 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
               <option value="12">12 Months</option>
             </select>
           </div>
-          
-          <Button 
-            type="submit" 
+
+          <Button
+            type="submit"
             className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
           >
             Subscribe
@@ -279,21 +341,28 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`rounded-lg shadow-lg ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+      className={`rounded-lg shadow-lg ${
+        darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+      }`}
     >
       <form onSubmit={handleSubmit} className="space-y-4 p-5">
         <div>
-          <Label htmlFor="category" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+          <Label
+            htmlFor="category"
+            className={`text-sm font-medium ${
+              darkMode ? 'text-gray-300' : 'text-gray-700'
+            } mb-2 block`}
+          >
             Category
           </Label>
           <select
             id="category"
             className={`w-full p-2.5 border rounded-lg ${
-              darkMode 
-                ? 'bg-gray-700 border-gray-600 text-white' 
+              darkMode
+                ? 'bg-gray-700 border-gray-600 text-white'
                 : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
             }`}
             value={selectedCategory}
@@ -303,23 +372,28 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
             }}
           >
             <option value="">Select Category</option>
-            {categories.map(category => (
+            {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.icon} {category.name}
               </option>
             ))}
           </select>
         </div>
-        
+
         <div>
-          <Label htmlFor="service" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+          <Label
+            htmlFor="service"
+            className={`text-sm font-medium ${
+              darkMode ? 'text-gray-300' : 'text-gray-700'
+            } mb-2 block`}
+          >
             Service
           </Label>
           <select
             id="service"
             className={`w-full p-2.5 border rounded-lg ${
-              darkMode 
-                ? 'bg-gray-700 border-gray-600 text-white' 
+              darkMode
+                ? 'bg-gray-700 border-gray-600 text-white'
                 : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
             }`}
             value={selectedService}
@@ -327,16 +401,21 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
             disabled={!selectedCategory}
           >
             <option value="">Select Service</option>
-            {filteredServices.map(service => (
+            {filteredServices.map((service) => (
               <option key={service.id} value={service.id}>
                 {service.name}
               </option>
             ))}
           </select>
         </div>
-        
+
         <div>
-          <Label htmlFor="link" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+          <Label
+            htmlFor="link"
+            className={`text-sm font-medium ${
+              darkMode ? 'text-gray-300' : 'text-gray-700'
+            } mb-2 block`}
+          >
             Link
           </Label>
           <Input
@@ -344,25 +423,30 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
             type="url"
             placeholder="https://"
             className={`w-full p-2.5 border rounded-lg ${
-              darkMode 
-                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+              darkMode
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
                 : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
             }`}
             value={link}
             onChange={(e) => setLink(e.target.value)}
           />
         </div>
-        
+
         <div>
-          <Label htmlFor="quantity" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+          <Label
+            htmlFor="quantity"
+            className={`text-sm font-medium ${
+              darkMode ? 'text-gray-300' : 'text-gray-700'
+            } mb-2 block`}
+          >
             Quantity
           </Label>
           <Input
             id="quantity"
             type="number"
             className={`w-full p-2.5 border rounded-lg ${
-              darkMode 
-                ? 'bg-gray-700 border-gray-600 text-white' 
+              darkMode
+                ? 'bg-gray-700 border-gray-600 text-white'
                 : 'border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
             }`}
             value={quantity || ''}
@@ -371,22 +455,32 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
             max={currentService?.maxQuantity || 9999}
           />
           {currentService && (
-            <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-2`}>
-              Min: {currentService.minQuantity} - Max: {currentService.maxQuantity}
+            <p
+              className={`text-xs ${
+                darkMode ? 'text-gray-400' : 'text-gray-500'
+              } mt-2`}
+            >
+              Min: {currentService.minQuantity} - Max:{' '}
+              {currentService.maxQuantity}
             </p>
           )}
         </div>
-        
+
         <div>
-          <Label htmlFor="average-time" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+          <Label
+            htmlFor="average-time"
+            className={`text-sm font-medium ${
+              darkMode ? 'text-gray-300' : 'text-gray-700'
+            } mb-2 block`}
+          >
             Average Time
           </Label>
           <Input
             id="average-time"
             type="text"
             className={`w-full p-2.5 border rounded-lg ${
-              darkMode 
-                ? 'bg-gray-700 border-gray-600 text-white' 
+              darkMode
+                ? 'bg-gray-700 border-gray-600 text-white'
                 : 'border-gray-300 bg-gray-100'
             }`}
             value={currentService?.averageTime || ''}
@@ -394,17 +488,22 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
             disabled
           />
         </div>
-        
+
         <div>
-          <Label htmlFor="charge" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'} mb-2 block`}>
+          <Label
+            htmlFor="charge"
+            className={`text-sm font-medium ${
+              darkMode ? 'text-gray-300' : 'text-gray-700'
+            } mb-2 block`}
+          >
             Charge
           </Label>
           <Input
             id="charge"
             type="text"
             className={`w-full p-2.5 border rounded-lg ${
-              darkMode 
-                ? 'bg-gray-700 border-gray-600 text-white' 
+              darkMode
+                ? 'bg-gray-700 border-gray-600 text-white'
                 : 'border-gray-300 bg-gray-100'
             }`}
             value={`${currency === 'USD' ? '$' : '৳'}${price.toFixed(4)}`}
@@ -412,9 +511,9 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
             disabled
           />
         </div>
-        
-        <Button 
-          type="submit" 
+
+        <Button
+          type="submit"
           className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
           disabled={!selectedService || !link || !quantity}
         >
@@ -423,4 +522,4 @@ export default function ModernOrderForm({ type, darkMode = false }: OrderFormPro
       </form>
     </motion.div>
   );
-} 
+}

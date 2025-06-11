@@ -3,27 +3,28 @@
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
+import { APP_NAME } from '@/lib/constants';
+import moment from 'moment';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import {
-  FaExclamationTriangle,
+  FaChartLine,
   FaCheckCircle,
   FaClipboardList,
   FaClock,
   FaDollarSign,
+  FaExclamationTriangle,
   FaExternalLinkAlt,
   FaEye,
   FaHistory,
   FaPlus,
   FaShoppingBag,
   FaTicketAlt,
-  FaChartLine,
-  FaUser,
-  FaWallet,
   FaTimes,
   FaTimesCircle,
+  FaUser,
+  FaWallet,
 } from 'react-icons/fa';
-import moment from 'moment';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 
 // Toast Component
 const Toast = ({
@@ -55,6 +56,11 @@ const DashboardPage = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Dashboard - ${APP_NAME}`;
+  }, []);
 
   // Get recent orders from user stats
   const userOrders = userStats?.recentOrders || [];
@@ -153,7 +159,7 @@ const DashboardPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           {/* User ID Card */}
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaUser />
               </div>
@@ -168,7 +174,7 @@ const DashboardPage = () => {
 
           {/* Username Card */}
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaUser />
               </div>
@@ -183,7 +189,7 @@ const DashboardPage = () => {
 
           {/* Name Card */}
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaUser />
               </div>
@@ -201,7 +207,7 @@ const DashboardPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           {/* Balance Card */}
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaWallet />
               </div>
@@ -225,7 +231,7 @@ const DashboardPage = () => {
 
           {/* Total Orders Card */}
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaShoppingBag />
               </div>
@@ -240,7 +246,7 @@ const DashboardPage = () => {
 
           {/* Total Spend Card */}
           <div className="card card-padding">
-            <div className="card-header">
+            <div className="card-content">
               <div className="card-icon">
                 <FaDollarSign />
               </div>
@@ -475,18 +481,18 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Right Column - Support Ticket */}
+          {/* Right Column - Support Tickets */}
           <div className="space-y-6">
-            {/* Support Ticket Section */}
+            {/* Support Tickets Section */}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
                   <FaTicketAlt />
                 </div>
-                <h3 className="card-title">Support Ticket</h3>
+                <h3 className="card-title">Support Tickets</h3>
                 <div className="ml-auto">
                   <button
-                    onClick={() => router.push('/support-ticket')}
+                    onClick={() => router.push('/support-tickets')}
                     className="btn btn-secondary flex items-center gap-2"
                   >
                     <FaEye className="w-4 h-4" />
@@ -504,10 +510,10 @@ const DashboardPage = () => {
                   style={{ color: 'var(--text-muted)', opacity: 0.5 }}
                 />
                 <div className="text-lg font-medium mb-2">
-                  No support Ticket found
+                  No Support Tickets found
                 </div>
                 <div className="text-sm">
-                  You haven't created any support Ticket yet.
+                  You haven't created any Support Tickets yet.
                 </div>
               </div>
             </div>

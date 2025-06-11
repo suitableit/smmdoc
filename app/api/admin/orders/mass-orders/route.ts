@@ -2,18 +2,18 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/orders/mass-orders - Get mass orders with pagination and filtering
+// GET /api/admin/orders/mass-orderss - Get Mass Orderss with pagination and filtering
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null,
         },
         { status: 401 }
       );
@@ -40,29 +40,29 @@ export async function GET(req: NextRequest) {
           user: {
             email: {
               contains: search,
-              mode: 'insensitive'
-            }
-          }
+              mode: 'insensitive',
+            },
+          },
         },
         {
           user: {
             name: {
               contains: search,
-              mode: 'insensitive'
-            }
-          }
+              mode: 'insensitive',
+            },
+          },
         },
         {
           id: {
             contains: search,
-            mode: 'insensitive'
-          }
-        }
+            mode: 'insensitive',
+          },
+        },
       ];
     }
 
-    // Get mass orders by grouping orders created at the same time by the same user
-    // We'll identify mass orders as orders created within 1 minute of each other by the same user
+    // Get Mass Orderss by grouping orders created at the same time by the same user
+    // We'll identify Mass Orderss as orders created within 1 minute of each other by the same user
     const massOrdersRaw = await db.$queryRaw`
       SELECT 
         u.id as userId,
@@ -83,15 +83,23 @@ export async function GET(req: NextRequest) {
       FROM "NewOrder" o
       JOIN "User" u ON o.userId = u.id
       WHERE 1=1
-        ${status && status !== 'all' ? `AND (
+        ${
+          status && status !== 'all'
+            ? `AND (
           CASE 
             WHEN COUNT(CASE WHEN o.status = 'completed' THEN 1 END) = COUNT(o.id) THEN 'completed'
             WHEN COUNT(CASE WHEN o.status = 'failed' OR o.status = 'cancelled' THEN 1 END) > 0 THEN 'failed'
             WHEN COUNT(CASE WHEN o.status = 'processing' THEN 1 END) > 0 THEN 'processing'
             ELSE 'pending'
           END
-        ) = '${status}'` : ''}
-        ${search ? `AND (u.email ILIKE '%${search}%' OR u.name ILIKE '%${search}%')` : ''}
+        ) = '${status}'`
+            : ''
+        }
+        ${
+          search
+            ? `AND (u.email ILIKE '%${search}%' OR u.name ILIKE '%${search}%')`
+            : ''
+        }
       GROUP BY u.id, u.name, u.email, DATE_TRUNC('minute', o.createdAt), o.currency
       HAVING COUNT(o.id) > 1
       ORDER BY MIN(o.createdAt) DESC
@@ -109,7 +117,11 @@ export async function GET(req: NextRequest) {
         FROM "NewOrder" o
         JOIN "User" u ON o.userId = u.id
         WHERE 1=1
-          ${search ? `AND (u.email ILIKE '%${search}%' OR u.name ILIKE '%${search}%')` : ''}
+          ${
+            search
+              ? `AND (u.email ILIKE '%${search}%' OR u.name ILIKE '%${search}%')`
+              : ''
+          }
         GROUP BY u.id, DATE_TRUNC('minute', o.createdAt)
         HAVING COUNT(o.id) > 1
       ) as mass_orders
@@ -118,20 +130,20 @@ export async function GET(req: NextRequest) {
     const totalCount = Number((totalCountRaw as any)[0]?.total || 0);
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Format the mass orders data
+    // Format the Mass Orderss data
     const massOrders = (massOrdersRaw as any[]).map((row) => ({
       id: `${row.userid}-${new Date(row.orderbatch).getTime()}`,
       userId: row.userid,
       user: {
         name: row.username,
-        email: row.useremail
+        email: row.useremail,
       },
       totalOrders: Number(row.totalorders),
       totalCost: Number(row.totalcost),
       currency: row.currency,
       createdAt: row.createdat,
       status: row.status,
-      orderIds: row.orderids
+      orderIds: row.orderids,
     }));
 
     // Get stats
@@ -169,24 +181,23 @@ export async function GET(req: NextRequest) {
         total: totalCount,
         totalPages,
         hasNext: page < totalPages,
-        hasPrev: page > 1
+        hasPrev: page > 1,
       },
       stats: {
         totalMassOrders: Number(statsData.totalmassorders || 0),
         totalOrdersInMass: Number(statsData.totalordersinmass || 0),
         totalRevenue: Number(statsData.totalrevenue || 0),
-        pendingMassOrders: Number(statsData.pendingmassorders || 0)
+        pendingMassOrders: Number(statsData.pendingmassorders || 0),
       },
-      error: null
+      error: null,
     });
-
   } catch (error) {
-    console.error('Error fetching mass orders:', error);
+    console.error('Error fetching Mass Orderss:', error);
     return NextResponse.json(
-      { 
-        error: 'Error fetching mass orders',
+      {
+        error: 'Error fetching Mass Orderss',
         success: false,
-        data: null 
+        data: null,
       },
       { status: 500 }
     );

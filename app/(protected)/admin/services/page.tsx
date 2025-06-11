@@ -177,7 +177,7 @@ export default function page() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {serviceStats.map((stat) => (
             <div key={stat.title} className="card card-padding">
-              <div className="card-header mb-4">
+              <div className="card-content">
                 <div className="card-icon">
                   {stat.icon}
                 </div>

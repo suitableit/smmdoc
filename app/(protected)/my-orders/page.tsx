@@ -2,8 +2,9 @@
 
 import useCurrency from '@/hooks/useCurrency';
 import { useGetUserOrdersQuery } from '@/lib/services/userOrderApi';
+import { APP_NAME } from '@/lib/constants';
 import moment from 'moment';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { 
   FaSearch, 
   FaExternalLinkAlt, 
@@ -49,6 +50,11 @@ export default function OrdersList() {
   const { currency } = useCurrency();
 
   const { data, isLoading, error } = useGetUserOrdersQuery({ page, limit, status, search });
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `My Orders - ${APP_NAME}`;
+  }, []);
 
   // Show toast notification
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {

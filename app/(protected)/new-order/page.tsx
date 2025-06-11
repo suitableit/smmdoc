@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { APP_NAME } from '@/lib/constants';
 import {
   FaBuffer,
   FaDiscord,
@@ -18,6 +20,11 @@ import NewOrderClient from './client';
 
 export default function NewOrderPage() {
   const router = useRouter();
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `New Order - ${APP_NAME}`;
+  }, []);
 
   // Social media platforms ordered by popularity (most popular first)
   const platforms = [
@@ -105,7 +112,7 @@ export default function NewOrderPage() {
 
   return (
     <div className="h-full">
-      <div className="flex flex-col py-6">
+      <div className="flex flex-col">
         {/* Social Media Platforms Grid */}
 
         {/* Social Media Platforms Grid */}

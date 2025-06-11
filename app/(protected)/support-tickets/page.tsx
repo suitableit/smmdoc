@@ -4,9 +4,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 
+import { APP_NAME } from '@/lib/constants';
 import { ChevronDown } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import {
   FaCheckCircle,
   FaClock,
@@ -54,6 +55,12 @@ interface Ticket {
 
 const TicketPage: React.FC = () => {
   const router = useRouter();
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Support Tickets - ${APP_NAME}`;
+  }, []);
+
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<TicketFormData>({
@@ -195,7 +202,7 @@ const TicketPage: React.FC = () => {
 
   const handleticketsHistoryClick = () => {
     // Navigate to Tickets History page
-    router.push('/support-ticket/history');
+    router.push('/support-tickets/history');
   };
 
   const toggleAccordion = (id: string) => {
@@ -219,15 +226,15 @@ const TicketPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Ticket Form */}
           <div className="space-y-6">
-            {/* Tab Navigation */}
+            {/* Tab Navigation - Updated with cloned style */}
             <div className="card" style={{ padding: '8px' }}>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setActiveTab('new')}
-                  className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 ${
+                  className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm ${
                     activeTab === 'new'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40'
-                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 hover:text-blue-600'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25'
+                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600'
                   }`}
                 >
                   <FaTicketAlt className="mr-2 w-4 h-4" />
@@ -235,11 +242,7 @@ const TicketPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleticketsHistoryClick}
-                  className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm transition-all duration-300 transform hover:scale-105 ${
-                    activeTab === 'history'
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40'
-                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600'
-                  }`}
+                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600"
                 >
                   <FaClock className="mr-2 w-4 h-4" />
                   Tickets History
@@ -332,7 +335,7 @@ const TicketPage: React.FC = () => {
                     onClick={handleSubmit}
                     className="btn btn-primary w-full"
                   >
-                    {isSubmitting ? <ButtonLoader /> : 'Submit ticket'}
+                    {isSubmitting ? <ButtonLoader /> : 'Submit Ticket'}
                   </button>
                 </div>
               </div>

@@ -152,7 +152,7 @@ export default function TicketDetailsPage() {
           <h1 className="text-2xl font-bold">Ticket Details</h1>
           <Button variant="outline" size="sm" asChild>
             <Link
-              href="/support-ticket/history"
+              href="/support-tickets/history"
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />

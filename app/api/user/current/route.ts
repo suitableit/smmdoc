@@ -31,7 +31,6 @@ export async function GET() {
         createdAt: true,
         emailVerified: true,
         isTwoFactorEnabled: true,
-        // নিরাপত্তার জন্য পাসওয়ার্ড অন্তর্ভুক্ত করা হচ্ছে না
       }
     });
     
