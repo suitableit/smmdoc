@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment } from 'react';
-import ServiceCard from './ServiceCard';
+import ServiceCard from '../../../app/(protected)/services/ServiceCard';
 import { FaSpinner, FaClipboardList } from 'react-icons/fa';
 
 interface Service {

@@ -2,7 +2,8 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { APP_NAME } from '@/lib/constants';
 import {
   FaCheckCircle,
   FaClock,
@@ -16,6 +17,15 @@ import {
   FaTicketAlt,
   FaTimes,
 } from 'react-icons/fa';
+
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-5 h-5", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
 
 // Toast Component
 const Toast = ({
@@ -62,6 +72,11 @@ export default function ContactSupportPage() {
     attachments: null as FileList | null,
   });
   const user = useCurrentUser();
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Contact Support — ${APP_NAME}`;
+  }, []);
 
   // Show toast notification
   const showToast = (
@@ -272,7 +287,7 @@ export default function ContactSupportPage() {
                 >
                   {isSubmitting ? (
                     <>
-                      <FaSpinner className="animate-spin mr-2 w-4 h-4" />
+                      <GradientSpinner size="w-4 h-4" className="mr-2" />
                       Sending...
                     </>
                   ) : (

@@ -23,7 +23,7 @@ export default function NewOrderPage() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `New Order - ${APP_NAME}`;
+    document.title = `New Order — ${APP_NAME}`;
   }, []);
 
   // Social media platforms ordered by popularity (most popular first)

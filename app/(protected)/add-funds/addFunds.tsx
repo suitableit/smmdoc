@@ -2,6 +2,7 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { APP_NAME } from '@/lib/constants';
 import { useEffect, useState, useTransition } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,6 +47,11 @@ export function AddFundForm() {
   const [isPending, startTransition] = useTransition();
   const { currency: globalCurrency, rate: globalRate } = useCurrency();
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Add Funds — ${APP_NAME}`;
+  }, []);
 
   // Show toast notification
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {

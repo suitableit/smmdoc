@@ -45,7 +45,6 @@ export default function OrdersList() {
   const [limit, setLimit] = useState(10);
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
   const { currency } = useCurrency();
 
@@ -53,7 +52,7 @@ export default function OrdersList() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `My Orders - ${APP_NAME}`;
+    document.title = `My Orders — ${APP_NAME}`;
   }, []);
 
   // Show toast notification
@@ -70,11 +69,10 @@ export default function OrdersList() {
     return data?.pagination || { total: 0, page: 1, limit: 10, totalPages: 1 };
   }, [data]);
 
-  // Handle search submit
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSearch(searchInput);
-    setPage(1);
+  // Calculate counts for each status filter
+  const getStatusCount = (statusKey: string) => {
+    if (statusKey === 'all') return orders.length;
+    return orders.filter((order: any) => order.status === statusKey).length;
   };
 
   // Status filter buttons configuration
@@ -115,12 +113,10 @@ export default function OrdersList() {
       <div className="page-container">
         <div className="page-content">
           <div className="card card-padding">
-            <div className="card card-padding">
             <div className="text-red-500 text-center flex flex-col items-center py-8">
               <FaExclamationTriangle className="text-4xl mb-4" />
               <div className="text-lg font-medium">Error loading orders!</div>
             </div>
-          </div>
           </div>
         </div>
       </div>
@@ -154,65 +150,63 @@ export default function OrdersList() {
       )}
       
       <div className="page-content">  
-        {/* Search Bar */}
-        <div className="mb-6">
-          <form onSubmit={handleSearch} className="flex gap-3">
-            <div className="flex-1 relative">
+        {/* Orders Content Card - Everything in one box */}
+        <div className="card card-padding">
+          {/* Search Bar - Default Style without Button */}
+          <div className="mb-6">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <FaSearch className="w-4 h-4 text-gray-500" />
+              </div>
               <input
                 type="search"
-                placeholder="Search"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="form-input w-full"
+                placeholder="Search orders..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="form-input pl-10"
                 autoComplete="off"
-                style={{ width: '100%', minWidth: '0' }}
               />
             </div>
-            <button 
-              type="submit" 
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 flex items-center gap-2 font-medium transition-all duration-200"
-            >
-              <FaSearch className="w-4 h-4" />
-              Search
-            </button>
-          </form>
-        </div>
-
-        {/* Status Filter Buttons */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-3">
-            {statusFilters.map((filter) => {
-              const IconComponent = filter.icon;
-              const isActive = status === filter.key;
-              
-              return (
-                <button
-                  key={filter.key}
-                  onClick={() => {
-                    setStatus(filter.key);
-                    setPage(1);
-                  }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
-                      : filter.color
-                  }`}
-                >
-                  <IconComponent className="w-4 h-4" />
-                  {filter.label}
-                </button>
-              );
-            })}
           </div>
-        </div>
 
-        {/* Orders Table Card */}
-        <div className="card card-padding">
-          <div className="overflow-x-auto">
+          {/* Status Filter Buttons with Counters - Updated Colors */}
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-3">
+              {statusFilters.map((filter) => {
+                const IconComponent = filter.icon;
+                const isActive = status === filter.key;
+                const count = getStatusCount(filter.key);
+                
+                return (
+                  <button
+                    key={filter.key}
+                    onClick={() => {
+                      setStatus(filter.key);
+                      setPage(1);
+                    }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
+                        : filter.color
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    {filter.label} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Orders Table */}
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
+                <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">ID</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Link</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Charge</th>
@@ -221,102 +215,105 @@ export default function OrdersList() {
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Service</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Remains</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Quick Actions</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">Quick Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.length > 0 ? (
-                  orders.map((order: any) => (
-                    <tr 
-                      key={order.id} 
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
-                      <td className="py-3 px-4">
-                        <span className="text-sm font-mono text-gray-700">
-                          #{order.id.substring(0, 8)}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-700">
-                          {moment(order.createdAt).format('DD/MM/YYYY')}
-                        </span>
-                        <div className="text-xs text-gray-500">
-                          {moment(order.createdAt).format('HH:mm')}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="max-w-[120px]">
-                          <a 
-                            href={order.link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 text-xs flex items-center hover:underline"
-                            title={order.link}
-                          >
-                            <span className="truncate mr-1">
-                              {order.link?.replace(/^https?:\/\//, '') || 'N/A'}
-                            </span>
-                            <FaExternalLinkAlt className="w-3 h-3 flex-shrink-0" />
-                          </a>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-sm font-medium text-gray-900">
-                          {currency === 'USD' ? (
-                            `$${order.usdPrice?.toFixed(2) || '0.00'}`
-                          ) : (
-                            `৳${order.bdtPrice?.toFixed(2) || '0.00'}`
-                          )}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-sm text-gray-700">
-                          {order.startCount || '0'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-sm font-medium text-gray-900">
-                          {order.qty?.toLocaleString() || 0}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 max-w-[200px]">
-                        <div className="truncate text-sm font-medium text-gray-900">
-                          {order.service?.name || 'N/A'}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {order.category?.category_name || 'N/A'}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-sm text-gray-700">
-                          {order.remains || order.qty || '0'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(order.status)}`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <button 
-                            className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
-                            title="View Details"
-                          >
-                            View
-                          </button>
-                          {order.status === 'pending' && (
-                            <button 
-                              className="text-red-600 hover:text-red-800 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50"
-                              title="Cancel Order"
+                  orders.map((order: any, index: number) => {
+                    const isLastRow = index === orders.length - 1;
+                    return (
+                      <tr 
+                        key={order.id} 
+                        className={`border-b border-gray-100 hover:bg-gray-50 ${isLastRow ? 'last:border-b-0' : ''}`}
+                      >
+                        <td className={`py-3 px-4 ${isLastRow ? 'first:rounded-bl-lg' : ''}`}>
+                          <span className="text-sm font-mono text-gray-700">
+                            #{order.id.substring(0, 8)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-700">
+                            {moment(order.createdAt).format('DD/MM/YYYY')}
+                          </span>
+                          <div className="text-xs text-gray-500">
+                            {moment(order.createdAt).format('HH:mm')}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="max-w-[120px]">
+                            <a 
+                              href={order.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-xs flex items-center hover:underline"
+                              title={order.link}
                             >
-                              Cancel
+                              <span className="truncate mr-1">
+                                {order.link?.replace(/^https?:\/\//, '') || 'N/A'}
+                              </span>
+                              <FaExternalLinkAlt className="w-3 h-3 flex-shrink-0" />
+                            </a>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm font-medium text-gray-900">
+                            {currency === 'USD' ? (
+                              `$${order.usdPrice?.toFixed(2) || '0.00'}`
+                            ) : (
+                              `৳${order.bdtPrice?.toFixed(2) || '0.00'}`
+                            )}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm text-gray-700">
+                            {order.startCount || '0'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm font-medium text-gray-900">
+                            {order.qty?.toLocaleString() || 0}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 max-w-[200px]">
+                          <div className="truncate text-sm font-medium text-gray-900">
+                            {order.service?.name || 'N/A'}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {order.category?.category_name || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm text-gray-700">
+                            {order.remains || order.qty || '0'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(order.status)}`}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className={`py-3 px-4 ${isLastRow ? 'last:rounded-br-lg' : ''}`}>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
+                              title="View Details"
+                            >
+                              View
                             </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            {order.status === 'pending' && (
+                              <button 
+                                className="text-red-600 hover:text-red-800 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50"
+                                title="Cancel Order"
+                              >
+                                Cancel
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={10} className="py-8 text-center text-gray-500">

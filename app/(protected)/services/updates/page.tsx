@@ -2,6 +2,7 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { APP_NAME } from '@/lib/constants';
 import { revalidate } from '@/lib/utils';
 import { Fragment, useEffect, useState } from 'react';
 import { 
@@ -10,8 +11,18 @@ import {
   FaExclamationTriangle,
   FaCheckCircle, 
   FaTimes,
-  FaClipboardList
+  FaClipboardList,
+  FaBell
 } from 'react-icons/fa';
+
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
 
 // Toast Component
 const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
@@ -49,6 +60,11 @@ export default function UpdateServiceTable() {
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
 
   const limit = 50;
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Service Updates — ${APP_NAME}`;
+  }, []);
 
   // Show toast notification
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
@@ -123,14 +139,9 @@ export default function UpdateServiceTable() {
     return (
       <div className="page-container">
         <div className="page-content">
-          <div className="page-header">
-            <h1 className="page-title">Service Updates</h1>
-            <p className="page-description">Latest updates and changes to services</p>
-          </div>
-
           <div className="card card-padding">
             <div className="text-center py-8 flex flex-col items-center">
-              <FaSpinner className="text-4xl text-blue-500 mb-4 animate-spin" />
+              <GradientSpinner size="w-14 h-14" className="mb-4" />
               <div className="text-lg font-medium">Loading service updates...</div>
             </div>
           </div>
@@ -151,16 +162,18 @@ export default function UpdateServiceTable() {
       )}
       
       <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">Service Updates</h1>
-          <p className="page-description">Latest updates and changes to services</p>
-        </div>
+        {/* Service Updates Content Card - Everything in one box */}
+        <div className="card card-padding">
+          {/* Header with Icon */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="card-icon">
+              <FaBell className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="card-title">Service Updates</h1>
+          </div>
 
-        {/* Search Bar */}
-        <div className="card card-padding mb-6">
-          <div className="form-group mb-0">
-            <label className="form-label">Search Service Updates</label>
+          {/* Search Bar */}
+          <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <FaSearch className="w-4 h-4 text-gray-500" />
@@ -175,71 +188,64 @@ export default function UpdateServiceTable() {
               />
             </div>
           </div>
-        </div>
 
-        {/* Services Table */}
-        <div className="card">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 max-w-[400px]">Service</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 w-[300px]">Update</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  renderSkeletonRows()
-                ) : services?.length > 0 ? (
-                  services?.map((service, i) => (
-                    <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <span className="text-sm font-medium text-gray-900">{i + 1}</span>
-                      </td>
-                      <td className="py-3 px-4 max-w-[400px]">
-                        <div className="font-medium text-gray-900 truncate" title={service.name}>
-                          {service.name}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-sm text-gray-700">
-                          {new Intl.DateTimeFormat('en', {
-                            dateStyle: 'medium',
-                            timeStyle: 'short',
-                            hour12: false,
-                            timeZone: 'Asia/Dhaka',
-                          }).format(new Date(service.updatedAt))}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 w-[300px]">
-                        <div className="text-sm text-gray-700 truncate" title={service.updateText}>
-                          {service.updateText}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="py-8 text-center text-gray-500">
-                      <div className="flex flex-col items-center">
-                        <FaClipboardList className="text-4xl text-gray-400 mb-4" />
-                        <div className="text-lg font-medium">No service updates found</div>
-                        <div className="text-sm">Try adjusting your search criteria</div>
-                      </div>
-                    </td>
+          {/* Services Updates Table */}
+          {services?.length > 0 ? (
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">ID</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 max-w-[400px]">Service</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 w-[300px] last:rounded-tr-lg">Update</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                </thead>
+                <tbody>
+                  {services?.map((service, i) => {
+                    const isLastRow = i === services.length - 1;
+                    return (
+                      <tr key={i} className={`border-b border-gray-100 hover:bg-gray-50 ${isLastRow ? 'last:border-b-0' : ''}`}>
+                        <td className={`py-3 px-4 ${isLastRow ? 'first:rounded-bl-lg' : ''}`}>
+                          <span className="text-sm font-medium text-gray-900">{i + 1}</span>
+                        </td>
+                        <td className="py-3 px-4 max-w-[400px]">
+                          <div className="font-medium text-gray-900 truncate" title={service.name}>
+                            {service.name}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm text-gray-700">
+                            {new Intl.DateTimeFormat('en', {
+                              dateStyle: 'medium',
+                              timeStyle: 'short',
+                              hour12: false,
+                              timeZone: 'Asia/Dhaka',
+                            }).format(new Date(service.updatedAt))}
+                          </span>
+                        </td>
+                        <td className={`py-3 px-4 w-[300px] ${isLastRow ? 'last:rounded-br-lg' : ''}`}>
+                          <div className="text-sm text-gray-700 truncate" title={service.updateText}>
+                            {service.updateText}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8 flex flex-col items-center">
+              <FaClipboardList className="text-4xl text-gray-400 mb-4" />
+              <div className="text-lg font-medium">No service updates found</div>
+              <div className="text-sm text-gray-500">Try adjusting your search criteria</div>
+            </div>
+          )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="card card-padding mt-6">
-            <div className="flex items-center justify-between">
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
                 Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
               </div>
@@ -260,8 +266,8 @@ export default function UpdateServiceTable() {
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

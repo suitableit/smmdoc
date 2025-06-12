@@ -2,6 +2,7 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useEffect, useState } from 'react';
+import { APP_NAME } from '@/lib/constants';
 import {
   FaBan,
   FaBook,
@@ -66,6 +67,11 @@ interface ServiceType {
 }
 
 export default function ApiIntegrationPage() {
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `API Integration — ${APP_NAME}`;
+  }, []);
+
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [showApiKey, setShowApiKey] = useState(false);
   const [isGeneratingKey, setIsGeneratingKey] = useState(false);
@@ -1024,6 +1030,8 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
+
+          {/* User Balance */}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">

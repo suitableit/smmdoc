@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect } from 'react';
+import { APP_NAME } from '@/lib/constants';
 import { 
   FaEye, 
   FaSearch, 
@@ -115,6 +116,11 @@ export default function TicketsHistory() {
   const [activeTab, setActiveTab] = useState<'all' | 'human' | 'ai'>('all');
   const [searchResults, setSearchResults] = useState<Ticket[]>([]);
 
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Tickets History — ${APP_NAME}`;
+  }, []);
+
   // Show toast notification
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToastMessage({ message, type });
@@ -189,6 +195,19 @@ export default function TicketsHistory() {
     e.preventDefault();
     setSearch(searchInput);
     setPage(1);
+  };
+
+  // Calculate counts for each status filter
+  const getStatusCount = (statusKey: string) => {
+    let tickets = [...dummyTickets];
+    
+    // Filter by current tab first
+    if (activeTab !== 'all') {
+      tickets = tickets.filter(ticket => ticket.type === activeTab);
+    }
+    
+    if (statusKey === 'all') return tickets.length;
+    return tickets.filter(ticket => ticket.status === statusKey).length;
   };
 
   // Status filter buttons configuration
@@ -419,6 +438,7 @@ export default function TicketsHistory() {
             {statusFilters.map((filter) => {
               const IconComponent = filter.icon;
               const isActive = status === filter.key;
+              const count = getStatusCount(filter.key);
               
               return (
                 <button
@@ -434,7 +454,7 @@ export default function TicketsHistory() {
                   }`}
                 >
                   <IconComponent className="w-4 h-4" />
-                  {filter.label}
+                  {filter.label} ({count})
                 </button>
               );
             })}

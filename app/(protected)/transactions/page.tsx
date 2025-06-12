@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { APP_NAME } from '@/lib/constants';
 import {
   FaExclamationTriangle,
   FaCheckCircle,
@@ -104,6 +105,11 @@ export default function TransactionsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Transactions — ${APP_NAME}`;
+  }, []);
 
   // Mock data for demonstration
   const mockTransactions = [
@@ -318,12 +324,6 @@ export default function TransactionsPage() {
 
       <div className="page-content">
         <div className="card card-padding">
-          <div className="card-header">
-            <div className="card-icon">
-              <FaReceipt />
-            </div>
-            <h3 className="card-title">All Transactions</h3>
-          </div>
 
           {/* Search Bar */}
           <div className="mb-6">
