@@ -1,7 +1,8 @@
 'use client';
 
 import { ChevronDown } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { APP_NAME } from '@/lib/constants';
 import {
   FaCode,
   FaCreditCard,
@@ -22,6 +23,11 @@ interface FAQItem {
 const FAQPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openItems, setOpenItems] = useState<string[]>([]);
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `FAQs — ${APP_NAME}`;
+  }, []);
 
   // Mock FAQ data
   const faqItems: FAQItem[] = [
@@ -162,26 +168,19 @@ const FAQPage = () => {
         <div className="card card-padding">
           {/* Search Section */}
           <div className="mb-6">
-            <form onSubmit={(e) => e.preventDefault()} className="flex gap-3">
-              <div className="flex-1 relative">
-                <input
-                  type="search"
-                  placeholder="Search questions..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="form-input w-full"
-                  autoComplete="off"
-                  style={{ width: '100%', minWidth: '0' }}
-                />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <FaSearch className="w-4 h-4 text-gray-500" />
               </div>
-              <button
-                type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 flex items-center gap-2 font-medium transition-all duration-200"
-              >
-                <FaSearch className="w-4 h-4" />
-                Search
-              </button>
-            </form>
+              <input
+                type="search"
+                placeholder="Search questions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-input pl-10"
+                autoComplete="off"
+              />
+            </div>
           </div>
 
           {/* FAQ Content */}

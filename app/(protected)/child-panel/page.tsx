@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { APP_NAME } from '@/lib/constants';
 import {
   FaShoppingCart,
   FaCheckCircle,
@@ -29,6 +30,15 @@ interface FAQ {
   answer: string;
 }
 
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-5 h-5", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 // Toast/Twist Message Component
 const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
   <div className={`toast toast-${type} toast-enter`}>
@@ -52,6 +62,11 @@ const ChildPanel: React.FC = () => {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Child Panel — ${APP_NAME}`;
+  }, []);
 
   const currencies = [
     { value: 'USD', label: 'United States Dollars (USD)' },
@@ -320,7 +335,10 @@ const ChildPanel: React.FC = () => {
                       className="btn btn-primary w-full"
                     >
                       {isLoading ? (
-                        <div className="loading-spinner"></div>
+                        <div className="flex items-center justify-center gap-2">
+                          <GradientSpinner size="w-5 h-5" />
+                          Processing...
+                        </div>
                       ) : (
                         'Submit Order'
                       )}

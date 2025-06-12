@@ -59,7 +59,7 @@ const DashboardPage = () => {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Dashboard - ${APP_NAME}`;
+    document.title = `Dashboard — ${APP_NAME}`;
   }, []);
 
   // Get recent orders from user stats

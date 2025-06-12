@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect, useCallback } from 'react';
+import { APP_NAME } from '@/lib/constants';
 import { 
   ArrowRightLeft, 
   Wallet, 
@@ -50,6 +51,11 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
   const [isUserValid, setIsUserValid] = useState(false);
 
   const rate = globalRate;
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Transfer Funds — ${APP_NAME}`;
+  }, []);
 
   // Debounced username validation
   const validateUsername = useCallback(async (usernameValue: string) => {

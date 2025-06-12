@@ -5,6 +5,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import React, { useState, useEffect } from 'react';
+import { APP_NAME } from '@/lib/constants';
 import { Copy, User, Shield, Key, DollarSign, Eye, EyeOff, Clock, Globe, Camera, CheckCircle, X } from 'lucide-react';
 
 // Mock components and hooks for demonstration
@@ -62,6 +63,11 @@ interface ApiKey {
 }
 
 const ProfilePage = () => {
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Account Settings — ${APP_NAME}`;
+  }, []);
+
   // Mock user data for demonstration
   const user = {
     name: 'john',

@@ -182,7 +182,7 @@ export default function MassOrder() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Mass Orders - ${APP_NAME}`;
+    document.title = `Mass Orders — ${APP_NAME}`;
   }, []);
 
   // User data from API or fallback with proper currency formatting

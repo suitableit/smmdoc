@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { APP_NAME } from '@/lib/constants';
 import {
   FaBan,
   FaCreditCard,
@@ -12,6 +14,11 @@ import {
 } from 'react-icons/fa';
 
 export default function TermsPage() {
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Terms & Conditions — ${APP_NAME}`;
+  }, []);
+
   const termsData = [
     {
       id: 'acceptance',
@@ -136,7 +143,7 @@ export default function TermsPage() {
               </div>
             </div>
             <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-              Version 2.0
+              Version 1.0
             </div>
           </div>
         </div>

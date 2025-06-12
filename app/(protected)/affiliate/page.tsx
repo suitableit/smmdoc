@@ -2,6 +2,7 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useEffect, useState } from 'react';
+import { APP_NAME } from '@/lib/constants'; // Added import for APP_NAME
 import {
   FaChartLine,
   FaCoins,
@@ -272,6 +273,11 @@ function AffiliateStatsCards() {
 }
 
 export default function AffiliateProgram() {
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Affiliate Program — ${APP_NAME}`;
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#f1f2f6] dark:bg-[#232333] transition-colors duration-200">
         <div className="space-y-6">

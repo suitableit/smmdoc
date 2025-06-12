@@ -5,6 +5,7 @@
 import ServiceViewModal from '@/components/admin/services/serviceViewModal';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { APP_NAME } from '@/lib/constants';
 import { Fragment, useEffect, useState } from 'react';
 import { 
   FaSearch, 
@@ -65,6 +66,11 @@ export default function UserServiceTable() {
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
 
   const limit = 50;
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `All Services — ${APP_NAME}`;
+  }, []);
 
   // Show toast notification
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
@@ -274,37 +280,6 @@ export default function UserServiceTable() {
     setIsOpen(true);
   };
 
-  const renderSkeletonRows = () => {
-    return Array.from({ length: 5 }).map((_, i) => (
-      <tr key={i} className="border-b border-gray-100">
-        <td className="py-3 px-4">
-          <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-        <td className="py-3 px-4">
-          <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-        <td className="py-3 px-4">
-          <div className="w-48 h-4 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-        <td className="py-3 px-4">
-          <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-        <td className="py-3 px-4">
-          <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-        <td className="py-3 px-4">
-          <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-        <td className="py-3 px-4">
-          <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-        <td className="py-3 px-4">
-          <div className="w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-      </tr>
-    ));
-  };
-
   if (loading) {
     return (
       <div className="page-container">
@@ -332,42 +307,41 @@ export default function UserServiceTable() {
       )}
       
       <div className="page-content">
-        {/* Search Bar */}
-        <div className="card card-padding mb-6">
-          <div className="form-group mb-0">
-            <label className="form-label">Search Services</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FaSearch className="w-4 h-4 text-gray-500" />
+        {/* All Services Content Card - Everything in one box */}
+        <div className="card card-padding">
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="form-group mb-0">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <FaSearch className="w-4 h-4 text-gray-500" />
+                </div>
+                <input
+                  type="search"
+                  placeholder="Search services..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="form-input pl-10"
+                  autoComplete="off"
+                />
               </div>
-              <input
-                type="search"
-                placeholder="Search services..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="form-input pl-10"
-                autoComplete="off"
-              />
             </div>
           </div>
-        </div>
 
-        {/* Services by Category */}
-        {Object.keys(groupedServices).length > 0 ? (
-          <div className="card">
-            {/* Single Table Header */}
-            <div className="overflow-x-auto">
+          {/* Services by Category */}
+          {Object.keys(groupedServices).length > 0 ? (
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Fav</th>
+                  <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">Fav</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Service</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Rate per 1000</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Min order</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Max order</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Average time</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Action</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -383,72 +357,74 @@ export default function UserServiceTable() {
                       </tr>
                       
                       {/* Category Services */}
-                      {categoryServices.map((service) => (
-                        <tr key={service.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4">
-                            <button
-                              onClick={() => toggleFavorite(service.id)}
-                              className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
-                              title={service.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                            >
-                              {service.isFavorite ? (
-                                <FaStar className="w-4 h-4 text-yellow-500" />
-                              ) : (
-                                <FaRegStar className="w-4 h-4 text-gray-400 hover:text-yellow-500" />
-                              )}
-                            </button>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-sm font-mono text-gray-700">{service.id}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="font-medium text-gray-900">{service.name}</div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-sm font-medium text-gray-900">
-                              <PriceDisplay amount={service.rate} originalCurrency={'USD'} />
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-sm text-gray-700">{service.min_order?.toLocaleString()}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-sm text-gray-700">{service.max_order?.toLocaleString()}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-sm text-gray-700">{service.avg_time || 'N/A'}</span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <button
-                              onClick={() => handleViewDetails(service)}
-                              className="flex items-center gap-2 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded hover:bg-blue-50 transition-colors duration-200"
-                            >
-                              <FaEye className="w-3 h-3" />
-                              Details
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {categoryServices.map((service, index) => {
+                        const isLastInCategory = index === categoryServices.length - 1;
+                        const isLastCategory = Object.keys(groupedServices).indexOf(categoryName) === Object.keys(groupedServices).length - 1;
+                        const isLastRow = isLastInCategory && isLastCategory;
+                        
+                        return (
+                          <tr key={service.id} className={`border-b border-gray-100 hover:bg-gray-50 ${isLastRow ? 'last:border-b-0' : ''}`}>
+                            <td className={`py-3 px-4 ${isLastRow ? 'first:rounded-bl-lg' : ''}`}>
+                              <button
+                                onClick={() => toggleFavorite(service.id)}
+                                className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
+                                title={service.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                              >
+                                {service.isFavorite ? (
+                                  <FaStar className="w-4 h-4 text-yellow-500" />
+                                ) : (
+                                  <FaRegStar className="w-4 h-4 text-gray-400 hover:text-yellow-500" />
+                                )}
+                              </button>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-sm font-mono text-gray-700">{service.id}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="font-medium text-gray-900">{service.name}</div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-sm font-medium text-gray-900">
+                                <PriceDisplay amount={service.rate} originalCurrency={'USD'} />
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-sm text-gray-700">{service.min_order?.toLocaleString()}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-sm text-gray-700">{service.max_order?.toLocaleString()}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-sm text-gray-700">{service.avg_time || 'N/A'}</span>
+                            </td>
+                            <td className={`py-3 px-4 ${isLastRow ? 'last:rounded-br-lg' : ''}`}>
+                              <button
+                                onClick={() => handleViewDetails(service)}
+                                className="flex items-center gap-2 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded hover:bg-blue-50 transition-colors duration-200"
+                              >
+                                <FaEye className="w-3 h-3" />
+                                Details
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </Fragment>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
-        ) : (
-          <div className="card card-padding">
+          ) : (
             <div className="text-center py-8 flex flex-col items-center">
               <FaClipboardList className="text-4xl text-gray-400 mb-4" />
               <div className="text-lg font-medium">No services found</div>
               <div className="text-sm text-gray-500">Try adjusting your search criteria</div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="card card-padding">
-            <div className="flex items-center justify-between">
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
                 Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
               </div>
@@ -469,8 +445,8 @@ export default function UserServiceTable() {
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Service Details Modal */}
