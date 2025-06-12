@@ -18,6 +18,15 @@ import {
 } from 'react-icons/fa';
 import { TransactionsList } from './components/TransactionsList';
 
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 // Mock components matching profile page style
 const ButtonLoader = () => <div className="loading-spinner"></div>;
 
@@ -325,99 +334,96 @@ export default function TransactionsPage() {
       <div className="page-content">
         <div className="card card-padding">
 
-          {/* Search Bar */}
-          <div className="mb-6">
-            <form onSubmit={(e) => e.preventDefault()} className="flex gap-3">
-              <div className="flex-1 relative">
-                <input
-                  type="search"
-                  placeholder="Search transactions..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="form-input w-full"
-                  autoComplete="off"
-                  style={{ width: '100%', minWidth: '0' }}
-                />
-              </div>
-              <button 
-                type="submit" 
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 flex items-center gap-2 font-medium transition-all duration-200"
-              >
-                <FaSearch className="w-4 h-4" />
-                Search
-              </button>
-            </form>
-          </div>
-
           {loading ? (
-            <div className="flex flex-col justify-center items-center py-16 space-y-4">
-              <div className="relative">
-                <div className="h-16 w-16 rounded-full border-4 border-dashed border-blue-500 animate-spin"></div>
-                <div className="absolute top-0 left-0 h-16 w-16 rounded-full border-t-4 border-blue-600 animate-pulse"></div>
-              </div>
-              <p className="text-blue-600 font-medium animate-pulse">Loading transactions...</p>
+            <div className="text-center py-8 flex flex-col items-center">
+              <GradientSpinner size="w-14 h-14" className="mb-4" />
+              <div className="text-lg font-medium">Loading transactions...</div>
             </div>
           ) : error ? (
             <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
               <p className="flex items-center">
-                <AlertCircle className="h-5 w-5 mr-2" />
+                <FaExclamationTriangle className="h-5 w-5 mr-2" />
                 <span>{error}</span>
               </p>
             </div>
           ) : (
             <>
-          {/* Status Filter Buttons */}
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setActiveTab('all')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                  activeTab === 'all' 
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
-                    : 'bg-gray-600 hover:bg-gray-700'
-                }`}
-              >
-                <FaReceipt className="w-4 h-4" />
-                All ({transactions.length})
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('success')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                  activeTab === 'success' 
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
-                    : 'bg-gray-600 hover:bg-gray-700'
-                }`}
-              >
-                <FaCheckCircle className="w-4 h-4" />
-                Success ({successTransactions.length})
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('pending')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                  activeTab === 'pending' 
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
-                    : 'bg-gray-600 hover:bg-gray-700'
-                }`}
-              >
-                <FaClock className="w-4 h-4" />
-                Pending ({pendingTransactions.length})
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('failed')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                  activeTab === 'failed' 
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
-                    : 'bg-gray-600 hover:bg-gray-700'
-                }`}
-              >
-                <FaExclamationTriangle className="w-4 h-4" />
-                Failed ({failedTransactions.length})
-              </button>
-            </div>
-          </div>
+              {/* Search Bar */}
+              <div className="mb-6">
+                <form onSubmit={(e) => e.preventDefault()} className="flex gap-3">
+                  <div className="flex-1 relative">
+                    <input
+                      type="search"
+                      placeholder="Search transactions..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="form-input w-full"
+                      autoComplete="off"
+                      style={{ width: '100%', minWidth: '0' }}
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 flex items-center gap-2 font-medium transition-all duration-200"
+                  >
+                    <FaSearch className="w-4 h-4" />
+                    Search
+                  </button>
+                </form>
+              </div>
+
+              {/* Status Filter Buttons */}
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setActiveTab('all')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
+                      activeTab === 'all' 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
+                        : 'bg-gray-600 hover:bg-gray-700'
+                    }`}
+                  >
+                    <FaReceipt className="w-4 h-4" />
+                    All ({transactions.length})
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveTab('success')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
+                      activeTab === 'success' 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
+                        : 'bg-gray-600 hover:bg-gray-700'
+                    }`}
+                  >
+                    <FaCheckCircle className="w-4 h-4" />
+                    Success ({successTransactions.length})
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveTab('pending')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
+                      activeTab === 'pending' 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
+                        : 'bg-gray-600 hover:bg-gray-700'
+                    }`}
+                  >
+                    <FaClock className="w-4 h-4" />
+                    Pending ({pendingTransactions.length})
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveTab('failed')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
+                      activeTab === 'failed' 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
+                        : 'bg-gray-600 hover:bg-gray-700'
+                    }`}
+                  >
+                    <FaExclamationTriangle className="w-4 h-4" />
+                    Failed ({failedTransactions.length})
+                  </button>
+                </div>
+              </div>
 
               {/* Transactions List */}
               <TransactionsList

@@ -19,8 +19,18 @@ import {
   FaShoppingCart,
   FaSpinner,
   FaTimes,
+  FaExclamationTriangle,
 } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
+
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
 
 // Toast Component
 const Toast = ({
@@ -100,12 +110,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
 // Instructions Panel Component
 const InstructionsPanel: React.FC = () => {
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-      className="card card-padding"
-    >
+    <div className="card card-padding">
       <div className="card-header">
         <div className="card-icon">
           <FaInfoCircle />
@@ -154,11 +159,11 @@ const InstructionsPanel: React.FC = () => {
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
-// Main Mass Orders Component
+  // Main Mass Orders Component
 export default function MassOrder() {
   const user = useCurrentUser();
   const router = useRouter();
@@ -175,6 +180,7 @@ export default function MassOrder() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [isFormLoading, setIsFormLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -183,6 +189,15 @@ export default function MassOrder() {
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Mass Orders — ${APP_NAME}`;
+  }, []);
+
+  // Simulate form initialization loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsFormLoading(false);
+    }, 1500); // 1.5 seconds loading simulation
+
+    return () => clearTimeout(timer);
   }, []);
 
   // User data from API or fallback with proper currency formatting
@@ -394,72 +409,81 @@ export default function MassOrder() {
               </div>
             </div>
 
-            {/* Order Form - Removed AnimatePresence */}
+            {/* Order Form with Loading State */}
             {activeTab === 'massOrder' && (
               <div className="card card-padding">
-                <div className="card-header">
-                  <div className="card-icon">
-                    <FaLayerGroup />
+                {isFormLoading ? (
+                  <div className="text-center py-12 flex flex-col items-center">
+                    <GradientSpinner size="w-12 h-12" className="mb-4" />
+                    <div className="text-lg font-medium text-gray-700">Loading mass order form...</div>
                   </div>
-                  <h3 className="card-title">Bulk Order Entry</h3>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Order Format: service_id | link | quantity
-                    </label>
-                    <textarea
-                      placeholder="3740|https://instagram.com/username|1000"
-                      value={orders}
-                      onChange={(e) => {
-                        setOrders(e.target.value);
-                        parseOrders(e.target.value);
-                      }}
-                      className="form-input font-mono text-sm resize-none"
-                      style={{ height: '256px' }}
-                    />
-                  </div>
-
-                  {/* Order Summary */}
-                  {totalOrders > 0 && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Valid Orders:</span>
-                          <span className="font-semibold text-blue-900">
-                            {totalOrders}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Estimated Cost:</span>
-                          <span className="font-semibold text-blue-900">
-                            {formatCurrency(totalPrice)}
-                          </span>
-                        </div>
+                ) : (
+                  <>
+                    <div className="card-header">
+                      <div className="card-icon">
+                        <FaLayerGroup />
                       </div>
-                      <div className="text-xs text-blue-600 mt-2">
-                        * Final price will be calculated based on actual service
-                        rates
-                      </div>
+                      <h3 className="card-title">Bulk Order Entry</h3>
                     </div>
-                  )}
 
-                  <button
-                    type="submit"
-                    disabled={totalOrders === 0 || isSubmitting}
-                    className="btn btn-primary w-full"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <FaSpinner className="animate-spin mr-2 w-4 h-4" />
-                        Processing...
-                      </>
-                    ) : (
-                      `Submit ${totalOrders} Orders`
-                    )}
-                  </button>
-                </form>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="form-group">
+                        <label className="form-label">
+                          Order Format: service_id | link | quantity
+                        </label>
+                        <textarea
+                          placeholder="3740|https://instagram.com/username|1000"
+                          value={orders}
+                          onChange={(e) => {
+                            setOrders(e.target.value);
+                            parseOrders(e.target.value);
+                          }}
+                          className="form-input font-mono text-sm resize-none"
+                          style={{ height: '256px' }}
+                        />
+                      </div>
+
+                      {/* Order Summary */}
+                      {totalOrders > 0 && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-blue-700">Valid Orders:</span>
+                              <span className="font-semibold text-blue-900">
+                                {totalOrders}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-blue-700">Estimated Cost:</span>
+                              <span className="font-semibold text-blue-900">
+                                {formatCurrency(totalPrice)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-xs text-blue-600 mt-2">
+                            * Final price will be calculated based on actual service
+                            rates
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={totalOrders === 0 || isSubmitting}
+                        className="btn btn-primary w-full"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <FaSpinner className="animate-spin mr-2 w-4 h-4" />
+                            Processing...
+                          </>
+                        ) : (
+                          `Submit ${totalOrders} Orders`
+                        )}
+                      </button>
+                    </form>
+                  </>
+                )}
               </div>
             )}
           </div>

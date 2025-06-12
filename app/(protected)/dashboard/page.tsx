@@ -26,6 +26,15 @@ import {
   FaWallet,
 } from 'react-icons/fa';
 
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 // Toast Component
 const Toast = ({
   message,
@@ -214,7 +223,11 @@ const DashboardPage = () => {
               <div className="flex-1">
                 <h3 className="card-title">Balance</h3>
                 <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(balance)}
+                  {isLoading ? (
+                    <GradientSpinner size="w-6 h-6" />
+                  ) : (
+                    formatCurrency(balance)
+                  )}
                 </p>
               </div>
               <div className="ml-4">
@@ -238,7 +251,11 @@ const DashboardPage = () => {
               <div>
                 <h3 className="card-title">Total Orders</h3>
                 <p className="text-2xl font-bold text-blue-600">
-                  {totalOrders}
+                  {isLoading ? (
+                    <GradientSpinner size="w-6 h-6" />
+                  ) : (
+                    totalOrders
+                  )}
                 </p>
               </div>
             </div>
@@ -253,7 +270,11 @@ const DashboardPage = () => {
               <div>
                 <h3 className="card-title">Total Spend</h3>
                 <p className="text-2xl font-bold text-purple-600">
-                  {formatCurrency(totalSpend)}
+                  {isLoading ? (
+                    <GradientSpinner size="w-6 h-6" />
+                  ) : (
+                    formatCurrency(totalSpend)
+                  )}
                 </p>
               </div>
             </div>
@@ -281,7 +302,11 @@ const DashboardPage = () => {
                         Completed
                       </div>
                       <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                        {completedOrders}
+                        {isLoading ? (
+                          <GradientSpinner size="w-6 h-6" />
+                        ) : (
+                          completedOrders
+                        )}
                       </div>
                     </div>
                     <FaCheckCircle className="text-green-500 w-5 h-5" />
@@ -296,7 +321,11 @@ const DashboardPage = () => {
                         Processing
                       </div>
                       <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                        {processingOrders}
+                        {isLoading ? (
+                          <GradientSpinner size="w-6 h-6" />
+                        ) : (
+                          processingOrders
+                        )}
                       </div>
                     </div>
                     <FaClock className="text-blue-500 w-5 h-5" />
@@ -311,7 +340,11 @@ const DashboardPage = () => {
                         Pending
                       </div>
                       <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-                        {pendingOrders}
+                        {isLoading ? (
+                          <GradientSpinner size="w-6 h-6" />
+                        ) : (
+                          pendingOrders
+                        )}
                       </div>
                     </div>
                     <FaExclamationTriangle className="text-yellow-500 w-5 h-5" />
@@ -326,7 +359,11 @@ const DashboardPage = () => {
                         Cancelled
                       </div>
                       <div className="text-2xl font-bold text-red-700 dark:text-red-300">
-                        {cancelledOrders}
+                        {isLoading ? (
+                          <GradientSpinner size="w-6 h-6" />
+                        ) : (
+                          cancelledOrders
+                        )}
                       </div>
                     </div>
                     <FaTimesCircle className="text-red-500 w-5 h-5" />
@@ -353,7 +390,12 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              {userOrders.length > 0 ? (
+              {isLoading ? (
+                <div className="text-center py-8 flex flex-col items-center">
+                  <GradientSpinner size="w-12 h-12" className="mb-4" />
+                  <div className="text-lg font-medium">Loading recent orders...</div>
+                </div>
+              ) : userOrders.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
@@ -501,21 +543,28 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              <div
-                className="text-center py-8"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                <FaTicketAlt
-                  className="w-16 h-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)', opacity: 0.5 }}
-                />
-                <div className="text-lg font-medium mb-2">
-                  No Support Tickets found
+              {isLoading ? (
+                <div className="text-center py-8 flex flex-col items-center">
+                  <GradientSpinner size="w-12 h-12" className="mb-4" />
+                  <div className="text-lg font-medium">Loading support tickets...</div>
                 </div>
-                <div className="text-sm">
-                  You haven't created any Support Tickets yet.
+              ) : (
+                <div
+                  className="text-center py-8"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <FaTicketAlt
+                    className="w-16 h-16 mx-auto mb-4"
+                    style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                  />
+                  <div className="text-lg font-medium mb-2">
+                    No Support Tickets found
+                  </div>
+                  <div className="text-sm">
+                    You haven't created any Support Tickets yet.
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Quick Actions */}

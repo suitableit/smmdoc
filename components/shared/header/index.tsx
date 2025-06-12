@@ -150,7 +150,7 @@ const Header = () => {
               </Link>
 
               <Link
-                href="/dashboard/services"
+                href="/our-services"
                 className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] font-medium transition-colors duration-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
                 Services

@@ -24,6 +24,15 @@ import {
   FaShieldAlt
 } from 'react-icons/fa';
 
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 // Toast Component
 const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
   <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
@@ -47,10 +56,20 @@ export function AddFundForm() {
   const [isPending, startTransition] = useTransition();
   const { currency: globalCurrency, rate: globalRate } = useCurrency();
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Add Funds — ${APP_NAME}`;
+  }, []);
+
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Show toast notification
@@ -208,6 +227,58 @@ export function AddFundForm() {
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column - Loading State */}
+        <div className="card card-padding">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center flex flex-col items-center">
+              <GradientSpinner size="w-14 h-14" className="mb-4" />
+              <div className="text-lg font-medium">Loading payment form...</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Feature Cards */}
+        <div className="space-y-6">
+          {/* Secure Payment */}
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaCreditCard />
+              </div>
+              <h3 className="card-title">Secure Payment</h3>
+            </div>
+            <p className="text-sm text-gray-600">SSL encrypted transactions with UddoktaPay</p>
+          </div>
+
+          {/* 100% Safe */}
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaShieldAlt />
+              </div>
+              <h3 className="card-title">100% Safe</h3>
+            </div>
+            <p className="text-sm text-gray-600">Your financial data is protected</p>
+          </div>
+
+          {/* Instant Credit */}
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaWallet />
+              </div>
+              <h3 className="card-title">Instant Credit</h3>
+            </div>
+            <p className="text-sm text-gray-600">Funds added immediately after payment</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Toast Container */}
@@ -315,10 +386,6 @@ export function AddFundForm() {
 
           {/* Phone Number Field */}
           <div className="form-group">
-            <label className="form-label">
-              <FaPhoneAlt className="inline mr-2" />
-              Phone Number
-            </label>
             <input
               type="tel"
               placeholder="Enter your phone number"

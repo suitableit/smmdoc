@@ -30,7 +30,7 @@ interface FAQ {
   answer: string;
 }
 
-// Custom Gradient Spinner Component
+// Custom Gradient Spinner Component (Large version for loading state)
 const GradientSpinner = ({ size = "w-5 h-5", className = "" }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -61,11 +61,21 @@ const ChildPanel: React.FC = () => {
 
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Child Panel — ${APP_NAME}`;
+  }, []);
+
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const currencies = [
@@ -157,6 +167,83 @@ const ChildPanel: React.FC = () => {
   const toggleFAQ = (index: number) => {
     setOpenFAQ(openFAQ === index ? null : index);
   };
+
+  if (isPageLoading) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          {/* Page Title Section - Static */}
+          <div className="mb-6">
+            <div className="card card-padding bg-gradient-to-r from-purple-50 to-blue-50">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+                <div className="lg:col-span-2">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                    Create A Child Panel
+                  </h1>
+                  <p className="text-gray-600 mb-4">
+                    Create a child panel with your own domain and start your own business. 
+                    You can connect your child panel with SMMDOC and start selling services to your customers.
+                  </p>
+                  <button className="btn btn-primary inline-flex items-center">
+                    Get Started
+                  </button>
+                </div>
+                <div className="lg:col-span-1">
+                  <div className="flex justify-center">
+                    <div className="w-48 h-32 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <FaServer className="w-16 h-16 text-purple-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column - Loading State */}
+            <div className="space-y-6">
+              <div id="childPanelOrder">
+                <div className="card card-padding">
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="text-center flex flex-col items-center">
+                      <GradientSpinner size="w-14 h-14" className="mb-4" />
+                      <div className="text-lg font-medium">Loading child panel form...</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Static FAQ */}
+            <div className="space-y-6">
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaQuestionCircle />
+                  </div>
+                  <h3 className="card-title">Frequently Asked Questions</h3>
+                </div>
+
+                <div className="space-y-3 mt-4">
+                  {faqs.slice(0, 3).map((faq, index) => (
+                    <div key={index} className="card">
+                      <div className="w-full p-4 text-left flex justify-between items-center">
+                        <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
+                          <FaInfoCircle className="w-4 h-4" />
+                          {faq.question}
+                        </span>
+                        <FaChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">

@@ -13,6 +13,15 @@ import {
   FaUserTie,
 } from 'react-icons/fa';
 
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 interface FAQItem {
   id: string;
   question: string;
@@ -23,10 +32,20 @@ interface FAQItem {
 const FAQPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openItems, setOpenItems] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `FAQs — ${APP_NAME}`;
+  }, []);
+
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Mock FAQ data
@@ -160,6 +179,22 @@ const FAQPage = () => {
         : [...prev, itemId]
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          {/* Main FAQ Card - Loading State */}
+          <div className="card card-padding">
+            <div className="text-center py-8 flex flex-col items-center">
+              <GradientSpinner size="w-14 h-14" className="mb-4" />
+              <div className="text-lg font-medium">Loading FAQs...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">

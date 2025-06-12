@@ -18,6 +18,15 @@ import {
 } from 'react-icons/fa';
 import moment from 'moment';
 
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 type Ticket = {
   id: string;
   subject: string;
@@ -111,7 +120,7 @@ export default function TicketsHistory() {
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'human' | 'ai'>('all');
   const [searchResults, setSearchResults] = useState<Ticket[]>([]);
@@ -119,6 +128,15 @@ export default function TicketsHistory() {
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Tickets History — ${APP_NAME}`;
+  }, []);
+
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Show toast notification
@@ -295,7 +313,7 @@ export default function TicketsHistory() {
         <div className="page-content">
           <div className="card card-padding">
             <div className="text-center py-8 flex flex-col items-center">
-              <FaSpinner className="text-4xl text-blue-500 mb-4 animate-spin" />
+              <GradientSpinner size="w-14 h-14" className="mb-4" />
               <div className="text-lg font-medium">Loading tickets...</div>
             </div>
           </div>
@@ -367,184 +385,188 @@ export default function TicketsHistory() {
           </div>
         </div>
 
-        {/* Search Bar with Live Search */}
-        <div className="mb-6">
-          <div className="relative w-full" ref={searchRef}>
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-              <FaSearch className="w-4 h-4 text-gray-500 flex-shrink-0" />
-            </div>
-            <input
-              type="search"
-              value={searchInput}
-              onChange={(e) => {
-                setSearchInput(e.target.value);
-                setSearch(e.target.value);
-                setShowDropdown(true);
-                if (!e.target.value.trim()) {
-                  setPage(1);
-                }
-              }}
-              onFocus={() => setShowDropdown(true)}
-              className="form-input pl-12"
-              placeholder="Search by ticket ID, subject, or status..."
-              autoComplete="off"
-              style={{ width: '100%', minWidth: '0' }}
-            />
-
-            {/* Search Dropdown */}
-            {showDropdown && searchResults.length > 0 && (
-              <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
-                {searchResults.map((ticket) => (
-                  <div
-                    key={ticket.id}
-                    className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleSearchSelect(ticket)}
-                  >
-                    <div className="flex justify-between items-center w-full">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-900">#{ticket.id}</span>
-                          <span className="text-sm text-gray-700 truncate">{ticket.subject}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(ticket.status)}`}>
-                            {ticket.status}
-                          </span>
-                          {ticket.type === 'ai' ? (
-                            <span className="text-xs text-purple-600 flex items-center gap-1">
-                              <FaRobot className="w-3 h-3" /> AI
-                            </span>
-                          ) : (
-                            <span className="text-xs text-blue-600 flex items-center gap-1">
-                              <FaUser className="w-3 h-3" /> Human
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-xs text-gray-500 flex-shrink-0">
-                        {moment(ticket.createdAt).format('DD/MM')}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Status Filter Buttons */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-3">
-            {statusFilters.map((filter) => {
-              const IconComponent = filter.icon;
-              const isActive = status === filter.key;
-              const count = getStatusCount(filter.key);
-              
-              return (
-                <button
-                  key={filter.key}
-                  onClick={() => {
-                    setStatus(filter.key);
-                    setPage(1);
-                  }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
-                      : filter.color
-                  }`}
-                >
-                  <IconComponent className="w-4 h-4" />
-                  {filter.label} ({count})
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Tickets Table Card */}
+        {/* Tickets Content Card - Everything in one box */}
         <div className="card card-padding">
-          <div className="overflow-x-auto">
+          {/* Search Bar with Live Search */}
+          <div className="mb-6">
+            <div className="relative w-full" ref={searchRef}>
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                <FaSearch className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              </div>
+              <input
+                type="search"
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setSearch(e.target.value);
+                  setShowDropdown(true);
+                  if (!e.target.value.trim()) {
+                    setPage(1);
+                  }
+                }}
+                onFocus={() => setShowDropdown(true)}
+                className="form-input pl-12"
+                placeholder="Search by ticket ID, subject, or status..."
+                autoComplete="off"
+                style={{ width: '100%', minWidth: '0' }}
+              />
+
+              {/* Search Dropdown */}
+              {showDropdown && searchResults.length > 0 && (
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
+                  {searchResults.map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleSearchSelect(ticket)}
+                    >
+                      <div className="flex justify-between items-center w-full">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900">#{ticket.id}</span>
+                            <span className="text-sm text-gray-700 truncate">{ticket.subject}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(ticket.status)}`}>
+                              {ticket.status}
+                            </span>
+                            {ticket.type === 'ai' ? (
+                              <span className="text-xs text-purple-600 flex items-center gap-1">
+                                <FaRobot className="w-3 h-3" /> AI
+                              </span>
+                            ) : (
+                              <span className="text-xs text-blue-600 flex items-center gap-1">
+                                <FaUser className="w-3 h-3" /> Human
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500 flex-shrink-0">
+                          {moment(ticket.createdAt).format('DD/MM')}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Status Filter Buttons */}
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-3">
+              {statusFilters.map((filter) => {
+                const IconComponent = filter.icon;
+                const isActive = status === filter.key;
+                const count = getStatusCount(filter.key);
+                
+                return (
+                  <button
+                    key={filter.key}
+                    onClick={() => {
+                      setStatus(filter.key);
+                      setPage(1);
+                    }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
+                        : filter.color
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    {filter.label} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Tickets Table */}
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Ticket ID</th>
+                <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">Ticket ID</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Type</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Subject</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Priority</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Created</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">Last Updated</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredTickets.length > 0 ? (
-                  filteredTickets.map((ticket) => (
-                    <tr key={ticket.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <span className="text-sm font-mono text-gray-700">
-                          #{ticket.id}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-1">
+                  filteredTickets.map((ticket, index) => {
+                    const isLastRow = index === filteredTickets.length - 1;
+                    return (
+                      <tr key={ticket.id} className={`border-b border-gray-100 hover:bg-gray-50 ${isLastRow ? 'last:border-b-0' : ''}`}>
+                        <td className={`py-3 px-4 ${isLastRow ? 'first:rounded-bl-lg' : ''}`}>
+                          <span className="text-sm font-mono text-gray-700">
+                            #{ticket.id}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1">
+                            {ticket.type === 'ai' ? (
+                              <>
+                                <FaRobot className="w-4 h-4 text-purple-600" />
+                                <span className="text-xs font-medium text-purple-600">AI</span>
+                              </>
+                            ) : (
+                              <>
+                                <FaUser className="w-4 h-4 text-blue-600" />
+                                <span className="text-xs font-medium text-blue-600">Human</span>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 max-w-[300px]">
+                          <div className="truncate text-sm font-medium text-gray-900">
+                            {ticket.subject}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
                           {ticket.type === 'ai' ? (
-                            <>
-                              <FaRobot className="w-4 h-4 text-purple-600" />
-                              <span className="text-xs font-medium text-purple-600">AI</span>
-                            </>
+                            <span className="text-sm text-gray-500">N/A</span>
                           ) : (
-                            <>
-                              <FaUser className="w-4 h-4 text-blue-600" />
-                              <span className="text-xs font-medium text-blue-600">Human</span>
-                            </>
+                            getPriorityBadge(ticket.priority)
                           )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 max-w-[300px]">
-                        <div className="truncate text-sm font-medium text-gray-900">
-                          {ticket.subject}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        {ticket.type === 'ai' ? (
-                          <span className="text-sm text-gray-500">N/A</span>
-                        ) : (
-                          getPriorityBadge(ticket.priority)
-                        )}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(ticket.status)}`}>
-                          {ticket.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-700">
-                          {moment(ticket.createdAt).format('DD/MM/YYYY')}
-                        </span>
-                        <div className="text-xs text-gray-500">
-                          {moment(ticket.createdAt).format('HH:mm')}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-700">
-                          {ticket.lastUpdated ? moment(ticket.lastUpdated).format('DD/MM/YYYY') : '-'}
-                        </span>
-                        <div className="text-xs text-gray-500">
-                          {ticket.lastUpdated ? moment(ticket.lastUpdated).format('HH:mm') : ''}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <button
-                          onClick={() => handleViewTicket(ticket.id)}
-                          className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
-                          title="View Ticket"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(ticket.status)}`}>
+                            {ticket.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-700">
+                            {moment(ticket.createdAt).format('DD/MM/YYYY')}
+                          </span>
+                          <div className="text-xs text-gray-500">
+                            {moment(ticket.createdAt).format('HH:mm')}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-700">
+                            {ticket.lastUpdated ? moment(ticket.lastUpdated).format('DD/MM/YYYY') : '-'}
+                          </span>
+                          <div className="text-xs text-gray-500">
+                            {ticket.lastUpdated ? moment(ticket.lastUpdated).format('HH:mm') : ''}
+                          </div>
+                        </td>
+                        <td className={`py-3 px-4 ${isLastRow ? 'last:rounded-br-lg' : ''}`}>
+                          <button
+                            onClick={() => handleViewTicket(ticket.id)}
+                            className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
+                            title="View Ticket"
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan={8} className="py-8 text-center text-gray-500">
