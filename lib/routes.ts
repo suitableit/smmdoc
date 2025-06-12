@@ -11,6 +11,7 @@ export const publicRoutes = [
   '/about',
   '/blog',
   '/blog/blog-details',
+  '/our-services',
   '/contact',
   '/new-password',
   '/api/exchange-rate',

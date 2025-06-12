@@ -8,6 +8,15 @@ import React, { useState, useEffect } from 'react';
 import { APP_NAME } from '@/lib/constants';
 import { Copy, User, Shield, Key, DollarSign, Eye, EyeOff, Clock, Globe, Camera, CheckCircle, X } from 'lucide-react';
 
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 // Mock components and hooks for demonstration
 const ButtonLoader = () => <div className="loading-spinner"></div>;
 
@@ -94,6 +103,7 @@ const ProfilePage = () => {
   const [twoFactor, setTwoFactor] = useState<boolean>(false);
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [selectedTimezone, setSelectedTimezone] = useState('21600');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
@@ -119,6 +129,15 @@ const ProfilePage = () => {
     { value: '19800', label: '(UTC +5:30) Indian Standard Time, Sri Lanka Time' },
     { value: '-18000', label: '(UTC -5:00) Eastern Standard Time, Western Caribbean Standard Time' },
   ];
+
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Show toast notification
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
@@ -165,6 +184,156 @@ const ProfilePage = () => {
     });
     showToast('API key generated successfully!', 'success');
   };
+
+  if (isPageLoading) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Left Column - Loading States */}
+            <div className="space-y-6">
+              
+              {/* Account Information Card - Loading */}
+              <div className="card card-padding">
+                <div className="flex items-center justify-center min-h-[200px]">
+                  <div className="text-center flex flex-col items-center">
+                    <GradientSpinner size="w-12 h-12" className="mb-3" />
+                    <div className="text-base font-medium">Loading account information...</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* User Profile Picture Card - Static */}
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <Camera />
+                  </div>
+                  <h3 className="card-title">Profile Picture</h3>
+                </div>
+                
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="relative">
+                    <div className="profile-picture">
+                      {user?.name?.charAt(0) || 'M'}
+                    </div>
+                    <button className="profile-picture-edit">
+                      <Camera className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <button className="btn btn-primary">
+                    Upload Photo
+                  </button>
+                </div>
+              </div>
+
+              {/* Change Password Card - Loading */}
+              <div className="card card-padding">
+                <div className="flex items-center justify-center min-h-[300px]">
+                  <div className="text-center flex flex-col items-center">
+                    <GradientSpinner size="w-12 h-12" className="mb-3" />
+                    <div className="text-base font-medium">Loading password settings...</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right Column - Static Cards */}
+            <div className="space-y-6">
+              
+              {/* Two Factor Auth Card */}
+              <div className="card card-padding">
+                <div className="card-header mb-4">
+                  <div className="card-icon">
+                    <Shield />
+                  </div>
+                  <h3 className="card-title">2FA</h3>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <label className="form-label">Two-factor authentication</label>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      Email-based option to add an extra layer of protection to your account.
+                    </p>
+                  </div>
+                  <div className="ml-4">
+                    <Switch
+                      checked={twoFactor}
+                      onCheckedChange={setTwoFactor}
+                      title={`${twoFactor ? 'Disable' : 'Enable'} Two-Factor Authentication`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* API Keys Card */}
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <Key />
+                  </div>
+                  <h3 className="card-title">API Keys</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="form-label mb-2">API Key</label>
+                    <div className="api-key-container">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          readOnly
+                          value="********************************"
+                          className="form-input api-key-input"
+                        />
+                      </div>
+                      
+                      <div className="api-key-buttons">
+                        <button className="btn btn-secondary flex items-center justify-center gap-2">
+                          <Copy className="h-4 w-4" />
+                          Copy
+                        </button>
+                        
+                        <button className="btn btn-primary">
+                          Generate
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timezone Card */}
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <Clock />
+                  </div>
+                  <h3 className="card-title">Timezone</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <label className="form-label">Select Timezone</label>
+                    <select className="form-select">
+                      <option>(UTC +6:00) Bangladesh Standard Time</option>
+                    </select>
+                  </div>
+                  <button className="btn btn-primary">
+                    Save Timezone
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">

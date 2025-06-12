@@ -16,6 +16,15 @@ import {
 } from 'lucide-react';
 import { FaExchangeAlt } from 'react-icons/fa';
 
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 // Mock currency context hook (replace with your actual import)
 const useCurrency = () => ({
   currency: 'BDT' as 'USD' | 'BDT',
@@ -49,12 +58,22 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
   const [isValidatingUser, setIsValidatingUser] = useState(false);
   const [userValidationError, setUserValidationError] = useState('');
   const [isUserValid, setIsUserValid] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const rate = globalRate;
 
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Transfer Funds — ${APP_NAME}`;
+  }, []);
+
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Debounced username validation
@@ -200,6 +219,26 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
   const currentAmount = activeCurrency === 'USD' ? parseFloat(amountUSD) || 0 : parseFloat(amountBDT) || 0;
   const fee = currentAmount * 0.03;
   const totalAmount = currentAmount + fee;
+
+  if (isLoading) {
+    return (
+      <div className={`page-container ${className}`}>
+        <div className="page-content">
+          <div className="max-w-2xl mx-auto">
+            {/* Transfer Form Card - Loading State */}
+            <div className="card card-padding">
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center flex flex-col items-center">
+                  <GradientSpinner size="w-14 h-14" className="mb-4" />
+                  <div className="text-lg font-medium">Loading transfer form...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`page-container ${className}`}>

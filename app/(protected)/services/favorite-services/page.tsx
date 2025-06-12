@@ -18,6 +18,15 @@ import {
   FaHeart
 } from 'react-icons/fa';
 
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 // Toast Component
 const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
   <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
@@ -220,7 +229,7 @@ export default function FavoriteServices() {
         <div className="page-content">
           <div className="card card-padding">
             <div className="text-center py-8 flex flex-col items-center">
-              <FaSpinner className="text-4xl text-blue-500 mb-4 animate-spin" />
+              <GradientSpinner size="w-14 h-14" className="mb-4" />
               <div className="text-lg font-medium">Loading favorite services...</div>
             </div>
           </div>

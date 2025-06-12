@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    template: `%s | ${APP_NAME}`,
+    template: `%s — ${APP_NAME}`,
     default: `${APP_NAME}`,
   },
   description: `${APP_DESCRIPTION}`,

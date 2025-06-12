@@ -15,8 +15,37 @@ import {
   FaCheckCircle,
   FaUser,
   FaLink,
+  FaTimes,
+  FaExclamationTriangle,
 } from 'react-icons/fa';
-import { toast } from 'sonner';
+
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
+// Custom Toast Component
+const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+    type === 'success' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200' :
+    type === 'error' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' :
+    type === 'info' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200' :
+    'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
+  }`}>
+    <div className="flex items-center space-x-2">
+      {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
+      {type === 'error' && <FaExclamationTriangle className="w-4 h-4" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded">
+        <FaTimes className="w-3 h-3" />
+      </button>
+    </div>
+  </div>
+);
 
 interface AffiliateStats {
   visits: number;
@@ -33,6 +62,7 @@ function AffiliateStatsCards() {
   const user = useCurrentUser();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
   const [stats, setStats] = useState<AffiliateStats>({
     visits: 0,
     registrations: 0,
@@ -46,6 +76,12 @@ function AffiliateStatsCards() {
 
   // Generate referral link based on user's ID
   const referralLink = user?.id ? `https://smmdoc.com/ref/${user.id}` : '';
+
+  // Show toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -68,7 +104,7 @@ function AffiliateStatsCards() {
         }
       } catch (error) {
         console.error('Error fetching affiliate stats:', error);
-        toast.error('Error loading affiliate stats');
+        showToast('Error loading affiliate stats', 'error');
       } finally {
         setLoading(false);
       }
@@ -82,17 +118,26 @@ function AffiliateStatsCards() {
       .writeText(referralLink)
       .then(() => {
         setCopied(true);
-        toast.success('Referral link copied!');
+        showToast('Referral link copied!', 'success');
         setTimeout(() => setCopied(false), 2000);
       })
       .catch((err) => {
-        toast.error('Failed to copy');
+        showToast('Failed to copy', 'error');
         console.error('Failed to copy: ', err);
       });
   };
 
   return (
     <div className="space-y-6">
+      {/* Toast Container */}
+      {toastMessage && (
+        <Toast 
+          message={toastMessage.message} 
+          type={toastMessage.type} 
+          onClose={() => setToastMessage(null)} 
+        />
+      )}
+
       {/* User Information Cards - Dashboard Style */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Username Card */}
@@ -185,7 +230,11 @@ function AffiliateStatsCards() {
                   Total Visits
                 </div>
                 <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  {stats.visits}
+                  {loading ? (
+                    <GradientSpinner size="w-6 h-6" />
+                  ) : (
+                    stats.visits
+                  )}
                 </div>
               </div>
               <FaMousePointer className="text-blue-500 w-5 h-5" />
@@ -200,7 +249,11 @@ function AffiliateStatsCards() {
                   Registrations
                 </div>
                 <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                  {stats.registrations}
+                  {loading ? (
+                    <GradientSpinner size="w-6 h-6" />
+                  ) : (
+                    stats.registrations
+                  )}
                 </div>
               </div>
               <FaUsers className="text-green-500 w-5 h-5" />
@@ -215,7 +268,11 @@ function AffiliateStatsCards() {
                   Referrals
                 </div>
                 <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  {stats.referrals}
+                  {loading ? (
+                    <GradientSpinner size="w-6 h-6" />
+                  ) : (
+                    stats.referrals
+                  )}
                 </div>
               </div>
               <FaUsers className="text-purple-500 w-5 h-5" />
@@ -230,7 +287,11 @@ function AffiliateStatsCards() {
                   Conversion Rate
                 </div>
                 <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                  {stats.conversionRate}
+                  {loading ? (
+                    <GradientSpinner size="w-6 h-6" />
+                  ) : (
+                    stats.conversionRate
+                  )}
                 </div>
               </div>
               <FaChartLine className="text-orange-500 w-5 h-5" />
@@ -245,7 +306,11 @@ function AffiliateStatsCards() {
                   Total Earnings
                 </div>
                 <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-                  {stats.totalEarnings}
+                  {loading ? (
+                    <GradientSpinner size="w-6 h-6" />
+                  ) : (
+                    stats.totalEarnings
+                  )}
                 </div>
               </div>
               <FaDollarSign className="text-emerald-500 w-5 h-5" />
@@ -260,7 +325,11 @@ function AffiliateStatsCards() {
                   Available Earnings
                 </div>
                 <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
-                  {stats.availableEarnings}
+                  {loading ? (
+                    <GradientSpinner size="w-6 h-6" />
+                  ) : (
+                    stats.availableEarnings
+                  )}
                 </div>
               </div>
               <FaCoins className="text-indigo-500 w-5 h-5" />

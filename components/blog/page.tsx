@@ -39,7 +39,7 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => (
     </div>
     <div className="p-6">
       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-200">
-        <Link href={`/blog/${post.slug}`}>
+        <Link href="/blog/blog-details">
           {post.title}
         </Link>
       </h3>
@@ -47,7 +47,7 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => (
         {post.excerpt}
       </p>
       <Link
-        href={`/blog/${post.slug}`}
+        href="/blog/blog-details"
         className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-4 py-2 text-sm rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
       >
         <span>Read more</span>
