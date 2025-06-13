@@ -19,7 +19,7 @@ import {
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
-const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
@@ -254,7 +254,9 @@ const TicketPage: React.FC = () => {
                 <div className="flex items-center justify-center min-h-[400px]">
                   <div className="text-center flex flex-col items-center">
                     <GradientSpinner size="w-14 h-14" className="mb-4" />
-                    <div className="text-lg font-medium">Loading ticket form...</div>
+                    <div className="text-lg font-medium">
+                      Loading ticket form...
+                    </div>
                   </div>
                 </div>
               </div>
@@ -286,7 +288,8 @@ const TicketPage: React.FC = () => {
                     <div className="w-full p-4 text-left flex justify-between items-center">
                       <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
                         <FaClock className="w-4 h-4" />
-                        How long does it take to get a reply from support regarding my complaint?
+                        How long does it take to get a reply from support
+                        regarding my complaint?
                       </span>
                       <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
                     </div>
@@ -398,7 +401,7 @@ const TicketPage: React.FC = () => {
                       value={formData.orderIds}
                       onChange={(e) => handleOrderIdsChange(e.target.value)}
                       placeholder="Enter order IDs separated by commas"
-                      className="form-input"
+                      className="form-field"
                     />
                   </div>
 
@@ -412,7 +415,7 @@ const TicketPage: React.FC = () => {
                           handleInputChange('message', e.target.value)
                         }
                         required={showMessageField}
-                        className="form-input"
+                        className="form-field"
                         style={{ minHeight: '120px', resize: 'vertical' }}
                       />
                     </div>

@@ -227,10 +227,10 @@ export default function FavoriteServices() {
     return (
       <div className="page-container">
         <div className="page-content">
-          <div className="card card-padding">
+          <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
             <div className="text-center py-8 flex flex-col items-center">
               <GradientSpinner size="w-14 h-14" className="mb-4" />
-              <div className="text-lg font-medium">Loading favorite services...</div>
+              <div className="text-lg font-medium text-gray-900 dark:text-white">Loading favorite services...</div>
             </div>
           </div>
         </div>
@@ -251,20 +251,20 @@ export default function FavoriteServices() {
       
       <div className="page-content">
         {/* Favorite Services Content Card - Everything in one box */}
-        <div className="card card-padding">
+        <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
           {/* Search Bar */}
           <div className="mb-6">
             <div className="form-group mb-0">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <FaSearch className="w-4 h-4 text-gray-500" />
+                  <FaSearch className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </div>
                 <input
                   type="search"
                   placeholder="Search favorite services..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="form-input pl-10"
+                  className="w-full pl-10 pr-4 py-3 bg-[#F9FAFB] dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   autoComplete="off"
                 />
               </div>
@@ -274,23 +274,23 @@ export default function FavoriteServices() {
           {/* Favorite Services */}
           {Object.keys(groupedServices).length === 0 ? (
             <div className="text-center py-8 flex flex-col items-center">
-              <FaHeart className="text-4xl text-gray-400 mb-4" />
-              <div className="text-lg font-medium">No favorite services yet</div>
-              <div className="text-sm text-gray-500">Start adding services to your favorites to see them here</div>
+              <FaHeart className="text-4xl text-gray-400 dark:text-gray-500 mb-4" />
+              <div className="text-lg font-medium text-gray-900 dark:text-white">No favorite services yet</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Start adding services to your favorites to see them here</div>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">Fav</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Service</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Rate per 1000</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Min order</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Max order</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Average time</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">Action</th>
+                  <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 rounded-t-lg">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white first:rounded-tl-lg">Fav</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">ID</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Service</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Rate per 1000</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Min order</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Max order</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Average time</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white last:rounded-tr-lg">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -299,7 +299,7 @@ export default function FavoriteServices() {
                       {/* Category Row */}
                       <tr>
                         <td colSpan={8} className="py-0">
-                          <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white font-medium py-3 px-6 shadow-lg">
+                          <div className="bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-medium py-3 px-6 shadow-lg">
                             <h3 className="text-lg font-semibold">{categoryName}</h3>
                           </div>
                         </td>
@@ -312,40 +312,40 @@ export default function FavoriteServices() {
                         const isLastRow = isLastInCategory && isLastCategory;
                         
                         return (
-                          <tr key={service.id} className={`border-b border-gray-100 hover:bg-gray-50 ${isLastRow ? 'last:border-b-0' : ''}`}>
+                          <tr key={service.id} className={`border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30 ${isLastRow ? 'last:border-b-0' : ''}`}>
                             <td className={`py-3 px-4 ${isLastRow ? 'first:rounded-bl-lg' : ''}`}>
                               <button
                                 onClick={() => toggleFavorite(service.id)}
-                                className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
+                                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors duration-200"
                                 title="Remove from favorites"
                               >
                                 <FaStar className="w-4 h-4 text-yellow-500" />
                               </button>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-sm font-mono text-gray-700">{service.id}</span>
+                              <span className="text-sm font-mono text-gray-700 dark:text-gray-300">{service.id}</span>
                             </td>
                             <td className="py-3 px-4">
-                              <div className="font-medium text-gray-900">{service.name}</div>
+                              <div className="font-medium text-gray-900 dark:text-white">{service.name}</div>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">
                                 <PriceDisplay amount={service.rate} originalCurrency={'USD'} />
                               </span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-sm text-gray-700">{service.min_order?.toLocaleString()}</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">{service.min_order?.toLocaleString()}</span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-sm text-gray-700">{service.max_order?.toLocaleString()}</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">{service.max_order?.toLocaleString()}</span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="text-sm text-gray-700">{service.avg_time || 'N/A'}</span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">{service.avg_time || 'N/A'}</span>
                             </td>
                             <td className={`py-3 px-4 ${isLastRow ? 'last:rounded-br-lg' : ''}`}>
                               <button
                                 onClick={() => handleViewDetails(service)}
-                                className="flex items-center gap-2 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded hover:bg-blue-50 transition-colors duration-200"
+                                className="flex items-center gap-2 px-3 py-1 text-sm text-[#5F1DE8] dark:text-[#B131F8] hover:text-[#4F0FD8] dark:hover:text-[#A121E8] border border-[#5F1DE8] dark:border-[#B131F8] rounded hover:bg-[#5F1DE8]/10 dark:hover:bg-[#B131F8]/10 transition-colors duration-200"
                               >
                                 <FaEye className="w-3 h-3" />
                                 Details
@@ -363,22 +363,22 @@ export default function FavoriteServices() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-              <div className="text-sm text-gray-600">
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
                 Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={handlePrevious}
                   disabled={page === 1}
-                  className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   Previous
                 </button>
                 <button
                   onClick={handleNext}
                   disabled={page === totalPages}
-                  className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   Next
                 </button>

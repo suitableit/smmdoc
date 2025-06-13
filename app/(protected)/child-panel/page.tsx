@@ -1,20 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { APP_NAME } from '@/lib/constants';
+import React, { useEffect, useState } from 'react';
 import {
-  FaShoppingCart,
   FaCheckCircle,
-  FaTimes,
   FaChevronDown,
-  FaServer,
-  FaGlobe,
-  FaUser,
-  FaLock,
-  FaDollarSign,
   FaInfoCircle,
-  FaClock,
-  FaQuestionCircle
+  FaQuestionCircle,
+  FaServer,
+  FaShoppingCart,
+  FaTimes,
 } from 'react-icons/fa';
 
 interface FormData {
@@ -31,7 +26,7 @@ interface FAQ {
 }
 
 // Custom Gradient Spinner Component (Large version for loading state)
-const GradientSpinner = ({ size = "w-5 h-5", className = "" }) => (
+const GradientSpinner = ({ size = 'w-5 h-5', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
@@ -40,7 +35,15 @@ const GradientSpinner = ({ size = "w-5 h-5", className = "" }) => (
 );
 
 // Toast/Twist Message Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
   <div className={`toast toast-${type} toast-enter`}>
     {type === 'success' && <FaCheckCircle className="toast-icon" />}
     <span className="font-medium">{message}</span>
@@ -56,13 +59,16 @@ const ChildPanel: React.FC = () => {
     currency: 'USD',
     username: '',
     password: '',
-    passwordConfirm: ''
+    passwordConfirm: '',
   });
 
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -80,82 +86,101 @@ const ChildPanel: React.FC = () => {
 
   const currencies = [
     { value: 'USD', label: 'United States Dollars (USD)' },
-    { value: 'BDT', label: 'Bangladeshi Taka (BDT)' }
+    { value: 'BDT', label: 'Bangladeshi Taka (BDT)' },
   ];
 
   const faqs: FAQ[] = [
     {
-      question: "What is child panel?",
-      answer: "A child panel is a panel with a limited selection of features that is linked to one of your regular panels such as SMMDOC.com"
+      question: 'What is child panel?',
+      answer:
+        'A child panel is a panel with a limited selection of features that is linked to one of your regular panels such as SMMDOC.com',
     },
     {
-      question: "How much cost for a child panel?",
-      answer: "It will cost you $10.00 per month. Please note, you paying for panel, not for services, you have to pay for the services you will purchase from SMMDOC"
+      question: 'How much cost for a child panel?',
+      answer:
+        'It will cost you $10.00 per month. Please note, you paying for panel, not for services, you have to pay for the services you will purchase from SMMDOC',
     },
     {
-      question: "How long it will take to activate the child panel?",
-      answer: "It will take 3-6 hrs to active your child panel if you changed your name server perfectly."
+      question: 'How long it will take to activate the child panel?',
+      answer:
+        'It will take 3-6 hrs to active your child panel if you changed your name server perfectly.',
     },
     {
-      question: "Do you need hosting for child panel?",
-      answer: "No, for child panel you just need a domain and that's all."
+      question: 'Do you need hosting for child panel?',
+      answer: "No, for child panel you just need a domain and that's all.",
     },
     {
-      question: "I have domain, what i can do next?",
-      answer: "If you have domain, you can simply change your domain name server and point it to ns1.smmdoc.com ns2.smmdoc.com After you successfully changed the name server, you can submit a order for child panel"
+      question: 'I have domain, what i can do next?',
+      answer:
+        'If you have domain, you can simply change your domain name server and point it to ns1.smmdoc.com ns2.smmdoc.com After you successfully changed the name server, you can submit a order for child panel',
     },
     {
-      question: "How can i change name server for my domain?",
-      answer: "Its actually depend on your domain provider, if you go to your domain settings and choose custom DNS and enter the name server given by SMMDOC."
+      question: 'How can i change name server for my domain?',
+      answer:
+        'Its actually depend on your domain provider, if you go to your domain settings and choose custom DNS and enter the name server given by SMMDOC.',
     },
     {
-      question: "How to i connect child panel with SMMDOC?",
-      answer: "You can simply go to https://yourdomain.com/admin/settings/providers and you will find out option to connect your panel with SMMDOC. You can a key to connect your panel with SMMDOC. This key you will find out on settings of your SMMDOC account."
+      question: 'How to i connect child panel with SMMDOC?',
+      answer:
+        'You can simply go to https://yourdomain.com/admin/settings/providers and you will find out option to connect your panel with SMMDOC. You can a key to connect your panel with SMMDOC. This key you will find out on settings of your SMMDOC account.',
     },
     {
-      question: "How can i get refund for child panel if i am not interested to continue?",
-      answer: "Unfortunately refund not possible after we activate your child panel. But you can terminate your child panel any time by creating a ticket to us."
+      question:
+        'How can i get refund for child panel if i am not interested to continue?',
+      answer:
+        'Unfortunately refund not possible after we activate your child panel. But you can terminate your child panel any time by creating a ticket to us.',
     },
     {
-      question: "I want to change my child panel domain address, what i need to do?",
-      answer: "You can simply, change your new domain name server and send to us your new domain address. We will replace your new domain with old domain. But, this change only possible for 1 time."
+      question:
+        'I want to change my child panel domain address, what i need to do?',
+      answer:
+        'You can simply, change your new domain name server and send to us your new domain address. We will replace your new domain with old domain. But, this change only possible for 1 time.',
     },
     {
-      question: "How can i activate affiliate on my child panel?",
-      answer: "Unfortunately, there is no affiliate feature on child panel"
+      question: 'How can i activate affiliate on my child panel?',
+      answer: 'Unfortunately, there is no affiliate feature on child panel',
     },
     {
-      question: "How can i add payment gateway on our child panel?",
-      answer: "You can visit https://yourdomain.com/admin/settings/payments - Add method - Choose Payment Method"
+      question: 'How can i add payment gateway on our child panel?',
+      answer:
+        'You can visit https://yourdomain.com/admin/settings/payments - Add method - Choose Payment Method',
     },
     {
-      question: "How can i collect money from our customer?",
-      answer: "You customer will pay to your own payment gateway account, they are not paying to us. So, you don't have to worry about payment. Setup your own payment gateway, and collect payment from your customers"
+      question: 'How can i collect money from our customer?',
+      answer:
+        "You customer will pay to your own payment gateway account, they are not paying to us. So, you don't have to worry about payment. Setup your own payment gateway, and collect payment from your customers",
     },
     {
-      question: "If i connect our child panel with SMMDOC, is there any way customer will find out about SMMDOC?",
-      answer: "No, your customer will never know about SMMDOC.com. They will place order on your website and your order will automatically place to SMMDOC.com under your user account."
-    }
+      question:
+        'If i connect our child panel with SMMDOC, is there any way customer will find out about SMMDOC?',
+      answer:
+        'No, your customer will never know about SMMDOC.com. They will place order on your website and your order will automatically place to SMMDOC.com under your user account.',
+    },
   ];
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
     if (e) e.preventDefault();
     setIsLoading(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
@@ -181,8 +206,9 @@ const ChildPanel: React.FC = () => {
                     Create A Child Panel
                   </h1>
                   <p className="text-gray-600 mb-4">
-                    Create a child panel with your own domain and start your own business. 
-                    You can connect your child panel with SMMDOC and start selling services to your customers.
+                    Create a child panel with your own domain and start your own
+                    business. You can connect your child panel with SMMDOC and
+                    start selling services to your customers.
                   </p>
                   <button className="btn btn-primary inline-flex items-center">
                     Get Started
@@ -207,7 +233,9 @@ const ChildPanel: React.FC = () => {
                   <div className="flex items-center justify-center min-h-[400px]">
                     <div className="text-center flex flex-col items-center">
                       <GradientSpinner size="w-14 h-14" className="mb-4" />
-                      <div className="text-lg font-medium">Loading child panel form...</div>
+                      <div className="text-lg font-medium">
+                        Loading child panel form...
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -250,10 +278,10 @@ const ChildPanel: React.FC = () => {
       {/* Toast Container */}
       <div className="toast-container">
         {toast && (
-          <Toast 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => setToast(null)} 
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
           />
         )}
       </div>
@@ -268,11 +296,12 @@ const ChildPanel: React.FC = () => {
                   Create A Child Panel
                 </h1>
                 <p className="text-gray-600 mb-4">
-                  Create a child panel with your own domain and start your own business. 
-                  You can connect your child panel with SMMDOC and start selling services to your customers.
+                  Create a child panel with your own domain and start your own
+                  business. You can connect your child panel with SMMDOC and
+                  start selling services to your customers.
                 </p>
-                <a 
-                  href="#childPanelOrder" 
+                <a
+                  href="#childPanelOrder"
                   className="btn btn-primary inline-flex items-center"
                 >
                   Get Started
@@ -315,7 +344,7 @@ const ChildPanel: React.FC = () => {
                       name="domain"
                       value={formData.domain}
                       onChange={handleInputChange}
-                      className="form-input"
+                      className="form-field"
                       placeholder="Enter your domain"
                       required
                     />
@@ -364,7 +393,7 @@ const ChildPanel: React.FC = () => {
                       name="username"
                       value={formData.username}
                       onChange={handleInputChange}
-                      className="form-input"
+                      className="form-field"
                       placeholder="Enter admin username"
                       required
                     />
@@ -380,7 +409,7 @@ const ChildPanel: React.FC = () => {
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="form-input"
+                      className="form-field"
                       placeholder="Enter admin password"
                       required
                     />
@@ -396,7 +425,7 @@ const ChildPanel: React.FC = () => {
                       name="passwordConfirm"
                       value={formData.passwordConfirm}
                       onChange={handleInputChange}
-                      className="form-input"
+                      className="form-field"
                       placeholder="Confirm admin password"
                       required
                     />
@@ -410,7 +439,7 @@ const ChildPanel: React.FC = () => {
                       type="text"
                       id="price"
                       value="$10.00"
-                      className="form-input bg-gray-50 text-gray-600"
+                      className="form-field bg-gray-50 text-gray-600"
                       readOnly
                     />
                   </div>

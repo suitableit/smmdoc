@@ -8,7 +8,6 @@ import {
   dashboardApi,
   useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
-import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
@@ -19,12 +18,11 @@ import {
   FaShoppingCart,
   FaSpinner,
   FaTimes,
-  FaExclamationTriangle,
 } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 
 // Custom Gradient Spinner Component
-const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
@@ -163,7 +161,7 @@ const InstructionsPanel: React.FC = () => {
   );
 };
 
-  // Main Mass Orders Component
+// Main Mass Orders Component
 export default function MassOrder() {
   const user = useCurrentUser();
   const router = useRouter();
@@ -389,7 +387,7 @@ export default function MassOrder() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
-            {/* Tab Navigation */}
+            {/* Tab Navigation - Updated with Services Page Gradient */}
             <div className="card" style={{ padding: '8px' }}>
               <div className="flex space-x-2">
                 <button
@@ -401,7 +399,7 @@ export default function MassOrder() {
                 </button>
                 <button
                   onClick={() => setActiveTab('massOrder')}
-                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25"
+                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white shadow-lg"
                 >
                   <FaLayerGroup className="mr-2 w-4 h-4" />
                   Mass Orders
@@ -415,7 +413,9 @@ export default function MassOrder() {
                 {isFormLoading ? (
                   <div className="text-center py-12 flex flex-col items-center">
                     <GradientSpinner size="w-12 h-12" className="mb-4" />
-                    <div className="text-lg font-medium text-gray-700">Loading mass order form...</div>
+                    <div className="text-lg font-medium text-gray-700">
+                      Loading mass order form...
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -438,7 +438,7 @@ export default function MassOrder() {
                             setOrders(e.target.value);
                             parseOrders(e.target.value);
                           }}
-                          className="form-input font-mono text-sm resize-none"
+                          className="form-field font-mono text-sm resize-none"
                           style={{ height: '256px' }}
                         />
                       </div>
@@ -448,21 +448,25 @@ export default function MassOrder() {
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div className="flex justify-between">
-                              <span className="text-blue-700">Valid Orders:</span>
+                              <span className="text-blue-700">
+                                Valid Orders:
+                              </span>
                               <span className="font-semibold text-blue-900">
                                 {totalOrders}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-blue-700">Estimated Cost:</span>
+                              <span className="text-blue-700">
+                                Estimated Cost:
+                              </span>
                               <span className="font-semibold text-blue-900">
                                 {formatCurrency(totalPrice)}
                               </span>
                             </div>
                           </div>
                           <div className="text-xs text-blue-600 mt-2">
-                            * Final price will be calculated based on actual service
-                            rates
+                            * Final price will be calculated based on actual
+                            service rates
                           </div>
                         </div>
                       )}

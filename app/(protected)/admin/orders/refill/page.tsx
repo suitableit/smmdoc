@@ -1,29 +1,30 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { 
-  FaSearch, 
-  FaFilter, 
-  FaDownload, 
-  FaSync, 
-  FaBox, 
-  FaClock, 
-  FaCheckCircle, 
+import {
+  FaCheckCircle,
+  FaClock,
   FaDollarSign,
-  FaEllipsisH,
-  FaEye,
-  FaPlay,
-  FaTimesCircle,
+  FaDownload,
   FaExclamationCircle,
-  FaTrash,
   FaExternalLinkAlt,
-  FaUser,
+  FaEye,
+  FaRedo,
+  FaSearch,
+  FaSync,
   FaTimes,
-  FaRedo
 } from 'react-icons/fa';
 
 // Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
   <div className={`toast toast-${type} toast-enter`}>
     {type === 'success' && <FaCheckCircle className="toast-icon" />}
     <span className="font-medium">{message}</span>
@@ -124,9 +125,12 @@ const RefillOrdersPage = () => {
     reason: '',
   });
   const [processing, setProcessing] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
-  
+
   const [stats, setStats] = useState({
     totalRefills: 0,
     pendingRefills: 0,
@@ -176,7 +180,10 @@ const RefillOrdersPage = () => {
   }, [searchTerm, statusFilter]);
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
@@ -194,7 +201,10 @@ const RefillOrdersPage = () => {
       if (result.success) {
         setRefillInfo(result.data);
       } else {
-        showToast(result.error || 'Failed to fetch refill information', 'error');
+        showToast(
+          result.error || 'Failed to fetch refill information',
+          'error'
+        );
         setRefillDialogOpen(false);
       }
     } catch (error) {
@@ -308,7 +318,9 @@ const RefillOrdersPage = () => {
         <div className="flex items-center justify-center py-20">
           <div className="flex items-center gap-2">
             <FaSync className="h-5 w-5 animate-spin text-blue-500" />
-            <span className="text-lg font-medium">Loading refillable orders...</span>
+            <span className="text-lg font-medium">
+              Loading refillable orders...
+            </span>
           </div>
         </div>
       </div>
@@ -320,10 +332,10 @@ const RefillOrdersPage = () => {
       {/* Toast Container */}
       <div className="toast-container">
         {toast && (
-          <Toast 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => setToast(null)} 
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
           />
         )}
       </div>
@@ -333,10 +345,12 @@ const RefillOrdersPage = () => {
         <div className="page-header mb-6">
           <div>
             <h1 className="page-title">Refill Orders Management</h1>
-            <p className="page-description mb-4">Create refill orders for completed or partial orders</p>
+            <p className="page-description mb-4">
+              Create refill orders for completed or partial orders
+            </p>
           </div>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={handleRefresh}
               className="btn btn-secondary flex items-center gap-2"
               disabled={loading}
@@ -344,7 +358,7 @@ const RefillOrdersPage = () => {
               <FaSync className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
-            <button 
+            <button
               onClick={handleExport}
               className="btn btn-primary flex items-center gap-2"
             >
@@ -378,7 +392,10 @@ const RefillOrdersPage = () => {
               <div>
                 <h3 className="card-title">Completed Orders</h3>
                 <p className="text-2xl font-bold text-blue-600">
-                  {filteredOrders.filter((o) => o.status === 'completed').length}
+                  {
+                    filteredOrders.filter((o) => o.status === 'completed')
+                      .length
+                  }
                 </p>
               </div>
             </div>
@@ -406,7 +423,10 @@ const RefillOrdersPage = () => {
               <div>
                 <h3 className="card-title">Total Value</h3>
                 <p className="text-2xl font-bold text-purple-600">
-                  ${filteredOrders.reduce((sum, order) => sum + order.price, 0).toFixed(2)}
+                  $
+                  {filteredOrders
+                    .reduce((sum, order) => sum + order.price, 0)
+                    .toFixed(2)}
                 </p>
               </div>
             </div>
@@ -426,9 +446,13 @@ const RefillOrdersPage = () => {
               }`}
             >
               All
-              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                statusFilter === 'all' ? 'bg-white/20' : 'bg-purple-100 text-purple-700'
-              }`}>
+              <span
+                className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                  statusFilter === 'all'
+                    ? 'bg-white/20'
+                    : 'bg-purple-100 text-purple-700'
+                }`}
+              >
                 {filteredOrders.length}
               </span>
             </button>
@@ -441,9 +465,13 @@ const RefillOrdersPage = () => {
               }`}
             >
               Completed
-              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                statusFilter === 'completed' ? 'bg-white/20' : 'bg-green-100 text-green-700'
-              }`}>
+              <span
+                className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                  statusFilter === 'completed'
+                    ? 'bg-white/20'
+                    : 'bg-green-100 text-green-700'
+                }`}
+              >
                 {orders.filter((o) => o.status === 'completed').length}
               </span>
             </button>
@@ -456,9 +484,13 @@ const RefillOrdersPage = () => {
               }`}
             >
               Partial
-              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                statusFilter === 'partial' ? 'bg-white/20' : 'bg-orange-100 text-orange-700'
-              }`}>
+              <span
+                className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                  statusFilter === 'partial'
+                    ? 'bg-white/20'
+                    : 'bg-orange-100 text-orange-700'
+                }`}
+              >
                 {orders.filter((o) => o.status === 'partial').length}
               </span>
             </button>
@@ -467,13 +499,16 @@ const RefillOrdersPage = () => {
           {/* Right: Search Bar with Filter Dropdown */}
           <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative flex-1 md:min-w-[300px]">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+              <FaSearch
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
+                style={{ color: 'var(--text-muted)' }}
+              />
               <input
                 type="text"
                 placeholder="Search eligible orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-input pl-10 pr-4"
+                className="form-field pl-10 pr-4"
               />
             </div>
             <select className="form-select min-w-[120px]">
@@ -491,14 +526,19 @@ const RefillOrdersPage = () => {
               <div className="card-icon">
                 <FaRedo />
               </div>
-              <h3 className="card-title">Eligible Orders for Refill ({filteredOrders.length})</h3>
+              <h3 className="card-title">
+                Eligible Orders for Refill ({filteredOrders.length})
+              </h3>
               <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
                 Manage Refills
               </span>
             </div>
             {selectedOrders.length > 0 && (
               <div className="flex items-center gap-2 mt-4">
-                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <span
+                  className="text-sm"
+                  style={{ color: 'var(--text-muted)' }}
+                >
                   {selectedOrders.length} selected
                 </span>
                 <button className="btn btn-primary flex items-center gap-2">
@@ -512,12 +552,19 @@ const RefillOrdersPage = () => {
           <div style={{ padding: '0 24px' }}>
             {filteredOrders.length === 0 ? (
               <div className="text-center py-12">
-                <FaRedo className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
-                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                <FaRedo
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   No eligible orders found
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  No orders are currently eligible for refill or no orders match your filters.
+                  No orders are currently eligible for refill or no orders match
+                  your filters.
                 </p>
               </div>
             ) : (
@@ -527,28 +574,82 @@ const RefillOrdersPage = () => {
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
                           <input
                             type="checkbox"
-                            checked={selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
+                            checked={
+                              selectedOrders.length === filteredOrders.length &&
+                              filteredOrders.length > 0
+                            }
                             onChange={handleSelectAll}
                             className="rounded border-gray-300 w-4 h-4"
                           />
                         </th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>User</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Service</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Link</th>
-                        <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Quantity</th>
-                        <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Amount</th>
-                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
-                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Progress</th>
-                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          ID
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          User
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Service
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Link
+                        </th>
+                        <th
+                          className="text-right p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Quantity
+                        </th>
+                        <th
+                          className="text-right p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Amount
+                        </th>
+                        <th
+                          className="text-center p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="text-center p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Progress
+                        </th>
+                        <th
+                          className="text-center p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredOrders.map((order) => (
-                        <tr key={order.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                        <tr
+                          key={order.id}
+                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                        >
                           <td className="p-3">
                             <input
                               type="checkbox"
@@ -563,19 +664,31 @@ const RefillOrdersPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {order.user.name}
                             </div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            <div
+                              className="text-xs"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
                               {order.user.email}
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div
+                                className="font-medium text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
                                 {order.service.name}
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              <div
+                                className="text-xs"
+                                style={{ color: 'var(--text-muted)' }}
+                              >
                                 {order.category.category_name}
                               </div>
                             </div>
@@ -594,7 +707,9 @@ const RefillOrdersPage = () => {
                                     : order.link}
                                 </a>
                                 <button
-                                  onClick={() => window.open(order.link, '_blank')}
+                                  onClick={() =>
+                                    window.open(order.link, '_blank')
+                                  }
                                   className="text-green-500 hover:text-green-700 p-1 flex-shrink-0"
                                   title="Open link in new tab"
                                 >
@@ -605,20 +720,30 @@ const RefillOrdersPage = () => {
                           </td>
                           <td className="p-3 text-right">
                             <div>
-                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div
+                                className="font-semibold text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
                                 {order.qty.toLocaleString()}
                               </div>
                               <div className="text-xs text-green-600">
-                                {(order.qty - order.remains).toLocaleString()} delivered
+                                {(order.qty - order.remains).toLocaleString()}{' '}
+                                delivered
                               </div>
                             </div>
                           </td>
                           <td className="p-3 text-right">
                             <div>
-                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div
+                                className="font-semibold text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
                                 ${order.price.toFixed(2)}
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              <div
+                                className="text-xs"
+                                style={{ color: 'var(--text-muted)' }}
+                              >
                                 {order.currency}
                               </div>
                             </div>
@@ -633,18 +758,27 @@ const RefillOrdersPage = () => {
                           </td>
                           <td className="p-3 text-center">
                             <div className="space-y-1">
-                              <div className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                              <div
+                                className="text-xs font-medium"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
                                 {calculateProgress(order.qty, order.remains)}%
                               </div>
                               <div className="w-full bg-gray-200 rounded-full h-1.5">
                                 <div
                                   className="bg-gradient-to-r from-green-500 to-emerald-500 h-1.5 rounded-full transition-all duration-300"
                                   style={{
-                                    width: `${calculateProgress(order.qty, order.remains)}%`,
+                                    width: `${calculateProgress(
+                                      order.qty,
+                                      order.remains
+                                    )}%`,
                                   }}
                                 />
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              <div
+                                className="text-xs"
+                                style={{ color: 'var(--text-muted)' }}
+                              >
                                 {order.remains} remaining
                               </div>
                             </div>
@@ -658,8 +792,13 @@ const RefillOrdersPage = () => {
                                 <FaRedo className="h-3 w-3" />
                                 Create Refill
                               </button>
-                              <button 
-                                onClick={() => window.open(`/admin/orders/${order.id}`, '_blank')}
+                              <button
+                                onClick={() =>
+                                  window.open(
+                                    `/admin/orders/${order.id}`,
+                                    '_blank'
+                                  )
+                                }
                                 className="btn btn-secondary p-2"
                                 title="View Order Details"
                               >
@@ -675,9 +814,15 @@ const RefillOrdersPage = () => {
 
                 {/* Mobile Card View - Visible on tablet and mobile */}
                 <div className="lg:hidden">
-                  <div className="space-y-4" style={{ padding: '24px 0 24px 0' }}>
+                  <div
+                    className="space-y-4"
+                    style={{ padding: '24px 0 24px 0' }}
+                  >
                     {filteredOrders.map((order) => (
-                      <div key={order.id} className="card card-padding border-l-4 border-green-500 mb-4">
+                      <div
+                        key={order.id}
+                        className="card card-padding border-l-4 border-green-500 mb-4"
+                      >
                         {/* Header with ID and Actions */}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
@@ -698,8 +843,13 @@ const RefillOrdersPage = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
-                            <button 
-                              onClick={() => window.open(`/admin/orders/${order.id}`, '_blank')}
+                            <button
+                              onClick={() =>
+                                window.open(
+                                  `/admin/orders/${order.id}`,
+                                  '_blank'
+                                )
+                              }
                               className="btn btn-secondary p-2"
                               title="View Order Details"
                             >
@@ -711,13 +861,22 @@ const RefillOrdersPage = () => {
                         {/* User Info */}
                         <div className="flex items-center justify-between mb-4 pb-4 border-b">
                           <div>
-                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
                               User
                             </div>
-                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {order.user.name}
                             </div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            <div
+                              className="text-xs"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
                               {order.user.email}
                             </div>
                           </div>
@@ -725,13 +884,22 @@ const RefillOrdersPage = () => {
 
                         {/* Service Info */}
                         <div className="mb-4">
-                          <div className="font-mono text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                          <div
+                            className="font-mono text-xs mb-1"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
                             #{order.service.id}
                           </div>
-                          <div className="font-medium text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                          <div
+                            className="font-medium text-sm mb-1"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
                             {order.service.name}
                           </div>
-                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          <div
+                            className="text-xs"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
                             {order.category.category_name}
                           </div>
                           <div className="flex items-center gap-1 mt-1">
@@ -758,15 +926,24 @@ const RefillOrdersPage = () => {
                         {/* Financial Info */}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
-                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
                               Amount
                             </div>
-                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-semibold text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               ${order.price.toFixed(2)} {order.currency}
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
                               User Balance
                             </div>
                             <div className="font-semibold text-sm text-green-600">
@@ -778,21 +955,34 @@ const RefillOrdersPage = () => {
                         {/* Quantity and Progress Info */}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
-                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
                               Quantity
                             </div>
-                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-semibold text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {order.qty.toLocaleString()}
                             </div>
                             <div className="text-xs text-green-600">
-                              {(order.qty - order.remains).toLocaleString()} delivered
+                              {(order.qty - order.remains).toLocaleString()}{' '}
+                              delivered
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
                               Start Count
                             </div>
-                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-semibold text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {order.startCount.toLocaleString()}
                             </div>
                           </div>
@@ -801,10 +991,16 @@ const RefillOrdersPage = () => {
                         {/* Progress Bar */}
                         <div className="mb-4">
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                            <span
+                              className="text-xs font-medium"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
                               Progress
                             </span>
-                            <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                            <span
+                              className="text-xs font-medium"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {calculateProgress(order.qty, order.remains)}%
                             </span>
                           </div>
@@ -812,11 +1008,17 @@ const RefillOrdersPage = () => {
                             <div
                               className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300"
                               style={{
-                                width: `${calculateProgress(order.qty, order.remains)}%`,
+                                width: `${calculateProgress(
+                                  order.qty,
+                                  order.remains
+                                )}%`,
                               }}
                             />
                           </div>
-                          <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                          <div
+                            className="text-xs mt-1"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
                             {order.remains} remaining
                           </div>
                         </div>
@@ -834,11 +1036,19 @@ const RefillOrdersPage = () => {
 
                         {/* Date */}
                         <div className="mt-4 pt-4 border-t">
-                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            Date: {new Date(order.createdAt).toLocaleDateString()}
+                          <div
+                            className="text-xs"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            Date:{' '}
+                            {new Date(order.createdAt).toLocaleDateString()}
                           </div>
-                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            Time: {new Date(order.createdAt).toLocaleTimeString()}
+                          <div
+                            className="text-xs"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            Time:{' '}
+                            {new Date(order.createdAt).toLocaleTimeString()}
                           </div>
                         </div>
                       </div>
@@ -847,9 +1057,16 @@ const RefillOrdersPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 border-t" style={{ padding: '16px 24px 24px 24px' }}>
-                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Showing 1 to {filteredOrders.length} of {filteredOrders.length} orders
+                <div
+                  className="flex items-center justify-between pt-4 border-t"
+                  style={{ padding: '16px 24px 24px 24px' }}
+                >
+                  <div
+                    className="text-sm"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    Showing 1 to {filteredOrders.length} of{' '}
+                    {filteredOrders.length} orders
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -858,7 +1075,10 @@ const RefillOrdersPage = () => {
                     >
                       Previous
                     </button>
-                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <span
+                      className="text-sm"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
                       Page 1 of 1
                     </span>
                     <button
@@ -888,9 +1108,10 @@ const RefillOrdersPage = () => {
                 <FaTimes className="h-5 w-5" />
               </button>
             </div>
-            
+
             <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
-              Create a refill order for #{selectedOrder?.id.slice(-8)}. This will create a new order to replace any lost engagement.
+              Create a refill order for #{selectedOrder?.id.slice(-8)}. This
+              will create a new order to replace any lost engagement.
             </p>
 
             {refillInfo && (
@@ -898,15 +1119,24 @@ const RefillOrdersPage = () => {
                 {/* Order Information */}
                 <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                   <div>
-                    <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                    <div
+                      className="text-xs font-medium mb-1"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
                       Original Quantity
                     </div>
-                    <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <div
+                      className="font-semibold"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       {refillInfo.order.totalQuantity.toLocaleString()}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                    <div
+                      className="text-xs font-medium mb-1"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
                       Remaining
                     </div>
                     <div className="font-semibold text-orange-600">
@@ -914,15 +1144,22 @@ const RefillOrdersPage = () => {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                    <div
+                      className="text-xs font-medium mb-1"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
                       User Balance
                     </div>
                     <div className="font-semibold text-green-600">
-                      ${refillInfo.user.balance.toFixed(2)} {refillInfo.user.currency}
+                      ${refillInfo.user.balance.toFixed(2)}{' '}
+                      {refillInfo.user.currency}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                    <div
+                      className="text-xs font-medium mb-1"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
                       Service Status
                     </div>
                     <div className="font-semibold text-blue-600 capitalize">
@@ -933,7 +1170,10 @@ const RefillOrdersPage = () => {
 
                 {/* Refill Options */}
                 <div className="space-y-4">
-                  <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <div
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Refill Type
                   </div>
                   <div className="grid grid-cols-1 gap-3">
@@ -957,14 +1197,23 @@ const RefillOrdersPage = () => {
                         className="flex-1 cursor-pointer"
                       >
                         <div className="font-medium">
-                          Full Refill ({refillInfo.refillOptions.full.quantity.toLocaleString()})
+                          Full Refill (
+                          {refillInfo.refillOptions.full.quantity.toLocaleString()}
+                          )
                         </div>
-                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                        <div
+                          className="text-sm"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
                           Cost: ${refillInfo.refillOptions.full.cost.toFixed(2)}
                           {refillInfo.refillOptions.full.affordable ? (
-                            <span className="text-green-600 ml-2">✓ Affordable</span>
+                            <span className="text-green-600 ml-2">
+                              ✓ Affordable
+                            </span>
                           ) : (
-                            <span className="text-red-600 ml-2">✗ Insufficient balance</span>
+                            <span className="text-red-600 ml-2">
+                              ✗ Insufficient balance
+                            </span>
                           )}
                         </div>
                       </label>
@@ -990,14 +1239,24 @@ const RefillOrdersPage = () => {
                         className="flex-1 cursor-pointer"
                       >
                         <div className="font-medium">
-                          Remaining Only ({refillInfo.refillOptions.remaining.quantity.toLocaleString()})
+                          Remaining Only (
+                          {refillInfo.refillOptions.remaining.quantity.toLocaleString()}
+                          )
                         </div>
-                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                          Cost: ${refillInfo.refillOptions.remaining.cost.toFixed(2)}
+                        <div
+                          className="text-sm"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
+                          Cost: $
+                          {refillInfo.refillOptions.remaining.cost.toFixed(2)}
                           {refillInfo.refillOptions.remaining.affordable ? (
-                            <span className="text-green-600 ml-2">✓ Affordable</span>
+                            <span className="text-green-600 ml-2">
+                              ✓ Affordable
+                            </span>
                           ) : (
-                            <span className="text-red-600 ml-2">✗ Insufficient balance</span>
+                            <span className="text-red-600 ml-2">
+                              ✗ Insufficient balance
+                            </span>
                           )}
                         </div>
                       </label>
@@ -1007,7 +1266,10 @@ const RefillOrdersPage = () => {
 
                 {/* Reason */}
                 <div className="space-y-2">
-                  <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <div
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Reason (Optional)
                   </div>
                   <input
@@ -1020,7 +1282,7 @@ const RefillOrdersPage = () => {
                         reason: e.target.value,
                       }))
                     }
-                    className="form-input w-full"
+                    className="form-field w-full"
                   />
                 </div>
               </div>
