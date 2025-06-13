@@ -1,8 +1,8 @@
 'use client';
 
-import { ChevronDown } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
 import { APP_NAME } from '@/lib/constants';
+import { ChevronDown } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import {
   FaCode,
   FaCreditCard,
@@ -14,7 +14,7 @@ import {
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
-const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
@@ -212,7 +212,7 @@ const FAQPage = () => {
                 placeholder="Search questions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-input pl-10"
+                className="form-field pl-10"
                 autoComplete="off"
               />
             </div>

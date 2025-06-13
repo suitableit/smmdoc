@@ -1,26 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-import React from 'react';
-import ButtonLoader from '@/components/button-loader';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import axiosInstance from '@/lib/axiosInstance';
 import {
@@ -31,13 +18,8 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { FaExclamationTriangle, FaPlus, FaSpinner } from 'react-icons/fa';
 import { toast } from 'sonner';
-import { 
-  FaPlus,
-  FaSpinner,
-  FaCheck,
-  FaExclamationTriangle
-} from 'react-icons/fa';
 
 export function CreateServiceForm() {
   const { data, error, isLoading } = useGetCategories();
@@ -94,7 +76,9 @@ export function CreateServiceForm() {
       <div className="text-center py-12">
         <FaExclamationTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-600 font-medium">No categories available</p>
-        <p className="text-gray-500 text-sm mt-1">Please add categories first</p>
+        <p className="text-gray-500 text-sm mt-1">
+          Please add categories first
+        </p>
       </div>
     );
   }
@@ -105,21 +89,23 @@ export function CreateServiceForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Form Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
             {/* Service Name - 100% width - REQUIRED */}
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Service Name <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
                     <input
                       type="text"
                       placeholder="Enter service name"
-                      className="form-input w-full"
+                      className="form-field w-full"
                       {...field}
                       disabled={isPending}
                       required
@@ -136,7 +122,10 @@ export function CreateServiceForm() {
               name="categoryId"
               render={({ field }) => (
                 <FormItem className="md:col-span-1">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Service Category <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -167,7 +156,10 @@ export function CreateServiceForm() {
               name="serviceType"
               render={({ field }) => (
                 <FormItem className="md:col-span-1">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Service Type <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -197,7 +189,10 @@ export function CreateServiceForm() {
               name="mode"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Mode <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -223,14 +218,18 @@ export function CreateServiceForm() {
                 name="rate"
                 render={({ field }) => (
                   <FormItem className="col-span-1">
-                    <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      Service Price <span className="text-red-500">* (Always USD Price)</span>
+                    <FormLabel
+                      className="text-sm font-medium"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      Service Price{' '}
+                      <span className="text-red-500">* (Always USD Price)</span>
                     </FormLabel>
                     <FormControl>
                       <input
                         type="text"
                         placeholder="Enter service price"
-                        className="form-input w-full"
+                        className="form-field w-full"
                         {...field}
                         disabled={isPending}
                         required
@@ -247,7 +246,10 @@ export function CreateServiceForm() {
                 name="min_order"
                 render={({ field }) => (
                   <FormItem className="col-span-1">
-                    <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    <FormLabel
+                      className="text-sm font-medium"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Minimum Order <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
@@ -255,7 +257,7 @@ export function CreateServiceForm() {
                         type="number"
                         min={0}
                         placeholder="Enter minimum order"
-                        className="form-input w-full"
+                        className="form-field w-full"
                         {...field}
                         disabled={isPending}
                         required
@@ -272,7 +274,10 @@ export function CreateServiceForm() {
                 name="max_order"
                 render={({ field }) => (
                   <FormItem className="col-span-1">
-                    <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    <FormLabel
+                      className="text-sm font-medium"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       Maximum Order <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
@@ -280,7 +285,7 @@ export function CreateServiceForm() {
                         type="number"
                         min={0}
                         placeholder="Enter maximum order"
-                        className="form-input w-full"
+                        className="form-field w-full"
                         {...field}
                         disabled={isPending}
                         required
@@ -298,7 +303,10 @@ export function CreateServiceForm() {
               name="refill"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Refill <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -323,7 +331,10 @@ export function CreateServiceForm() {
               name="refillDays"
               render={({ field }) => (
                 <FormItem className="md:col-span-1">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Refill Days <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -331,7 +342,7 @@ export function CreateServiceForm() {
                       type="number"
                       min={0}
                       placeholder="Enter refill days"
-                      className="form-input w-full"
+                      className="form-field w-full"
                       {...field}
                       disabled={isPending || refillValue === 'off'}
                       readOnly={refillValue === 'off'}
@@ -349,15 +360,19 @@ export function CreateServiceForm() {
               name="refillDisplay"
               render={({ field }) => (
                 <FormItem className="md:col-span-1">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    Refill Display (in hours) <span className="text-red-500">*</span>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    Refill Display (in hours){' '}
+                    <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
                     <input
                       type="number"
                       min={0}
                       placeholder="Enter refill display hours"
-                      className="form-input w-full"
+                      className="form-field w-full"
                       {...field}
                       disabled={isPending || refillValue === 'off'}
                       readOnly={refillValue === 'off'}
@@ -375,7 +390,10 @@ export function CreateServiceForm() {
               name="cancel"
               render={({ field }) => (
                 <FormItem className="md:col-span-1">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Cancel <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -400,7 +418,10 @@ export function CreateServiceForm() {
               name="personalizedService"
               render={({ field }) => (
                 <FormItem className="md:col-span-1">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Personalized Service <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -425,7 +446,10 @@ export function CreateServiceForm() {
               name="orderLink"
               render={({ field }) => (
                 <FormItem className="md:col-span-1">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Order Link <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -450,7 +474,10 @@ export function CreateServiceForm() {
               name="serviceSpeed"
               render={({ field }) => (
                 <FormItem className="md:col-span-1">
-                  <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <FormLabel
+                    className="text-sm font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     Service Speed <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -471,7 +498,6 @@ export function CreateServiceForm() {
                 </FormItem>
               )}
             />
-
           </div>
 
           {/* Service Description - 100% width - REQUIRED */}
@@ -480,13 +506,16 @@ export function CreateServiceForm() {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   Service Description <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
                   <textarea
                     placeholder="Enter service description"
-                    className="form-input w-full min-h-[120px] resize-y"
+                    className="form-field w-full min-h-[120px] resize-y"
                     {...field}
                     disabled={isPending}
                     required

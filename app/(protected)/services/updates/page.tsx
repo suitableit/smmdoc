@@ -4,19 +4,17 @@
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { revalidate } from '@/lib/utils';
-import { Fragment, useEffect, useState } from 'react';
-import { 
-  FaSearch, 
-  FaSpinner, 
-  FaExclamationTriangle,
-  FaCheckCircle, 
-  FaTimes,
+import { useEffect, useState } from 'react';
+import {
+  FaBell,
+  FaCheckCircle,
   FaClipboardList,
-  FaBell
+  FaSearch,
+  FaTimes,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
-const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
@@ -25,13 +23,26 @@ const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
 );
 
 // Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
-    type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-    type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-    type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
-    'bg-yellow-50 border-yellow-200 text-yellow-800'
-  }`}>
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div
+    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+      type === 'success'
+        ? 'bg-green-50 border-green-200 text-green-800'
+        : type === 'error'
+        ? 'bg-red-50 border-red-200 text-red-800'
+        : type === 'info'
+        ? 'bg-blue-50 border-blue-200 text-blue-800'
+        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+    }`}
+  >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
@@ -57,7 +68,10 @@ export default function UpdateServiceTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
 
   const limit = 50;
 
@@ -67,7 +81,10 @@ export default function UpdateServiceTable() {
   }, []);
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
@@ -142,7 +159,9 @@ export default function UpdateServiceTable() {
           <div className="card card-padding">
             <div className="text-center py-8 flex flex-col items-center">
               <GradientSpinner size="w-14 h-14" className="mb-4" />
-              <div className="text-lg font-medium">Loading service updates...</div>
+              <div className="text-lg font-medium">
+                Loading service updates...
+              </div>
             </div>
           </div>
         </div>
@@ -154,13 +173,13 @@ export default function UpdateServiceTable() {
     <div className="page-container">
       {/* Toast Container */}
       {toastMessage && (
-        <Toast 
-          message={toastMessage.message} 
-          type={toastMessage.type} 
-          onClose={() => setToastMessage(null)} 
+        <Toast
+          message={toastMessage.message}
+          type={toastMessage.type}
+          onClose={() => setToastMessage(null)}
         />
       )}
-      
+
       <div className="page-content">
         {/* Service Updates Content Card - Everything in one box */}
         <div className="card card-padding">
@@ -183,7 +202,7 @@ export default function UpdateServiceTable() {
                 placeholder="Search services..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="form-input pl-10"
+                className="form-field pl-10"
                 autoComplete="off"
               />
             </div>
@@ -195,22 +214,44 @@ export default function UpdateServiceTable() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">ID</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 max-w-[400px]">Service</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Date</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 w-[300px] last:rounded-tr-lg">Update</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
+                      ID
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 max-w-[400px]">
+                      Service
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      Date
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 w-[300px] last:rounded-tr-lg">
+                      Update
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {services?.map((service, i) => {
                     const isLastRow = i === services.length - 1;
                     return (
-                      <tr key={i} className={`border-b border-gray-100 hover:bg-gray-50 ${isLastRow ? 'last:border-b-0' : ''}`}>
-                        <td className={`py-3 px-4 ${isLastRow ? 'first:rounded-bl-lg' : ''}`}>
-                          <span className="text-sm font-medium text-gray-900">{i + 1}</span>
+                      <tr
+                        key={i}
+                        className={`border-b border-gray-100 hover:bg-gray-50 ${
+                          isLastRow ? 'last:border-b-0' : ''
+                        }`}
+                      >
+                        <td
+                          className={`py-3 px-4 ${
+                            isLastRow ? 'first:rounded-bl-lg' : ''
+                          }`}
+                        >
+                          <span className="text-sm font-medium text-gray-900">
+                            {i + 1}
+                          </span>
                         </td>
                         <td className="py-3 px-4 max-w-[400px]">
-                          <div className="font-medium text-gray-900 truncate" title={service.name}>
+                          <div
+                            className="font-medium text-gray-900 truncate"
+                            title={service.name}
+                          >
                             {service.name}
                           </div>
                         </td>
@@ -224,8 +265,15 @@ export default function UpdateServiceTable() {
                             }).format(new Date(service.updatedAt))}
                           </span>
                         </td>
-                        <td className={`py-3 px-4 w-[300px] ${isLastRow ? 'last:rounded-br-lg' : ''}`}>
-                          <div className="text-sm text-gray-700 truncate" title={service.updateText}>
+                        <td
+                          className={`py-3 px-4 w-[300px] ${
+                            isLastRow ? 'last:rounded-br-lg' : ''
+                          }`}
+                        >
+                          <div
+                            className="text-sm text-gray-700 truncate"
+                            title={service.updateText}
+                          >
                             {service.updateText}
                           </div>
                         </td>
@@ -238,8 +286,12 @@ export default function UpdateServiceTable() {
           ) : (
             <div className="text-center py-8 flex flex-col items-center">
               <FaClipboardList className="text-4xl text-gray-400 mb-4" />
-              <div className="text-lg font-medium">No service updates found</div>
-              <div className="text-sm text-gray-500">Try adjusting your search criteria</div>
+              <div className="text-lg font-medium">
+                No service updates found
+              </div>
+              <div className="text-sm text-gray-500">
+                Try adjusting your search criteria
+              </div>
             </div>
           )}
 
@@ -247,7 +299,8 @@ export default function UpdateServiceTable() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
-                Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
+                Page <span className="font-medium">{page}</span> of{' '}
+                <span className="font-medium">{totalPages}</span>
               </div>
               <div className="flex gap-2">
                 <button

@@ -41,7 +41,7 @@ export const userNavItems = [
   {
     title: 'Favorite Services',
     href: '/services/favorite-services',
-    icon: 'FaHeart', // Changed from FaStar to heart for favorites
+    icon: 'FaStar', // Changed from FaStar to heart for favorites
     label: 'Favorite Services',
     roles: ['user'],
   },
@@ -138,7 +138,7 @@ export const userNavItems = [
   {
     title: 'Account Settings',
     href: '/account-settings',
-    icon: 'FaCog', // Changed from FaUserCog to simple cog for settings
+    icon: 'FaUserCog', // Changed from FaUserCog to simple cog for settings
     label: 'Account Settings',
     roles: ['user'],
   },

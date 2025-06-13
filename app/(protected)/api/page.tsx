@@ -1,8 +1,8 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useEffect, useState } from 'react';
 import { APP_NAME } from '@/lib/constants';
+import { useEffect, useState } from 'react';
 import {
   FaBan,
   FaBook,
@@ -340,7 +340,7 @@ axios.post(url, payload)
                       type={showApiKey ? 'text' : 'password'}
                       value={apiKey || ''}
                       readOnly
-                      className="form-input pr-10 font-mono"
+                      className="form-field pr-10 font-mono"
                     />
                     <button
                       onClick={() => setShowApiKey(!showApiKey)}

@@ -215,138 +215,129 @@ export default function SideBarNav({
   const renderNavSection = (title: string, sectionItems: NavItem[]) => {
     if (!sectionItems || !sectionItems.length) return null;
 
-    return (
-      <div className={`nav-section ${collapsed ? 'mb-0 px-0' : 'mb-6 px-2'}`}>
-        {title && (
-          <p
-            className={`section-title ${
-              collapsed ? 'opacity-0 pointer-events-none' : ''
-            } text-xs font-semibold tracking-wider mx-4 my-2.5 whitespace-nowrap uppercase`}
-            style={{
-              color: 'var(--text-muted, rgba(255, 255, 255, 0.5))',
-              fontSize: '11px',
-              letterSpacing: '0.08em',
-            }}
-          >
-            {title}
-          </p>
-        )}
-        <ul
-          className={`nav-links ${collapsed ? 'px-1' : 'px-3'} ${
-            collapsed ? 'space-y-1' : 'space-y-1.5'
-          }`}
-        >
+    if (collapsed) {
+      // When collapsed, render items without section wrapper to remove gaps
+      return (
+        <ul className="nav-links space-y-0">
           {sectionItems.map((item, index) => {
             const active = isActive(item.href);
 
             return (
-              <li
-                key={index}
-                className={`nav-item relative ${
-                  collapsed ? 'rounded-lg my-0' : 'rounded-lg mb-1'
-                }`}
-              >
-                {active && !collapsed && (
-                  <div
-                    className="absolute left-0 top-0 bottom-0 w-1 rounded-r-md"
-                    style={{ backgroundColor: 'var(--primary, #5F1DE8)' }}
-                  ></div>
-                )}
+              <li key={index} className="nav-item relative group">
+                {/* Blue indicator bar - shows on active or hover */}
+                <div className={cn(
+                  "absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#5F1DE8] to-[#B131F8] z-10 transition-opacity duration-200",
+                  active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                )}></div>
+                
                 <Link
                   href={item.disabled ? '/' : item.href}
                   className={cn(
-                    collapsed
-                      ? 'nav-link flex justify-center items-center py-3 relative transition-all duration-200'
-                      : 'nav-link flex items-center px-3.5 py-2.5 rounded-lg transition-all duration-200 relative',
+                    'flex items-center transition-all duration-200 relative group justify-center py-3 px-0',
                     active
-                      ? collapsed
-                        ? 'active text-white'
-                        : 'active text-white'
-                      : 'text-white/70 hover:text-white',
-                    !active && !collapsed && 'hover:bg-white/5',
-                    active && !collapsed && 'bg-[var(--primary)]/10',
-                    item.disabled &&
-                      'opacity-50 pointer-events-none cursor-not-allowed'
+                      ? 'bg-slate-700/50 text-white'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50',
+                    item.disabled && 'opacity-50 pointer-events-none cursor-not-allowed'
                   )}
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: isAdmin ? '500' : '400',
-                    fontFamily: 'inherit',
-                  }}
                   onClick={() => setOpen(false)}
-                  title={collapsed ? item.title : undefined}
+                  title={item.title}
                 >
-                  {active && collapsed && (
-                    <div
-                      className="absolute left-0 top-1/2 -translate-y-1/2 h-[60%] w-[3px] rounded-r"
-                      style={{ backgroundColor: 'var(--primary, #5F1DE8)' }}
-                    ></div>
-                  )}
+                  {/* Icon */}
                   <span
-                    className={`flex items-center justify-center ${
-                      !collapsed && 'mr-3'
-                    } transition-colors duration-200`}
-                    style={{
-                      fontSize: '18px',
-                      minWidth: '24px',
-                      color: active
-                        ? 'var(--primary, #5F1DE8)'
-                        : isAdmin
-                        ? '#c084fc'
-                        : 'currentColor',
-                    }}
+                    className={cn(
+                      'flex items-center justify-center transition-colors duration-200 text-lg',
+                      active ? 'text-white' : 'text-slate-400 group-hover:text-white'
+                    )}
                   >
                     {renderIcon(item.icon)}
                   </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      );
+    }
+
+    return (
+      <div className="nav-section mb-4 px-0">
+        {title && (
+          <p className="text-xs text-white/50 uppercase tracking-wide mx-4 mt-6 mb-2 ml-6 transition-all duration-300 ease-out whitespace-nowrap">
+            {title}
+          </p>
+        )}
+        <ul className="nav-links space-y-0">
+          {sectionItems.map((item, index) => {
+            const active = isActive(item.href);
+
+            return (
+              <li key={index} className="nav-item relative group">
+                {/* Blue indicator bar - shows on active or hover */}
+                <div className={cn(
+                  "absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#5F1DE8] to-[#B131F8] z-10 transition-opacity duration-200",
+                  active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                )}></div>
+                
+                <Link
+                  href={item.disabled ? '/' : item.href}
+                  className={cn(
+                    'flex items-center px-8 py-3 transition-all duration-200 relative group',
+                    active
+                      ? 'bg-slate-700/50 text-white'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50',
+                    item.disabled && 'opacity-50 pointer-events-none cursor-not-allowed'
+                  )}
+                  onClick={() => setOpen(false)}
+                  title={collapsed ? item.title : undefined}
+                >
+                  {/* Icon */}
                   <span
-                    className={`transition-all whitespace-nowrap overflow-hidden ${
-                      collapsed ? 'opacity-0 w-0' : ''
-                    }`}
-                    style={{
-                      fontSize: '14px',
-                      fontWeight: isAdmin ? '500' : '400',
-                      lineHeight: '1.5',
-                    }}
+                    className={cn(
+                      'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
+                      active ? 'text-white' : 'text-slate-400 group-hover:text-white'
+                    )}
+                  >
+                    {renderIcon(item.icon)}
+                  </span>
+                  
+                  {/* Title */}
+                  <span
+                    className={cn(
+                      'text-sm font-medium transition-all duration-200 opacity-100',
+                      active ? 'text-white' : 'text-slate-300 group-hover:text-white'
+                    )}
                   >
                     {item.title}
                   </span>
+                  
+                  {/* Badge */}
                   {item.badge && (
-                    <div
-                      className={`badge ml-auto py-0.5 px-2 font-medium rounded-md transition-all duration-200 ${
-                        collapsed ? 'opacity-0 w-0 overflow-hidden' : ''
-                      }`}
-                      style={{
-                        fontSize: '11px',
-                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                        color: '#f87171',
-                        letterSpacing: '0.025em',
-                      }}
-                    >
+                    <div className="badge ml-auto py-1 px-2 text-xs font-medium rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
                       {item.badge}
                     </div>
                   )}
+                  
+                  {/* Status Indicator */}
                   {item.statusColor && (
-                    <div
-                      className={`status-indicator ml-auto rounded-full transition-all duration-200 ${
-                        collapsed ? 'opacity-0 w-0 overflow-hidden' : ''
-                      }`}
-                      style={{
-                        width: '8px',
-                        height: '8px',
-                        backgroundColor:
-                          item.statusColor === 'green'
-                            ? '#10b981'
-                            : item.statusColor === 'red'
-                            ? '#ef4444'
-                            : '#f59e0b',
-                        boxShadow:
-                          item.statusColor === 'green'
-                            ? '0 0 0 4px rgba(16, 185, 129, 0.1), 0 1px 2px rgba(16, 185, 129, 0.5)'
-                            : item.statusColor === 'red'
-                            ? '0 0 0 4px rgba(239, 68, 68, 0.1), 0 1px 2px rgba(239, 68, 68, 0.5)'
-                            : '0 0 0 4px rgba(245, 158, 11, 0.1), 0 1px 2px rgba(245, 158, 11, 0.5)',
-                      }}
-                    ></div>
+                    <div className="ml-auto">
+                      <div
+                        className={cn(
+                          'w-2 h-2 rounded-full',
+                          item.statusColor === 'green' && 'bg-green-400 shadow-green-400/50',
+                          item.statusColor === 'red' && 'bg-red-400 shadow-red-400/50',
+                          item.statusColor === 'yellow' && 'bg-yellow-400 shadow-yellow-400/50'
+                        )}
+                        style={{
+                          boxShadow: `0 0 8px ${
+                            item.statusColor === 'green'
+                              ? 'rgba(34, 197, 94, 0.6)'
+                              : item.statusColor === 'red'
+                              ? 'rgba(239, 68, 68, 0.6)'
+                              : 'rgba(245, 158, 11, 0.6)'
+                          }`,
+                        }}
+                      />
+                    </div>
                   )}
                 </Link>
               </li>

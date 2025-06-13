@@ -106,6 +106,8 @@ const DashboardPage = () => {
         return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800';
       case 'processing':
         return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800';
+      case 'in_progress':
+        return 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800';
       case 'completed':
         return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800';
       case 'cancelled':
@@ -372,7 +374,7 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Order History Section */}
+            {/* Order History Section - Updated with OrdersList design */}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
@@ -396,11 +398,11 @@ const DashboardPage = () => {
                   <div className="text-lg font-medium">Loading recent orders...</div>
                 </div>
               ) : userOrders.length > 0 ? (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                      <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-t-lg">
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 first:rounded-tl-lg">
                           ID
                         </th>
                         <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
@@ -424,14 +426,15 @@ const DashboardPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {userOrders.map((order: any) => {
+                      {userOrders.map((order: any, index: number) => {
                         const dateTime = formatDate(order.createdAt);
+                        const isLastRow = index === userOrders.length - 1;
                         return (
                           <tr
                             key={order.id}
-                            className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                            className={`border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 ${isLastRow ? 'last:border-b-0' : ''}`}
                           >
-                            <td className="py-3 px-4">
+                            <td className={`py-3 px-4 ${isLastRow ? 'first:rounded-bl-lg' : ''}`}>
                               <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
                                 #{order.id.substring(0, 8)}
                               </span>
@@ -464,7 +467,7 @@ const DashboardPage = () => {
                             <td className="py-3 px-4">
                               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                 {currency === 'USD'
-                                  ? `$${order.usdPrice?.toFixed(2) || '0.00'}`
+                                  ? `${order.usdPrice?.toFixed(2) || '0.00'}`
                                   : `৳${order.bdtPrice?.toFixed(2) || '0.00'}`}
                               </span>
                             </td>
@@ -481,7 +484,7 @@ const DashboardPage = () => {
                                 {order.category?.category_name || 'N/A'}
                               </div>
                             </td>
-                            <td className="py-3 px-4">
+                            <td className={`py-3 px-4 ${isLastRow ? 'last:rounded-br-lg' : ''}`}>
                               <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(
                                   order.status

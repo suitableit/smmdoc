@@ -313,7 +313,7 @@ export const adminNavItems = [
   // Account Section
   {
     title: 'Account Settings',
-    href: '/admin/profile',
+    href: '/account-settings',
     icon: 'FaUserCog',
     label: 'Account Settings',
     roles: ['admin'],

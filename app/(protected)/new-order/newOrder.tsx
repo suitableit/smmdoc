@@ -693,7 +693,7 @@ export default function NewOrder() {
             {/* Tab Navigation */}
             <div className="card" style={{ padding: '8px' }}>
               <div className="flex space-x-2">
-                <button className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25">
+                <button className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white shadow-lg">
                   <FaShoppingCart className="mr-2 w-4 h-4" />
                   New Order
                 </button>
@@ -724,7 +724,7 @@ export default function NewOrder() {
                         setShowDropdown(true);
                       }}
                       onFocus={() => setShowDropdown(true)}
-                      className="form-input pl-12"
+                      className="form-field pl-12"
                       placeholder="Search services..."
                       autoComplete="off"
                       style={{ width: '100%', minWidth: '0' }}
@@ -831,7 +831,7 @@ export default function NewOrder() {
                   <input
                     type="url"
                     id="link"
-                    className="form-input"
+                    className="form-field"
                     placeholder="https://example.com"
                     required
                     value={link}
@@ -848,7 +848,7 @@ export default function NewOrder() {
                   <input
                     type="number"
                     id="qty"
-                    className="form-input"
+                    className="form-field"
                     placeholder="Enter Quantity"
                     onChange={(e) =>
                       e.target.value
@@ -886,7 +886,7 @@ export default function NewOrder() {
                     id="price"
                     readOnly
                     disabled
-                    className="form-input disabled:opacity-70 font-semibold"
+                    className="form-field disabled:opacity-70 font-semibold"
                     value={
                       user?.currency === 'USD'
                         ? `$ ${totalPrice.toFixed(4)}`

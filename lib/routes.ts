@@ -13,6 +13,7 @@ export const publicRoutes = [
   '/blog/blog-details',
   '/our-services',
   '/contact',
+  '/contact/form-styles',
   '/new-password',
   '/api/exchange-rate',
   '/api/user/services',

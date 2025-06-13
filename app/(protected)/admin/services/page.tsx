@@ -1,34 +1,30 @@
 'use client';
 import ServiceTable from '@/components/admin/services/serviceTable';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
-  FaCog,
-  FaChartBar,
-  FaGlobe,
-  FaPlus,
-  FaShieldAlt,
-  FaStar,
   FaArrowUp,
-  FaUsers,
-  FaBolt,
   FaCheckCircle,
-  FaLayerGroup,
-  FaSpinner,
-  FaArrowDown,
-  FaBuffer,
-  FaSync,
+  FaCog,
   FaDownload,
+  FaPlus,
   FaSearch,
-  FaFilter,
-  FaTimes
+  FaShieldAlt,
+  FaSpinner,
+  FaSync,
+  FaTimes,
 } from 'react-icons/fa';
 
 // Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
   <div className={`toast toast-${type} toast-enter`}>
     {type === 'success' && <FaCheckCircle className="toast-icon" />}
     <span className="font-medium">{message}</span>
@@ -48,7 +44,10 @@ export default function page() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
 
   useEffect(() => {
     const fetchServiceStats = async () => {
@@ -84,7 +83,10 @@ export default function page() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
@@ -132,10 +134,10 @@ export default function page() {
       {/* Toast Container */}
       <div className="toast-container">
         {toast && (
-          <Toast 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => setToast(null)} 
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
           />
         )}
       </div>
@@ -145,10 +147,13 @@ export default function page() {
         <div className="page-header mb-6">
           <div>
             <h1 className="page-title">Services Management</h1>
-            <p className="page-description mb-4">Monitor, manage, and configure all your platform services from one centralized location</p>
+            <p className="page-description mb-4">
+              Monitor, manage, and configure all your platform services from one
+              centralized location
+            </p>
           </div>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={handleRefresh}
               className="btn btn-secondary flex items-center gap-2"
               disabled={loading}
@@ -156,14 +161,14 @@ export default function page() {
               <FaSync className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
-            <button 
+            <button
               onClick={handleExport}
               className="btn btn-primary flex items-center gap-2"
             >
               <FaDownload />
               Export
             </button>
-            <Link 
+            <Link
               href="/admin/services/create-service"
               className="btn btn-primary flex items-center gap-2"
             >
@@ -178,9 +183,7 @@ export default function page() {
           {serviceStats.map((stat) => (
             <div key={stat.title} className="card card-padding">
               <div className="card-content">
-                <div className="card-icon">
-                  {stat.icon}
-                </div>
+                <div className="card-icon">{stat.icon}</div>
                 <div>
                   <h3 className="card-title">{stat.title}</h3>
                   <p className={`text-2xl font-bold ${stat.textColor}`}>
@@ -209,9 +212,13 @@ export default function page() {
               }`}
             >
               All
-              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                statusFilter === 'all' ? 'bg-white/20' : 'bg-purple-100 text-purple-700'
-              }`}>
+              <span
+                className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                  statusFilter === 'all'
+                    ? 'bg-white/20'
+                    : 'bg-purple-100 text-purple-700'
+                }`}
+              >
                 {stats.totalServices}
               </span>
             </button>
@@ -224,9 +231,13 @@ export default function page() {
               }`}
             >
               Active
-              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                statusFilter === 'active' ? 'bg-white/20' : 'bg-green-100 text-green-700'
-              }`}>
+              <span
+                className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                  statusFilter === 'active'
+                    ? 'bg-white/20'
+                    : 'bg-green-100 text-green-700'
+                }`}
+              >
                 {stats.activeServices}
               </span>
             </button>
@@ -239,9 +250,13 @@ export default function page() {
               }`}
             >
               Inactive
-              <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                statusFilter === 'inactive' ? 'bg-white/20' : 'bg-red-100 text-red-700'
-              }`}>
+              <span
+                className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                  statusFilter === 'inactive'
+                    ? 'bg-white/20'
+                    : 'bg-red-100 text-red-700'
+                }`}
+              >
                 {stats.inactiveServices}
               </span>
             </button>
@@ -250,13 +265,16 @@ export default function page() {
           {/* Right: Search Bar with Filter Dropdown */}
           <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative flex-1 md:min-w-[300px]">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+              <FaSearch
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
+                style={{ color: 'var(--text-muted)' }}
+              />
               <input
                 type="text"
                 placeholder="Search services..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-input pl-10 pr-4"
+                className="form-field pl-10 pr-4"
               />
             </div>
             <select className="form-select min-w-[120px]">
@@ -274,13 +292,15 @@ export default function page() {
               <div className="card-icon">
                 <FaCog />
               </div>
-              <h3 className="card-title">Services List ({stats.totalServices})</h3>
+              <h3 className="card-title">
+                Services List ({stats.totalServices})
+              </h3>
               <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
                 Manage Services
               </span>
             </div>
           </div>
-          
+
           <div style={{ padding: '0 24px' }}>
             <ServiceTable searchTerm={searchTerm} statusFilter={statusFilter} />
           </div>

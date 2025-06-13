@@ -1,9 +1,9 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
 import { APP_NAME } from '@/lib/constants';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {
   FaCheckCircle,
   FaClock,
@@ -13,13 +13,12 @@ import {
   FaPaperPlane,
   FaPhone,
   FaQuestionCircle,
-  FaSpinner,
   FaTicketAlt,
   FaTimes,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component (Large version for loading state)
-const GradientSpinner = ({ size = "w-5 h-5", className = "" }) => (
+const GradientSpinner = ({ size = 'w-5 h-5', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
@@ -172,7 +171,9 @@ export default function ContactSupportPage() {
                 <div className="flex items-center justify-center min-h-[400px]">
                   <div className="text-center flex flex-col items-center">
                     <GradientSpinner size="w-14 h-14" className="mb-4" />
-                    <div className="text-lg font-medium">Loading contact form...</div>
+                    <div className="text-lg font-medium">
+                      Loading contact form...
+                    </div>
                   </div>
                 </div>
               </div>
@@ -195,8 +196,12 @@ export default function ContactSupportPage() {
                       <FaEnvelope className="text-blue-600 text-sm" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 text-sm">Email</h4>
-                      <p className="text-gray-600 text-sm">support@smmdoc.com</p>
+                      <h4 className="font-medium text-gray-900 text-sm">
+                        Email
+                      </h4>
+                      <p className="text-gray-600 text-sm">
+                        support@smmdoc.com
+                      </p>
                     </div>
                   </div>
 
@@ -205,7 +210,9 @@ export default function ContactSupportPage() {
                       <FaPhone className="text-green-600 text-sm" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 text-sm">Phone</h4>
+                      <h4 className="font-medium text-gray-900 text-sm">
+                        Phone
+                      </h4>
                       <p className="text-gray-600 text-sm">+1 (555) 123-4567</p>
                     </div>
                   </div>
@@ -215,7 +222,9 @@ export default function ContactSupportPage() {
                       <FaClock className="text-purple-600 text-sm" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 text-sm">Hours</h4>
+                      <h4 className="font-medium text-gray-900 text-sm">
+                        Hours
+                      </h4>
                       <p className="text-gray-600 text-sm">24/7 Support</p>
                     </div>
                   </div>
@@ -233,8 +242,8 @@ export default function ContactSupportPage() {
 
                 <div className="space-y-4">
                   <p className="text-sm text-gray-600">
-                    For ongoing issues, you can also create a Support Tickets and
-                    track its progress.
+                    For ongoing issues, you can also create a Support Tickets
+                    and track its progress.
                   </p>
                   <button className="btn btn-secondary w-full inline-flex items-center justify-center">
                     <FaTicketAlt className="mr-2 w-4 h-4" />
@@ -301,7 +310,7 @@ export default function ContactSupportPage() {
                   <input
                     type="text"
                     id="username"
-                    className="form-input"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     value={user?.username || user?.username || 'Guest User'}
                     readOnly
                     disabled
@@ -317,7 +326,7 @@ export default function ContactSupportPage() {
                   <input
                     type="text"
                     id="subject"
-                    className="form-input"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     placeholder="Enter the subject of your inquiry"
                     value={formData.subject}
                     onChange={(e) =>
@@ -334,7 +343,7 @@ export default function ContactSupportPage() {
                   </label>
                   <select
                     id="category"
-                    className="form-select"
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                     value={formData.category}
                     onChange={(e) =>
                       handleInputChange('category', e.target.value)
@@ -360,7 +369,7 @@ export default function ContactSupportPage() {
                   </label>
                   <textarea
                     id="message"
-                    className="form-input"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     placeholder="Please describe your issue in detail"
                     rows={6}
                     value={formData.message}
@@ -384,7 +393,7 @@ export default function ContactSupportPage() {
                   <input
                     type="file"
                     id="attachments"
-                    className="form-input"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[#5F1DE8] file:to-[#B131F8] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
                     multiple
                     onChange={(e) =>
                       handleInputChange('attachments', e.target.files)

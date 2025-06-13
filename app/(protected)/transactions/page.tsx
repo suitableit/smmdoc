@@ -1,25 +1,20 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { APP_NAME } from '@/lib/constants';
+import { useEffect, useState } from 'react';
 import {
-  FaExclamationTriangle,
   FaCheckCircle,
   FaClock,
+  FaExclamationTriangle,
   FaReceipt,
   FaSearch,
-  FaEye,
-  FaCalendarAlt,
-  FaCreditCard,
   FaTimes,
-  FaFilter
 } from 'react-icons/fa';
 import { TransactionsList } from './components/TransactionsList';
 
 // Custom Gradient Spinner Component
-const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
@@ -31,7 +26,15 @@ const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
 const ButtonLoader = () => <div className="loading-spinner"></div>;
 
 // Toast Component matching the profile page style
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
   <div className={`toast toast-${type} toast-enter`}>
     {type === 'success' && <FaCheckCircle className="toast-icon" />}
     {type === 'error' && <FaExclamationTriangle className="toast-icon" />}
@@ -63,7 +66,7 @@ type Transaction = {
 function formatAmount(amount: number) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD'
+    currency: 'USD',
   }).format(amount);
 }
 
@@ -113,7 +116,10 @@ export default function TransactionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -133,7 +139,7 @@ export default function TransactionsPage() {
       createdAt: new Date().toISOString(),
       transaction_type: 'deposit' as const,
       sender_number: '01712345678',
-      phone: '01712345678'
+      phone: '01712345678',
     },
     {
       id: 'tx-2',
@@ -146,7 +152,7 @@ export default function TransactionsPage() {
       createdAt: new Date(Date.now() - 86400000).toISOString(),
       transaction_type: 'deposit' as const,
       sender_number: '01823456789',
-      phone: '01823456789'
+      phone: '01823456789',
     },
     {
       id: 'tx-3',
@@ -159,7 +165,7 @@ export default function TransactionsPage() {
       createdAt: new Date(Date.now() - 172800000).toISOString(),
       transaction_type: 'deposit' as const,
       sender_number: '01934567890',
-      phone: '01934567890'
+      phone: '01934567890',
     },
     {
       id: 'tx-4',
@@ -172,7 +178,7 @@ export default function TransactionsPage() {
       createdAt: new Date(Date.now() - 259200000).toISOString(),
       transaction_type: 'deposit' as const,
       sender_number: '01645678901',
-      phone: '01645678901'
+      phone: '01645678901',
     },
     {
       id: 'tx-5',
@@ -185,12 +191,15 @@ export default function TransactionsPage() {
       createdAt: new Date(Date.now() - 345600000).toISOString(),
       transaction_type: 'deposit' as const,
       sender_number: '01756789012',
-      phone: '01756789012'
-    }
+      phone: '01756789012',
+    },
   ];
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
@@ -221,7 +230,8 @@ export default function TransactionsPage() {
         // Add URL transaction if it doesn't exist in database yet
         if (invoiceId && amount && transactionId) {
           const existingTransaction = transactionsToShow.find(
-            (tx: Transaction) => tx.invoice_id === invoiceId || tx.transaction_id === transactionId
+            (tx: Transaction) =>
+              tx.invoice_id === invoiceId || tx.transaction_id === transactionId
           );
 
           if (!existingTransaction) {
@@ -229,21 +239,28 @@ export default function TransactionsPage() {
               id: `url-${Date.now()}`,
               invoice_id: invoiceId,
               amount: parseFloat(amount),
-              status: status === 'success' ? 'Success' as const : 'Processing' as const,
+              status:
+                status === 'success'
+                  ? ('Success' as const)
+                  : ('Processing' as const),
               method: 'uddoktapay',
-              payment_method: status === 'success' ? 'Payment Gateway' : 'Manual Payment',
+              payment_method:
+                status === 'success' ? 'Payment Gateway' : 'Manual Payment',
               transaction_id: transactionId,
               createdAt: new Date().toISOString(),
               transaction_type: 'deposit' as const,
               sender_number: phone || 'N/A',
-              phone: phone || 'N/A'
+              phone: phone || 'N/A',
             };
 
             // Add to beginning of array to show as most recent
             transactionsToShow.unshift(newTransaction);
 
             if (status === 'success') {
-              showToast(`Successful transaction ${invoiceId} loaded`, 'success');
+              showToast(
+                `Successful transaction ${invoiceId} loaded`,
+                'success'
+              );
             } else {
               showToast(`Pending transaction ${invoiceId} loaded`, 'info');
             }
@@ -274,14 +291,18 @@ export default function TransactionsPage() {
             id: `fallback-${Date.now()}`,
             invoice_id: invoiceId,
             amount: parseFloat(amount),
-            status: status === 'success' ? 'Success' as const : 'Processing' as const,
+            status:
+              status === 'success'
+                ? ('Success' as const)
+                : ('Processing' as const),
             method: 'uddoktapay',
-            payment_method: status === 'success' ? 'Payment Gateway' : 'Manual Payment',
+            payment_method:
+              status === 'success' ? 'Payment Gateway' : 'Manual Payment',
             transaction_id: transactionId,
             createdAt: new Date().toISOString(),
             transaction_type: 'deposit' as const,
             sender_number: phone || 'N/A',
-            phone: phone || 'N/A'
+            phone: phone || 'N/A',
           };
           fallbackTransactions.unshift(newTransaction);
         }
@@ -301,39 +322,50 @@ export default function TransactionsPage() {
   };
 
   // Filter transactions
-  const filteredTransactions = transactions.filter(tx => {
-    const matchesSearch = tx.invoice_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tx.transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tx.payment_method?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+  const filteredTransactions = transactions.filter((tx) => {
+    const matchesSearch =
+      tx.invoice_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.payment_method?.toLowerCase().includes(searchTerm.toLowerCase());
+
     if (activeTab === 'all') return matchesSearch;
-    if (activeTab === 'success') return tx.status === 'Success' && matchesSearch;
-    if (activeTab === 'pending') return tx.status === 'Processing' && matchesSearch;
-    if (activeTab === 'failed') return (tx.status === 'Failed' || tx.status === 'Cancelled') && matchesSearch;
-    
+    if (activeTab === 'success')
+      return tx.status === 'Success' && matchesSearch;
+    if (activeTab === 'pending')
+      return tx.status === 'Processing' && matchesSearch;
+    if (activeTab === 'failed')
+      return (
+        (tx.status === 'Failed' || tx.status === 'Cancelled') && matchesSearch
+      );
+
     return matchesSearch;
   });
 
-  const successTransactions = transactions.filter(tx => tx.status === 'Success');
-  const pendingTransactions = transactions.filter(tx => tx.status === 'Processing');
-  const failedTransactions = transactions.filter(tx => tx.status === 'Failed' || tx.status === 'Cancelled');
+  const successTransactions = transactions.filter(
+    (tx) => tx.status === 'Success'
+  );
+  const pendingTransactions = transactions.filter(
+    (tx) => tx.status === 'Processing'
+  );
+  const failedTransactions = transactions.filter(
+    (tx) => tx.status === 'Failed' || tx.status === 'Cancelled'
+  );
 
   return (
     <div className="page-container">
       {/* Toast Container */}
       <div className="toast-container">
         {toast && (
-          <Toast 
-            message={toast.message} 
-            type={toast.type} 
-            onClose={() => setToast(null)} 
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
           />
         )}
       </div>
 
       <div className="page-content">
         <div className="card card-padding">
-
           {loading ? (
             <div className="text-center py-8 flex flex-col items-center">
               <GradientSpinner size="w-14 h-14" className="mb-4" />
@@ -350,20 +382,23 @@ export default function TransactionsPage() {
             <>
               {/* Search Bar */}
               <div className="mb-6">
-                <form onSubmit={(e) => e.preventDefault()} className="flex gap-3">
+                <form
+                  onSubmit={(e) => e.preventDefault()}
+                  className="flex gap-3"
+                >
                   <div className="flex-1 relative">
                     <input
                       type="search"
                       placeholder="Search transactions..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="form-input w-full"
+                      className="form-field w-full"
                       autoComplete="off"
                       style={{ width: '100%', minWidth: '0' }}
                     />
                   </div>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 flex items-center gap-2 font-medium transition-all duration-200"
                   >
                     <FaSearch className="w-4 h-4" />
@@ -372,50 +407,50 @@ export default function TransactionsPage() {
                 </form>
               </div>
 
-              {/* Status Filter Buttons */}
+              {/* Status Filter Buttons - Updated with Services Page Gradient */}
               <div className="mb-6">
                 <div className="flex flex-wrap gap-3">
                   <button
                     onClick={() => setActiveTab('all')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      activeTab === 'all' 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
+                      activeTab === 'all'
+                        ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
                     }`}
                   >
                     <FaReceipt className="w-4 h-4" />
                     All ({transactions.length})
                   </button>
-                  
+
                   <button
                     onClick={() => setActiveTab('success')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      activeTab === 'success' 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
+                      activeTab === 'success'
+                        ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
                     }`}
                   >
                     <FaCheckCircle className="w-4 h-4" />
                     Success ({successTransactions.length})
                   </button>
-                  
+
                   <button
                     onClick={() => setActiveTab('pending')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      activeTab === 'pending' 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
+                      activeTab === 'pending'
+                        ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
                     }`}
                   >
                     <FaClock className="w-4 h-4" />
                     Pending ({pendingTransactions.length})
                   </button>
-                  
+
                   <button
                     onClick={() => setActiveTab('failed')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      activeTab === 'failed' 
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40' 
+                      activeTab === 'failed'
+                        ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
                     }`}
                   >
