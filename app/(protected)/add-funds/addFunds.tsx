@@ -354,7 +354,7 @@ export function AddFundForm() {
                     <input
                       type="number"
                       placeholder="0.00"
-                      className="form-field pl-14"
+                      className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       disabled={isPending}
                       value={form.watch('amountUSD') || ''}
                       onChange={handleUSDChange}
@@ -371,7 +371,7 @@ export function AddFundForm() {
                     <input
                       type="number"
                       placeholder="0.00"
-                      className="form-field pl-14"
+                      className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       disabled={isPending}
                       value={form.watch('amountBDT') || ''}
                       onChange={handleBDTChange}
@@ -411,12 +411,12 @@ export function AddFundForm() {
                 <div className="relative">
                   <input
                     type="text"
-                    className="form-field pl-14 font-bold text-blue-600"
+                    className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     disabled
                     placeholder="0.00 BDT"
                     value={form.watch('amountBDTConverted') || '0.00'}
                   />
-                  <span className="absolute left-4   top-1/2 -translate-y-1/2 text-blue-600 font-bold">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
                     ৳
                   </span>
                 </div>
@@ -424,7 +424,7 @@ export function AddFundForm() {
                 <div className="relative">
                   <input
                     type="text"
-                    className="form-field pl-14 font-bold text-blue-600"
+                    className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     disabled
                     placeholder="0.00 USD"
                     value={form.watch('amountUSD') || '0.00'}
@@ -442,7 +442,7 @@ export function AddFundForm() {
             <input
               type="tel"
               placeholder="Enter your phone number"
-              className="form-field"
+              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               disabled={isPending}
               value={form.watch('phone') || ''}
               onChange={(e) =>

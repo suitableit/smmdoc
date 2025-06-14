@@ -12,7 +12,6 @@ import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
-  FaBars,
   FaBell,
   FaChevronDown,
   FaDesktop,
@@ -26,7 +25,6 @@ import {
   FaSignOutAlt,
   FaSun,
   FaTicketAlt,
-  FaTimes,
   FaUserCog,
   FaWallet,
 } from 'react-icons/fa';
@@ -66,7 +64,7 @@ const AvatarImage = ({ src, alt }: { src: string; alt: string }) => (
 );
 
 const AvatarFallback = ({ children }: { children: React.ReactNode }) => (
-  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] flex items-center justify-center text-white font-semibold text-sm">
+  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-semibold text-sm">
     {children}
   </div>
 );
@@ -342,7 +340,7 @@ const Menu = ({ user }: { user: any }) => {
               style={{ backgroundColor: 'rgb(243 243 243)' }}
             >
               <div className="flex items-center space-x-2 sm:space-x-4 mb-3 sm:mb-4">
-                <Avatar className="h-10 w-10 sm:h-14 sm:w-14 ring-2 sm:ring-3 ring-[#5F1DE8]/20">
+                <Avatar className="h-10 w-10 sm:h-14 sm:w-14 ring-2 sm:ring-3 ring-[var(--primary)]/20">
                   <AvatarImage
                     src={user?.photo || user?.image}
                     alt={user?.name || 'User'}
@@ -386,7 +384,9 @@ const Menu = ({ user }: { user: any }) => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-1.5 sm:space-x-2">
                       <FaWallet className="h-3 w-3 sm:h-5 sm:w-5" />
-                      <span className="font-semibold text-xs sm:text-base">Account Balance</span>
+                      <span className="font-semibold text-xs sm:text-base">
+                        Account Balance
+                      </span>
                     </div>
                     <FaChevronDown className="h-2.5 w-2.5 sm:h-4 sm:w-4 opacity-70" />
                   </div>
@@ -519,11 +519,7 @@ const Header = () => {
     >
       {/* Mobile Logo - Visible only on mobile */}
       <div className="flex lg:hidden items-center">
-        <img 
-          src="/logo.png" 
-          alt="Logo" 
-          className="h-10 w-auto"
-        />
+        <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
       </div>
 
       {/* Desktop Search - Hidden on mobile */}
@@ -535,11 +531,9 @@ const Header = () => {
           <input
             type="search"
             placeholder="Search..."
-            className="w-full h-full pl-10 pr-4 header-theme-transition rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-colors duration-200"
+            className="form-field w-full h-full pl-10 pr-4 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             style={{
               backgroundColor: 'var(--dropdown-bg)',
-              color: 'var(--header-text)',
-              border: `1px solid var(--header-border)`,
             }}
           />
         </div>
@@ -807,7 +801,9 @@ const Header = () => {
         </div>
 
         {/* User Menu */}
-        <div className="flex items-center justify-center">{user && <Menu user={user} />}</div>
+        <div className="flex items-center justify-center">
+          {user && <Menu user={user} />}
+        </div>
 
         {/* Mobile Menu Toggle (3-dot menu) - Hidden on desktop */}
         <div className="flex items-center lg:hidden">

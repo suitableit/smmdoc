@@ -35,12 +35,12 @@ export default function GlobalError({ error }: ErrorProps) {
               <FaExclamationTriangle />
             </div>
           </div>
-          <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
+          <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
             Something went wrong!
           </h4>
           <h1 className="page-title">
             Application{' '}
-            <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">
+            <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
               Error
             </span>
           </h1>
@@ -97,7 +97,7 @@ export default function GlobalError({ error }: ErrorProps) {
                   onClick={() => (window.location.href = '/dashboard')}
                 >
                   <div className="flex items-center gap-2 font-medium">
-                    <FaHome className="w-4 h-4 text-[#5F1DE8] dark:text-[#B131F8]" />
+                    <FaHome className="w-4 h-4 text-[var(--primary)] dark:text-[var(--secondary)]" />
                     Dashboard
                   </div>
                   <div
@@ -113,7 +113,7 @@ export default function GlobalError({ error }: ErrorProps) {
                   onClick={() => (window.location.href = '/contact-support')}
                 >
                   <div className="flex items-center gap-2 font-medium">
-                    <FaHeadset className="w-4 h-4 text-[#5F1DE8] dark:text-[#B131F8]" />
+                    <FaHeadset className="w-4 h-4 text-[var(--primary)] dark:text-[var(--secondary)]" />
                     Contact Support
                   </div>
                   <div
@@ -129,7 +129,7 @@ export default function GlobalError({ error }: ErrorProps) {
                   onClick={() => window.location.reload()}
                 >
                   <div className="flex items-center gap-2 font-medium">
-                    <FaRedo className="w-4 h-4 text-[#5F1DE8] dark:text-[#B131F8]" />
+                    <FaRedo className="w-4 h-4 text-[var(--primary)] dark:text-[var(--secondary)]" />
                     Try Again
                   </div>
                   <div
@@ -145,7 +145,7 @@ export default function GlobalError({ error }: ErrorProps) {
                   onClick={() => (window.location.href = '/account-settings')}
                 >
                   <div className="flex items-center gap-2 font-medium">
-                    <FaCog className="w-4 h-4 text-[#5F1DE8] dark:text-[#B131F8]" />
+                    <FaCog className="w-4 h-4 text-[var(--primary)] dark:text-[var(--secondary)]" />
                     Account Settings
                   </div>
                   <div

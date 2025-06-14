@@ -119,7 +119,7 @@ const ProfilePage = () => {
   };
 
   const [apiKey, setApiKey] = useState<ApiKey | null>({
-    key: 'sk_test_1234567890abcdef1234567890abcdef',
+    key: 'smmdoc_51NxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
     createdAt: new Date('2024-01-15'),
     updatedAt: new Date(),
     id: '1',
@@ -132,6 +132,7 @@ const ProfilePage = () => {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [selectedTimezone, setSelectedTimezone] = useState('21600');
+  const [showApiKey, setShowApiKey] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -229,6 +230,7 @@ const ProfilePage = () => {
       id: Math.random().toString(),
       userId: '1',
     });
+    setShowApiKey(true); // Show the newly generated API key
     showToast('API key generated successfully!', 'success');
   };
 
@@ -340,7 +342,7 @@ const ProfilePage = () => {
                           type="text"
                           readOnly
                           value="********************************"
-                          className="form-field api-key-input"
+                          className="form-field w-full pr-10 font-monow-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                         />
                       </div>
 
@@ -369,7 +371,7 @@ const ProfilePage = () => {
                 <div className="space-y-4">
                   <div className="form-group">
                     <label className="form-label">Select Timezone</label>
-                    <select className="form-select">
+                    <select className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer">
                       <option>(UTC +6:00) Bangladesh Standard Time</option>
                     </select>
                   </div>
@@ -416,7 +418,7 @@ const ProfilePage = () => {
                     type="text"
                     value={user?.name || 'msrjihad'}
                     readOnly
-                    className="form-field"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
 
@@ -424,9 +426,9 @@ const ProfilePage = () => {
                   <label className="form-label">Email</label>
                   <input
                     type="email"
-                    value={user?.email || 'msrjihad@gmail.com'}
+                    value={user?.email || 'email@example.com'}
                     readOnly
-                    className="form-field"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
 
@@ -476,7 +478,7 @@ const ProfilePage = () => {
                         currentPass: e.target.value,
                       }))
                     }
-                    className="form-field"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
 
@@ -490,7 +492,7 @@ const ProfilePage = () => {
                         newPass: e.target.value,
                       }))
                     }
-                    className="form-field"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
 
@@ -504,7 +506,7 @@ const ProfilePage = () => {
                         confirmNewPass: e.target.value,
                       }))
                     }
-                    className="form-field"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
 
@@ -573,10 +575,28 @@ const ProfilePage = () => {
                         type="text"
                         readOnly
                         value={
-                          apiKey?.key || '********************************'
+                          showApiKey
+                            ? apiKey?.key || '••••••••••••••••••••••••••••••••'
+                            : '••••••••••••••••••••••••••••••••'
                         }
-                        className="form-field api-key-input"
+                        className="form-field w-full pr-20 font-mono px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       />
+
+                      {/* View/Hide Toggle Button */}
+                      {apiKey?.key && (
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                          title={showApiKey ? 'Hide API Key' : 'Show API Key'}
+                        >
+                          {showApiKey ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      )}
 
                       {/* Responsive timestamp positioning */}
                       {apiKey?.key && (
@@ -603,6 +623,7 @@ const ProfilePage = () => {
                         type="button"
                         onClick={() => copyToClipboard(apiKey)}
                         className="btn btn-secondary flex items-center justify-center gap-2"
+                        disabled={!showApiKey && !apiKey?.key}
                       >
                         <Copy className="h-4 w-4" />
                         {copied ? 'Copied!' : 'Copy'}
@@ -635,7 +656,7 @@ const ProfilePage = () => {
                   <select
                     value={selectedTimezone}
                     onChange={(e) => setSelectedTimezone(e.target.value)}
-                    className="form-select"
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   >
                     {timezones.map((tz) => (
                       <option key={tz.value} value={tz.value}>
@@ -663,7 +684,7 @@ const ProfilePage = () => {
                   <select
                     value={selectedLanguage}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="form-select"
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   >
                     {languages.map((lang) => (
                       <option key={lang.value} value={lang.value}>

@@ -380,31 +380,24 @@ export default function TransactionsPage() {
             </div>
           ) : (
             <>
-              {/* Search Bar */}
+              {/* Search Bar - Default Style without Button */}
               <div className="mb-6">
-                <form
-                  onSubmit={(e) => e.preventDefault()}
-                  className="flex gap-3"
-                >
-                  <div className="flex-1 relative">
-                    <input
-                      type="search"
-                      placeholder="Search transactions..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="form-field w-full"
-                      autoComplete="off"
-                      style={{ width: '100%', minWidth: '0' }}
-                    />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <FaSearch className="w-4 h-4 text-gray-500" />
                   </div>
-                  <button
-                    type="submit"
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 flex items-center gap-2 font-medium transition-all duration-200"
-                  >
-                    <FaSearch className="w-4 h-4" />
-                    Search
-                  </button>
-                </form>
+                  <input
+                    type="search"
+                    placeholder="Search transactions..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setPage(1);
+                    }}
+                    className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    autoComplete="off"
+                  />
+                </div>
               </div>
 
               {/* Status Filter Buttons - Updated with Services Page Gradient */}
@@ -414,7 +407,7 @@ export default function TransactionsPage() {
                     onClick={() => setActiveTab('all')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                       activeTab === 'all'
-                        ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] shadow-lg'
+                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
                     }`}
                   >
@@ -426,7 +419,7 @@ export default function TransactionsPage() {
                     onClick={() => setActiveTab('success')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                       activeTab === 'success'
-                        ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] shadow-lg'
+                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
                     }`}
                   >
@@ -438,7 +431,7 @@ export default function TransactionsPage() {
                     onClick={() => setActiveTab('pending')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                       activeTab === 'pending'
-                        ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] shadow-lg'
+                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
                     }`}
                   >
@@ -450,7 +443,7 @@ export default function TransactionsPage() {
                     onClick={() => setActiveTab('failed')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                       activeTab === 'failed'
-                        ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] shadow-lg'
+                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
                     }`}
                   >

@@ -399,7 +399,7 @@ export default function MassOrder() {
                 </button>
                 <button
                   onClick={() => setActiveTab('massOrder')}
-                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white shadow-lg"
+                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg"
                 >
                   <FaLayerGroup className="mr-2 w-4 h-4" />
                   Mass Orders
@@ -427,7 +427,7 @@ export default function MassOrder() {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="form-group">
+                      <div className="form-group  mb-0">
                         <label className="form-label">
                           Order Format: service_id | link | quantity
                         </label>
@@ -438,7 +438,7 @@ export default function MassOrder() {
                             setOrders(e.target.value);
                             parseOrders(e.target.value);
                           }}
-                          className="form-field font-mono text-sm resize-none"
+                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                           style={{ height: '256px' }}
                         />
                       </div>

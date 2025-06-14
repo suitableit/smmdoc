@@ -62,7 +62,7 @@ const Footer = () => {
     <footer className="bg-slate-900 relative pt-16 pb-8">
       {/* Top Logo */}
       <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        <div className="w-20 h-20 bg-slate-900 border-2 border-[#5F1DE8] dark:border-[#B131F8] rounded-full flex items-center justify-center transition-colors duration-200">
+        <div className="w-20 h-20 bg-slate-900 border-2 border-[var(--primary)] dark:border-[var(--secondary)] rounded-full flex items-center justify-center transition-colors duration-200">
           <Image
             src="/favicon.png"
             alt="SMMDOC favicon"
@@ -102,7 +102,7 @@ const Footer = () => {
                     <li key={index}>
                       <Link
                         href={social.url}
-                        className="social_link w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-[#5F1DE8] dark:hover:bg-[#B131F8] hover:text-white transition-all duration-300 text-slate-900 group"
+                        className="social_link w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-[var(--primary)] dark:hover:bg-[var(--secondary)] hover:text-white transition-all duration-300 text-slate-900 group"
                         aria-label={social.name}
                       >
                         <IconComponent className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
@@ -125,7 +125,7 @@ const Footer = () => {
                     <li key={index}>
                       <Link
                         href={link.href}
-                        className="footer_menu_item block text-white font-semibold text-base py-1 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
+                        className="footer_menu_item block text-white font-semibold text-base py-1 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
                       >
                         {link.name}
                       </Link>
@@ -142,7 +142,7 @@ const Footer = () => {
                     <li key={index}>
                       <Link
                         href={link.href}
-                        className="footer_menu_item block text-white font-semibold text-base py-1 hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
+                        className="footer_menu_item block text-white font-semibold text-base py-1 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
                       >
                         {link.name}
                       </Link>
@@ -159,12 +159,12 @@ const Footer = () => {
               <h4 className="text-xl font-bold text-white mb-4">Reach Out</h4>
               <ul className="footer_contact list-none p-0 m-0">
                 <li className="flex items-center gap-2 mb-3">
-                  <div className="icon w-8 h-8 bg-white rounded-full flex items-center justify-center group hover:bg-[#5F1DE8] dark:hover:bg-[#B131F8] transition-colors duration-200">
+                  <div className="icon w-8 h-8 bg-white rounded-full flex items-center justify-center group hover:bg-[var(--primary)] dark:hover:bg-[var(--secondary)] transition-colors duration-200">
                     <FaWhatsapp className="w-4 h-4 text-slate-900 group-hover:text-white transition-colors duration-200" />
                   </div>
                   <Link
                     href="https://wa.me/8801723139610"
-                    className="footer_menu_item text-white font-semibold text-sm hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
+                    className="footer_menu_item text-white font-semibold text-sm hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -172,12 +172,12 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="icon w-8 h-8 bg-white rounded-full flex items-center justify-center group hover:bg-[#5F1DE8] dark:hover:bg-[#B131F8] transition-colors duration-200">
+                  <div className="icon w-8 h-8 bg-white rounded-full flex items-center justify-center group hover:bg-[var(--primary)] dark:hover:bg-[var(--secondary)] transition-colors duration-200">
                     <FaEnvelope className="w-4 h-4 text-slate-900 group-hover:text-white transition-colors duration-200" />
                   </div>
                   <Link
                     href="mailto:support@smmdoc.com"
-                    className="footer_menu_item text-white font-semibold text-sm hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
+                    className="footer_menu_item text-white font-semibold text-sm hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
                   >
                     support@smmdoc.com
                   </Link>
@@ -195,7 +195,7 @@ const Footer = () => {
                 © {currentYear} All Rights Reserved by{' '}
                 <Link
                   href="/"
-                  className="text-white font-bold hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
+                  className="text-white font-bold hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
                 >
                   SMMDOC
                 </Link>
@@ -207,7 +207,7 @@ const Footer = () => {
                 <React.Fragment key={index}>
                   <Link
                     href={link.href}
-                    className="text-white font-semibold hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
+                    className="text-white font-semibold hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
                   >
                     {link.name}
                   </Link>
@@ -224,7 +224,7 @@ const Footer = () => {
                   href="https://www.suitableit.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-white font-bold hover:text-[#5F1DE8] dark:hover:text-[#B131F8] transition-colors duration-300"
+                  className="text-white font-bold hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
                 >
                   Suitable IT
                 </Link>

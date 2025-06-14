@@ -2,7 +2,6 @@ import FAQ from '@/components/homepage/faq';
 import HeroSection from '@/components/homepage/hero';
 import HowItWorks from '@/components/homepage/howitworks';
 import Platform from '@/components/homepage/platforms';
-import Statistics from '@/components/homepage/stat';
 import WhatPeopleSays from '@/components/homepage/whatpeoplesays';
 import WhoWeAre from '@/components/homepage/whoweare';
 import WhyChooseUs from '@/components/homepage/whychooseus';
@@ -18,7 +17,6 @@ export default function Home() {
   return (
     <main>
       <HeroSection />
-      <Statistics />
       <WhoWeAre />
       <Platform />
       <WhyChooseUs />
