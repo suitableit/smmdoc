@@ -171,9 +171,17 @@ const ChildPanel: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+
+    let processedValue = value;
+
+    if (name === 'username') {
+      // Allow only letters, numbers, underscore, hyphen, and dot
+      processedValue = value.replace(/[^a-zA-Z0-9._-]/g, '').toLowerCase();
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }));
   };
 
@@ -344,7 +352,7 @@ const ChildPanel: React.FC = () => {
                       name="domain"
                       value={formData.domain}
                       onChange={handleInputChange}
-                      className="form-field"
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       placeholder="Enter your domain"
                       required
                     />
@@ -372,7 +380,7 @@ const ChildPanel: React.FC = () => {
                       name="currency"
                       value={formData.currency}
                       onChange={handleInputChange}
-                      className="form-select"
+                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                       required
                     >
                       {currencies.map((currency) => (
@@ -393,7 +401,10 @@ const ChildPanel: React.FC = () => {
                       name="username"
                       value={formData.username}
                       onChange={handleInputChange}
-                      className="form-field"
+                      onInput={(e) => {
+                        e.target.value = e.target.value.toLowerCase();
+                      }}
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       placeholder="Enter admin username"
                       required
                     />
@@ -409,7 +420,7 @@ const ChildPanel: React.FC = () => {
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="form-field"
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       placeholder="Enter admin password"
                       required
                     />
@@ -425,7 +436,7 @@ const ChildPanel: React.FC = () => {
                       name="passwordConfirm"
                       value={formData.passwordConfirm}
                       onChange={handleInputChange}
-                      className="form-field"
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       placeholder="Confirm admin password"
                       required
                     />
@@ -439,7 +450,7 @@ const ChildPanel: React.FC = () => {
                       type="text"
                       id="price"
                       value="$10.00"
-                      className="form-field bg-gray-50 text-gray-600"
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       readOnly
                     />
                   </div>

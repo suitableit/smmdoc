@@ -1,26 +1,26 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useEffect, useState } from 'react';
 import { APP_NAME } from '@/lib/constants'; // Added import for APP_NAME
+import { useEffect, useState } from 'react';
 import {
   FaChartLine,
+  FaCheckCircle,
   FaCoins,
   FaCopy,
   FaDollarSign,
+  FaExclamationTriangle,
+  FaFile,
+  FaLink,
   FaMousePointer,
   FaPercent,
-  FaUsers,
-  FaFile,
-  FaCheckCircle,
-  FaUser,
-  FaLink,
   FaTimes,
-  FaExclamationTriangle,
+  FaUser,
+  FaUsers,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
-const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
@@ -29,18 +29,34 @@ const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
 );
 
 // Custom Toast Component
-const Toast = ({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'info' | 'pending'; onClose: () => void }) => (
-  <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
-    type === 'success' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200' :
-    type === 'error' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' :
-    type === 'info' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200' :
-    'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
-  }`}>
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div
+    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+      type === 'success'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+        : type === 'error'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
+        : type === 'info'
+        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
+    }`}
+  >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       {type === 'error' && <FaExclamationTriangle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded">
+      <button
+        onClick={onClose}
+        className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"
+      >
         <FaTimes className="w-3 h-3" />
       </button>
     </div>
@@ -62,7 +78,10 @@ function AffiliateStatsCards() {
   const user = useCurrentUser();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'pending' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
   const [stats, setStats] = useState<AffiliateStats>({
     visits: 0,
     registrations: 0,
@@ -78,7 +97,10 @@ function AffiliateStatsCards() {
   const referralLink = user?.id ? `https://smmdoc.com/ref/${user.id}` : '';
 
   // Show toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
@@ -131,10 +153,10 @@ function AffiliateStatsCards() {
     <div className="space-y-6">
       {/* Toast Container */}
       {toastMessage && (
-        <Toast 
-          message={toastMessage.message} 
-          type={toastMessage.type} 
-          onClose={() => setToastMessage(null)} 
+        <Toast
+          message={toastMessage.message}
+          type={toastMessage.type}
+          onClose={() => setToastMessage(null)}
         />
       )}
 
@@ -164,13 +186,18 @@ function AffiliateStatsCards() {
             <div className="flex-1 min-w-0">
               <h3 className="card-title">Referral Link</h3>
               <div className="flex items-center">
-                <p className="text-sm truncate" style={{ color: 'var(--text-muted)' }}>
-                  {referralLink ? referralLink.replace('https://', '') : 'Login to generate'}
+                <p
+                  className="text-sm truncate"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {referralLink
+                    ? referralLink.replace('https://', '')
+                    : 'Login to generate'}
                 </p>
                 {referralLink && (
                   <button
                     onClick={copyToClipboard}
-                    className="ml-2 text-[#5F1DE8] hover:text-[#B131F8] dark:text-[#B131F8] dark:hover:text-[#5F1DE8] transition-colors duration-200"
+                    className="ml-2 text-[var(--primary)] hover:text-[var(--secondary)] dark:text-[var(--secondary)] dark:hover:text-[var(--primary)] transition-colors duration-200"
                     title={copied ? 'Copied!' : 'Copy link'}
                   >
                     <FaCopy className="h-4 w-4" />
@@ -230,11 +257,7 @@ function AffiliateStatsCards() {
                   Total Visits
                 </div>
                 <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  {loading ? (
-                    <GradientSpinner size="w-6 h-6" />
-                  ) : (
-                    stats.visits
-                  )}
+                  {loading ? <GradientSpinner size="w-6 h-6" /> : stats.visits}
                 </div>
               </div>
               <FaMousePointer className="text-blue-500 w-5 h-5" />
@@ -348,97 +371,99 @@ export default function AffiliateProgram() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f1f2f6] dark:bg-[#232333] transition-colors duration-200">
-        <div className="space-y-6">
-          
-          {/* Affiliate Stats Component */}
-          <AffiliateStatsCards />
-          
-          {/* About the Affiliate Program Card */}
-          <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                  <FaUsers className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  About the Affiliate Program
-                </h2>
+    <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
+      <div className="space-y-6">
+        {/* Affiliate Stats Component */}
+        <AffiliateStatsCards />
+
+        {/* About the Affiliate Program Card */}
+        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
+                <FaUsers className="w-5 h-5 text-white" />
               </div>
-              
-              <div className="space-y-6">
-                
-                {/* How it works section */}
-                <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                      <FaUsers className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      How it works?
-                    </h3>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                About the Affiliate Program
+              </h2>
+            </div>
+
+            <div className="space-y-6">
+              {/* How it works section */}
+              <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
+                    <FaUsers className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                    Share your unique referral link. When someone signs up using your link and places an order, you'll receive a 1% commission on their order.
-                  </p>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    How it works?
+                  </h3>
                 </div>
-                
-                {/* Payments section */}
-                <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                      <FaDollarSign className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Payments
-                    </h3>
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                  Share your unique referral link. When someone signs up using
+                  your link and places an order, you'll receive a 1% commission
+                  on their order.
+                </p>
+              </div>
+
+              {/* Payments section */}
+              <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
+                    <FaDollarSign className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                    When your earnings reach $100 or more, you can request a payment. Payments are processed monthly.
-                  </p>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Payments
+                  </h3>
                 </div>
-                
-                {/* Terms and Conditions section */}
-                <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] rounded-lg flex items-center justify-center">
-                      <FaFile className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Terms and Conditions
-                    </h3>
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                  When your earnings reach $100 or more, you can request a
+                  payment. Payments are processed monthly.
+                </p>
+              </div>
+
+              {/* Terms and Conditions section */}
+              <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
+                    <FaFile className="w-4 h-4 text-white" />
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-gray-600 dark:text-gray-300">
-                        You cannot use your own referral link on your account
-                      </p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-gray-600 dark:text-gray-300">
-                        Spamming or unethical promotion is prohibited
-                      </p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-gray-600 dark:text-gray-300">
-                        You can use social media, email, blogs, etc. to share your referral link
-                      </p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-gray-600 dark:text-gray-300">
-                        The affiliate program is subject to change at any time
-                      </p>
-                    </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Terms and Conditions
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-gray-600 dark:text-gray-300">
+                      You cannot use your own referral link on your account
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-gray-600 dark:text-gray-300">
+                      Spamming or unethical promotion is prohibited
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-gray-600 dark:text-gray-300">
+                      You can use social media, email, blogs, etc. to share your
+                      referral link
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-gray-600 dark:text-gray-300">
+                      The affiliate program is subject to change at any time
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
     </div>
   );
 }

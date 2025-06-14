@@ -295,10 +295,10 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
                     type="text"
                     value={username}
                     onChange={handleUsernameChange}
-                    className={`form-field pr-10 ${
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
                       isUserValid
                         ? 'border-green-300 focus:ring-green-500'
-                        : 'border-gray-300 focus:ring-blue-500'
+                        : 'border-gray-300 focus:ring-[var(--primary)]'
                     }`}
                     placeholder="Enter friend's username"
                     disabled={isPending}
@@ -347,7 +347,7 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
                           min="0"
                           value={amountUSD}
                           onChange={handleUSDChange}
-                          className="form-field pl-14"
+                          className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           placeholder="0.00"
                           disabled={isPending}
                         />
@@ -366,7 +366,7 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
                           min="0"
                           value={amountBDT}
                           onChange={handleBDTChange}
-                          className="form-field pl-14"
+                          className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           placeholder="0.00"
                           disabled={isPending}
                         />
@@ -405,7 +405,7 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
                     <div className="relative">
                       <input
                         type="text"
-                        className="form-field pl-14 bg-gray-50 font-bold text-blue-600"
+                        className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                         disabled
                         placeholder="0.00 BDT"
                         value={amountBDTConverted || '0.00'}
@@ -418,7 +418,7 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
                     <div className="relative">
                       <input
                         type="text"
-                        className="form-field pl-14 bg-gray-50 font-bold text-blue-600"
+                        className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                         disabled
                         placeholder="0.00 USD"
                         value={amountUSD || '0.00'}

@@ -1,8 +1,14 @@
 'use client';
 import Footer from '@/components/footer';
 import Header from '@/components/shared/header';
-import { useState, useEffect } from 'react';
-import { FaArrowUp, FaComment, FaTimes, FaWhatsapp, FaFacebookMessenger } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
+import {
+  FaArrowUp,
+  FaComment,
+  FaFacebookMessenger,
+  FaTimes,
+  FaWhatsapp,
+} from 'react-icons/fa';
 import { RiTelegramFill } from 'react-icons/ri';
 
 export default function RootLayout({
@@ -31,7 +37,7 @@ export default function RootLayout({
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'smooth',
     });
   };
 
@@ -58,14 +64,14 @@ export default function RootLayout({
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
-      
+
       {/* Chat Support Menu */}
       <div className="fixed bottom-6 left-6 z-50">
         {/* WhatsApp Button */}
         <div
           className={`transition-all duration-300 relative group ${
-            isChatExpanded 
-              ? 'opacity-100 transform translate-y-0 mb-3' 
+            isChatExpanded
+              ? 'opacity-100 transform translate-y-0 mb-3'
               : 'opacity-0 transform translate-y-4 pointer-events-none mb-0'
           }`}
         >
@@ -88,8 +94,8 @@ export default function RootLayout({
         {/* Telegram Button */}
         <div
           className={`transition-all duration-300 relative group ${
-            isChatExpanded 
-              ? 'opacity-100 transform translate-y-0 mb-3' 
+            isChatExpanded
+              ? 'opacity-100 transform translate-y-0 mb-3'
               : 'opacity-0 transform translate-y-4 pointer-events-none mb-0'
           }`}
         >
@@ -112,8 +118,8 @@ export default function RootLayout({
         {/* Messenger Button */}
         <div
           className={`transition-all duration-300 relative group ${
-            isChatExpanded 
-              ? 'opacity-100 transform translate-y-0 mb-3' 
+            isChatExpanded
+              ? 'opacity-100 transform translate-y-0 mb-3'
               : 'opacity-0 transform translate-y-4 pointer-events-none mb-0'
           }`}
         >
@@ -137,7 +143,7 @@ export default function RootLayout({
         <div className="relative group">
           <button
             onClick={toggleChat}
-            className={`inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white rounded-full shadow-lg hover:shadow-xl hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1 ${
+            className={`inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white rounded-full shadow-lg hover:shadow-xl hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1 ${
               isChatExpanded ? 'rotate-180' : 'rotate-0'
             }`}
             aria-label={isChatExpanded ? 'Close chat menu' : 'Open chat menu'}
@@ -157,18 +163,18 @@ export default function RootLayout({
           </div>
         </div>
       </div>
-      
+
       {/* Back to Top Button */}
       <div
         className={`fixed bottom-6 right-6 z-50 transition-all duration-500 ${
-          isVisible 
-            ? 'opacity-100 transform translate-y-0' 
+          isVisible
+            ? 'opacity-100 transform translate-y-0'
             : 'opacity-0 transform translate-y-4 pointer-events-none'
         }`}
       >
         <button
           onClick={scrollToTop}
-          className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white rounded-full shadow-lg hover:shadow-xl hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
+          className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white rounded-full shadow-lg hover:shadow-xl hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
           aria-label="Back to top"
         >
           <FaArrowUp className="w-6 h-6" />

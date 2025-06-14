@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import {
@@ -15,7 +14,6 @@ import {
   FaTwitter,
   FaUser,
   FaYoutube,
-  
 } from 'react-icons/fa';
 
 // Contact Form Component
@@ -156,7 +154,7 @@ const ContactForm: React.FC = () => {
               onChange={handleChange}
               placeholder="Enter your full name"
               disabled={isSubmitting}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
           </div>
           {errors.name && (
@@ -188,7 +186,7 @@ const ContactForm: React.FC = () => {
                 onChange={handleChange}
                 placeholder="your@email.com"
                 disabled={isSubmitting}
-                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               />
             </div>
             {errors.email && (
@@ -218,7 +216,7 @@ const ContactForm: React.FC = () => {
                 onChange={handleChange}
                 placeholder="+1 (555) 123-4567"
                 disabled={isSubmitting}
-                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               />
             </div>
             {errors.phone && (
@@ -249,7 +247,7 @@ const ContactForm: React.FC = () => {
               onChange={handleChange}
               placeholder="What can we help you with?"
               disabled={isSubmitting}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
           </div>
           {errors.subject && (
@@ -275,7 +273,7 @@ const ContactForm: React.FC = () => {
             rows={4}
             placeholder="Describe your message..."
             disabled={isSubmitting}
-            className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
+            className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
           />
           {errors.message && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
@@ -288,7 +286,7 @@ const ContactForm: React.FC = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
             <>
@@ -331,14 +329,13 @@ const ContactForm: React.FC = () => {
 const ContactUs: React.FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0d0712] transition-colors duration-200">
-
       {/* How to Contact & Contact Form Section */}
       <section className="pt-[60px] pb-[120px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
               How to{' '}
-              <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">
+              <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 Contact
               </span>{' '}
               Us
@@ -352,7 +349,7 @@ const ContactUs: React.FC = () => {
                 {/* Email Card */}
                 <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 group">
                   <div className="mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#5F1DE8] to-[#B131F8] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
                       <FaEnvelope className="w-8 h-8 text-white" />
                     </div>
                   </div>
@@ -363,7 +360,7 @@ const ContactUs: React.FC = () => {
                     For detailed inquiries, feedback, or support, email us at{' '}
                     <Link
                       href="mailto:support@smmdoc.com"
-                      className="text-[#5F1DE8] dark:text-[#B131F8] hover:underline"
+                      className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline"
                     >
                       support@smmdoc.com
                     </Link>
@@ -375,7 +372,7 @@ const ContactUs: React.FC = () => {
                 {/* Social Media Card */}
                 <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 group">
                   <div className="mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#5F1DE8] to-[#B131F8] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
                       <div className="flex space-x-1">
                         <FaFacebookF className="w-3 h-3 text-white" />
                         <FaTwitter className="w-3 h-3 text-white" />
@@ -405,7 +402,7 @@ const ContactUs: React.FC = () => {
                 </p>
                 <Link
                   href="/about"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
                 >
                   <span>More About Us</span>
                   <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
@@ -426,7 +423,7 @@ const ContactUs: React.FC = () => {
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
               Complete{' '}
-              <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">
+              <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 Form
               </span>{' '}
               Controls
@@ -448,7 +445,7 @@ const ContactUs: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Enter text here"
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
 
@@ -460,7 +457,7 @@ const ContactUs: React.FC = () => {
                   <input
                     type="email"
                     placeholder="email@example.com"
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
 
@@ -472,7 +469,7 @@ const ContactUs: React.FC = () => {
                   <input
                     type="password"
                     placeholder="Enter password"
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
               </div>
@@ -489,7 +486,7 @@ const ContactUs: React.FC = () => {
                     placeholder="0"
                     min="0"
                     max="100"
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
 
@@ -501,7 +498,7 @@ const ContactUs: React.FC = () => {
                   <input
                     type="tel"
                     placeholder="+1 (555) 123-4567"
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
 
@@ -513,7 +510,7 @@ const ContactUs: React.FC = () => {
                   <input
                     type="url"
                     placeholder="https://example.com"
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
               </div>
@@ -526,7 +523,7 @@ const ContactUs: React.FC = () => {
                 <input
                   type="search"
                   placeholder="Search..."
-                  className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
@@ -539,7 +536,7 @@ const ContactUs: React.FC = () => {
                   </label>
                   <input
                     type="date"
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
                   />
                 </div>
 
@@ -550,7 +547,7 @@ const ContactUs: React.FC = () => {
                   </label>
                   <input
                     type="time"
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
                   />
                 </div>
 
@@ -561,7 +558,7 @@ const ContactUs: React.FC = () => {
                   </label>
                   <input
                     type="month"
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
                   />
                 </div>
 
@@ -572,7 +569,7 @@ const ContactUs: React.FC = () => {
                   </label>
                   <input
                     type="week"
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
                   />
                 </div>
               </div>
@@ -584,7 +581,7 @@ const ContactUs: React.FC = () => {
                 </label>
                 <input
                   type="datetime-local"
-                  className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
+                  className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
                 />
               </div>
 
@@ -598,7 +595,7 @@ const ContactUs: React.FC = () => {
                   <input
                     type="color"
                     defaultValue="#5F1DE8"
-                    className="w-full h-12 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm transition-all duration-200"
+                    className="w-full h-12 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm transition-all duration-200"
                   />
                 </div>
 
@@ -612,7 +609,7 @@ const ContactUs: React.FC = () => {
                     min="0"
                     max="100"
                     defaultValue="50"
-                    className="w-full h-12 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm transition-all duration-200"
+                    className="w-full h-12 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm transition-all duration-200"
                   />
                 </div>
               </div>
@@ -625,7 +622,7 @@ const ContactUs: React.FC = () => {
                 <input
                   type="file"
                   multiple
-                  className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[#5F1DE8] file:to-[#B131F8] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
+                  className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
                 />
               </div>
 
@@ -640,27 +637,33 @@ const ContactUs: React.FC = () => {
                       type="radio"
                       name="radio-group"
                       value="option1"
-                      className="w-4 h-4 text-[#5F1DE8] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:ring-2 transition-all duration-200"
+                      className="w-4 h-4 text-[var(--primary)] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:ring-2 transition-all duration-200"
                     />
-                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">Option 1</span>
+                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">
+                      Option 1
+                    </span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="radio"
                       name="radio-group"
                       value="option2"
-                      className="w-4 h-4 text-[#5F1DE8] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:ring-2 transition-all duration-200"
+                      className="w-4 h-4 text-[var(--primary)] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:ring-2 transition-all duration-200"
                     />
-                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">Option 2</span>
+                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">
+                      Option 2
+                    </span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="radio"
                       name="radio-group"
                       value="option3"
-                      className="w-4 h-4 text-[#5F1DE8] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:ring-2 transition-all duration-200"
+                      className="w-4 h-4 text-[var(--primary)] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:ring-2 transition-all duration-200"
                     />
-                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">Option 3</span>
+                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">
+                      Option 3
+                    </span>
                   </label>
                 </div>
               </div>
@@ -674,24 +677,30 @@ const ContactUs: React.FC = () => {
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      className="w-4 h-4 text-[#5F1DE8] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:ring-2 transition-all duration-200"
+                      className="w-4 h-4 text-[var(--primary)] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:ring-2 transition-all duration-200"
                     />
-                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">Checkbox 1</span>
+                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">
+                      Checkbox 1
+                    </span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      className="w-4 h-4 text-[#5F1DE8] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:ring-2 transition-all duration-200"
+                      className="w-4 h-4 text-[var(--primary)] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:ring-2 transition-all duration-200"
                     />
-                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">Checkbox 2</span>
+                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">
+                      Checkbox 2
+                    </span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       defaultChecked
-                      className="w-4 h-4 text-[#5F1DE8] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:ring-2 transition-all duration-200"
+                      className="w-4 h-4 text-[var(--primary)] bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:ring-2 transition-all duration-200"
                     />
-                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">Checkbox 3 (checked)</span>
+                    <span className="ml-2 text-gray-900 dark:text-white transition-colors duration-200">
+                      Checkbox 3 (checked)
+                    </span>
                   </label>
                 </div>
               </div>
@@ -701,7 +710,7 @@ const ContactUs: React.FC = () => {
                 <label className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200">
                   Select Dropdown
                 </label>
-                <select className="w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointe">
+                <select className="w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer">
                   <option value="">Choose an option</option>
                   <option value="option1">Option 1</option>
                   <option value="option2">Option 2</option>
@@ -715,10 +724,10 @@ const ContactUs: React.FC = () => {
                 <label className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200">
                   Multiple Select
                 </label>
-                <select 
-                  multiple 
+                <select
+                  multiple
                   size={4}
-                  className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
+                  className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
                 >
                   <option value="item1">Item 1</option>
                   <option value="item2">Item 2</option>
@@ -727,7 +736,9 @@ const ContactUs: React.FC = () => {
                   <option value="item5">Item 5</option>
                   <option value="item6">Item 6</option>
                 </select>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl (or Cmd) to select multiple options</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Hold Ctrl (or Cmd) to select multiple options
+                </p>
               </div>
 
               {/* Image Input */}
@@ -751,7 +762,7 @@ const ContactUs: React.FC = () => {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-3 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 hover:-translate-y-1"
+                  className="flex items-center gap-2 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-3 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 hover:-translate-y-1"
                 >
                   <span>Submit Form</span>
                   <FaArrowRight className="w-4 h-4" />
@@ -768,7 +779,7 @@ const ContactUs: React.FC = () => {
                 {/* Regular Button */}
                 <button
                   type="button"
-                  className="flex items-center gap-2 bg-white dark:bg-gray-700 border-2 border-[#5F1DE8] dark:border-[#B131F8] text-[#5F1DE8] dark:text-[#B131F8] font-semibold px-8 py-3 rounded-lg hover:bg-[#5F1DE8] hover:text-white dark:hover:bg-[#B131F8] dark:hover:text-white transition-all duration-300 hover:-translate-y-1"
+                  className="flex items-center gap-2 bg-white dark:bg-gray-700 border-2 border-[var(--primary)] dark:border-[var(--secondary)] text-[var(--primary)] dark:text-[var(--secondary)] font-semibold px-8 py-3 rounded-lg hover:bg-[var(--primary)] hover:text-white dark:hover:bg-[var(--secondary)] dark:hover:text-white transition-all duration-300 hover:-translate-y-1"
                 >
                   <span>Custom Button</span>
                 </button>
@@ -777,16 +788,17 @@ const ContactUs: React.FC = () => {
               {/* Note about hidden field */}
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <p className="text-blue-700 dark:text-blue-400 text-sm">
-                  <strong>Note:</strong> This form includes a hidden input field (not visible) with name="hidden-field" and value="hidden-value". 
-                  Hidden fields are commonly used to store data that needs to be submitted with the form but shouldn't be visible to users.
+                  <strong>Note:</strong> This form includes a hidden input field
+                  (not visible) with name="hidden-field" and
+                  value="hidden-value". Hidden fields are commonly used to store
+                  data that needs to be submitted with the form but shouldn't be
+                  visible to users.
                 </p>
               </div>
             </form>
           </div>
         </div>
       </section>
-
-      
     </div>
   );
 };

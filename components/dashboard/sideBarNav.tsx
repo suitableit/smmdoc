@@ -225,11 +225,13 @@ export default function SideBarNav({
             return (
               <li key={index} className="nav-item relative group">
                 {/* Blue indicator bar - shows on active or hover */}
-                <div className={cn(
-                  "absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#5F1DE8] to-[#B131F8] z-10 transition-opacity duration-200",
-                  active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                )}></div>
-                
+                <div
+                  className={cn(
+                    'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
+                    active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  )}
+                ></div>
+
                 <Link
                   href={item.disabled ? '/' : item.href}
                   className={cn(
@@ -237,7 +239,8 @@ export default function SideBarNav({
                     active
                       ? 'bg-slate-700/50 text-white'
                       : 'text-slate-300 hover:text-white hover:bg-slate-700/50',
-                    item.disabled && 'opacity-50 pointer-events-none cursor-not-allowed'
+                    item.disabled &&
+                      'opacity-50 pointer-events-none cursor-not-allowed'
                   )}
                   onClick={() => setOpen(false)}
                   title={item.title}
@@ -246,7 +249,9 @@ export default function SideBarNav({
                   <span
                     className={cn(
                       'flex items-center justify-center transition-colors duration-200 text-lg',
-                      active ? 'text-white' : 'text-slate-400 group-hover:text-white'
+                      active
+                        ? 'text-white'
+                        : 'text-slate-400 group-hover:text-white'
                     )}
                   >
                     {renderIcon(item.icon)}
@@ -273,11 +278,13 @@ export default function SideBarNav({
             return (
               <li key={index} className="nav-item relative group">
                 {/* Blue indicator bar - shows on active or hover */}
-                <div className={cn(
-                  "absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#5F1DE8] to-[#B131F8] z-10 transition-opacity duration-200",
-                  active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                )}></div>
-                
+                <div
+                  className={cn(
+                    'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
+                    active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  )}
+                ></div>
+
                 <Link
                   href={item.disabled ? '/' : item.href}
                   className={cn(
@@ -285,7 +292,8 @@ export default function SideBarNav({
                     active
                       ? 'bg-slate-700/50 text-white'
                       : 'text-slate-300 hover:text-white hover:bg-slate-700/50',
-                    item.disabled && 'opacity-50 pointer-events-none cursor-not-allowed'
+                    item.disabled &&
+                      'opacity-50 pointer-events-none cursor-not-allowed'
                   )}
                   onClick={() => setOpen(false)}
                   title={collapsed ? item.title : undefined}
@@ -294,38 +302,45 @@ export default function SideBarNav({
                   <span
                     className={cn(
                       'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
-                      active ? 'text-white' : 'text-slate-400 group-hover:text-white'
+                      active
+                        ? 'text-white'
+                        : 'text-slate-400 group-hover:text-white'
                     )}
                   >
                     {renderIcon(item.icon)}
                   </span>
-                  
+
                   {/* Title */}
                   <span
                     className={cn(
                       'text-sm font-medium transition-all duration-200 opacity-100',
-                      active ? 'text-white' : 'text-slate-300 group-hover:text-white'
+                      active
+                        ? 'text-white'
+                        : 'text-slate-300 group-hover:text-white'
                     )}
                   >
                     {item.title}
                   </span>
-                  
+
                   {/* Badge */}
                   {item.badge && (
                     <div className="badge ml-auto py-1 px-2 text-xs font-medium rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
                       {item.badge}
                     </div>
                   )}
-                  
+
                   {/* Status Indicator */}
                   {item.statusColor && (
                     <div className="ml-auto">
                       <div
                         className={cn(
                           'w-2 h-2 rounded-full',
-                          item.statusColor === 'green' && 'bg-green-400 shadow-green-400/50',
-                          item.statusColor === 'red' && 'bg-red-400 shadow-red-400/50',
-                          item.statusColor === 'yellow' && 'bg-yellow-400 shadow-yellow-400/50'
+                          item.statusColor === 'green' &&
+                            'bg-green-400 shadow-green-400/50',
+                          item.statusColor === 'red' &&
+                            'bg-red-400 shadow-red-400/50',
+                          item.statusColor === 'yellow' &&
+                            'bg-yellow-400 shadow-yellow-400/50'
                         )}
                         style={{
                           boxShadow: `0 0 8px ${

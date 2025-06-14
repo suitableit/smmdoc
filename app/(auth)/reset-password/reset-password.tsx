@@ -18,7 +18,7 @@ export default function ResetForm() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
-  
+
   const form = useForm<ResetSchema>({
     mode: 'all',
     resolver: zodResolver(resetSchema),
@@ -28,7 +28,7 @@ export default function ResetForm() {
   const onSubmit: SubmitHandler<ResetSchema> = async (values) => {
     setError('');
     setSuccess('');
-    
+
     startTransition(() => {
       resetPassword(values)
         .then((data) => {
@@ -56,10 +56,13 @@ export default function ResetForm() {
           Enter your email to reset password.
         </p>
       </div>
-      
+
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <div>
-          <label htmlFor="email" className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200">
+          <label
+            htmlFor="email"
+            className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200"
+          >
             Email
           </label>
           <div className="relative">
@@ -72,21 +75,23 @@ export default function ResetForm() {
               placeholder="eg: mail@email.com"
               disabled={isPending}
               {...form.register('email')}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
           </div>
           {form.formState.errors.email && (
-            <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">{form.formState.errors.email.message}</p>
+            <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
+              {form.formState.errors.email.message}
+            </p>
           )}
         </div>
 
         <FormError message={error} />
         <FormSuccess message={success} />
-        
+
         <button
           type="submit"
           disabled={isPending}
-          className="w-full bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending ? <ButtonLoader /> : 'Reset Password'}
         </button>
@@ -95,7 +100,10 @@ export default function ResetForm() {
       <div className="text-center mt-4">
         <p className="text-gray-600 dark:text-gray-300 transition-colors duration-200">
           Remember your password?{' '}
-          <Link href="/sign-in" className="text-[#5F1DE8] dark:text-[#B131F8] hover:underline transition-colors duration-200">
+          <Link
+            href="/sign-in"
+            className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline transition-colors duration-200"
+          >
             Back to sign in
           </Link>
         </p>

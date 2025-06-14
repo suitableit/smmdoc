@@ -155,7 +155,7 @@ const ContactForm: React.FC = () => {
               onChange={handleChange}
               placeholder="Enter your full name"
               disabled={isSubmitting}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
           </div>
           {errors.name && (
@@ -187,7 +187,7 @@ const ContactForm: React.FC = () => {
                 onChange={handleChange}
                 placeholder="your@email.com"
                 disabled={isSubmitting}
-                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               />
             </div>
             {errors.email && (
@@ -217,7 +217,7 @@ const ContactForm: React.FC = () => {
                 onChange={handleChange}
                 placeholder="+1 (555) 123-4567"
                 disabled={isSubmitting}
-                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               />
             </div>
             {errors.phone && (
@@ -248,7 +248,7 @@ const ContactForm: React.FC = () => {
               onChange={handleChange}
               placeholder="What can we help you with?"
               disabled={isSubmitting}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
           </div>
           {errors.subject && (
@@ -274,7 +274,7 @@ const ContactForm: React.FC = () => {
             rows={4}
             placeholder="Describe your message..."
             disabled={isSubmitting}
-            className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F1DE8] dark:focus:ring-[#B131F8] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
+            className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
           />
           {errors.message && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
@@ -287,7 +287,7 @@ const ContactForm: React.FC = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
             <>
@@ -336,12 +336,12 @@ const ContactUs: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
             <div className="space-y-6">
-              <h4 className="text-2xl font-bold text-[#5F1DE8] dark:text-[#B131F8] mb-2 transition-colors duration-200">
+              <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
                 Contact Us
               </h4>
               <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
                 Reach Out to{' '}
-                <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">
+                <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                   SMMGen
                 </span>
                 for Your Social Media Solutions
@@ -356,7 +356,7 @@ const ContactUs: React.FC = () => {
               </p>
               <Link
                 href="/signup"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
               >
                 <span>Get Started</span>
                 <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
@@ -386,7 +386,7 @@ const ContactUs: React.FC = () => {
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
               How to{' '}
-              <span className="text-[#5F1DE8] dark:text-[#B131F8] transition-colors duration-200">
+              <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 Contact
               </span>{' '}
               Us
@@ -400,7 +400,7 @@ const ContactUs: React.FC = () => {
                 {/* Email Card */}
                 <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 group">
                   <div className="mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#5F1DE8] to-[#B131F8] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
                       <FaEnvelope className="w-8 h-8 text-white" />
                     </div>
                   </div>
@@ -411,7 +411,7 @@ const ContactUs: React.FC = () => {
                     For detailed inquiries, feedback, or support, email us at{' '}
                     <Link
                       href="mailto:support@smmdoc.com"
-                      className="text-[#5F1DE8] dark:text-[#B131F8] hover:underline"
+                      className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline"
                     >
                       support@smmdoc.com
                     </Link>
@@ -423,7 +423,7 @@ const ContactUs: React.FC = () => {
                 {/* Social Media Card */}
                 <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 group">
                   <div className="mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#5F1DE8] to-[#B131F8] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
                       <div className="flex space-x-1">
                         <FaFacebookF className="w-3 h-3 text-white" />
                         <FaTwitter className="w-3 h-3 text-white" />
@@ -453,7 +453,7 @@ const ContactUs: React.FC = () => {
                 </p>
                 <Link
                   href="/about"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
                 >
                   <span>More About Us</span>
                   <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />

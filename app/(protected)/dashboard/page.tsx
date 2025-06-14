@@ -2,11 +2,11 @@
 
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import { APP_NAME } from '@/lib/constants';
+import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FaChartLine,
   FaCheckCircle,
@@ -27,7 +27,7 @@ import {
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
-const GradientSpinner = ({ size = "w-16 h-16", className = "" }) => (
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
@@ -153,7 +153,7 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="px-8 py-8 bg-[#f1f2f6] dark:bg-[#232333]">
+    <div className="px-8 py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]">
       {/* Toast Container */}
       <div className="toast-container">
         {toast && (
@@ -253,11 +253,7 @@ const DashboardPage = () => {
               <div>
                 <h3 className="card-title">Total Orders</h3>
                 <p className="text-2xl font-bold text-blue-600">
-                  {isLoading ? (
-                    <GradientSpinner size="w-6 h-6" />
-                  ) : (
-                    totalOrders
-                  )}
+                  {isLoading ? <GradientSpinner size="w-6 h-6" /> : totalOrders}
                 </p>
               </div>
             </div>
@@ -395,7 +391,9 @@ const DashboardPage = () => {
               {isLoading ? (
                 <div className="text-center py-8 flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-4" />
-                  <div className="text-lg font-medium">Loading recent orders...</div>
+                  <div className="text-lg font-medium">
+                    Loading recent orders...
+                  </div>
                 </div>
               ) : userOrders.length > 0 ? (
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
@@ -432,9 +430,15 @@ const DashboardPage = () => {
                         return (
                           <tr
                             key={order.id}
-                            className={`border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 ${isLastRow ? 'last:border-b-0' : ''}`}
+                            className={`border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 ${
+                              isLastRow ? 'last:border-b-0' : ''
+                            }`}
                           >
-                            <td className={`py-3 px-4 ${isLastRow ? 'first:rounded-bl-lg' : ''}`}>
+                            <td
+                              className={`py-3 px-4 ${
+                                isLastRow ? 'first:rounded-bl-lg' : ''
+                              }`}
+                            >
                               <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
                                 #{order.id.substring(0, 8)}
                               </span>
@@ -484,7 +488,11 @@ const DashboardPage = () => {
                                 {order.category?.category_name || 'N/A'}
                               </div>
                             </td>
-                            <td className={`py-3 px-4 ${isLastRow ? 'last:rounded-br-lg' : ''}`}>
+                            <td
+                              className={`py-3 px-4 ${
+                                isLastRow ? 'last:rounded-br-lg' : ''
+                              }`}
+                            >
                               <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(
                                   order.status
@@ -549,7 +557,9 @@ const DashboardPage = () => {
               {isLoading ? (
                 <div className="text-center py-8 flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-4" />
-                  <div className="text-lg font-medium">Loading support tickets...</div>
+                  <div className="text-lg font-medium">
+                    Loading support tickets...
+                  </div>
                 </div>
               ) : (
                 <div

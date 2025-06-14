@@ -278,7 +278,9 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="px-8 py-8 bg-[#f1f2f6] dark:bg-[#232333]">Loading...</div>
+      <div className="px-8 py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]">
+        Loading...
+      </div>
     );
   }
 

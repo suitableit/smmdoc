@@ -430,7 +430,7 @@ export default function TicketsHistory() {
               }}
               className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm ${
                 activeTab === 'all'
-                  ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
                   : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 hover:text-blue-600'
               }`}
             >
@@ -445,7 +445,7 @@ export default function TicketsHistory() {
               }}
               className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm ${
                 activeTab === 'human'
-                  ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
                   : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600'
               }`}
             >
@@ -460,7 +460,7 @@ export default function TicketsHistory() {
               }}
               className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm ${
                 activeTab === 'ai'
-                  ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
                   : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-green-50 hover:text-green-600'
               }`}
             >
@@ -490,7 +490,7 @@ export default function TicketsHistory() {
                   }
                 }}
                 onFocus={() => setShowDropdown(true)}
-                className="form-field pl-12"
+                className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 placeholder="Search by ticket ID, subject, or status..."
                 autoComplete="off"
                 style={{ width: '100%', minWidth: '0' }}
@@ -562,7 +562,7 @@ export default function TicketsHistory() {
                     }}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                       isActive
-                        ? 'bg-gradient-to-r from-[#5F1DE8] to-[#B131F8] shadow-lg'
+                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
                         : filter.color
                     }`}
                   >
