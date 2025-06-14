@@ -33,6 +33,15 @@ import {
   FaUsers,
 } from 'react-icons/fa';
 
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 // Toast Component
 const Toast = ({
   message,
@@ -116,7 +125,11 @@ export default function AdminDashboard() {
     dailyOrders: [],
   });
 
-  const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [chartLoading, setChartLoading] = useState(true);
 
   // Pending Transactions State
   const [pendingTransactions, setPendingTransactions] = useState<
@@ -141,11 +154,59 @@ export default function AdminDashboard() {
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
       } finally {
-        setLoading(false);
+        setStatsLoading(false);
+      }
+    };
+
+    const fetchOrderStats = async () => {
+      try {
+        // Simulate API call for order stats
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      } catch (error) {
+        console.error('Error fetching order stats:', error);
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+
+    const fetchTicketStats = async () => {
+      try {
+        // Simulate API call for ticket stats
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error('Error fetching ticket stats:', error);
+      } finally {
+        setTicketsLoading(false);
+      }
+    };
+
+    const fetchUserData = async () => {
+      try {
+        // Simulate API call for user data
+        await new Promise(resolve => setTimeout(resolve, 2500));
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
+    const fetchChartData = async () => {
+      try {
+        // Simulate API call for chart data
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      } catch (error) {
+        console.error('Error fetching chart data:', error);
+      } finally {
+        setChartLoading(false);
       }
     };
 
     fetchStats();
+    fetchOrderStats();
+    fetchTicketStats();
+    fetchUserData();
+    fetchChartData();
   }, []);
 
   // Fetch Pending Transactions
@@ -253,6 +314,7 @@ export default function AdminDashboard() {
   };
 
   const handleRefreshTransactions = () => {
+    setTransactionsLoading(true);
     fetchPendingTransactions();
     showToast('Transactions refreshed successfully!', 'success');
   };
@@ -276,7 +338,7 @@ export default function AdminDashboard() {
     };
   };
 
-  if (loading) {
+  if (false) {
     return (
       <div className="px-8 py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]">
         Loading...
@@ -308,12 +370,21 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Total Users</h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  {stats.totalUsers || 1}
-                </p>
-                <p className="text-xs text-green-600 font-medium mt-1">
-                  +12% from last month
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {stats.totalUsers || 1}
+                    </p>
+                    <p className="text-xs text-green-600 font-medium mt-1">
+                      +12% from last month
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -325,12 +396,21 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Total Balance</h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(stats.totalRevenue || 0)}
-                </p>
-                <p className="text-xs text-green-600 font-medium mt-1">
-                  +8% from last month
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-green-600">
+                      {formatCurrency(stats.totalRevenue || 0)}
+                    </p>
+                    <p className="text-xs text-green-600 font-medium mt-1">
+                      +8% from last month
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -342,12 +422,21 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Total Orders</h3>
-                <p className="text-2xl font-bold text-purple-600">
-                  {stats.totalOrders || 0}
-                </p>
-                <p className="text-xs text-green-600 font-medium mt-1">
-                  +15% from last month
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {stats.totalOrders || 0}
+                    </p>
+                    <p className="text-xs text-green-600 font-medium mt-1">
+                      +15% from last month
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -359,12 +448,21 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Total Payments</h3>
-                <p className="text-2xl font-bold text-orange-600">
-                  {formatCurrency(stats.totalRevenue || 0)}
-                </p>
-                <p className="text-xs text-green-600 font-medium mt-1">
-                  +22% from last month
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-orange-600">
+                      {formatCurrency(stats.totalRevenue || 0)}
+                    </p>
+                    <p className="text-xs text-green-600 font-medium mt-1">
+                      +22% from last month
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -379,12 +477,21 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Last 30 Days</h3>
-                <p className="text-2xl font-bold text-cyan-600">
-                  {formatCurrency(stats.totalRevenue || 0)}
-                </p>
-                <p className="text-xs text-cyan-600 font-medium mt-1">
-                  Monthly Revenue
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-cyan-600">
+                      {formatCurrency(stats.totalRevenue || 0)}
+                    </p>
+                    <p className="text-xs text-cyan-600 font-medium mt-1">
+                      Monthly Revenue
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -396,12 +503,21 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Today Profit</h3>
-                <p className="text-2xl font-bold text-rose-600">
-                  {formatCurrency(stats.totalRevenue || 0)}
-                </p>
-                <p className="text-xs text-rose-600 font-medium mt-1">
-                  Daily Earnings
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-rose-600">
+                      {formatCurrency(stats.totalRevenue || 0)}
+                    </p>
+                    <p className="text-xs text-rose-600 font-medium mt-1">
+                      Daily Earnings
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -413,10 +529,19 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Today's Orders</h3>
-                <p className="text-2xl font-bold text-teal-600">0</p>
-                <p className="text-xs text-teal-600 font-medium mt-1">
-                  Fresh Orders
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-teal-600">0</p>
+                    <p className="text-xs text-teal-600 font-medium mt-1">
+                      Fresh Orders
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -428,10 +553,19 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">New Users Today</h3>
-                <p className="text-2xl font-bold text-indigo-600">0</p>
-                <p className="text-xs text-indigo-600 font-medium mt-1">
-                  Fresh Registrations
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold text-indigo-600">0</p>
+                    <p className="text-xs text-indigo-600 font-medium mt-1">
+                      Fresh Registrations
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -512,11 +646,11 @@ export default function AdminDashboard() {
           <div style={{ padding: '0 24px' }}>
             {transactionsLoading ? (
               <div className="flex items-center justify-center py-20">
-                <div className="flex items-center gap-2">
-                  <FaSync className="h-5 w-5 animate-spin text-blue-500" />
-                  <span className="text-lg font-medium">
+                <div className="text-center flex flex-col items-center">
+                  <GradientSpinner size="w-12 h-12" className="mb-3" />
+                  <div className="text-base font-medium">
                     Loading transactions...
-                  </span>
+                  </div>
                 </div>
               </div>
             ) : pendingTransactions.length === 0 ? (
@@ -864,502 +998,510 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Recent Orders & Statistics Charts - Section 3 */}
-      <div className="mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <div className="card card-padding">
-              <div className="card-header mb-4">
-                <div className="card-icon">
-                  <FaChartBar />
-                </div>
-                <h3 className="card-title">Recent Orders</h3>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                <Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
-                  <FaCheckCircle className="h-3 w-3 mr-1" />
-                  Completed
-                </Badge>
-                <Badge className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
-                  <FaRedo className="h-3 w-3 mr-1" />
-                  Processing
-                </Badge>
-                <Badge className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800">
-                  <FaClock className="h-3 w-3 mr-1" />
-                  Pending
-                </Badge>
-                <Badge className="bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 border border-orange-200 dark:border-orange-800">
-                  <FaChartLine className="h-3 w-3 mr-1" />
-                  In Progress
-                </Badge>
-                <Badge className="bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800">
-                  <FaBullseye className="h-3 w-3 mr-1" />
-                  Partial
-                </Badge>
-                <Badge className="bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-800">
-                  <FaTimes className="h-3 w-3 mr-1" />
-                  Canceled
-                </Badge>
-                <Badge className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800">
-                  <FaRedo className="h-3 w-3 mr-1" />
-                  Refunded
-                </Badge>
-              </div>
-
-              <div className="h-[300px] flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                {stats.recentOrders && stats.recentOrders.length > 0 ? (
-                  <div
-                    className="text-center"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    <FaChartBar
-                      className="h-16 w-16 mx-auto mb-4"
-                      style={{ color: 'var(--text-muted)', opacity: 0.5 }}
-                    />
-                    <p className="text-lg font-medium mb-2">
-                      Interactive Chart will be displayed here
-                    </p>
-                    <p className="text-sm">Real-time order analytics</p>
-                  </div>
-                ) : (
-                  <div
-                    className="text-center"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    <FaChartPie
-                      className="h-16 w-16 mx-auto mb-4"
-                      style={{ color: 'var(--text-muted)', opacity: 0.5 }}
-                    />
-                    <p className="text-lg font-medium mb-2">
-                      No recent orders to display
-                    </p>
-                    <p className="text-sm">
-                      Charts will appear when data is available
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="card card-padding">
-              <div className="card-header mb-4">
-                <div className="card-icon">
-                  <FaChartPie />
-                </div>
-                <h3 className="card-title">Statistics</h3>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                <Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
-                  <FaCheckCircle className="h-3 w-3 mr-1" />
-                  Complete
-                </Badge>
-                <Badge className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
-                  <FaRedo className="h-3 w-3 mr-1" />
-                  Processing
-                </Badge>
-                <Badge className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800">
-                  <FaClock className="h-3 w-3 mr-1" />
-                  Pending
-                </Badge>
-              </div>
-
-              <div className="h-[200px] flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div
-                  className="text-center"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  <FaChartPie
-                    className="h-12 w-12 mx-auto mb-3"
-                    style={{ color: 'var(--text-muted)', opacity: 0.5 }}
-                  />
-                  <p className="text-sm font-medium">Statistics chart</p>
-                  <p className="text-xs">Real-time data visualization</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Last 30 Days Orders - Section 4 */}
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="card-icon">
-            <FaCalendar />
-          </div>
-          <h2 className="card-title text-2xl">Last 30 Days Orders</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-blue-600 dark:text-blue-400 font-semibold">
-                  Total Orders
-                </div>
-                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  0
-                </div>
-              </div>
-              <FaShoppingCart className="text-blue-500 w-5 h-5" />
+        <div className="card card-padding">
+          <div className="card-header mb-6">
+            <div className="card-icon">
+              <FaCalendar />
             </div>
+            <h3 className="card-title">Last 30 Days Orders</h3>
           </div>
 
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-green-600 dark:text-green-400 font-semibold">
-                  Completed
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <a
+              href="/admin/orders"
+              className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-blue-600 dark:text-blue-400 font-semibold">
+                    All
+                  </div>
+                  {ordersLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                      0
+                    </div>
+                  )}
                 </div>
-                <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                  0
-                </div>
+                <FaShoppingCart className="text-blue-500 w-5 h-5" />
               </div>
-              <FaCheckCircle className="text-green-500 w-5 h-5" />
-            </div>
-          </div>
+            </a>
 
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-yellow-600 dark:text-yellow-400 font-semibold">
-                  Processing
+            <a
+              href="/admin/orders"
+              className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-yellow-600 dark:text-yellow-400 font-semibold">
+                    Pending
+                  </div>
+                  {ordersLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                      0
+                    </div>
+                  )}
                 </div>
-                <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-                  0
-                </div>
+                <FaClock className="text-yellow-500 w-5 h-5" />
               </div>
-              <FaRedo className="text-yellow-500 w-5 h-5" />
-            </div>
-          </div>
+            </a>
 
-          <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-cyan-600 dark:text-cyan-400 font-semibold">
-                  Pending
+            <a
+              href="/admin/orders"
+              className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-4 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-cyan-600 dark:text-cyan-400 font-semibold">
+                    Processing
+                  </div>
+                  {ordersLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
+                      0
+                    </div>
+                  )}
                 </div>
-                <div className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
-                  0
-                </div>
+                <FaRedo className="text-cyan-500 w-5 h-5" />
               </div>
-              <FaClock className="text-cyan-500 w-5 h-5" />
-            </div>
-          </div>
-        </div>
+            </a>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-purple-600 dark:text-purple-400 font-semibold">
-                  In Progress
+            <a
+              href="/admin/orders"
+              className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-green-600 dark:text-green-400 font-semibold">
+                    Completed
+                  </div>
+                  {ordersLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                      0
+                    </div>
+                  )}
                 </div>
-                <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  0
-                </div>
+                <FaCheckCircle className="text-green-500 w-5 h-5" />
               </div>
-              <FaChartLine className="text-purple-500 w-5 h-5" />
-            </div>
-          </div>
+            </a>
 
-          <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-indigo-600 dark:text-indigo-400 font-semibold">
-                  Partial
+            <a
+              href="/admin/orders"
+              className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-indigo-600 dark:text-indigo-400 font-semibold">
+                    Partial
+                  </div>
+                  {ordersLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
+                      0
+                    </div>
+                  )}
                 </div>
-                <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
-                  0
-                </div>
+                <FaBullseye className="text-indigo-500 w-5 h-5" />
               </div>
-              <FaBullseye className="text-indigo-500 w-5 h-5" />
-            </div>
-          </div>
+            </a>
 
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-red-600 dark:text-red-400 font-semibold">
-                  Canceled
+            <a
+              href="/admin/orders"
+              className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-red-600 dark:text-red-400 font-semibold">
+                    Cancelled
+                  </div>
+                  {ordersLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-red-700 dark:text-red-300">
+                      0
+                    </div>
+                  )}
                 </div>
-                <div className="text-2xl font-bold text-red-700 dark:text-red-300">
-                  0
-                </div>
+                <FaTimes className="text-red-500 w-5 h-5" />
               </div>
-              <FaTimes className="text-red-500 w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-pink-600 dark:text-pink-400 font-semibold">
-                  Refunded
-                </div>
-                <div className="text-2xl font-bold text-pink-700 dark:text-pink-300">
-                  0
-                </div>
-              </div>
-              <FaRedo className="text-pink-500 w-5 h-5" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Support Tickets - Section 5 */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="card-icon">
-            <FaCommentDots />
-          </div>
-          <h2 className="card-title text-2xl">Support Tickets</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-blue-600 dark:text-blue-400 font-semibold">
-                  Processing
-                </div>
-                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  0
-                </div>
-              </div>
-              <FaRedo className="text-blue-500 w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-yellow-600 dark:text-yellow-400 font-semibold">
-                  Pending
-                </div>
-                <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-                  0
-                </div>
-              </div>
-              <FaClock className="text-yellow-500 w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-green-600 dark:text-green-400 font-semibold">
-                  Replied
-                </div>
-                <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                  0
-                </div>
-              </div>
-              <FaCommentDots className="text-green-500 w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-teal-600 dark:text-teal-400 font-semibold">
-                  Answered
-                </div>
-                <div className="text-2xl font-bold text-teal-700 dark:text-teal-300">
-                  0
-                </div>
-              </div>
-              <FaCheckCircle className="text-teal-500 w-5 h-5" />
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-red-600 dark:text-red-400 font-semibold">
-                  Canceled
-                </div>
-                <div className="text-2xl font-bold text-red-700 dark:text-red-300">
-                  0
-                </div>
-              </div>
-              <FaTimes className="text-red-500 w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-pink-600 dark:text-pink-400 font-semibold">
-                  Refunded
-                </div>
-                <div className="text-2xl font-bold text-pink-700 dark:text-pink-300">
-                  0
-                </div>
-              </div>
-              <FaRedo className="text-pink-500 w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-gray-600 dark:text-gray-400 font-semibold">
-                  Closed
-                </div>
-                <div className="text-2xl font-bold text-gray-700 dark:text-gray-300">
-                  0
-                </div>
-              </div>
-              <FaCheckCircle className="text-gray-500 w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-orange-600 dark:text-orange-400 font-semibold">
-                  Pending
-                </div>
-                <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                  0
-                </div>
-              </div>
-              <FaClock className="text-orange-500 w-5 h-5" />
-            </div>
+            </a>
           </div>
         </div>
       </div>
 
-      {/* Latest Users - Section 5 */}
+      {/* Recent Orders Graph - Section 5 */}
       <div className="mb-6">
         <div className="card card-padding">
           <div className="card-header mb-4">
             <div className="card-icon">
-              <FaUsers />
+              <FaChartBar />
             </div>
-            <h3 className="card-title">Latest Users</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
-                    <div className="flex items-center gap-2">
-                      <FaUser className="h-4 w-4 text-green-600" />
-                      Username
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
-                    <div className="flex items-center gap-2">
-                      <FaEnvelope className="h-4 w-4 text-blue-600" />
-                      Email
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
-                    <div className="flex items-center gap-2">
-                      <FaPhone className="h-4 w-4 text-purple-600" />
-                      Phone
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
-                    <div className="flex items-center gap-2">
-                      <FaDollarSign className="h-4 w-4 text-yellow-600" />
-                      Balance
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
-                    <div className="flex items-center gap-2">
-                      <FaShieldAlt className="h-4 w-4 text-orange-600" />
-                      Status
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
-                    <div className="flex items-center gap-2">
-                      <FaCog className="h-4 w-4 text-gray-600" />
-                      Action
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        M
-                      </div>
-                      <div>
-                        <p className="font-bold text-gray-800 dark:text-gray-200">
-                          munna
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Premium User
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <FaEnvelope className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm">alsoadmunna@gmail.com</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <FaPhone className="h-4 w-4 text-purple-500" />
-                      <span className="text-sm font-medium">1770001527</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <FaDollarSign className="h-4 w-4 text-yellow-500" />
-                      <span className="text-sm font-bold text-yellow-600">
-                        0 USD
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        Active
-                      </div>
-                    </Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex gap-2">
-                      <button className="btn btn-secondary btn-sm flex items-center gap-1">
-                        <FaEye className="h-3 w-3" />
-                        View
-                      </button>
-                      <button className="btn btn-secondary btn-sm flex items-center gap-1">
-                        <FaEdit className="h-3 w-3" />
-                        Edit
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <h3 className="card-title">Recent Orders Graph</h3>
           </div>
 
-          <div className="bg-gray-50 dark:bg-gray-800/50 p-4 border-t border-gray-200 dark:border-gray-700 mt-4 rounded-b-lg">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                <FaUsers className="h-4 w-4 text-green-600" />
-                Showing 1 of 1 users
-              </p>
-              <button className="btn btn-primary flex items-center gap-2">
+          <div className="flex flex-wrap gap-2 mb-6">
+            <Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
+              <FaCheckCircle className="h-3 w-3 mr-1" />
+              Completed
+            </Badge>
+            <Badge className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+              <FaRedo className="h-3 w-3 mr-1" />
+              Processing
+            </Badge>
+            <Badge className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800">
+              <FaClock className="h-3 w-3 mr-1" />
+              Pending
+            </Badge>
+            <Badge className="bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800">
+              <FaBullseye className="h-3 w-3 mr-1" />
+              Partial
+            </Badge>
+            <Badge className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800">
+              <FaTimes className="h-3 w-3 mr-1" />
+              Canceled
+            </Badge>
+          </div>
+
+          <div className="h-[300px] flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+            {chartLoading ? (
+              <div className="text-center flex flex-col items-center">
+                <GradientSpinner size="w-12 h-12" className="mb-3" />
+                <div className="text-base font-medium">
+                  Loading chart data...
+                </div>
+              </div>
+            ) : stats.recentOrders && stats.recentOrders.length > 0 ? (
+              <div
+                className="text-center"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <FaChartBar
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                />
+                <p className="text-lg font-medium mb-2">
+                  Interactive Chart will be displayed here
+                </p>
+                <p className="text-sm">Real-time order analytics</p>
+              </div>
+            ) : (
+              <div
+                className="text-center"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <FaChartPie
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                />
+                <p className="text-lg font-medium mb-2">
+                  No recent orders to display
+                </p>
+                <p className="text-sm">
+                  Charts will appear when data is available
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Support Tickets - Section 6 */}
+      <div className="mb-6">
+        <div className="card card-padding">
+          <div className="card-header mb-6">
+            <div className="card-icon">
+              <FaCommentDots />
+            </div>
+            <h3 className="card-title">Support Tickets</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            <a
+              href="/manage-tickets"
+              className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-blue-600 dark:text-blue-400 font-semibold">
+                    Open
+                  </div>
+                  {ticketsLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                      0
+                    </div>
+                  )}
+                </div>
+                <FaClock className="text-blue-500 w-5 h-5" />
+              </div>
+            </a>
+
+            <a
+              href="/manage-tickets"
+              className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-green-600 dark:text-green-400 font-semibold">
+                    Answered
+                  </div>
+                  {ticketsLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+                      0
+                    </div>
+                  )}
+                </div>
+                <FaCheckCircle className="text-green-500 w-5 h-5" />
+              </div>
+            </a>
+
+            <a
+              href="/manage-tickets"
+              className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-yellow-600 dark:text-yellow-400 font-semibold">
+                    Customer Reply
+                  </div>
+                  {ticketsLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                      0
+                    </div>
+                  )}
+                </div>
+                <FaCommentDots className="text-yellow-500 w-5 h-5" />
+              </div>
+            </a>
+
+            <a
+              href="/manage-tickets"
+              className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-orange-600 dark:text-orange-400 font-semibold">
+                    On Hold
+                  </div>
+                  {ticketsLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
+                      0
+                    </div>
+                  )}
+                </div>
+                <FaClock className="text-orange-500 w-5 h-5" />
+              </div>
+            </a>
+
+            <a
+              href="/manage-tickets"
+              className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-purple-600 dark:text-purple-400 font-semibold">
+                    In Progress
+                  </div>
+                  {ticketsLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                      0
+                    </div>
+                  )}
+                </div>
+                <FaRedo className="text-purple-500 w-5 h-5" />
+              </div>
+            </a>
+
+            <a
+              href="/manage-tickets"
+              className="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-900/30 transition-colors duration-200 cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-gray-600 dark:text-gray-400 font-semibold">
+                    Closed
+                  </div>
+                  {ticketsLoading ? (
+                    <div className="flex items-center gap-2 mt-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                      0
+                    </div>
+                  )}
+                </div>
+                <FaTimes className="text-gray-500 w-5 h-5" />
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Latest Users - Section 7 */}
+      <div className="mb-6">
+        <div className="card card-padding">
+          <div className="card-header mb-4">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <div className="card-icon">
+                  <FaUsers />
+                </div>
+                <h3 className="card-title">Latest Users</h3>
+              </div>
+              <button className="btn btn-secondary flex items-center gap-2">
                 <FaUserPlus className="h-4 w-4" />
                 View All Users
               </button>
+            </div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
+                      ID
+                    </th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
+                      User
+                    </th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
+                      Balance
+                    </th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
+                      Spent
+                    </th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
+                      Orders
+                    </th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
+                      Services
+                    </th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
+                      Discount
+                    </th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
+                      Special Pricing
+                    </th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
+                      Registered
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="py-3 px-3">
+                      <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                        #001
+                      </div>
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                          M
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800 dark:text-gray-200 text-sm">
+                            munna
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            alsoadmunna@gmail.com
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="text-sm font-bold text-yellow-600">
+                        $0.00
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="text-sm font-medium text-red-600">
+                        $125.50
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="text-sm font-medium text-purple-600">
+                        15
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="text-sm font-medium text-indigo-600">
+                        8
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="text-sm font-medium text-orange-600">
+                        5%
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <Badge className="bg-pink-100 dark:bg-pink-900/20 text-pink-800 dark:text-pink-200 border border-pink-200 dark:border-pink-800 text-xs">
+                        VIP
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <div>Jan 15, 2024</div>
+                        <div className="text-xs text-gray-500">10:30 AM</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
