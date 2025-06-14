@@ -342,12 +342,12 @@ const ContactUs: React.FC = () => {
               <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
                 Reach Out to{' '}
                 <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
-                  SMMGen
+                  SMMDOC
                 </span>
                 for Your Social Media Solutions
               </h1>
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
-                At SMMGen, we're always eager to connect with you and discuss
+                At SMMDOC, we're always eager to connect with you and discuss
                 how we can elevate your social media presence. Whether you have
                 questions about our services, need assistance in choosing the
                 right strategy, or want to discuss a customized plan, we're here
@@ -447,7 +447,7 @@ const ContactUs: React.FC = () => {
               <div className="text-left">
                 <p className="text-gray-600 dark:text-gray-300 text-lg mb-6 transition-colors duration-200">
                   We value every interaction and are dedicated to providing you
-                  with the information and support you need. At SMMGen, your
+                  with the information and support you need. At SMMDOC, your
                   digital marketing success is our priority, and we look forward
                   to playing a part in your journey to social media excellence.
                 </p>

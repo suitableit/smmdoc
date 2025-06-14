@@ -117,7 +117,6 @@ const ThemeToggle = () => {
         >
           <CurrentIcon
             className="h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200"
-            style={{ color: 'var(--header-text-hover)' }}
           />
         </button>
       </DropdownMenuTrigger>
@@ -727,12 +726,12 @@ const Header = () => {
             href="/add-funds"
             className={`hidden sm:flex items-center gap-2 h-10 ${
               isRefreshing ? 'animate-pulse' : ''
-            } text-white rounded-lg px-4 shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 group flex-shrink-0`}
+            } text-white rounded-lg px-4 shadow-lg gradient-button-hover transition-all duration-300 group flex-shrink-0`}
             style={{
               background: `linear-gradient(to right, var(--primary), var(--secondary))`,
             }}
           >
-            <FaWallet className="text-white group-hover:animate-bounce h-4 w-4" />
+            <FaWallet className="text-white h-4 w-4" />
             <span className="font-bold text-sm">{formatCurrency(balance)}</span>
           </Link>
         )}

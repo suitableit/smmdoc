@@ -27,6 +27,21 @@ export default function SignUpForm() {
     defaultValues: signUpDefaultValues,
   });
 
+  // Handle username input transformation
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Remove special characters and convert to lowercase
+    const cleanedValue = value
+      .toLowerCase()
+      .replace(/[^a-z0-9._]/g, ''); // Only allow lowercase letters, numbers, dots, and underscores
+    
+    form.setValue('username', cleanedValue, { 
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true 
+    });
+  };
+
   const onSubmit: SubmitHandler<SignUpSchema> = async (values) => {
     setError('');
     setSuccess('');
@@ -80,10 +95,14 @@ export default function SignUpForm() {
               id="username"
               placeholder="eg: john"
               disabled={isPending}
-              {...form.register('username')}
+              value={form.watch('username') || ''}
+              onChange={handleUsernameChange}
               className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
           </div>
+          <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 transition-colors duration-200">
+            Only lowercase letters, numbers, dots (.) and underscores (_) are allowed
+          </p>
           {form.formState.errors.username && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
               {form.formState.errors.username.message}

@@ -81,7 +81,7 @@ const Footer = () => {
               <Link href="/">
                 <Image
                   src="/logo.png"
-                  alt="SMMGen White Logo"
+                  alt="SMMDOC White Logo"
                   width={200}
                   height={60}
                   className="footer_logo mb-4 max-w-[200px] h-auto hover:opacity-80 transition-opacity cursor-pointer"

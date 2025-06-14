@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 import { APP_NAME } from '@/lib/constants';
 import {
   FaBan,
@@ -203,12 +204,18 @@ export default function TermsPage() {
             </div>
 
             <div className="flex gap-4">
-              <a href="/contact-support" className="btn btn-primary">
-                Contact Support
-              </a>
-              <a href="/faqs" className="btn btn-secondary">
-                View FAQ
-              </a>
+              <Link
+                  href="/contact-support"
+                  className={`btn btn-primary`}
+                  >
+                  Contact Support
+              </Link>
+              <Link
+                  href="/faqs"
+                  className={`btn btn-secondary`}
+                  >
+                  View FAQ
+              </Link>
             </div>
           </div>
         </div>

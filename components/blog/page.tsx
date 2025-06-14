@@ -189,7 +189,7 @@ const BlogPage: React.FC = () => {
             Strategies
           </h1>
           <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-4xl mx-auto transition-colors duration-200">
-            Welcome to SMMGen's blog page. Your gateway to the latest insights
+            Welcome to SMMDOC's blog page. Your gateway to the latest insights
             and trends in social media marketing. This resource outlines how we
             share knowledge, provide valuable content, and help you stay ahead
             in the digital marketing landscape with cutting-edge strategies and
