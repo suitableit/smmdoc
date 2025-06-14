@@ -5,6 +5,7 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import moment from 'moment';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
@@ -233,13 +234,13 @@ const DashboardPage = () => {
                 </p>
               </div>
               <div className="ml-4">
-                <button
-                  onClick={() => router.push('/add-funds')}
-                  className="btn btn-primary flex items-center gap-2"
-                >
+                <Link
+                  href="/add-funds"
+                  className={`btn btn-primary flex items-center gap-2`}
+                  >
                   <FaPlus className="w-4 h-4" />
                   Add
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -378,13 +379,13 @@ const DashboardPage = () => {
                 </div>
                 <h3 className="card-title">Recent Orders</h3>
                 <div className="ml-auto">
-                  <button
-                    onClick={() => router.push('/my-orders')}
-                    className="btn btn-secondary flex items-center gap-2"
-                  >
+                  <Link
+                    href="/my-orders"
+                    className={`btn btn-secondary flex items-center gap-2`}
+                    >
                     <FaEye className="w-4 h-4" />
-                    View All Orders
-                  </button>
+                    <span className="font-bold text-sm">View All Orders</span>
+                  </Link>
                 </div>
               </div>
 
@@ -544,13 +545,13 @@ const DashboardPage = () => {
                 </div>
                 <h3 className="card-title">Support Tickets</h3>
                 <div className="ml-auto">
-                  <button
-                    onClick={() => router.push('/support-tickets')}
-                    className="btn btn-secondary flex items-center gap-2"
-                  >
+                  <Link
+                    href="/support-tickets"
+                    className={`btn btn-secondary flex items-center gap-2`}
+                    >
                     <FaEye className="w-4 h-4" />
-                    View All
-                  </button>
+                    <span className="font-bold text-sm">View All</span>
+                  </Link>
                 </div>
               </div>
 
@@ -590,29 +591,29 @@ const DashboardPage = () => {
               </div>
 
               <div className="space-y-3">
-                <button
-                  onClick={() => router.push('/new-order')}
-                  className="btn btn-primary w-full flex items-center justify-center gap-2"
-                >
+                <Link
+                  href="/new-order"
+                  className={`btn btn-primary w-full flex items-center justify-center gap-2`}
+                  >
                   <FaPlus className="w-4 h-4" />
                   New Order
-                </button>
+                </Link>
 
-                <button
-                  onClick={() => router.push('/add-funds')}
-                  className="btn btn-secondary w-full flex items-center justify-center gap-2"
-                >
+                <Link
+                  href="/add-funds"
+                  className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
+                  >
                   <FaWallet className="w-4 h-4" />
                   Add Funds
-                </button>
-
-                <button
-                  onClick={() => router.push('/my-orders')}
-                  className="btn btn-secondary w-full flex items-center justify-center gap-2"
-                >
+                </Link>
+                
+                <Link
+                  href="/support-tickets/history"
+                  className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
+                  >
                   <FaHistory className="w-4 h-4" />
                   Order History
-                </button>
+                </Link>
               </div>
             </div>
           </div>

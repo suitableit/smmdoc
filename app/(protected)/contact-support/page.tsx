@@ -2,6 +2,7 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
@@ -245,10 +246,13 @@ export default function ContactSupportPage() {
                     For ongoing issues, you can also create a Support Tickets
                     and track its progress.
                   </p>
-                  <button className="btn btn-secondary w-full inline-flex items-center justify-center">
-                    <FaTicketAlt className="mr-2 w-4 h-4" />
-                    View My Ticket
-                  </button>
+                  <Link
+                  href="/support-tickets/history"
+                  className={`btn btn-secondary w-full inline-flex items-center justify-center`}
+                  >
+                  <FaTicketAlt className="mr-2 w-4 h-4" />
+                  View My Ticket
+                </Link>
                 </div>
               </div>
 
@@ -265,10 +269,13 @@ export default function ContactSupportPage() {
                   <p className="text-sm text-gray-600">
                     Check our FAQ section for quick answers to common questions.
                   </p>
-                  <button className="btn btn-secondary w-full inline-flex items-center justify-center">
-                    <FaQuestionCircle className="mr-2 w-4 h-4" />
+                  <Link
+                  href="/faqs"
+                  className={`btn btn-secondary w-full inline-flex items-center justify-center`}
+                  >
+                  <FaQuestionCircle className="mr-2 w-4 h-4" />
                     View FAQs
-                  </button>
+                </Link>
                 </div>
               </div>
             </div>
@@ -486,13 +493,13 @@ export default function ContactSupportPage() {
                   For ongoing issues, you can also create a Support Tickets and
                   track its progress.
                 </p>
-                <button
-                  onClick={handleNavigateToTicket}
-                  className="btn btn-secondary w-full inline-flex items-center justify-center"
-                >
+                <Link
+                  href="/support-tickets/history"
+                  className={`btn btn-secondary w-full inline-flex items-center justify-center`}
+                  >
                   <FaTicketAlt className="mr-2 w-4 h-4" />
                   View My Ticket
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -509,13 +516,13 @@ export default function ContactSupportPage() {
                 <p className="text-sm text-gray-600">
                   Check our FAQ section for quick answers to common questions.
                 </p>
-                <button
-                  onClick={handleNavigateToFAQs}
-                  className="btn btn-secondary w-full inline-flex items-center justify-center"
-                >
+                <Link
+                  href="/faqs"
+                  className={`btn btn-secondary w-full inline-flex items-center justify-center`}
+                  >
                   <FaQuestionCircle className="mr-2 w-4 h-4" />
-                  View FAQs
-                </button>
+                    View FAQs
+                </Link>
               </div>
             </div>
           </div>

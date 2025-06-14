@@ -3,19 +3,53 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { FaDesktop, FaMoon, FaSun } from 'react-icons/fa';
 
-const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState('system'); // 'light', 'dark', 'system'
+// Enhanced Dropdown Components (you'll need to install these or use your existing dropdown)
+const DropdownMenu = ({ children }: { children: React.ReactNode }) => (
+  <div className="relative inline-block">{children}</div>
+);
+
+const DropdownMenuTrigger = ({
+  asChild,
+  children,
+}: {
+  asChild?: boolean;
+  children: React.ReactNode;
+}) => <>{children}</>;
+
+const DropdownMenuContent = ({
+  align,
+  className,
+  style,
+  children,
+}: {
+  align?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) => (
+  <div
+    className={`absolute mt-2 z-50 ${
+      align === 'end' ? 'right-0' : 'left-0'
+    } ${className}`}
+    style={style}
+  >
+    {children}
+  </div>
+);
+
+// Enhanced Theme Toggle Component (cloned from dashboard)
+const ThemeToggle = () => {
+  const [theme, setTheme] = useState('system'); // 'light', 'dark', 'system'
   const [mounted, setMounted] = useState(false);
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
 
-  // Handle hydration
   useEffect(() => {
     setMounted(true);
     // Get theme from localStorage or default to system
     const savedTheme = localStorage.getItem('theme') || 'system';
-    setCurrentTheme(savedTheme);
+    setTheme(savedTheme);
     applyTheme(savedTheme);
   }, []);
 
@@ -35,87 +69,104 @@ const Header = () => {
     }
   };
 
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    setIsThemeMenuOpen(false);
+
+    if (newTheme === 'system') {
+      localStorage.removeItem('theme');
+    } else {
+      localStorage.setItem('theme', newTheme);
+    }
+
+    applyTheme(newTheme);
+  };
+
+  if (!mounted) {
+    return (
+      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center animate-pulse">
+        <div className="h-4 w-4 sm:h-5 sm:w-5 rounded bg-gray-200 dark:bg-gray-600"></div>
+      </div>
+    );
+  }
+
+  const themeOptions = [
+    { key: 'light', label: 'Light', icon: FaSun },
+    { key: 'dark', label: 'Dark', icon: FaMoon },
+    { key: 'system', label: 'System', icon: FaDesktop },
+  ];
+
+  const currentTheme =
+    themeOptions.find((option) => option.key === theme) || themeOptions[2];
+  const CurrentIcon = currentTheme.icon;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+        className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ml-4"
+        aria-label="Toggle theme"
+      >
+        <CurrentIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700 dark:text-gray-300 transition-colors duration-200" />
+      </button>
+
+      {/* Theme Dropdown */}
+      {isThemeMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsThemeMenuOpen(false)}
+          />
+          <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 transition-colors duration-200">
+            <div className="p-1">
+              {themeOptions.map((option) => {
+                const IconComponent = option.icon;
+                const isActive = theme === option.key;
+
+                return (
+                  <button
+                    key={option.key}
+                    onClick={() => handleThemeChange(option.key)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
+                      isActive
+                        ? 'bg-[var(--primary)] text-white shadow-sm'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <IconComponent
+                      className={`h-4 w-4 transition-colors duration-200 ml-1 ${
+                        isActive
+                          ? 'text-white'
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                    />
+                    <span className="font-medium text-sm">{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Handle hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   const closeMenu = () => {
     setIsMenuOpen(false);
-  };
-
-  const toggleThemeMenu = () => {
-    setIsThemeMenuOpen(!isThemeMenuOpen);
-  };
-
-  const closeThemeMenu = () => {
-    setIsThemeMenuOpen(false);
-  };
-
-  const handleThemeChange = (theme: string) => {
-    setCurrentTheme(theme);
-    setIsThemeMenuOpen(false);
-
-    if (theme === 'system') {
-      localStorage.removeItem('theme');
-    } else {
-      localStorage.setItem('theme', theme);
-    }
-
-    applyTheme(theme);
-  };
-
-  const getCurrentThemeIcon = () => {
-    switch (currentTheme) {
-      case 'light':
-        return (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-            />
-          </svg>
-        );
-      case 'dark':
-        return (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-            />
-          </svg>
-        );
-      case 'system':
-      default:
-        return (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
-        );
-    }
   };
 
   // Prevent hydration mismatch
@@ -132,7 +183,7 @@ const Header = () => {
             <Link href="/" className="flex items-center">
               <Image
                 src="/logo.png"
-                alt="SMMGEN"
+                alt="SMMDOC"
                 width={400}
                 height={50}
                 className="h-20 w-auto max-w-[400px]"
@@ -182,94 +233,11 @@ const Header = () => {
                 href="/sign-up"
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:from-[#4F0FD8] hover:to-[#A121E8]"
               >
-                <span>Sign Up</span>
+                <span className="pl-2">Sign Up</span>
               </Link>
 
-              {/* Theme Toggle */}
-              <div className="relative">
-                <button
-                  onClick={toggleThemeMenu}
-                  className="p-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-md transition-colors duration-200"
-                  aria-label="Toggle theme"
-                >
-                  {getCurrentThemeIcon()}
-                </button>
-
-                {/* Theme Dropdown */}
-                {isThemeMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-[#2A2D3A] rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                    <button
-                      onClick={() => handleThemeChange('light')}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors ${
-                        currentTheme === 'light'
-                          ? 'text-[var(--primary)] bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20'
-                          : 'text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                        />
-                      </svg>
-                      Light
-                    </button>
-                    <button
-                      onClick={() => handleThemeChange('dark')}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors ${
-                        currentTheme === 'dark'
-                          ? 'text-[var(--primary)] bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20'
-                          : 'text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                        />
-                      </svg>
-                      Dark
-                    </button>
-                    <button
-                      onClick={() => handleThemeChange('system')}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 transition-colors ${
-                        currentTheme === 'system'
-                          ? 'text-[var(--primary)] bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20'
-                          : 'text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 00-2-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                      System
-                    </button>
-                  </div>
-                )}
-              </div>
+              {/* Enhanced Theme Toggle */}
+              <ThemeToggle />
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -366,81 +334,13 @@ const Header = () => {
                 </Link>
               </div>
 
-              {/* Mobile Theme Toggle */}
+              {/* Mobile Enhanced Theme Toggle */}
               <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
                 <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
                   Theme
                 </div>
                 <div className="flex gap-2 px-4">
-                  <button
-                    onClick={() => handleThemeChange('light')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
-                      currentTheme === 'light'
-                        ? 'bg-[var(--primary)] text-white'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                    Light
-                  </button>
-                  <button
-                    onClick={() => handleThemeChange('dark')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
-                      currentTheme === 'dark'
-                        ? 'bg-[var(--primary)] text-white'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                      />
-                    </svg>
-                    Dark
-                  </button>
-                  <button
-                    onClick={() => handleThemeChange('system')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
-                      currentTheme === 'system'
-                        ? 'bg-[var(--primary)] text-white'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 00-2-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                    System
-                  </button>
+                  <ThemeToggle />
                 </div>
               </div>
             </div>
@@ -454,11 +354,6 @@ const Header = () => {
           className="fixed inset-0 bg-black/20 dark:bg-black/40 lg:hidden z-40"
           onClick={closeMenu}
         />
-      )}
-
-      {/* Theme Menu Overlay */}
-      {isThemeMenuOpen && (
-        <div className="fixed inset-0 z-40" onClick={closeThemeMenu} />
       )}
     </header>
   );

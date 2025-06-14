@@ -176,7 +176,7 @@ const ChildPanel: React.FC = () => {
 
     if (name === 'username') {
       // Allow only letters, numbers, underscore, hyphen, and dot
-      processedValue = value.replace(/[^a-zA-Z0-9._-]/g, '').toLowerCase();
+      processedValue = value.replace(/[^a-zA-Z0-9._]/g, '').toLowerCase();
     }
 
     setFormData((prev) => ({

@@ -2,6 +2,7 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
   FaBan,
@@ -1183,22 +1184,21 @@ axios.post(url, payload)
                 support team or check our detailed documentation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <a
+                <Link
                   href="/contact-support"
-                  className="btn btn-secondary inline-flex items-center justify-center"
-                >
+                  className={`btn btn-secondary inline-flex items-center justify-center`}
+                  >
                   <FaLifeRing className="mr-2 w-4 h-4" />
                   Contact Support
-                </a>
-                <a
+                </Link>
+                <Link
                   href="https://docs.smmdoc.com"
                   target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-secondary inline-flex items-center justify-center"
-                >
+                  className={`btn btn-secondary inline-flex items-center justify-center`}
+                  >
                   <FaBook className="mr-2 w-4 h-4" />
                   API Documentation
-                </a>
+                </Link>
               </div>
             </div>
           </div>

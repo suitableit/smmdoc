@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'What Are the Best Ways to Increase Social Media Followers?',
     description:
-      'Learn 9 effective strategies to grow your social media following with proven techniques from SMMGen. Boost your online presence and engagement today.',
+      'Learn 9 effective strategies to grow your social media following with proven techniques from SMMDOC. Boost your online presence and engagement today.',
     type: 'article',
     publishedTime: '2025-06-01T00:00:00.000Z',
     authors: ['SMMDOC'],
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
       'Strategy',
       'Instagram',
       'TikTok',
-      'Facebook'
+      'Facebook',
     ],
     images: [
       {
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'What Are the Best Ways to Increase Social Media Followers?',
     description:
-      'Learn 9 effective strategies to grow your social media following with proven techniques from SMMGen.',
+      'Learn 9 effective strategies to grow your social media following with proven techniques from SMMDOC.',
     images: ['/images/blog/social-media-followers-growth.jpg'],
     creator: '@smmdoc',
   },

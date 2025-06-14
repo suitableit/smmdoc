@@ -138,7 +138,7 @@ const About: React.FC = () => {
             </h4>
             <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
-                SMMGen:
+                SMMDOC:
               </span>{' '}
               Pioneering Social Media{' '}
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
@@ -148,7 +148,7 @@ const About: React.FC = () => {
             </h1>
             <div className="space-y-4 text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
               <p>
-                Founded in 2018, SMMGen has swiftly risen to prominence as a
+                Founded in 2018, SMMDOC has swiftly risen to prominence as a
                 leading provider of social media marketing (SMM) services in
                 Bangladesh and neighboring regions. With a focus on offering the
                 most affordable yet effective SMM panels, we have revolutionized
@@ -163,7 +163,7 @@ const About: React.FC = () => {
                 marketing, making it accessible and affordable for businesses of
                 all sizes. We recognized the immense potential of social media
                 in reshaping brand-customer interactions and set out to harness
-                this power for our clients. Today, SMMGen stands as a testament
+                this power for our clients. Today, SMMDOC stands as a testament
                 to innovative solutions, customer-centric approaches, and
                 results-driven strategies in the world of social media
                 marketing.
@@ -180,8 +180,8 @@ const About: React.FC = () => {
           <div className="text-center lg:text-right">
             <div className="relative">
               <Image
-                src="/smmgen-about-us.webp"
-                alt="smmgen about us"
+                src="/SMMDOC-about-us.webp"
+                alt="SMMDOC about us"
                 width={600}
                 height={400}
                 className="w-full max-w-lg mx-auto lg:mx-0 rounded-lg"
@@ -218,7 +218,7 @@ const About: React.FC = () => {
               Strategies
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
-              Our mission at SMMGen is straightforward – to provide
+              Our mission at SMMDOC is straightforward – to provide
               high-quality, cost-effective social media marketing services that
               drive business growth and enhance online visibility. We are
               committed to helping businesses in Bangladesh and beyond to unlock
@@ -256,7 +256,7 @@ const About: React.FC = () => {
               be the harbinger of innovation in social media marketing,
               constantly adapting to the ever-evolving digital landscape. We
               envision a world where every business, regardless of its size, has
-              equal opportunity to thrive in the digital marketplace. SMMGen
+              equal opportunity to thrive in the digital marketplace. SMMDOC
               strives to lead the way in creating more inclusive, effective, and
               sustainable social media strategies.
             </p>
@@ -308,7 +308,7 @@ const About: React.FC = () => {
               and Innovation
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
-              The strength of SMMGen lies in our diverse team of professionals.
+              The strength of SMMDOC lies in our diverse team of professionals.
               Comprising seasoned digital marketers, creative strategists, and
               tech-savvy innovators, our team brings a wealth of experience and
               fresh perspectives to the table. We foster a culture of continuous
@@ -342,7 +342,7 @@ const About: React.FC = () => {
             Need
           </h2>
           <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-3xl mx-auto transition-colors duration-200">
-            At SMMGen, we offer a broad spectrum of social media marketing
+            At SMMDOC, we offer a broad spectrum of social media marketing
             services. <br /> Our solutions are designed to cater to the unique
             requirements of each platform:
           </p>
@@ -390,7 +390,7 @@ const About: React.FC = () => {
             Solutions
           </h2>
           <p className="text-purple-100 text-lg leading-relaxed mb-8">
-            Embark on your journey to social media success with SMMGen. Reach
+            Embark on your journey to social media success with SMMDOC. Reach
             out to us for a consultation, to explore our services, or to start a
             partnership that transforms your digital presence. Our team is ready
             to assist you with tailored solutions that align with your business
@@ -422,7 +422,7 @@ const About: React.FC = () => {
               , and Client-Focused
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
-              What sets SMMGen apart is our commitment to affordability without
+              What sets SMMDOC apart is our commitment to affordability without
               compromising on quality. We offer the cheapest SMM panels in the
               region, making high-quality social media marketing accessible to
               all. Our innovative approach, coupled with personalized service,

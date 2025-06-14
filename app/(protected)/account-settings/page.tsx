@@ -6,18 +6,18 @@
 
 import { APP_NAME } from '@/lib/constants';
 import {
-  Camera,
-  CheckCircle,
-  Clock,
-  Copy,
-  Eye,
-  EyeOff,
-  Globe,
-  Key,
-  Shield,
-  User,
-  X,
-} from 'lucide-react';
+  FaCamera,
+  FaCheck,
+  FaClock,
+  FaCopy,
+  FaEye,
+  FaEyeSlash,
+  FaGlobe,
+  FaKey,
+  FaShieldAlt,
+  FaUser,
+  FaTimes,
+} from 'react-icons/fa';
 import React, { useEffect, useState } from 'react';
 
 // Custom Gradient Spinner Component
@@ -43,10 +43,10 @@ const Toast = ({
   onClose: () => void;
 }) => (
   <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <CheckCircle className="toast-icon" />}
+    {type === 'success' && <FaCheck className="toast-icon" />}
     <span className="font-medium">{message}</span>
     <button onClick={onClose} className="toast-close">
-      <X className="toast-close-icon" />
+      <FaTimes className="toast-close-icon" />
     </button>
   </div>
 );
@@ -79,9 +79,9 @@ const PasswordInput = React.forwardRef<HTMLInputElement, any>(
           className="password-toggle"
         >
           {showPassword ? (
-            <EyeOff className="h-4 w-4" />
+            <FaEyeSlash className="h-4 w-4" />
           ) : (
-            <Eye className="h-4 w-4" />
+            <FaEye className="h-4 w-4" />
           )}
         </button>
       </div>
@@ -257,7 +257,7 @@ const ProfilePage = () => {
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
-                    <Camera />
+                    <FaCamera />
                   </div>
                   <h3 className="card-title">Profile Picture</h3>
                 </div>
@@ -268,7 +268,7 @@ const ProfilePage = () => {
                       {user?.name?.charAt(0) || 'M'}
                     </div>
                     <button className="profile-picture-edit">
-                      <Camera className="w-4 h-4" />
+                      <FaCamera className="w-4 h-4" />
                     </button>
                   </div>
                   <button className="btn btn-primary">Upload Photo</button>
@@ -294,7 +294,7 @@ const ProfilePage = () => {
               <div className="card card-padding">
                 <div className="card-header mb-4">
                   <div className="card-icon">
-                    <Shield />
+                    <FaShieldAlt />
                   </div>
                   <h3 className="card-title">2FA</h3>
                 </div>
@@ -328,7 +328,7 @@ const ProfilePage = () => {
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
-                    <Key />
+                    <FaKey />
                   </div>
                   <h3 className="card-title">API Keys</h3>
                 </div>
@@ -348,7 +348,7 @@ const ProfilePage = () => {
 
                       <div className="api-key-buttons">
                         <button className="btn btn-secondary flex items-center justify-center gap-2">
-                          <Copy className="h-4 w-4" />
+                          <FaCopy className="h-4 w-4" />
                           Copy
                         </button>
 
@@ -363,7 +363,7 @@ const ProfilePage = () => {
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
-                    <Clock />
+                    <FaClock />
                   </div>
                   <h3 className="card-title">Timezone</h3>
                 </div>
@@ -406,7 +406,7 @@ const ProfilePage = () => {
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
-                  <User />
+                  <FaUser />
                 </div>
                 <h3 className="card-title">Account Information</h3>
               </div>
@@ -440,7 +440,7 @@ const ProfilePage = () => {
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
-                  <Camera />
+                  <FaCamera />
                 </div>
                 <h3 className="card-title">Profile Picture</h3>
               </div>
@@ -451,7 +451,7 @@ const ProfilePage = () => {
                     {user?.name?.charAt(0) || 'M'}
                   </div>
                   <button className="profile-picture-edit">
-                    <Camera className="w-4 h-4" />
+                    <FaCamera className="w-4 h-4" />
                   </button>
                 </div>
                 <button className="btn btn-primary">Upload Photo</button>
@@ -462,7 +462,7 @@ const ProfilePage = () => {
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
-                  <Shield />
+                  <FaShieldAlt />
                 </div>
                 <h3 className="card-title">Change Password</h3>
               </div>
@@ -528,7 +528,7 @@ const ProfilePage = () => {
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
-                  <Shield />
+                  <FaShieldAlt />
                 </div>
                 <h3 className="card-title">2FA</h3>
               </div>
@@ -561,7 +561,7 @@ const ProfilePage = () => {
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
-                  <Key />
+                  <FaKey />
                 </div>
                 <h3 className="card-title">API Keys</h3>
               </div>
@@ -591,9 +591,9 @@ const ProfilePage = () => {
                           title={showApiKey ? 'Hide API Key' : 'Show API Key'}
                         >
                           {showApiKey ? (
-                            <EyeOff className="h-4 w-4" />
+                            <FaEyeSlash className="h-4 w-4" />
                           ) : (
-                            <Eye className="h-4 w-4" />
+                            <FaEye className="h-4 w-4" />
                           )}
                         </button>
                       )}
@@ -625,7 +625,7 @@ const ProfilePage = () => {
                         className="btn btn-secondary flex items-center justify-center gap-2"
                         disabled={!showApiKey && !apiKey?.key}
                       >
-                        <Copy className="h-4 w-4" />
+                        <FaCopy className="h-4 w-4" />
                         {copied ? 'Copied!' : 'Copy'}
                       </button>
 
@@ -645,7 +645,7 @@ const ProfilePage = () => {
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
-                  <Clock />
+                  <FaClock />
                 </div>
                 <h3 className="card-title">Timezone</h3>
               </div>
@@ -673,7 +673,7 @@ const ProfilePage = () => {
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
-                  <Globe />
+                  <FaGlobe />
                 </div>
                 <h3 className="card-title">Change Language</h3>
               </div>
