@@ -8,7 +8,6 @@ import {
   FaCheckCircle,
   FaClock,
   FaExclamationTriangle,
-  FaList,
   FaRobot,
   FaSearch,
   FaSpinner,
@@ -264,7 +263,7 @@ export default function TicketsHistory() {
     {
       key: 'all',
       label: 'All',
-      icon: FaList,
+      icon: FaTicketAlt,
       color: 'bg-gray-600 hover:bg-gray-700',
     },
     {
@@ -434,7 +433,7 @@ export default function TicketsHistory() {
                   : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 hover:text-blue-600'
               }`}
             >
-              <FaList className="mr-2 w-4 h-4" />
+              <FaTicketAlt className="mr-2 w-4 h-4" />
               All Tickets
             </button>
             <button
