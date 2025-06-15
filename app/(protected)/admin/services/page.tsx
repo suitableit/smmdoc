@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
   FaArrowUp,
+  FaBriefcase,
   FaCheckCircle,
   FaCog,
   FaDownload,
@@ -147,7 +148,7 @@ export default function page() {
     {
       title: 'Total Services',
       value: stats.totalServices,
-      icon: <FaCog className="h-6 w-6" />,
+      icon: <FaBriefcase className="h-6 w-6" />,
       textColor: 'text-blue-600',
     },
     {
@@ -319,7 +320,7 @@ export default function page() {
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
             <div className="flex items-center gap-2 flex-1">
               <div className="card-icon">
-                <FaCog />
+                <FaBriefcase />
               </div>
               <h3 className="card-title">
                 Services List ({stats.totalServices})
@@ -346,4 +347,4 @@ export default function page() {
       </div>
     </div>
   );
-}
+} 

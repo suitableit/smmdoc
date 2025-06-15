@@ -44,7 +44,7 @@ export const adminNavItems = [
   {
     title: 'All Services',
     href: '/admin/services',
-    icon: 'FaList',
+    icon: 'FaBriefcase',
     label: 'All Services',
     roles: ['admin'],
   },
