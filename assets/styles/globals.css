@@ -340,14 +340,12 @@ html {
 }
 
 .form-group.error .form-field,
-.form-group.error .form-select,
 .form-group.error .form-textarea {
   border-color: var(--toast-error);
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
 .form-group.success .form-field,
-.form-group.success .form-select,
 .form-group.success .form-textarea {
   border-color: var(--toast-success);
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);

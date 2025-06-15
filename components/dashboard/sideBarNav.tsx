@@ -90,7 +90,7 @@ export default function SideBarNav({
         ),
         users: items.filter((item) =>
           [
-            'User List',
+            'Users List',
             'Admins',
             'User Activity Logs',
             'KYC Approvals',

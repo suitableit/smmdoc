@@ -57,7 +57,7 @@ export const adminNavItems = [
   },
   {
     title: 'Manage Categories',
-    href: '/admin/categories',
+    href: '/admin/services/categories',
     icon: 'FaLayerGroup',
     label: 'Manage Categories',
     roles: ['admin'],

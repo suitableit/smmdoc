@@ -143,22 +143,22 @@ const HomePage: React.FC = () => {
     {
       icon: <FaShoppingCart className="w-10 h-10 text-white" />,
       title: 'Order Completed',
-      count: '2,757,280',
+      count: '1,000+',
     },
     {
       icon: <FaServer className="w-10 h-10 text-white" />,
       title: 'Active Services',
-      count: '4,917',
+      count: '50+',
     },
     {
       icon: <FaUsers className="w-10 h-10 text-white" />,
       title: 'Active Users',
-      count: '30,175',
+      count: '500+',
     },
     {
       icon: <FaShareAlt className="w-10 h-10 text-white" />,
       title: 'Paid to Affiliate Users',
-      count: '236,456',
+      count: '100+',
     },
   ];
 
@@ -599,7 +599,7 @@ const HomePage: React.FC = () => {
                 >
                   Boost your online presence today with our Cheap SMM Panel –
                   the ultimate solution for social media success! SMMDOC is a
-                  SMM Panel with more then 3 years on the market and 21 Orders
+                  SMM Panel with more then 3 years on the market and 1,000+ Orders
                   processed successfully until now!
                 </p>
                 <Link
@@ -618,7 +618,7 @@ const HomePage: React.FC = () => {
                   data-aos-duration="1200"
                 >
                   <Image
-                    src="/SMMDOC-users.webp"
+                    src="/smmgen-users.webp"
                     alt="SMMDOC Users"
                     width={60}
                     height={40}
@@ -626,7 +626,7 @@ const HomePage: React.FC = () => {
                   />
                   <div className="text-gray-600 dark:text-gray-300 font-semibold text-base transition-colors duration-200">
                     <span className="text-[var(--primary)] dark:text-[var(--secondary)] font-bold transition-colors duration-200">
-                      30,175
+                      500
                     </span>
                     + Users using our services.
                   </div>

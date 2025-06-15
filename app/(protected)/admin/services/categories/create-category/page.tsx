@@ -1,4 +1,4 @@
-import { CreateCategoryForm } from '@/components/admin/categories/categoryCreateForm';
+import { CreateCategoryForm } from '@/components/admin/services/categories/categoryCreateForm';
 import BreadCrumb from '@/components/shared/BreadCrumb';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';

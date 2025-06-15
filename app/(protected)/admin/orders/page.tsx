@@ -19,6 +19,18 @@ import {
   FaTrash,
 } from 'react-icons/fa';
 
+// Import APP_NAME constant
+import { APP_NAME } from '@/lib/constants';
+
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 // Toast Component
 const Toast = ({
   message,
@@ -104,6 +116,11 @@ interface PaginationInfo {
 }
 
 const AdminOrdersPage = () => {
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `All Orders — ${APP_NAME}`;
+  }, []);
+
   // State management
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<OrderStats>({
@@ -125,7 +142,6 @@ const AdminOrdersPage = () => {
     hasPrev: false,
   });
 
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
@@ -135,6 +151,10 @@ const AdminOrdersPage = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+
+  // Loading states
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
   // New state for action modals
   const [editStartCountDialog, setEditStartCountDialog] = useState<{
@@ -227,7 +247,6 @@ const AdminOrdersPage = () => {
   };
   const fetchOrders = async () => {
     try {
-      setLoading(true);
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -267,7 +286,7 @@ const AdminOrdersPage = () => {
         hasPrev: false,
       });
     } finally {
-      setLoading(false);
+      setOrdersLoading(false);
     }
   };
 
@@ -335,7 +354,8 @@ const AdminOrdersPage = () => {
   // Handle search with debouncing - only update table, not whole page
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Don't reset page to 1, just refetch with current filters
+      // Set loading when search changes
+      setOrdersLoading(true);
       fetchOrders();
     }, 500);
 
@@ -344,12 +364,24 @@ const AdminOrdersPage = () => {
 
   // Load data on component mount and when filters change
   useEffect(() => {
+    setOrdersLoading(true);
     fetchOrders();
   }, [pagination.page, pagination.limit, statusFilter]);
 
   useEffect(() => {
     fetchStats();
     fetchAllOrdersForCounts(); // Get real status counts
+    
+    // Initial orders load
+    setOrdersLoading(true);
+    fetchOrders();
+    
+    // Simulate stats loading delay
+    const timer = setTimeout(() => {
+      setStatsLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Update stats when pagination data changes (real total orders)
@@ -378,7 +410,7 @@ const AdminOrdersPage = () => {
         return <FaClock className="h-3 w-3 text-yellow-500" />;
       case 'processing':
       case 'in_progress':
-        return <FaPlay className="h-3 w-3 text-blue-500" />;
+        return <FaSync className="h-3 w-3 text-blue-500" />;
       case 'completed':
         return <FaCheckCircle className="h-3 w-3 text-green-500" />;
       case 'cancelled':
@@ -393,6 +425,18 @@ const AdminOrdersPage = () => {
 
   const calculateProgress = (qty: number, remains: number) => {
     return qty > 0 ? Math.round(((qty - remains) / qty) * 100) : 0;
+  };
+
+  // Function to format currency based on order currency
+  const formatCurrency = (amount: number, currency: string) => {
+    if (currency === 'USD') {
+      return `${amount.toFixed(2)}`;
+    } else if (currency === 'BDT') {
+      return `৳${amount.toFixed(2)}`;
+    } else {
+      // Default fallback
+      return `${amount.toFixed(2)}`;
+    }
   };
 
   const handleSelectAll = () => {
@@ -416,6 +460,7 @@ const AdminOrdersPage = () => {
   };
 
   const handleRefresh = () => {
+    setOrdersLoading(true);
     fetchOrders();
     fetchStats();
     fetchAllOrdersForCounts(); // Refresh status counts too
@@ -554,19 +599,6 @@ const AdminOrdersPage = () => {
     setNewStatus(currentStatus);
   };
 
-  if (loading && orders.length === 0) {
-    return (
-      <div className="page-container">
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-2">
-            <FaSync className="h-5 w-5 animate-spin text-blue-500" />
-            <span className="text-lg font-medium">Loading orders...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="page-container">
       {/* Toast Container */}
@@ -583,19 +615,12 @@ const AdminOrdersPage = () => {
       <div className="page-content">
         {/* Page Header */}
         <div className="page-header mb-6">
-          <div>
-            <h1 className="page-title">Orders Management</h1>
-            <p className="page-description mb-4">
-              Manage and monitor all customer orders
-            </p>
-          </div>
           <div className="flex gap-2">
             <button
               onClick={handleRefresh}
               className="btn btn-secondary flex items-center gap-2"
-              disabled={loading}
             >
-              <FaSync className={loading ? 'animate-spin' : ''} />
+              <FaSync />
               Refresh
             </button>
             <button
@@ -617,9 +642,16 @@ const AdminOrdersPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Total Orders</h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  {stats.totalOrders}
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-blue-600">
+                    {stats.totalOrders}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -631,9 +663,16 @@ const AdminOrdersPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Pending Orders</h3>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {stats.pendingOrders}
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {stats.pendingOrders}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -645,9 +684,16 @@ const AdminOrdersPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Completed Orders</h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {stats.completedOrders}
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-green-600">
+                    {stats.completedOrders}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -659,9 +705,16 @@ const AdminOrdersPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Total Revenue</h3>
-                <p className="text-2xl font-bold text-purple-600">
-                  ${stats.totalRevenue.toFixed(2)}
-                </p>
+                {statsLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-purple-600">
+                    ${stats.totalRevenue.toFixed(2)}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -802,7 +855,7 @@ const AdminOrdersPage = () => {
                 className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 pr-4"
               />
             </div>
-            <select className="form-select min-w-[120px]">
+            <select className="form-field 0w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer">
               <option value="id">Order ID</option>
               <option value="url">Order URL</option>
               <option value="username">Username</option>
@@ -839,7 +892,14 @@ const AdminOrdersPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {orders.length === 0 ? (
+            {ordersLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center flex flex-col items-center">
+                  <GradientSpinner size="w-12 h-12" className="mb-3" />
+                  <div className="text-base font-medium">Loading orders...</div>
+                </div>
+              </div>
+            ) : orders.length === 0 ? (
               <div className="text-center py-12">
                 <FaBox
                   className="h-16 w-16 mx-auto mb-4"
@@ -1002,12 +1062,6 @@ const AdminOrdersPage = () => {
                                 {order.charge
                                   ? order.charge.toFixed(2)
                                   : '0.00'}
-                              </div>
-                              <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
-                              >
-                                {order.currency || 'null'}
                               </div>
                             </div>
                           </td>
@@ -1484,7 +1538,7 @@ const AdminOrdersPage = () => {
                               style={{ color: 'var(--text-primary)' }}
                             >
                               ${order.charge ? order.charge.toFixed(2) : '0.00'}{' '}
-                              {order.currency || 'null'}
+                              {order.currency || 'USD'}
                             </div>
                           </div>
                           <div>
@@ -1617,12 +1671,17 @@ const AdminOrdersPage = () => {
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
                   >
-                    Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                    {Math.min(
-                      pagination.page * pagination.limit,
-                      pagination.total
-                    )}{' '}
-                    of {pagination.total} orders
+                    {ordersLoading ? (
+                      <div className="flex items-center gap-2">
+                        <GradientSpinner size="w-4 h-4" />
+                        <span>Loading pagination...</span>
+                      </div>
+                    ) : (
+                      `Showing ${(pagination.page - 1) * pagination.limit + 1} to ${Math.min(
+                        pagination.page * pagination.limit,
+                        pagination.total
+                      )} of ${pagination.total} orders`
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -1632,7 +1691,7 @@ const AdminOrdersPage = () => {
                           page: Math.max(1, prev.page - 1),
                         }))
                       }
-                      disabled={!pagination.hasPrev}
+                      disabled={!pagination.hasPrev || ordersLoading}
                       className="btn btn-secondary"
                     >
                       Previous
@@ -1641,7 +1700,11 @@ const AdminOrdersPage = () => {
                       className="text-sm"
                       style={{ color: 'var(--text-muted)' }}
                     >
-                      Page {pagination.page} of {pagination.totalPages}
+                      {ordersLoading ? (
+                        <GradientSpinner size="w-4 h-4" />
+                      ) : (
+                        `Page ${pagination.page} of ${pagination.totalPages}`
+                      )}
                     </span>
                     <button
                       onClick={() =>
@@ -1650,7 +1713,7 @@ const AdminOrdersPage = () => {
                           page: Math.min(prev.totalPages, prev.page + 1),
                         }))
                       }
-                      disabled={!pagination.hasNext}
+                      disabled={!pagination.hasNext || ordersLoading}
                       className="btn btn-secondary"
                     >
                       Next
@@ -1670,10 +1733,10 @@ const AdminOrdersPage = () => {
                           Not going amount
                         </label>
                         <input
-                          type="text"
+                          type="number"
                           value={notGoingAmount}
                           onChange={(e) => setNotGoingAmount(e.target.value)}
-                          className="form-field w-full"
+                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           placeholder="Enter not going amount"
                         />
                       </div>
@@ -1718,7 +1781,7 @@ const AdminOrdersPage = () => {
                           type="number"
                           value={newStartCount}
                           onChange={(e) => setNewStartCount(e.target.value)}
-                          className="form-field w-full"
+                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           placeholder="Enter new start count"
                         />
                       </div>
@@ -1766,7 +1829,7 @@ const AdminOrdersPage = () => {
                         <select
                           value={newStatus}
                           onChange={(e) => setNewStatus(e.target.value)}
-                          className="form-select w-full"
+                          className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                         >
                           <option value="pending">Pending</option>
                           <option value="processing">Processing</option>

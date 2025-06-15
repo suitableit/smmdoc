@@ -67,9 +67,50 @@ const DashboardPage = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
+  // Additional loading states for different sections
+  const [userInfoLoading, setUserInfoLoading] = useState(true);
+  const [financeLoading, setFinanceLoading] = useState(true);
+  const [statisticsLoading, setStatisticsLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
+
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Dashboard — ${APP_NAME}`;
+  }, []);
+
+  // Simulate loading states for different sections
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setUserInfoLoading(false);
+    };
+
+    const loadFinanceData = async () => {
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      setFinanceLoading(false);
+    };
+
+    const loadStatistics = async () => {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setStatisticsLoading(false);
+    };
+
+    const loadOrders = async () => {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setOrdersLoading(false);
+    };
+
+    const loadTickets = async () => {
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      setTicketsLoading(false);
+    };
+
+    loadUserInfo();
+    loadFinanceData();
+    loadStatistics();
+    loadOrders();
+    loadTickets();
   }, []);
 
   // Get recent orders from user stats
@@ -177,9 +218,16 @@ const DashboardPage = () => {
               </div>
               <div>
                 <h3 className="card-title">User ID</h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  #{user?.id || 'N/A'}
-                </p>
+                {userInfoLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-4 h-4" />
+                    <span className="text-xs text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    #{user?.id || 'N/A'}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -192,9 +240,16 @@ const DashboardPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Username</h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {user?.username || user?.email?.split('@')[0] || 'User'}
-                </p>
+                {userInfoLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-4 h-4" />
+                    <span className="text-xs text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    {user?.username || user?.email?.split('@')[0] || 'User'}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -207,9 +262,16 @@ const DashboardPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Full Name</h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {user?.name || 'User'}
-                </p>
+                {userInfoLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-4 h-4" />
+                    <span className="text-xs text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    {user?.name || 'User'}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -225,13 +287,16 @@ const DashboardPage = () => {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Balance</h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {isLoading ? (
+                {financeLoading || isLoading ? (
+                  <div className="flex items-center gap-2">
                     <GradientSpinner size="w-6 h-6" />
-                  ) : (
-                    formatCurrency(balance)
-                  )}
-                </p>
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatCurrency(balance)}
+                  </p>
+                )}
               </div>
               <div className="ml-4">
                 <Link
@@ -253,9 +318,16 @@ const DashboardPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Total Orders</h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  {isLoading ? <GradientSpinner size="w-6 h-6" /> : totalOrders}
-                </p>
+                {financeLoading || isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <GradientSpinner size="w-6 h-6" />
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-blue-600">
+                    {totalOrders}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -268,13 +340,16 @@ const DashboardPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Total Spend</h3>
-                <p className="text-2xl font-bold text-purple-600">
-                  {isLoading ? (
+                {financeLoading || isLoading ? (
+                  <div className="flex items-center gap-2">
                     <GradientSpinner size="w-6 h-6" />
-                  ) : (
-                    formatCurrency(totalSpend)
-                  )}
-                </p>
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-purple-600">
+                    {formatCurrency(totalSpend)}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -294,15 +369,21 @@ const DashboardPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 {/* Completed Orders */}
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <Link
+                  href="/my-orders?status=completed"
+                  className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors duration-200 cursor-pointer"
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-green-600 dark:text-green-400 font-semibold">
                         Completed
                       </div>
                       <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                        {isLoading ? (
-                          <GradientSpinner size="w-6 h-6" />
+                        {statisticsLoading || isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <GradientSpinner size="w-5 h-5" />
+                            <span className="text-sm text-gray-400">Loading...</span>
+                          </div>
                         ) : (
                           completedOrders
                         )}
@@ -310,18 +391,24 @@ const DashboardPage = () => {
                     </div>
                     <FaCheckCircle className="text-green-500 w-5 h-5" />
                   </div>
-                </div>
+                </Link>
 
                 {/* Processing Orders */}
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <Link
+                  href="/my-orders?status=processing"
+                  className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200 cursor-pointer"
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-blue-600 dark:text-blue-400 font-semibold">
                         Processing
                       </div>
                       <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                        {isLoading ? (
-                          <GradientSpinner size="w-6 h-6" />
+                        {statisticsLoading || isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <GradientSpinner size="w-5 h-5" />
+                            <span className="text-sm text-gray-400">Loading...</span>
+                          </div>
                         ) : (
                           processingOrders
                         )}
@@ -329,18 +416,24 @@ const DashboardPage = () => {
                     </div>
                     <FaClock className="text-blue-500 w-5 h-5" />
                   </div>
-                </div>
+                </Link>
 
                 {/* Pending Orders */}
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <Link
+                  href="/my-orders?status=pending"
+                  className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors duration-200 cursor-pointer"
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-yellow-600 dark:text-yellow-400 font-semibold">
                         Pending
                       </div>
                       <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-                        {isLoading ? (
-                          <GradientSpinner size="w-6 h-6" />
+                        {statisticsLoading || isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <GradientSpinner size="w-5 h-5" />
+                            <span className="text-sm text-gray-400">Loading...</span>
+                          </div>
                         ) : (
                           pendingOrders
                         )}
@@ -348,18 +441,24 @@ const DashboardPage = () => {
                     </div>
                     <FaExclamationTriangle className="text-yellow-500 w-5 h-5" />
                   </div>
-                </div>
+                </Link>
 
                 {/* Cancelled Orders */}
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <Link
+                  href="/my-orders?status=cancelled"
+                  className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-200 cursor-pointer"
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-red-600 dark:text-red-400 font-semibold">
                         Cancelled
                       </div>
                       <div className="text-2xl font-bold text-red-700 dark:text-red-300">
-                        {isLoading ? (
-                          <GradientSpinner size="w-6 h-6" />
+                        {statisticsLoading || isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <GradientSpinner size="w-5 h-5" />
+                            <span className="text-sm text-gray-400">Loading...</span>
+                          </div>
                         ) : (
                           cancelledOrders
                         )}
@@ -367,7 +466,7 @@ const DashboardPage = () => {
                     </div>
                     <FaTimesCircle className="text-red-500 w-5 h-5" />
                   </div>
-                </div>
+                </Link>
               </div>
             </div>
 
@@ -389,7 +488,7 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              {isLoading ? (
+              {ordersLoading || isLoading ? (
                 <div className="text-center py-8 flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-4" />
                   <div className="text-lg font-medium">
@@ -555,7 +654,7 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              {isLoading ? (
+              {ticketsLoading ? (
                 <div className="text-center py-8 flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-4" />
                   <div className="text-lg font-medium">
