@@ -1,4 +1,4 @@
-import EditCategory from '@/components/admin/categories/editCategory';
+import EditCategory from '@/components/admin/services/categories/editCategory';
 import BreadCrumb from '@/components/shared/BreadCrumb';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';

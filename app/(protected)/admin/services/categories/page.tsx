@@ -1,4 +1,4 @@
-import CategoriesTable from '@/components/admin/categories/categoriesTable';
+import CategoriesTable from '@/components/admin/services/categories/categoriesTable';
 import BreadCrumb from '@/components/shared/BreadCrumb';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';

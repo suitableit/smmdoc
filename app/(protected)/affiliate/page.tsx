@@ -78,6 +78,8 @@ function AffiliateStatsCards() {
   const user = useCurrentUser();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userInfoLoading, setUserInfoLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -109,6 +111,7 @@ function AffiliateStatsCards() {
     const fetchStats = async () => {
       try {
         setLoading(true);
+        setStatsLoading(true);
         const response = await fetch('/api/user/affiliate/stats', {
           method: 'GET',
           headers: {
@@ -129,10 +132,17 @@ function AffiliateStatsCards() {
         showToast('Error loading affiliate stats', 'error');
       } finally {
         setLoading(false);
+        setStatsLoading(false);
       }
     };
 
+    const loadUserInfo = async () => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setUserInfoLoading(false);
+    };
+
     fetchStats();
+    loadUserInfo();
   }, []);
 
   const copyToClipboard = () => {
@@ -170,9 +180,16 @@ function AffiliateStatsCards() {
             </div>
             <div>
               <h3 className="card-title">Username</h3>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                {user?.username || user?.email?.split('@')[0] || 'User'}
-              </p>
+              {userInfoLoading ? (
+                <div className="flex items-center gap-2">
+                  <GradientSpinner size="w-4 h-4" />
+                  <span className="text-xs text-gray-400">Loading...</span>
+                </div>
+              ) : (
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {user?.username || user?.email?.split('@')[0] || 'User'}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -185,25 +202,32 @@ function AffiliateStatsCards() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="card-title">Referral Link</h3>
-              <div className="flex items-center">
-                <p
-                  className="text-sm truncate"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {referralLink
-                    ? referralLink.replace('https://', '')
-                    : 'Login to generate'}
-                </p>
-                {referralLink && (
-                  <button
-                    onClick={copyToClipboard}
-                    className="ml-2 text-[var(--primary)] hover:text-[var(--secondary)] dark:text-[var(--secondary)] dark:hover:text-[var(--primary)] transition-colors duration-200"
-                    title={copied ? 'Copied!' : 'Copy link'}
+              {userInfoLoading ? (
+                <div className="flex items-center gap-2">
+                  <GradientSpinner size="w-4 h-4" />
+                  <span className="text-xs text-gray-400">Loading...</span>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <p
+                    className="text-sm truncate"
+                    style={{ color: 'var(--text-muted)' }}
                   >
-                    <FaCopy className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+                    {referralLink
+                      ? referralLink.replace('https://', '')
+                      : 'Login to generate'}
+                  </p>
+                  {referralLink && (
+                    <button
+                      onClick={copyToClipboard}
+                      className="ml-2 text-[var(--primary)] hover:text-[var(--secondary)] dark:text-[var(--secondary)] dark:hover:text-[var(--primary)] transition-colors duration-200"
+                      title={copied ? 'Copied!' : 'Copy link'}
+                    >
+                      <FaCopy className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -216,9 +240,16 @@ function AffiliateStatsCards() {
             </div>
             <div>
               <h3 className="card-title">Commission Rate</h3>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                {stats.commissionRate}
-              </p>
+              {userInfoLoading ? (
+                <div className="flex items-center gap-2">
+                  <GradientSpinner size="w-4 h-4" />
+                  <span className="text-xs text-gray-400">Loading...</span>
+                </div>
+              ) : (
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {stats.commissionRate}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -231,9 +262,16 @@ function AffiliateStatsCards() {
             </div>
             <div>
               <h3 className="card-title">Minimum Payout</h3>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                {stats.minimumPayout}
-              </p>
+              {userInfoLoading ? (
+                <div className="flex items-center gap-2">
+                  <GradientSpinner size="w-4 h-4" />
+                  <span className="text-xs text-gray-400">Loading...</span>
+                </div>
+              ) : (
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {stats.minimumPayout}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -257,7 +295,14 @@ function AffiliateStatsCards() {
                   Total Visits
                 </div>
                 <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  {loading ? <GradientSpinner size="w-6 h-6" /> : stats.visits}
+                  {statsLoading ? (
+                    <div className="flex items-center gap-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    stats.visits
+                  )}
                 </div>
               </div>
               <FaMousePointer className="text-blue-500 w-5 h-5" />
@@ -272,8 +317,11 @@ function AffiliateStatsCards() {
                   Registrations
                 </div>
                 <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                  {loading ? (
-                    <GradientSpinner size="w-6 h-6" />
+                  {statsLoading ? (
+                    <div className="flex items-center gap-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
                   ) : (
                     stats.registrations
                   )}
@@ -291,8 +339,11 @@ function AffiliateStatsCards() {
                   Referrals
                 </div>
                 <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  {loading ? (
-                    <GradientSpinner size="w-6 h-6" />
+                  {statsLoading ? (
+                    <div className="flex items-center gap-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
                   ) : (
                     stats.referrals
                   )}
@@ -310,8 +361,11 @@ function AffiliateStatsCards() {
                   Conversion Rate
                 </div>
                 <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                  {loading ? (
-                    <GradientSpinner size="w-6 h-6" />
+                  {statsLoading ? (
+                    <div className="flex items-center gap-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
                   ) : (
                     stats.conversionRate
                   )}
@@ -329,8 +383,11 @@ function AffiliateStatsCards() {
                   Total Earnings
                 </div>
                 <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-                  {loading ? (
-                    <GradientSpinner size="w-6 h-6" />
+                  {statsLoading ? (
+                    <div className="flex items-center gap-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
                   ) : (
                     stats.totalEarnings
                   )}
@@ -348,8 +405,11 @@ function AffiliateStatsCards() {
                   Available Earnings
                 </div>
                 <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
-                  {loading ? (
-                    <GradientSpinner size="w-6 h-6" />
+                  {statsLoading ? (
+                    <div className="flex items-center gap-2">
+                      <GradientSpinner size="w-5 h-5" />
+                      <span className="text-sm text-gray-400">Loading...</span>
+                    </div>
                   ) : (
                     stats.availableEarnings
                   )}

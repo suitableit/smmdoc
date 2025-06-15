@@ -24,10 +24,6 @@ export default function CreateServicesPage() {
       <div className="page-content">
         {/* Page Header */}
         <div className="page-header mb-6">
-          <div>
-            <h1 className="page-title">Create New Service</h1>
-            <p className="page-description mb-4">Add a new service to your platform</p>
-          </div>
           <div className="flex gap-2">
             <button 
               className="btn btn-secondary flex items-center gap-2"
@@ -36,7 +32,7 @@ export default function CreateServicesPage() {
               Back
             </button>
             <button 
-              className="btn btn-primary flex items-center gap-2 animation animate-pulse"
+              className="btn btn-primary flex items-center gap-2"
             >
               <FaEye />
               View All Services
@@ -51,7 +47,7 @@ export default function CreateServicesPage() {
               <div className="card-icon">
                 <FaPlus />
               </div>
-              <h3 className="card-title">Service Information</h3>
+              <h3 className="card-title">Create New Service</h3>
               <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
                 Create Service
               </span>

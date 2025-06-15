@@ -999,7 +999,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Last 30 Days Orders - Section 4 */}
-      <div className="mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="card card-padding">
           <div className="card-header mb-6">
             <div className="card-icon">
@@ -1008,7 +1008,7 @@ export default function AdminDashboard() {
             <h3 className="card-title">Last 30 Days Orders</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <a
               href="/admin/orders"
               className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200 cursor-pointer"
@@ -1154,87 +1154,9 @@ export default function AdminDashboard() {
             </a>
           </div>
         </div>
-      </div>
 
-      {/* Recent Orders Graph - Section 5 */}
-      <div className="mb-6">
-        <div className="card card-padding">
-          <div className="card-header mb-4">
-            <div className="card-icon">
-              <FaChartBar />
-            </div>
-            <h3 className="card-title">Recent Orders Graph</h3>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mb-6">
-            <Badge className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
-              <FaCheckCircle className="h-3 w-3 mr-1" />
-              Completed
-            </Badge>
-            <Badge className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
-              <FaRedo className="h-3 w-3 mr-1" />
-              Processing
-            </Badge>
-            <Badge className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800">
-              <FaClock className="h-3 w-3 mr-1" />
-              Pending
-            </Badge>
-            <Badge className="bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800">
-              <FaBullseye className="h-3 w-3 mr-1" />
-              Partial
-            </Badge>
-            <Badge className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800">
-              <FaTimes className="h-3 w-3 mr-1" />
-              Canceled
-            </Badge>
-          </div>
-
-          <div className="h-[300px] flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-            {chartLoading ? (
-              <div className="text-center flex flex-col items-center">
-                <GradientSpinner size="w-12 h-12" className="mb-3" />
-                <div className="text-base font-medium">
-                  Loading chart data...
-                </div>
-              </div>
-            ) : stats.recentOrders && stats.recentOrders.length > 0 ? (
-              <div
-                className="text-center"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                <FaChartBar
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)', opacity: 0.5 }}
-                />
-                <p className="text-lg font-medium mb-2">
-                  Interactive Chart will be displayed here
-                </p>
-                <p className="text-sm">Real-time order analytics</p>
-              </div>
-            ) : (
-              <div
-                className="text-center"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                <FaChartPie
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)', opacity: 0.5 }}
-                />
-                <p className="text-lg font-medium mb-2">
-                  No recent orders to display
-                </p>
-                <p className="text-sm">
-                  Charts will appear when data is available
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Support Tickets - Section 6 */}
-      <div className="mb-6">
-        <div className="card card-padding">
+            {/* Support Tickets - Section 6 */}
+            <div className="card card-padding">
           <div className="card-header mb-6">
             <div className="card-icon">
               <FaCommentDots />
@@ -1242,7 +1164,7 @@ export default function AdminDashboard() {
             <h3 className="card-title">Support Tickets</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <a
               href="/manage-tickets"
               className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200 cursor-pointer"
@@ -1450,15 +1372,12 @@ export default function AdminDashboard() {
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                          M
-                        </div>
                         <div>
                           <p className="font-bold text-gray-800 dark:text-gray-200 text-sm">
-                            munna
+                            john
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            alsoadmunna@gmail.com
+                            john@example.com
                           </p>
                         </div>
                       </div>
@@ -1490,7 +1409,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="py-3 px-3">
                       <Badge className="bg-pink-100 dark:bg-pink-900/20 text-pink-800 dark:text-pink-200 border border-pink-200 dark:border-pink-800 text-xs">
-                        VIP
+                        0% Discount
                       </Badge>
                     </td>
                     <td className="py-3 px-3">

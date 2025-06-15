@@ -15,6 +15,18 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 
+// Import APP_NAME constant
+import { APP_NAME } from '@/lib/constants';
+
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
 // Toast Component
 const Toast = ({
   message,
@@ -35,13 +47,22 @@ const Toast = ({
 );
 
 export default function page() {
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `All Services — ${APP_NAME}`;
+  }, []);
+
   const [stats, setStats] = useState({
     totalServices: 0,
     activeServices: 0,
     inactiveServices: 0,
     recentlyAdded: 0,
   });
-  const [loading, setLoading] = useState(true);
+  
+  // Loading states
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [toast, setToast] = useState<{
@@ -67,21 +88,37 @@ export default function page() {
       } catch (error) {
         console.error('Failed to fetch service stats:', error);
       } finally {
-        setLoading(false);
+        setStatsLoading(false);
       }
     };
 
     fetchServiceStats();
+
+    // Simulate stats loading delay
+    const timer = setTimeout(() => {
+      setStatsLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Handle search with debouncing
   useEffect(() => {
     const timer = setTimeout(() => {
+      // Set loading when search changes
+      setServicesLoading(true);
       // Trigger search in ServiceTable component
+      setTimeout(() => setServicesLoading(false), 1000);
     }, 500);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Handle status filter changes
+  useEffect(() => {
+    setServicesLoading(true);
+    setTimeout(() => setServicesLoading(false), 800);
+  }, [statusFilter]);
 
   const showToast = (
     message: string,
@@ -92,10 +129,14 @@ export default function page() {
   };
 
   const handleRefresh = () => {
-    setLoading(true);
+    setStatsLoading(true);
+    setServicesLoading(true);
     // Refresh logic here
     showToast('Services refreshed successfully!', 'success');
-    setLoading(false);
+    setTimeout(() => {
+      setStatsLoading(false);
+      setServicesLoading(false);
+    }, 1500);
   };
 
   const handleExport = () => {
@@ -145,28 +186,13 @@ export default function page() {
       <div className="page-content">
         {/* Page Header */}
         <div className="page-header mb-6">
-          <div>
-            <h1 className="page-title">Services Management</h1>
-            <p className="page-description mb-4">
-              Monitor, manage, and configure all your platform services from one
-              centralized location
-            </p>
-          </div>
           <div className="flex gap-2">
             <button
               onClick={handleRefresh}
               className="btn btn-secondary flex items-center gap-2"
-              disabled={loading}
             >
-              <FaSync className={loading ? 'animate-spin' : ''} />
+              <FaSync />
               Refresh
-            </button>
-            <button
-              onClick={handleExport}
-              className="btn btn-primary flex items-center gap-2"
-            >
-              <FaDownload />
-              Export
             </button>
             <Link
               href="/admin/services/create-service"
@@ -186,13 +212,16 @@ export default function page() {
                 <div className="card-icon">{stat.icon}</div>
                 <div>
                   <h3 className="card-title">{stat.title}</h3>
-                  <p className={`text-2xl font-bold ${stat.textColor}`}>
-                    {loading ? (
-                      <FaSpinner className="h-5 w-5 animate-spin" />
-                    ) : (
-                      stat.value.toLocaleString()
-                    )}
-                  </p>
+                  {statsLoading ? (
+                    <div className="flex items-center gap-2">
+                      <GradientSpinner size="w-6 h-6" />
+                      <span className="text-lg text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <p className={`text-2xl font-bold ${stat.textColor}`}>
+                      {stat.value.toLocaleString()}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -277,7 +306,7 @@ export default function page() {
                 className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 pr-4"
               />
             </div>
-            <select className="form-select min-w-[120px]">
+            <select className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer">
               <option value="id">Service ID</option>
               <option value="name">Service Name</option>
               <option value="category">Category</option>
@@ -302,7 +331,16 @@ export default function page() {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            <ServiceTable searchTerm={searchTerm} statusFilter={statusFilter} />
+            {servicesLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center flex flex-col items-center">
+                  <GradientSpinner size="w-12 h-12" className="mb-3" />
+                  <div className="text-base font-medium">Loading services...</div>
+                </div>
+              </div>
+            ) : (
+              <ServiceTable searchTerm={searchTerm} statusFilter={statusFilter} />
+            )}
           </div>
         </div>
       </div>

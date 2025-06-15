@@ -135,7 +135,7 @@ export function EditServiceForm() {
                   </FormLabel>
                   <FormControl>
                     <select
-                      className="form-select w-full"
+                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer w-full"
                       {...field}
                       disabled={isPending}
                     >
