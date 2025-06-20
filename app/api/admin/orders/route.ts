@@ -263,13 +263,13 @@ export async function POST(req: NextRequest) {
     // Check user balance (unless admin explicitly skips this check)
     if (!skipBalanceCheck) {
       const orderPrice = user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice;
-      
+
       if (user.balance < orderPrice) {
         return NextResponse.json(
-          { 
+          {
             error: `Insufficient balance. Required: ${orderPrice.toFixed(2)}, Available: ${user.balance.toFixed(2)}`,
             success: false,
-            data: null 
+            data: null
           },
           { status: 400 }
         );
@@ -320,7 +320,7 @@ export async function POST(req: NextRequest) {
     // Deduct balance if not skipping balance check and status is not pending
     if (!skipBalanceCheck && status !== 'pending') {
       const orderPrice = user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice;
-      
+
       await db.user.update({
         where: { id: userId },
         data: {

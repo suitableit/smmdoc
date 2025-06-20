@@ -7,6 +7,7 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { Fragment, useEffect, useState } from 'react';
+import { formatNumber } from '@/lib/utils';
 import {
   FaCheckCircle,
   FaEye,
@@ -416,12 +417,12 @@ export default function FavoriteServices() {
                               </td>
                               <td className="py-3 px-4">
                                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  {service.min_order?.toLocaleString()}
+                                  {formatNumber(service.min_order || 0)}
                                 </span>
                               </td>
                               <td className="py-3 px-4">
                                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  {service.max_order?.toLocaleString()}
+                                  {formatNumber(service.max_order || 0)}
                                 </span>
                               </td>
                               <td className="py-3 px-4">

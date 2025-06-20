@@ -1,24 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from '@/components/ui/form';
+import { GradientSpinner } from '@/components/ui/GradientSpinner';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import axiosInstance from '@/lib/axiosInstance';
 import {
-  createServiceDefaultValues,
-  createServiceSchema,
-  CreateServiceSchema,
+    createServiceDefaultValues,
+    createServiceSchema,
+    CreateServiceSchema,
 } from '@/lib/validators/admin/services/services.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { FaExclamationTriangle, FaPlus, FaSpinner } from 'react-icons/fa';
+import { FaExclamationTriangle, FaPlus } from 'react-icons/fa';
 import { toast } from 'sonner';
 
 export function CreateServiceForm() {
@@ -54,7 +55,7 @@ export function CreateServiceForm() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex items-center gap-2">
-          <FaSpinner className="h-5 w-5 animate-spin text-blue-500" />
+          <GradientSpinner size="w-5 h-5" />
           <span className="text-lg font-medium">Loading categories...</span>
         </div>
       </div>
@@ -66,7 +67,9 @@ export function CreateServiceForm() {
       <div className="text-center py-12">
         <FaExclamationTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
         <p className="text-red-600 font-medium">Error loading categories</p>
-        <p className="text-gray-500 text-sm mt-1">{error}</p>
+        <p className="text-gray-500 text-sm mt-1">
+          {error instanceof Error ? error.message : String(error)}
+        </p>
       </div>
     );
   }
@@ -535,7 +538,7 @@ export function CreateServiceForm() {
             >
               {isPending ? (
                 <>
-                  <FaSpinner className="h-4 w-4 animate-spin" />
+                  <GradientSpinner size="w-4 h-4" />
                   Creating Service...
                 </>
               ) : (

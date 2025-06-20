@@ -12,28 +12,28 @@ import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
-  FaBell,
-  FaChevronDown,
-  FaDesktop,
-  FaEllipsisV,
-  FaFileContract,
-  FaMoneyBillWave,
-  FaMoon,
-  FaPlus,
-  FaSearch,
-  FaShoppingCart,
-  FaSignOutAlt,
-  FaSun,
-  FaTicketAlt,
-  FaUserCog,
-  FaWallet,
+    FaBell,
+    FaChevronDown,
+    FaDesktop,
+    FaEllipsisV,
+    FaFileContract,
+    FaMoneyBillWave,
+    FaMoon,
+    FaPlus,
+    FaSearch,
+    FaShoppingCart,
+    FaSignOutAlt,
+    FaSun,
+    FaTicketAlt,
+    FaUserCog,
+    FaWallet,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import MobileSidebar from './mobile-siderbar';
 
@@ -502,7 +502,7 @@ const Header = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  const handleCurrencyChange = async (newCurrency: 'USD' | 'BDT') => {
+  const handleCurrencyChange = async (newCurrency: 'USD' | 'BDT' | 'USDT') => {
     await setCurrency(newCurrency);
     window.location.reload();
   };

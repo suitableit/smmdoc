@@ -1,10 +1,10 @@
 import authConfig from '@/auth.config';
 import NextAuth from 'next-auth';
 import {
-  apiAuthPrefixes,
-  authRoutes,
-  DEFAULT_SIGN_IN_REDIRECT,
-  publicRoutes,
+    apiAuthPrefixes,
+    authRoutes,
+    DEFAULT_SIGN_IN_REDIRECT,
+    publicRoutes,
 } from './lib/routes';
 export const { auth } = NextAuth(authConfig);
 
@@ -17,28 +17,39 @@ export default auth(async (req) => {
   );
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
-  console.log('path', nextUrl.pathname);
+  
+  console.log('Path:', nextUrl.pathname);
+  console.log('User logged in:', isLoggedIn);
+  console.log('User role:', userRole?.role);
+  
   const callbackUrl =
     nextUrl.searchParams.get('callbackUrl') || DEFAULT_SIGN_IN_REDIRECT;
 
-  // if user is authenticated and trying to access api auth route, redirect to callbackUrl
+  // If accessing API auth routes
   if (isApiAuthRoute) {
     return;
   }
 
-  // if user is authenticated and trying to access auth route, redirect to callbackUrl
+  // If accessing auth routes while logged in
   if (isAuthRoute) {
     if (isLoggedIn) {
+      // Redirect admin to admin dashboard, users to user dashboard
+      if (userRole?.role === 'admin') {
+        console.log('Admin user detected, redirecting to admin dashboard');
+        return Response.redirect(new URL('/admin', nextUrl));
+      }
+      console.log('Regular user detected, redirecting to user dashboard');
       return Response.redirect(new URL(callbackUrl, nextUrl));
     }
     return;
   }
 
-  // user role  can not access admin route
+  // Admin-only routes protection
   if (nextUrl.pathname.startsWith('/admin') && userRole?.role !== 'admin') {
     return Response.redirect(new URL('/dashboard', nextUrl));
   }
-  // admin role can not access user route
+  
+  // User-only routes protection
   if (
     nextUrl.pathname.startsWith('/dashboard') &&
     userRole?.role === 'admin'
@@ -46,15 +57,15 @@ export default auth(async (req) => {
     return Response.redirect(new URL('/admin', nextUrl));
   }
 
-  // unauthenticated users trying to access a protected route
+  // Redirect unauthenticated users to sign-in page
   if (!isLoggedIn && !isPublicRoute) {
-    return Response.redirect(
-      new URL(
-        `/sign-in?callbackUrl=${encodeURIComponent(nextUrl.pathname)}`,
-        nextUrl
-      )
-    );
+    let redirectUrl = `/sign-in`;
+    if (nextUrl.pathname !== '/') {
+      redirectUrl += `?callbackUrl=${encodeURIComponent(nextUrl.pathname)}`;
+    }
+    return Response.redirect(new URL(redirectUrl, nextUrl));
   }
+  
   return;
 });
 

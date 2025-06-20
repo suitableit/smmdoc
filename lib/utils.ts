@@ -76,3 +76,25 @@ function extractFieldName(target: any): string {
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+// Number formatting utilities
+export function formatNumber(num: number | string): string {
+  const number = typeof num === 'string' ? parseFloat(num) : num;
+  if (isNaN(number)) return '0';
+  return new Intl.NumberFormat('en-US').format(number);
+}
+
+export function formatCurrency(amount: number, currency: 'USD' | 'BDT' = 'USD'): string {
+  const symbol = currency === 'USD' ? '$' : '৳';
+  return `${symbol}${formatNumber(amount.toFixed(2))}`;
+}
+
+export function formatPrice(amount: number, decimals: number = 2): string {
+  return formatNumber(parseFloat(amount.toFixed(decimals)));
+}
+
+export function formatID(id: number | string): string {
+  const number = typeof id === 'string' ? parseInt(id) : id;
+  if (isNaN(number)) return String(id);
+  return formatNumber(number);
+}

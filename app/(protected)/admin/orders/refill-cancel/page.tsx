@@ -1,37 +1,67 @@
 'use client';
 
-import BreadCrumb from '@/components/shared/BreadCrumb';
+import { Badge } from '@/components/ui/badge';
+import { BreadCrumb } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  RefreshCw,
-  Search,
-  Filter,
-  CheckCircle,
-  Clock,
-  Settings,
-  BarChart3,
-  Zap,
-  RotateCcw,
-  TrendingUp,
-  DollarSign,
-  XCircle,
-  Ban,
-  Loader2,
-  Eye
+    Ban,
+    BarChart3,
+    CheckCircle,
+    Clock,
+    DollarSign,
+    Eye,
+    Filter,
+    Loader2,
+    RefreshCw,
+    RotateCcw,
+    Search,
+    Settings,
+    TrendingUp,
+    XCircle,
+    Zap
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import {
+    FaCheckCircle,
+    FaTimes
+} from 'react-icons/fa';
 import { toast } from 'sonner';
+
+// Helper function to format price
+const formatPrice = (price: number, decimals: number = 2) => {
+  return price.toFixed(decimals);
+};
+
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
+// Toast Component
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div className={`toast toast-${type} toast-enter`}>
+    {type === 'success' && <FaCheckCircle className="toast-icon" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="toast-close">
+      <FaTimes className="toast-close-icon" />
+    </button>
+  </div>
+);
 
 // Define interfaces for type safety
 interface RefillCancelTask {
@@ -359,7 +389,7 @@ export default function RefillCancelPage() {
                   </div>
                   <p className="text-xs font-medium text-gray-600 leading-tight">Refunds Processed</p>
                   <p className="text-xs text-purple-600 font-medium">
-                    ${loading ? '...' : stats.totalRefundAmount.toFixed(2)} refunded
+                    ${loading ? '...' : formatPrice(stats.totalRefundAmount, 2)} refunded
                   </p>
                 </div>
                 <div className="p-1.5 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg shadow-sm group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-1.5">
@@ -408,7 +438,7 @@ export default function RefillCancelPage() {
                   <h3 className="font-bold text-xs lg:text-sm text-gray-800 mb-0.5 group-hover:text-purple-600 transition-colors duration-300 leading-tight">Process Refunds</h3>
                   <p className="text-xs text-gray-600 group-hover:text-gray-700 transition-colors duration-300 mb-1 leading-tight">Handle refund requests</p>
                   <div className="inline-flex px-1.5 py-0.5 bg-purple-100 rounded-full text-xs font-medium text-purple-700 group-hover:bg-purple-200 transition-colors duration-300">
-                    ${loading ? '...' : stats.totalRefundAmount.toFixed(2)} pending
+                    ${loading ? '...' : formatPrice(stats.totalRefundAmount, 2)} pending
                   </div>
                 </div>
               </CardContent>

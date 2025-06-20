@@ -1,63 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { PriceDisplay } from '@/components/PriceDisplay';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useGetServices } from '@/hooks/service-fetch';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
+import { formatNumber } from '@/lib/utils';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
-  FaSearch,
-  FaFilter,
-  FaHashtag,
-  FaBox,
-  FaCog,
-  FaToggleOn,
-  FaToggleOff,
-  FaUser,
-  FaChartLine,
-  FaEllipsisV,
-  FaEllipsisH,
-  FaEdit,
-  FaPencilAlt,
-  FaClock,
-  FaTrash,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaSpinner,
-  FaExclamationTriangle,
-  FaStar,
-  FaRedo,
-  FaFileExport,
-  FaLayerGroup,
-  FaTimes,
-  FaEye,
-  FaSync,
-  FaExternalLinkAlt,
-  FaPlay,
-  FaExclamationCircle,
-  FaChevronDown,
-  FaChevronRight
+    FaBox,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronRight,
+    FaEdit,
+    FaEllipsisH,
+    FaExclamationTriangle,
+    FaSpinner,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
+    FaToggleOff,
+    FaToggleOn,
+    FaTrash
 } from 'react-icons/fa';
-import Link from 'next/link';
-import { Fragment, useMemo, useState, useEffect } from 'react';
-import { toast } from 'sonner';
 import { mutate } from 'swr';
 import ServiceViewModal from './serviceViewModal';
 
@@ -105,7 +69,7 @@ export default function ServiceTable({ searchTerm: parentSearchTerm, statusFilte
   const groupedServices = useMemo(() => {
     if (!data?.data) return {} as Record<string, any[]>;
 
-    let filtered = data.data.filter((service: any) => {
+    const filtered = data.data.filter((service: any) => {
       const matchesSearch =
         service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.category?.category_name
@@ -447,37 +411,37 @@ export default function ServiceTable({ searchTerm: parentSearchTerm, statusFilte
                           ) : (
                             <FaChevronDown className="h-3 w-3" />
                           )}
-                          
-                          {/* Category Toggle Button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleCategoryAndServices(categoryName, services);
-                            }}
-                            disabled={isUpdating}
-                            className={`p-1 rounded transition-colors ${
-                              activeCategoryToggles[categoryName]
-                                ? 'text-green-600 hover:bg-green-50'
-                                : 'text-red-600 hover:bg-red-50'
-                            } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            title={`${activeCategoryToggles[categoryName] ? 'Deactivate' : 'Activate'} ${categoryName} category`}
-                          >
-                            {isUpdating ? (
-                              <FaSpinner className="h-4 w-4 animate-spin" />
-                            ) : activeCategoryToggles[categoryName] ? (
-                              <FaToggleOn className="h-4 w-4" />
-                            ) : (
-                              <FaToggleOff className="h-4 w-4" />
-                            )}
-                          </button>
-                          
-                          <span className="font-semibold text-lg text-gray-800">
-                            {categoryName}
-                          </span>
-                          <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
-                            {services.length} services
-                          </span>
                         </button>
+
+                        {/* Category Toggle Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCategoryAndServices(categoryName, services);
+                          }}
+                          disabled={isUpdating}
+                          className={`p-1 rounded transition-colors ${
+                            activeCategoryToggles[categoryName]
+                              ? 'text-green-600 hover:bg-green-50'
+                              : 'text-red-600 hover:bg-red-50'
+                          } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title={`${activeCategoryToggles[categoryName] ? 'Deactivate' : 'Activate'} ${categoryName} category`}
+                        >
+                          {isUpdating ? (
+                            <FaSpinner className="h-4 w-4 animate-spin" />
+                          ) : activeCategoryToggles[categoryName] ? (
+                            <FaToggleOn className="h-4 w-4" />
+                          ) : (
+                            <FaToggleOff className="h-4 w-4" />
+                          )}
+                        </button>
+
+                        <span className="font-semibold text-lg text-gray-800">
+                          {categoryName}
+                        </span>
+                        <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                          {services.length} services
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <input
@@ -548,7 +512,7 @@ export default function ServiceTable({ searchTerm: parentSearchTerm, statusFilte
                     <td className="p-3">
                       <div>
                         <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                          {service?.min_order} - {service?.max_order}
+                          {formatNumber(service?.min_order || 0)} - {formatNumber(service?.max_order || 0)}
                         </div>
                         <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                           Min / Max
@@ -667,16 +631,18 @@ export default function ServiceTable({ searchTerm: parentSearchTerm, statusFilte
               {/* Category Header */}
               <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
                 <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => toggleCategory(categoryName)}
-                    className="flex items-center gap-2 hover:bg-gray-100 rounded p-2 transition-colors flex-1"
-                  >
-                    {collapsedCategories.includes(categoryName) ? (
-                      <FaChevronRight className="h-3 w-3" />
-                    ) : (
-                      <FaChevronDown className="h-3 w-3" />
-                    )}
-                    
+                  <div className="flex items-center gap-2 flex-1">
+                    <button
+                      onClick={() => toggleCategory(categoryName)}
+                      className="flex items-center gap-2 hover:bg-gray-100 rounded p-1 transition-colors"
+                    >
+                      {collapsedCategories.includes(categoryName) ? (
+                        <FaChevronRight className="h-3 w-3" />
+                      ) : (
+                        <FaChevronDown className="h-3 w-3" />
+                      )}
+                    </button>
+
                     {/* Category Toggle Button for Mobile */}
                     <button
                       onClick={(e) => {
@@ -688,7 +654,7 @@ export default function ServiceTable({ searchTerm: parentSearchTerm, statusFilte
                         activeCategoryToggles[categoryName]
                           ? 'text-green-600 hover:bg-green-50'
                           : 'text-red-600 hover:bg-red-50'
-                      } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}
                       title={`${activeCategoryToggles[categoryName] ? 'Deactivate' : 'Activate'} ${categoryName} category`}
                     >
                       {isUpdating ? (
@@ -699,14 +665,14 @@ export default function ServiceTable({ searchTerm: parentSearchTerm, statusFilte
                         <FaToggleOff className="h-4 w-4" />
                       )}
                     </button>
-                    
+
                     <span className="font-semibold text-lg text-gray-800">
                       {categoryName}
                     </span>
                     <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full ml-auto">
                       {services.length}
                     </span>
-                  </button>
+                  </div>
                   <input
                     type="checkbox"
                     checked={services.every(service => selectedServices.includes(service.id))}
@@ -841,7 +807,7 @@ export default function ServiceTable({ searchTerm: parentSearchTerm, statusFilte
                             Min / Max Orders
                           </div>
                           <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
-                            {service?.min_order} - {service?.max_order}
+                            {formatNumber(service?.min_order || 0)} - {formatNumber(service?.max_order || 0)}
                           </div>
                         </div>
                         <div className="flex gap-4">

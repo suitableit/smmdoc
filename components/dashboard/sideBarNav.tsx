@@ -2,6 +2,7 @@
 import { adminNavItems } from '@/data/sidebar-nav/admin-nav-items';
 import { userNavItems } from '@/data/sidebar-nav/user-nav-items';
 import { cn } from '@/lib/utils';
+import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
@@ -16,6 +17,7 @@ interface NavItem {
   badge?: string;
   statusColor?: string;
   disabled?: boolean;
+  isLogout?: boolean;
 }
 
 interface AdminSections {
@@ -222,6 +224,15 @@ export default function SideBarNav({
           {sectionItems.map((item, index) => {
             const active = isActive(item.href);
 
+            // Handle logout action
+            const handleClick = () => {
+              if (item.isLogout) {
+                signOut({ callbackUrl: '/' });
+              } else {
+                setOpen(false);
+              }
+            };
+
             return (
               <li key={index} className="nav-item relative group">
                 {/* Blue indicator bar - shows on active or hover */}
@@ -232,31 +243,54 @@ export default function SideBarNav({
                   )}
                 ></div>
 
-                <Link
-                  href={item.disabled ? '/' : item.href}
-                  className={cn(
-                    'flex items-center transition-all duration-200 relative group justify-center py-3 px-0',
-                    active
-                      ? 'bg-slate-700/50 text-white'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50',
-                    item.disabled &&
-                      'opacity-50 pointer-events-none cursor-not-allowed'
-                  )}
-                  onClick={() => setOpen(false)}
-                  title={item.title}
-                >
-                  {/* Icon */}
-                  <span
+                {item.isLogout ? (
+                  <button
+                    onClick={handleClick}
                     className={cn(
-                      'flex items-center justify-center transition-colors duration-200 text-lg',
-                      active
-                        ? 'text-white'
-                        : 'text-slate-400 group-hover:text-white'
+                      'flex items-center transition-all duration-200 relative group justify-center py-3 px-0 w-full',
+                      'text-slate-300 hover:text-white hover:bg-slate-700/50',
+                      item.disabled &&
+                        'opacity-50 pointer-events-none cursor-not-allowed'
                     )}
+                    title={item.title}
                   >
-                    {renderIcon(item.icon)}
-                  </span>
-                </Link>
+                    {/* Icon */}
+                    <span
+                      className={cn(
+                        'flex items-center justify-center transition-colors duration-200 text-lg',
+                        'text-slate-400 group-hover:text-white'
+                      )}
+                    >
+                      {renderIcon(item.icon)}
+                    </span>
+                  </button>
+                ) : (
+                  <Link
+                    href={item.disabled ? '/' : item.href}
+                    className={cn(
+                      'flex items-center transition-all duration-200 relative group justify-center py-3 px-0',
+                      active
+                        ? 'bg-slate-700/50 text-white'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-700/50',
+                      item.disabled &&
+                        'opacity-50 pointer-events-none cursor-not-allowed'
+                    )}
+                    onClick={handleClick}
+                    title={item.title}
+                  >
+                    {/* Icon */}
+                    <span
+                      className={cn(
+                        'flex items-center justify-center transition-colors duration-200 text-lg',
+                        active
+                          ? 'text-white'
+                          : 'text-slate-400 group-hover:text-white'
+                      )}
+                    >
+                      {renderIcon(item.icon)}
+                    </span>
+                  </Link>
+                )}
               </li>
             );
           })}
@@ -274,6 +308,15 @@ export default function SideBarNav({
         <ul className="nav-links space-y-0">
           {sectionItems.map((item, index) => {
             const active = isActive(item.href);
+            
+            // Handle logout action
+            const handleClick = () => {
+              if (item.isLogout) {
+                signOut({ callbackUrl: '/' });
+              } else {
+                setOpen(false);
+              }
+            };
 
             return (
               <li key={index} className="nav-item relative group">
@@ -285,76 +328,109 @@ export default function SideBarNav({
                   )}
                 ></div>
 
-                <Link
-                  href={item.disabled ? '/' : item.href}
-                  className={cn(
-                    'flex items-center px-8 py-3 transition-all duration-200 relative group',
-                    active
-                      ? 'bg-slate-700/50 text-white'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-700/50',
-                    item.disabled &&
-                      'opacity-50 pointer-events-none cursor-not-allowed'
-                  )}
-                  onClick={() => setOpen(false)}
-                  title={collapsed ? item.title : undefined}
-                >
-                  {/* Icon */}
-                  <span
+                {item.isLogout ? (
+                  <button
+                    onClick={handleClick}
                     className={cn(
-                      'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
-                      active
-                        ? 'text-white'
-                        : 'text-slate-400 group-hover:text-white'
+                      'flex items-center px-8 py-3 transition-all duration-200 relative group w-full text-left',
+                      'text-slate-300 hover:text-white hover:bg-slate-700/50',
+                      item.disabled &&
+                        'opacity-50 pointer-events-none cursor-not-allowed'
                     )}
+                    title={collapsed ? item.title : undefined}
                   >
-                    {renderIcon(item.icon)}
-                  </span>
+                    {/* Icon */}
+                    <span
+                      className={cn(
+                        'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
+                        'text-slate-400 group-hover:text-white'
+                      )}
+                    >
+                      {renderIcon(item.icon)}
+                    </span>
 
-                  {/* Title */}
-                  <span
+                    {/* Title */}
+                    <span
+                      className={cn(
+                        'text-sm font-medium transition-all duration-200 opacity-100',
+                        'text-slate-300 group-hover:text-white'
+                      )}
+                    >
+                      {item.title}
+                    </span>
+                  </button>
+                ) : (
+                  <Link
+                    href={item.disabled ? '/' : item.href}
                     className={cn(
-                      'text-sm font-medium transition-all duration-200 opacity-100',
+                      'flex items-center px-8 py-3 transition-all duration-200 relative group',
                       active
-                        ? 'text-white'
-                        : 'text-slate-300 group-hover:text-white'
+                        ? 'bg-slate-700/50 text-white'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-700/50',
+                      item.disabled &&
+                        'opacity-50 pointer-events-none cursor-not-allowed'
                     )}
+                    onClick={handleClick}
+                    title={collapsed ? item.title : undefined}
                   >
-                    {item.title}
-                  </span>
+                    {/* Icon */}
+                    <span
+                      className={cn(
+                        'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
+                        active
+                          ? 'text-white'
+                          : 'text-slate-400 group-hover:text-white'
+                      )}
+                    >
+                      {renderIcon(item.icon)}
+                    </span>
 
-                  {/* Badge */}
-                  {item.badge && (
-                    <div className="badge ml-auto py-1 px-2 text-xs font-medium rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
-                      {item.badge}
-                    </div>
-                  )}
+                    {/* Title */}
+                    <span
+                      className={cn(
+                        'text-sm font-medium transition-all duration-200 opacity-100',
+                        active
+                          ? 'text-white'
+                          : 'text-slate-300 group-hover:text-white'
+                      )}
+                    >
+                      {item.title}
+                    </span>
 
-                  {/* Status Indicator */}
-                  {item.statusColor && (
-                    <div className="ml-auto">
-                      <div
-                        className={cn(
-                          'w-2 h-2 rounded-full',
-                          item.statusColor === 'green' &&
-                            'bg-green-400 shadow-green-400/50',
-                          item.statusColor === 'red' &&
-                            'bg-red-400 shadow-red-400/50',
-                          item.statusColor === 'yellow' &&
-                            'bg-yellow-400 shadow-yellow-400/50'
-                        )}
-                        style={{
-                          boxShadow: `0 0 8px ${
-                            item.statusColor === 'green'
-                              ? 'rgba(34, 197, 94, 0.6)'
-                              : item.statusColor === 'red'
-                              ? 'rgba(239, 68, 68, 0.6)'
-                              : 'rgba(245, 158, 11, 0.6)'
-                          }`,
-                        }}
-                      />
-                    </div>
-                  )}
-                </Link>
+                    {/* Badge */}
+                    {item.badge && (
+                      <div className="badge ml-auto py-1 px-2 text-xs font-medium rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
+                        {item.badge}
+                      </div>
+                    )}
+
+                    {/* Status Indicator */}
+                    {item.statusColor && (
+                      <div className="ml-auto">
+                        <div
+                          className={cn(
+                            'w-2 h-2 rounded-full',
+                            item.statusColor === 'green' &&
+                              'bg-green-400 shadow-green-400/50',
+                            item.statusColor === 'red' &&
+                              'bg-red-400 shadow-red-400/50',
+                            item.statusColor === 'yellow' &&
+                              'bg-yellow-400 shadow-yellow-400/50'
+                          )}
+                          style={{
+                            boxShadow: `0 0 8px ${
+                              item.statusColor === 'green'
+                                ? 'rgba(34, 197, 94, 0.6)'
+                                : item.statusColor === 'red'
+                                ? 'rgba(239, 68, 68, 0.6)'
+                                : 'rgba(245, 158, 11, 0.6)'
+                            }`,
+                          }}
+                        />
+                      </div>
+                    )}
+                  </Link>
+                )}
               </li>
             );
           })}
@@ -405,3 +481,6 @@ export default function SideBarNav({
     </div>
   );
 }
+
+// Add display name
+SideBarNav.displayName = 'SideBarNav';

@@ -6,6 +6,7 @@ import ServiceViewModal from '@/components/admin/services/serviceViewModal';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
+import { formatNumber } from '@/lib/utils';
 import { Fragment, useEffect, useState } from 'react';
 import {
   FaCheckCircle,
@@ -480,12 +481,12 @@ export default function UserServiceTable() {
                               </td>
                               <td className="py-3 px-4">
                                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  {service.min_order?.toLocaleString()}
+                                  {formatNumber(service.min_order || 0)}
                                 </span>
                               </td>
                               <td className="py-3 px-4">
                                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  {service.max_order?.toLocaleString()}
+                                  {formatNumber(service.max_order || 0)}
                                 </span>
                               </td>
                               <td className="py-3 px-4">

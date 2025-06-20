@@ -4,12 +4,8 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   FaUsers,
   FaCheckCircle,
-  FaClock,
-  FaDollarSign,
-  FaDownload,
   FaEllipsisH,
   FaExclamationCircle,
-  FaEye,
   FaSearch,
   FaSync,
   FaTimes,
@@ -18,9 +14,9 @@ import {
   FaBan,
   FaUserCheck,
   FaEdit,
-  FaUserTimes,
   FaCoins,
   FaGift,
+  FaSignInAlt,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -65,7 +61,7 @@ interface User {
   totalOrders: number;
   servicesDiscount: number;
   specialPricing: boolean;
-  status: 'active' | 'inactive' | 'suspended' | 'banned';
+  status: 'active' | 'suspended' | 'banned';
   currency: string;
   createdAt: string;
   updatedAt: string;
@@ -94,6 +90,110 @@ interface PaginationInfo {
   hasPrev: boolean;
 }
 
+interface UserActionsProps {
+  user: User;
+  onView: (userId: string) => void;
+  onEditUser: (userId: string) => void;
+  onEditBalance: (userId: string, currentBalance: number) => void;
+  onEditDiscount: (userId: string, currentDiscount: number) => void;
+  onChangeRole: (userId: string, currentRole: string) => void;
+  onResetSpecialPricing: (userId: string) => Promise<boolean>;
+  onSetNewApiKey: (userId: string) => Promise<boolean>;
+  onUpdateStatus: (userId: string, currentStatus: string) => void;
+  onDelete: (userId: string) => void;
+  isLoading: boolean;
+}
+
+interface UserCardProps {
+  user: User;
+  isSelected: boolean;
+  onSelect: (userId: string) => void;
+  onView: (userId: string) => void;
+  onEditBalance: (userId: string, currentBalance: number) => void;
+  onEditDiscount: (userId: string, currentDiscount: number) => void;
+  onChangeRole: (userId: string, currentRole: string) => void;
+  onResetSpecialPricing: (userId: string) => Promise<boolean>;
+  onSetNewApiKey: (userId: string) => Promise<boolean>;
+  onUpdateStatus: (userId: string, currentStatus: string) => void;
+  onDelete: (userId: string) => void;
+  formatCurrency: (amount: number, currency: string) => string;
+  isLoading: boolean;
+}
+
+interface PaginationProps {
+  pagination: PaginationInfo;
+  onPageChange: (newPage: number) => void;
+  isLoading: boolean;
+}
+
+interface DeleteConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+}
+
+interface EditBalanceModalProps {
+  isOpen: boolean;
+  currentBalance: number;
+  newBalance: string;
+  onBalanceChange: (value: string) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+}
+
+interface UpdateStatusModalProps {
+  isOpen: boolean;
+  currentStatus: string;
+  newStatus: string;
+  onStatusChange: (value: string) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+}
+
+interface EditDiscountModalProps {
+  isOpen: boolean;
+  currentDiscount: number;
+  newDiscount: string;
+  onDiscountChange: (value: string) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+}
+
+interface ChangeRoleModalProps {
+  isOpen: boolean;
+  currentRole: string;
+  newRole: string;
+  onRoleChange: (value: string) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+}
+
+// Edit User Modal interfaces - cloned from Edit Balance pattern
+interface EditUserModalProps {
+  isOpen: boolean;
+  currentUser: User | null;
+  formData: EditUserFormData;
+  onFormDataChange: (field: keyof EditUserFormData, value: string | number | boolean) => void;
+  onClose: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+  onGeneratePassword: () => void;
+}
+
+interface EditUserFormData {
+  username: string;
+  name: string;
+  email: string;
+  balance: string;
+  emailVerified: boolean;
+  password: string;
+}
+
 // Custom hooks for better organization
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -111,7 +211,7 @@ const useDebounce = (value: string, delay: number) => {
   return debouncedValue;
 };
 
-const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: () => void) => {
+const useClickOutside = (ref: React.RefObject<HTMLElement | null>, handler: () => void) => {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
       if (!ref.current || ref.current.contains(event.target as Node)) {
@@ -173,7 +273,7 @@ const UsersListPage = () => {
   const [usersLoading, setUsersLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // New state for action modals
+  // Modal states
   const [editBalanceDialog, setEditBalanceDialog] = useState<{
     open: boolean;
     userId: string;
@@ -204,6 +304,36 @@ const UsersListPage = () => {
     currentDiscount: 0,
   });
   const [newDiscount, setNewDiscount] = useState('');
+  const [changeRoleDialog, setChangeRoleDialog] = useState<{
+    open: boolean;
+    userId: string;
+    currentRole: string;
+  }>({
+    open: false,
+    userId: '',
+    currentRole: '',
+  });
+  const [newRole, setNewRole] = useState('');
+
+  // Edit User Modal state - cloned from Edit Balance pattern
+  const [editUserDialog, setEditUserDialog] = useState<{
+    open: boolean;
+    userId: string;
+    currentUser: User | null;
+  }>({
+    open: false,
+    userId: '',
+    currentUser: null,
+  });
+
+  const [editUserFormData, setEditUserFormData] = useState<EditUserFormData>({
+    username: '',
+    name: '',
+    email: '',
+    balance: '',
+    emailVerified: false,
+    password: '',
+  });
 
   // Use debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -212,7 +342,6 @@ const UsersListPage = () => {
   const filterOptions = useMemo(() => [
     { key: 'all', label: 'All', count: stats.totalUsers },
     { key: 'active', label: 'Active', count: stats.activeUsers },
-    { key: 'inactive', label: 'Inactive', count: stats.statusBreakdown?.inactive || 0 },
     { key: 'suspended', label: 'Suspended', count: stats.suspendedUsers },
     { key: 'banned', label: 'Banned', count: stats.bannedUsers },
   ], [stats]);
@@ -224,6 +353,7 @@ const UsersListPage = () => {
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
+        role: 'user', // Only fetch users with 'user' role
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
       });
@@ -234,7 +364,9 @@ const UsersListPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        setUsers(result.data || []);
+        // Client-side filter as backup to ensure no admins slip through
+        const filteredUsers = (result.data || []).filter((user: User) => user.role === 'user');
+        setUsers(filteredUsers);
         setPagination(prev => ({
           ...prev,
           ...result.pagination,
@@ -254,6 +386,7 @@ const UsersListPage = () => {
   const fetchStats = useCallback(async () => {
     try {
       setStatsLoading(true);
+      // Remove role parameter as the API endpoint doesn't support it
       const response = await fetch('/api/admin/users/stats?period=all');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       
@@ -312,11 +445,10 @@ const UsersListPage = () => {
   const getStatusIcon = (status: string) => {
     const icons = {
       active: <FaCheckCircle className="h-3 w-3 text-green-500" />,
-      inactive: <FaClock className="h-3 w-3 text-gray-500" />,
       suspended: <FaExclamationCircle className="h-3 w-3 text-yellow-500" />,
       banned: <FaBan className="h-3 w-3 text-red-500" />,
     };
-    return icons[status as keyof typeof icons] || icons.inactive;
+    return icons[status as keyof typeof icons] || icons.active;
   };
 
   const formatCurrency = useCallback((amount: number, currency: string) => {
@@ -349,11 +481,6 @@ const UsersListPage = () => {
     await Promise.all([fetchUsers(), fetchStats()]);
     showToast('Data refreshed successfully!', 'success');
   }, [fetchUsers, fetchStats, showToast]);
-
-  const handleExport = useCallback(() => {
-    showToast('Export started! Download will begin shortly.', 'info');
-    // Implement actual export logic here
-  }, [showToast]);
 
   // Generic API action handler
   const handleApiAction = useCallback(async (
@@ -446,6 +573,21 @@ const UsersListPage = () => {
     }
   }, [handleApiAction]);
 
+  // Handle change role
+  const handleChangeRole = useCallback(async (userId: string, role: string) => {
+    const success = await handleApiAction(
+      `/api/admin/users/${userId}/role`,
+      'PATCH',
+      { role },
+      `User role updated to ${role}`
+    );
+    
+    if (success) {
+      setChangeRoleDialog({ open: false, userId: '', currentRole: '' });
+      setNewRole('');
+    }
+  }, [handleApiAction]);
+
   // Handle reset special pricing
   const handleResetSpecialPricing = useCallback(async (userId: string) => {
     return handleApiAction(
@@ -466,10 +608,75 @@ const UsersListPage = () => {
     );
   }, [handleApiAction]);
 
-  // Handle edit user (redirect to edit page)
-  const handleEditUser = useCallback((userId: string) => {
-    window.open(`/admin/users/${userId}/edit`, '_blank');
+  // Edit User functions - cloned from Edit Balance pattern
+  const openEditUserDialog = useCallback((userId: string, currentUser: User) => {
+    setEditUserDialog({ open: true, userId, currentUser });
+    setEditUserFormData({
+      username: currentUser.username || '',
+      name: currentUser.name || '',
+      email: currentUser.email || '',
+      balance: (currentUser.balance || 0).toString(),
+      emailVerified: currentUser.emailVerified || false,
+      password: '',
+    });
   }, []);
+
+  const handleEditUserFormDataChange = useCallback((field: keyof EditUserFormData, value: string | number | boolean) => {
+    setEditUserFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, []);
+
+  const handleGeneratePassword = useCallback(() => {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    setEditUserFormData(prev => ({
+      ...prev,
+      password: password
+    }));
+  }, []);
+
+  const handleEditUserSubmit = useCallback(async () => {
+    const userData = {
+      username: editUserFormData.username,
+      name: editUserFormData.name,
+      email: editUserFormData.email,
+      balance: parseFloat(editUserFormData.balance) || 0,
+      emailVerified: editUserFormData.emailVerified,
+      ...(editUserFormData.password && { password: editUserFormData.password }),
+    };
+
+    const success = await handleApiAction(
+      `/api/admin/users/${editUserDialog.userId}`,
+      'PATCH',
+      userData,
+      'User updated successfully'
+    );
+    
+    if (success) {
+      setEditUserDialog({ open: false, userId: '', currentUser: null });
+      setEditUserFormData({
+        username: '',
+        name: '',
+        email: '',
+        balance: '',
+        emailVerified: false,
+        password: '',
+      });
+    }
+  }, [editUserDialog.userId, editUserFormData, handleApiAction]);
+
+  const handleEditUser = useCallback((userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      openEditUserDialog(userId, user);
+    }
+  }, [users, openEditUserDialog]);
 
   // Modal handlers
   const openEditBalanceDialog = useCallback((userId: string, currentBalance: number) => {
@@ -485,6 +692,11 @@ const UsersListPage = () => {
   const openEditDiscountDialog = useCallback((userId: string, currentDiscount: number) => {
     setEditDiscountDialog({ open: true, userId, currentDiscount });
     setNewDiscount(currentDiscount.toString());
+  }, []);
+
+  const openChangeRoleDialog = useCallback((userId: string, currentRole: string) => {
+    setChangeRoleDialog({ open: true, userId, currentRole });
+    setNewRole(currentRole);
   }, []);
 
   // Pagination handlers
@@ -506,27 +718,6 @@ const UsersListPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header mb-6">
-          <div className="flex gap-2">
-            <button
-              onClick={handleRefresh}
-              disabled={usersLoading || statsLoading}
-              className="btn btn-secondary flex items-center gap-2 disabled:opacity-50"
-            >
-              <FaSync className={usersLoading || statsLoading ? 'animate-spin' : ''} />
-              Refresh
-            </button>
-            <button
-              onClick={handleExport}
-              className="btn btn-primary flex items-center gap-2"
-            >
-              <FaDownload />
-              Export
-            </button>
-          </div>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div className="card card-padding">
@@ -614,121 +805,54 @@ const UsersListPage = () => {
           </div>
         </div>
 
-        {/* Filter Buttons and Search Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          {/* Left: Filter Buttons */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'all'
-                  ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              All
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'all'
-                    ? 'bg-white/20'
-                    : 'bg-purple-100 text-purple-700'
-                }`}
+        {/* Controls Section - After stats cards */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            {/* Left: Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Page View Dropdown */}
+              <select 
+                value={pagination.limit}
+                onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
-                {stats.totalUsers.toLocaleString()}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('active')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'active'
-                  ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Active
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'active'
-                    ? 'bg-white/20'
-                    : 'bg-green-100 text-green-700'
-                }`}
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={pagination.total || 1000}>All</option>
+              </select>
+              
+              <button
+                onClick={handleRefresh}
+                disabled={usersLoading || statsLoading}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
-                {stats.activeUsers.toLocaleString()}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('inactive')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'inactive'
-                  ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Inactive
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'inactive'
-                    ? 'bg-white/20'
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                {(stats.statusBreakdown?.inactive || 0).toLocaleString()}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('suspended')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'suspended'
-                  ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Suspended
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'suspended'
-                    ? 'bg-white/20'
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}
-              >
-                {stats.suspendedUsers.toLocaleString()}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('banned')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'banned'
-                  ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Banned
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'banned'
-                    ? 'bg-white/20'
-                    : 'bg-red-100 text-red-700'
-                }`}
-              >
-                {stats.bannedUsers.toLocaleString()}
-              </span>
-            </button>
-          </div>
-
-          {/* Right: Search Bar */}
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="relative flex-1 md:min-w-[300px]">
-              <FaSearch
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                style={{ color: 'var(--text-muted)' }}
-              />
-              <input
-                type="text"
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-              />
+                <FaSync className={usersLoading || statsLoading ? 'animate-spin' : ''} />
+                Refresh
+              </button>
+            </div>
+            
+            {/* Right: Search Controls Only */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <FaSearch
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <input
+                  type="text"
+                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} users...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                />
+              </div>
+              
+              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+                <option value="username">Username</option>
+                <option value="id">User ID</option>
+                <option value="email">User Email</option>
+              </select>
             </div>
           </div>
         </div>
@@ -736,32 +860,87 @@ const UsersListPage = () => {
         {/* Users Table */}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            <div className="flex items-center gap-2 flex-1">
-              <div className="card-icon">
-                <FaUsers />
-              </div>
-              <h3 className="card-title">Users List ({pagination.total.toLocaleString()})</h3>
-              <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
-                Manage Users
-              </span>
-            </div>
-            {selectedUsers.length > 0 && (
-              <div className="flex items-center gap-2 mt-4">
-                <span
-                  className="text-sm"
-                  style={{ color: 'var(--text-muted)' }}
+            {/* Filter Buttons - Inside table header */}
+            <div className="mb-4">
+              <div className="block space-y-2">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'all'
+                      ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
                 >
-                  {selectedUsers.length} selected
-                </span>
-                <button 
-                  className="btn btn-primary flex items-center gap-2"
-                  disabled={actionLoading !== null}
+                  All
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'all'
+                        ? 'bg-white/20'
+                        : 'bg-purple-100 text-purple-700'
+                    }`}
+                  >
+                    {stats.totalUsers.toLocaleString()}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('active')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'active'
+                      ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
                 >
-                  <FaTrash />
-                  Delete Selected
+                  Active
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'active'
+                        ? 'bg-white/20'
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                  >
+                    {stats.activeUsers.toLocaleString()}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('suspended')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'suspended'
+                      ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Suspended
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'suspended'
+                        ? 'bg-white/20'
+                        : 'bg-yellow-100 text-yellow-700'
+                    }`}
+                  >
+                    {stats.suspendedUsers.toLocaleString()}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('banned')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'banned'
+                      ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Banned
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'banned'
+                        ? 'bg-white/20'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    {stats.bannedUsers.toLocaleString()}
+                  </span>
                 </button>
               </div>
-            )}
+            </div>
           </div>
 
           <div style={{ padding: '0 24px' }}>
@@ -785,8 +964,12 @@ const UsersListPage = () => {
                   No users found
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {debouncedSearchTerm || statusFilter !== 'all' 
-                    ? 'No users match your current filters.' 
+                  {debouncedSearchTerm && statusFilter !== 'all' 
+                    ? `No ${statusFilter} users match your search "${debouncedSearchTerm}".`
+                    : debouncedSearchTerm 
+                    ? `No users match your search "${debouncedSearchTerm}".`
+                    : statusFilter !== 'all' 
+                    ? `No ${statusFilter} users found.`
                     : 'No users exist yet.'}
                 </p>
               </div>
@@ -797,17 +980,10 @@ const UsersListPage = () => {
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
-                          <input
-                            type="checkbox"
-                            checked={selectedUsers.length === users.length && users.length > 0}
-                            onChange={handleSelectAll}
-                            className="rounded border-gray-300 w-4 h-4"
-                          />
-                        </th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Username</th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Email</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Balance</th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Spent</th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Orders</th>
@@ -821,14 +997,6 @@ const UsersListPage = () => {
                       {users.map((user) => (
                         <tr key={user.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
                           <td className="p-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedUsers.includes(user.id)}
-                              onChange={() => handleSelectUser(user.id)}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
-                          </td>
-                          <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{user.id?.slice(-8) || 'null'}
                             </div>
@@ -837,13 +1005,6 @@ const UsersListPage = () => {
                             <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
                               {user.username || 'null'}
                             </div>
-                            {user.role !== 'user' && (
-                              <div className={`text-xs px-2 py-1 rounded-full mt-1 w-fit ${
-                                user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                              }`}>
-                                {user.role}
-                              </div>
-                            )}
                           </td>
                           <td className="p-3">
                             <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
@@ -864,14 +1025,25 @@ const UsersListPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="text-right">
+                            <div className="flex items-center justify-start">
+                              <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
+                                user.status === 'active' ? 'bg-green-100 text-green-700' :
+                                user.status === 'suspended' ? 'bg-yellow-100 text-yellow-700' :
+                                user.status === 'banned' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                              }`}>
+                                {user.status || 'active'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-left">
                               <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
                                 {formatCurrency(user.balance || 0, user.currency || 'USD')}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="text-right">
+                            <div className="text-left">
                               <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
                                 {formatCurrency(user.spent || 0, user.currency || 'USD')}
                               </div>
@@ -896,19 +1068,19 @@ const UsersListPage = () => {
                               {user.specialPricing ? (
                                 <div className="flex items-center justify-center">
                                   <FaGift className="h-4 w-4 text-purple-500" />
-                                  <span className="text-xs text-purple-600 ml-1">Yes</span>
+                                  <span className="text-sm ml-1" style={{ color: 'var(--text-primary)' }}>Yes</span>
                                 </div>
                               ) : (
-                                <span className="text-xs text-gray-500">No</span>
+                                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>No</span>
                               )}
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
                                 {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'null'}
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
                                 {user.createdAt ? new Date(user.createdAt).toLocaleTimeString() : 'null'}
                               </div>
                             </div>
@@ -920,6 +1092,7 @@ const UsersListPage = () => {
                               onEditUser={handleEditUser}
                               onEditBalance={openEditBalanceDialog}
                               onEditDiscount={openEditDiscountDialog}
+                              onChangeRole={openChangeRoleDialog}
                               onResetSpecialPricing={handleResetSpecialPricing}
                               onSetNewApiKey={handleSetNewApiKey}
                               onUpdateStatus={openUpdateStatusDialog}
@@ -948,6 +1121,9 @@ const UsersListPage = () => {
                         onView={handleViewUser}
                         onEditBalance={openEditBalanceDialog}
                         onEditDiscount={openEditDiscountDialog}
+                        onChangeRole={openChangeRoleDialog}
+                        onResetSpecialPricing={handleResetSpecialPricing}
+                        onSetNewApiKey={handleSetNewApiKey}
                         onUpdateStatus={openUpdateStatusDialog}
                         onDelete={(userId) => {
                           setUserToDelete(userId);
@@ -1027,13 +1203,67 @@ const UsersListPage = () => {
           onConfirm={() => handleEditDiscount(editDiscountDialog.userId, parseInt(newDiscount) || 0)}
           isLoading={actionLoading === `/api/admin/users/${editDiscountDialog.userId}/discount`}
         />
+
+        <ChangeRoleModal
+          isOpen={changeRoleDialog.open}
+          currentRole={changeRoleDialog.currentRole}
+          newRole={newRole}
+          onRoleChange={setNewRole}
+          onClose={() => {
+            setChangeRoleDialog({ open: false, userId: '', currentRole: '' });
+            setNewRole('');
+          }}
+          onConfirm={() => {
+            handleChangeRole(changeRoleDialog.userId, newRole).then((success) => {
+              if (success) {
+                setChangeRoleDialog({ open: false, userId: '', currentRole: '' });
+                setNewRole('');
+              }
+            });
+          }}
+          isLoading={actionLoading === `/api/admin/users/${changeRoleDialog.userId}/role`}
+        />
+
+        {/* Edit User Modal - cloned from Edit Balance pattern */}
+        <EditUserModal
+          isOpen={editUserDialog.open}
+          currentUser={editUserDialog.currentUser}
+          formData={editUserFormData}
+          onFormDataChange={handleEditUserFormDataChange}
+          onClose={() => {
+            setEditUserDialog({ open: false, userId: '', currentUser: null });
+            setEditUserFormData({
+              username: '',
+              name: '',
+              email: '',
+              balance: '',
+              emailVerified: false,
+              password: '',
+            });
+          }}
+          onConfirm={handleEditUserSubmit}
+          onGeneratePassword={handleGeneratePassword}
+          isLoading={actionLoading === `/api/admin/users/${editUserDialog.userId}`}
+        />
       </div>
     </div>
   );
 };
 
 // Extracted Components for better organization
-const UserActions = ({ user, onView, onEditUser, onEditBalance, onEditDiscount, onResetSpecialPricing, onSetNewApiKey, onUpdateStatus, onDelete, isLoading }) => {
+const UserActions: React.FC<UserActionsProps> = ({ 
+  user, 
+  onView, 
+  onEditUser, 
+  onEditBalance, 
+  onEditDiscount, 
+  onChangeRole, 
+  onResetSpecialPricing, 
+  onSetNewApiKey, 
+  onUpdateStatus, 
+  onDelete, 
+  isLoading 
+}) => {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -1044,10 +1274,10 @@ const UserActions = ({ user, onView, onEditUser, onEditBalance, onEditDiscount, 
       <button
         onClick={() => onView(user.id)}
         className="btn btn-secondary p-2"
-        title="View User Details"
+        title="Switch to this User"
         disabled={isLoading}
       >
-        <FaEye className="h-3 w-3" />
+        <FaSignInAlt className="h-3 w-3" />
       </button>
 
       <div className="relative" ref={dropdownRef}>
@@ -1092,6 +1322,16 @@ const UserActions = ({ user, onView, onEditUser, onEditBalance, onEditDiscount, 
               >
                 <FaGift className="h-3 w-3" />
                 Edit Discount
+              </button>
+              <button
+                onClick={() => {
+                  onChangeRole(user.id, user.role || 'user');
+                  setIsOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+              >
+                <FaUserCheck className="h-3 w-3" />
+                Change Role
               </button>
               <button
                 onClick={() => {
@@ -1142,16 +1382,10 @@ const UserActions = ({ user, onView, onEditUser, onEditBalance, onEditDiscount, 
   );
 };
 
-const UserCard = ({ user, isSelected, onSelect, onView, onEditUser, onEditBalance, onEditDiscount, onResetSpecialPricing, onSetNewApiKey, onUpdateStatus, onDelete, formatCurrency, isLoading }) => (
+const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onSelect, onView, onEditBalance, onEditDiscount, onChangeRole, onResetSpecialPricing, onSetNewApiKey, onUpdateStatus, onDelete, formatCurrency, isLoading }) => (
   <div className="card card-padding border-l-4 border-blue-500 mb-4">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onSelect(user.id)}
-          className="rounded border-gray-300 w-4 h-4"
-        />
         <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
           #{user.id?.slice(-8) || 'null'}
         </div>
@@ -1159,9 +1393,15 @@ const UserCard = ({ user, isSelected, onSelect, onView, onEditUser, onEditBalanc
       <UserActions
         user={user}
         onView={onView}
-        onEditUser={onEditUser}
+        onEditUser={(userId: string) => {
+          const foundUser = [user].find(u => u.id === userId);
+          if (foundUser) {
+            onView(userId);
+          }
+        }}
         onEditBalance={onEditBalance}
         onEditDiscount={onEditDiscount}
+        onChangeRole={onChangeRole}
         onResetSpecialPricing={onResetSpecialPricing}
         onSetNewApiKey={onSetNewApiKey}
         onUpdateStatus={onUpdateStatus}
@@ -1175,23 +1415,16 @@ const UserCard = ({ user, isSelected, onSelect, onView, onEditUser, onEditBalanc
         <div>
           <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Username</div>
           <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>{user.username || 'null'}</div>
-          {user.role !== 'user' && (
-            <div className={`text-xs px-2 py-1 rounded-full mt-1 w-fit ${
-              user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-            }`}>
-              {user.role}
-            </div>
-          )}
         </div>
         <div className="text-right">
           <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Special Pricing</div>
           {user.specialPricing ? (
             <div className="flex items-center justify-end">
               <FaGift className="h-4 w-4 text-purple-500" />
-              <span className="text-xs text-purple-600 ml-1">Yes</span>
+              <span className="text-sm ml-1" style={{ color: 'var(--text-primary)' }}>Yes</span>
             </div>
           ) : (
-            <span className="text-xs text-gray-500">No</span>
+            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>No</span>
           )}
         </div>
       </div>
@@ -1245,14 +1478,14 @@ const UserCard = ({ user, isSelected, onSelect, onView, onEditUser, onEditBalanc
       </div>
 
       <div>
-        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+        <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
           Registered: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'null'}
         </div>
-        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+        <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
           Time: {user.createdAt ? new Date(user.createdAt).toLocaleTimeString() : 'null'}
         </div>
         {user.lastLoginAt && (
-          <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+          <div className="text-sm mt-1" style={{ color: 'var(--text-primary)' }}>
             Last login: {new Date(user.lastLoginAt).toLocaleDateString()}
           </div>
         )}
@@ -1261,8 +1494,8 @@ const UserCard = ({ user, isSelected, onSelect, onView, onEditUser, onEditBalanc
   </div>
 );
 
-const Pagination = ({ pagination, onPageChange, isLoading }) => (
-  <div className="flex items-center justify-between pt-4 border-t" style={{ padding: '16px 24px 24px 24px' }}>
+const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoading }) => (
+  <div className="flex items-center justify-between pt-4 pb-6 border-t">
     <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
       {isLoading ? (
         <div className="flex items-center gap-2">
@@ -1303,7 +1536,7 @@ const Pagination = ({ pagination, onPageChange, isLoading }) => (
 );
 
 // Modal Components
-const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
+const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpen, onClose, onConfirm, isLoading }) => {
   if (!isOpen) return null;
 
   return (
@@ -1317,8 +1550,19 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
           <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
             Cancel
           </button>
-          <button onClick={onConfirm} className="btn btn-danger" disabled={isLoading}>
-            {isLoading ? 'Deleting...' : 'Delete'}
+          <button 
+            onClick={onConfirm} 
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-lg hover:bg-red-700 hover:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Deleting...
+              </div>
+            ) : (
+              'Delete'
+            )}
           </button>
         </div>
       </div>
@@ -1326,7 +1570,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
   );
 };
 
-const EditBalanceModal = ({ isOpen, currentBalance, newBalance, onBalanceChange, onClose, onConfirm, isLoading }) => {
+const EditBalanceModal: React.FC<EditBalanceModalProps> = ({ isOpen, currentBalance, newBalance, onBalanceChange, onClose, onConfirm, isLoading }) => {
   if (!isOpen) return null;
 
   return (
@@ -1334,13 +1578,13 @@ const EditBalanceModal = ({ isOpen, currentBalance, newBalance, onBalanceChange,
       <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
         <h3 className="text-lg font-semibold mb-4">Edit User Balance</h3>
         <div className="mb-4">
-          <label className="form-label mb-2">New Balance Amount</label>
+          <label className="form-label mb-2">New Balance Amount (in USD)</label>
           <input
             type="number"
             step="0.01"
             value={newBalance}
             onChange={(e) => onBalanceChange(e.target.value)}
-            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             placeholder="Enter new balance amount"
             disabled={isLoading}
           />
@@ -1358,7 +1602,7 @@ const EditBalanceModal = ({ isOpen, currentBalance, newBalance, onBalanceChange,
   );
 };
 
-const UpdateStatusModal = ({ isOpen, currentStatus, newStatus, onStatusChange, onClose, onConfirm, isLoading }) => {
+const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({ isOpen, currentStatus, newStatus, onStatusChange, onClose, onConfirm, isLoading }) => {
   if (!isOpen) return null;
 
   return (
@@ -1374,7 +1618,6 @@ const UpdateStatusModal = ({ isOpen, currentStatus, newStatus, onStatusChange, o
             disabled={isLoading}
           >
             <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
             <option value="suspended">Suspended</option>
             <option value="banned">Banned</option>
           </select>
@@ -1392,7 +1635,7 @@ const UpdateStatusModal = ({ isOpen, currentStatus, newStatus, onStatusChange, o
   );
 };
 
-const EditDiscountModal = ({ isOpen, currentDiscount, newDiscount, onDiscountChange, onClose, onConfirm, isLoading }) => {
+const EditDiscountModal: React.FC<EditDiscountModalProps> = ({ isOpen, currentDiscount, newDiscount, onDiscountChange, onClose, onConfirm, isLoading }) => {
   if (!isOpen) return null;
 
   return (
@@ -1408,7 +1651,7 @@ const EditDiscountModal = ({ isOpen, currentDiscount, newDiscount, onDiscountCha
             step="1"
             value={newDiscount}
             onChange={(e) => onDiscountChange(e.target.value)}
-            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             placeholder="Enter discount percentage (0-100)"
             disabled={isLoading}
           />
@@ -1421,6 +1664,191 @@ const EditDiscountModal = ({ isOpen, currentDiscount, newDiscount, onDiscountCha
             Cancel
           </button>
           <button onClick={onConfirm} className="btn btn-primary" disabled={isLoading}>
+            {isLoading ? 'Updating...' : 'Update'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, newRole, onRoleChange, onClose, onConfirm, isLoading }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4">Change User Role</h3>
+        <div className="mb-4">
+          <label className="form-label mb-2">Select New Role</label>
+          <select
+            value={newRole}
+            onChange={(e) => onRoleChange(e.target.value)}
+            className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+            disabled={isLoading}
+          >
+            <option value="user">User</option>
+            <option value="moderator">Moderator</option>
+            <option value="admin">Admin</option>
+          </select>
+          <div className="text-xs text-gray-500 mt-1">
+            Current role: <span className="font-medium capitalize">{currentRole}</span>
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end">
+          <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
+            Cancel
+          </button>
+          <button onClick={onConfirm} className="btn btn-primary" disabled={isLoading}>
+            {isLoading ? 'Updating...' : 'Update Role'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Edit User Modal Component - cloned from Edit Balance pattern
+const EditUserModal: React.FC<EditUserModalProps> = ({ 
+  isOpen, 
+  currentUser,
+  formData,
+  onFormDataChange,
+  onClose, 
+  onConfirm, 
+  isLoading,
+  onGeneratePassword
+}) => {
+  if (!isOpen || !currentUser) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold mb-4">Edit User</h3>
+        
+        <div className="space-y-4">
+          {/* Username */}
+          <div className="mb-4">
+            <label className="form-label mb-2">Username</label>
+            <input
+              type="text"
+              value={formData.username}
+              onChange={(e) => onFormDataChange('username', e.target.value)}
+              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              placeholder="Enter username"
+              disabled={isLoading}
+            />
+          </div>
+
+          {/* Full Name */}
+          <div className="mb-4">
+            <label className="form-label mb-2">Full Name</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => onFormDataChange('name', e.target.value)}
+              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              placeholder="Enter full name"
+              disabled={isLoading}
+            />
+          </div>
+
+          {/* User Email */}
+          <div className="mb-4">
+            <label className="form-label mb-2">User Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => onFormDataChange('email', e.target.value)}
+              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              placeholder="Enter email address"
+              disabled={isLoading}
+            />
+          </div>
+
+          {/* Balance */}
+          <div className="mb-4">
+            <label className="form-label mb-2">Balance Amount (in USD)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.balance}
+              onChange={(e) => onFormDataChange('balance', e.target.value)}
+              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              placeholder="Enter balance amount"
+              disabled={isLoading}
+            />
+          </div>
+
+          {/* Email Confirmation */}
+          <div className="mb-4">
+            <label className={`flex items-center gap-3 ${currentUser.emailVerified ? 'cursor-default' : 'cursor-pointer'}`}>
+              <input
+                type="checkbox"
+                checked={formData.emailVerified}
+                onChange={(e) => onFormDataChange('emailVerified', e.target.checked)}
+                className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
+                  currentUser.emailVerified ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
+                disabled={isLoading || currentUser.emailVerified}
+                readOnly={currentUser.emailVerified}
+              />
+              <span className="form-label">
+                Email Confirmed
+                {currentUser.emailVerified && (
+                  <span className="ml-2 text-xs text-green-600 font-medium">(Already Verified)</span>
+                )}
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 mt-1 ml-7">
+              {currentUser.emailVerified 
+                ? 'This user has already verified their email address' 
+                : 'Check this if the user\'s email is verified'
+              }
+            </p>
+          </div>
+
+          {/* Password */}
+          <div className="mb-4">
+            <label className="form-label mb-2">Password</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.password}
+                onChange={(e) => onFormDataChange('password', e.target.value)}
+                className="form-field w-full px-4 py-3 pr-12 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                placeholder="Leave blank to keep current password"
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={onGeneratePassword}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-blue-600 transition-colors duration-200"
+                title="Generate random password"
+                disabled={isLoading}
+              >
+                <FaSync className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1 mb-4">
+              Leave blank to keep current password, or click the refresh icon to generate a new one
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-2 justify-end">
+          <button 
+            onClick={onClose} 
+            className="btn btn-secondary" 
+            disabled={isLoading}
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={onConfirm} 
+            className="btn btn-primary" 
+            disabled={isLoading}
+          >
             {isLoading ? 'Updating...' : 'Update'}
           </button>
         </div>

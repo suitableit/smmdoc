@@ -129,9 +129,20 @@ export async function POST(request: Request) {
       const calculatedUsdPrice = usdPrice || (service!.rate * qty) / 1000;
       const calculatedBdtPrice =
         bdtPrice || calculatedUsdPrice * (user.dollarRate || 121.52);
-      const finalPrice =
-        price ||
-        (user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice);
+
+      // IMPORTANT: Always use user's current currency for final price
+      let finalPrice;
+      if (user.currency === 'USD') {
+        finalPrice = calculatedUsdPrice;
+      } else if (user.currency === 'BDT') {
+        finalPrice = calculatedBdtPrice;
+      } else if (user.currency === 'USDT') {
+        // For USDT, use USD price (1:1 ratio)
+        finalPrice = calculatedUsdPrice;
+      } else {
+        // Default fallback
+        finalPrice = price || calculatedUsdPrice;
+      }
 
       totalCost += finalPrice;
 
@@ -152,14 +163,35 @@ export async function POST(request: Request) {
       });
     }
 
+    // Debug logging
+    console.log('Order creation debug:', {
+      userCurrency: user.currency,
+      userBalance: user.balance,
+      totalCost,
+      processedOrders: processedOrders.map(o => ({
+        currency: o.currency,
+        price: o.price,
+        usdPrice: o.usdPrice,
+        bdtPrice: o.bdtPrice
+      })),
+      originalOrders: orders.map(o => ({ currency: o.currency, price: o.price }))
+    });
+
+    // Convert balance to user's currency for comparison
+    let availableBalance = user.balance;
+    if (user.currency === 'USD' || user.currency === 'USDT') {
+      // Convert BDT balance to USD for comparison
+      availableBalance = user.balance / (user.dollarRate || 121.52);
+    }
+
     // Check if user has enough balance for all orders
-    if (user.balance < totalCost) {
+    if (availableBalance < totalCost) {
       return NextResponse.json(
         {
           success: false,
           message: `Insufficient balance. Required: ${totalCost.toFixed(
             2
-          )}, Available: ${user.balance.toFixed(2)}`,
+          )} ${user.currency}, Available: ${availableBalance.toFixed(2)} ${user.currency}`,
           data: null,
         },
         { status: 400 }
@@ -192,15 +224,34 @@ export async function POST(request: Request) {
         createdOrders.push(order);
       }
 
+      // Calculate the amount to deduct from balance (always in BDT)
+      let balanceDeductionAmount = totalCost;
+      const currentRate = user.dollarRate && user.dollarRate > 1 ? user.dollarRate : 121.52;
+      if (user.currency === 'USD' || user.currency === 'USDT') {
+        // Convert USD cost to BDT for balance deduction
+        balanceDeductionAmount = totalCost * currentRate;
+      }
+
       // Deduct total cost from user balance and update total spent
+      console.log('About to deduct balance:', {
+        userId: session.user.id,
+        userCurrency: user.currency,
+        currentBalance: user.balance,
+        totalCostInUserCurrency: totalCost,
+        balanceDeductionAmountInBDT: balanceDeductionAmount,
+        userDollarRate: user.dollarRate,
+        usedRate: currentRate,
+        willDeduct: true
+      });
+
       await prisma.user.update({
         where: { id: session.user.id },
         data: {
           balance: {
-            decrement: totalCost,
+            decrement: balanceDeductionAmount,
           },
           total_spent: {
-            increment: totalCost,
+            increment: balanceDeductionAmount,
           },
         },
       });

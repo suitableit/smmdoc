@@ -320,9 +320,10 @@ export const adminNavItems = [
   },
   {
     title: 'Logout',
-    href: '/auth/logout',
+    href: '#',
     icon: 'FaSignOutAlt',
     label: 'Logout',
     roles: ['admin'],
+    isLogout: true,
   },
 ];

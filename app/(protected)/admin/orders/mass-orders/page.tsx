@@ -33,6 +33,7 @@ import {
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { formatNumber, formatID, formatPrice } from '@/lib/utils';
 
 interface MassOrder {
   id: string;
@@ -229,7 +230,7 @@ export default function AdminMassOrdersPage() {
                     Total Mass Orderss
                   </p>
                   <p className="text-3xl font-bold text-blue-900">
-                    {stats.totalMassOrders}
+                    {formatNumber(stats.totalMassOrders)}
                   </p>
                 </div>
                 <Package className="h-8 w-8 text-blue-500" />
@@ -251,7 +252,7 @@ export default function AdminMassOrdersPage() {
                     Total Orders
                   </p>
                   <p className="text-3xl font-bold text-green-900">
-                    {stats.totalOrdersInMass}
+                    {formatNumber(stats.totalOrdersInMass)}
                   </p>
                 </div>
                 <Users className="h-8 w-8 text-green-500" />
@@ -273,7 +274,7 @@ export default function AdminMassOrdersPage() {
                     Total Revenue
                   </p>
                   <p className="text-3xl font-bold text-purple-900">
-                    ${stats.totalRevenue.toFixed(2)}
+                    ${formatPrice(stats.totalRevenue, 2)}
                   </p>
                 </div>
                 <Calendar className="h-8 w-8 text-purple-500" />
@@ -295,7 +296,7 @@ export default function AdminMassOrdersPage() {
                     Pending
                   </p>
                   <p className="text-3xl font-bold text-orange-900">
-                    {stats.pendingMassOrders}
+                    {formatNumber(stats.pendingMassOrders)}
                   </p>
                 </div>
                 <AlertCircle className="h-8 w-8 text-orange-500" />
@@ -350,7 +351,7 @@ export default function AdminMassOrdersPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               <Package className="h-5 w-5 text-purple-500" />
-              Mass Orderss List ({pagination.total})
+              Mass Orderss List ({formatNumber(pagination.total)})
             </CardTitle>
           </div>
         </CardHeader>
@@ -391,7 +392,7 @@ export default function AdminMassOrdersPage() {
                       >
                         <TableCell>
                           <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                            #MO-{massOrder.id.slice(-8)}
+                            #MO-{formatID(massOrder.id.slice(-8))}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -414,13 +415,13 @@ export default function AdminMassOrdersPage() {
                             variant="outline"
                             className="bg-blue-50 text-blue-700 border-blue-200"
                           >
-                            {massOrder.totalOrders} orders
+                            {formatNumber(massOrder.totalOrders)} orders
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="font-semibold text-gray-900">
                             {massOrder.currency === 'USD' ? '$' : '৳'}
-                            {massOrder.totalCost.toFixed(2)}
+                            {formatPrice(massOrder.totalCost, 2)}
                           </div>
                           <div className="text-xs text-gray-500">
                             {massOrder.currency}
@@ -459,12 +460,12 @@ export default function AdminMassOrdersPage() {
               {pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-4 border-t">
                   <div className="text-sm text-gray-500">
-                    Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                    {Math.min(
+                    Showing {formatNumber((pagination.page - 1) * pagination.limit + 1)} to{' '}
+                    {formatNumber(Math.min(
                       pagination.page * pagination.limit,
                       pagination.total
-                    )}{' '}
-                    of {pagination.total} results
+                    ))}{' '}
+                    of {formatNumber(pagination.total)} results
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -481,7 +482,7 @@ export default function AdminMassOrdersPage() {
                       Previous
                     </Button>
                     <span className="text-sm text-gray-600">
-                      Page {pagination.page} of {pagination.totalPages}
+                      Page {formatNumber(pagination.page)} of {formatNumber(pagination.totalPages)}
                     </span>
                     <Button
                       variant="outline"

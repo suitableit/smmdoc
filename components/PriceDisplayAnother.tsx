@@ -3,6 +3,7 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { Fragment } from 'react';
+import { formatPrice } from '@/lib/utils';
 
 interface PriceDisplayProps {
   amount: number;
@@ -31,7 +32,9 @@ export function PriceDisplayAnother({
 
   return (
     <Fragment>
-      {displayCurrency === 'USD' ? '$' : '৳'} {displayAmount.toFixed(4)}
+      <span className={className}>
+        {displayCurrency === 'USD' ? '$' : '৳'} {formatPrice(displayAmount, 4)}
+      </span>
     </Fragment>
   );
 }

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState } from 'react';
-import { FaArrowRight, FaSpinner } from 'react-icons/fa';
+import { FaArrowRight } from 'react-icons/fa';
 
 interface BlogPost {
   id: string;
@@ -219,7 +219,7 @@ const BlogPage: React.FC = () => {
             >
               {isLoading ? (
                 <>
-                  <FaSpinner className="w-4 h-4 animate-spin" />
+                  <GradientSpinner size="w-4 h-4" />
                   <span>Loading...</span>
                 </>
               ) : (

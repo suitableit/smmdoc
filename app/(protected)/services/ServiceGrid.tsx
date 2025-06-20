@@ -1,8 +1,9 @@
 'use client';
 
+import { GradientSpinner } from '@/components/ui/GradientSpinner';
 import { Fragment } from 'react';
+import { FaClipboardList } from 'react-icons/fa';
 import ServiceCard from '../../../app/(protected)/services/ServiceCard';
-import { FaSpinner, FaClipboardList } from 'react-icons/fa';
 
 interface Service {
   id: string;
@@ -80,7 +81,7 @@ export default function ServiceGrid({ groupedServices, loading, toggleFavorite }
 
           <div className="card card-padding mb-6">
             <div className="text-center py-8 flex flex-col items-center">
-              <FaSpinner className="text-4xl text-blue-500 mb-4 animate-spin" />
+              <GradientSpinner size="w-16 h-16" className="mb-4" />
               <div className="text-lg font-medium">Loading services...</div>
             </div>
           </div>

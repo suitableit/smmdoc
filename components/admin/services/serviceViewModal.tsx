@@ -1,4 +1,5 @@
 import { PriceDisplay } from '@/components/PriceDisplay';
+import { formatNumber } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { 
@@ -110,7 +111,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Min Order</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {service?.min_order || '10'}
+                  {formatNumber(service?.min_order || 10)}
                 </span>
               </div>
 
@@ -121,7 +122,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Max order</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {service?.max_order?.toLocaleString() || '10 000 000'}
+                  {formatNumber(service?.max_order || 10000000)}
                 </span>
               </div>
 

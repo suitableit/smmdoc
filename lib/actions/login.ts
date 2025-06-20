@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import { AuthError } from 'next-auth';
 import { db } from '../db';
 import { sendMail } from '../nodemailer';
+import { DEFAULT_SIGN_IN_REDIRECT } from '../routes';
 import { generateTwoFactorToken, generateVerificationToken } from '../tokens';
 import { signInSchema } from '../validators/auth.validator';
 
@@ -85,8 +86,40 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
   }
 
   try {
-    await signIn('credentials', { email, password });
-    return { success: true, message: 'Logged in!' };
+    // Check if user is admin
+    const isAdmin = existingUser.role === 'admin';
+    
+    // Determine the redirect URL based on user role
+    const redirectUrl = isAdmin ? '/admin' : DEFAULT_SIGN_IN_REDIRECT;
+      
+    console.log('User role:', existingUser.role);
+    console.log('Is admin:', isAdmin);
+    console.log('Redirect URL:', redirectUrl);
+    
+    // Don't redirect here, instead return auth result and redirect URL
+    const signInResult = await signIn('credentials', {
+      email,
+      password,
+      redirect: false
+    });
+    
+    console.log('SignIn result:', JSON.stringify(signInResult, null, 2));
+    
+    // After successful sign-in, check if user is admin again
+    const session = await auth();
+    console.log('Session after sign-in:', JSON.stringify({
+      id: session?.user?.id,
+      name: session?.user?.name,
+      email: session?.user?.email,
+      role: session?.user?.role
+    }, null, 2));
+    
+    return { 
+      success: true, 
+      message: 'Logged in successfully!', 
+      redirectTo: redirectUrl,
+      isAdmin: isAdmin
+    };
   } catch (error) {
     console.error('Login error details:', error);
     if (error instanceof AuthError) {
@@ -135,4 +168,72 @@ export const toggleTwoFactor = async (toggle: boolean) => {
   //   });
   // }
   return { success: true, message: 'Two factor authentication updated!' };
+};
+
+// Admin login specific function 
+export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
+  const validedFields = signInSchema.safeParse(values);
+  if (!validedFields.success) {
+    return { success: false, error: 'Invalid Fields!' };
+  }
+  
+  const { email, password } = validedFields.data;
+  const existingUser = await getUserByEmail(email);
+  
+  if (!existingUser || !existingUser.password || !existingUser.email) {
+    return { success: false, error: 'User does not exist!' };
+  }
+  
+  // Check if user is admin
+  if (existingUser.role !== 'admin') {
+    return { success: false, error: 'Access denied. Admin login only.' };
+  }
+
+  // Check password
+  const passwordsMatch = await bcrypt.compare(password, existingUser.password);
+  if (!passwordsMatch) {
+    return { success: false, error: 'Invalid Credentials!' };
+  }
+
+  try {
+    console.log('Admin login attempt for user:', email);
+    
+    // Sign in without redirect
+    const signInResult = await signIn('credentials', {
+      email,
+      password,
+      redirect: false
+    });
+    
+    console.log('Admin login result:', JSON.stringify(signInResult, null, 2));
+    
+    // Verify session has admin role
+    const session = await auth();
+    console.log('Admin session after sign-in:', JSON.stringify({
+      id: session?.user?.id,
+      name: session?.user?.name,
+      email: session?.user?.email,
+      role: session?.user?.role
+    }, null, 2));
+    
+    return { 
+      success: true, 
+      message: 'Admin logged in successfully!', 
+      redirectTo: '/admin',
+      isAdmin: true
+    };
+  } catch (error) {
+    console.error('Admin login error details:', error);
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          return { success: false, error: 'Invalid Admin Credentials!' };
+        default:
+          console.error('Unknown AuthError type:', error.type);
+          return { success: false, error: `Authentication error: ${error.type}` };
+      }
+    }
+    console.error('Non-AuthError during admin login:', error);
+    return { success: false, error: 'An unexpected error occurred. Please try again.' };
+  }
 };

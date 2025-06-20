@@ -11,16 +11,16 @@ import {
   FaExclamationCircle,
   FaExternalLinkAlt,
   FaEye,
-  FaPlay,
   FaSearch,
   FaSync,
   FaTimes,
   FaTimesCircle,
-  FaTrash,
+  FaTrash
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
 import { APP_NAME } from '@/lib/constants';
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -430,12 +430,12 @@ const AdminOrdersPage = () => {
   // Function to format currency based on order currency
   const formatCurrency = (amount: number, currency: string) => {
     if (currency === 'USD') {
-      return `${amount.toFixed(2)}`;
+      return `${formatPrice(amount, 2)}`;
     } else if (currency === 'BDT') {
-      return `৳${amount.toFixed(2)}`;
+      return `৳${formatPrice(amount, 2)}`;
     } else {
       // Default fallback
-      return `${amount.toFixed(2)}`;
+      return `${formatPrice(amount, 2)}`;
     }
   };
 
@@ -712,7 +712,7 @@ const AdminOrdersPage = () => {
                   </div>
                 ) : (
                   <p className="text-2xl font-bold text-purple-600">
-                    ${stats.totalRevenue.toFixed(2)}
+                    ${formatPrice(stats.totalRevenue, 2)}
                   </p>
                 )}
               </div>
@@ -964,6 +964,12 @@ const AdminOrdersPage = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
+                          Price (Unit/Total)
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
                           Link
                         </th>
                         <th
@@ -1038,7 +1044,7 @@ const AdminOrdersPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{order.id ? order.id.slice(-8) : 'null'}
+                              #{order.id ? formatID(order.id.slice(-8)) : 'null'}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1060,7 +1066,7 @@ const AdminOrdersPage = () => {
                               >
                                 $
                                 {order.charge
-                                  ? order.charge.toFixed(2)
+                                  ? formatPrice(order.charge, 2)
                                   : '0.00'}
                               </div>
                             </div>
@@ -1070,8 +1076,19 @@ const AdminOrdersPage = () => {
                               <div className="font-semibold text-sm text-green-600">
                                 $
                                 {order.profit
-                                  ? order.profit.toFixed(2)
+                                  ? formatPrice(order.profit, 2)
                                   : '0.00'}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-right">
+                              <div className="font-semibold text-sm text-blue-600">
+                                $
+                                {formatPrice(order.price || 0, 2)}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Total: ${formatPrice((order.price || 0) * (order.qty || 1), 2)}
                               </div>
                             </div>
                           </td>
@@ -1123,7 +1140,7 @@ const AdminOrdersPage = () => {
                               style={{ color: 'var(--text-primary)' }}
                             >
                               {order.startCount
-                                ? order.startCount.toLocaleString()
+                                ? formatNumber(order.startCount)
                                 : 'null'}
                             </div>
                           </td>
@@ -1134,12 +1151,12 @@ const AdminOrdersPage = () => {
                                 style={{ color: 'var(--text-primary)' }}
                               >
                                 {order.qty
-                                  ? order.qty.toLocaleString()
+                                  ? formatNumber(order.qty)
                                   : 'null'}
                               </div>
                               <div className="text-xs text-green-600">
                                 {order.qty && order.remains
-                                  ? (order.qty - order.remains).toLocaleString()
+                                  ? formatNumber(order.qty - order.remains)
                                   : '0'}{' '}
                                 delivered
                               </div>
@@ -1151,7 +1168,7 @@ const AdminOrdersPage = () => {
                                 className="font-mono text-xs"
                                 style={{ color: 'var(--text-muted)' }}
                               >
-                                #{order.service?.id || 'null'}
+                                #{order.service?.id ? formatID(order.service.id) : 'null'}
                               </div>
                               <div
                                 className="font-medium text-sm truncate max-w-44"
@@ -1207,7 +1224,7 @@ const AdminOrdersPage = () => {
                                 className="text-xs"
                                 style={{ color: 'var(--text-muted)' }}
                               >
-                                {order.remains || 'null'} left
+                                {order.remains ? formatNumber(order.remains) : 'null'} left
                               </div>
                             </div>
                           </td>
@@ -1350,7 +1367,7 @@ const AdminOrdersPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{order.id ? order.id.slice(-8) : 'null'}
+                              #{order.id ? formatID(order.id.slice(-8)) : 'null'}
                             </div>
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                               {getStatusIcon(order.status)}
@@ -1477,7 +1494,7 @@ const AdminOrdersPage = () => {
                             className="font-mono text-xs mb-1"
                             style={{ color: 'var(--text-muted)' }}
                           >
-                            #{order.service?.id || 'null'}
+                            #{order.service?.id ? formatID(order.service.id) : 'null'}
                           </div>
                           <div
                             className="font-medium text-sm mb-1"
@@ -1525,20 +1542,30 @@ const AdminOrdersPage = () => {
                         </div>
 
                         {/* Financial Info */}
-                        <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-3 gap-4 mb-4">
                           <div>
                             <div
                               className="text-xs font-medium mb-1"
                               style={{ color: 'var(--text-muted)' }}
                             >
-                              Charge
+                              Unit Price
                             </div>
                             <div
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              ${order.charge ? order.charge.toFixed(2) : '0.00'}{' '}
-                              {order.currency || 'USD'}
+                              ${order.price ? formatPrice(order.price, 2) : '0.00'}
+                            </div>
+                          </div>
+                          <div>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
+                              Total Price
+                            </div>
+                            <div className="font-semibold text-sm text-blue-600">
+                              ${formatPrice((order.price || 0) * (order.qty || 1), 2)}
                             </div>
                           </div>
                           <div>
@@ -1549,7 +1576,7 @@ const AdminOrdersPage = () => {
                               Profit
                             </div>
                             <div className="font-semibold text-sm text-green-600">
-                              ${order.profit ? order.profit.toFixed(2) : '0.00'}
+                              ${order.profit ? formatPrice(order.profit, 2) : '0.00'}
                             </div>
                           </div>
                         </div>
@@ -1567,11 +1594,11 @@ const AdminOrdersPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {order.qty ? order.qty.toLocaleString() : 'null'}
+                              {order.qty ? formatNumber(order.qty) : 'null'}
                             </div>
                             <div className="text-xs text-green-600">
                               {order.qty && order.remains
-                                ? (order.qty - order.remains).toLocaleString()
+                                ? formatNumber(order.qty - order.remains)
                                 : '0'}{' '}
                               delivered
                             </div>
@@ -1588,7 +1615,7 @@ const AdminOrdersPage = () => {
                               style={{ color: 'var(--text-primary)' }}
                             >
                               {order.startCount
-                                ? order.startCount.toLocaleString()
+                                ? formatNumber(order.startCount)
                                 : 'null'}
                             </div>
                           </div>
@@ -1677,10 +1704,10 @@ const AdminOrdersPage = () => {
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
-                      `Showing ${(pagination.page - 1) * pagination.limit + 1} to ${Math.min(
+                      `Showing ${formatNumber((pagination.page - 1) * pagination.limit + 1)} to ${formatNumber(Math.min(
                         pagination.page * pagination.limit,
                         pagination.total
-                      )} of ${pagination.total} orders`
+                      ))} of ${formatNumber(pagination.total)} orders`
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -1703,7 +1730,7 @@ const AdminOrdersPage = () => {
                       {ordersLoading ? (
                         <GradientSpinner size="w-4 h-4" />
                       ) : (
-                        `Page ${pagination.page} of ${pagination.totalPages}`
+                        `Page ${formatNumber(pagination.page)} of ${formatNumber(pagination.totalPages)}`
                       )}
                     </span>
                     <button

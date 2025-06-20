@@ -6,31 +6,24 @@ import axiosInstance from '@/lib/axiosInstance';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import {
-  FaArrowRight,
-  FaAward,
-  FaBullseye,
-  FaCalendar,
-  FaChartBar,
-  FaChartLine,
-  FaChartPie,
-  FaCheckCircle,
-  FaClock,
-  FaCog,
-  FaCommentDots,
-  FaDollarSign,
-  FaEdit,
-  FaEnvelope,
-  FaEye,
-  FaPhone,
-  FaRedo,
-  FaShieldAlt,
-  FaShoppingCart,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
-  FaUser,
-  FaUserPlus,
-  FaUsers,
+    FaArrowRight,
+    FaAward,
+    FaBullseye,
+    FaCalendar,
+    FaChartLine,
+    FaCheckCircle,
+    FaClock,
+    FaCog,
+    FaCommentDots,
+    FaDollarSign,
+    FaEye,
+    FaRedo,
+    FaShoppingCart,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
+    FaUserPlus,
+    FaUsers
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -63,15 +56,23 @@ const Toast = ({
 
 interface PendingTransaction {
   id: string;
+  invoice_id: string;
   userId: string;
   username?: string;
   amount: number;
-  transactionId?: string;
-  senderNumber?: string;
+  transaction_id?: string;
+  sender_number?: string;
   status: string;
+  admin_status: string;
   method?: string;
+  payment_method?: string;
+  currency?: string;
   createdAt: string;
   updatedAt?: string;
+  user?: {
+    name?: string;
+    email?: string;
+  };
 }
 
 type Order = {
@@ -100,11 +101,15 @@ type DashboardStats = {
     processing: number;
     completed: number;
     cancelled: number;
+    partial: number;
   };
   dailyOrders: {
     date: string;
     orders: number;
   }[];
+  todaysOrders: number;
+  todaysProfit: number;
+  newUsersToday: number;
 };
 
 export default function AdminDashboard() {
@@ -121,8 +126,12 @@ export default function AdminDashboard() {
       processing: 0,
       completed: 0,
       cancelled: 0,
+      partial: 0,
     },
     dailyOrders: [],
+    todaysOrders: 0,
+    todaysProfit: 0,
+    newUsersToday: 0,
   });
 
   const [statsLoading, setStatsLoading] = useState(true);
@@ -155,13 +164,17 @@ export default function AdminDashboard() {
         console.error('Error fetching dashboard stats:', error);
       } finally {
         setStatsLoading(false);
+        setOrdersLoading(false);
+        setTicketsLoading(false);
+        setUsersLoading(false);
+        setChartLoading(false);
       }
     };
 
     const fetchOrderStats = async () => {
       try {
-        // Simulate API call for order stats
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Order stats are already included in the main stats API call
+        // No need for separate API call
       } catch (error) {
         console.error('Error fetching order stats:', error);
       } finally {
@@ -171,8 +184,8 @@ export default function AdminDashboard() {
 
     const fetchTicketStats = async () => {
       try {
-        // Simulate API call for ticket stats
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Ticket stats would need separate API endpoint
+        // For now, just set loading to false
       } catch (error) {
         console.error('Error fetching ticket stats:', error);
       } finally {
@@ -182,8 +195,8 @@ export default function AdminDashboard() {
 
     const fetchUserData = async () => {
       try {
-        // Simulate API call for user data
-        await new Promise(resolve => setTimeout(resolve, 2500));
+        // User data is already included in the main stats API call
+        // No need for separate API call
       } catch (error) {
         console.error('Error fetching user data:', error);
       } finally {
@@ -193,8 +206,8 @@ export default function AdminDashboard() {
 
     const fetchChartData = async () => {
       try {
-        // Simulate API call for chart data
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // Chart data is already included in the main stats API call
+        // No need for separate API call
       } catch (error) {
         console.error('Error fetching chart data:', error);
       } finally {
@@ -203,28 +216,33 @@ export default function AdminDashboard() {
     };
 
     fetchStats();
-    fetchOrderStats();
-    fetchTicketStats();
-    fetchUserData();
-    fetchChartData();
   }, []);
 
   // Fetch Pending Transactions
   const fetchPendingTransactions = async () => {
     try {
-      const response = await axiosInstance.get('/api/transactions');
+      // Use optimized endpoint with admin flag and limit
+      const response = await axiosInstance.get('/api/transactions', {
+        params: {
+          admin: 'true',
+          status: 'pending',
+          limit: 10,
+          offset: 0
+        },
+        timeout: 10000 // 10 second timeout
+      });
 
-      // The API returns an array directly
-      if (Array.isArray(response.data)) {
-        // Filter only pending transactions
+      // Handle the response structure
+      if (response.data && response.data.transactions) {
+        const transactions = response.data.transactions;
+        setTotalTransactionCount(transactions.length);
+        setPendingTransactions(transactions.slice(0, 3));
+      } else if (Array.isArray(response.data)) {
+        // Fallback for direct array response
         const pending = response.data.filter(
           (transaction: PendingTransaction) => transaction.status === 'pending'
         );
-
-        // Store total count before slicing
         setTotalTransactionCount(pending.length);
-
-        // Show only the latest 3 transactions
         setPendingTransactions(pending.slice(0, 3));
       } else {
         setPendingTransactions([]);
@@ -511,7 +529,7 @@ export default function AdminDashboard() {
                 ) : (
                   <>
                     <p className="text-2xl font-bold text-rose-600">
-                      {formatCurrency(stats.totalRevenue || 0)}
+                      {formatCurrency(stats.todaysProfit || 0)}
                     </p>
                     <p className="text-xs text-rose-600 font-medium mt-1">
                       Daily Earnings
@@ -536,7 +554,7 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <>
-                    <p className="text-2xl font-bold text-teal-600">0</p>
+                    <p className="text-2xl font-bold text-teal-600">{stats.todaysOrders || 0}</p>
                     <p className="text-xs text-teal-600 font-medium mt-1">
                       Fresh Orders
                     </p>
@@ -560,7 +578,7 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <>
-                    <p className="text-2xl font-bold text-indigo-600">0</p>
+                    <p className="text-2xl font-bold text-indigo-600">{stats.newUsersToday || 0}</p>
                     <p className="text-xs text-indigo-600 font-medium mt-1">
                       Fresh Registrations
                     </p>
@@ -748,7 +766,7 @@ export default function AdminDashboard() {
                               className="font-medium text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.username || 'N/A'}
+                              {transaction.user?.name || transaction.username || 'N/A'}
                             </span>
                           </td>
                           <td className="p-3">
@@ -776,7 +794,7 @@ export default function AdminDashboard() {
                               className="font-mono text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.transactionId || 'N/A'}
+                              {transaction.transaction_id || 'N/A'}
                             </span>
                           </td>
                           <td className="p-3">
@@ -784,7 +802,9 @@ export default function AdminDashboard() {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              ${transaction.amount.toFixed(2)}
+                              {transaction.currency === 'USD' || transaction.currency === 'USDT'
+                                ? `$${transaction.amount.toFixed(2)}`
+                                : `৳${transaction.amount.toFixed(2)}`}
                             </div>
                           </td>
                           <td className="p-3">
@@ -792,7 +812,7 @@ export default function AdminDashboard() {
                               className="text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.senderNumber || 'N/A'}
+                              {transaction.sender_number || 'N/A'}
                             </span>
                           </td>
                           <td className="p-3">
@@ -800,7 +820,7 @@ export default function AdminDashboard() {
                               className="text-sm font-medium"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.method || 'BDT'}
+                              {transaction.payment_method || transaction.method || 'uddoktapay'}
                             </span>
                           </td>
                           <td className="p-3">
@@ -853,7 +873,7 @@ export default function AdminDashboard() {
                               className="font-medium text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.username || 'N/A'}
+                              {transaction.user?.name || transaction.username || 'N/A'}
                             </div>
                           </div>
                           <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 rounded-full">
@@ -876,7 +896,7 @@ export default function AdminDashboard() {
                             className="font-mono text-sm"
                             style={{ color: 'var(--text-primary)' }}
                           >
-                            {transaction.transactionId || 'N/A'}
+                            {transaction.transaction_id || 'N/A'}
                           </div>
                         </div>
 
@@ -893,7 +913,9 @@ export default function AdminDashboard() {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              ${transaction.amount.toFixed(2)}
+                              {transaction.currency === 'USD' || transaction.currency === 'USDT'
+                                ? `$${transaction.amount.toFixed(2)}`
+                                : `৳${transaction.amount.toFixed(2)}`}
                             </div>
                           </div>
                           <div>
@@ -907,7 +929,7 @@ export default function AdminDashboard() {
                               className="font-medium text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.senderNumber || 'N/A'}
+                              {transaction.sender_number || 'N/A'}
                             </div>
                           </div>
                         </div>
@@ -924,7 +946,7 @@ export default function AdminDashboard() {
                             className="text-sm"
                             style={{ color: 'var(--text-primary)' }}
                           >
-                            {transaction.method || 'BDT'}
+                            {transaction.payment_method || transaction.method || 'uddoktapay'}
                           </div>
                         </div>
 
@@ -981,7 +1003,7 @@ export default function AdminDashboard() {
               <button
                 className="btn btn-primary flex items-center gap-2"
                 onClick={() =>
-                  (window.location.href = '/funds?tab=all-transactions')
+                  (window.location.href = '/admin/funds?tab=pending-transactions')
                 }
               >
                 <FaEye className="h-4 w-4" />
@@ -1025,7 +1047,7 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                      0
+                      {stats.totalOrders || 0}
                     </div>
                   )}
                 </div>
@@ -1049,7 +1071,7 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-                      0
+                      {stats.ordersByStatus?.pending || 0}
                     </div>
                   )}
                 </div>
@@ -1073,7 +1095,7 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <div className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
-                      0
+                      {stats.ordersByStatus?.processing || 0}
                     </div>
                   )}
                 </div>
@@ -1097,7 +1119,7 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                      0
+                      {stats.ordersByStatus?.completed || 0}
                     </div>
                   )}
                 </div>
@@ -1121,7 +1143,7 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
-                      0
+                      {stats.ordersByStatus?.partial || 0}
                     </div>
                   )}
                 </div>
@@ -1145,7 +1167,7 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <div className="text-2xl font-bold text-red-700 dark:text-red-300">
-                      0
+                      {stats.ordersByStatus?.cancelled || 0}
                     </div>
                   )}
                 </div>

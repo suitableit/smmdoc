@@ -4,6 +4,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
+import { formatNumber, formatID, formatPrice } from '@/lib/utils';
 import moment from 'moment';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -130,7 +131,7 @@ const DashboardPage = () => {
     const convertedAmount =
       currency === 'BDT' ? amount : amount / (currencyRate || 121.52);
     const symbol = currency === 'USD' ? '$' : '৳';
-    return `${symbol}${convertedAmount.toFixed(2)}`;
+    return `${symbol}${formatPrice(convertedAmount, 2)}`;
   };
 
   const handleCategoryClick = (categoryId: string | null) => {
@@ -225,7 +226,7 @@ const DashboardPage = () => {
                   </div>
                 ) : (
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    #{user?.id || 'N/A'}
+                    #{user?.id ? formatID(user.id) : 'N/A'}
                   </p>
                 )}
               </div>
@@ -325,7 +326,7 @@ const DashboardPage = () => {
                   </div>
                 ) : (
                   <p className="text-2xl font-bold text-blue-600">
-                    {totalOrders}
+                    {formatNumber(totalOrders)}
                   </p>
                 )}
               </div>
@@ -385,7 +386,7 @@ const DashboardPage = () => {
                             <span className="text-sm text-gray-400">Loading...</span>
                           </div>
                         ) : (
-                          completedOrders
+                          formatNumber(completedOrders)
                         )}
                       </div>
                     </div>
@@ -410,7 +411,7 @@ const DashboardPage = () => {
                             <span className="text-sm text-gray-400">Loading...</span>
                           </div>
                         ) : (
-                          processingOrders
+                          formatNumber(processingOrders)
                         )}
                       </div>
                     </div>
@@ -435,7 +436,7 @@ const DashboardPage = () => {
                             <span className="text-sm text-gray-400">Loading...</span>
                           </div>
                         ) : (
-                          pendingOrders
+                          formatNumber(pendingOrders)
                         )}
                       </div>
                     </div>
@@ -460,7 +461,7 @@ const DashboardPage = () => {
                             <span className="text-sm text-gray-400">Loading...</span>
                           </div>
                         ) : (
-                          cancelledOrders
+                          formatNumber(cancelledOrders)
                         )}
                       </div>
                     </div>
@@ -507,9 +508,6 @@ const DashboardPage = () => {
                           Date
                         </th>
                         <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
-                          Link
-                        </th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                           Charge
                         </th>
                         <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
@@ -540,7 +538,7 @@ const DashboardPage = () => {
                               }`}
                             >
                               <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
-                                #{order.id.substring(0, 8)}
+                                #{formatID(order.id.substring(0, 8))}
                               </span>
                             </td>
                             <td className="py-3 px-4 whitespace-nowrap">
@@ -552,32 +550,15 @@ const DashboardPage = () => {
                               </div>
                             </td>
                             <td className="py-3 px-4">
-                              <div className="max-w-[120px]">
-                                <a
-                                  href={order.link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs flex items-center hover:underline"
-                                  title={order.link}
-                                >
-                                  <span className="truncate mr-1">
-                                    {order.link?.replace(/^https?:\/\//, '') ||
-                                      'N/A'}
-                                  </span>
-                                  <FaExternalLinkAlt className="w-3 h-3 flex-shrink-0" />
-                                </a>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
                               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                 {currency === 'USD'
-                                  ? `${order.usdPrice?.toFixed(2) || '0.00'}`
-                                  : `৳${order.bdtPrice?.toFixed(2) || '0.00'}`}
+                                  ? `$${formatPrice(order.usdPrice || 0, 2)}`
+                                  : `৳${formatPrice(order.bdtPrice || 0, 2)}`}
                               </span>
                             </td>
                             <td className="py-3 px-4">
                               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {order.qty?.toLocaleString() || 0}
+                                {formatNumber(order.qty || 0)}
                               </span>
                             </td>
                             <td className="py-3 px-4 max-w-[200px]">

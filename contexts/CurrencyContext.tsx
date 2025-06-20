@@ -4,8 +4,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 type CurrencyContextType = {
-  currency: 'USD' | 'BDT';
-  setCurrency: (currency: 'USD' | 'BDT') => Promise<void>;
+  currency: 'USD' | 'BDT' | 'USDT';
+  setCurrency: (currency: 'USD' | 'BDT' | 'USDT') => Promise<void>;
   rate: number | null;
   isLoading: boolean;
   formatCurrency: (amount: number) => string;
@@ -26,13 +26,26 @@ export function CurrencyProvider({
   serverCurrency,
 }: {
   children: React.ReactNode;
-  serverCurrency?: 'USD' | 'BDT';
+  serverCurrency?: 'USD' | 'BDT' | 'USDT';
 }) {
-  const [currency, setCurrencyState] = useState<'USD' | 'BDT'>(
+  const [currency, setCurrencyState] = useState<'USD' | 'BDT' | 'USDT'>(
     serverCurrency || 'USD'
   );
   const [rate, setRate] = useState<number | null>(121.45);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  // Handle client-side hydration
+  useEffect(() => {
+    setIsClient(true);
+    // Load currency from localStorage only on client side
+    if (typeof window !== 'undefined') {
+      const savedCurrency = localStorage.getItem('currency') as 'USD' | 'BDT' | 'USDT' | null;
+      if (savedCurrency && !serverCurrency) {
+        setCurrencyState(savedCurrency);
+      }
+    }
+  }, [serverCurrency]);
 
   useEffect(() => {
     const fetchRate = async () => {
@@ -63,7 +76,7 @@ export function CurrencyProvider({
     fetchRate();
   }, []);
 
-  const setCurrency = async (newCurrency: 'USD' | 'BDT') => {
+  const setCurrency = async (newCurrency: 'USD' | 'BDT' | 'USDT') => {
     try {
       // Update server preference if user is authenticated
       const response = await fetch('/api/currency', {
@@ -76,7 +89,9 @@ export function CurrencyProvider({
 
       if (response.ok) {
         setCurrencyState(newCurrency);
-        localStorage.setItem('currency', newCurrency);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('currency', newCurrency);
+        }
       }
     } catch (error) {
       console.error('Failed to update currency:', error);
@@ -87,6 +102,8 @@ export function CurrencyProvider({
     if (currency === 'BDT' && rate) {
       const amountInBDT = amount * rate;
       return `৳${amountInBDT.toFixed(2)}`;
+    } else if (currency === 'USDT') {
+      return `${amount.toFixed(2)} USDT`;
     } else {
       return `$${amount.toFixed(2)}`;
     }
@@ -95,9 +112,30 @@ export function CurrencyProvider({
   const convertAmount = (amount: number): number => {
     if (currency === 'BDT' && rate) {
       return amount * rate;
+    } else if (currency === 'USDT') {
+      // USDT is pegged to USD, so no conversion needed
+      return amount;
     }
     return amount;
   };
+
+  // Prevent hydration mismatch by not rendering until client is ready
+  if (!isClient) {
+    return (
+      <CurrencyContext.Provider
+        value={{
+          currency: serverCurrency || 'USD',
+          setCurrency,
+          rate,
+          isLoading: true,
+          formatCurrency,
+          convertAmount
+        }}
+      >
+        {children}
+      </CurrencyContext.Provider>
+    );
+  }
 
   return (
     <CurrencyContext.Provider
