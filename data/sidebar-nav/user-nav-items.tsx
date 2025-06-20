@@ -144,9 +144,10 @@ export const userNavItems = [
   },
   {
     title: 'Logout',
-    href: '/auth/logout',
+    href: '#',
     icon: 'FaSignOutAlt', // This one was already appropriate
     label: 'Logout',
     roles: ['user'],
+    isLogout: true, // Mark as logout action
   },
 ];

@@ -1,6 +1,6 @@
-import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { ChevronRight, MoreHorizontal } from "lucide-react"
+import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -98,12 +98,45 @@ function BreadcrumbEllipsis({
   )
 }
 
-export {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-  BreadcrumbEllipsis,
+// Custom BreadCrumb component for admin pages
+interface BreadCrumbItem {
+  title: string;
+  link?: string;
 }
+
+interface BreadCrumbProps {
+  items: BreadCrumbItem[];
+}
+
+function BreadCrumb({ items }: BreadCrumbProps) {
+  return (
+    <nav aria-label="breadcrumb" className="mb-4">
+      <ol className="flex items-center space-x-2 text-sm text-gray-600">
+        {items.map((item, index) => (
+          <li key={index} className="flex items-center">
+            {index > 0 && (
+              <ChevronRight className="w-4 h-4 mx-2 text-gray-400" />
+            )}
+            {item.link ? (
+              <a
+                href={item.link}
+                className="hover:text-blue-600 transition-colors duration-200"
+              >
+                {item.title}
+              </a>
+            ) : (
+              <span className="text-gray-900 font-medium">{item.title}</span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
+export {
+    Breadcrumb, BreadCrumb, BreadcrumbEllipsis, BreadcrumbItem,
+    BreadcrumbLink, BreadcrumbList, BreadcrumbPage,
+    BreadcrumbSeparator
+}
+

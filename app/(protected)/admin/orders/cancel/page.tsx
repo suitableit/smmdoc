@@ -46,7 +46,8 @@ import {
   XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { formatNumber, formatPrice } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // Define interfaces for type safety
@@ -413,9 +414,8 @@ export default function CancelOrdersPage() {
               <div className="flex items-center gap-2 mb-1">
                 <p className="text-3xl font-bold text-gray-800">
                   $
-                  {filteredOrders
-                    .reduce((sum, order) => sum + order.price, 0)
-                    .toFixed(2)}
+                  {formatPrice(filteredOrders
+                    .reduce((sum, order) => sum + order.price, 0), 2)}
                 </p>
                 <DollarSign className="h-4 w-4 text-purple-500" />
               </div>
@@ -584,10 +584,10 @@ export default function CancelOrdersPage() {
                       <TableCell className="text-right">
                         <div>
                           <div className="font-semibold text-gray-900">
-                            {order.qty.toLocaleString()}
+                            {formatNumber(order.qty)}
                           </div>
                           <div className="text-sm text-blue-600">
-                            {(order.qty - order.remains).toLocaleString()}{' '}
+                            {formatNumber(order.qty - order.remains)}{' '}
                             delivered
                           </div>
                         </div>
@@ -595,7 +595,7 @@ export default function CancelOrdersPage() {
                       <TableCell className="text-right">
                         <div>
                           <div className="font-semibold text-gray-900">
-                            ${order.price.toFixed(2)}
+                            ${formatPrice(order.price, 2)}
                           </div>
                           <div className="text-sm text-gray-500">
                             {order.currency}
@@ -698,7 +698,7 @@ export default function CancelOrdersPage() {
                     Total Quantity
                   </Label>
                   <div className="font-semibold text-gray-900">
-                    {cancelInfo.order.totalQuantity.toLocaleString()}
+                    {formatNumber(cancelInfo.order.totalQuantity)}
                   </div>
                 </div>
                 <div>
@@ -706,7 +706,7 @@ export default function CancelOrdersPage() {
                     Delivered
                   </Label>
                   <div className="font-semibold text-green-600">
-                    {cancelInfo.order.deliveredQuantity.toLocaleString()}
+                    {formatNumber(cancelInfo.order.deliveredQuantity)}
                   </div>
                 </div>
                 <div>
@@ -714,7 +714,7 @@ export default function CancelOrdersPage() {
                     Remaining
                   </Label>
                   <div className="font-semibold text-orange-600">
-                    {cancelInfo.order.remainingQuantity.toLocaleString()}
+                    {formatNumber(cancelInfo.order.remainingQuantity)}
                   </div>
                 </div>
               </div>
@@ -734,7 +734,7 @@ export default function CancelOrdersPage() {
                         Refund Amount
                       </Label>
                       <div className="font-semibold text-green-600">
-                        ${cancelInfo.refund.amount.toFixed(2)}{' '}
+                        ${formatPrice(cancelInfo.refund.amount, 2)}{' '}
                         {cancelInfo.refund.currency}
                       </div>
                     </div>
@@ -744,9 +744,8 @@ export default function CancelOrdersPage() {
                       </Label>
                       <div className="font-semibold text-green-600">
                         $
-                        {(
-                          cancelInfo.user.balance + cancelInfo.refund.amount
-                        ).toFixed(2)}{' '}
+                        {formatPrice(
+                            cancelInfo.user.balance + cancelInfo.refund.amount, 2)}{' '}
                         {cancelInfo.user.currency}
                       </div>
                     </div>
@@ -782,7 +781,7 @@ export default function CancelOrdersPage() {
                       <div className="font-medium">Full Refund</div>
                       <div className="text-sm text-gray-500">
                         Refund the entire order amount: $
-                        {cancelInfo.order.totalCost.toFixed(2)}
+                        {formatPrice(cancelInfo.order.totalCost, 2)}
                       </div>
                     </label>
                   </div>
@@ -811,7 +810,7 @@ export default function CancelOrdersPage() {
                       </div>
                       <div className="text-sm text-gray-500">
                         Refund only for undelivered quantity: $
-                        {cancelInfo.refund.amount.toFixed(2)}
+                        {formatPrice(cancelInfo.refund.amount, 2)}
                       </div>
                     </label>
                   </div>

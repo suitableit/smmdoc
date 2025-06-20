@@ -1,19 +1,16 @@
 'use client';
-import ServiceTable from '@/components/admin/services/serviceTable';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
-  FaArrowUp,
-  FaBriefcase,
-  FaCheckCircle,
-  FaCog,
-  FaDownload,
-  FaPlus,
-  FaSearch,
-  FaShieldAlt,
-  FaSpinner,
-  FaSync,
-  FaTimes,
+    FaArrowUp,
+    FaBriefcase,
+    FaCheckCircle,
+    FaPlus,
+    FaSearch,
+    FaShieldAlt,
+    FaSync,
+    FaTimes
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -46,6 +43,12 @@ const Toast = ({
     </button>
   </div>
 );
+
+// Replace static import with dynamic import
+const ServiceTable = dynamic(() => import('@/components/admin/services/serviceTable'), {
+  loading: () => <div className="flex justify-center items-center h-20"><div className="animate-spin rounded-full h-6 w-6 border-t-2 border-blue-500"></div></div>,
+  ssr: false,
+});
 
 export default function page() {
   // Set document title using useEffect for client-side

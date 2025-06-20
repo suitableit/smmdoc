@@ -90,6 +90,54 @@ export async function GET() {
     const cancelledOrders = await db.newOrder.count({
       where: { status: 'cancelled' }
     });
+
+    const partialOrders = await db.newOrder.count({
+      where: { status: 'partial' }
+    });
+
+    // Get today's orders
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const todaysOrders = await db.newOrder.count({
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lte: todayEnd
+        }
+      }
+    });
+
+    // Get today's profit
+    const todaysOrdersWithProfit = await db.newOrder.findMany({
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lte: todayEnd
+        },
+        status: {
+          in: ['completed', 'processing']
+        }
+      },
+      select: {
+        profit: true
+      }
+    });
+
+    const todaysProfit = todaysOrdersWithProfit.reduce((acc, order) => acc + (order.profit || 0), 0);
+
+    // Get new users today
+    const newUsersToday = await db.user.count({
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lte: todayEnd
+        },
+        role: 'user'
+      }
+    });
     
     // Get daily orders for the last 7 days
     const today = new Date();
@@ -131,9 +179,13 @@ export async function GET() {
             pending: pendingOrders,
             processing: processingOrders,
             completed: completedOrders,
-            cancelled: cancelledOrders
+            cancelled: cancelledOrders,
+            partial: partialOrders
           },
-          dailyOrders: formattedDailyOrders
+          dailyOrders: formattedDailyOrders,
+          todaysOrders,
+          todaysProfit,
+          newUsersToday
         }
       },
       { status: 200 }

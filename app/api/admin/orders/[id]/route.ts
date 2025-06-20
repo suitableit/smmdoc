@@ -201,15 +201,15 @@ export async function PUT(
       if (currentOrder.status === 'pending' && ['processing', 'completed'].includes(body.status)) {
         if (user.balance < orderPrice) {
           return NextResponse.json(
-            { 
+            {
               error: `Insufficient balance to activate order. Required: ${orderPrice.toFixed(2)}, Available: ${user.balance.toFixed(2)}`,
               success: false,
-              data: null 
+              data: null
             },
             { status: 400 }
           );
         }
-        
+
         // Deduct balance and update spent amount
         await db.user.update({
           where: { id: user.id },
@@ -358,7 +358,7 @@ export async function DELETE(
     // If order was paid (not pending), refund the user
     if (order.status !== 'pending') {
       const refundAmount = order.user.currency === 'USD' ? order.usdPrice : order.bdtPrice;
-      
+
       await db.user.update({
         where: { id: order.userId },
         data: {

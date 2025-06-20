@@ -2,6 +2,7 @@
 'use client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatPrice } from '@/lib/utils';
 
 interface PriceDisplayProps {
   amount: number;
@@ -30,7 +31,7 @@ export function PriceDisplay({
 
   return (
     <span className={className}>
-      {displayCurrency === 'USD' ? '$' : '৳'} {displayAmount.toFixed(4)}
+      {displayCurrency === 'USD' ? '$' : '৳'} {formatPrice(displayAmount, 4)}
     </span>
   );
 }

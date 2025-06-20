@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { formatNumber, formatPrice } from '@/lib/utils';
 import {
   FaCheckCircle,
   FaClock,
@@ -418,9 +419,8 @@ const RefillOrdersPage = () => {
                 <h3 className="card-title">Total Value</h3>
                 <p className="text-2xl font-bold text-purple-600">
                   $
-                  {filteredOrders
-                    .reduce((sum, order) => sum + order.price, 0)
-                    .toFixed(2)}
+                  {formatPrice(filteredOrders
+                    .reduce((sum, order) => sum + order.price, 0), 2)}
                 </p>
               </div>
             </div>
@@ -718,10 +718,10 @@ const RefillOrdersPage = () => {
                                 className="font-semibold text-sm"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {order.qty.toLocaleString()}
+                                {formatNumber(order.qty)}
                               </div>
                               <div className="text-xs text-green-600">
-                                {(order.qty - order.remains).toLocaleString()}{' '}
+                                {formatNumber(order.qty - order.remains)}{' '}
                                 delivered
                               </div>
                             </div>
@@ -732,7 +732,7 @@ const RefillOrdersPage = () => {
                                 className="font-semibold text-sm"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                ${order.price.toFixed(2)}
+                                ${formatPrice(order.price, 2)}
                               </div>
                               <div
                                 className="text-xs"
@@ -930,7 +930,7 @@ const RefillOrdersPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              ${order.price.toFixed(2)} {order.currency}
+                              ${formatPrice(order.price, 2)} {order.currency}
                             </div>
                           </div>
                           <div>
@@ -941,7 +941,7 @@ const RefillOrdersPage = () => {
                               User Balance
                             </div>
                             <div className="font-semibold text-sm text-green-600">
-                              ${order.user.balance.toFixed(2)}
+                              ${formatPrice(order.user.balance, 2)}
                             </div>
                           </div>
                         </div>
@@ -959,10 +959,10 @@ const RefillOrdersPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {order.qty.toLocaleString()}
+                              {formatNumber(order.qty)}
                             </div>
                             <div className="text-xs text-green-600">
-                              {(order.qty - order.remains).toLocaleString()}{' '}
+                              {formatNumber(order.qty - order.remains)}{' '}
                               delivered
                             </div>
                           </div>
@@ -977,7 +977,7 @@ const RefillOrdersPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {order.startCount.toLocaleString()}
+                              {formatNumber(order.startCount)}
                             </div>
                           </div>
                         </div>
@@ -1123,7 +1123,7 @@ const RefillOrdersPage = () => {
                       className="font-semibold"
                       style={{ color: 'var(--text-primary)' }}
                     >
-                      {refillInfo.order.totalQuantity.toLocaleString()}
+                      {formatNumber(refillInfo.order.totalQuantity)}
                     </div>
                   </div>
                   <div>
@@ -1134,7 +1134,7 @@ const RefillOrdersPage = () => {
                       Remaining
                     </div>
                     <div className="font-semibold text-orange-600">
-                      {refillInfo.order.remainingQuantity.toLocaleString()}
+                      {formatNumber(refillInfo.order.remainingQuantity)}
                     </div>
                   </div>
                   <div>
@@ -1145,7 +1145,7 @@ const RefillOrdersPage = () => {
                       User Balance
                     </div>
                     <div className="font-semibold text-green-600">
-                      ${refillInfo.user.balance.toFixed(2)}{' '}
+                      ${formatPrice(refillInfo.user.balance, 2)}{' '}
                       {refillInfo.user.currency}
                     </div>
                   </div>
@@ -1192,14 +1192,14 @@ const RefillOrdersPage = () => {
                       >
                         <div className="font-medium">
                           Full Refill (
-                          {refillInfo.refillOptions.full.quantity.toLocaleString()}
+                          {formatNumber(refillInfo.refillOptions.full.quantity)}
                           )
                         </div>
                         <div
                           className="text-sm"
                           style={{ color: 'var(--text-muted)' }}
                         >
-                          Cost: ${refillInfo.refillOptions.full.cost.toFixed(2)}
+                          Cost: ${formatPrice(refillInfo.refillOptions.full.cost, 2)}
                           {refillInfo.refillOptions.full.affordable ? (
                             <span className="text-green-600 ml-2">
                               ✓ Affordable
@@ -1234,7 +1234,7 @@ const RefillOrdersPage = () => {
                       >
                         <div className="font-medium">
                           Remaining Only (
-                          {refillInfo.refillOptions.remaining.quantity.toLocaleString()}
+                          {formatNumber(refillInfo.refillOptions.remaining.quantity)}
                           )
                         </div>
                         <div
@@ -1242,7 +1242,7 @@ const RefillOrdersPage = () => {
                           style={{ color: 'var(--text-muted)' }}
                         >
                           Cost: $
-                          {refillInfo.refillOptions.remaining.cost.toFixed(2)}
+                          {formatPrice(refillInfo.refillOptions.remaining.cost, 2)}
                           {refillInfo.refillOptions.remaining.affordable ? (
                             <span className="text-green-600 ml-2">
                               ✓ Affordable

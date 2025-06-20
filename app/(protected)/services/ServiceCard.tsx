@@ -3,6 +3,7 @@
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { formatNumber } from '@/lib/utils';
 import {
   FaCheckCircle,
   FaEye,
@@ -176,13 +177,13 @@ export default function ServiceCard({
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Min order:</span>
               <span className="font-medium text-gray-900">
-                {service.min_order?.toLocaleString()}
+                {formatNumber(service.min_order || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Max order:</span>
               <span className="font-medium text-gray-900">
-                {service.max_order?.toLocaleString()}
+                {formatNumber(service.max_order || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -250,7 +251,7 @@ export default function ServiceCard({
                   Min order:
                 </span>
                 <div className="text-sm font-semibold text-gray-900">
-                  {service.min_order?.toLocaleString()}
+                  {formatNumber(service.min_order || 0)}
                 </div>
               </div>
             </div>
@@ -260,7 +261,7 @@ export default function ServiceCard({
                   Max order:
                 </span>
                 <div className="text-sm font-semibold text-gray-900">
-                  {service.max_order?.toLocaleString()}
+                  {formatNumber(service.max_order || 0)}
                 </div>
               </div>
               <div>

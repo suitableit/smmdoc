@@ -3,6 +3,7 @@
 import useCurrency from '@/hooks/useCurrency';
 import { APP_NAME } from '@/lib/constants';
 import { useGetUserOrdersQuery } from '@/lib/services/userOrderApi';
+import { formatNumber, formatID, formatPrice } from '@/lib/utils';
 import moment from 'moment';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -325,7 +326,7 @@ export default function OrdersList() {
                           }`}
                         >
                           <span className="text-sm font-mono text-gray-700">
-                            #{order.id.substring(0, 8)}
+                            #{formatID(order.id)}
                           </span>
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
@@ -356,18 +357,18 @@ export default function OrdersList() {
                         <td className="py-3 px-4">
                           <span className="text-sm font-medium text-gray-900">
                             {currency === 'USD'
-                              ? `$${order.usdPrice?.toFixed(2) || '0.00'}`
-                              : `৳${order.bdtPrice?.toFixed(2) || '0.00'}`}
+                              ? `$${formatPrice(order.usdPrice || 0)}`
+                              : `৳${formatPrice(order.bdtPrice || 0)}`}
                           </span>
                         </td>
                         <td className="py-3 px-4">
                           <span className="text-sm text-gray-700">
-                            {order.startCount || '0'}
+                            {formatNumber(order.startCount || 0)}
                           </span>
                         </td>
                         <td className="py-3 px-4">
                           <span className="text-sm font-medium text-gray-900">
-                            {order.qty?.toLocaleString() || 0}
+                            {formatNumber(order.qty || 0)}
                           </span>
                         </td>
                         <td className="py-3 px-4 max-w-[200px]">
@@ -380,7 +381,7 @@ export default function OrdersList() {
                         </td>
                         <td className="py-3 px-4">
                           <span className="text-sm text-gray-700">
-                            {order.remains || order.qty || '0'}
+                            {formatNumber(order.remains || order.qty || 0)}
                           </span>
                         </td>
                         <td className="py-3 px-4">
@@ -441,11 +442,11 @@ export default function OrdersList() {
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
                 Showing{' '}
-                <span className="font-medium">{(page - 1) * limit + 1}</span> to{' '}
+                <span className="font-medium">{formatNumber((page - 1) * limit + 1)}</span> to{' '}
                 <span className="font-medium">
-                  {Math.min(page * limit, pagination.total)}
+                  {formatNumber(Math.min(page * limit, pagination.total))}
                 </span>{' '}
-                of <span className="font-medium">{pagination.total}</span>{' '}
+                of <span className="font-medium">{formatNumber(pagination.total)}</span>{' '}
                 orders
               </div>
               <div className="flex gap-2">

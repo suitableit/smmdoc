@@ -6,6 +6,8 @@ model NewOrder {
   link       String
   qty        Int
   price      Float
+  charge     Float    @default(0)
+  profit     Float    @default(0)
   avg_time   String
   status     String   @default("pending")
   createdAt  DateTime @default(now())

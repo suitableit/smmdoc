@@ -126,6 +126,10 @@ export async function POST(request: Request) {
         const usdPrice = (service.rate * quantity) / 1000;
         const bdtPrice = usdPrice * (user.dollarRate || 121.52);
         const finalPrice = user.currency === 'USD' ? usdPrice : bdtPrice;
+        
+        // Calculate charge (service cost) and profit
+        const charge = usdPrice; // Service cost in USD
+        const profit = finalPrice - charge; // Profit = selling price - service cost
 
         totalCost += finalPrice;
 
@@ -137,6 +141,8 @@ export async function POST(request: Request) {
           link,
           qty: quantity,
           price: finalPrice,
+          charge: charge,
+          profit: profit,
           usdPrice,
           bdtPrice,
           currency: user.currency,

@@ -7,7 +7,7 @@ import { SessionProvider } from 'next-auth/react';
 
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { getUserCurrency } from '@/lib/actions/currency';
-import { Geist_Mono, Nunito } from 'next/font/google';
+import { Nunito } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
 import StoreProvider from './StoreProvider';
@@ -17,11 +17,6 @@ const nunito = Nunito({
   variable: '--font-nunito',
   weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
@@ -48,6 +43,7 @@ export default async function RootLayout({
         </head>
         <body
           className={`${nunito.variable} font-nunito antialiased text-black`}
+          suppressHydrationWarning
         >
           <StoreProvider>
             <ThemeProvider

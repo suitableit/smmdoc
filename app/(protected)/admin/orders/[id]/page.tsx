@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import {
   Activity,
   AlertCircle,
@@ -359,7 +360,7 @@ export default function OrderDetailsPage() {
         <div>
           <BreadCrumb items={breadcrumbItems} />
           <p className="text-sm text-muted-foreground mt-1">
-            Detailed view and management of order #{orderId?.slice(-8)}
+            Detailed view and management of order #{orderId ? formatID(orderId.slice(-8)) : 'N/A'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -428,7 +429,7 @@ export default function OrderDetailsPage() {
                     Order ID
                   </Label>
                   <div className="font-mono text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-md mt-1">
-                    #{order.id}
+                    #{formatID(order.id)}
                   </div>
                 </div>
 
@@ -484,10 +485,10 @@ export default function OrderDetailsPage() {
                   </Label>
                   <div className="mt-1">
                     <div className="font-semibold text-gray-900">
-                      {order.qty.toLocaleString()}
+                      {formatNumber(order.qty)}
                     </div>
                     <div className="text-sm text-green-600">
-                      {(order.qty - order.remains).toLocaleString()} delivered
+                      {formatNumber(order.qty - order.remains)} delivered
                     </div>
                   </div>
                 </div>
@@ -510,7 +511,7 @@ export default function OrderDetailsPage() {
                     />
                   ) : (
                     <div className="font-semibold text-gray-900 mt-1">
-                      {order.startCount.toLocaleString()}
+                      {formatNumber(order.startCount)}
                     </div>
                   )}
                 </div>
@@ -533,7 +534,7 @@ export default function OrderDetailsPage() {
                     />
                   ) : (
                     <div className="font-semibold text-gray-900 mt-1">
-                      {order.remains.toLocaleString()}
+                      {formatNumber(order.remains)}
                     </div>
                   )}
                 </div>
@@ -675,7 +676,7 @@ export default function OrderDetailsPage() {
                   Current Balance
                 </Label>
                 <div className="font-semibold text-green-600 mt-1">
-                  ${order.user.balance.toFixed(2)} {order.user.currency}
+                  ${formatPrice(order.user.balance, 2)} {order.user.currency}
                 </div>
               </div>
               <div>
@@ -683,7 +684,7 @@ export default function OrderDetailsPage() {
                   Total Spent
                 </Label>
                 <div className="font-semibold text-gray-900 mt-1">
-                  ${order.user.total_spent.toFixed(2)} {order.user.currency}
+                  ${formatPrice(order.user.total_spent, 2)} {order.user.currency}
                 </div>
               </div>
             </div>
@@ -714,7 +715,7 @@ export default function OrderDetailsPage() {
                   Service Rate
                 </Label>
                 <div className="font-semibold text-gray-900 mt-1">
-                  ${order.service.rate.toFixed(2)} per 1000
+                  ${formatPrice(order.service.rate, 2)} per 1000
                 </div>
               </div>
               <div>
@@ -722,7 +723,7 @@ export default function OrderDetailsPage() {
                   Order Total
                 </Label>
                 <div className="font-semibold text-green-600 mt-1">
-                  ${order.price.toFixed(2)} {order.currency}
+                  ${formatPrice(order.price, 2)} {order.currency}
                 </div>
               </div>
             </div>
@@ -733,7 +734,7 @@ export default function OrderDetailsPage() {
                   USD Price
                 </Label>
                 <div className="font-semibold text-gray-900 mt-1">
-                  ${order.usdPrice.toFixed(2)}
+                  ${formatPrice(order.usdPrice, 2)}
                 </div>
               </div>
               <div>
@@ -741,7 +742,7 @@ export default function OrderDetailsPage() {
                   BDT Price
                 </Label>
                 <div className="font-semibold text-gray-900 mt-1">
-                  ৳{order.bdtPrice.toFixed(2)}
+                  ৳{formatPrice(order.bdtPrice, 2)}
                 </div>
               </div>
             </div>

@@ -66,6 +66,7 @@ export default {
         session.user.name = token.name;
         session.user.username = token.username;
         session.user.email = token.email;
+        session.user.balance = token.balance;
       }
       return session;
     },
@@ -79,7 +80,12 @@ export default {
       token.name = existingUser.name;
       token.username = existingUser.username;
       token.email = existingUser.email;
+      token.balance = existingUser.balance;
       return token;
     },
+  },
+  pages: {
+    signIn: "/sign-in",
+    error: "/sign-error",
   },
 } satisfies NextAuthConfig;

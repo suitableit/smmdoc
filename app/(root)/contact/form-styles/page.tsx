@@ -3,17 +3,16 @@
 import Link from 'next/link';
 import React, { useState } from 'react';
 import {
-  FaArrowRight,
-  FaCheckCircle,
-  FaEnvelope,
-  FaExclamationTriangle,
-  FaFacebookF,
-  FaLock,
-  FaPhone,
-  FaSpinner,
-  FaTwitter,
-  FaUser,
-  FaYoutube,
+    FaArrowRight,
+    FaCheckCircle,
+    FaEnvelope,
+    FaExclamationTriangle,
+    FaFacebookF,
+    FaLock,
+    FaPhone,
+    FaTwitter,
+    FaUser,
+    FaYoutube
 } from 'react-icons/fa';
 
 // Contact Form Component
@@ -290,7 +289,7 @@ const ContactForm: React.FC = () => {
         >
           {isSubmitting ? (
             <>
-              <FaSpinner className="w-4 h-4 animate-spin" />
+              <GradientSpinner size="w-4 h-4" />
               <span>Sending...</span>
             </>
           ) : (

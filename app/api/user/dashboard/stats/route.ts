@@ -141,6 +141,7 @@ export async function GET() {
           status: order.status,
           bdtPrice: order.bdtPrice,
           createdAt: order.createdAt,
+          link: order.link,
           service: {
             name: order.service.name
           },

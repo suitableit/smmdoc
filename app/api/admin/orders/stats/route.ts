@@ -80,31 +80,58 @@ export async function GET(req: NextRequest) {
       
       // Daily order trends (last 30 days or all time)
       period === 'all' ?
-        db.$queryRaw`
-          SELECT
-            DATE(createdAt) as date,
-            COUNT(*) as orders,
-            SUM(price) as revenue,
-            COUNT(DISTINCT userId) as unique_users
-          FROM NewOrder
-          ${userId ? db.$queryRaw`WHERE userId = ${userId}` : db.$queryRaw``}
-          GROUP BY DATE(createdAt)
-          ORDER BY date DESC
-          LIMIT 30
-        ` :
-        db.$queryRaw`
-          SELECT
-            DATE(createdAt) as date,
-            COUNT(*) as orders,
-            SUM(price) as revenue,
-            COUNT(DISTINCT userId) as unique_users
-          FROM NewOrder
-          WHERE createdAt >= ${new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000)}
-          ${userId ? db.$queryRaw`AND userId = ${userId}` : db.$queryRaw``}
-          GROUP BY DATE(createdAt)
-          ORDER BY date DESC
-          LIMIT 30
-        `,
+        (userId ? 
+          db.$queryRaw`
+            SELECT
+              DATE(createdAt) as date,
+              COUNT(*) as orders,
+              SUM(price) as revenue,
+              COUNT(DISTINCT userId) as unique_users
+            FROM NewOrder
+            WHERE userId = ${userId}
+            GROUP BY DATE(createdAt)
+            ORDER BY date DESC
+            LIMIT 30
+          ` :
+          db.$queryRaw`
+            SELECT
+              DATE(createdAt) as date,
+              COUNT(*) as orders,
+              SUM(price) as revenue,
+              COUNT(DISTINCT userId) as unique_users
+            FROM NewOrder
+            GROUP BY DATE(createdAt)
+            ORDER BY date DESC
+            LIMIT 30
+          `
+        ) :
+        (userId ?
+          db.$queryRaw`
+            SELECT
+              DATE(createdAt) as date,
+              COUNT(*) as orders,
+              SUM(price) as revenue,
+              COUNT(DISTINCT userId) as unique_users
+            FROM NewOrder
+            WHERE createdAt >= ${new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000)}
+            AND userId = ${userId}
+            GROUP BY DATE(createdAt)
+            ORDER BY date DESC
+            LIMIT 30
+          ` :
+          db.$queryRaw`
+            SELECT
+              DATE(createdAt) as date,
+              COUNT(*) as orders,
+              SUM(price) as revenue,
+              COUNT(DISTINCT userId) as unique_users
+            FROM NewOrder
+            WHERE createdAt >= ${new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000)}
+            GROUP BY DATE(createdAt)
+            ORDER BY date DESC
+            LIMIT 30
+          `
+        ),
       
       // Top services by order count
       db.newOrder.groupBy({
@@ -213,7 +240,7 @@ export async function GET(req: NextRequest) {
     // Calculate growth rates (compare with previous period) - only if period is specified
     let orderGrowth = 0;
     let revenueGrowth = 0;
-    let periodInfo: any = {
+    const periodInfo: any = {
       type: period === 'all' ? 'all-time' : 'period',
       endDate: new Date().toISOString()
     };
@@ -254,29 +281,56 @@ export async function GET(req: NextRequest) {
     console.log('Total stats:', totalStats);
     console.log('Status stats:', statusStats);
 
+    // Convert BigInt values to Numbers for JSON serialization
+    const convertBigIntToNumber = (value: any): number => {
+      return typeof value === 'bigint' ? Number(value) : (value || 0);
+    };
+
     const statistics = {
       period: periodInfo,
       overview: {
-        totalOrders: totalStats._count.id,
-        totalRevenue: totalStats._sum.price || 0,
-        totalQuantity: totalStats._sum.qty || 0,
-        averageOrderValue: totalStats._avg.price || 0,
+        totalOrders: convertBigIntToNumber(totalStats._count.id),
+        totalRevenue: convertBigIntToNumber(totalStats._sum.price),
+        totalQuantity: convertBigIntToNumber(totalStats._sum.qty),
+        averageOrderValue: convertBigIntToNumber(totalStats._avg.price),
         orderGrowth: Math.round(orderGrowth * 100) / 100,
         revenueGrowth: Math.round(revenueGrowth * 100) / 100
       },
       statusBreakdown: statusStats.map(stat => ({
         status: stat.status,
-        count: stat._count.status,
-        revenue: stat._sum.price || 0,
-        percentage: totalStats._count.id > 0 ? Math.round((stat._count.status / totalStats._count.id) * 100) : 0
+        count: convertBigIntToNumber(stat._count.status),
+        revenue: convertBigIntToNumber(stat._sum.price),
+        percentage: totalStats._count.id > 0 ? Math.round((convertBigIntToNumber(stat._count.status) / convertBigIntToNumber(totalStats._count.id)) * 100) : 0
       })),
-      dailyTrends: dailyStats,
-      topServices: topServicesWithDetails,
-      topUsers: topUsersWithDetails,
+      dailyTrends: Array.isArray(dailyStats) ? dailyStats.map((stat: any) => ({
+        date: stat.date,
+        orders: convertBigIntToNumber(stat.orders),
+        revenue: convertBigIntToNumber(stat.revenue),
+        unique_users: convertBigIntToNumber(stat.unique_users)
+      })) : [],
+      topServices: topServicesWithDetails.map(stat => ({
+        ...stat,
+        _count: {
+          serviceId: convertBigIntToNumber(stat._count.serviceId)
+        },
+        _sum: {
+          price: convertBigIntToNumber(stat._sum.price),
+          qty: convertBigIntToNumber(stat._sum.qty)
+        }
+      })),
+      topUsers: topUsersWithDetails.map(stat => ({
+        ...stat,
+        _count: {
+          userId: convertBigIntToNumber(stat._count.userId)
+        },
+        _sum: {
+          price: convertBigIntToNumber(stat._sum.price)
+        }
+      })),
       revenueByCurrency: revenueStats.map(stat => ({
         currency: stat.currency,
-        orders: stat._count.currency,
-        revenue: stat._sum.price || 0
+        orders: convertBigIntToNumber(stat._count.currency),
+        revenue: convertBigIntToNumber(stat._sum.price)
       }))
     };
     
