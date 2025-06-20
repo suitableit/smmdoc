@@ -49,24 +49,10 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
-    title: 'Create Service',
-    href: '/admin/services/create-service',
-    icon: 'FaPlusCircle',
-    label: 'Create Service',
-    roles: ['admin'],
-  },
-  {
     title: 'Manage Categories',
     href: '/admin/services/categories',
     icon: 'FaLayerGroup',
     label: 'Manage Categories',
-    roles: ['admin'],
-  },
-  {
-    title: 'Create Category',
-    href: '/admin/services/categories/create-category',
-    icon: 'FaPlusCircle',
-    label: 'Create Category',
     roles: ['admin'],
   },
   {
@@ -107,17 +93,17 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
+    title: 'Moderators',
+    href: '/admin/users/moderators',
+    icon: 'FaUserCheck',
+    label: 'Moderators',
+    roles: ['Moderators'],
+  },
+  {
     title: 'User Activity Logs',
     href: '/admin/users/logs',
     icon: 'FaChartLine',
     label: 'User Activity Logs',
-    roles: ['admin'],
-  },
-  {
-    title: 'KYC Approvals',
-    href: '/admin/users/kyc',
-    icon: 'FaUserCheck',
-    label: 'KYC Approvals',
     roles: ['admin'],
   },
 

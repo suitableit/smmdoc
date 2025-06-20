@@ -82,11 +82,9 @@ export default function SideBarNav({
         services: items.filter((item) =>
           [
             'All Services',
-            'Create Service',
             'Manage Categories',
-            'Create Category',
-            'Modify Bulk Services',
             'Sort by Category',
+            'Modify Bulk Services',
             'Synchronize Logs',
           ].includes(item.title)
         ),
@@ -94,8 +92,8 @@ export default function SideBarNav({
           [
             'Users List',
             'Admins',
+            'Moderators',
             'User Activity Logs',
-            'KYC Approvals',
           ].includes(item.title)
         ),
         funds: items.filter((item) =>
