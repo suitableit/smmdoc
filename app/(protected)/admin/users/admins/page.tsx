@@ -637,6 +637,7 @@ const AdminsListPage = () => {
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Username</th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Email</th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Role</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Balance</th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Registered Date</th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
                       </tr>
@@ -684,6 +685,13 @@ const AdminsListPage = () => {
                               }`}>
                                 {admin.role === 'super_admin' ? 'SUPER ADMIN' : admin.role === 'admin' ? 'Admin' : 'MODERATOR'}
                               </span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-left">
+                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                                {formatCurrency(admin.balance || 0, admin.currency || 'USD')}
+                              </div>
                             </div>
                           </td>
                           <td className="p-3">
