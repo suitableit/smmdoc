@@ -696,10 +696,10 @@ const AdminsListPage = () => {
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
                                 {admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : 'null'}
                               </div>
-                              <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
                                 {admin.createdAt ? new Date(admin.createdAt).toLocaleTimeString() : 'null'}
                               </div>
                             </div>

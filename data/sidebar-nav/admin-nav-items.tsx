@@ -14,7 +14,7 @@ export const adminNavItems = [
   {
     title: 'All Orders',
     href: '/admin/orders',
-    icon: 'FaListAlt',
+    icon: 'FaBox',
     label: 'All Orders',
     roles: ['admin'],
   },
@@ -42,17 +42,24 @@ export const adminNavItems = [
 
   // Services Section
   {
-    title: 'All Services',
+    title: 'Services',
     href: '/admin/services',
     icon: 'FaBriefcase',
-    label: 'All Services',
+    label: 'Services',
+    roles: ['admin'],
+  },  
+  {
+    title: 'Import Services',
+    href: '/admin/services/import-services',
+    icon: 'FaFileImport',
+    label: 'Import Services',
     roles: ['admin'],
   },
   {
-    title: 'Manage Categories',
-    href: '/admin/services/categories',
-    icon: 'FaLayerGroup',
-    label: 'Manage Categories',
+    title: 'Service Types',
+    href: '/admin/services/types',
+    icon: 'FaShapes',
+    label: 'Service Types',
     roles: ['admin'],
   },
   {
@@ -60,13 +67,6 @@ export const adminNavItems = [
     href: '/admin/services/bulk-modify',
     icon: 'FaEdit',
     label: 'Modify Bulk Services',
-    roles: ['admin'],
-  },
-  {
-    title: 'Sort by Category',
-    href: '/admin/services/sort-category',
-    icon: 'FaSortAmountDown',
-    label: 'Sort by Category',
     roles: ['admin'],
   },
   {

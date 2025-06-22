@@ -81,9 +81,9 @@ export default function SideBarNav({
         ),
         services: items.filter((item) =>
           [
-            'All Services',
-            'Manage Categories',
-            'Sort by Category',
+            'Services',
+            'Import Services',
+            'Service Types',
             'Modify Bulk Services',
             'Synchronize Logs',
           ].includes(item.title)

@@ -2,12 +2,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import ServiceViewModal from '@/components/admin/services/serviceViewModal';
+import ServiceViewModal from '@/app/(protected)/admin/services/serviceViewModal';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
-import { Fragment, useEffect, useState } from 'react';
 import { formatNumber } from '@/lib/utils';
+import { Fragment, useEffect, useState } from 'react';
 import {
   FaCheckCircle,
   FaEye,

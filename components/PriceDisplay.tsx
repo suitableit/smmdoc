@@ -31,7 +31,7 @@ export function PriceDisplay({
 
   return (
     <span className={className}>
-      {displayCurrency === 'USD' ? '$' : '৳'} {formatPrice(displayAmount, 4)}
+      {displayCurrency === 'USD' ? '$' : '৳'}{formatPrice(displayAmount, 4)}
     </span>
   );
 }

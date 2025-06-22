@@ -1,6 +1,6 @@
 'use client';
-import Footer from '@/components/footer';
-import Header from '@/components/shared/header';
+import Footer from '@/components/frontend/footer';
+import Header from '@/components/frontend/header';
 import { FaArrowLeft, FaHeadset } from 'react-icons/fa';
 
 const NotFoundPage = () => {

@@ -1,6 +1,6 @@
 'use client';
-import Footer from '@/components/footer';
-import Header from '@/components/shared/header';
+import Footer from '@/components/frontend/footer';
+import Header from '@/components/frontend/header';
 import { handleError } from '@/lib/utils';
 import { useEffect } from 'react';
 import { FaArrowLeft, FaRedo } from 'react-icons/fa';
