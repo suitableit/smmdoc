@@ -1467,3 +1467,89 @@ body {
     font-size: 0.875rem;
   }
 }
+
+.modal-backdrop-enter {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.modal-backdrop-exit {
+  animation: fadeOut 0.3s ease-out forwards;
+}
+
+.modal-content-enter {
+  animation: modalSlideIn 0.3s ease-out forwards;
+}
+
+.modal-content-exit {
+  animation: modalSlideOut 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalSlideOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+}
+
+/* Drag and Drop Styles */
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grab:active {
+  cursor: grabbing;
+}
+
+[draggable="true"] {
+  -webkit-user-drag: element;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Improve drag visual feedback */
+.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+}

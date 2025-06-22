@@ -1077,10 +1077,10 @@ const UsersListPage = () => {
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
                                 {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'null'}
                               </div>
-                              <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
                                 {user.createdAt ? new Date(user.createdAt).toLocaleTimeString() : 'null'}
                               </div>
                             </div>

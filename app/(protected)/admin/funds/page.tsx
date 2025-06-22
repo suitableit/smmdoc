@@ -1,9 +1,9 @@
 'use client';
 
-import AddUserFund from '@/components/admin/funds/AddUserFund';
-import AllTransactions from '@/components/admin/funds/AllTransactions';
-import PendingTransactions from '@/components/admin/funds/PendingTransactions';
-import UpdatePrice from '@/components/admin/funds/UpdatePrice';
+import AddUserFund from '@/app/(protected)/admin/funds/AddUserFund';
+import AllTransactions from '@/app/(protected)/admin/funds/AllTransactions';
+import PendingTransactions from '@/app/(protected)/admin/funds/PendingTransactions';
+import UpdatePrice from '@/app/(protected)/admin/funds/UpdatePrice';
 import BreadCrumb from '@/components/shared/BreadCrumb';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

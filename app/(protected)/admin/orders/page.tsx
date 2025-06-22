@@ -6,7 +6,6 @@ import {
   FaCheckCircle,
   FaClock,
   FaDollarSign,
-  FaDownload,
   FaEllipsisH,
   FaExclamationCircle,
   FaExternalLinkAlt,
@@ -372,10 +371,6 @@ const AdminOrdersPage = () => {
     fetchStats();
     fetchAllOrdersForCounts(); // Get real status counts
     
-    // Initial orders load
-    setOrdersLoading(true);
-    fetchOrders();
-    
     // Simulate stats loading delay
     const timer = setTimeout(() => {
       setStatsLoading(false);
@@ -465,10 +460,6 @@ const AdminOrdersPage = () => {
     fetchStats();
     fetchAllOrdersForCounts(); // Refresh status counts too
     showToast('Orders refreshed successfully!', 'success');
-  };
-
-  const handleExport = () => {
-    showToast('Export started! Download will begin shortly.', 'info');
   };
 
   // Handle order deletion
@@ -613,26 +604,6 @@ const AdminOrdersPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header mb-6">
-          <div className="flex gap-2">
-            <button
-              onClick={handleRefresh}
-              className="btn btn-secondary flex items-center gap-2"
-            >
-              <FaSync />
-              Refresh
-            </button>
-            <button
-              onClick={handleExport}
-              className="btn btn-primary flex items-center gap-2"
-            >
-              <FaDownload />
-              Export
-            </button>
-          </div>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div className="card card-padding">
@@ -720,161 +691,181 @@ const AdminOrdersPage = () => {
           </div>
         </div>
 
-        {/* Filter Buttons and Search Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          {/* Left: Filter Buttons */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'all'
-                  ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              All
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'all'
-                    ? 'bg-white/20'
-                    : 'bg-purple-100 text-purple-700'
-                }`}
+        {/* Controls Section - After stats cards */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            {/* Left: Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Page View Dropdown */}
+              <select 
+                value={pagination.limit}
+                onChange={(e) => setPagination(prev => ({ ...prev, limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value), page: 1 }))}
+                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
-                {stats.totalOrders}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('pending')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'pending'
-                  ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Pending
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'pending'
-                    ? 'bg-white/20'
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
+              </select>
+              
+              <button
+                onClick={handleRefresh}
+                disabled={ordersLoading || statsLoading}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
-                {stats.pendingOrders}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('processing')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'processing'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Processing
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'processing'
-                    ? 'bg-white/20'
-                    : 'bg-blue-100 text-blue-700'
-                }`}
-              >
-                {stats.processingOrders}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('completed')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'completed'
-                  ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Completed
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'completed'
-                    ? 'bg-white/20'
-                    : 'bg-green-100 text-green-700'
-                }`}
-              >
-                {stats.completedOrders}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('partial')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'partial'
-                  ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Partial
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'partial'
-                    ? 'bg-white/20'
-                    : 'bg-orange-100 text-orange-700'
-                }`}
-              >
-                {stats.statusBreakdown?.partial || 0}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('cancelled')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'cancelled'
-                  ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Cancelled
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'cancelled'
-                    ? 'bg-white/20'
-                    : 'bg-red-100 text-red-700'
-                }`}
-              >
-                {stats.statusBreakdown?.cancelled || 0}
-              </span>
-            </button>
-          </div>
-
-          {/* Right: Search Bar with Filter Dropdown */}
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="relative flex-1 md:min-w-[300px]">
-              <FaSearch
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                style={{ color: 'var(--text-muted)' }}
-              />
-              <input
-                type="text"
-                placeholder="Search orders..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 pr-4"
-              />
+                <FaSync className={ordersLoading || statsLoading ? 'animate-spin' : ''} />
+                Refresh
+              </button>
             </div>
-            <select className="form-field 0w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer">
-              <option value="id">Order ID</option>
-              <option value="url">Order URL</option>
-              <option value="username">Username</option>
-            </select>
+            
+            {/* Right: Search Controls Only */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <FaSearch
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <input
+                  type="text"
+                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} orders...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                />
+              </div>
+              
+              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+                <option value="id">Order ID</option>
+                <option value="url">Order URL</option>
+                <option value="username">Username</option>
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Orders Table */}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            <div className="flex items-center gap-2 flex-1">
-              <div className="card-icon">
-                <FaBox />
+            {/* Filter Buttons - Inside table header */}
+            <div className="mb-4">
+              <div className="block space-y-2">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'all'
+                      ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  All
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'all'
+                        ? 'bg-white/20'
+                        : 'bg-purple-100 text-purple-700'
+                    }`}
+                  >
+                    {stats.totalOrders}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('pending')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'pending'
+                      ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Pending
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'pending'
+                        ? 'bg-white/20'
+                        : 'bg-yellow-100 text-yellow-700'
+                    }`}
+                  >
+                    {stats.pendingOrders}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('processing')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'processing'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Processing
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'processing'
+                        ? 'bg-white/20'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
+                    {stats.processingOrders}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('completed')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'completed'
+                      ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Completed
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'completed'
+                        ? 'bg-white/20'
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                  >
+                    {stats.completedOrders}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('partial')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'partial'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Partial
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'partial'
+                        ? 'bg-white/20'
+                        : 'bg-orange-100 text-orange-700'
+                    }`}
+                  >
+                    {stats.statusBreakdown?.partial || 0}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('cancelled')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'cancelled'
+                      ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Cancelled
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'cancelled'
+                        ? 'bg-white/20'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    {stats.statusBreakdown?.cancelled || 0}
+                  </span>
+                </button>
               </div>
-              <h3 className="card-title">Orders List ({pagination.total})</h3>
-              <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
-                Manage Orders
-              </span>
             </div>
+            
             {selectedOrders.length > 0 && (
               <div className="flex items-center gap-2 mt-4">
                 <span
@@ -1083,7 +1074,7 @@ const AdminOrdersPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="text-right">
-                              <div className="font-semibold text-sm text-blue-600">
+                              <div className="font-semibold text-sm text-600">
                                 $
                                 {formatPrice(order.price || 0, 2)}
                               </div>
@@ -1232,7 +1223,6 @@ const AdminOrdersPage = () => {
                             <div>
                               <div
                                 className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
                               >
                                 {order.createdAt
                                   ? new Date(
@@ -1242,7 +1232,6 @@ const AdminOrdersPage = () => {
                               </div>
                               <div
                                 className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
                               >
                                 {order.createdAt
                                   ? new Date(
@@ -1691,8 +1680,7 @@ const AdminOrdersPage = () => {
 
                 {/* Pagination */}
                 <div
-                  className="flex items-center justify-between pt-4 border-t"
-                  style={{ padding: '16px 24px 24px 24px' }}
+                  className="flex items-center justify-between pt-4 pb-6 border-t"
                 >
                   <div
                     className="text-sm"
