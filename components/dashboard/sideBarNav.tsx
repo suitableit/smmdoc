@@ -85,7 +85,7 @@ export default function SideBarNav({
             'Import Services',
             'Service Types',
             'Modify Bulk Services',
-            'Synchronize Logs',
+            'API Sync Logs',
           ].includes(item.title)
         ),
         users: items.filter((item) =>

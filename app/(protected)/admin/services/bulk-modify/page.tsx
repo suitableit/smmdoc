@@ -1,10 +1,9 @@
 'use client';
 
-import BreadCrumb from '@/components/shared/BreadCrumb';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+// import { Checkbox } from '@/components/ui/checkbox'; // Removed - using HTML checkbox instead
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -56,11 +55,6 @@ export default function BulkModifyServicesPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [bulkData, setBulkData] = useState<BulkUpdateData>({});
   const [showBulkForm, setShowBulkForm] = useState(false);
-
-  const breadcrumbItems = [
-    { title: 'Services', link: '/admin/services' },
-    { title: 'Modify Bulk Services', link: '/admin/services/bulk-modify' },
-  ];
 
   useEffect(() => {
     fetchServices();
@@ -160,9 +154,6 @@ export default function BulkModifyServicesPage() {
   if (loading) {
     return (
       <div className="h-full space-y-6">
-        <div className="flex items-center justify-between py-1">
-          <BreadCrumb items={breadcrumbItems} />
-        </div>
         <div className="flex items-center justify-center py-20">
           <div className="flex items-center gap-2">
             <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />
@@ -390,10 +381,11 @@ export default function BulkModifyServicesPage() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Checkbox
+                    <input
+                      type="checkbox"
                       checked={selectedServices.includes(service.id)}
-                      onCheckedChange={() => handleSelectService(service.id)}
-                      className="transition-all duration-200"
+                      onChange={() => handleSelectService(service.id)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-all duration-200"
                     />
                     <div>
                       <h3 className="font-medium text-gray-900">
