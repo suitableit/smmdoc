@@ -47,13 +47,6 @@ export const adminNavItems = [
     icon: 'FaBriefcase',
     label: 'Services',
     roles: ['admin'],
-  },  
-  {
-    title: 'Import Services',
-    href: '/admin/services/import-services',
-    icon: 'FaFileImport',
-    label: 'Import Services',
-    roles: ['admin'],
   },
   {
     title: 'Service Types',
@@ -70,10 +63,17 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
-    title: 'Synchronize Logs',
+    title: 'Import Services',
+    href: '/admin/services/import-services',
+    icon: 'FaFileImport',
+    label: 'Import Services',
+    roles: ['admin'],
+  },
+  {
+    title: 'API Sync Logs',
     href: '/admin/services/sync-logs',
     icon: 'FaSync',
-    label: 'Synchronize Logs',
+    label: 'API Sync Logs',
     roles: ['admin'],
   },
 
