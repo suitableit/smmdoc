@@ -64,7 +64,7 @@ export const adminNavItems = [
   },
   {
     title: 'Import Services',
-    href: '/admin/services/import-services',
+    href: '/admin/services/import',
     icon: 'FaFileImport',
     label: 'Import Services',
     roles: ['admin'],

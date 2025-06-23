@@ -1,686 +1,842 @@
 'use client';
 
-import BreadCrumb from '@/components/shared/BreadCrumb';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import React, { useEffect, useState } from 'react';
 import {
-  Activity,
-  AlertTriangle,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Database,
-  Download,
-  Eye,
-  RefreshCw,
-  RotateCw,
-  Search,
-  Server,
-  XCircle,
-  Zap,
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+  FaBox,
+  FaCheckCircle,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTrash,
+  FaExclamationTriangle
+} from 'react-icons/fa';
 
+// Import APP_NAME constant
+import { APP_NAME } from '@/lib/constants';
+
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
+// Toast Component
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div className={`toast toast-${type} toast-enter`}>
+    {type === 'success' && <FaCheckCircle className="toast-icon" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="toast-close">
+      <FaTimes className="toast-close-icon" />
+    </button>
+  </div>
+);
+
+// Define interface for SyncLog
 interface SyncLog {
   id: string;
-  provider: string;
-  action: string;
-  status: 'success' | 'failed' | 'pending' | 'in_progress';
-  message: string;
-  servicesAffected: number;
-  timestamp: string;
-  duration?: number;
-  errorDetails?: string;
+  slNo: number;
+  apiProvider: string;
+  serviceName: string;
+  changes: string;
+  changeType: 'added' | 'updated' | 'deleted' | 'error';
+  when: string;
 }
 
-interface SyncStats {
-  totalSyncs: number;
-  successfulSyncs: number;
-  failedSyncs: number;
-  pendingSyncs: number;
-  lastSyncTime: string;
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
 }
 
-export default function SynchronizeLogsPage() {
-  const [logs, setLogs] = useState<SyncLog[]>([]);
-  const [stats, setStats] = useState<SyncStats>({
-    totalSyncs: 0,
-    successfulSyncs: 0,
-    failedSyncs: 0,
-    pendingSyncs: 0,
-    lastSyncTime: '',
-  });
-  const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [providerFilter, setProviderFilter] = useState('all');
-
-  const breadcrumbItems = [
-    { title: 'Services', link: '/admin/services' },
-    { title: 'Synchronize Logs', link: '/admin/services/sync-logs' },
-  ];
-
+const SyncLogsPage = () => {
+  // Set document title using useEffect for client-side
   useEffect(() => {
-    fetchSyncLogs();
-    fetchSyncStats();
+    document.title = `API Sync Logs — ${APP_NAME}`;
   }, []);
 
-  const fetchSyncLogs = async () => {
-    try {
-      setLoading(true);
-      // Simulate API call - replace with actual endpoint
-      const mockLogs: SyncLog[] = [
-        {
-          id: '1',
-          provider: 'SMM Provider A',
-          action: 'Service Update',
-          status: 'success',
-          message: 'Successfully synchronized 45 services',
-          servicesAffected: 45,
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          duration: 2.5,
-        },
-        {
-          id: '2',
-          provider: 'SMM Provider B',
-          action: 'Price Sync',
-          status: 'failed',
-          message: 'Failed to sync pricing data',
-          servicesAffected: 0,
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-          duration: 1.2,
-          errorDetails: 'Connection timeout after 30 seconds',
-        },
-        {
-          id: '3',
-          provider: 'SMM Provider C',
-          action: 'Full Sync',
-          status: 'in_progress',
-          message: 'Synchronizing all services...',
-          servicesAffected: 120,
-          timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-        },
-        {
-          id: '4',
-          provider: 'SMM Provider A',
-          action: 'Status Check',
-          status: 'success',
-          message: 'All services status verified',
-          servicesAffected: 45,
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-          duration: 0.8,
-        },
-        {
-          id: '5',
-          provider: 'SMM Provider D',
-          action: 'New Services',
-          status: 'pending',
-          message: 'Waiting for provider response',
-          servicesAffected: 0,
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-        },
-      ];
-
-      setLogs(mockLogs);
-    } catch (error) {
-      console.error('Error fetching sync logs:', error);
-      toast.error('Error fetching sync logs');
-    } finally {
-      setLoading(false);
+  // Dummy data for sync logs
+  const dummySyncLogs: SyncLog[] = [
+    { 
+      id: 'log_001', 
+      slNo: 1, 
+      apiProvider: 'SMM Panel Pro', 
+      serviceName: 'Instagram Followers', 
+      changes: 'Service rate updated: $0.50 → $0.45', 
+      changeType: 'updated',
+      when: '2024-01-15T10:30:00Z' 
+    },
+    { 
+      id: 'log_002', 
+      slNo: 2, 
+      apiProvider: 'Social Boost API', 
+      serviceName: 'YouTube Views', 
+      changes: 'New service added with rate $1.20', 
+      changeType: 'added',
+      when: '2024-01-15T09:45:00Z' 
+    },
+    { 
+      id: 'log_003', 
+      slNo: 3, 
+      apiProvider: 'Growth Engine', 
+      serviceName: 'TikTok Likes', 
+      changes: 'Service discontinued', 
+      changeType: 'deleted',
+      when: '2024-01-15T08:15:00Z' 
+    },
+    { 
+      id: 'log_004', 
+      slNo: 4, 
+      apiProvider: 'Viral Marketing', 
+      serviceName: 'Facebook Page Likes', 
+      changes: 'Min/Max quantity updated: 100-50000', 
+      changeType: 'updated',
+      when: '2024-01-14T16:20:00Z' 
+    },
+    { 
+      id: 'log_005', 
+      slNo: 5, 
+      apiProvider: 'SMM Panel Pro', 
+      serviceName: 'Twitter Retweets', 
+      changes: 'API connection failed during sync', 
+      changeType: 'error',
+      when: '2024-01-14T14:10:00Z' 
+    },
+    { 
+      id: 'log_006', 
+      slNo: 6, 
+      apiProvider: 'Boost Central', 
+      serviceName: 'LinkedIn Connections', 
+      changes: 'Service status changed to active', 
+      changeType: 'updated',
+      when: '2024-01-14T12:30:00Z' 
+    },
+    { 
+      id: 'log_007', 
+      slNo: 7, 
+      apiProvider: 'Social Boost API', 
+      serviceName: 'Instagram Story Views', 
+      changes: 'New service added with rate $0.30', 
+      changeType: 'added',
+      when: '2024-01-14T11:45:00Z' 
+    },
+    { 
+      id: 'log_008', 
+      slNo: 8, 
+      apiProvider: 'Growth Engine', 
+      serviceName: 'Pinterest Saves', 
+      changes: 'Service temporarily disabled', 
+      changeType: 'updated',
+      when: '2024-01-13T15:25:00Z' 
+    },
+    { 
+      id: 'log_009', 
+      slNo: 9, 
+      apiProvider: 'Viral Marketing', 
+      serviceName: 'Telegram Members', 
+      changes: 'Rate increased: $0.80 → $0.95', 
+      changeType: 'updated',
+      when: '2024-01-13T13:15:00Z' 
+    },
+    { 
+      id: 'log_010', 
+      slNo: 10, 
+      apiProvider: 'SMM Panel Pro', 
+      serviceName: 'Discord Members', 
+      changes: 'Service removed from catalog', 
+      changeType: 'deleted',
+      when: '2024-01-13T10:40:00Z' 
     }
-  };
+  ];
 
-  const fetchSyncStats = async () => {
-    try {
-      // Simulate API call - replace with actual endpoint
-      const mockStats: SyncStats = {
-        totalSyncs: 156,
-        successfulSyncs: 142,
-        failedSyncs: 8,
-        pendingSyncs: 6,
-        lastSyncTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      };
-
-      setStats(mockStats);
-    } catch (error) {
-      console.error('Error fetching sync stats:', error);
-    }
-  };
-
-  const handleManualSync = async (provider?: string) => {
-    try {
-      setSyncing(true);
-
-      // Simulate sync process
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      toast.success(
-        provider ? `Sync initiated for ${provider}` : 'Full sync initiated'
-      );
-      fetchSyncLogs();
-      fetchSyncStats();
-    } catch (error) {
-      console.error('Error initiating sync:', error);
-      toast.error('Error initiating sync');
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const filteredLogs = logs.filter((log) => {
-    const matchesSearch =
-      log.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.message.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || log.status === statusFilter;
-    const matchesProvider =
-      providerFilter === 'all' || log.provider === providerFilter;
-    return matchesSearch && matchesStatus && matchesProvider;
+  // State management
+  const [syncLogs, setSyncLogs] = useState<SyncLog[]>(dummySyncLogs);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 20,
+    total: dummySyncLogs.length,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false,
   });
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'in_progress':
-        return <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />;
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchBy, setSearchBy] = useState('all');
+  const [selectedLogs, setSelectedLogs] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
+
+  // Loading states
+  const [logsLoading, setLogsLoading] = useState(false);
+
+  // Utility functions
+  const formatID = (id: string) => {
+    return id.toUpperCase();
+  };
+
+  // Get change type badge
+  const getChangeTypeBadge = (changeType: string) => {
+    switch (changeType) {
+      case 'added':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            Added
+          </span>
+        );
+      case 'updated':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            Updated
+          </span>
+        );
+      case 'deleted':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            Deleted
+          </span>
+        );
+      case 'error':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            Error
+          </span>
+        );
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            Unknown
+          </span>
+        );
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'success':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'failed':
-        return 'bg-red-100 text-red-800 hover:bg-red-200';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+  // Filter sync logs based on search term and search category
+  const filteredSyncLogs = syncLogs.filter(log => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    switch (searchBy) {
+      case 'api_provider':
+        return log.apiProvider.toLowerCase().includes(searchLower);
+      case 'service_name':
+        return log.serviceName.toLowerCase().includes(searchLower);
+      case 'all':
       default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+        return (
+          log.apiProvider.toLowerCase().includes(searchLower) ||
+          log.serviceName.toLowerCase().includes(searchLower) ||
+          log.changes.toLowerCase().includes(searchLower) ||
+          log.id.toLowerCase().includes(searchLower)
+        );
+    }
+  });
+
+  // Update pagination when filtered data changes
+  useEffect(() => {
+    const total = filteredSyncLogs.length;
+    const totalPages = Math.ceil(total / pagination.limit);
+    setPagination(prev => ({
+      ...prev,
+      total,
+      totalPages,
+      hasNext: prev.page < totalPages,
+      hasPrev: prev.page > 1
+    }));
+  }, [filteredSyncLogs, pagination.limit, pagination.page]);
+
+  // Get paginated data
+  const getPaginatedData = () => {
+    const startIndex = (pagination.page - 1) * pagination.limit;
+    const endIndex = startIndex + pagination.limit;
+    return filteredSyncLogs.slice(startIndex, endIndex);
+  };
+
+  // Show toast notification
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const handleSelectAll = () => {
+    const currentPageData = getPaginatedData();
+    if (selectedLogs.length === currentPageData.length) {
+      setSelectedLogs([]);
+    } else {
+      setSelectedLogs(currentPageData.map((log) => log.id));
     }
   };
 
-  const formatDuration = (duration?: number) => {
-    if (!duration) return 'N/A';
-    return `${duration}s`;
-  };
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString();
-  };
-
-  const getTimeAgo = (timestamp: string) => {
-    const now = new Date();
-    const time = new Date(timestamp);
-    const diffInMinutes = Math.floor(
-      (now.getTime() - time.getTime()) / (1000 * 60)
+  const handleSelectLog = (logId: string) => {
+    setSelectedLogs((prev) =>
+      prev.includes(logId)
+        ? prev.filter((id) => id !== logId)
+        : [...prev, logId]
     );
-
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-    return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
-  const providers = [...new Set(logs.map((log) => log.provider))];
+  const handleRefresh = () => {
+    setLogsLoading(true);
+    // Simulate loading
+    setTimeout(() => {
+      setLogsLoading(false);
+      showToast('Sync logs refreshed successfully!', 'success');
+    }, 1000);
+  };
 
-  if (loading) {
-    return (
-      <div className="h-full space-y-6">
-        <div className="flex items-center justify-between py-1">
-          <BreadCrumb items={breadcrumbItems} />
-        </div>
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-2">
-            <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />
-            <span className="text-lg font-medium">
-              Loading synchronization logs...
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Handle log deletion
+  const handleDeleteLog = async (logId: string) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setSyncLogs(prev => prev.filter(log => log.id !== logId));
+      showToast('Sync log deleted successfully', 'success');
+      setDeleteDialogOpen(false);
+      setLogToDelete(null);
+    } catch (error) {
+      console.error('Error deleting sync log:', error);
+      showToast('Error deleting sync log', 'error');
+    }
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setSyncLogs(prev => prev.filter(log => !selectedLogs.includes(log.id)));
+      showToast(`${selectedLogs.length} sync logs deleted successfully`, 'success');
+      setSelectedLogs([]);
+    } catch (error) {
+      console.error('Error deleting sync logs:', error);
+      showToast('Error deleting sync logs', 'error');
+    }
+  };
 
   return (
-    <div className="h-full space-y-6 p-6 bg-gradient-to-br from-gray-50 to-green-50 min-h-screen">
-      {/* Header Section */}
-      <div className="flex items-center justify-between py-1">
-        <div>
-          <BreadCrumb items={breadcrumbItems} />
-          <p className="text-sm text-muted-foreground mt-1">
-            Monitor and manage service synchronization with external providers
-          </p>
-        </div>
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          className="shadow-lg hover:shadow-xl transition-all duration-200"
-        >
-          <a href="/admin/services" className="flex items-center gap-2">
-            <Eye className="h-4 w-4" />
-            View All Services
-          </a>
-        </Button>
+    <div className="page-container">
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
       </div>
 
-      <Separator />
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-blue-50 to-indigo-100">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <CardContent className="p-6 flex items-center justify-between relative z-10">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-3xl font-bold text-gray-800">
-                  {stats.totalSyncs}
-                </p>
-                <Database className="h-4 w-4 text-blue-500" />
-              </div>
-              <p className="text-sm font-medium text-gray-600">Total Syncs</p>
+      <div className="page-content">
+        {/* Controls Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            {/* Left: Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Page View Dropdown */}
+              <select 
+                value={pagination.limit}
+                onChange={(e) => setPagination(prev => ({ 
+                  ...prev, 
+                  limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value), 
+                  page: 1 
+                }))}
+                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+              >
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
+              </select>
+              
+              <button
+                onClick={handleRefresh}
+                disabled={logsLoading}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
+              >
+                <FaSync className={logsLoading ? 'animate-spin' : ''} />
+                Refresh
+              </button>
             </div>
-            <div className="p-3 bg-blue-500/10 rounded-full">
-              <Database className="h-6 w-6 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-green-50 to-emerald-100">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <CardContent className="p-6 flex items-center justify-between relative z-10">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-3xl font-bold text-gray-800">
-                  {stats.successfulSyncs}
-                </p>
-                <CheckCircle className="h-4 w-4 text-green-500" />
-              </div>
-              <p className="text-sm font-medium text-gray-600">Successful</p>
-            </div>
-            <div className="p-3 bg-green-500/10 rounded-full">
-              <CheckCircle className="h-6 w-6 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-red-50 to-rose-100">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <CardContent className="p-6 flex items-center justify-between relative z-10">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-3xl font-bold text-gray-800">
-                  {stats.failedSyncs}
-                </p>
-                <XCircle className="h-4 w-4 text-red-500" />
-              </div>
-              <p className="text-sm font-medium text-gray-600">Failed</p>
-            </div>
-            <div className="p-3 bg-red-500/10 rounded-full">
-              <XCircle className="h-6 w-6 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-gradient-to-br from-yellow-50 to-amber-100">
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <CardContent className="p-6 flex items-center justify-between relative z-10">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-3xl font-bold text-gray-800">
-                  {stats.pendingSyncs}
-                </p>
-                <Clock className="h-4 w-4 text-yellow-500" />
-              </div>
-              <p className="text-sm font-medium text-gray-600">Pending</p>
-            </div>
-            <div className="p-3 bg-yellow-500/10 rounded-full">
-              <Clock className="h-6 w-6 text-yellow-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Sync Controls */}
-      <Card className="relative overflow-hidden border-0 bg-white shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <Zap className="h-5 w-5 text-green-500" />
-            Synchronization Controls
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Search Logs</Label>
+            
+            {/* Right: Search Controls */}
+            <div className="flex items-center gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="search"
-                  placeholder="Search logs..."
+                <FaSearch
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <input
+                  type="text"
+                  placeholder={`Search ${searchBy === 'all' ? 'sync logs' : searchBy === 'api_provider' ? 'API providers' : 'service names'}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-green-500"
+                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Filter by Status</Label>
-              <select
-                id="status"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
+              
+              <select 
+                value={searchBy}
+                onChange={(e) => setSearchBy(e.target.value)}
+                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
-                <option value="all">All Status</option>
-                <option value="success">Success</option>
-                <option value="failed">Failed</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
+                <option value="all">All Fields</option>
+                <option value="api_provider">API Provider</option>
+                <option value="service_name">Service Name</option>
               </select>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="provider">Filter by Provider</Label>
-              <select
-                id="provider"
-                value={providerFilter}
-                onChange={(e) => setProviderFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
-              >
-                <option value="all">All Providers</option>
-                {providers.map((provider) => (
-                  <option key={provider} value={provider}>
-                    {provider}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Quick Actions</Label>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleManualSync()}
-                  disabled={syncing}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all duration-200"
-                  size="sm"
-                >
-                  {syncing ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <RotateCw className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button
-                  onClick={fetchSyncLogs}
-                  variant="outline"
-                  size="sm"
-                  className="hover:bg-green-50 transition-all duration-200"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
           </div>
+        </div>
 
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div className="text-sm text-gray-600">
-              Last sync:{' '}
-              {stats.lastSyncTime ? getTimeAgo(stats.lastSyncTime) : 'Never'}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => handleManualSync()}
-                disabled={syncing}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200"
-              >
-                {syncing ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Syncing...
-                  </>
-                ) : (
-                  <>
-                    <RotateCw className="h-4 w-4 mr-2" />
-                    Full Sync
-                  </>
-                )}
-              </Button>
-
-              <Button
-                variant="outline"
-                className="hover:bg-gray-50 transition-all duration-200"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export Logs
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Sync Logs Display */}
-      <Card className="relative overflow-hidden border-0 bg-white shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <Activity className="h-5 w-5 text-blue-500" />
-            Synchronization Logs ({filteredLogs.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {filteredLogs.map((log) => (
-              <div
-                key={log.id}
-                className="p-4 rounded-lg border transition-all duration-200 hover:shadow-md hover:border-blue-300 bg-gradient-to-r from-gray-50 to-blue-50"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-3">
-                      {getStatusIcon(log.status)}
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          {log.action}
-                        </h3>
-                        <p className="text-sm text-gray-600">{log.provider}</p>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-gray-700">{log.message}</p>
-
-                    {log.errorDetails && (
-                      <div className="flex items-start gap-2 p-2 bg-red-50 rounded border border-red-200">
-                        <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-red-700">
-                          {log.errorDetails}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {formatTimestamp(log.timestamp)}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Server className="h-3 w-3" />
-                        {log.servicesAffected} services
-                      </div>
-                      {log.duration && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatDuration(log.duration)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <Badge
-                        variant="secondary"
-                        className={`${getStatusColor(
-                          log.status
-                        )} transition-all duration-200`}
-                      >
-                        {log.status.replace('_', ' ')}
-                      </Badge>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {getTimeAgo(log.timestamp)}
-                      </p>
-                    </div>
-
-                    {log.status === 'failed' && (
-                      <Button
-                        onClick={() => handleManualSync(log.provider)}
-                        disabled={syncing}
-                        size="sm"
-                        variant="outline"
-                        className="hover:bg-red-50 hover:border-red-300 transition-all duration-200"
-                      >
-                        <RefreshCw className="h-3 w-3 mr-1" />
-                        Retry
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {filteredLogs.length === 0 && (
-              <div className="text-center py-12">
-                <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">No sync logs found</p>
-                <p className="text-gray-400 text-sm">
-                  Try adjusting your search or filter criteria
-                </p>
+        {/* Sync Logs Table */}
+        <div className="card">
+          <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
+            {selectedLogs.length > 0 && (
+              <div className="flex items-center gap-2 mt-4">
+                <span
+                  className="text-sm"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {selectedLogs.length} selected
+                </span>
+                <button 
+                  onClick={() => setBulkDeleteDialogOpen(true)}
+                  className="btn btn-primary flex items-center gap-2"
+                >
+                  <FaTrash />
+                  Delete Selected
+                </button>
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Provider Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {providers.map((provider) => {
-          const providerLogs = logs.filter((log) => log.provider === provider);
-          const lastLog = providerLogs[0];
-          const successRate =
-            providerLogs.length > 0
-              ? Math.round(
-                  (providerLogs.filter((log) => log.status === 'success')
-                    .length /
-                    providerLogs.length) *
-                    100
-                )
-              : 0;
-
-          return (
-            <Card
-              key={provider}
-              className="relative overflow-hidden border-0 bg-white shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold text-gray-900">
-                    {provider}
-                  </CardTitle>
-                  {lastLog && (
-                    <Badge
-                      variant="secondary"
-                      className={`${getStatusColor(
-                        lastLog.status
-                      )} transition-all duration-200`}
-                    >
-                      {lastLog.status.replace('_', ' ')}
-                    </Badge>
-                  )}
+          <div style={{ padding: '0 24px' }}>
+            {logsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center flex flex-col items-center">
+                  <GradientSpinner size="w-12 h-12" className="mb-3" />
+                  <div className="text-base font-medium">Loading sync logs...</div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Success Rate</span>
-                  <span
-                    className={`font-semibold ${
-                      successRate >= 90
-                        ? 'text-green-600'
-                        : successRate >= 70
-                        ? 'text-yellow-600'
-                        : 'text-red-600'
-                    }`}
-                  >
-                    {successRate}%
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Total Syncs</span>
-                  <span className="font-semibold text-gray-900">
-                    {providerLogs.length}
-                  </span>
-                </div>
-
-                {lastLog && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Last Sync</span>
-                    <span className="font-semibold text-gray-900">
-                      {getTimeAgo(lastLog.timestamp)}
-                    </span>
-                  </div>
-                )}
-
-                <div className="pt-2 border-t">
-                  <Button
-                    onClick={() => handleManualSync(provider)}
-                    disabled={syncing}
-                    size="sm"
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all duration-200"
-                  >
-                    {syncing ? (
-                      <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-                    ) : (
-                      <RotateCw className="h-3 w-3 mr-2" />
-                    )}
-                    Sync {provider}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-
-        {providers.length === 0 && (
-          <Card className="relative overflow-hidden border-0 bg-white shadow-lg col-span-full">
-            <CardContent className="p-12">
-              <div className="text-center">
-                <Server className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">No providers configured</p>
-                <p className="text-gray-400 text-sm">
-                  Add external service providers to start synchronization
+              </div>
+            ) : getPaginatedData().length === 0 ? (
+              <div className="text-center py-12">
+                <FaBox
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  No sync logs found
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  No sync logs match your search criteria or no sync logs exist yet.
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <React.Fragment>
+                {/* Desktop Table View - Hidden on mobile */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full text-sm min-w-[1000px]">
+                    <thead className="sticky top-0 bg-white border-b z-10">
+                      <tr>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedLogs.length === getPaginatedData().length &&
+                              getPaginatedData().length > 0
+                            }
+                            onChange={handleSelectAll}
+                            className="rounded border-gray-300 w-4 h-4"
+                          />
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Sl. No
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          API Provider
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Service Name
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Changes
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          When
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getPaginatedData().map((log) => (
+                        <tr
+                          key={log.id}
+                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                        >
+                          <td className="p-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedLogs.includes(log.id)}
+                              onChange={() => handleSelectLog(log.id)}
+                              className="rounded border-gray-300 w-4 h-4"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {log.slNo}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {log.apiProvider}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {log.serviceName}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="max-w-xs">
+                              <div className="flex items-center gap-2 mb-1">
+                                {getChangeTypeBadge(log.changeType)}
+                              </div>
+                              <div
+                                className="text-sm truncate"
+                                style={{ color: 'var(--text-primary)' }}
+                                title={log.changes}
+                              >
+                                {log.changes}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div>
+                              <div
+                                className="text-xs"
+                              >
+                                {new Date(log.when).toLocaleDateString()}
+                              </div>
+                              <div
+                                className="text-xs"
+                              >
+                                {new Date(log.when).toLocaleTimeString()}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <button
+                              onClick={() => {
+                                setLogToDelete(log.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors duration-200"
+                              title="Delete Log"
+                            >
+                              <FaTrash className="h-3 w-3" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View - Visible on tablet and mobile */}
+                <div className="lg:hidden">
+                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
+                    {getPaginatedData().map((log) => (
+                      <div
+                        key={log.id}
+                        className="card card-padding border-l-4 border-blue-500 mb-4"
+                      >
+                        {/* Header with Checkbox, Sl No and Actions */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedLogs.includes(log.id)}
+                              onChange={() => handleSelectLog(log.id)}
+                              className="rounded border-gray-300 w-4 h-4"
+                            />
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              #{log.slNo}
+                            </div>
+                            {getChangeTypeBadge(log.changeType)}
+                          </div>
+                          
+                          {/* Actions for Mobile */}
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                setLogToDelete(log.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors duration-200"
+                              title="Delete Log"
+                            >
+                              <FaTrash className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* API Provider and Service Name */}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
+                              API Provider
+                            </div>
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {log.apiProvider}
+                            </div>
+                          </div>
+                          <div>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
+                              Service Name
+                            </div>
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {log.serviceName}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Changes */}
+                        <div className="mb-4">
+                          <div
+                            className="text-xs font-medium mb-1"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            Changes
+                          </div>
+                          <div
+                            className="text-sm"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            {log.changes}
+                          </div>
+                        </div>
+
+                        {/* When */}
+                        <div>
+                          <div
+                            className="text-xs font-medium mb-1"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            When
+                          </div>
+                          <div
+                            className="text-xs"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            Date: {new Date(log.when).toLocaleDateString()}
+                          </div>
+                          <div
+                            className="text-xs"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            Time: {new Date(log.when).toLocaleTimeString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pagination */}
+                <div
+                  className="flex items-center justify-between pt-4 pb-6 border-t"
+                >
+                  <div
+                    className="text-sm"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    {logsLoading ? (
+                      <div className="flex items-center gap-2">
+                        <GradientSpinner size="w-4 h-4" />
+                        <span>Loading pagination...</span>
+                      </div>
+                    ) : (
+                      `Showing ${(pagination.page - 1) * pagination.limit + 1} to ${Math.min(
+                        pagination.page * pagination.limit,
+                        pagination.total
+                      )} of ${pagination.total} sync logs`
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setPagination((prev) => ({
+                          ...prev,
+                          page: Math.max(1, prev.page - 1),
+                        }))
+                      }
+                      disabled={!pagination.hasPrev || logsLoading}
+                      className="btn btn-secondary"
+                    >
+                      Previous
+                    </button>
+                    <span
+                      className="text-sm"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {logsLoading ? (
+                        <GradientSpinner size="w-4 h-4" />
+                      ) : (
+                        `Page ${pagination.page} of ${pagination.totalPages}`
+                      )}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setPagination((prev) => ({
+                          ...prev,
+                          page: Math.min(prev.totalPages, prev.page + 1),
+                        }))
+                      }
+                      disabled={!pagination.hasNext || logsLoading}
+                      className="btn btn-secondary"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </React.Fragment>
+            )}
+          </div>
+        </div>
+
+        {/* Delete Confirmation Dialog */}
+        {deleteDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4">
+                Delete Sync Log
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this sync log? This action cannot be undone.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => {
+                    setDeleteDialogOpen(false);
+                    setLogToDelete(null);
+                  }}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => logToDelete && handleDeleteLog(logToDelete)}
+                  className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Delete Confirmation Dialog */}
+        {bulkDeleteDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4">
+                Delete Selected Sync Logs
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete {selectedLogs.length} selected sync log{selectedLogs.length !== 1 ? 's' : ''}? This action cannot be undone.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setBulkDeleteDialogOpen(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handleBulkDelete();
+                    setBulkDeleteDialogOpen(false);
+                  }}
+                  className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm"
+                >
+                  Delete {selectedLogs.length} Log{selectedLogs.length !== 1 ? 's' : ''}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
-}
+};
+
+export default SyncLogsPage;
