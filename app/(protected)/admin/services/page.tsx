@@ -2921,7 +2921,7 @@ function AdminServicesPage() {
                                       }
                                     }}
                                     disabled={isUpdating}
-                                    className="p-1 hover:bg-red-50 hover:text-red-600 text-gray-400 rounded transition-colors disabled:opacity-50"
+                                    className="p-1 hover:bg-red-50 hover:text-red-600 text-red-600 rounded transition-colors disabled:opacity-50"
                                     title={`Delete ${categoryName} category`}
                                   >
                                     <FaTrash className="h-3 w-3" />

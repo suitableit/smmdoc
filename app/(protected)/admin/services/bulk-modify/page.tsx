@@ -1,163 +1,337 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-// import { Checkbox } from '@/components/ui/checkbox'; // Removed - using HTML checkbox instead
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import React, { useEffect, useState } from 'react';
 import {
-  CheckSquare,
-  DollarSign,
-  Edit,
-  Eye,
-  Filter,
-  Package,
-  RefreshCw,
-  Save,
-  Search,
-  Settings,
-  Square,
-  TrendingUp,
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+  FaBox,
+  FaCheckCircle,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaSave,
+  FaEdit,
+  FaTag,
+  FaExclamationTriangle
+} from 'react-icons/fa';
+
+// Import APP_NAME constant
+import { APP_NAME } from '@/lib/constants';
+import { useGetServices } from '@/hooks/service-fetch';
+import { useGetCategories } from '@/hooks/categories-fetch';
+import axiosInstance from '@/lib/axiosInstance';
+import { mutate } from 'swr';
+
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
+// Toast Component
+const Toast = ({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string;
+  type?: 'success' | 'error' | 'info' | 'pending';
+  onClose: () => void;
+}) => (
+  <div className={`toast toast-${type} toast-enter`}>
+    {type === 'success' && <FaCheckCircle className="toast-icon" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="toast-close">
+      <FaTimes className="toast-close-icon" />
+    </button>
+  </div>
+);
+
+// Define interfaces
+interface Category {
+  id: string;
+  category_name: string;
+  hideCategory?: string;
+  position?: string;
+}
 
 interface Service {
   id: string;
   name: string;
-  rate: number;
   min_order: number;
   max_order: number;
-  status: string;
-  category: {
+  rate: number;
+  description: string;
+  categoryId: string;
+  category?: {
     id: string;
     category_name: string;
   };
-  description: string;
-  avg_time: string;
+  status: 'active' | 'inactive';
+  provider?: string;
+  service_type?: string;
+  serviceType?: string;
+  refill?: boolean;
+  cancel?: boolean;
 }
 
-interface BulkUpdateData {
-  rate?: number;
-  min_order?: number;
-  max_order?: number;
-  status?: string;
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
 }
 
-export default function BulkModifyServicesPage() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [bulkData, setBulkData] = useState<BulkUpdateData>({});
-  const [showBulkForm, setShowBulkForm] = useState(false);
-
+const BulkModifyPage = () => {
+  // Set document title using useEffect for client-side
   useEffect(() => {
-    fetchServices();
+    document.title = `Bulk Modify Services — ${APP_NAME}`;
   }, []);
 
-  const fetchServices = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/admin/services/get-services');
-      const result = await response.json();
+  // API hooks
+  const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
+  const { data: servicesData, error: servicesError, isLoading: servicesLoading } = useGetServices();
 
-      if (result.success) {
-        setServices(result.data);
-      } else {
-        toast.error('Failed to fetch services');
-      }
-    } catch (error) {
-      console.error('Error fetching services:', error);
-      toast.error('Error fetching services');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredServices = services.filter((service) => {
-    const matchesSearch =
-      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.category.category_name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'all' || service.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  // State management
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editedServices, setEditedServices] = useState<{[key: string]: Partial<Service>}>({});
+  const [hasChanges, setHasChanges] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [tempSelectedCategory, setTempSelectedCategory] = useState<string>('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
   });
 
-  const handleSelectAll = () => {
-    if (selectedServices.length === filteredServices.length) {
-      setSelectedServices([]);
-    } else {
-      setSelectedServices(filteredServices.map((service) => service.id));
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
+
+  // Loading states
+  const [localServicesLoading, setLocalServicesLoading] = useState(false);
+
+  // Utility functions
+  const formatID = (id: string) => {
+    return id.toUpperCase();
+  };
+
+  // Update categories when data is loaded
+  useEffect(() => {
+    if (categoriesData?.data) {
+      setCategories(categoriesData.data);
+    }
+  }, [categoriesData]);
+
+  // Load services when category is selected
+  useEffect(() => {
+    if (selectedCategory && servicesData?.data) {
+      setLocalServicesLoading(true);
+      // Filter services by selected category
+      const categoryServices = servicesData.data.filter((service: Service) => 
+        service.categoryId === selectedCategory || service.category?.id === selectedCategory
+      );
+      setServices(categoryServices);
+      setLocalServicesLoading(false);
+      setEditedServices({});
+      setHasChanges(false);
+      showToast(`Loaded ${categoryServices.length} services`, 'success');
+    } else if (selectedCategory && !servicesData?.data) {
+      setServices([]);
+      setEditedServices({});
+      setHasChanges(false);
+    }
+  }, [selectedCategory, servicesData]);
+
+  // Filter services based on search term
+  const filteredServices = services.filter(service =>
+    service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.provider?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.category?.category_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Update pagination when filtered data changes
+  useEffect(() => {
+    const total = filteredServices.length;
+    const totalPages = Math.ceil(total / pagination.limit);
+    setPagination(prev => ({
+      ...prev,
+      total,
+      totalPages,
+      hasNext: prev.page < totalPages,
+      hasPrev: prev.page > 1
+    }));
+  }, [filteredServices, pagination.limit, pagination.page]);
+
+  // Get paginated data
+  const getPaginatedData = () => {
+    const startIndex = (pagination.page - 1) * pagination.limit;
+    const endIndex = startIndex + pagination.limit;
+    return filteredServices.slice(startIndex, endIndex);
+  };
+
+  // Show toast notification
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // Handle field changes
+  const handleFieldChange = (serviceId: string, field: keyof Service, value: string | number) => {
+    setEditedServices(prev => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        [field]: value
+      }
+    }));
+    setHasChanges(true);
+  };
+
+  // Get current value (edited value or original value)
+  const getCurrentValue = (service: Service, field: keyof Service) => {
+    return editedServices[service.id]?.[field] !== undefined 
+      ? editedServices[service.id][field] 
+      : service[field];
+  };
+
+  // Handle category selection from modal
+  const handleCategorySelect = () => {
+    if (tempSelectedCategory) {
+      setSelectedCategory(tempSelectedCategory);
+      setCategoryModalOpen(false);
+      setTempSelectedCategory('');
     }
   };
 
-  const handleSelectService = (serviceId: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(serviceId)
-        ? prev.filter((id) => id !== serviceId)
-        : [...prev, serviceId]
-    );
+  // Handle refresh
+  const handleRefresh = () => {
+    if (selectedCategory) {
+      setLocalServicesLoading(true);
+      // Trigger SWR revalidation
+      mutate('/api/admin/services/get-services');
+      mutate('/api/admin/categories');
+      
+      setTimeout(() => {
+        setLocalServicesLoading(false);
+        setEditedServices({});
+        setHasChanges(false);
+        showToast('Services refreshed successfully!', 'success');
+      }, 1000);
+    }
   };
 
-  const handleBulkUpdate = async () => {
-    if (selectedServices.length === 0) {
-      toast.error('Please select at least one service');
-      return;
-    }
-
-    if (Object.keys(bulkData).length === 0) {
-      toast.error('Please specify at least one field to update');
-      return;
-    }
-
+  // Handle save changes
+  const handleSaveChanges = async () => {
     try {
-      setUpdating(true);
-      const response = await fetch('/api/admin/services/bulk-update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          serviceIds: selectedServices,
-          updateData: bulkData,
-        }),
+      setIsUpdating(true);
+      showToast('Saving changes...', 'pending');
+      
+      // Prepare update requests for all edited services
+      const updatePromises = Object.entries(editedServices).map(async ([serviceId, changes]) => {
+        const originalService = services.find(s => s.id === serviceId);
+        if (!originalService) return;
+
+        // Merge original service data with changes
+        const updatedData = {
+          name: changes.name || originalService.name,
+          description: changes.description || originalService.description,
+          rate: changes.rate?.toString() || originalService.rate?.toString(),
+          min_order: changes.min_order?.toString() || originalService.min_order?.toString(),
+          max_order: changes.max_order?.toString() || originalService.max_order?.toString(),
+          categoryId: changes.categoryId || originalService.categoryId,
+          serviceType: changes.service_type || changes.serviceType || originalService.service_type || originalService.serviceType || 'other',
+          mode: 'manual', // Default mode
+          refill: originalService.refill ? 'on' : 'off',
+          refillDays: '0',
+          refillDisplay: '0',
+          cancel: originalService.cancel ? 'on' : 'off',
+          personalizedService: 'no',
+          orderLink: 'link',
+          serviceSpeed: 'normal'
+        };
+
+        return axiosInstance.put(`/api/admin/services/update-services?id=${serviceId}`, updatedData);
       });
 
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success(
-          `Successfully updated ${selectedServices.length} services`
-        );
-        setSelectedServices([]);
-        setBulkData({});
-        setShowBulkForm(false);
-        fetchServices();
-      } else {
-        toast.error(result.error || 'Failed to update services');
-      }
-    } catch (error) {
-      console.error('Error updating services:', error);
-      toast.error('Error updating services');
-    } finally {
-      setUpdating(false);
+      // Execute all updates
+      await Promise.all(updatePromises);
+      
+      // Refresh data
+      await mutate('/api/admin/services/get-services');
+      await mutate('/api/admin/services/stats');
+      
+      setEditedServices({});
+      setHasChanges(false);
+      setIsUpdating(false);
+      showToast(`Successfully updated ${Object.keys(editedServices).length} services`, 'success');
+    } catch (error: any) {
+      console.error('Error saving changes:', error);
+      setIsUpdating(false);
+      showToast(`Error saving changes: ${error.message || 'Unknown error'}`, 'error');
     }
   };
 
-  if (loading) {
+  // Get selected category name
+  const getSelectedCategoryName = () => {
+    const category = categories.find(cat => cat.id === selectedCategory);
+    return category ? category.category_name : '';
+  };
+
+  // Handle loading and error states
+  if (categoriesLoading || servicesLoading) {
     return (
-      <div className="h-full space-y-6">
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-2">
-            <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />
-            <span className="text-lg font-medium">Loading services...</span>
+      <div className="page-container">
+        <div className="page-content">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center flex flex-col items-center">
+              <GradientSpinner size="w-12 h-12" className="mb-3" />
+              <div className="text-base font-medium">Loading data...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (categoriesError || servicesError) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <div className="text-center py-12">
+            <FaExclamationTriangle className="h-16 w-16 mx-auto mb-4 text-red-500" />
+            <h3 className="text-lg font-semibold mb-2 text-red-600">
+              Error Loading Data
+            </h3>
+            <p className="text-sm text-gray-600">
+              {categoriesError || servicesError}
+            </p>
+            <button 
+              onClick={() => {
+                mutate('/api/admin/categories');
+                mutate('/api/admin/services/get-services');
+              }}
+              className="btn btn-primary mt-4"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>
@@ -165,282 +339,489 @@ export default function BulkModifyServicesPage() {
   }
 
   return (
-    <div className="h-full space-y-6 p-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+    <div className="page-container">
+      {/* Toast Container */}
+      <div className="toast-container">
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </div>
 
-      {/* Search and Filter Section */}
-      <Card className="relative overflow-hidden border-0 bg-white shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <Search className="h-5 w-5 text-blue-500" />
-            Search & Filter Services
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Search Services</Label>
+      <div className="page-content">
+        {/* Controls Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            {/* Left: Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Page View Dropdown */}
+              <select 
+                value={pagination.limit}
+                onChange={(e) => setPagination(prev => ({ 
+                  ...prev, 
+                  limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value), 
+                  page: 1 
+                }))}
+                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+              >
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
+              </select>
+              
+              <button
+                onClick={() => setCategoryModalOpen(true)}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
+              >
+                <FaTag />
+                Select Category
+              </button>
+              
+              <button
+                onClick={handleRefresh}
+                disabled={localServicesLoading || !selectedCategory}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
+              >
+                <FaSync className={localServicesLoading ? 'animate-spin' : ''} />
+                Refresh
+              </button>
+
+              {hasChanges && (
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={isUpdating}
+                  className="btn btn-primary flex items-center gap-2 px-3 py-2.5 bg-green-600 hover:bg-green-700"
+                >
+                  {isUpdating ? (
+                    <>
+                      <GradientSpinner size="w-4 h-4" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <FaSave />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            
+            {/* Right: Search Controls */}
+            <div className="flex items-center gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="search"
-                  placeholder="Search by name or category..."
+                <FaSearch
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search services..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500"
+                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Filter by Status</Label>
-              <select
-                id="status"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-
-            <div className="flex items-end gap-2">
-              <Button
-                onClick={handleSelectAll}
-                variant="outline"
-                className="flex-1 hover:bg-blue-50 transition-all duration-200"
-              >
-                {selectedServices.length === filteredServices.length ? (
-                  <>
-                    <Square className="h-4 w-4 mr-2" />
-                    Deselect All
-                  </>
-                ) : (
-                  <>
-                    <CheckSquare className="h-4 w-4 mr-2" />
-                    Select All
-                  </>
-                )}
-              </Button>
-
-              <Button
-                onClick={() => setShowBulkForm(!showBulkForm)}
-                disabled={selectedServices.length === 0}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Bulk Edit ({selectedServices.length})
-              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Bulk Edit Form */}
-      {showBulkForm && (
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg animate-in slide-in-from-top-5 duration-300">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-blue-700">
-              <Settings className="h-5 w-5" />
-              Bulk Update Settings
-            </CardTitle>
-            <p className="text-sm text-blue-600">
-              Update {selectedServices.length} selected services
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="bulk-rate" className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
-                  Rate (per 1000)
-                </Label>
-                <Input
-                  id="bulk-rate"
-                  type="number"
-                  step="0.01"
-                  placeholder="Enter new rate"
-                  value={bulkData.rate || ''}
-                  onChange={(e) =>
-                    setBulkData((prev) => ({
-                      ...prev,
-                      rate: parseFloat(e.target.value) || undefined,
-                    }))
-                  }
-                  className="transition-all duration-200 focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bulk-min">Minimum Order</Label>
-                <Input
-                  id="bulk-min"
-                  type="number"
-                  placeholder="Min order"
-                  value={bulkData.min_order || ''}
-                  onChange={(e) =>
-                    setBulkData((prev) => ({
-                      ...prev,
-                      min_order: parseInt(e.target.value) || undefined,
-                    }))
-                  }
-                  className="transition-all duration-200 focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bulk-max">Maximum Order</Label>
-                <Input
-                  id="bulk-max"
-                  type="number"
-                  placeholder="Max order"
-                  value={bulkData.max_order || ''}
-                  onChange={(e) =>
-                    setBulkData((prev) => ({
-                      ...prev,
-                      max_order: parseInt(e.target.value) || undefined,
-                    }))
-                  }
-                  className="transition-all duration-200 focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bulk-status">Status</Label>
-                <select
-                  id="bulk-status"
-                  value={bulkData.status || ''}
-                  onChange={(e) =>
-                    setBulkData((prev) => ({
-                      ...prev,
-                      status: e.target.value || undefined,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-                >
-                  <option value="">Keep current</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 pt-4 border-t">
-              <Button
-                onClick={handleBulkUpdate}
-                disabled={updating || Object.keys(bulkData).length === 0}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all duration-200"
-              >
-                {updating ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Update {selectedServices.length} Services
-                  </>
-                )}
-              </Button>
-
-              <Button
-                onClick={() => {
-                  setShowBulkForm(false);
-                  setBulkData({});
-                }}
-                variant="outline"
-                className="hover:bg-gray-50 transition-all duration-200"
-              >
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Services List */}
-      <Card className="relative overflow-hidden border-0 bg-white shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <Package className="h-5 w-5 text-green-500" />
-            Services List ({filteredServices.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {filteredServices.map((service) => (
-              <div
-                key={service.id}
-                className={`p-4 rounded-lg border transition-all duration-200 hover:shadow-md ${
-                  selectedServices.includes(service.id)
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedServices.includes(service.id)}
-                      onChange={() => handleSelectService(service.id)}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-all duration-200"
-                    />
-                    <div>
-                      <h3 className="font-medium text-gray-900">
-                        {service.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {service.category.category_name}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-semibold text-green-600">
-                        ${service.rate}
-                      </p>
-                      <p className="text-xs text-gray-500">per 1000</p>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-sm font-medium">
-                        {service.min_order} - {service.max_order}
-                      </p>
-                      <p className="text-xs text-gray-500">Min - Max</p>
-                    </div>
-
-                    <Badge
-                      variant={
-                        service.status === 'active' ? 'default' : 'secondary'
-                      }
-                      className={`${
-                        service.status === 'active'
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      } transition-all duration-200`}
-                    >
-                      {service.status}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {filteredServices.length === 0 && (
-              <div className="text-center py-12">
-                <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">No services found</p>
-                <p className="text-gray-400 text-sm">
-                  Try adjusting your search or filter criteria
+        {/* Services Table */}
+        <div className="card">
+          <div className="px-6 py-6">
+            {selectedCategory && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <FaTag className="inline mr-2" />
+                  Editing services in: <strong>{getSelectedCategoryName()}</strong>
                 </p>
               </div>
             )}
+
+            {hasChanges && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <FaEdit className="inline mr-2" />
+                  You have unsaved changes. Click "Save Changes" to apply them.
+                </p>
+              </div>
+            )}
+
+            {localServicesLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center flex flex-col items-center">
+                  <GradientSpinner size="w-12 h-12" className="mb-3" />
+                  <div className="text-base font-medium">
+                    Loading services...
+                  </div>
+                </div>
+              </div>
+            ) : !selectedCategory ? (
+              <div className="text-center py-12">
+                <FaBox
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Bulk Modify Services
+                </h3>
+                <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+                  Choose a service category to view and modify its services.
+                </p>
+                <button
+                  onClick={() => setCategoryModalOpen(true)}
+                  className="btn btn-primary flex items-center gap-2 px-4 py-2.5 mx-auto"
+                >
+                  <FaTag />
+                  Select Category
+                </button>
+              </div>
+            ) : selectedCategory && getPaginatedData().length === 0 ? (
+              <div className="text-center py-12">
+                <FaBox
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  No services found
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {searchTerm ? 'No services match your search criteria.' : 'This category has no services yet.'}
+                </p>
+              </div>
+            ) : (
+              <React.Fragment>
+                {/* Desktop Table View - Hidden on mobile */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full text-sm min-w-[1200px]">
+                    <thead className="sticky top-0 bg-white border-b z-10">
+                      <tr>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          ID
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Name
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Min
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Max
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Price (USD)
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Description
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getPaginatedData().map((service) => (
+                        <tr
+                          key={service.id}
+                          className={`border-t hover:bg-gray-50 transition-colors duration-200 ${
+                            editedServices[service.id] ? 'bg-yellow-50' : ''
+                          }`}
+                        >
+                          <td className="p-3">
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit">
+                              #{formatID(service.id)}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="text"
+                              value={getCurrentValue(service, 'name') as string}
+                              onChange={(e) => handleFieldChange(service.id, 'name', e.target.value)}
+                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="number"
+                              value={getCurrentValue(service, 'min_order') as number}
+                              onChange={(e) => handleFieldChange(service.id, 'min_order', parseInt(e.target.value) || 0)}
+                              className="form-field w-20 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              min="0"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="number"
+                              value={getCurrentValue(service, 'max_order') as number}
+                              onChange={(e) => handleFieldChange(service.id, 'max_order', parseInt(e.target.value) || 0)}
+                              className="form-field w-24 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              min="0"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <input
+                              type="number"
+                              value={getCurrentValue(service, 'rate') as number}
+                              onChange={(e) => handleFieldChange(service.id, 'rate', parseFloat(e.target.value) || 0)}
+                              className="form-field w-20 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              min="0"
+                              step="0.01"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <textarea
+                              value={getCurrentValue(service, 'description') as string}
+                              onChange={(e) => handleFieldChange(service.id, 'description', e.target.value)}
+                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 resize-y"
+                              rows={2}
+                            />
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
+                              <FaCheckCircle className={`h-3 w-3 ${service.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />
+                              <span className="text-xs font-medium capitalize">
+                                {service.status}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View - Visible on tablet and mobile */}
+                <div className="lg:hidden">
+                  <div className="space-y-4 pt-6">
+                    {getPaginatedData().map((service) => (
+                      <div
+                        key={service.id}
+                        className={`card card-padding border-l-4 border-blue-500 mb-4 ${
+                          editedServices[service.id] ? 'bg-yellow-50' : ''
+                        }`}
+                      >
+                        {/* Header with ID */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              #{formatID(service.id)}
+                            </div>
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
+                              <FaCheckCircle className={`h-3 w-3 ${service.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />
+                              <span className="text-xs font-medium capitalize">
+                                {service.status}
+                              </span>
+                            </div>
+                          </div>
+                          {editedServices[service.id] && (
+                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                              Modified
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Service Name */}
+                        <div className="mb-4">
+                          <label className="form-label mb-2">Service Name</label>
+                          <input
+                            type="text"
+                            value={getCurrentValue(service, 'name') as string}
+                            onChange={(e) => handleFieldChange(service.id, 'name', e.target.value)}
+                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                          />
+                        </div>
+
+                        {/* Min and Max */}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <label className="form-label mb-2">Min Order</label>
+                            <input
+                              type="number"
+                              value={getCurrentValue(service, 'min_order') as number}
+                              onChange={(e) => handleFieldChange(service.id, 'min_order', parseInt(e.target.value) || 0)}
+                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              min="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="form-label mb-2">Max Order</label>
+                            <input
+                              type="number"
+                              value={getCurrentValue(service, 'max_order') as number}
+                              onChange={(e) => handleFieldChange(service.id, 'max_order', parseInt(e.target.value) || 0)}
+                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              min="0"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Price */}
+                        <div className="mb-4">
+                          <label className="form-label mb-2">Price (USD)</label>
+                          <input
+                            type="number"
+                            value={getCurrentValue(service, 'rate') as number}
+                            onChange={(e) => handleFieldChange(service.id, 'rate', parseFloat(e.target.value) || 0)}
+                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                          <label className="form-label mb-2">Description</label>
+                          <textarea
+                            value={getCurrentValue(service, 'description') as string}
+                            onChange={(e) => handleFieldChange(service.id, 'description', e.target.value)}
+                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-y"
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div
+                    className="text-sm"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    {localServicesLoading ? (
+                      <div className="flex items-center gap-2">
+                        <GradientSpinner size="w-4 h-4" />
+                        <span>Loading pagination...</span>
+                      </div>
+                    ) : (
+                      `Showing ${(pagination.page - 1) * pagination.limit + 1} to ${Math.min(
+                        pagination.page * pagination.limit,
+                        pagination.total
+                      )} of ${pagination.total} services`
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setPagination((prev) => ({
+                          ...prev,
+                          page: Math.max(1, prev.page - 1),
+                        }))
+                      }
+                      disabled={!pagination.hasPrev || localServicesLoading}
+                      className="btn btn-secondary"
+                    >
+                      Previous
+                    </button>
+                    <span
+                      className="text-sm"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {localServicesLoading ? (
+                        <GradientSpinner size="w-4 h-4" />
+                      ) : (
+                        `Page ${pagination.page} of ${pagination.totalPages}`
+                      )}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setPagination((prev) => ({
+                          ...prev,
+                          page: Math.min(prev.totalPages, prev.page + 1),
+                        }))
+                      }
+                      disabled={!pagination.hasNext || localServicesLoading}
+                      className="btn btn-secondary"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </React.Fragment>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Category Selection Modal */}
+        {categoryModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4">
+                Select Category
+              </h3>
+              <div className="mb-4">
+                <label className="form-label mb-2">
+                  Choose a category to modify its services
+                </label>
+                <select
+                  value={tempSelectedCategory}
+                  onChange={(e) => setTempSelectedCategory(e.target.value)}
+                  className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                >
+                  <option value="">-- Select Category --</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.category_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => {
+                    setCategoryModalOpen(false);
+                    setTempSelectedCategory('');
+                  }}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCategorySelect}
+                  disabled={!tempSelectedCategory}
+                  className="btn btn-primary"
+                >
+                  Load Services
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default BulkModifyPage;
