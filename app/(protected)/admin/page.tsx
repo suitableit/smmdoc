@@ -3,8 +3,9 @@
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import axiosInstance from '@/lib/axiosInstance';
+import { APP_NAME } from '@/lib/constants';
 import moment from 'moment';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
     FaArrowRight,
     FaAward,
@@ -23,7 +24,7 @@ import {
     FaTimes,
     FaTimesCircle,
     FaUserPlus,
-    FaUsers
+    FaUsers,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -53,6 +54,26 @@ const Toast = ({
     </button>
   </div>
 );
+
+// User interfaces
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  name?: string;
+  balance: number;
+  spent: number;
+  totalOrders: number;
+  servicesDiscount: number;
+  specialPricing: boolean;
+  status: 'active' | 'suspended' | 'banned';
+  currency: string;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string;
+  emailVerified: boolean;
+  role: 'user' | 'admin' | 'moderator';
+}
 
 interface PendingTransaction {
   id: string;
@@ -112,7 +133,12 @@ type DashboardStats = {
   newUsersToday: number;
 };
 
-export default function AdminDashboard() {
+export default function AdminDashboardPage() {
+  // Set document title
+  useEffect(() => {
+    document.title = `Admin Dashboard — ${APP_NAME}`;
+  }, []);
+
   const { currency, rate } = useCurrency();
   const [stats, setStats] = useState<DashboardStats>({
     totalOrders: 0,
@@ -140,6 +166,10 @@ export default function AdminDashboard() {
   const [usersLoading, setUsersLoading] = useState(true);
   const [chartLoading, setChartLoading] = useState(true);
 
+  // Latest Users State
+  const [latestUsers, setLatestUsers] = useState<User[]>([]);
+  const [latestUsersLoading, setLatestUsersLoading] = useState(true);
+
   // Pending Transactions State
   const [pendingTransactions, setPendingTransactions] = useState<
     PendingTransaction[]
@@ -150,6 +180,39 @@ export default function AdminDashboard() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+
+  // Fetch Latest Users
+  const fetchLatestUsers = useCallback(async () => {
+    try {
+      setLatestUsersLoading(true);
+      const queryParams = new URLSearchParams({
+        page: '1',
+        limit: '5', // Get latest 5 users
+        role: 'user', // Only fetch users with 'user' role
+        sort: 'createdAt', // Sort by creation date
+        order: 'desc', // Newest first
+      });
+
+      const response = await fetch(`/api/admin/users?${queryParams}`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const result = await response.json();
+
+      if (result.success) {
+        // Client-side filter as backup to ensure no admins slip through
+        const filteredUsers = (result.data || []).filter((user: User) => user.role === 'user');
+        // Ensure we only show exactly 5 users maximum
+        setLatestUsers(filteredUsers.slice(0, 5));
+      } else {
+        throw new Error(result.error || 'Failed to fetch latest users');
+      }
+    } catch (error) {
+      console.error('Error fetching latest users:', error);
+      setLatestUsers([]);
+    } finally {
+      setLatestUsersLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -171,52 +234,9 @@ export default function AdminDashboard() {
       }
     };
 
-    const fetchOrderStats = async () => {
-      try {
-        // Order stats are already included in the main stats API call
-        // No need for separate API call
-      } catch (error) {
-        console.error('Error fetching order stats:', error);
-      } finally {
-        setOrdersLoading(false);
-      }
-    };
-
-    const fetchTicketStats = async () => {
-      try {
-        // Ticket stats would need separate API endpoint
-        // For now, just set loading to false
-      } catch (error) {
-        console.error('Error fetching ticket stats:', error);
-      } finally {
-        setTicketsLoading(false);
-      }
-    };
-
-    const fetchUserData = async () => {
-      try {
-        // User data is already included in the main stats API call
-        // No need for separate API call
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setUsersLoading(false);
-      }
-    };
-
-    const fetchChartData = async () => {
-      try {
-        // Chart data is already included in the main stats API call
-        // No need for separate API call
-      } catch (error) {
-        console.error('Error fetching chart data:', error);
-      } finally {
-        setChartLoading(false);
-      }
-    };
-
     fetchStats();
-  }, []);
+    fetchLatestUsers();
+  }, [fetchLatestUsers]);
 
   // Fetch Pending Transactions
   const fetchPendingTransactions = async () => {
@@ -274,6 +294,15 @@ export default function AdminDashboard() {
     setCustomToast({ message, type });
     setTimeout(() => setCustomToast(null), 4000);
   };
+
+  // Utility functions
+  const formatCurrency = useCallback((amount: number, currency: string) => {
+    const formatters = {
+      USD: (amt: number) => `${amt.toFixed(2)}`,
+      BDT: (amt: number) => `৳${amt.toFixed(2)}`,
+    };
+    return formatters[currency as keyof typeof formatters]?.(amount) || `${amount.toFixed(2)}`;
+  }, []);
 
   const handleApprove = async (transactionId: string) => {
     try {
@@ -338,7 +367,7 @@ export default function AdminDashboard() {
   };
 
   // Function to format currency based on selected currency
-  const formatCurrency = (amount: number) => {
+  const formatDashboardCurrency = (amount: number) => {
     // Admin stats are stored in BDT, so we need to convert if USD is selected
     if (currency === 'USD' && rate) {
       const amountInUSD = amount / rate;
@@ -422,7 +451,7 @@ export default function AdminDashboard() {
                 ) : (
                   <>
                     <p className="text-2xl font-bold text-green-600">
-                      {formatCurrency(stats.totalRevenue || 0)}
+                      {formatDashboardCurrency(stats.totalRevenue || 0)}
                     </p>
                     <p className="text-xs text-green-600 font-medium mt-1">
                       +8% from last month
@@ -474,7 +503,7 @@ export default function AdminDashboard() {
                 ) : (
                   <>
                     <p className="text-2xl font-bold text-orange-600">
-                      {formatCurrency(stats.totalRevenue || 0)}
+                      {formatDashboardCurrency(stats.totalRevenue || 0)}
                     </p>
                     <p className="text-xs text-green-600 font-medium mt-1">
                       +22% from last month
@@ -503,7 +532,7 @@ export default function AdminDashboard() {
                 ) : (
                   <>
                     <p className="text-2xl font-bold text-cyan-600">
-                      {formatCurrency(stats.totalRevenue || 0)}
+                      {formatDashboardCurrency(stats.totalRevenue || 0)}
                     </p>
                     <p className="text-xs text-cyan-600 font-medium mt-1">
                       Monthly Revenue
@@ -529,7 +558,7 @@ export default function AdminDashboard() {
                 ) : (
                   <>
                     <p className="text-2xl font-bold text-rose-600">
-                      {formatCurrency(stats.todaysProfit || 0)}
+                      {formatDashboardCurrency(stats.todaysProfit || 0)}
                     </p>
                     <p className="text-xs text-rose-600 font-medium mt-1">
                       Daily Earnings
@@ -1177,8 +1206,8 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-            {/* Support Tickets - Section 6 */}
-            <div className="card card-padding">
+        {/* Support Tickets - Section 6 */}
+        <div className="card card-padding">
           <div className="card-header mb-6">
             <div className="card-icon">
               <FaCommentDots />
@@ -1345,105 +1374,167 @@ export default function AdminDashboard() {
                 </div>
                 <h3 className="card-title">Latest Users</h3>
               </div>
-              <button className="btn btn-secondary flex items-center gap-2">
+              <button 
+                onClick={() => window.open('/admin/users', '_blank')}
+                className="btn btn-secondary flex items-center gap-2"
+              >
                 <FaUserPlus className="h-4 w-4" />
                 View All Users
               </button>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
-                      ID
-                    </th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
-                      User
-                    </th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
-                      Balance
-                    </th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
-                      Spent
-                    </th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
-                      Orders
-                    </th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
-                      Services
-                    </th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
-                      Discount
-                    </th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
-                      Special Pricing
-                    </th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-900 dark:text-gray-100">
-                      Registered
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="py-3 px-3">
-                      <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                        #001
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <p className="font-bold text-gray-800 dark:text-gray-200 text-sm">
-                            john
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            john@example.com
-                          </p>
+
+          <div>
+            {latestUsersLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center flex flex-col items-center">
+                  <GradientSpinner size="w-12 h-12" className="mb-3" />
+                  <div className="text-base font-medium">Loading users...</div>
+                </div>
+              </div>
+            ) : latestUsers.length === 0 ? (
+              <div className="text-center py-12">
+                <FaUsers
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  No users found
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {latestUsers.length === 0 ? 'No users exist yet.' : 'No users match your criteria.'}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table View - Hidden on mobile */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full text-sm min-w-[600px]">
+                    <thead className="sticky top-0 bg-white border-b z-10">
+                      <tr>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Username</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Email</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Balance</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Registered Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {latestUsers.map((user) => (
+                        <tr key={user.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                          <td className="p-3">
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              #{user.id?.slice(-8) || 'null'}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {user.username || 'null'}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {user.email || 'null'}
+                            </div>
+                            <div className="flex items-center gap-1 mt-1">
+                              {user.emailVerified ? (
+                                <>
+                                  <FaCheckCircle className="h-3 w-3 text-green-500" />
+                                  <span className="text-xs text-green-600">Verified</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FaTimesCircle className="h-3 w-3 text-red-500" />
+                                  <span className="text-xs text-red-600">Unverified</span>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-left">
+                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                                {formatCurrency(user.balance || 0, user.currency || 'USD')}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div>
+                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'null'}
+                              </div>
+                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                                {user.createdAt ? new Date(user.createdAt).toLocaleTimeString() : 'null'}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="lg:hidden">
+                  <div className="space-y-4">
+                    {latestUsers.map((user) => (
+                      <div key={user.id} className="card card-padding border-l-4 border-blue-500 mb-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              #{user.id?.slice(-8) || 'null'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Username</div>
+                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>{user.username || 'null'}</div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Email</div>
+                            <div className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>{user.email || 'null'}</div>
+                            <div className="flex items-center gap-1">
+                              {user.emailVerified ? (
+                                <>
+                                  <FaCheckCircle className="h-3 w-3 text-green-500" />
+                                  <span className="text-xs text-green-600">Verified</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FaTimesCircle className="h-3 w-3 text-red-500" />
+                                  <span className="text-xs text-red-600">Unverified</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Balance</div>
+                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              {formatCurrency(user.balance || 0, user.currency || 'USD')}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                              Registered: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'null'}
+                            </div>
+                            <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                              Time: {user.createdAt ? new Date(user.createdAt).toLocaleTimeString() : 'null'}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-sm font-bold text-yellow-600">
-                        $0.00
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-sm font-medium text-red-600">
-                        $125.50
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-sm font-medium text-purple-600">
-                        15
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-sm font-medium text-indigo-600">
-                        8
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-sm font-medium text-orange-600">
-                        5%
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <Badge className="bg-pink-100 dark:bg-pink-900/20 text-pink-800 dark:text-pink-200 border border-pink-200 dark:border-pink-800 text-xs">
-                        0% Discount
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        <div>Jan 15, 2024</div>
-                        <div className="text-xs text-gray-500">10:30 AM</div>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

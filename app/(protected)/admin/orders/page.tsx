@@ -14,7 +14,7 @@ import {
   FaSync,
   FaTimes,
   FaTimesCircle,
-  FaTrash
+  FaEdit
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -84,7 +84,8 @@ interface Order {
     | 'completed'
     | 'partial'
     | 'cancelled'
-    | 'refunded';
+    | 'refunded'
+    | 'failed';
   createdAt: string;
   updatedAt: string;
   link: string;
@@ -185,6 +186,14 @@ const AdminOrdersPage = () => {
   });
   const [notGoingAmount, setNotGoingAmount] = useState('');
 
+  // New state for bulk status change
+  const [bulkStatusDialog, setBulkStatusDialog] = useState<{
+    open: boolean;
+  }>({
+    open: false,
+  });
+  const [bulkStatus, setBulkStatus] = useState('');
+
   // Calculate status counts from current orders data
   const calculateStatusCounts = (ordersData: Order[]) => {
     const counts = {
@@ -195,6 +204,7 @@ const AdminOrdersPage = () => {
       cancelled: 0,
       in_progress: 0,
       refunded: 0,
+      failed: 0,
     };
 
     ordersData.forEach((order) => {
@@ -209,6 +219,7 @@ const AdminOrdersPage = () => {
       completed: counts.completed,
       partial: counts.partial,
       cancelled: counts.cancelled + counts.refunded, // Combine cancelled and refunded
+      failed: counts.failed,
     };
   };
 
@@ -237,6 +248,7 @@ const AdminOrdersPage = () => {
             completed: statusCounts.completed,
             partial: statusCounts.partial,
             cancelled: statusCounts.cancelled,
+            failed: statusCounts.failed,
           },
         }));
       }
@@ -413,6 +425,8 @@ const AdminOrdersPage = () => {
         return <FaTimesCircle className="h-3 w-3 text-red-500" />;
       case 'partial':
         return <FaExclamationCircle className="h-3 w-3 text-orange-500" />;
+      case 'failed':
+        return <FaTimesCircle className="h-3 w-3 text-gray-500" />;
       default:
         return <FaClock className="h-3 w-3 text-gray-500" />;
     }
@@ -448,10 +462,6 @@ const AdminOrdersPage = () => {
         ? prev.filter((id) => id !== orderId)
         : [...prev, orderId]
     );
-  };
-
-  const handleViewOrder = (orderId: string) => {
-    window.open(`/admin/orders/${orderId}`, '_blank');
   };
 
   const handleRefresh = () => {
@@ -510,6 +520,39 @@ const AdminOrdersPage = () => {
     } catch (error) {
       console.error('Error updating order status:', error);
       showToast('Error updating order status', 'error');
+    }
+  };
+
+  // Handle bulk status update
+  const handleBulkStatusUpdate = async (newStatus: string) => {
+    try {
+      const response = await fetch('/api/admin/orders/bulk/status', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          orderIds: selectedOrders,
+          status: newStatus 
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast(`${selectedOrders.length} orders status updated to ${newStatus}`, 'success');
+        fetchOrders();
+        fetchStats();
+        fetchAllOrdersForCounts();
+        setSelectedOrders([]);
+        setBulkStatusDialog({ open: false });
+        setBulkStatus('');
+      } else {
+        showToast(result.error || 'Failed to update orders status', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating orders status:', error);
+      showToast('Error updating orders status', 'error');
     }
   };
 
@@ -588,6 +631,12 @@ const AdminOrdersPage = () => {
   const openUpdateStatusDialog = (orderId: string, currentStatus: string) => {
     setUpdateStatusDialog({ open: true, orderId, currentStatus });
     setNewStatus(currentStatus);
+  };
+
+  // Open bulk status dialog
+  const openBulkStatusDialog = () => {
+    setBulkStatusDialog({ open: true });
+    setBulkStatus('');
   };
 
   return (
@@ -848,7 +897,7 @@ const AdminOrdersPage = () => {
                   onClick={() => setStatusFilter('cancelled')}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'cancelled'
-                      ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
@@ -857,32 +906,57 @@ const AdminOrdersPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'cancelled'
                         ? 'bg-white/20'
-                        : 'bg-red-100 text-red-700'
+                        : 'bg-gray-100 text-gray-700'
                     }`}
                   >
                     {stats.statusBreakdown?.cancelled || 0}
                   </span>
                 </button>
+                <button
+                  onClick={() => setStatusFilter('failed')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'failed'
+                      ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Failed
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'failed'
+                        ? 'bg-white/20'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    {stats.statusBreakdown?.failed || 0}
+                  </span>
+                </button>
               </div>
             </div>
             
+
+          </div>
+
+          <div style={{ padding: '0 24px' }}>
+            {/* Selected Orders Actions - Top of table */}
             {selectedOrders.length > 0 && (
-              <div className="flex items-center gap-2 mt-4">
+              <div className="flex items-center gap-2 py-4 border-b mb-4">
                 <span
                   className="text-sm"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   {selectedOrders.length} selected
                 </span>
-                <button className="btn btn-primary flex items-center gap-2">
-                  <FaTrash />
-                  Delete Selected
+                <button 
+                  onClick={openBulkStatusDialog}
+                  className="btn btn-primary flex items-center gap-2"
+                >
+                  <FaEdit />
+                  Change All Orders Status
                 </button>
               </div>
             )}
-          </div>
 
-          <div style={{ padding: '0 24px' }}>
             {ordersLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
@@ -1255,14 +1329,7 @@ const AdminOrdersPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleViewOrder(order.id)}
-                                className="btn btn-secondary p-2"
-                                title="View Order Details"
-                              >
-                                <FaEye className="h-3 w-3" />
-                              </button>
+                            <div className="flex items-center">
 
                               {/* 3 Dot Menu */}
                               <div className="relative">
@@ -1367,14 +1434,7 @@ const AdminOrdersPage = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleViewOrder(order.id)}
-                              className="btn btn-secondary p-2"
-                              title="View Order Details"
-                            >
-                              <FaEye className="h-3 w-3" />
-                            </button>
+                          <div className="flex items-center">
 
                             {/* 3 Dot Menu for Mobile */}
                             <div className="relative">
@@ -1735,6 +1795,53 @@ const AdminOrdersPage = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Bulk Status Change Dialog */}
+                {bulkStatusDialog.open && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4">
+                        Change All Orders Status
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        This will change the status of {selectedOrders.length} selected order{selectedOrders.length !== 1 ? 's' : ''}.
+                      </p>
+                      <div className="mb-4">
+                        <label className="form-label mb-2">
+                          Select New Status
+                        </label>
+                        <select
+                          value={bulkStatus}
+                          onChange={(e) => setBulkStatus(e.target.value)}
+                          className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                        >
+                          <option value="">Select status...</option>
+                          <option value="pending">Pending</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="cancelled">Cancel & Refund</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => {
+                            setBulkStatusDialog({ open: false });
+                            setBulkStatus('');
+                          }}
+                          className="btn btn-secondary"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleBulkStatusUpdate(bulkStatus)}
+                          disabled={!bulkStatus}
+                          className="btn btn-primary"
+                        >
+                          Update All
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Mark Partial Dialog */}
                 {markPartialDialog.open && (

@@ -44,10 +44,11 @@ const Toast = ({
   </div>
 );
 
-// Define interface for ServiceType
+// Define interface for ServiceType with Service Count
 interface ServiceType {
   id: string;
   name: string;
+  serviceCount: number;
   createdAt: string;
 }
 
@@ -66,18 +67,23 @@ const ServiceTypes = () => {
     document.title = `Service Types — ${APP_NAME}`;
   }, []);
 
-  // Dummy data for service types
+  // Dummy data for service types with service counts (including some with 0 counts)
   const dummyServiceTypes: ServiceType[] = [
-    { id: 'st_001', name: 'Social Media Marketing', createdAt: '2024-01-15T10:30:00Z' },
-    { id: 'st_002', name: 'Search Engine Optimization', createdAt: '2024-01-14T14:45:00Z' },
-    { id: 'st_003', name: 'Content Creation', createdAt: '2024-01-13T09:15:00Z' },
-    { id: 'st_004', name: 'Video Marketing', createdAt: '2024-01-12T16:20:00Z' },
-    { id: 'st_005', name: 'Email Marketing', createdAt: '2024-01-11T11:35:00Z' },
-    { id: 'st_006', name: 'Pay Per Click Advertising', createdAt: '2024-01-10T13:50:00Z' },
-    { id: 'st_007', name: 'Influencer Marketing', createdAt: '2024-01-09T08:25:00Z' },
-    { id: 'st_008', name: 'Web Development', createdAt: '2024-01-08T15:40:00Z' },
-    { id: 'st_009', name: 'Graphic Design', createdAt: '2024-01-07T12:10:00Z' },
-    { id: 'st_010', name: 'Analytics & Reporting', createdAt: '2024-01-06T17:30:00Z' }
+    { id: 'st_001', name: 'Social Media Marketing', serviceCount: 15, createdAt: '2024-01-15T10:30:00Z' },
+    { id: 'st_002', name: 'Search Engine Optimization', serviceCount: 8, createdAt: '2024-01-14T14:45:00Z' },
+    { id: 'st_003', name: 'Content Creation', serviceCount: 23, createdAt: '2024-01-13T09:15:00Z' },
+    { id: 'st_004', name: 'Video Marketing', serviceCount: 12, createdAt: '2024-01-12T16:20:00Z' },
+    { id: 'st_005', name: 'Email Marketing', serviceCount: 6, createdAt: '2024-01-11T11:35:00Z' },
+    { id: 'st_006', name: 'Pay Per Click Advertising', serviceCount: 18, createdAt: '2024-01-10T13:50:00Z' },
+    { id: 'st_007', name: 'Influencer Marketing', serviceCount: 0, createdAt: '2024-01-09T08:25:00Z' },
+    { id: 'st_008', name: 'Web Development', serviceCount: 31, createdAt: '2024-01-08T15:40:00Z' },
+    { id: 'st_009', name: 'Graphic Design', serviceCount: 27, createdAt: '2024-01-07T12:10:00Z' },
+    { id: 'st_010', name: 'Analytics & Reporting', serviceCount: 9, createdAt: '2024-01-06T17:30:00Z' },
+    { id: 'st_011', name: 'Podcast Marketing', serviceCount: 0, createdAt: '2024-01-05T14:15:00Z' },
+    { id: 'st_012', name: 'Affiliate Marketing', serviceCount: 3, createdAt: '2024-01-04T16:45:00Z' },
+    { id: 'st_013', name: 'Mobile App Development', serviceCount: 0, createdAt: '2024-01-03T11:20:00Z' },
+    { id: 'st_014', name: 'Brand Strategy', serviceCount: 14, createdAt: '2024-01-02T09:30:00Z' },
+    { id: 'st_015', name: 'Conversion Rate Optimization', serviceCount: 0, createdAt: '2024-01-01T13:10:00Z' }
   ];
 
   // State management
@@ -211,6 +217,7 @@ const ServiceTypes = () => {
       const newServiceType: ServiceType = {
         id: `st_${String(serviceTypes.length + 1).padStart(3, '0')}`,
         name: newServiceTypeName.trim(),
+        serviceCount: 0, // New service types start with 0 services
         createdAt: new Date().toISOString()
       };
       
@@ -352,6 +359,12 @@ const ServiceTypes = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
+                          Service Count
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
                           Created
                         </th>
                         <th
@@ -379,6 +392,14 @@ const ServiceTypes = () => {
                               style={{ color: 'var(--text-primary)' }}
                             >
                               {serviceType.name}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {serviceType.serviceCount}
                             </div>
                           </td>
                           <td className="p-3">
@@ -520,6 +541,22 @@ const ServiceTypes = () => {
                             style={{ color: 'var(--text-primary)' }}
                           >
                             {serviceType.name}
+                          </div>
+                        </div>
+
+                        {/* Service Count */}
+                        <div className="mb-4">
+                          <div
+                            className="text-xs font-medium mb-1"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            Service Count
+                          </div>
+                          <div
+                            className="font-medium text-sm"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            {serviceType.serviceCount}
                           </div>
                         </div>
 

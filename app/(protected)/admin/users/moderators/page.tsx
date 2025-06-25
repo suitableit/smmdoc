@@ -48,7 +48,7 @@ const Toast = ({
 );
 
 // Define interfaces for type safety
-interface Admin {
+interface Moderator {
   id: string;
   username: string;
   email: string;
@@ -69,10 +69,10 @@ interface Admin {
   password?: string;
 }
 
-interface AdminStats {
-  totalAdmins: number;
-  activeAdmins: number;
-  inactiveAdmins: number;
+interface ModeratorStats {
+  totalModerators: number;
+  activeModerators: number;
+  inactiveModerators: number;
   totalBalance: number;
   totalSpent: number;
   todayRegistrations: number;
@@ -88,11 +88,11 @@ interface PaginationInfo {
   hasPrev: boolean;
 }
 
-interface AdminActionsProps {
-  admin: Admin;
-  onEdit: (adminId: string) => void;
-  onChangeRole: (adminId: string, currentRole: string) => void;
-  onDelete: (adminId: string) => void;
+interface ModeratorActionsProps {
+  moderator: Moderator;
+  onEdit: (moderatorId: string) => void;
+  onChangeRole: (moderatorId: string, currentRole: string) => void;
+  onDelete: (moderatorId: string) => void;
   isLoading: boolean;
 }
 
@@ -132,11 +132,11 @@ interface ChangeRoleModalProps {
   isLoading: boolean;
 }
 
-interface EditAdminModalProps {
+interface EditModeratorModalProps {
   isOpen: boolean;
-  admin: Admin | null;
+  moderator: Moderator | null;
   onClose: () => void;
-  onSave: (adminData: Partial<Admin>) => void;
+  onSave: (moderatorData: Partial<Moderator>) => void;
   isLoading: boolean;
 }
 
@@ -176,18 +176,21 @@ const useClickOutside = (ref: React.RefObject<HTMLElement | null>, handler: () =
   }, [ref, handler]);
 };
 
-const AdminsListPage = () => {
+const ModeratorsPage = () => {
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `All Admins — ${APP_NAME}`;
+    document.title = `All Moderators — ${APP_NAME}`;
   }, []);
 
+  // Note: Currently using dummy data for demonstration purposes
+  // Real API integration is commented out in fetchModerators and fetchStats functions
+
   // State management
-  const [admins, setAdmins] = useState<Admin[]>([]);
-  const [stats, setStats] = useState<AdminStats>({
-    totalAdmins: 0,
-    activeAdmins: 0,
-    inactiveAdmins: 0,
+  const [moderators, setModerators] = useState<Moderator[]>([]);
+  const [stats, setStats] = useState<ModeratorStats>({
+    totalModerators: 0,
+    activeModerators: 0,
+    inactiveModerators: 0,
     totalBalance: 0,
     totalSpent: 0,
     todayRegistrations: 0,
@@ -206,7 +209,7 @@ const AdminsListPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [adminToDelete, setAdminToDelete] = useState<string | null>(null);
+  const [moderatorToDelete, setModeratorToDelete] = useState<string | null>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -214,27 +217,27 @@ const AdminsListPage = () => {
 
   // Loading states
   const [statsLoading, setStatsLoading] = useState(true);
-  const [adminsLoading, setAdminsLoading] = useState(true);
+  const [moderatorsLoading, setModeratorsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // New state for action modals
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
-    adminId: string;
+    moderatorId: string;
     currentStatus: string;
   }>({
     open: false,
-    adminId: '',
+    moderatorId: '',
     currentStatus: '',
   });
   const [newStatus, setNewStatus] = useState('');
   const [changeRoleDialog, setChangeRoleDialog] = useState<{
     open: boolean;
-    adminId: string;
+    moderatorId: string;
     currentRole: string;
   }>({
     open: false,
-    adminId: '',
+    moderatorId: '',
     currentRole: '',
   });
   const [newRole, setNewRole] = useState('');
@@ -242,31 +245,183 @@ const AdminsListPage = () => {
   // Edit modal state
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
-    admin: Admin | null;
+    moderator: Moderator | null;
   }>({
     open: false,
-    admin: null,
+    moderator: null,
   });
-  const [editFormData, setEditFormData] = useState<Partial<Admin>>({});
+  const [editFormData, setEditFormData] = useState<Partial<Moderator>>({});
 
   // Use debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Memoized filter options
   const filterOptions = useMemo(() => [
-    { key: 'all', label: 'All', count: stats.totalAdmins },
-    { key: 'active', label: 'Active', count: stats.activeAdmins },
-    { key: 'inactive', label: 'Inactive', count: stats.inactiveAdmins },
+    { key: 'all', label: 'All', count: stats.totalModerators },
+    { key: 'active', label: 'Active', count: stats.activeModerators },
+    { key: 'inactive', label: 'Inactive', count: stats.inactiveModerators },
   ], [stats]);
 
   // API functions
-  const fetchAdmins = useCallback(async () => {
+  const fetchModerators = useCallback(async () => {
     try {
-      setAdminsLoading(true);
+      setModeratorsLoading(true);
+      
+      // For now, using dummy data
+      const dummyModerators: Moderator[] = [
+        {
+          id: "mod_001_abcd1234",
+          username: "sarah_mod",
+          email: "sarah.wilson@company.com",
+          name: "Sarah Wilson",
+          balance: 50.00,
+          spent: 125.75,
+          totalOrders: 8,
+          servicesDiscount: 5,
+          specialPricing: false,
+          status: "active",
+          currency: "USD",
+          createdAt: "2024-01-15T10:30:00Z",
+          updatedAt: "2025-06-20T14:22:00Z",
+          lastLoginAt: "2025-06-25T09:15:00Z",
+          emailVerified: true,
+          role: "moderator",
+          permissions: ["view_users", "moderate_content", "manage_tickets"]
+        },
+        {
+          id: "mod_002_efgh5678",
+          username: "alex_moderator",
+          email: "alex.chen@company.com",
+          name: "Alex Chen",
+          balance: 0.00,
+          spent: 89.50,
+          totalOrders: 12,
+          servicesDiscount: 10,
+          specialPricing: true,
+          status: "active",
+          currency: "USD",
+          createdAt: "2024-03-22T16:45:00Z",
+          updatedAt: "2025-06-18T11:30:00Z",
+          lastLoginAt: "2025-06-26T08:45:00Z",
+          emailVerified: true,
+          role: "moderator",
+          permissions: ["view_users", "moderate_content"]
+        },
+        {
+          id: "mod_003_ijkl9012",
+          username: "mike_support",
+          email: "mike.rodriguez@company.com",
+          name: "Mike Rodriguez",
+          balance: 25.50,
+          spent: 234.80,
+          totalOrders: 15,
+          servicesDiscount: 0,
+          specialPricing: false,
+          status: "inactive",
+          currency: "USD",
+          createdAt: "2023-11-08T12:20:00Z",
+          updatedAt: "2025-05-30T16:10:00Z",
+          lastLoginAt: "2025-05-28T14:20:00Z",
+          emailVerified: true,
+          role: "moderator",
+          permissions: ["view_users", "moderate_content", "manage_tickets", "handle_disputes"]
+        },
+        {
+          id: "mod_004_mnop3456",
+          username: "emma_mod",
+          email: "emma.thompson@company.com",
+          name: "Emma Thompson",
+          balance: 100.00,
+          spent: 67.25,
+          totalOrders: 5,
+          servicesDiscount: 15,
+          specialPricing: false,
+          status: "active",
+          currency: "USD",
+          createdAt: "2024-05-10T09:15:00Z",
+          updatedAt: "2025-06-22T13:45:00Z",
+          lastLoginAt: undefined, // Never logged in
+          emailVerified: false,
+          role: "moderator",
+          permissions: ["view_users", "moderate_content"]
+        },
+        {
+          id: "mod_005_qrst7890",
+          username: "david_moderator",
+          email: "david.kim@company.com",
+          name: "David Kim",
+          balance: 75.25,
+          spent: 156.90,
+          totalOrders: 22,
+          servicesDiscount: 8,
+          specialPricing: true,
+          status: "active",
+          currency: "USD",
+          createdAt: "2024-02-28T14:30:00Z",
+          updatedAt: "2025-06-24T10:20:00Z",
+          lastLoginAt: "2025-06-24T15:30:00Z",
+          emailVerified: true,
+          role: "moderator",
+          permissions: ["view_users", "moderate_content", "manage_tickets"]
+        },
+        {
+          id: "mod_006_uvwx1234",
+          username: "lisa_support",
+          email: "lisa.garcia@company.com",
+          name: "Lisa Garcia",
+          balance: 15.00,
+          spent: 298.45,
+          totalOrders: 28,
+          servicesDiscount: 12,
+          specialPricing: false,
+          status: "inactive",
+          currency: "USD",
+          createdAt: "2023-09-14T11:45:00Z",
+          updatedAt: "2025-04-15T09:30:00Z",
+          lastLoginAt: "2025-04-12T16:45:00Z",
+          emailVerified: true,
+          role: "moderator",
+          permissions: ["view_users", "moderate_content", "handle_disputes"]
+        }
+      ];
+
+      // Filter by status if not 'all'
+      let filteredModerators = dummyModerators;
+      if (statusFilter !== 'all') {
+        filteredModerators = dummyModerators.filter(mod => mod.status === statusFilter);
+      }
+
+      // Filter by search term if provided
+      if (debouncedSearchTerm) {
+        const searchLower = debouncedSearchTerm.toLowerCase();
+        filteredModerators = filteredModerators.filter(mod => 
+          mod.username.toLowerCase().includes(searchLower) ||
+          mod.email.toLowerCase().includes(searchLower) ||
+          mod.id.toLowerCase().includes(searchLower) ||
+          (mod.name && mod.name.toLowerCase().includes(searchLower))
+        );
+      }
+
+      // Simulate pagination
+      const startIndex = (pagination.page - 1) * pagination.limit;
+      const endIndex = startIndex + pagination.limit;
+      const paginatedModerators = filteredModerators.slice(startIndex, endIndex);
+
+      setModerators(paginatedModerators);
+      setPagination(prev => ({
+        ...prev,
+        total: filteredModerators.length,
+        totalPages: Math.ceil(filteredModerators.length / pagination.limit),
+        hasNext: endIndex < filteredModerators.length,
+        hasPrev: pagination.page > 1,
+      }));
+
+      /* 
+      // Real API call (commented out for now)
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
-        role: 'admin,moderator,super_admin', // Filter for admin roles only
+        role: 'moderator', // Filter for moderator role only
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
       });
@@ -277,31 +432,50 @@ const AdminsListPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Filter data to only include admin roles on client side as backup
-        const adminData = (result.data || []).filter((user: Admin) => 
-          ['admin', 'moderator', 'super_admin'].includes(user.role)
+        // Filter data to only include moderator roles on client side as backup
+        const moderatorData = (result.data || []).filter((user: Moderator) => 
+          user.role === 'moderator'
         );
-        setAdmins(adminData);
+        setModerators(moderatorData);
         setPagination(prev => ({
           ...prev,
           ...result.pagination,
         }));
       } else {
-        throw new Error(result.error || 'Failed to fetch admins');
+        throw new Error(result.error || 'Failed to fetch moderators');
       }
+      */
     } catch (error) {
-      console.error('Error fetching admins:', error);
-      showToast(error instanceof Error ? error.message : 'Error fetching admins', 'error');
-      setAdmins([]);
+      console.error('Error fetching moderators:', error);
+      showToast(error instanceof Error ? error.message : 'Error fetching moderators', 'error');
+      setModerators([]);
     } finally {
-      setAdminsLoading(false);
+      setModeratorsLoading(false);
     }
   }, [pagination.page, pagination.limit, statusFilter, debouncedSearchTerm]);
 
   const fetchStats = useCallback(async () => {
     try {
       setStatsLoading(true);
-      // Remove role parameter as the API endpoint doesn't support it
+      
+      // For now, using dummy stats that match our dummy moderator data
+      const dummyStats = {
+        totalModerators: 6,
+        activeModerators: 4, // sarah_mod, alex_moderator, emma_mod, david_moderator
+        inactiveModerators: 2, // mike_support, lisa_support
+        totalBalance: 265.75, // Sum of all balances
+        totalSpent: 972.65, // Sum of all spent amounts
+        todayRegistrations: 2,
+        statusBreakdown: {
+          active: 4,
+          inactive: 2
+        }
+      };
+
+      setStats(dummyStats);
+
+      /* 
+      // Real API call (commented out for now)
       const response = await fetch('/api/admin/users/stats?period=all');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       
@@ -318,9 +492,9 @@ const AdminsListPage = () => {
         }
 
         setStats({
-          totalAdmins: data.overview?.totalUsers || 0,
-          activeAdmins: statusBreakdown.active || 0,
-          inactiveAdmins: statusBreakdown.inactive || 0,
+          totalModerators: data.overview?.totalUsers || 0,
+          activeModerators: statusBreakdown.active || 0,
+          inactiveModerators: statusBreakdown.inactive || 0,
           totalBalance: data.overview?.totalBalance || 0,
           totalSpent: data.overview?.totalSpent || 0,
           todayRegistrations: data.dailyTrends?.[0]?.registrations || 0,
@@ -329,6 +503,7 @@ const AdminsListPage = () => {
       } else {
         throw new Error(result.error || 'Failed to fetch stats');
       }
+      */
     } catch (error) {
       console.error('Error fetching stats:', error);
       showToast('Error loading statistics', 'error');
@@ -339,8 +514,8 @@ const AdminsListPage = () => {
 
   // Effects
   useEffect(() => {
-    fetchAdmins();
-  }, [fetchAdmins]);
+    fetchModerators();
+  }, [fetchModerators]);
 
   useEffect(() => {
     fetchStats();
@@ -378,25 +553,26 @@ const AdminsListPage = () => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }, []);
 
-  const handleEditAdmin = useCallback((adminId: string) => {
-    const admin = admins.find(a => a.id === adminId);
-    if (admin) {
-      setEditDialog({ open: true, admin });
+  const handleEditModerator = useCallback((moderatorId: string) => {
+    const moderator = moderators.find(m => m.id === moderatorId);
+    if (moderator) {
+      setEditDialog({ open: true, moderator });
       setEditFormData({
-        username: admin.username,
-        email: admin.email,
-        name: admin.name,
-        balance: admin.balance,
-        status: admin.status,
-        role: admin.role,
+        username: moderator.username,
+        email: moderator.email,
+        name: moderator.name,
+        status: moderator.status,
+        role: moderator.role,
+        password: '',
+        permissions: moderator.permissions || [],
       });
     }
-  }, [admins]);
+  }, [moderators]);
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([fetchAdmins(), fetchStats()]);
+    await Promise.all([fetchModerators(), fetchStats()]);
     showToast('Data refreshed successfully!', 'success');
-  }, [fetchAdmins, fetchStats, showToast]);
+  }, [fetchModerators, fetchStats, showToast]);
 
   // Generic API action handler
   const handleApiAction = useCallback(async (
@@ -407,6 +583,17 @@ const AdminsListPage = () => {
   ) => {
     try {
       setActionLoading(url);
+      
+      // For now, simulate successful operations
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+      
+      if (successMessage) showToast(successMessage, 'success');
+      await fetchModerators();
+      await fetchStats();
+      return true;
+
+      /* 
+      // Real API call (commented out for now)
       const response = await fetch(url, {
         method,
         headers: body ? { 'Content-Type': 'application/json' } : undefined,
@@ -419,12 +606,13 @@ const AdminsListPage = () => {
 
       if (result.success) {
         if (successMessage) showToast(successMessage, 'success');
-        await fetchAdmins();
+        await fetchModerators();
         await fetchStats();
         return true;
       } else {
         throw new Error(result.error || 'Operation failed');
       }
+      */
     } catch (error) {
       console.error('API action error:', error);
       showToast(error instanceof Error ? error.message : 'Operation failed', 'error');
@@ -432,75 +620,75 @@ const AdminsListPage = () => {
     } finally {
       setActionLoading(null);
     }
-  }, [fetchAdmins, fetchStats, showToast]);
+  }, [fetchModerators, fetchStats, showToast]);
 
-  // Handle admin deletion
-  const handleDeleteAdmin = useCallback(async (adminId: string) => {
+  // Handle moderator deletion
+  const handleDeleteModerator = useCallback(async (moderatorId: string) => {
     const success = await handleApiAction(
-      `/api/admin/users/${adminId}`,
+      `/api/admin/users/${moderatorId}`,
       'DELETE',
       undefined,
-      'Admin deleted successfully'
+      'Moderator deleted successfully'
     );
     
     if (success) {
       setDeleteDialogOpen(false);
-      setAdminToDelete(null);
+      setModeratorToDelete(null);
     }
   }, [handleApiAction]);
 
-  // Handle admin status update
-  const handleStatusUpdate = useCallback(async (adminId: string, newStatus: string) => {
+  // Handle moderator status update
+  const handleStatusUpdate = useCallback(async (moderatorId: string, newStatus: string) => {
     return handleApiAction(
-      `/api/admin/users/${adminId}/status`,
+      `/api/admin/users/${moderatorId}/status`,
       'PATCH',
       { status: newStatus },
-      `Admin status updated to ${newStatus}`
+      `Moderator status updated to ${newStatus}`
     );
   }, [handleApiAction]);
 
   // Handle change role
-  const handleChangeRole = useCallback(async (adminId: string, role: string) => {
+  const handleChangeRole = useCallback(async (moderatorId: string, role: string) => {
     const success = await handleApiAction(
-      `/api/admin/users/${adminId}/role`,
+      `/api/admin/users/${moderatorId}/role`,
       'PATCH',
       { role },
-      `Admin role updated to ${role}`
+      `Moderator role updated to ${role}`
     );
     
     if (success) {
-      setChangeRoleDialog({ open: false, adminId: '', currentRole: '' });
+      setChangeRoleDialog({ open: false, moderatorId: '', currentRole: '' });
       setNewRole('');
     }
   }, [handleApiAction]);
 
-  // Modal handlers
-  const openUpdateStatusDialog = useCallback((adminId: string, currentStatus: string) => {
-    setUpdateStatusDialog({ open: true, adminId, currentStatus });
-    setNewStatus(currentStatus);
-  }, []);
-
-  const openChangeRoleDialog = useCallback((adminId: string, currentRole: string) => {
-    setChangeRoleDialog({ open: true, adminId, currentRole });
-    setNewRole(currentRole);
-  }, []);
-
-  // Handle edit admin save
-  const handleEditSave = useCallback(async (adminData: Partial<Admin>) => {
-    if (!editDialog.admin) return;
+  // Handle edit moderator save
+  const handleEditSave = useCallback(async (moderatorData: Partial<Moderator>) => {
+    if (!editDialog.moderator) return;
     
     const success = await handleApiAction(
-      `/api/admin/users/${editDialog.admin.id}`,
+      `/api/admin/users/${editDialog.moderator.id}`,
       'PATCH',
-      adminData,
-      'Admin updated successfully'
+      moderatorData,
+      'Moderator updated successfully'
     );
     
     if (success) {
-      setEditDialog({ open: false, admin: null });
+      setEditDialog({ open: false, moderator: null });
       setEditFormData({});
     }
-  }, [editDialog.admin, handleApiAction]);
+  }, [editDialog.moderator, handleApiAction]);
+
+  // Modal handlers
+  const openUpdateStatusDialog = useCallback((moderatorId: string, currentStatus: string) => {
+    setUpdateStatusDialog({ open: true, moderatorId, currentStatus });
+    setNewStatus(currentStatus);
+  }, []);
+
+  const openChangeRoleDialog = useCallback((moderatorId: string, currentRole: string) => {
+    setChangeRoleDialog({ open: true, moderatorId, currentRole });
+    setNewRole(currentRole);
+  }, []);
 
   // Pagination handlers
   const handlePageChange = useCallback((newPage: number) => {
@@ -540,10 +728,10 @@ const AdminsListPage = () => {
               
               <button
                 onClick={handleRefresh}
-                disabled={adminsLoading}
+                disabled={moderatorsLoading}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
-                <FaSync className={adminsLoading ? 'animate-spin' : ''} />
+                <FaSync className={moderatorsLoading ? 'animate-spin' : ''} />
                 Refresh
               </button>
             </div>
@@ -557,7 +745,7 @@ const AdminsListPage = () => {
                 />
                 <input
                   type="text"
-                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} admins...`}
+                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} moderators...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
@@ -566,14 +754,14 @@ const AdminsListPage = () => {
               
               <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="username">Username</option>
-                <option value="id">Admin ID</option>
-                <option value="email">Admin Email</option>
+                <option value="id">Moderator ID</option>
+                <option value="email">Moderator Email</option>
               </select>
             </div>
           </div>
         </div>
 
-        {/* Admins Table */}
+        {/* Moderators Table */}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
             {/* Filter Buttons - Inside table header */}
@@ -595,7 +783,7 @@ const AdminsListPage = () => {
                         : 'bg-purple-100 text-purple-700'
                     }`}
                   >
-                    {stats.totalAdmins.toLocaleString()}
+                    {stats.totalModerators.toLocaleString()}
                   </span>
                 </button>
                 <button
@@ -614,7 +802,7 @@ const AdminsListPage = () => {
                         : 'bg-green-100 text-green-700'
                     }`}
                   >
-                    {stats.activeAdmins.toLocaleString()}
+                    {stats.activeModerators.toLocaleString()}
                   </span>
                 </button>
                 <button
@@ -633,7 +821,7 @@ const AdminsListPage = () => {
                         : 'bg-gray-100 text-gray-700'
                     }`}
                   >
-                    {stats.inactiveAdmins.toLocaleString()}
+                    {stats.inactiveModerators.toLocaleString()}
                   </span>
                 </button>
               </div>
@@ -641,14 +829,14 @@ const AdminsListPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {adminsLoading ? (
+            {moderatorsLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">Loading admins...</div>
+                  <div className="text-base font-medium">Loading moderators...</div>
                 </div>
               </div>
-            ) : admins.length === 0 ? (
+            ) : moderators.length === 0 ? (
               <div className="text-center py-12">
                 <FaUserShield
                   className="h-16 w-16 mx-auto mb-4"
@@ -658,16 +846,16 @@ const AdminsListPage = () => {
                   className="text-lg font-semibold mb-2"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  No admins found
+                  No moderators found
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   {debouncedSearchTerm && statusFilter !== 'all' 
-                    ? `No ${statusFilter} admins match your search "${debouncedSearchTerm}".`
+                    ? `No ${statusFilter} moderators match your search "${debouncedSearchTerm}".`
                     : debouncedSearchTerm 
-                    ? `No admins match your search "${debouncedSearchTerm}".`
+                    ? `No moderators match your search "${debouncedSearchTerm}".`
                     : statusFilter !== 'all' 
-                    ? `No ${statusFilter} admins found.`
-                    : 'No admins exist yet.'}
+                    ? `No ${statusFilter} moderators found.`
+                    : 'No moderators exist yet.'}
                 </p>
               </div>
             ) : (
@@ -688,24 +876,24 @@ const AdminsListPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {admins.map((admin) => (
-                        <tr key={admin.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                      {moderators.map((moderator) => (
+                        <tr key={moderator.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{admin.id?.slice(-8) || 'null'}
+                              #{moderator.id?.slice(-8) || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
-                              {admin.username || 'null'}
+                              {moderator.username || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                              {admin.email || 'null'}
+                              {moderator.email || 'null'}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
-                              {admin.emailVerified ? (
+                              {moderator.emailVerified ? (
                                 <>
                                   <FaCheckCircle className="h-3 w-3 text-green-500" />
                                   <span className="text-xs text-green-600">Verified</span>
@@ -719,45 +907,44 @@ const AdminsListPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="flex items-center gap-2">
-                              {getRoleIcon(admin.role)}
+                            <div>
                               <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                admin.role === 'super_admin' 
+                                moderator.role === 'super_admin' 
                                   ? 'bg-yellow-100 text-yellow-700'
-                                  : admin.role === 'admin'
+                                  : moderator.role === 'admin'
                                   ? 'bg-red-100 text-red-700'
                                   : 'bg-purple-100 text-purple-700'
                               }`}>
-                                {admin.role === 'super_admin' ? 'SUPER ADMIN' : admin.role === 'admin' ? 'Admin' : 'MODERATOR'}
+                                {moderator.role === 'super_admin' ? 'SUPER ADMIN' : moderator.role === 'admin' ? 'Admin' : 'Moderator'}
                               </span>
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="text-left">
                               <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-                                {formatCurrency(admin.balance || 0)}
+                                {formatCurrency(moderator.balance || 0)}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
                               <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                {admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : 'null'}
+                                {moderator.createdAt ? new Date(moderator.createdAt).toLocaleDateString() : 'null'}
                               </div>
                               <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                {admin.createdAt ? new Date(admin.createdAt).toLocaleTimeString() : 'null'}
+                                {moderator.createdAt ? new Date(moderator.createdAt).toLocaleTimeString() : 'null'}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              {admin.lastLoginAt ? (
+                              {moderator.lastLoginAt ? (
                                 <>
                                   <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                    {new Date(admin.lastLoginAt).toLocaleDateString()}
+                                    {new Date(moderator.lastLoginAt).toLocaleDateString()}
                                   </div>
                                   <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                    {new Date(admin.lastLoginAt).toLocaleTimeString()}
+                                    {new Date(moderator.lastLoginAt).toLocaleTimeString()}
                                   </div>
                                 </>
                               ) : (
@@ -766,15 +953,15 @@ const AdminsListPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <AdminActions
-                              admin={admin}
-                              onEdit={handleEditAdmin}
+                            <ModeratorActions
+                              moderator={moderator}
+                              onEdit={handleEditModerator}
                               onChangeRole={openChangeRoleDialog}
-                              onDelete={(adminId) => {
-                                setAdminToDelete(adminId);
+                              onDelete={(moderatorId) => {
+                                setModeratorToDelete(moderatorId);
                                 setDeleteDialogOpen(true);
                               }}
-                              isLoading={actionLoading === admin.id}
+                              isLoading={actionLoading === moderator.id}
                             />
                           </td>
                         </tr>
@@ -787,7 +974,7 @@ const AdminsListPage = () => {
                 <Pagination
                   pagination={pagination}
                   onPageChange={handlePageChange}
-                  isLoading={adminsLoading}
+                  isLoading={moderatorsLoading}
                 />
               </>
             )}
@@ -799,12 +986,12 @@ const AdminsListPage = () => {
           isOpen={deleteDialogOpen}
           onClose={() => {
             setDeleteDialogOpen(false);
-            setAdminToDelete(null);
+            setModeratorToDelete(null);
           }}
-          onConfirm={() => adminToDelete && handleDeleteAdmin(adminToDelete)}
-          isLoading={actionLoading === `/api/admin/users/${adminToDelete}`}
-          title="Delete Admin"
-          message="Are you sure you want to delete this admin? This action cannot be undone and will permanently remove all admin data and access."
+          onConfirm={() => moderatorToDelete && handleDeleteModerator(moderatorToDelete)}
+          isLoading={actionLoading === `/api/admin/users/${moderatorToDelete}`}
+          title="Delete Moderator"
+          message="Are you sure you want to delete this moderator? This action cannot be undone and will permanently remove all moderator data and access."
         />
 
         <UpdateStatusModal
@@ -813,19 +1000,19 @@ const AdminsListPage = () => {
           newStatus={newStatus}
           onStatusChange={setNewStatus}
           onClose={() => {
-            setUpdateStatusDialog({ open: false, adminId: '', currentStatus: '' });
+            setUpdateStatusDialog({ open: false, moderatorId: '', currentStatus: '' });
             setNewStatus('');
           }}
           onConfirm={() => {
-            handleStatusUpdate(updateStatusDialog.adminId, newStatus).then((success) => {
+            handleStatusUpdate(updateStatusDialog.moderatorId, newStatus).then((success) => {
               if (success) {
-                setUpdateStatusDialog({ open: false, adminId: '', currentStatus: '' });
+                setUpdateStatusDialog({ open: false, moderatorId: '', currentStatus: '' });
                 setNewStatus('');
               }
             });
           }}
-          isLoading={actionLoading === `/api/admin/users/${updateStatusDialog.adminId}/status`}
-          title="Update Admin Status"
+          isLoading={actionLoading === `/api/admin/users/${updateStatusDialog.moderatorId}/status`}
+          title="Update Moderator Status"
         />
 
         <ChangeRoleModal
@@ -834,37 +1021,37 @@ const AdminsListPage = () => {
           newRole={newRole}
           onRoleChange={setNewRole}
           onClose={() => {
-            setChangeRoleDialog({ open: false, adminId: '', currentRole: '' });
+            setChangeRoleDialog({ open: false, moderatorId: '', currentRole: '' });
             setNewRole('');
           }}
           onConfirm={() => {
-            handleChangeRole(changeRoleDialog.adminId, newRole).then((success) => {
+            handleChangeRole(changeRoleDialog.moderatorId, newRole).then((success) => {
               if (success) {
-                setChangeRoleDialog({ open: false, adminId: '', currentRole: '' });
+                setChangeRoleDialog({ open: false, moderatorId: '', currentRole: '' });
                 setNewRole('');
               }
             });
           }}
-          isLoading={actionLoading === `/api/admin/users/${changeRoleDialog.adminId}/role`}
+          isLoading={actionLoading === `/api/admin/users/${changeRoleDialog.moderatorId}/role`}
         />
 
-        <EditAdminModal
+        <EditModeratorModal
           isOpen={editDialog.open}
-          admin={editDialog.admin}
+          moderator={editDialog.moderator}
           onClose={() => {
-            setEditDialog({ open: false, admin: null });
+            setEditDialog({ open: false, moderator: null });
             setEditFormData({
               username: '',
               email: '',
               name: '',
               status: 'active',
-              role: 'admin',
+              role: 'moderator',
               password: '',
               permissions: [],
             });
           }}
           onSave={handleEditSave}
-          isLoading={actionLoading === `/api/admin/users/${editDialog.admin?.id}`}
+          isLoading={actionLoading === `/api/admin/users/${editDialog.moderator?.id}`}
         />
       </div>
     </div>
@@ -872,7 +1059,7 @@ const AdminsListPage = () => {
 };
 
 // Extracted Components for better organization
-const AdminActions: React.FC<AdminActionsProps> = ({ admin, onEdit, onChangeRole, onDelete, isLoading }) => {
+const ModeratorActions: React.FC<ModeratorActionsProps> = ({ moderator, onEdit, onChangeRole, onDelete, isLoading }) => {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -881,9 +1068,9 @@ const AdminActions: React.FC<AdminActionsProps> = ({ admin, onEdit, onChangeRole
   return (
     <div className="flex items-center gap-1">
       <button
-        onClick={() => onEdit(admin.id)}
+        onClick={() => onEdit(moderator.id)}
         className="btn btn-secondary p-2"
-        title="Edit Admin"
+        title="Edit Moderator"
         disabled={isLoading}
       >
         <FaEdit className="h-3 w-3" />
@@ -904,7 +1091,7 @@ const AdminActions: React.FC<AdminActionsProps> = ({ admin, onEdit, onChangeRole
             <div className="py-1">
               <button
                 onClick={() => {
-                  onChangeRole(admin.id, admin.role);
+                  onChangeRole(moderator.id, moderator.role);
                   setIsOpen(false);
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -915,13 +1102,13 @@ const AdminActions: React.FC<AdminActionsProps> = ({ admin, onEdit, onChangeRole
               <hr className="my-1" />
               <button
                 onClick={() => {
-                  onDelete(admin.id);
+                  onDelete(moderator.id);
                   setIsOpen(false);
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
               >
                 <FaTrash className="h-3 w-3" />
-                Delete Admin
+                Delete Moderator
               </button>
             </div>
           </div>
@@ -943,7 +1130,7 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoa
         `Showing ${((pagination.page - 1) * pagination.limit + 1).toLocaleString()} to ${Math.min(
           pagination.page * pagination.limit,
           pagination.total
-        ).toLocaleString()} of ${pagination.total.toLocaleString()} admins`
+        ).toLocaleString()} of ${pagination.total.toLocaleString()} moderators`
       )}
     </div>
     <div className="flex items-center gap-2">
@@ -979,9 +1166,9 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpe
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4 text-red-600">Delete Admin?</h3>
+        <h3 className="text-lg font-semibold mb-4 text-red-600">Delete Moderator?</h3>
         <p className="text-sm text-gray-600 mb-4">
-          Are you sure you want to delete this admin? This action cannot be undone and will permanently remove all admin data.
+          Are you sure you want to delete this moderator? This action cannot be undone and will permanently remove all moderator data.
         </p>
         <div className="flex gap-2 justify-end">
           <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
@@ -1045,7 +1232,7 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Change Admin Role</h3>
+        <h3 className="text-lg font-semibold mb-4">Change Moderator Role</h3>
         <div className="mb-4">
           <label className="form-label mb-2">Select New Role</label>
           <select
@@ -1075,30 +1262,25 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, 
   );
 };
 
-const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose, onSave, isLoading }) => {
-  const [formData, setFormData] = useState<Partial<Admin>>({});
+const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderator, onClose, onSave, isLoading }) => {
+  const [formData, setFormData] = useState<Partial<Moderator>>({});
 
   // Initialize form data when modal opens
   React.useEffect(() => {
-    if (admin) {
+    if (moderator) {
       setFormData({
-        username: admin.username,
-        email: admin.email,
-        name: admin.name || '',
-        status: admin.status,
-        role: admin.role,
+        username: moderator.username,
+        email: moderator.email,
+        name: moderator.name || '',
+        status: moderator.status,
+        role: moderator.role,
         password: '',
-        permissions: admin.permissions || [],
+        permissions: moderator.permissions || [],
       });
     }
-  }, [admin]);
+  }, [moderator]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
-  const handleInputChange = (field: keyof Admin, value: any) => {
+  const handleInputChange = (field: keyof Moderator, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -1145,12 +1327,12 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
     return { checked: false, indeterminate: true };
   };
 
-  if (!isOpen || !admin) return null;
+  if (!isOpen || !moderator) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold mb-4">Edit Admin</h3>
+        <h3 className="text-lg font-semibold mb-4">Edit Moderator</h3>
         
         <div className="space-y-4">
           {/* Username */}
@@ -1221,27 +1403,25 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
             </p>
           </div>
 
-          {/* Status - Only show for non-Admin roles */}
-          {formData.role !== 'admin' && (
-            <div className="mb-4">
-              <label className="form-label mb-2">Status</label>
-              <select
-                value={formData.status || 'active'}
-                onChange={(e) => handleInputChange('status', e.target.value)}
-                className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                disabled={isLoading}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          )}
+          {/* Status */}
+          <div className="mb-4">
+            <label className="form-label mb-2">Status</label>
+            <select
+              value={formData.status || 'active'}
+              onChange={(e) => handleInputChange('status', e.target.value)}
+              className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+              disabled={isLoading}
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
 
           {/* Role */}
           <div className="mb-4">
             <label className="form-label mb-2">Role</label>
             <select
-              value={formData.role || 'admin'}
+              value={formData.role || 'moderator'}
               onChange={(e) => handleInputChange('role', e.target.value)}
               className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
               disabled={isLoading}
@@ -1329,4 +1509,4 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
   );
 };
 
-export default AdminsListPage;
+export default ModeratorsPage;

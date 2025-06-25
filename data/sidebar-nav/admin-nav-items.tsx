@@ -19,24 +19,17 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
-    title: 'Order Status',
-    href: '/admin/orders/status',
-    icon: 'FaChartLine',
-    label: 'Order Status',
-    roles: ['admin'],
-  },
-  {
-    title: 'Refill Orders',
-    href: '/admin/orders/refill',
+    title: 'Refill Requests',
+    href: '/admin/orders/refill-requests',
     icon: 'FaRedo',
-    label: 'Refill Orders',
+    label: 'Refill Requests',
     roles: ['admin'],
   },
   {
-    title: 'Refill Order & Cancel Tasks',
-    href: '/admin/orders/refill-cancel',
-    icon: 'FaUndo',
-    label: 'Refill Order & Cancel Tasks',
+    title: 'Cancel Requests',
+    href: '/admin/orders/cancel-requests',
+    icon: 'FaTimes',
+    label: 'Cancel Requests',
     roles: ['admin'],
   },
 
@@ -79,10 +72,10 @@ export const adminNavItems = [
 
   // Users Section
   {
-    title: 'Users List',
+    title: 'Users',
     href: '/admin/users',
     icon: 'FaUsers',
-    label: 'Users List',
+    label: 'Users',
     roles: ['admin'],
   },
   {
@@ -109,60 +102,25 @@ export const adminNavItems = [
 
   // Funds Section
   {
-    title: 'Funds Management',
-    href: '/admin/funds',
-    icon: 'FaMoneyBillWave',
-    label: 'Funds Management',
-    roles: ['admin'],
-  },
-  {
-    title: 'Add User Funds',
-    href: '/admin/funds?tab=add-user-fund',
-    icon: 'FaMoneyBillWave',
-    label: 'Add User Funds',
-    roles: ['admin'],
-  },
-  {
     title: 'All Transactions',
-    href: '/admin/funds?tab=all-transactions',
+    href: '/admin/transactions',
     icon: 'FaExchangeAlt',
     label: 'All Transactions',
-    roles: ['admin'],
-  },
-  {
-    title: 'Update Price',
-    href: '/admin/funds?tab=update-price',
-    icon: 'FaUndo',
-    label: 'Update Price',
-    roles: ['admin'],
-  },
-  {
-    title: 'Payment Testing',
-    href: '/admin/payment-testing',
-    icon: 'FaFlask',
-    label: 'Payment Testing',
     roles: ['admin'],
   },
 
   // Support Section
   {
-    title: 'All Ticket',
-    href: '/admin/Ticket',
+    title: 'Support Tickets',
+    href: '/admin/support-tickets',
     icon: 'FaTicketAlt',
-    label: 'All Ticket',
+    label: 'Support Tickets',
     roles: ['admin'],
   },
   {
-    title: 'AI Ticket',
-    href: '/admin/Ticket/ai',
-    icon: 'FaRobot',
-    label: 'AI Ticket',
-    roles: ['admin'],
-  },
-  {
-    title: 'Human Ticket',
-    href: '/admin/Ticket/human',
-    icon: 'FaHeadset',
+    title: 'Contact Messages',
+    href: '/admin/contact-messages',
+    icon: 'FaEnvelope',
     label: 'Human Ticket',
     roles: ['admin'],
   },
@@ -252,10 +210,10 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
-    title: 'Appearance',
-    href: '/admin/settings/appearance',
-    icon: 'FaPalette',
-    label: 'Appearance',
+    title: 'Providers',
+    href: '/admin/settings/providers',
+    icon: 'FaHandshake',
+    label: 'Providers',
     roles: ['admin'],
   },
   {

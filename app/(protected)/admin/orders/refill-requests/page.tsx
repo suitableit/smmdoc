@@ -309,10 +309,6 @@ const RefillOrdersPage = () => {
     showToast('Orders refreshed successfully!', 'success');
   };
 
-  const handleExport = () => {
-    showToast('Export started! Download will begin shortly.', 'info');
-  };
-
   if (loading && orders.length === 0) {
     return (
       <div className="page-container">
@@ -347,83 +343,12 @@ const RefillOrdersPage = () => {
           <div className="flex gap-2">
             <button
               onClick={handleRefresh}
-              className="btn btn-secondary flex items-center gap-2"
+              className="btn btn-primary flex items-center gap-2"
               disabled={loading}
             >
               <FaSync className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
-            <button
-              onClick={handleExport}
-              className="btn btn-primary flex items-center gap-2"
-            >
-              <FaDownload />
-              Export
-            </button>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div className="card card-padding">
-            <div className="card-content">
-              <div className="card-icon">
-                <FaRedo />
-              </div>
-              <div>
-                <h3 className="card-title">Eligible Orders</h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {filteredOrders.length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card card-padding">
-            <div className="card-content">
-              <div className="card-icon">
-                <FaCheckCircle />
-              </div>
-              <div>
-                <h3 className="card-title">Completed Orders</h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  {
-                    filteredOrders.filter((o) => o.status === 'completed')
-                      .length
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card card-padding">
-            <div className="card-content">
-              <div className="card-icon">
-                <FaExclamationCircle />
-              </div>
-              <div>
-                <h3 className="card-title">Partial Orders</h3>
-                <p className="text-2xl font-bold text-orange-600">
-                  {filteredOrders.filter((o) => o.status === 'partial').length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card card-padding">
-            <div className="card-content">
-              <div className="card-icon">
-                <FaDollarSign />
-              </div>
-              <div>
-                <h3 className="card-title">Total Value</h3>
-                <p className="text-2xl font-bold text-purple-600">
-                  $
-                  {formatPrice(filteredOrders
-                    .reduce((sum, order) => sum + order.price, 0), 2)}
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 

@@ -24,7 +24,7 @@ interface AdminSections {
   dashboard: NavItem[];
   orders: NavItem[];
   services: NavItem[];
-  users: NavItem[];
+  management: NavItem[];
   funds: NavItem[];
   support: NavItem[];
   analytics: NavItem[];
@@ -75,8 +75,8 @@ export default function SideBarNav({
         orders: items.filter((item) =>
           [
             'All Orders',
-            'Refill Orders',
-            'Refill Order & Cancel Tasks',
+            'Refill Requests',
+            'Cancel Requests',
           ].includes(item.title)
         ),
         services: items.filter((item) =>
@@ -88,25 +88,21 @@ export default function SideBarNav({
             'API Sync Logs',
           ].includes(item.title)
         ),
-        users: items.filter((item) =>
+        management: items.filter((item) =>
           [
-            'Users List',
+            'Users',
             'Admins',
             'Moderators',
             'User Activity Logs',
           ].includes(item.title)
         ),
-        funds: items.filter((item) =>
+        transactions: items.filter((item) =>
           [
-            'Funds Management',
-            'Add User Funds',
             'All Transactions',
-            'Update Price',
-            'Payment Testing',
           ].includes(item.title)
         ),
         support: items.filter((item) =>
-          ['All Ticket', 'AI Ticket', 'Human Ticket'].includes(item.title)
+          ['Support Tickets', 'Contact Messages'].includes(item.title)
         ),
         analytics: items.filter((item) =>
           ['Sales Report', 'Trending Services', 'Export Data'].includes(
@@ -129,7 +125,7 @@ export default function SideBarNav({
         settings: items.filter((item) =>
           [
             'General Settings',
-            'Appearance',
+            'Providers',
             'Email Settings',
             'SEO Settings',
             'Integrations',
@@ -154,7 +150,7 @@ export default function SideBarNav({
             item.title
           )
         ),
-        funds: items.filter((item) =>
+        transactions: items.filter((item) =>
           ['Add Funds', 'Transfer Funds', 'Transactions'].includes(item.title)
         ),
         support: items.filter((item) =>
@@ -453,8 +449,8 @@ export default function SideBarNav({
             {renderNavSection('', getSectionItems('dashboard'))}
             {renderNavSection('Orders', getSectionItems('orders'))}
             {renderNavSection('Services', getSectionItems('services'))}
-            {renderNavSection('Users', getSectionItems('users'))}
-            {renderNavSection('Funds', getSectionItems('funds'))}
+            {renderNavSection('Management', getSectionItems('management'))}
+            {renderNavSection('Transactions', getSectionItems('transactions'))}
             {renderNavSection('Support', getSectionItems('support'))}
             {renderNavSection('Analytics', getSectionItems('analytics'))}
             {renderNavSection('API', getSectionItems('api'))}
