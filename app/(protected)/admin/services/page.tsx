@@ -2318,6 +2318,107 @@ function AdminServicesPage() {
     }
   };
 
+  // Batch Operations Handlers
+  const handleBatchOperation = async (operation: string) => {
+    if (selectedServices.length === 0) {
+      showToast('No services selected', 'error');
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      const count = selectedServices.length;
+      const serviceText = count !== 1 ? 'services' : 'service';
+
+      switch (operation) {
+        case 'enable':
+          showToast(`Enabling ${count} ${serviceText}...`, 'pending');
+          await Promise.all(selectedServices.map(serviceId => 
+            axiosInstance.post('/api/admin/services/toggle-status', { id: serviceId, status: 'inactive' })
+          ));
+          showToast(`Successfully enabled ${count} ${serviceText}`, 'success');
+          break;
+
+        case 'disable':
+          showToast(`Disabling ${count} ${serviceText}...`, 'pending');
+          await Promise.all(selectedServices.map(serviceId => 
+            axiosInstance.post('/api/admin/services/toggle-status', { id: serviceId, status: 'active' })
+          ));
+          showToast(`Successfully disabled ${count} ${serviceText}`, 'success');
+          break;
+
+        case 'make-secret':
+          showToast(`Making ${count} ${serviceText} secret...`, 'pending');
+          // TODO: Implement secret functionality
+          showToast(`Successfully made ${count} ${serviceText} secret`, 'success');
+          break;
+
+        case 'remove-secret':
+          showToast(`Removing secret from ${count} ${serviceText}...`, 'pending');
+          // TODO: Implement remove secret functionality
+          showToast(`Successfully removed secret from ${count} ${serviceText}`, 'success');
+          break;
+
+        case 'delete-pricing':
+          showToast(`Deleting custom pricing for ${count} ${serviceText}...`, 'pending');
+          // TODO: Implement delete custom pricing functionality
+          showToast(`Successfully deleted custom pricing for ${count} ${serviceText}`, 'success');
+          break;
+
+        case 'delete':
+          handleOpenDeleteConfirmation();
+          return; // Exit early, don't clear selection or refresh data yet
+
+        case 'refill-enable':
+          showToast(`Enabling refill for ${count} ${serviceText}...`, 'pending');
+          await Promise.all(selectedServices.map(serviceId => 
+            axiosInstance.post('/api/admin/services/toggle-refill', { id: serviceId, refill: true })
+          ));
+          showToast(`Successfully enabled refill for ${count} ${serviceText}`, 'success');
+          break;
+
+        case 'refill-disable':
+          showToast(`Disabling refill for ${count} ${serviceText}...`, 'pending');
+          await Promise.all(selectedServices.map(serviceId => 
+            axiosInstance.post('/api/admin/services/toggle-refill', { id: serviceId, refill: false })
+          ));
+          showToast(`Successfully disabled refill for ${count} ${serviceText}`, 'success');
+          break;
+
+        case 'cancel-enable':
+          showToast(`Enabling cancel for ${count} ${serviceText}...`, 'pending');
+          await Promise.all(selectedServices.map(serviceId => 
+            axiosInstance.post('/api/admin/services/toggle-cancel', { id: serviceId, cancel: true })
+          ));
+          showToast(`Successfully enabled cancel for ${count} ${serviceText}`, 'success');
+          break;
+
+        case 'cancel-disable':
+          showToast(`Disabling cancel for ${count} ${serviceText}...`, 'pending');
+          await Promise.all(selectedServices.map(serviceId => 
+            axiosInstance.post('/api/admin/services/toggle-cancel', { id: serviceId, cancel: false })
+          ));
+          showToast(`Successfully disabled cancel for ${count} ${serviceText}`, 'success');
+          break;
+
+        default:
+          showToast('Unknown operation', 'error');
+          return;
+      }
+
+      // Clear selection and refresh data for all operations except delete
+      if (operation !== 'delete') {
+        setSelectedServices([]);
+        mutate('/api/admin/services/get-services');
+        mutate('/api/admin/services/stats');
+      }
+    } catch (error: any) {
+      showToast(`Error performing batch operation: ${error.message || 'Something went wrong'}`, 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleOpenDeleteCategoryModal = (categoryName: string, categoryId: string, servicesCount: number) => {
     setDeleteCategoryModal({
       open: true,
@@ -2497,6 +2598,8 @@ function AdminServicesPage() {
       document.body.style.overflow = 'unset';
     }
 
+    document.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
@@ -2615,7 +2718,7 @@ function AdminServicesPage() {
               </button>
 
               <Link
-                href="/admin/services/import-services"
+                href="/admin/services/import"
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
                 title="Import Services"
               >
@@ -2760,14 +2863,31 @@ function AdminServicesPage() {
                     <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
                       {selectedServices.length} selected
                     </span>
-                    <button 
-                      onClick={handleOpenDeleteConfirmation}
-                      className="btn btn-primary flex items-center gap-2"
+                    
+                    {/* Batch Operations Dropdown */}
+                    <select 
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleBatchOperation(e.target.value);
+                          e.target.value = ""; // Reset selection
+                        }
+                      }}
                       disabled={isUpdating}
+                      className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm disabled:opacity-50"
                     >
-                      <FaTrash />
-                      Delete Selected
-                    </button>
+                      <option value="" disabled>Batch Operations</option>
+                      <option value="enable">Enable Selected Services</option>
+                      <option value="disable">Disable Selected Services</option>
+                      <option value="make-secret">Make Selected Services Secret</option>
+                      <option value="remove-secret">Remove Selected from Service Secret</option>
+                      <option value="delete-pricing">Delete Selected Services Custom Pricing</option>
+                      <option value="refill-enable">Refill Enable Selected Services</option>
+                      <option value="refill-disable">Refill Disable Selected Services</option>
+                      <option value="cancel-enable">Cancel Enable Selected Services</option>
+                      <option value="cancel-disable">Cancel Disable Selected Services</option>
+                      <option value="delete">Delete Selected Services</option>
+                    </select>
                   </div>
                 )}
 

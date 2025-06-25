@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FaCheckCircle,
@@ -8,7 +8,7 @@ import {
   FaChevronRight,
   FaChevronLeft,
   FaFileImport,
-  FaServer,
+  FaHandshake,
   FaPercent,
   FaList,
   FaEdit,
@@ -16,7 +16,9 @@ import {
   FaCheck,
   FaSearch,
   FaSync,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaChevronDown,
+  FaChevronUp
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -53,7 +55,7 @@ const Toast = ({
 // Step Progress Component
 const StepProgress = ({ currentStep }: { currentStep: number }) => {
   const steps = [
-    { number: 1, title: 'Choose Provider', icon: FaServer },
+    { number: 1, title: 'Choose Provider', icon: FaHandshake },
     { number: 2, title: 'Select Category', icon: FaList },
     { number: 3, title: 'Customize Services', icon: FaEdit },
   ];
@@ -74,7 +76,7 @@ const StepProgress = ({ currentStep }: { currentStep: number }) => {
                     isCompleted
                       ? 'bg-green-500 border-green-500 text-white'
                       : isActive
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 border-blue-500 text-white'
+                      ? 'bg-gradient-to-r from-purple-700 to-purple-500 border-purple-600 text-white shadow-lg'
                       : 'bg-gray-100 border-gray-300 text-gray-400'
                   }`}
                 >
@@ -143,6 +145,8 @@ interface Service {
   rate: number;
   description: string;
   type: string;
+  percent?: number;
+  providerPrice?: number; // Original price from provider
 }
 
 const ImportServicesPage = () => {
@@ -219,10 +223,11 @@ const ImportServicesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editedServices, setEditedServices] = useState<{[key: string]: Partial<Service>}>({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [collapsedCategories, setCollapsedCategories] = useState<{[key: string]: boolean}>({});
 
   // Step 1 state
   const [selectedProvider, setSelectedProvider] = useState<string>('');
-  const [profitPercent, setProfitPercent] = useState<number>(20);
+  const [profitPercent, setProfitPercent] = useState<number>(10);
 
   // Step 2 state
   const [apiCategories, setApiCategories] = useState<ApiCategory[]>(dummyApiCategories);
@@ -236,6 +241,26 @@ const ImportServicesPage = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
+  // Group services by category and filter by search term
+  const groupedServices = useMemo(() => {
+    const filteredServices = services.filter(service =>
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const grouped: {[key: string]: Service[]} = {};
+    filteredServices.forEach(service => {
+      if (!grouped[service.category]) {
+        grouped[service.category] = [];
+      }
+      grouped[service.category].push(service);
+    });
+
+    return grouped;
+  }, [services, searchTerm]);
+
   // Show toast notification
   const showToast = (
     message: string,
@@ -243,6 +268,14 @@ const ImportServicesPage = () => {
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
+  };
+
+  // Toggle category collapse
+  const toggleCategoryCollapse = (category: string) => {
+    setCollapsedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
   };
 
   // Handle category selection
@@ -287,14 +320,28 @@ const ImportServicesPage = () => {
       selectedCategoryNames.includes(service.category)
     );
 
-    // Apply profit margin to prices
+    // Store original provider price and apply profit margin to sale price
     const servicesWithProfit = categoryServices.map(service => ({
       ...service,
-      rate: parseFloat((service.rate * (1 + profitPercent / 100)).toFixed(2))
+      providerPrice: service.rate, // Store original provider price
+      rate: parseFloat((service.rate * (1 + profitPercent / 100)).toFixed(2)), // Calculate initial sale price
+      percent: profitPercent // Set initial percent from Step 1
     }));
 
     setServices(servicesWithProfit);
     showToast(`Loaded ${servicesWithProfit.length} services for customization`, 'success');
+  };
+
+  // Calculate sale price based on provider price and percentage
+  const calculateSalePrice = (service: Service, percentage: number) => {
+    const providerPrice = service.providerPrice || service.rate;
+    return parseFloat((providerPrice * (1 + percentage / 100)).toFixed(2));
+  };
+
+  // Get current sale price (recalculated based on current percentage)
+  const getCurrentSalePrice = (service: Service) => {
+    const currentPercent = getCurrentValue(service, 'percent') as number;
+    return calculateSalePrice(service, currentPercent);
   };
 
   // Handle field changes in step 3
@@ -315,14 +362,6 @@ const ImportServicesPage = () => {
       ? editedServices[service.id][field] 
       : service[field];
   };
-
-  // Filter services based on search term
-  const filteredServices = services.filter(service =>
-    service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    service.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    service.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   // Navigate to next step
   const handleNext = () => {
@@ -395,19 +434,6 @@ const ImportServicesPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <FaFileImport className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-              Import Services
-            </h1>
-          </div>
-          <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
-            Import services from external API providers and customize them for your platform
-          </p>
-        </div>
-
         {/* Step Progress */}
         <StepProgress currentStep={currentStep} />
 
@@ -426,55 +452,36 @@ const ImportServicesPage = () => {
                 {/* Provider Selection */}
                 <div>
                   <label className="form-label mb-3" style={{ color: 'var(--text-primary)' }}>
-                    <FaServer className="inline mr-2" />
                     Select API Provider
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <select
+                    value={selectedProvider}
+                    onChange={(e) => setSelectedProvider(e.target.value)}
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                  >
+                    <option value="">-- Select API Provider --</option>
                     {dummyProviders.map(provider => (
-                      <div
-                        key={provider.id}
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
-                          selectedProvider === provider.id
-                            ? 'border-blue-500 bg-blue-50'
-                            : provider.status === 'active'
-                            ? 'border-gray-200 hover:border-blue-300'
-                            : 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                        }`}
-                        onClick={() => provider.status === 'active' && setSelectedProvider(provider.id)}
+                      <option 
+                        key={provider.id} 
+                        value={provider.id}
+                        disabled={provider.status === 'inactive'}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>
-                            {provider.name}
-                          </h3>
-                          <div className={`text-xs px-2 py-1 rounded-full ${
-                            provider.status === 'active' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {provider.status}
-                          </div>
-                        </div>
-                        <p className="text-sm mb-2" style={{ color: 'var(--text-muted)' }}>
-                          {provider.description}
-                        </p>
-                        <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
-                          {provider.url}
-                        </p>
-                        {selectedProvider === provider.id && (
-                          <div className="mt-3 flex items-center text-blue-600">
-                            <FaCheckCircle className="h-4 w-4 mr-2" />
-                            <span className="text-sm font-medium">Selected</span>
-                          </div>
-                        )}
-                      </div>
+                        {provider.name} ({provider.status})
+                      </option>
                     ))}
-                  </div>
+                  </select>
+                  {selectedProvider && (
+                    <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                      <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                        {dummyProviders.find(p => p.id === selectedProvider)?.description}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Profit Percent */}
                 <div>
                   <label className="form-label mb-3" style={{ color: 'var(--text-primary)' }}>
-                    <FaPercent className="inline mr-2" />
                     Profit Percent
                   </label>
                   <div className="max-w-md">
@@ -665,8 +672,9 @@ const ImportServicesPage = () => {
                   </div>
                 </div>
 
-                {/* Search */}
-                <div className="flex items-center gap-3">
+                {/* Controls */}
+                <div className="flex items-center justify-between">
+                  {/* Left: Search */}
                   <div className="relative flex-1 max-w-md">
                     <FaSearch
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
@@ -680,18 +688,56 @@ const ImportServicesPage = () => {
                       className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     />
                   </div>
-                  {hasChanges && (
-                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-sm text-yellow-800">
-                        <FaEdit className="inline mr-2" />
-                        You have unsaved changes
-                      </p>
-                    </div>
-                  )}
+
+                  {/* Right: Changes indicator and collapse toggle */}
+                  <div className="flex items-center gap-3">
+                    {hasChanges && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <FaEdit className="h-4 w-4 text-yellow-600" />
+                        <span className="text-sm text-yellow-800 font-medium">
+                          You have unsaved changes
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Collapse/Expand All Toggle */}
+                    <button
+                      onClick={() => {
+                        const allCategories = Object.keys(groupedServices);
+                        const allCollapsed = allCategories.every(cat => collapsedCategories[cat]);
+                        
+                        if (allCollapsed) {
+                          // Expand all
+                          setCollapsedCategories({});
+                        } else {
+                          // Collapse all
+                          const newCollapsed = {};
+                          allCategories.forEach(cat => {
+                            newCollapsed[cat] = true;
+                          });
+                          setCollapsedCategories(newCollapsed);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      title={Object.keys(groupedServices).every(cat => collapsedCategories[cat]) ? "Expand all categories" : "Collapse all categories"}
+                    >
+                      {Object.keys(groupedServices).every(cat => collapsedCategories[cat]) ? (
+                        <>
+                          <FaChevronDown className="h-4 w-4" />
+                          <span className="text-sm font-medium">Expand All</span>
+                        </>
+                      ) : (
+                        <>
+                          <FaChevronUp className="h-4 w-4" />
+                          <span className="text-sm font-medium">Collapse All</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
-                {/* Services Table */}
-                {filteredServices.length === 0 ? (
+                {/* Services by Category */}
+                {Object.keys(groupedServices).length === 0 ? (
                   <div className="text-center py-12">
                     <FaExclamationTriangle 
                       className="h-16 w-16 mx-auto mb-4" 
@@ -706,177 +752,244 @@ const ImportServicesPage = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Desktop Table */}
-                    <div className="hidden lg:block overflow-x-auto">
-                      <table className="w-full text-sm min-w-[1200px]">
-                        <thead className="sticky top-0 bg-white border-b z-10">
-                          <tr>
-                            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Service Name</th>
-                            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Category</th>
-                            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Min</th>
-                            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Max</th>
-                            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Price (USD)</th>
-                            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Description</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredServices.map((service, index) => (
-                            <tr
-                              key={service.id}
-                              className={`border-t hover:bg-gray-50 transition-colors duration-200 animate-in fade-in slide-in-from-left-1 ${
-                                editedServices[service.id] ? 'bg-yellow-50' : ''
-                              }`}
-                              style={{ animationDelay: `${index * 25}ms` }}
-                            >
-                              <td className="p-3">
-                                <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit">
-                                  #{service.id}
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <input
-                                  type="text"
-                                  value={getCurrentValue(service, 'name') as string}
-                                  onChange={(e) => handleFieldChange(service.id, 'name', e.target.value)}
-                                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                                />
-                              </td>
-                              <td className="p-3">
-                                <div className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
-                                  {service.category}
-                                </div>
-                              </td>
-                              <td className="p-3">
-                                <input
-                                  type="number"
-                                  value={getCurrentValue(service, 'min') as number}
-                                  onChange={(e) => handleFieldChange(service.id, 'min', parseInt(e.target.value) || 0)}
-                                  className="form-field w-20 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                  min="0"
-                                />
-                              </td>
-                              <td className="p-3">
-                                <input
-                                  type="number"
-                                  value={getCurrentValue(service, 'max') as number}
-                                  onChange={(e) => handleFieldChange(service.id, 'max', parseInt(e.target.value) || 0)}
-                                  className="form-field w-24 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                  min="0"
-                                />
-                              </td>
-                              <td className="p-3">
-                                <input
-                                  type="number"
-                                  value={getCurrentValue(service, 'rate') as number}
-                                  onChange={(e) => handleFieldChange(service.id, 'rate', parseFloat(e.target.value) || 0)}
-                                  className="form-field w-20 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                  min="0"
-                                  step="0.01"
-                                />
-                              </td>
-                              <td className="p-3">
-                                <textarea
-                                  value={getCurrentValue(service, 'description') as string}
-                                  onChange={(e) => handleFieldChange(service.id, 'description', e.target.value)}
-                                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 resize-y"
-                                  rows={2}
-                                />
-                              </td>
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block card animate-in fade-in duration-500">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm min-w-[1000px]">
+                          <thead className="sticky top-0 bg-white border-b z-10">
+                            <tr>
+                              <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
+                              <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Service Name</th>
+                              <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Price (USD)</th>
+                              <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Percent</th>
+                              <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Description</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {Object.entries(groupedServices).map(([category, categoryServices]) => (
+                              <React.Fragment key={category}>
+                                {/* Category Header Row */}
+                                <tr className="bg-gray-50 border-t-2 border-gray-200">
+                                  <td colSpan={5} className="p-3">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <button
+                                          onClick={() => toggleCategoryCollapse(category)}
+                                          className="flex items-center gap-2 hover:bg-gray-100 rounded p-1 transition-colors"
+                                        >
+                                          {collapsedCategories[category] ? (
+                                            <FaChevronRight className="h-3 w-3" />
+                                          ) : (
+                                            <FaChevronDown className="h-3 w-3" />
+                                          )}
+                                        </button>
+
+                                        <span className="font-semibold text-md text-gray-800">
+                                          {category}
+                                        </span>
+                                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+                                          {categoryServices.length} service{categoryServices.length !== 1 ? 's' : ''}
+                                        </span>
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {categoryServices.filter(service => editedServices[service.id]).length > 0 && (
+                                          <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                                            {categoryServices.filter(service => editedServices[service.id]).length} modified
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+
+                                {/* Services Rows */}
+                                {!collapsedCategories[category] && (
+                                  categoryServices.length > 0 ? (
+                                    categoryServices.map((service, index) => (
+                                      <tr
+                                        key={service.id}
+                                        className={`border-t hover:bg-gray-50 transition-colors duration-200 animate-in fade-in slide-in-from-left-1 ${
+                                          editedServices[service.id] ? 'bg-yellow-50' : ''
+                                        }`}
+                                        style={{ animationDelay: `${index * 25}ms` }}
+                                      >
+                                        <td className="p-3 pl-8">
+                                          <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit">
+                                            #{service.id}
+                                          </div>
+                                        </td>
+                                        <td className="p-3">
+                                          <input
+                                            type="text"
+                                            value={getCurrentValue(service, 'name') as string}
+                                            onChange={(e) => handleFieldChange(service.id, 'name', e.target.value)}
+                                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                                          />
+                                        </td>
+                                        <td className="p-3">
+                                          <div className="text-left">
+                                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                                              ${getCurrentSalePrice(service)}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                              Provider: ${service.providerPrice || service.rate}
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td className="p-3">
+                                          <input
+                                            type="number"
+                                            value={getCurrentValue(service, 'percent') as number}
+                                            onChange={(e) => handleFieldChange(service.id, 'percent', parseFloat(e.target.value) || 0)}
+                                            className="form-field w-20 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            min="0"
+                                            max="1000"
+                                            step="0.1"
+                                          />
+                                        </td>
+                                        <td className="p-3">
+                                          <textarea
+                                            value={getCurrentValue(service, 'description') as string}
+                                            onChange={(e) => handleFieldChange(service.id, 'description', e.target.value)}
+                                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 resize-y"
+                                            rows={2}
+                                          />
+                                        </td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    <tr className="border-t">
+                                      <td colSpan={5} className="p-8 text-center">
+                                        <div className="flex flex-col items-center justify-center text-gray-500">
+                                          <FaExclamationTriangle className="h-8 w-8 mb-2 text-gray-400" />
+                                          <p className="text-sm font-medium">No services in this category</p>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
 
-                    {/* Mobile Cards */}
-                    <div className="lg:hidden space-y-4">
-                      {filteredServices.map((service, index) => (
-                        <div
-                          key={service.id}
-                          className={`card card-padding border-l-4 border-blue-500 animate-in fade-in slide-in-from-right-1 ${
-                            editedServices[service.id] ? 'bg-yellow-50' : ''
-                          }`}
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          {/* Header */}
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{service.id}
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-6">
+                      {Object.entries(groupedServices).map(([category, categoryServices]) => (
+                        <div key={category} className="space-y-4 animate-in fade-in duration-500">
+                          {/* Category Header */}
+                          <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 flex-1">
+                                <button
+                                  onClick={() => toggleCategoryCollapse(category)}
+                                  className="flex items-center gap-2 hover:bg-gray-100 rounded p-1 transition-colors"
+                                >
+                                  {collapsedCategories[category] ? (
+                                    <FaChevronRight className="h-3 w-3" />
+                                  ) : (
+                                    <FaChevronDown className="h-3 w-3" />
+                                  )}
+                                </button>
+
+                                <span className="font-semibold text-md text-gray-800">
+                                  {category}
+                                </span>
+                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium ml-auto">
+                                  {categoryServices.length} service{categoryServices.length !== 1 ? 's' : ''}
+                                </span>
+                              </div>
                             </div>
-                            {editedServices[service.id] && (
-                              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                                Modified
-                              </span>
+                            {categoryServices.filter(service => editedServices[service.id]).length > 0 && (
+                              <div className="mt-2">
+                                <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">
+                                  {categoryServices.filter(service => editedServices[service.id]).length} modified
+                                </span>
+                              </div>
                             )}
                           </div>
 
-                          {/* Service Name */}
-                          <div className="mb-4">
-                            <label className="form-label mb-2">Service Name</label>
-                            <input
-                              type="text"
-                              value={getCurrentValue(service, 'name') as string}
-                              onChange={(e) => handleFieldChange(service.id, 'name', e.target.value)}
-                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                            />
-                          </div>
+                          {/* Services Cards */}
+                          {!collapsedCategories[category] && (
+                            <div className="space-y-4 ml-4">
+                              {categoryServices.length > 0 ? (
+                                categoryServices.map((service, index) => (
+                                  <div
+                                    key={service.id}
+                                    className={`card card-padding border-l-4 border-blue-500 animate-in fade-in slide-in-from-right-1 ${
+                                      editedServices[service.id] ? 'bg-yellow-50' : ''
+                                    }`}
+                                    style={{ animationDelay: `${index * 50}ms` }}
+                                  >
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between mb-4">
+                                      <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                                        #{service.id}
+                                      </div>
+                                      {editedServices[service.id] && (
+                                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                          Modified
+                                        </span>
+                                      )}
+                                    </div>
 
-                          {/* Category */}
-                          <div className="mb-4">
-                            <label className="form-label mb-2">Category</label>
-                            <div className="text-sm font-medium bg-gray-50 px-3 py-2 rounded" style={{ color: 'var(--text-muted)' }}>
-                              {service.category}
+                                    {/* Service Name */}
+                                    <div className="mb-4">
+                                      <label className="form-label mb-2">Service Name</label>
+                                      <input
+                                        type="text"
+                                        value={getCurrentValue(service, 'name') as string}
+                                        onChange={(e) => handleFieldChange(service.id, 'name', e.target.value)}
+                                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                                      />
+                                    </div>
+
+                                    {/* Price and Percent */}
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                      <div>
+                                        <label className="form-label mb-2">Price (USD)</label>
+                                        <div className="font-semibold text-sm bg-gray-50 px-3 py-2 rounded" style={{ color: 'var(--text-primary)' }}>
+                                          ${getCurrentValue(service, 'rate') as number}
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <label className="form-label mb-2">Profit Percent</label>
+                                        <input
+                                          type="number"
+                                          value={getCurrentValue(service, 'percent') as number}
+                                          onChange={(e) => handleFieldChange(service.id, 'percent', parseFloat(e.target.value) || 0)}
+                                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                          min="0"
+                                          max="1000"
+                                          step="0.1"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* Description */}
+                                    <div>
+                                      <label className="form-label mb-2">Description</label>
+                                      <textarea
+                                        value={getCurrentValue(service, 'description') as string}
+                                        onChange={(e) => handleFieldChange(service.id, 'description', e.target.value)}
+                                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-y"
+                                        rows={3}
+                                      />
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="p-8 text-center">
+                                  <div className="flex flex-col items-center justify-center text-gray-500">
+                                    <FaExclamationTriangle className="h-8 w-8 mb-2 text-gray-400" />
+                                    <p className="text-sm font-medium">No services in this category</p>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          </div>
-
-                          {/* Min and Max */}
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                              <label className="form-label mb-2">Min Order</label>
-                              <input
-                                type="number"
-                                value={getCurrentValue(service, 'min') as number}
-                                onChange={(e) => handleFieldChange(service.id, 'min', parseInt(e.target.value) || 0)}
-                                className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                min="0"
-                              />
-                            </div>
-                            <div>
-                              <label className="form-label mb-2">Max Order</label>
-                              <input
-                                type="number"
-                                value={getCurrentValue(service, 'max') as number}
-                                onChange={(e) => handleFieldChange(service.id, 'max', parseInt(e.target.value) || 0)}
-                                className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                min="0"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Price */}
-                          <div className="mb-4">
-                            <label className="form-label mb-2">Price (USD)</label>
-                            <input
-                              type="number"
-                              value={getCurrentValue(service, 'rate') as number}
-                              onChange={(e) => handleFieldChange(service.id, 'rate', parseFloat(e.target.value) || 0)}
-                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                              min="0"
-                              step="0.01"
-                            />
-                          </div>
-
-                          {/* Description */}
-                          <div>
-                            <label className="form-label mb-2">Description</label>
-                            <textarea
-                              value={getCurrentValue(service, 'description') as string}
-                              onChange={(e) => handleFieldChange(service.id, 'description', e.target.value)}
-                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-y"
-                              rows={3}
-                            />
-                          </div>
+                          )}
                         </div>
                       ))}
                     </div>
