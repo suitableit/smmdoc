@@ -31,6 +31,65 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   </div>
 );
 
+// Cancel Modal Component
+const CancelModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  orderId,
+  reason,
+  setReason,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  orderId: number | null;
+  reason: string;
+  setReason: (reason: string) => void;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4">
+          Cancel Order #{formatID(orderId || 0)}
+        </h3>
+        
+        <div className="mb-4">
+          <label className="form-label mb-2">
+            Cancellation Reason <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Please provide a reason for cancelling this order..."
+            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none"
+            rows={4}
+            required
+          />
+        </div>
+        
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
+          >
+            Keep Order
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={!reason.trim()}
+            className="btn btn-primary"
+          >
+            Cancel Order
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Toast Component
 const Toast = ({
   message,
@@ -74,14 +133,158 @@ export default function OrdersList() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+  const [cancelModal, setCancelModal] = useState<{
+    isOpen: boolean;
+    orderId: number | null;
+    reason: string;
+  }>({
+    isOpen: false,
+    orderId: null,
+    reason: ''
+  });
   const { currency } = useCurrency();
 
-  const { data, isLoading, error } = useGetUserOrdersQuery({
-    page,
-    limit,
-    status,
-    search,
-  });
+  // Dummy data with refill enabled examples
+  const dummyData = {
+    data: [
+      {
+        id: 12345,
+        createdAt: "2025-06-25T10:30:00Z",
+        link: "https://instagram.com/p/abc123def",
+        usdPrice: 25.50,
+        bdtPrice: 2805.50,
+        startCount: 150,
+        qty: 1000,
+        service: {
+          name: "Instagram Likes - Real & Active",
+          refillEnabled: true  // ✅ Refill button will show
+        },
+        category: {
+          category_name: "Instagram"
+        },
+        remains: 200,
+        status: "completed"
+      },
+      {
+        id: 67890,
+        createdAt: "2025-06-24T14:15:00Z", 
+        link: "https://youtube.com/watch?v=xyz789abc",
+        usdPrice: 45.00,
+        bdtPrice: 4950.00,
+        startCount: 500,
+        qty: 2500,
+        service: {
+          name: "YouTube Views - High Retention", 
+          refillEnabled: true  // ✅ Refill button will show
+        },
+        category: {
+          category_name: "YouTube"
+        },
+        remains: 1200,
+        status: "partial"
+      },
+      {
+        id: 11111,
+        createdAt: "2025-06-23T09:45:00Z",
+        link: "https://tiktok.com/@user/video/123",
+        usdPrice: 15.00,
+        bdtPrice: 1650.00,
+        startCount: 100,
+        qty: 500,
+        service: {
+          name: "TikTok Followers - Basic",
+          refillEnabled: false  // ❌ No refill button
+        },
+        category: {
+          category_name: "TikTok"
+        },
+        remains: 0,
+        status: "completed"
+      },
+      {
+        id: 22222,
+        createdAt: "2025-06-22T16:20:00Z",
+        link: "https://facebook.com/post/456789",
+        usdPrice: 35.75,
+        bdtPrice: 3932.25,
+        startCount: 80,
+        qty: 1500,
+        service: {
+          name: "Facebook Post Likes - Premium",
+          refillEnabled: true  // ✅ Refill button will show
+        },
+        category: {
+          category_name: "Facebook"
+        },
+        remains: 750,
+        status: "pending"  // Will show both Refill and Cancel buttons
+      },
+      {
+        id: 33333,
+        createdAt: "2025-06-21T11:10:00Z",
+        link: "https://twitter.com/status/987654321",
+        usdPrice: 12.25,
+        bdtPrice: 1347.75,
+        startCount: 25,
+        qty: 300,
+        service: {
+          name: "Twitter Retweets - Fast",
+          refillEnabled: false  // ❌ No refill button
+        },
+        category: {
+          category_name: "Twitter"
+        },
+        remains: 0,
+        status: "pending"  // Will show only Cancel button
+      },
+      {
+        id: 44444,
+        createdAt: "2025-06-20T08:30:00Z",
+        link: "https://instagram.com/reel/def456ghi",
+        usdPrice: 18.90,
+        bdtPrice: 2079.00,
+        startCount: 320,
+        qty: 800,
+        service: {
+          name: "Instagram Reel Views - Real",
+          refillEnabled: true  // ✅ Refill button will show
+        },
+        category: {
+          category_name: "Instagram"
+        },
+        remains: 150,
+        status: "in_progress"
+      }
+    ],
+    pagination: {
+      total: 6,
+      page: 1,
+      limit: 10,
+      totalPages: 1
+    }
+  };
+
+  // Comment out real API call and use dummy data
+  // const { data, isLoading, error } = useGetUserOrdersQuery({
+  //   page,
+  //   limit,
+  //   status,
+  //   search,
+  // });
+
+  // For demo purposes, simulate loading and use dummy data
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
+
+  // Simulate API loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setData(dummyData);
+      setIsLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -98,17 +301,75 @@ export default function OrdersList() {
   };
 
   const orders = useMemo(() => {
-    return data?.data || [];
-  }, [data]);
+    let filteredOrders = data?.data || [];
+    
+    // Filter by status
+    if (status !== 'all') {
+      filteredOrders = filteredOrders.filter((order: any) => order.status === status);
+    }
+    
+    // Filter by search
+    if (search) {
+      filteredOrders = filteredOrders.filter((order: any) => 
+        order.id.toString().includes(search) ||
+        order.service?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        order.category?.category_name?.toLowerCase().includes(search.toLowerCase()) ||
+        order.link?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    return filteredOrders;
+  }, [data, status, search]);
 
   const pagination = useMemo(() => {
-    return data?.pagination || { total: 0, page: 1, limit: 10, totalPages: 1 };
-  }, [data]);
+    return {
+      total: orders.length,
+      page: 1,
+      limit: 10,
+      totalPages: Math.ceil(orders.length / 10)
+    };
+  }, [orders]);
+
+  // Handle refill button click
+  const handleRefill = (orderId: number) => {
+    showToast(`Refill request submitted for order #${formatID(orderId)}`, 'success');
+  };
+
+  // Handle cancel button click
+  const handleCancel = (orderId: number) => {
+    setCancelModal({
+      isOpen: true,
+      orderId,
+      reason: ''
+    });
+  };
+
+  // Handle cancel confirmation
+  const handleCancelConfirm = () => {
+    if (cancelModal.orderId && cancelModal.reason.trim()) {
+      showToast(`Order #${formatID(cancelModal.orderId)} has been cancelled successfully`, 'info');
+      setCancelModal({
+        isOpen: false,
+        orderId: null,
+        reason: ''
+      });
+    }
+  };
+
+  // Handle cancel modal close
+  const handleCancelClose = () => {
+    setCancelModal({
+      isOpen: false,
+      orderId: null,
+      reason: ''
+    });
+  };
 
   // Calculate counts for each status filter
   const getStatusCount = (statusKey: string) => {
-    if (statusKey === 'all') return orders.length;
-    return orders.filter((order: any) => order.status === statusKey).length;
+    const allOrders = data?.data || [];
+    if (statusKey === 'all') return allOrders.length;
+    return allOrders.filter((order: any) => order.status === statusKey).length;
   };
 
   // Status filter buttons configuration
@@ -211,6 +472,16 @@ export default function OrdersList() {
 
   return (
     <div className="page-container">
+      {/* Cancel Modal */}
+      <CancelModal
+        isOpen={cancelModal.isOpen}
+        onClose={handleCancelClose}
+        onConfirm={handleCancelConfirm}
+        orderId={cancelModal.orderId}
+        reason={cancelModal.reason}
+        setReason={(reason) => setCancelModal(prev => ({ ...prev, reason }))}
+      />
+
       {/* Toast Container */}
       {toastMessage && (
         <Toast
@@ -399,14 +670,18 @@ export default function OrdersList() {
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <button
-                              className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
-                              title="View Details"
-                            >
-                              View
-                            </button>
+                            {order.service?.refillEnabled && (
+                              <button
+                                onClick={() => handleRefill(order.id)}
+                                className="text-green-600 hover:text-green-800 text-xs px-2 py-1 border border-green-300 rounded hover:bg-green-50"
+                                title="Refill Order"
+                              >
+                                Refill
+                              </button>
+                            )}
                             {order.status === 'pending' && (
                               <button
+                                onClick={() => handleCancel(order.id)}
                                 className="text-red-600 hover:text-red-800 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50"
                                 title="Cancel Order"
                               >

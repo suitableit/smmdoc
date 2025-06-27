@@ -13,14 +13,15 @@ import {
   FaSync,
   FaTimes,
   FaTimesCircle,
-  FaEdit,
-  FaPhone,
-  FaUser
+  FaUser,
+  FaPlus
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
 import { APP_NAME } from '@/lib/constants';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+const formatID = (id) => id;
+const formatNumber = (num) => num.toLocaleString();
+const formatPrice = (price, decimals = 2) => price.toFixed(decimals);
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -63,11 +64,10 @@ interface Transaction {
   amount: number;
   currency: string;
   phone: string;
-  method: string; // bkash, nagad, rocket, card, etc.
-  type: 'deposit' | 'withdrawal' | 'refund' | 'payment';
-  status: 'pending' | 'completed' | 'failed' | 'cancelled' | 'processing';
+  method: string;
+  type: 'deposit' | 'withdrawal';
+  status: 'pending' | 'completed' | 'cancelled';
   admin_status: 'pending' | 'Success' | 'Cancelled' | 'Suspicious';
-  reference?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -78,7 +78,6 @@ interface TransactionStats {
   totalTransactions: number;
   pendingTransactions: number;
   completedTransactions: number;
-  failedTransactions: number;
   totalVolume: number;
   todayTransactions: number;
   statusBreakdown: Record<string, number>;
@@ -94,15 +93,12 @@ interface PaginationInfo {
 }
 
 const AdminAllTransactionsPage = () => {
-  // Set document title using useEffect for client-side
+  // Set document title
   useEffect(() => {
     document.title = `All Transactions — ${APP_NAME}`;
   }, []);
 
-  // 🎬 DEMO DATA - Replace with API calls when backend is ready
-  // This component currently uses dummy data for demonstration purposes
-
-  // Dummy data for testing
+  // Dummy data for testing - Updated to show empty Transaction IDs for pending withdrawals
   const dummyTransactions: Transaction[] = [
     {
       id: 'txn_001',
@@ -112,16 +108,15 @@ const AdminAllTransactionsPage = () => {
         name: 'John Doe',
         username: 'johndoe',
       },
-      transactionId: 'TXN202401001',
+      transactionId: '', // Empty for pending withdrawal
       amount: 500,
       currency: 'BDT',
       phone: '+8801712345678',
       method: 'bkash',
-      type: 'deposit',
+      type: 'withdrawal',
       status: 'pending',
-      admin_status: 'Pending',
-      reference: 'BKS123456789',
-      notes: 'Initial deposit by new user',
+      admin_status: 'pending',
+      notes: 'Pending withdrawal - awaiting approval',
       createdAt: '2024-01-15T10:30:00Z',
       updatedAt: '2024-01-15T10:30:00Z',
     },
@@ -141,7 +136,6 @@ const AdminAllTransactionsPage = () => {
       type: 'deposit',
       status: 'completed',
       admin_status: 'Success',
-      reference: 'NGD987654321',
       createdAt: '2024-01-14T15:45:00Z',
       updatedAt: '2024-01-14T16:00:00Z',
       processedAt: '2024-01-14T16:00:00Z',
@@ -154,16 +148,14 @@ const AdminAllTransactionsPage = () => {
         name: 'Alex Johnson',
         username: 'alexj',
       },
-      transactionId: 'TXN202401003',
+      transactionId: '', // Empty for pending withdrawal
       amount: 250,
       currency: 'USD',
       phone: '+8801555123456',
       method: 'rocket',
       type: 'withdrawal',
-      status: 'cancelled',
-      admin_status: 'Cancelled',
-      reference: 'RKT456789123',
-      notes: 'Cancelled due to insufficient verification',
+      status: 'pending',
+      admin_status: 'pending',
       createdAt: '2024-01-13T09:20:00Z',
       updatedAt: '2024-01-13T09:35:00Z',
     },
@@ -181,9 +173,8 @@ const AdminAllTransactionsPage = () => {
       phone: '+8801666789012',
       method: 'bkash',
       type: 'deposit',
-      status: 'processing',
-      admin_status: 'Pending',
-      reference: 'BKS789012345',
+      status: 'pending',
+      admin_status: 'pending',
       createdAt: '2024-01-12T14:10:00Z',
       updatedAt: '2024-01-12T14:10:00Z',
     },
@@ -201,10 +192,8 @@ const AdminAllTransactionsPage = () => {
       phone: '+8801777345678',
       method: 'card',
       type: 'deposit',
-      status: 'failed',
+      status: 'completed',
       admin_status: 'Suspicious',
-      reference: 'CARD123789456',
-      notes: 'Flagged for manual review - unusual activity pattern',
       createdAt: '2024-01-11T11:25:00Z',
       updatedAt: '2024-01-11T11:40:00Z',
     },
@@ -212,44 +201,20 @@ const AdminAllTransactionsPage = () => {
       id: 'txn_006',
       user: {
         id: 'user_006',
-        email: 'emma.davis@example.com',
-        name: 'Emma Davis',
-        username: 'emmad',
+        email: 'robert.taylor@example.com',
+        name: 'Robert Taylor',
+        username: 'robertt',
       },
-      transactionId: 'TXN202401006',
-      amount: 300,
-      currency: 'USD',
-      phone: '+8801888456789',
-      method: 'nagad',
-      type: 'refund',
-      status: 'completed',
-      admin_status: 'Success',
-      reference: 'NGD654321987',
-      notes: 'Refund for cancelled order #ORD123',
-      createdAt: '2024-01-10T16:30:00Z',
-      updatedAt: '2024-01-10T16:45:00Z',
-      processedAt: '2024-01-10T16:45:00Z',
-    },
-    {
-      id: 'txn_007',
-      user: {
-        id: 'user_007',
-        email: 'david.lee@example.com',
-        name: 'David Lee',
-        username: 'davidl',
-      },
-      transactionId: 'TXN202401007',
-      amount: 1500,
+      transactionId: '', // Empty for pending withdrawal
+      amount: 600,
       currency: 'BDT',
-      phone: '+8801999567890',
-      method: 'rocket',
-      type: 'payment',
-      status: 'completed',
-      admin_status: 'Success',
-      reference: 'RKT321654987',
-      createdAt: '2024-01-09T13:15:00Z',
-      updatedAt: '2024-01-09T13:30:00Z',
-      processedAt: '2024-01-09T13:30:00Z',
+      phone: '+8801444567890',
+      method: 'nagad',
+      type: 'withdrawal',
+      status: 'pending',
+      admin_status: 'pending',
+      createdAt: '2024-01-09T16:20:00Z',
+      updatedAt: '2024-01-09T16:20:00Z',
     },
     {
       id: 'txn_008',
@@ -266,9 +231,7 @@ const AdminAllTransactionsPage = () => {
       method: 'bkash',
       type: 'deposit',
       status: 'pending',
-      admin_status: 'Pending',
-      reference: 'BKS567890123',
-      notes: 'Waiting for payment confirmation',
+      admin_status: 'pending',
       createdAt: '2024-01-08T08:45:00Z',
       updatedAt: '2024-01-08T08:45:00Z',
     },
@@ -286,9 +249,8 @@ const AdminAllTransactionsPage = () => {
       phone: '+8801222345678',
       method: 'card',
       type: 'withdrawal',
-      status: 'processing',
-      admin_status: 'Pending',
-      reference: 'CARD789456123',
+      status: 'pending',
+      admin_status: 'pending',
       createdAt: '2024-01-07T12:20:00Z',
       updatedAt: '2024-01-07T12:20:00Z',
     },
@@ -308,8 +270,6 @@ const AdminAllTransactionsPage = () => {
       type: 'deposit',
       status: 'completed',
       admin_status: 'Success',
-      reference: 'NGD147258369',
-      notes: 'Large deposit - verified manually',
       createdAt: '2024-01-06T17:10:00Z',
       updatedAt: '2024-01-06T17:25:00Z',
       processedAt: '2024-01-06T17:25:00Z',
@@ -319,20 +279,17 @@ const AdminAllTransactionsPage = () => {
   // State management
   const [transactions, setTransactions] = useState<Transaction[]>(dummyTransactions);
   const [stats, setStats] = useState<TransactionStats>({
-    totalTransactions: 10,
-    pendingTransactions: 3,
+    totalTransactions: 9,
+    pendingTransactions: 4,
     completedTransactions: 5,
-    failedTransactions: 1,
-    totalVolume: 8750,
+    totalVolume: 7550,
     todayTransactions: 2,
     statusBreakdown: {
-      pending: 3,
+      pending: 4,
       completed: 5,
-      failed: 1,
       cancelled: 1,
-      processing: 0,
       Success: 5,
-      Pending: 3,
+      Pending: 4,
       Cancelled: 1,
       Suspicious: 1,
     },
@@ -341,7 +298,7 @@ const AdminAllTransactionsPage = () => {
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
-    total: 10,
+    total: 9,
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
@@ -350,7 +307,6 @@ const AdminAllTransactionsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -360,7 +316,7 @@ const AdminAllTransactionsPage = () => {
   const [statsLoading, setStatsLoading] = useState(false);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
 
-  // New state for action modals
+  // Dialog states
   const [viewDetailsDialog, setViewDetailsDialog] = useState<{
     open: boolean;
     transaction: Transaction | null;
@@ -380,32 +336,50 @@ const AdminAllTransactionsPage = () => {
   });
   const [newStatus, setNewStatus] = useState('');
 
-  const [bulkStatusDialog, setBulkStatusDialog] = useState<{
-    open: boolean;
-  }>({
-    open: false,
-  });
-  const [bulkStatus, setBulkStatus] = useState('');
-
-  const [addNotesDialog, setAddNotesDialog] = useState<{
+  // Confirmation modals state
+  const [approveConfirmDialog, setApproveConfirmDialog] = useState<{
     open: boolean;
     transactionId: string;
-    currentNotes: string;
+    transaction: Transaction | null;
   }>({
     open: false,
     transactionId: '',
-    currentNotes: '',
+    transaction: null,
   });
-  const [newNotes, setNewNotes] = useState('');
 
-  // Calculate status counts from current transactions data
+  // New state for approve transaction ID input
+  const [approveTransactionId, setApproveTransactionId] = useState('');
+
+  const [cancelConfirmDialog, setCancelConfirmDialog] = useState<{
+    open: boolean;
+    transactionId: string;
+    transaction: Transaction | null;
+  }>({
+    open: false,
+    transactionId: '',
+    transaction: null,
+  });
+
+  // Add/Deduct Balance modal state
+  const [addDeductBalanceDialog, setAddDeductBalanceDialog] = useState<{
+    open: boolean;
+  }>({
+    open: false,
+  });
+
+  const [balanceForm, setBalanceForm] = useState({
+    username: '',
+    amount: '',
+    action: 'add',
+    notes: '',
+  });
+
+  // Calculate status counts
   const calculateStatusCounts = (transactionsData: Transaction[]) => {
     const counts = {
       pending: 0,
       completed: 0,
-      failed: 0,
       cancelled: 0,
-      processing: 0,
     };
 
     transactionsData.forEach((transaction) => {
@@ -417,54 +391,20 @@ const AdminAllTransactionsPage = () => {
     return counts;
   };
 
-  // Fetch all transactions to calculate real status counts
+  // Fetch functions
   const fetchAllTransactionsForCounts = async () => {
     try {
-      // Using dummy data for demo purposes
-      // Uncomment below lines when API is ready
-      /*
-      console.log('Fetching all transactions for status counts...');
-      const response = await fetch('/api/admin/transactions?limit=1000');
-      const result = await response.json();
-
-      if (result.success && result.data) {
-        const allTransactions = result.data;
-        const statusCounts = calculateStatusCounts(allTransactions);
-
-        console.log('Calculated status counts:', statusCounts);
-
-        setStats((prev) => ({
-          ...prev,
-          pendingTransactions: statusCounts.pending,
-          completedTransactions: statusCounts.completed,
-          failedTransactions: statusCounts.failed,
-          statusBreakdown: {
-            ...prev.statusBreakdown,
-            pending: statusCounts.pending,
-            completed: statusCounts.completed,
-            failed: statusCounts.failed,
-            cancelled: statusCounts.cancelled,
-            processing: statusCounts.processing,
-          },
-        }));
-      }
-      */
-      
-      // Demo: Calculate from dummy data
       const statusCounts = calculateStatusCounts(dummyTransactions);
       
       setStats((prev) => ({
         ...prev,
         pendingTransactions: statusCounts.pending,
         completedTransactions: statusCounts.completed,
-        failedTransactions: statusCounts.failed,
         statusBreakdown: {
           ...prev.statusBreakdown,
           pending: statusCounts.pending,
           completed: statusCounts.completed,
-          failed: statusCounts.failed,
           cancelled: statusCounts.cancelled,
-          processing: statusCounts.processing,
         },
       }));
     } catch (error) {
@@ -474,39 +414,6 @@ const AdminAllTransactionsPage = () => {
 
   const fetchTransactions = async () => {
     try {
-      // Using dummy data for demo purposes
-      // Uncomment below lines when API is ready
-      /*
-      const queryParams = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...(statusFilter !== 'all' && { status: statusFilter }),
-        ...(typeFilter !== 'all' && { type: typeFilter }),
-        ...(searchTerm && { search: searchTerm }),
-      });
-
-      const response = await fetch(`/api/admin/transactions?${queryParams}`);
-      const result = await response.json();
-
-      if (result.success) {
-        setTransactions(result.data || []);
-        setPagination(
-          result.pagination || {
-            page: 1,
-            limit: 20,
-            total: 0,
-            totalPages: 0,
-            hasNext: false,
-            hasPrev: false,
-          }
-        );
-      } else {
-        toast && showToast(result.error || 'Failed to fetch transactions', 'error');
-        setTransactions([]);
-      }
-      */
-      
-      // Demo: Filter dummy data based on current filters
       let filteredTransactions = dummyTransactions;
       
       if (statusFilter !== 'all') {
@@ -555,54 +462,12 @@ const AdminAllTransactionsPage = () => {
 
   const fetchStats = async () => {
     try {
-      // Using dummy stats for demo purposes
-      // Uncomment below lines when API is ready
-      /*
-      console.log('Fetching stats from API...');
-      const response = await fetch('/api/admin/transactions/stats?period=all');
-      console.log('Stats API response status:', response.status);
-
-      const result = await response.json();
-      console.log('Stats API full response:', result);
-
-      if (result.success) {
-        const data = result.data;
-        console.log('Stats API data:', data);
-
-        const statusBreakdown: Record<string, number> = {};
-        if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
-          data.statusBreakdown.forEach((item: any) => {
-            statusBreakdown[item.status] = item.count || 0;
-          });
-        }
-
-        const processedStats = {
-          totalTransactions: data.overview?.totalTransactions || pagination.total,
-          pendingTransactions: statusBreakdown.pending || 0,
-          completedTransactions: statusBreakdown.completed || 0,
-          failedTransactions: statusBreakdown.failed || 0,
-          totalVolume: data.overview?.totalVolume || 0,
-          todayTransactions: data.dailyTrends?.[0]?.transactions || 0,
-          statusBreakdown: statusBreakdown,
-        };
-
-        console.log('Processed Stats:', processedStats);
-        setStats(processedStats);
-      } else {
-        console.error('Stats API error:', result.error);
-      }
-      */
-      
-      // Demo: Calculate stats from dummy data
       const totalTransactions = dummyTransactions.length;
       const pendingCount = dummyTransactions.filter(t => 
-        t.admin_status === 'Pending' || t.status === 'pending'
+        t.admin_status === 'pending' || t.status === 'pending'
       ).length;
       const successCount = dummyTransactions.filter(t => 
         t.admin_status === 'Success' || t.status === 'completed'
-      ).length;
-      const failedCount = dummyTransactions.filter(t => 
-        t.admin_status === 'Suspicious' || t.status === 'failed'
       ).length;
       const totalVolume = dummyTransactions.reduce((sum, t) => sum + t.amount, 0);
       
@@ -610,15 +475,12 @@ const AdminAllTransactionsPage = () => {
         totalTransactions,
         pendingTransactions: pendingCount,
         completedTransactions: successCount,
-        failedTransactions: failedCount,
         totalVolume,
         todayTransactions: 2,
         statusBreakdown: {
           pending: pendingCount,
           completed: successCount,
-          failed: failedCount,
           cancelled: dummyTransactions.filter(t => t.admin_status === 'Cancelled').length,
-          processing: dummyTransactions.filter(t => t.status === 'processing').length,
           Success: successCount,
           Pending: pendingCount,
           Cancelled: dummyTransactions.filter(t => t.admin_status === 'Cancelled').length,
@@ -631,7 +493,7 @@ const AdminAllTransactionsPage = () => {
     }
   };
 
-  // Handle search with debouncing
+  // Effects
   useEffect(() => {
     const timer = setTimeout(() => {
       setTransactionsLoading(true);
@@ -641,7 +503,6 @@ const AdminAllTransactionsPage = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Load data on component mount and when filters change
   useEffect(() => {
     setTransactionsLoading(true);
     fetchTransactions();
@@ -650,12 +511,9 @@ const AdminAllTransactionsPage = () => {
   useEffect(() => {
     fetchStats();
     fetchAllTransactionsForCounts();
-    
-    // No loading delay needed for demo data
     setStatsLoading(false);
   }, []);
 
-  // Update stats when pagination data changes
   useEffect(() => {
     if (pagination.total > 0) {
       setStats((prev) => ({
@@ -665,7 +523,7 @@ const AdminAllTransactionsPage = () => {
     }
   }, [pagination.total]);
 
-  // Show toast notification
+  // Utility functions
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -674,94 +532,17 @@ const AdminAllTransactionsPage = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Handle transaction approval
-  const handleApprove = async (transactionId: string) => {
-    try {
-      const response = await fetch(`/api/admin/funds/${transactionId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Update local state to reflect the change
-        setTransactions(prevTransactions =>
-          prevTransactions.map(transaction =>
-            transaction.id === transactionId
-              ? { ...transaction, admin_status: 'Success', status: 'completed' }
-              : transaction
-          )
-        );
-
-        showToast('Transaction approved successfully!', 'success');
-        fetchStats();
-        fetchAllTransactionsForCounts();
-      } else {
-        showToast(result.error || 'Failed to approve transaction', 'error');
-      }
-    } catch (error) {
-      console.error('Error approving transaction:', error);
-      showToast('Error approving transaction', 'error');
-    }
-  };
-
-  // Handle transaction cancellation
-  const handleCancel = async (transactionId: string) => {
-    if (!confirm('Are you sure you want to cancel this transaction? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/admin/funds/${transactionId}/cancel`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Update local state to reflect the change
-        setTransactions(prevTransactions =>
-          prevTransactions.map(transaction =>
-            transaction.id === transactionId
-              ? { ...transaction, admin_status: 'Cancelled', status: 'cancelled' }
-              : transaction
-          )
-        );
-
-        showToast('Transaction cancelled successfully!', 'success');
-        fetchStats();
-        fetchAllTransactionsForCounts();
-      } else {
-        showToast(result.error || 'Failed to cancel transaction', 'error');
-      }
-    } catch (error) {
-      console.error('Error cancelling transaction:', error);
-      showToast('Error cancelling transaction', 'error');
-    }
-  };
-
-  // Utility functions
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
       case 'Pending':
         return <FaClock className="h-3 w-3 text-yellow-500" />;
-      case 'processing':
-        return <FaSync className="h-3 w-3 text-blue-500" />;
       case 'completed':
       case 'Success':
         return <FaCheckCircle className="h-3 w-3 text-green-500" />;
       case 'cancelled':
       case 'Cancelled':
         return <FaTimesCircle className="h-3 w-3 text-red-500" />;
-      case 'failed':
-        return <FaTimesCircle className="h-3 w-3 text-gray-500" />;
       case 'Suspicious':
         return <FaExclamationCircle className="h-3 w-3 text-purple-500" />;
       default:
@@ -778,19 +559,11 @@ const AdminAllTransactionsPage = () => {
             <span className="text-xs font-medium text-green-700">Success</span>
           </div>
         );
-      case 'Pending':
       case 'pending':
         return (
           <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 rounded-full w-fit">
             <FaClock className="h-3 w-3 text-yellow-500" />
             <span className="text-xs font-medium text-yellow-700">Pending</span>
-          </div>
-        );
-      case 'processing':
-        return (
-          <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 rounded-full w-fit">
-            <FaSync className="h-3 w-3 text-blue-500" />
-            <span className="text-xs font-medium text-blue-700">Processing</span>
           </div>
         );
       case 'Cancelled':
@@ -823,47 +596,18 @@ const AdminAllTransactionsPage = () => {
       case 'deposit':
         return 'bg-green-100 text-green-800';
       case 'withdrawal':
-        return 'bg-red-100 text-red-800';
-      case 'refund':
-        return 'bg-blue-100 text-blue-800';
-      case 'payment':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getMethodColor = (method: string) => {
-    switch (method.toLowerCase()) {
-      case 'bkash':
-        return 'bg-pink-100 text-pink-800';
-      case 'nagad':
-        return 'bg-orange-100 text-orange-800';
-      case 'rocket':
-        return 'bg-purple-100 text-purple-800';
-      case 'card':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  // Helper function to display method (without background colors)
+  const displayMethod = (transaction: Transaction) => {
+    return transaction.method || 'null';
   };
 
-  const handleSelectAll = () => {
-    if (selectedTransactions.length === transactions.length) {
-      setSelectedTransactions([]);
-    } else {
-      setSelectedTransactions(transactions.map((transaction) => transaction.id));
-    }
-  };
-
-  const handleSelectTransaction = (transactionId: string) => {
-    setSelectedTransactions((prev) =>
-      prev.includes(transactionId)
-        ? prev.filter((id) => id !== transactionId)
-        : [...prev, transactionId]
-    );
-  };
-
+  // Action handlers
   const handleRefresh = () => {
     setTransactionsLoading(true);
     fetchTransactions();
@@ -872,7 +616,154 @@ const AdminAllTransactionsPage = () => {
     showToast('Transactions refreshed successfully!', 'success');
   };
 
-  // Handle transaction status update
+  const handleAddDeductBalance = () => {
+    setAddDeductBalanceDialog({ open: true });
+  };
+
+  const handleBalanceSubmit = async () => {
+    if (!balanceForm.username || !balanceForm.amount) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    if (parseFloat(balanceForm.amount) <= 0) {
+      showToast('Amount must be greater than 0', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/users/balance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: balanceForm.username,
+          amount: parseFloat(balanceForm.amount),
+          action: balanceForm.action,
+          notes: balanceForm.notes,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast(`Successfully ${balanceForm.action === 'add' ? 'added' : 'deducted'} ${balanceForm.amount} to ${balanceForm.username}'s balance`, 'success');
+        setAddDeductBalanceDialog({ open: false });
+        setBalanceForm({ username: '', amount: '', action: 'add', notes: '' });
+      } else {
+        showToast(result.error || 'Failed to update user balance', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating user balance:', error);
+      showToast('Error updating user balance', 'error');
+    }
+  };
+
+  const handleApprove = (transactionId: string) => {
+    const transaction = transactions.find(t => t.id === transactionId);
+    setApproveConfirmDialog({
+      open: true,
+      transactionId,
+      transaction: transaction || null,
+    });
+    setApproveTransactionId(''); // Reset transaction ID input
+  };
+
+  const confirmApprove = async (transactionId: string) => {
+    const transaction = approveConfirmDialog.transaction;
+    
+    // Only require transaction ID for withdrawal transactions
+    if (transaction?.type === 'withdrawal' && !approveTransactionId.trim()) {
+      showToast('Please enter a transaction ID', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/funds/${transactionId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transactionId: transaction?.type === 'withdrawal' ? approveTransactionId.trim() : transaction?.transactionId
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setTransactions(prevTransactions =>
+          prevTransactions.map(transaction =>
+            transaction.id === transactionId
+              ? { 
+                  ...transaction, 
+                  admin_status: 'Success', 
+                  status: 'completed',
+                  transactionId: transaction.type === 'withdrawal' ? approveTransactionId.trim() : transaction.transactionId
+                }
+              : transaction
+          )
+        );
+
+        showToast('Transaction approved successfully!', 'success');
+        fetchStats();
+        fetchAllTransactionsForCounts();
+      } else {
+        showToast(result.error || 'Failed to approve transaction', 'error');
+      }
+    } catch (error) {
+      console.error('Error approving transaction:', error);
+      showToast('Error approving transaction', 'error');
+    } finally {
+      setApproveConfirmDialog({ open: false, transactionId: '', transaction: null });
+      setApproveTransactionId('');
+    }
+  };
+
+  const handleCancel = (transactionId: string) => {
+    const transaction = transactions.find(t => t.id === transactionId);
+    setCancelConfirmDialog({
+      open: true,
+      transactionId,
+      transaction: transaction || null,
+    });
+  };
+
+  const confirmCancel = async (transactionId: string) => {
+    try {
+      const response = await fetch(`/api/admin/funds/${transactionId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setTransactions(prevTransactions =>
+          prevTransactions.map(transaction =>
+            transaction.id === transactionId
+              ? { ...transaction, admin_status: 'Cancelled', status: 'cancelled' }
+              : transaction
+          )
+        );
+
+        showToast('Transaction cancelled successfully!', 'success');
+        fetchStats();
+        fetchAllTransactionsForCounts();
+      } else {
+        showToast(result.error || 'Failed to cancel transaction', 'error');
+      }
+    } catch (error) {
+      console.error('Error cancelling transaction:', error);
+      showToast('Error cancelling transaction', 'error');
+    } finally {
+      setCancelConfirmDialog({ open: false, transactionId: '', transaction: null });
+    }
+  };
+
   const handleStatusUpdate = async (transactionId: string, newStatus: string) => {
     try {
       const response = await fetch(`/api/admin/transactions/${transactionId}/status`, {
@@ -899,67 +790,7 @@ const AdminAllTransactionsPage = () => {
     }
   };
 
-  // Handle bulk status update
-  const handleBulkStatusUpdate = async (newStatus: string) => {
-    try {
-      const response = await fetch('/api/admin/transactions/bulk/status', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          transactionIds: selectedTransactions,
-          status: newStatus 
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        showToast(`${selectedTransactions.length} transactions status updated to ${newStatus}`, 'success');
-        fetchTransactions();
-        fetchStats();
-        fetchAllTransactionsForCounts();
-        setSelectedTransactions([]);
-        setBulkStatusDialog({ open: false });
-        setBulkStatus('');
-      } else {
-        showToast(result.error || 'Failed to update transactions status', 'error');
-      }
-    } catch (error) {
-      console.error('Error updating transactions status:', error);
-      showToast('Error updating transactions status', 'error');
-    }
-  };
-
-  // Handle add notes
-  const handleAddNotes = async (transactionId: string, notes: string) => {
-    try {
-      const response = await fetch(`/api/admin/transactions/${transactionId}/notes`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ notes: notes }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        showToast('Notes updated successfully', 'success');
-        fetchTransactions();
-        setAddNotesDialog({ open: false, transactionId: '', currentNotes: '' });
-        setNewNotes('');
-      } else {
-        showToast(result.error || 'Failed to update notes', 'error');
-      }
-    } catch (error) {
-      console.error('Error updating notes:', error);
-      showToast('Error updating notes', 'error');
-    }
-  };
-
-  // Open dialog functions
+  // Dialog openers
   const openViewDetailsDialog = (transaction: Transaction) => {
     setViewDetailsDialog({ open: true, transaction });
   };
@@ -967,16 +798,6 @@ const AdminAllTransactionsPage = () => {
   const openUpdateStatusDialog = (transactionId: string, currentStatus: string) => {
     setUpdateStatusDialog({ open: true, transactionId, currentStatus });
     setNewStatus(currentStatus);
-  };
-
-  const openBulkStatusDialog = () => {
-    setBulkStatusDialog({ open: true });
-    setBulkStatus('');
-  };
-
-  const openAddNotesDialog = (transactionId: string, currentNotes: string) => {
-    setAddNotesDialog({ open: true, transactionId, currentNotes });
-    setNewNotes(currentNotes);
   };
 
   return (
@@ -996,9 +817,7 @@ const AdminAllTransactionsPage = () => {
         {/* Controls Section */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
-              {/* Page View Dropdown */}
               <select 
                 value={pagination.limit}
                 onChange={(e) => setPagination(prev => ({ ...prev, limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value), page: 1 }))}
@@ -1018,11 +837,17 @@ const AdminAllTransactionsPage = () => {
                 <FaSync className={transactionsLoading || statsLoading ? 'animate-spin' : ''} />
                 Refresh
               </button>
+
+              <button
+                onClick={handleAddDeductBalance}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
+              >
+                <FaPlus />
+                Add/Deduct User Balance
+              </button>
             </div>
             
-            {/* Right: Search and Filter Controls */}
             <div className="flex items-center gap-3">
-              {/* Type Filter */}
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
@@ -1031,8 +856,6 @@ const AdminAllTransactionsPage = () => {
                 <option value="all">All Types</option>
                 <option value="deposit">Deposit</option>
                 <option value="withdrawal">Withdrawal</option>
-                <option value="refund">Refund</option>
-                <option value="payment">Payment</option>
               </select>
 
               <div className="relative">
@@ -1061,7 +884,6 @@ const AdminAllTransactionsPage = () => {
         {/* Transactions Table */}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons */}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -1084,9 +906,9 @@ const AdminAllTransactionsPage = () => {
                   </span>
                 </button>
                 <button
-                  onClick={() => setStatusFilter('Pending')}
+                  onClick={() => setStatusFilter('pending')}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
-                    statusFilter === 'Pending'
+                    statusFilter === 'pending'
                       ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
@@ -1094,31 +916,12 @@ const AdminAllTransactionsPage = () => {
                   Pending
                   <span
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                      statusFilter === 'Pending'
+                      statusFilter === 'pending'
                         ? 'bg-white/20'
                         : 'bg-yellow-100 text-yellow-700'
                     }`}
                   >
                     {stats.pendingTransactions}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setStatusFilter('processing')}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
-                    statusFilter === 'processing'
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  Processing
-                  <span
-                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                      statusFilter === 'processing'
-                        ? 'bg-white/20'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}
-                  >
-                    {stats.statusBreakdown?.processing || 0}
                   </span>
                 </button>
                 <button
@@ -1138,25 +941,6 @@ const AdminAllTransactionsPage = () => {
                     }`}
                   >
                     {stats.completedTransactions}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setStatusFilter('failed')}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
-                    statusFilter === 'failed'
-                      ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  Failed
-                  <span
-                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                      statusFilter === 'failed'
-                        ? 'bg-white/20'
-                        : 'bg-red-100 text-red-700'
-                    }`}
-                  >
-                    {stats.failedTransactions}
                   </span>
                 </button>
                 <button
@@ -1202,25 +986,6 @@ const AdminAllTransactionsPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {/* Selected Transactions Actions */}
-            {selectedTransactions.length > 0 && (
-              <div className="flex items-center gap-2 py-4 border-b mb-4">
-                <span
-                  className="text-sm"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {selectedTransactions.length} selected
-                </span>
-                <button 
-                  onClick={openBulkStatusDialog}
-                  className="btn btn-primary flex items-center gap-2"
-                >
-                  <FaEdit />
-                  Change All Status
-                </button>
-              </div>
-            )}
-
             {transactionsLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
@@ -1251,20 +1016,6 @@ const AdminAllTransactionsPage = () => {
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={
-                              selectedTransactions.length === transactions.length &&
-                              transactions.length > 0
-                            }
-                            onChange={handleSelectAll}
-                            className="rounded border-gray-300 w-4 h-4"
-                          />
-                        </th>
                         <th
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
@@ -1334,14 +1085,6 @@ const AdminAllTransactionsPage = () => {
                           className="border-t hover:bg-gray-50 transition-colors duration-200"
                         >
                           <td className="p-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedTransactions.includes(transaction.id)}
-                              onChange={() => handleSelectTransaction(transaction.id)}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
-                          </td>
-                          <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{transaction.id ? formatID(transaction.id.slice(-8)) : 'null'}
                             </div>
@@ -1358,19 +1101,21 @@ const AdminAllTransactionsPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded max-w-32 truncate">
-                              {transaction.transactionId || 'null'}
-                            </div>
+                            {transaction.transactionId ? (
+                              <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded max-w-32 truncate">
+                                {transaction.transactionId}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">Not assigned</span>
+                            )}
                           </td>
                           <td className="p-3">
-                            <div className="text-right">
-                              <div
-                                className="font-semibold text-sm"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
-                                {transaction.currency === 'BDT' ? '৳' : '$'}
-                                {formatPrice(transaction.amount, 2)}
-                              </div>
+                            <div
+                              className="font-semibold text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {transaction.currency === 'BDT' ? '৳' : '$'}
+                              {formatPrice(transaction.amount, 2)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1382,11 +1127,13 @@ const AdminAllTransactionsPage = () => {
                             </span>
                           </td>
                           <td className="p-3">
-                            <div
-                              className={`text-xs font-medium px-2 py-1 rounded capitalize ${getMethodColor(transaction.method || '')}`}
-                            >
-                              {transaction.method || 'null'}
-                            </div>
+                            {displayMethod(transaction) ? (
+                              <div className="text-xs font-medium text-gray-700 capitalize">
+                                {displayMethod(transaction)}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">-</span>
+                            )}
                           </td>
                           <td className="p-3">
                             <div
@@ -1397,16 +1144,12 @@ const AdminAllTransactionsPage = () => {
                           </td>
                           <td className="p-3">
                             <div>
-                              <div
-                                className="text-xs"
-                              >
+                              <div className="text-xs">
                                 {transaction.createdAt
                                   ? new Date(transaction.createdAt).toLocaleDateString()
                                   : 'null'}
                               </div>
-                              <div
-                                className="text-xs"
-                              >
+                              <div className="text-xs">
                                 {transaction.createdAt
                                   ? new Date(transaction.createdAt).toLocaleTimeString()
                                   : 'null'}
@@ -1417,24 +1160,21 @@ const AdminAllTransactionsPage = () => {
                             {getStatusBadge(transaction.admin_status || transaction.status)}
                           </td>
                           <td className="p-3">
-                            {(transaction.admin_status === 'Pending' || transaction.admin_status === 'pending' || 
-                              (!transaction.admin_status && transaction.status === 'pending')) ? (
+                            {(transaction.admin_status === 'pending' || transaction.status === 'pending') ? (
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => handleApprove(transaction.id)}
-                                  className="btn btn-primary flex items-center gap-1 px-3 py-1.5 text-xs bg-green-500/10 text-green-600 border border-green-500/20 hover:bg-green-500/20"
-                                  title="Approve transaction and add funds to user account"
+                                  className="btn btn-primary flex items-center gap-1 px-3 py-1.5 text-xs bg-green-500 text-white border border-green-500 hover:bg-green-600"
+                                  title="Approve"
                                 >
                                   <FaCheckCircle className="h-3 w-3" />
-                                  Approve
                                 </button>
                                 <button
                                   onClick={() => handleCancel(transaction.id)}
-                                  className="btn btn-secondary flex items-center gap-1 px-3 py-1.5 text-xs bg-red-500/10 text-red-600 border border-red-500/20 hover:bg-red-500/20"
-                                  title="Cancel transaction and notify user"
+                                  className="btn btn-secondary flex items-center gap-1 px-3 py-1.5 text-xs bg-red-500 text-white border border-red-500 hover:bg-red-600"
+                                  title="Cancel"
                                 >
                                   <FaTimesCircle className="h-3 w-3" />
-                                  Cancel
                                 </button>
                               </div>
                             ) : (
@@ -1484,22 +1224,6 @@ const AdminAllTransactionsPage = () => {
                                         <FaSync className="h-3 w-3" />
                                         Update Status
                                       </button>
-                                      <button
-                                        onClick={() => {
-                                          openAddNotesDialog(
-                                            transaction.id,
-                                            transaction.notes || ''
-                                          );
-                                          const dropdown = document.querySelector(
-                                            '.absolute.right-0'
-                                          ) as HTMLElement;
-                                          dropdown?.classList.add('hidden');
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                      >
-                                        <FaEdit className="h-3 w-3" />
-                                        Add Notes
-                                      </button>
                                     </div>
                                   </div>
                                 </div>
@@ -1520,34 +1244,26 @@ const AdminAllTransactionsPage = () => {
                         key={transaction.id}
                         className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
-                        {/* Header */}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedTransactions.includes(transaction.id)}
-                              onChange={() => handleSelectTransaction(transaction.id)}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{transaction.id ? formatID(transaction.id.slice(-8)) : 'null'}
                             </div>
                             {getStatusBadge(transaction.admin_status || transaction.status)}
                           </div>
                           <div className="flex items-center">
-                            {(transaction.admin_status === 'Pending' || transaction.admin_status === 'pending' || 
-                              (!transaction.admin_status && transaction.status === 'pending')) ? (
+                            {(transaction.admin_status === 'pending' || transaction.status === 'pending') ? (
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => handleApprove(transaction.id)}
-                                  className="btn btn-primary flex items-center gap-1 px-2 py-1 text-xs bg-green-500/10 text-green-600 border border-green-500/20 hover:bg-green-500/20"
+                                  className="btn btn-primary flex items-center gap-1 px-2 py-1 text-xs bg-green-500 text-white border border-green-500 hover:bg-green-600"
                                   title="Approve transaction"
                                 >
                                   <FaCheckCircle className="h-3 w-3" />
                                 </button>
                                 <button
                                   onClick={() => handleCancel(transaction.id)}
-                                  className="btn btn-secondary flex items-center gap-1 px-2 py-1 text-xs bg-red-500/10 text-red-600 border border-red-500/20 hover:bg-red-500/20"
+                                  className="btn btn-secondary flex items-center gap-1 px-2 py-1 text-xs bg-red-500 text-white border border-red-500 hover:bg-red-600"
                                   title="Cancel transaction"
                                 >
                                   <FaTimesCircle className="h-3 w-3" />
@@ -1599,22 +1315,6 @@ const AdminAllTransactionsPage = () => {
                                       <FaSync className="h-3 w-3" />
                                       Update Status
                                     </button>
-                                    <button
-                                      onClick={() => {
-                                        openAddNotesDialog(
-                                          transaction.id,
-                                          transaction.notes || ''
-                                        );
-                                        const dropdown = document.querySelector(
-                                          '.absolute.right-0'
-                                        ) as HTMLElement;
-                                        dropdown?.classList.add('hidden');
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                    >
-                                      <FaEdit className="h-3 w-3" />
-                                      Add Notes
-                                    </button>
                                   </div>
                                 </div>
                               </div>
@@ -1622,7 +1322,6 @@ const AdminAllTransactionsPage = () => {
                           </div>
                         </div>
 
-                        {/* User and Transaction Info */}
                         <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b">
                           <div>
                             <div
@@ -1648,13 +1347,16 @@ const AdminAllTransactionsPage = () => {
                             >
                               Transaction ID
                             </div>
-                            <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit">
-                              {transaction.transactionId || 'null'}
-                            </div>
+                            {transaction.transactionId ? (
+                              <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit">
+                                {transaction.transactionId}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">Not assigned</span>
+                            )}
                           </div>
                         </div>
 
-                        {/* Amount and Payment Info */}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
@@ -1678,15 +1380,16 @@ const AdminAllTransactionsPage = () => {
                             >
                               Method
                             </div>
-                            <div
-                              className={`text-xs font-medium px-2 py-1 rounded capitalize w-fit ${getMethodColor(transaction.method || '')}`}
-                            >
-                              {transaction.method || 'null'}
-                            </div>
+                            {displayMethod(transaction) ? (
+                              <div className="text-xs font-medium text-gray-700 capitalize">
+                                {displayMethod(transaction)}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400">-</span>
+                            )}
                           </div>
                         </div>
 
-                        {/* Phone and Type */}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
@@ -1695,15 +1398,12 @@ const AdminAllTransactionsPage = () => {
                             >
                               Phone
                             </div>
-                            <div className="flex items-center gap-1">
-                              <FaPhone className="h-3 w-3 text-gray-400" />
-                              <span
-                                className="text-sm"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
-                                {transaction.phone || 'null'}
-                              </span>
-                            </div>
+                            <span
+                              className="text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {transaction.phone || 'null'}
+                            </span>
                           </div>
                           <div>
                             <div
@@ -1720,7 +1420,6 @@ const AdminAllTransactionsPage = () => {
                           </div>
                         </div>
 
-                        {/* Date */}
                         <div>
                           <div
                             className="text-xs"
@@ -1746,7 +1445,6 @@ const AdminAllTransactionsPage = () => {
                   </div>
                 </div>
 
-                {/* Pagination */}
                 <div className="flex items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1806,8 +1504,7 @@ const AdminAllTransactionsPage = () => {
                 {viewDetailsDialog.open && viewDetailsDialog.transaction && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-[600px] max-w-[90vw] mx-4 max-h-[80vh] overflow-y-auto">
-                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <FaEye />
+                      <h3 className="text-lg font-semibold mb-4">
                         Transaction Details
                       </h3>
                       
@@ -1816,7 +1513,7 @@ const AdminAllTransactionsPage = () => {
                           <div>
                             <label className="text-sm font-medium text-gray-700">Transaction ID</label>
                             <div className="font-mono text-sm bg-gray-50 p-2 rounded">
-                              {viewDetailsDialog.transaction.transactionId}
+                              {viewDetailsDialog.transaction.transactionId || 'Not assigned'}
                             </div>
                           </div>
                           <div>
@@ -1860,9 +1557,13 @@ const AdminAllTransactionsPage = () => {
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-700">Method</label>
-                            <div className={`text-xs font-medium px-2 py-2 rounded capitalize ${getMethodColor(viewDetailsDialog.transaction.method || '')}`}>
-                              {viewDetailsDialog.transaction.method || 'N/A'}
-                            </div>
+                            {displayMethod(viewDetailsDialog.transaction) ? (
+                              <div className="text-xs font-medium p-2 text-gray-700 capitalize">
+                                {displayMethod(viewDetailsDialog.transaction)}
+                              </div>
+                            ) : (
+                              <div className="text-sm bg-gray-50 p-2 rounded text-gray-400">-</div>
+                            )}
                           </div>
                         </div>
 
@@ -1875,15 +1576,6 @@ const AdminAllTransactionsPage = () => {
                             </span>
                           </div>
                         </div>
-
-                        {viewDetailsDialog.transaction.reference && (
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Reference</label>
-                            <div className="text-sm bg-gray-50 p-2 rounded font-mono">
-                              {viewDetailsDialog.transaction.reference}
-                            </div>
-                          </div>
-                        )}
 
                         {viewDetailsDialog.transaction.notes && (
                           <div>
@@ -1922,55 +1614,6 @@ const AdminAllTransactionsPage = () => {
                   </div>
                 )}
 
-                {/* Bulk Status Dialog */}
-                {bulkStatusDialog.open && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
-                        Change All Transactions Status
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        This will change the status of {selectedTransactions.length} selected transaction{selectedTransactions.length !== 1 ? 's' : ''}.
-                      </p>
-                      <div className="mb-4">
-                        <label className="form-label mb-2">
-                          Select New Status
-                        </label>
-                        <select
-                          value={bulkStatus}
-                          onChange={(e) => setBulkStatus(e.target.value)}
-                          className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                        >
-                          <option value="">Select status...</option>
-                          <option value="Pending">Pending</option>
-                          <option value="processing">Processing</option>
-                          <option value="Success">Success</option>
-                          <option value="Cancelled">Cancelled</option>
-                          <option value="Suspicious">Suspicious</option>
-                        </select>
-                      </div>
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => {
-                            setBulkStatusDialog({ open: false });
-                            setBulkStatus('');
-                          }}
-                          className="btn btn-secondary"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => handleBulkStatusUpdate(bulkStatus)}
-                          disabled={!bulkStatus}
-                          className="btn btn-primary"
-                        >
-                          Update All
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Update Status Dialog */}
                 {updateStatusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1988,7 +1631,6 @@ const AdminAllTransactionsPage = () => {
                           className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                         >
                           <option value="Pending">Pending</option>
-                          <option value="processing">Processing</option>
                           <option value="Success">Success</option>
                           <option value="Cancelled">Cancelled</option>
                           <option value="Suspicious">Suspicious</option>
@@ -2027,40 +1669,232 @@ const AdminAllTransactionsPage = () => {
                   </div>
                 )}
 
-                {/* Add Notes Dialog */}
-                {addNotesDialog.open && (
+                {/* Approve Confirmation Dialog with Transaction ID Input */}
+                {approveConfirmDialog.open && approveConfirmDialog.transaction && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
-                        Add Notes
+                    <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-green-600">
+                        Approve Transaction
                       </h3>
-                      <div className="mb-4">
-                        <label className="form-label mb-2">
-                          Notes
-                        </label>
-                        <textarea
-                          value={newNotes}
-                          onChange={(e) => setNewNotes(e.target.value)}
-                          rows={4}
-                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none"
-                          placeholder="Enter notes about this transaction..."
-                        />
+                      
+                      <div className="mb-6">
+                        <p className="text-gray-700 mb-4">
+                          Are you sure you want to approve this {approveConfirmDialog.transaction?.type}? This will {approveConfirmDialog.transaction?.type === 'withdrawal' ? 'process the withdrawal and assign a transaction ID' : 'add funds to the user\'s account'}.
+                        </p>
+                        
+                        <div className="bg-gray-50 rounded-lg p-4 space-y-2 mb-4">
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-600">Transaction ID:</span>
+                            <span className="font-mono text-sm">{approveConfirmDialog.transaction.transactionId || 'Not assigned'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-600">User:</span>
+                            <span>{approveConfirmDialog.transaction.user?.username || approveConfirmDialog.transaction.user?.email || 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-600">Amount:</span>
+                            <span className="font-semibold text-lg text-green-600">
+                              {approveConfirmDialog.transaction.currency === 'BDT' ? '৳' : '$'}
+                              {formatPrice(approveConfirmDialog.transaction.amount, 2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-600">Method:</span>
+                            <span className="capitalize">{displayMethod(approveConfirmDialog.transaction) || '-'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-600">Phone:</span>
+                            <span>{approveConfirmDialog.transaction.phone}</span>
+                          </div>
+                        </div>
+
+                        {/* Transaction ID Input Field - Only for Withdrawals */}
+                        {approveConfirmDialog.transaction?.type === 'withdrawal' && (
+                          <div className="mb-4">
+                            <label className="form-label mb-2">
+                              Transaction ID *
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Enter transaction ID"
+                              value={approveTransactionId}
+                              onChange={(e) => setApproveTransactionId(e.target.value)}
+                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                              required
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              This transaction ID will be assigned to the approved withdrawal.
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex gap-2 justify-end">
+
+                      <div className="flex gap-3 justify-end">
                         <button
                           onClick={() => {
-                            setAddNotesDialog({ open: false, transactionId: '', currentNotes: '' });
-                            setNewNotes('');
+                            setApproveConfirmDialog({ open: false, transactionId: '', transaction: null });
+                            setApproveTransactionId('');
                           }}
                           className="btn btn-secondary"
                         >
                           Cancel
                         </button>
                         <button
-                          onClick={() => handleAddNotes(addNotesDialog.transactionId, newNotes)}
-                          className="btn btn-primary"
+                          onClick={() => confirmApprove(approveConfirmDialog.transactionId)}
+                          disabled={approveConfirmDialog.transaction?.type === 'withdrawal' && !approveTransactionId.trim()}
+                          className="btn btn-primary flex items-center gap-2"
                         >
-                          Save Notes
+                          <FaCheckCircle className="h-4 w-4" />
+                          Approve Transaction
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Cancel Confirmation Dialog */}
+                {cancelConfirmDialog.open && cancelConfirmDialog.transaction && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-red-600">
+                        Cancel Transaction
+                      </h3>
+                      
+                      <div className="mb-6">
+                        <p className="text-gray-700 mb-2">
+                          Are you sure you want to cancel this transaction?
+                        </p>
+                        <p className="text-red-600 text-sm font-medium mb-4">
+                            This action cannot be undone and will notify the user.
+                        </p>
+                        
+                        <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-600">Transaction ID:</span>
+                            <span className="font-mono text-sm">{cancelConfirmDialog.transaction.transactionId || 'Not assigned'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-600">User:</span>
+                            <span>{cancelConfirmDialog.transaction.user?.username || cancelConfirmDialog.transaction.user?.email || 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-600">Amount:</span>
+                            <span className="font-semibold text-lg">
+                              {cancelConfirmDialog.transaction.currency === 'BDT' ? '৳' : '$'}
+                              {formatPrice(cancelConfirmDialog.transaction.amount, 2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-600">Method:</span>
+                            <span className="capitalize">{displayMethod(cancelConfirmDialog.transaction) || '-'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-600">Phone:</span>
+                            <span>{cancelConfirmDialog.transaction.phone}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 justify-end">
+                        <button
+                          onClick={() => setCancelConfirmDialog({ open: false, transactionId: '', transaction: null })}
+                          className="btn btn-secondary"
+                        >
+                          Keep Transaction
+                        </button>
+                        <button
+                          onClick={() => confirmCancel(cancelConfirmDialog.transactionId)}
+                          className="btn btn-primary flex items-center gap-2"
+                        >
+                          <FaTimesCircle className="h-4 w-4" />
+                          Cancel Transaction
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Add/Deduct User Balance Dialog */}
+                {addDeductBalanceDialog.open && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                      <h3 className="text-lg font-semibold mb-4">
+                        Add/Deduct User Balance
+                      </h3>
+                      
+                      <div className="space-y-4 mb-6">
+                        <div>
+                          <label className="form-label mb-2">
+                            Username *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Enter username"
+                            value={balanceForm.username}
+                            onChange={(e) => setBalanceForm(prev => ({ ...prev, username: e.target.value }))}
+                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="form-label mb-2">
+                            Action *
+                          </label>
+                          <select
+                            value={balanceForm.action}
+                            onChange={(e) => setBalanceForm(prev => ({ ...prev, action: e.target.value }))}
+                            className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                          >
+                            <option value="add">Add Balance</option>
+                            <option value="deduct">Deduct Balance</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="form-label mb-2">
+                            Amount *
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="Enter amount"
+                            value={balanceForm.amount}
+                            onChange={(e) => setBalanceForm(prev => ({ ...prev, amount: e.target.value }))}
+                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="form-label mb-2">
+                            Notes
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Add notes (optional)"
+                            value={balanceForm.notes}
+                            onChange={(e) => setBalanceForm(prev => ({ ...prev, notes: e.target.value }))}
+                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 justify-end">
+                        <button
+                          onClick={() => {
+                            setAddDeductBalanceDialog({ open: false });
+                            setBalanceForm({ username: '', amount: '', action: 'add', notes: '' });
+                          }}
+                          className="btn btn-secondary"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleBalanceSubmit}
+                          className="btn btn-primary flex items-center gap-2"
+                        >
+                          <FaDollarSign className="h-4 w-4" />
+                          {balanceForm.action === 'add' ? 'Add Balance' : 'Deduct Balance'}
                         </button>
                       </div>
                     </div>
