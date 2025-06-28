@@ -186,7 +186,7 @@ const Header = () => {
                 alt="SMMDOC"
                 width={400}
                 height={50}
-                className="h-20 w-auto max-w-[400px]"
+                className="h-16 w-auto max-w-[400px]"
                 priority
               />
             </Link>
