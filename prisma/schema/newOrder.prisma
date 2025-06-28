@@ -1,5 +1,5 @@
 model NewOrder {
-  id         String   @id @default(cuid())
+  id         Int      @id @default(autoincrement())
   categoryId String
   serviceId  String
   userId     String
@@ -17,9 +17,10 @@ model NewOrder {
   bdtPrice   Float
   currency   String
   usdPrice   Float
-  category   Category @relation(fields: [categoryId], references: [id])
-  service    Service  @relation(fields: [serviceId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
+  category       Category        @relation(fields: [categoryId], references: [id])
+  service        Service         @relation(fields: [serviceId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
+  cancelRequests CancelRequest[]
 
   @@index([categoryId], map: "NewOrder_categoryId_fkey")
   @@index([serviceId], map: "NewOrder_serviceId_fkey")

@@ -49,4 +49,5 @@ model User {
   twoFactorConfirmation TwoFactorConfirmation?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
+  cancelRequests        CancelRequest[]
 }

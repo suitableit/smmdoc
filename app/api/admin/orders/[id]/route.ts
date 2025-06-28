@@ -9,35 +9,48 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null
         },
         { status: 401 }
       );
     }
-    
+
     const { id } = params;
-    
+
     if (!id) {
       return NextResponse.json(
-        { 
+        {
           error: 'Order ID is required',
           success: false,
-          data: null 
+          data: null
         },
         { status: 400 }
       );
     }
-    
+
+    // Convert string ID to integer
+    const orderId = parseInt(id);
+    if (isNaN(orderId)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid Order ID format',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
     // Get order with all related data
     const order = await db.newOrder.findUnique({
-      where: { id },
+      where: { id: orderId },
       include: {
         user: {
           select: {
@@ -108,36 +121,49 @@ export async function PUT(
 ) {
   try {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null
         },
         { status: 401 }
       );
     }
-    
+
     const { id } = params;
     const body = await req.json();
-    
+
     if (!id) {
       return NextResponse.json(
-        { 
+        {
           error: 'Order ID is required',
           success: false,
-          data: null 
+          data: null
         },
         { status: 400 }
       );
     }
-    
+
+    // Convert string ID to integer
+    const orderId = parseInt(id);
+    if (isNaN(orderId)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid Order ID format',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
     // Get current order
     const currentOrder = await db.newOrder.findUnique({
-      where: { id },
+      where: { id: orderId },
       include: {
         user: {
           select: {
@@ -242,7 +268,7 @@ export async function PUT(
     
     // Update the order
     const updatedOrder = await db.newOrder.update({
-      where: { id },
+      where: { id: orderId },
       data: updateData,
       include: {
         user: {
@@ -305,35 +331,48 @@ export async function DELETE(
 ) {
   try {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null
         },
         { status: 401 }
       );
     }
-    
+
     const { id } = params;
-    
+
     if (!id) {
       return NextResponse.json(
-        { 
+        {
           error: 'Order ID is required',
           success: false,
-          data: null 
+          data: null
         },
         { status: 400 }
       );
     }
-    
+
+    // Convert string ID to integer
+    const orderId = parseInt(id);
+    if (isNaN(orderId)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid Order ID format',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
     // Get order details before deletion for refund calculation
     const order = await db.newOrder.findUnique({
-      where: { id },
+      where: { id: orderId },
       include: {
         user: {
           select: {
@@ -374,12 +413,12 @@ export async function DELETE(
     
     // Delete the order
     await db.newOrder.delete({
-      where: { id }
+      where: { id: orderId }
     });
-    
+
     // Log the order deletion
-    console.log(`Admin ${session.user.email} deleted order ${id}`, {
-      orderId: id,
+    console.log(`Admin ${session.user.email} deleted order ${orderId}`, {
+      orderId: orderId,
       userId: order.userId,
       refunded: order.status !== 'pending',
       timestamp: new Date().toISOString()

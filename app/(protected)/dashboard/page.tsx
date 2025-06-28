@@ -538,7 +538,7 @@ const DashboardPage = () => {
                               }`}
                             >
                               <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
-                                #{formatID(order.id.substring(0, 8))}
+                                #{order.id}
                               </span>
                             </td>
                             <td className="py-3 px-4 whitespace-nowrap">

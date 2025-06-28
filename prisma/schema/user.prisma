@@ -25,6 +25,7 @@ model User {
   services              Service[]
   sessions              Session[]
   twoFactorConfirmation TwoFactorConfirmation?
+  cancelRequests        CancelRequest[]
 }
 
 model Account {
