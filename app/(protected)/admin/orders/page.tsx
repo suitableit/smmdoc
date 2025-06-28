@@ -51,7 +51,7 @@ const Toast = ({
 
 // Define interfaces for type safety
 interface Order {
-  id: string;
+  id: number;
   user: {
     id: string;
     email: string;
@@ -144,9 +144,9 @@ const AdminOrdersPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -456,7 +456,7 @@ const AdminOrdersPage = () => {
     }
   };
 
-  const handleSelectOrder = (orderId: string) => {
+  const handleSelectOrder = (orderId: number) => {
     setSelectedOrders((prev) =>
       prev.includes(orderId)
         ? prev.filter((id) => id !== orderId)
@@ -473,7 +473,7 @@ const AdminOrdersPage = () => {
   };
 
   // Handle order deletion
-  const handleDeleteOrder = async (orderId: string) => {
+  const handleDeleteOrder = async (orderId: number) => {
     try {
       const response = await fetch(`/api/admin/orders/${orderId}`, {
         method: 'DELETE',
@@ -1109,7 +1109,7 @@ const AdminOrdersPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{order.id ? formatID(order.id.slice(-8)) : 'null'}
+                              #{order.id || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1423,7 +1423,7 @@ const AdminOrdersPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{order.id ? formatID(order.id.slice(-8)) : 'null'}
+                              #{order.id || 'null'}
                             </div>
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                               {getStatusIcon(order.status)}

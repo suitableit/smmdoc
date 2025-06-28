@@ -37,7 +37,7 @@ const Toast = ({
 
 // Define interfaces for type safety
 interface Order {
-  id: string;
+  id: number;
   user: {
     id: string;
     email: string;
@@ -130,7 +130,7 @@ const RefillOrdersPage = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
 
   const [stats, setStats] = useState({
     totalRefills: 0,
@@ -296,7 +296,7 @@ const RefillOrdersPage = () => {
     }
   };
 
-  const handleSelectOrder = (orderId: string) => {
+  const handleSelectOrder = (orderId: number) => {
     setSelectedOrders((prev) =>
       prev.includes(orderId)
         ? prev.filter((id) => id !== orderId)
@@ -579,7 +579,7 @@ const RefillOrdersPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                              #{order.id.slice(-8)}
+                              #{order.id}
                             </div>
                           </td>
                           <td className="p-3">
@@ -752,7 +752,7 @@ const RefillOrdersPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
                             <div className="font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                              #{order.id.slice(-8)}
+                              #{order.id}
                             </div>
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                               {getStatusIcon(order.status)}

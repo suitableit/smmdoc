@@ -139,7 +139,7 @@ const ServiceTypes = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1
     }));
-  }, [filteredServiceTypes, pagination.limit, pagination.page]);
+  }, [filteredServiceTypes.length, pagination.limit]);
 
   // Get paginated data
   const getPaginatedData = () => {

@@ -144,147 +144,19 @@ export default function OrdersList() {
   });
   const { currency } = useCurrency();
 
-  // Dummy data with refill enabled examples
-  const dummyData = {
-    data: [
-      {
-        id: 12345,
-        createdAt: "2025-06-25T10:30:00Z",
-        link: "https://instagram.com/p/abc123def",
-        usdPrice: 25.50,
-        bdtPrice: 2805.50,
-        startCount: 150,
-        qty: 1000,
-        service: {
-          name: "Instagram Likes - Real & Active",
-          refillEnabled: true  // ✅ Refill button will show
-        },
-        category: {
-          category_name: "Instagram"
-        },
-        remains: 200,
-        status: "completed"
-      },
-      {
-        id: 67890,
-        createdAt: "2025-06-24T14:15:00Z", 
-        link: "https://youtube.com/watch?v=xyz789abc",
-        usdPrice: 45.00,
-        bdtPrice: 4950.00,
-        startCount: 500,
-        qty: 2500,
-        service: {
-          name: "YouTube Views - High Retention", 
-          refillEnabled: true  // ✅ Refill button will show
-        },
-        category: {
-          category_name: "YouTube"
-        },
-        remains: 1200,
-        status: "partial"
-      },
-      {
-        id: 11111,
-        createdAt: "2025-06-23T09:45:00Z",
-        link: "https://tiktok.com/@user/video/123",
-        usdPrice: 15.00,
-        bdtPrice: 1650.00,
-        startCount: 100,
-        qty: 500,
-        service: {
-          name: "TikTok Followers - Basic",
-          refillEnabled: false  // ❌ No refill button
-        },
-        category: {
-          category_name: "TikTok"
-        },
-        remains: 0,
-        status: "completed"
-      },
-      {
-        id: 22222,
-        createdAt: "2025-06-22T16:20:00Z",
-        link: "https://facebook.com/post/456789",
-        usdPrice: 35.75,
-        bdtPrice: 3932.25,
-        startCount: 80,
-        qty: 1500,
-        service: {
-          name: "Facebook Post Likes - Premium",
-          refillEnabled: true  // ✅ Refill button will show
-        },
-        category: {
-          category_name: "Facebook"
-        },
-        remains: 750,
-        status: "pending"  // Will show both Refill and Cancel buttons
-      },
-      {
-        id: 33333,
-        createdAt: "2025-06-21T11:10:00Z",
-        link: "https://twitter.com/status/987654321",
-        usdPrice: 12.25,
-        bdtPrice: 1347.75,
-        startCount: 25,
-        qty: 300,
-        service: {
-          name: "Twitter Retweets - Fast",
-          refillEnabled: false  // ❌ No refill button
-        },
-        category: {
-          category_name: "Twitter"
-        },
-        remains: 0,
-        status: "pending"  // Will show only Cancel button
-      },
-      {
-        id: 44444,
-        createdAt: "2025-06-20T08:30:00Z",
-        link: "https://instagram.com/reel/def456ghi",
-        usdPrice: 18.90,
-        bdtPrice: 2079.00,
-        startCount: 320,
-        qty: 800,
-        service: {
-          name: "Instagram Reel Views - Real",
-          refillEnabled: true  // ✅ Refill button will show
-        },
-        category: {
-          category_name: "Instagram"
-        },
-        remains: 150,
-        status: "in_progress"
-      }
-    ],
-    pagination: {
-      total: 6,
-      page: 1,
-      limit: 10,
-      totalPages: 1
-    }
-  };
+  // Get real user orders from API
+  const { data, isLoading, error } = useGetUserOrdersQuery({
+    page,
+    limit,
+    status,
+    search,
+  });
 
-  // Comment out real API call and use dummy data
-  // const { data, isLoading, error } = useGetUserOrdersQuery({
-  //   page,
-  //   limit,
-  //   status,
-  //   search,
-  // });
 
-  // For demo purposes, simulate loading and use dummy data
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [data, setData] = useState(null);
 
-  // Simulate API loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setData(dummyData);
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+
+
+
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -597,7 +469,7 @@ export default function OrdersList() {
                           }`}
                         >
                           <span className="text-sm font-mono text-gray-700">
-                            #{formatID(order.id)}
+                            #{order.id}
                           </span>
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
