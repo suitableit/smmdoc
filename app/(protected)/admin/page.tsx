@@ -690,7 +690,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div style={{ padding: '0 24px' }}>
+          <div style={{ padding: '0 24px 24px' }}>
             {transactionsLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
@@ -867,14 +867,12 @@ export default function AdminDashboardPage() {
                                 className="btn btn-primary flex items-center gap-2"
                               >
                                 <FaCheckCircle className="h-3 w-3" />
-                                Approve
                               </button>
                               <button
                                 onClick={() => handleCancel(transaction.id)}
                                 className="btn btn-secondary flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white border-red-500"
                               >
                                 <FaTimesCircle className="h-3 w-3" />
-                                Cancel
                               </button>
                             </div>
                           </td>
