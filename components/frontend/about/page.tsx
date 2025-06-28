@@ -180,7 +180,7 @@ const About: React.FC = () => {
           <div className="text-center lg:text-right">
             <div className="relative">
               <Image
-                src="/SMMDOC-about-us.webp"
+                src="/smmdoc-about-us.webp"
                 alt="SMMDOC about us"
                 width={600}
                 height={400}
