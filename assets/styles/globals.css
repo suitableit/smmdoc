@@ -903,7 +903,6 @@ div:not(.sidebar div):not(.bg-[#1B1E2F] div),
 a:not(.sidebar a):not(.bg-[#1B1E2F] a),
 li:not(.sidebar li):not(.bg-[#1B1E2F] li) {
   font-family: 'Nunito', sans-serif;
-  color: #000000;
 }
 
 /* Dark mode text elements */
