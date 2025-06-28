@@ -855,16 +855,6 @@ body {
   font-family: Nunito, sans-serif;
 }
 
-/* Main content sections */
-.main-content,
-.content-section,
-main,
-.page-content,
-.dashboard-content,
-.h-full:not(.sidebar):not(.bg-[#1B1E2F]) {
-  color: #000000;
-}
-
 /* Dark mode content background and text color */
 .dark .main-content,
 .dark .content-section,
