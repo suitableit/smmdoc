@@ -287,9 +287,9 @@ export default function SignInForm() {
                   setSuccess('');
                 });
             }}
-            className="w-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-purple-800 hover:to-indigo-800 transition-all duration-300 flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FaSignInAlt className="w-5 h-5" /> Login to Dashboard
+            Sign In
           </button>
         </div>
       </form>
