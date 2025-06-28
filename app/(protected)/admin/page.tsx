@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
+import Link from 'next/link';
 import moment from 'moment';
 import { useEffect, useState, useCallback } from 'react';
 import {
@@ -629,34 +630,34 @@ export default function AdminDashboardPage() {
             <h3 className="card-title">Quick Actions</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <a
-              href="/admin/funds"
-              className="btn btn-primary w-full flex items-center justify-center gap-2"
-            >
-              <FaDollarSign className="h-4 w-4" />
-              Manage Funds
-            </a>
-            <a
+            <Link
+              href="/admin/transactions"
+              className={`btn btn-primary w-full flex items-center justify-center gap-2`}
+              >
+              <FaDollarSign className="w-4 h-4" />
+              Manage Transactions
+            </Link>
+            <Link
               href="/admin/users"
-              className="btn btn-secondary w-full flex items-center justify-center gap-2"
-            >
-              <FaUsers className="h-4 w-4" />
+              className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
+              >
+              <FaUsers className="w-4 h-4" />
               Manage Users
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin/orders"
-              className="btn btn-secondary w-full flex items-center justify-center gap-2"
-            >
-              <FaShoppingCart className="h-4 w-4" />
+              className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
+              >
+              <FaShoppingCart className="w-4 h-4" />
               Manage Orders
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin/services"
-              className="btn btn-secondary w-full flex items-center justify-center gap-2"
-            >
-              <FaCog className="h-4 w-4" />
+              className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
+              >
+              <FaCog className="w-4 h-4" />
               Manage Services
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -679,14 +680,13 @@ export default function AdminDashboardPage() {
                   )}
                 </h3>
               </div>
-              <button
-                onClick={handleRefreshTransactions}
-                className="btn btn-secondary flex items-center gap-2"
-                disabled={transactionsLoading}
-              >
-                <FaSync className={transactionsLoading ? 'animate-spin' : ''} />
-                Refresh
-              </button>
+              <Link
+                href="/admin/transactions"
+                className={`btn btn-secondary flex items-center gap-2`}
+                >
+                <FaEye className="w-4 h-4" />
+                View More
+              </Link>
             </div>
           </div>
 
@@ -1028,7 +1028,7 @@ export default function AdminDashboardPage() {
 
           {/* View More Button */}
           {totalTransactionCount > 0 && (
-            <div className="flex justify-center p-4 border-t bg-gray-50">
+            <div className="flex justify-center p-4 bg-gray-50">
               <button
                 className="btn btn-primary flex items-center gap-2"
                 onClick={() =>
@@ -1374,13 +1374,13 @@ export default function AdminDashboardPage() {
                 </div>
                 <h3 className="card-title">Latest Users</h3>
               </div>
-              <button 
-                onClick={() => window.open('/admin/users', '_blank')}
-                className="btn btn-secondary flex items-center gap-2"
+              <Link
+              href="/admin/services"
+              className={`btn btn-secondary flex items-center gap-2`}
               >
-                <FaUserPlus className="h-4 w-4" />
-                View All Users
-              </button>
+              <FaUsers className="w-4 h-4" />
+              View All Users
+            </Link>
             </div>
           </div>
 
