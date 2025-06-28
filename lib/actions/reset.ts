@@ -20,7 +20,7 @@ export const resetPassword = async (values: z.infer<typeof resetSchema>) => {
   const resetPasswordToken = await generatePasswordResetToken(email);
   await sendMail({
     sendTo: email,
-    subject: "Smm-panel Reset Password",
+    subject: "Reset Password",
     html: `<a href="${process.env.NEXT_PUBLIC_APP_URL}/new-password?token=${resetPasswordToken.token}">Click here to reset your password</a>`,
   });
   return {

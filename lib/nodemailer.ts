@@ -28,7 +28,7 @@ export const sendMail = async ({
 }: MailOptions): Promise<boolean> => {
   try {
     await transporter.sendMail({
-      from: `"Smm-Panel" <${process.env.EMAIL_FROM}>`,
+      from: `"SMMDOC" <${process.env.EMAIL_FROM}>`,
       to: sendTo,
       subject: subject,
       html: html,
