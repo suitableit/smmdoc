@@ -673,11 +673,6 @@ export default function AdminDashboardPage() {
                 </div>
                 <h3 className="card-title">
                   Pending Transactions
-                  {totalTransactionCount > 0 && (
-                    <span className="ml-2 bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
-                      {totalTransactionCount}
-                    </span>
-                  )}
                 </h3>
               </div>
               <Link
@@ -864,13 +859,15 @@ export default function AdminDashboardPage() {
                             <div className="flex gap-2 justify-center">
                               <button
                                 onClick={() => handleApprove(transaction.id)}
-                                className="btn btn-primary flex items-center gap-2"
+                                className="btn btn-primary flex items-center gap-1 px-3 py-1.5 text-xs bg-green-500 text-white border border-green-500 hover:bg-green-600"
+                                title="Approve"
                               >
                                 <FaCheckCircle className="h-3 w-3" />
                               </button>
                               <button
                                 onClick={() => handleCancel(transaction.id)}
-                                className="btn btn-secondary flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white border-red-500"
+                                className="btn btn-secondary flex items-center gap-1 px-3 py-1.5 text-xs bg-red-500 text-white border border-red-500 hover:bg-red-600"
+                                title="Cancel"
                               >
                                 <FaTimesCircle className="h-3 w-3" />
                               </button>
