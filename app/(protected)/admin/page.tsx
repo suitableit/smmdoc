@@ -1025,27 +1025,6 @@ export default function AdminDashboardPage() {
               </>
             )}
           </div>
-
-          {/* View More Button */}
-          {totalTransactionCount > 0 && (
-            <div className="flex justify-center p-4 bg-gray-50">
-              <button
-                className="btn btn-primary flex items-center gap-2"
-                onClick={() =>
-                  (window.location.href = '/admin/funds?tab=pending-transactions')
-                }
-              >
-                <FaEye className="h-4 w-4" />
-                View More Pending Transactions
-                {totalTransactionCount > 3 && (
-                  <span className="text-xs px-2 py-0.5 bg-white/20 rounded-full">
-                    +{totalTransactionCount - 3}
-                  </span>
-                )}
-                <FaArrowRight className="h-3 w-3 ml-1" />
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
