@@ -2,11 +2,11 @@
 
 import { Input } from '@/components/ui/input';
 import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationNext,
-    PaginationPrevious,
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
 } from '@/components/ui/pagination';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { SearchIcon } from 'lucide-react';
@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import ServiceGrid from './ServiceGrid';
 
 interface Service {
-  id: string;
+  id: number;
   name: string;
   rate: number;
   min_order: number;
@@ -24,7 +24,7 @@ interface Service {
   description: string;
   category: {
     category_name: string;
-    id: string;
+    id: number;
   };
   isFavorite?: boolean;
 }
@@ -37,7 +37,9 @@ export default function ServiceGridView() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [groupedServices, setGroupedServices] = useState<Record<string, Service[]>>({});
+  const [groupedServices, setGroupedServices] = useState<
+    Record<string, Service[]>
+  >({});
 
   const limit = 50;
 
@@ -61,11 +63,11 @@ export default function ServiceGridView() {
             method: 'GET',
             cache: 'no-store',
             headers: {
-              'Cache-Control': 'no-cache'
-            }
+              'Cache-Control': 'no-cache',
+            },
           }
         );
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch services: ${response.statusText}`);
         }
@@ -73,21 +75,26 @@ export default function ServiceGridView() {
         const data = await response.json();
 
         if (!user?.id) {
-          const servicesData = data?.data?.map((service: Service) => ({
-            ...service,
-            isFavorite: false,
-          })) || [];
-          
+          const servicesData =
+            data?.data?.map((service: Service) => ({
+              ...service,
+              isFavorite: false,
+            })) || [];
+
           setServices(servicesData);
           // Group services by category
-          const grouped = servicesData.reduce((acc: Record<string, Service[]>, service: Service) => {
-            const categoryName = service.category?.category_name || 'Uncategorized';
-            if (!acc[categoryName]) {
-              acc[categoryName] = [];
-            }
-            acc[categoryName].push(service);
-            return acc;
-          }, {});
+          const grouped = servicesData.reduce(
+            (acc: Record<string, Service[]>, service: Service) => {
+              const categoryName =
+                service.category?.category_name || 'Uncategorized';
+              if (!acc[categoryName]) {
+                acc[categoryName] = [];
+              }
+              acc[categoryName].push(service);
+              return acc;
+            },
+            {}
+          );
           setGroupedServices(grouped);
           setTotalPages(data.totalPages || 1);
           return;
@@ -101,15 +108,17 @@ export default function ServiceGridView() {
               method: 'GET',
               cache: 'no-store',
               headers: {
-                'Cache-Control': 'no-cache'
-              }
+                'Cache-Control': 'no-cache',
+              },
             }
           );
-          
+
           if (!favResponse.ok) {
-            throw new Error(`Failed to fetch favorites: ${favResponse.statusText}`);
+            throw new Error(
+              `Failed to fetch favorites: ${favResponse.statusText}`
+            );
           }
-          
+
           const favData = await favResponse.json();
           const favoriteServiceIds = favData.favoriteServiceIds || [];
 
@@ -121,40 +130,48 @@ export default function ServiceGridView() {
             })) || [];
 
           setServices(servicesWithFavorites);
-          
+
           // Group services by category
-          const grouped = servicesWithFavorites.reduce((acc: Record<string, Service[]>, service: Service) => {
-            const categoryName = service.category?.category_name || 'Uncategorized';
-            if (!acc[categoryName]) {
-              acc[categoryName] = [];
-            }
-            acc[categoryName].push(service);
-            return acc;
-          }, {});
+          const grouped = servicesWithFavorites.reduce(
+            (acc: Record<string, Service[]>, service: Service) => {
+              const categoryName =
+                service.category?.category_name || 'Uncategorized';
+              if (!acc[categoryName]) {
+                acc[categoryName] = [];
+              }
+              acc[categoryName].push(service);
+              return acc;
+            },
+            {}
+          );
           setGroupedServices(grouped);
-          
         } catch (favError) {
           console.error('Error fetching favorites:', favError);
           // If favorite fetch fails, still show services without favorites
-          const servicesData = data?.data?.map((service: Service) => ({
-            ...service,
-            isFavorite: false,
-          })) || [];
-          
+          const servicesData =
+            data?.data?.map((service: Service) => ({
+              ...service,
+              isFavorite: false,
+            })) || [];
+
           setServices(servicesData);
-          
+
           // Group services by category
-          const grouped = servicesData.reduce((acc: Record<string, Service[]>, service: Service) => {
-            const categoryName = service.category?.category_name || 'Uncategorized';
-            if (!acc[categoryName]) {
-              acc[categoryName] = [];
-            }
-            acc[categoryName].push(service);
-            return acc;
-          }, {});
+          const grouped = servicesData.reduce(
+            (acc: Record<string, Service[]>, service: Service) => {
+              const categoryName =
+                service.category?.category_name || 'Uncategorized';
+              if (!acc[categoryName]) {
+                acc[categoryName] = [];
+              }
+              acc[categoryName].push(service);
+              return acc;
+            },
+            {}
+          );
           setGroupedServices(grouped);
         }
-        
+
         setTotalPages(data.totalPages || 1);
       } catch (error) {
         console.error('Error fetching services:', error);
@@ -195,7 +212,7 @@ export default function ServiceGridView() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache',
         },
         cache: 'no-store',
         body: JSON.stringify({
@@ -215,7 +232,7 @@ export default function ServiceGridView() {
               : service
           )
         );
-        
+
         // Update grouped services as well
         setGroupedServices((prevGrouped) => {
           const newGrouped = { ...prevGrouped };
@@ -228,7 +245,7 @@ export default function ServiceGridView() {
           });
           return newGrouped;
         });
-        
+
         toast.success(data.message);
       } else {
         throw new Error(data.error || 'Failed to update favorite status');
@@ -253,10 +270,10 @@ export default function ServiceGridView() {
         />
       </div>
 
-      <ServiceGrid 
-        groupedServices={groupedServices} 
-        loading={loading} 
-        toggleFavorite={toggleFavorite} 
+      <ServiceGrid
+        groupedServices={groupedServices}
+        loading={loading}
+        toggleFavorite={toggleFavorite}
       />
 
       {totalPages > 1 && (

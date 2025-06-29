@@ -1,19 +1,19 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FaUserShield,
   FaCheckCircle,
-  FaEllipsisH,
+  FaClock,
+  FaCrown,
   FaEdit,
+  FaEllipsisH,
   FaSearch,
   FaSync,
   FaTimes,
   FaTimesCircle,
   FaTrash,
-  FaClock,
   FaUserCheck,
-  FaCrown,
+  FaUserShield,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -49,7 +49,7 @@ const Toast = ({
 
 // Define interfaces for type safety
 interface Admin {
-  id: string;
+  id: number;
   username: string;
   email: string;
   name?: string;
@@ -157,7 +157,10 @@ const useDebounce = (value: string, delay: number) => {
   return debouncedValue;
 };
 
-const useClickOutside = (ref: React.RefObject<HTMLElement | null>, handler: () => void) => {
+const useClickOutside = (
+  ref: React.RefObject<HTMLElement | null>,
+  handler: () => void
+) => {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
       if (!ref.current || ref.current.contains(event.target as Node)) {
@@ -220,7 +223,7 @@ const AdminsListPage = () => {
   // New state for action modals
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
-    adminId: string;
+    adminId: number;
     currentStatus: string;
   }>({
     open: false,
@@ -230,7 +233,7 @@ const AdminsListPage = () => {
   const [newStatus, setNewStatus] = useState('');
   const [changeRoleDialog, setChangeRoleDialog] = useState<{
     open: boolean;
-    adminId: string;
+    adminId: number;
     currentRole: string;
   }>({
     open: false,
@@ -253,11 +256,14 @@ const AdminsListPage = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Memoized filter options
-  const filterOptions = useMemo(() => [
-    { key: 'all', label: 'All', count: stats.totalAdmins },
-    { key: 'active', label: 'Active', count: stats.activeAdmins },
-    { key: 'inactive', label: 'Inactive', count: stats.inactiveAdmins },
-  ], [stats]);
+  const filterOptions = useMemo(
+    () => [
+      { key: 'all', label: 'All', count: stats.totalAdmins },
+      { key: 'active', label: 'Active', count: stats.activeAdmins },
+      { key: 'inactive', label: 'Inactive', count: stats.inactiveAdmins },
+    ],
+    [stats]
+  );
 
   // API functions
   const fetchAdmins = useCallback(async () => {
@@ -272,17 +278,18 @@ const AdminsListPage = () => {
       });
 
       const response = await fetch(`/api/admin/users?${queryParams}`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
       const result = await response.json();
 
       if (result.success) {
         // Filter data to only include admin roles on client side as backup
-        const adminData = (result.data || []).filter((user: Admin) => 
+        const adminData = (result.data || []).filter((user: Admin) =>
           ['admin', 'moderator', 'super_admin'].includes(user.role)
         );
         setAdmins(adminData);
-        setPagination(prev => ({
+        setPagination((prev) => ({
           ...prev,
           ...result.pagination,
         }));
@@ -291,7 +298,10 @@ const AdminsListPage = () => {
       }
     } catch (error) {
       console.error('Error fetching admins:', error);
-      showToast(error instanceof Error ? error.message : 'Error fetching admins', 'error');
+      showToast(
+        error instanceof Error ? error.message : 'Error fetching admins',
+        'error'
+      );
       setAdmins([]);
     } finally {
       setAdminsLoading(false);
@@ -303,14 +313,15 @@ const AdminsListPage = () => {
       setStatsLoading(true);
       // Remove role parameter as the API endpoint doesn't support it
       const response = await fetch('/api/admin/users/stats?period=all');
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
       const result = await response.json();
 
       if (result.success) {
         const data = result.data;
         const statusBreakdown: Record<string, number> = {};
-        
+
         if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
           data.statusBreakdown.forEach((item: any) => {
             statusBreakdown[item.status] = item.count || 0;
@@ -347,13 +358,16 @@ const AdminsListPage = () => {
   }, [fetchStats]);
 
   // Show toast notification
-  const showToast = useCallback((
-    message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'success'
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  }, []);
+  const showToast = useCallback(
+    (
+      message: string,
+      type: 'success' | 'error' | 'info' | 'pending' = 'success'
+    ) => {
+      setToast({ message, type });
+      setTimeout(() => setToast(null), 4000);
+    },
+    []
+  );
 
   // Utility functions
   const getStatusIcon = (status: string) => {
@@ -375,23 +389,29 @@ const AdminsListPage = () => {
 
   // Updated formatCurrency function to only show USD with comma separators
   const formatCurrency = useCallback((amount: number) => {
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$${amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   }, []);
 
-  const handleEditAdmin = useCallback((adminId: string) => {
-    const admin = admins.find(a => a.id === adminId);
-    if (admin) {
-      setEditDialog({ open: true, admin });
-      setEditFormData({
-        username: admin.username,
-        email: admin.email,
-        name: admin.name,
-        balance: admin.balance,
-        status: admin.status,
-        role: admin.role,
-      });
-    }
-  }, [admins]);
+  const handleEditAdmin = useCallback(
+    (adminId: string) => {
+      const admin = admins.find((a) => a.id === adminId);
+      if (admin) {
+        setEditDialog({ open: true, admin });
+        setEditFormData({
+          username: admin.username,
+          email: admin.email,
+          name: admin.name,
+          balance: admin.balance,
+          status: admin.status,
+          role: admin.role,
+        });
+      }
+    },
+    [admins]
+  );
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([fetchAdmins(), fetchStats()]);
@@ -399,112 +419,137 @@ const AdminsListPage = () => {
   }, [fetchAdmins, fetchStats, showToast]);
 
   // Generic API action handler
-  const handleApiAction = useCallback(async (
-    url: string,
-    method: string,
-    body?: any,
-    successMessage?: string
-  ) => {
-    try {
-      setActionLoading(url);
-      const response = await fetch(url, {
-        method,
-        headers: body ? { 'Content-Type': 'application/json' } : undefined,
-        body: body ? JSON.stringify(body) : undefined,
-      });
+  const handleApiAction = useCallback(
+    async (
+      url: string,
+      method: string,
+      body?: any,
+      successMessage?: string
+    ) => {
+      try {
+        setActionLoading(url);
+        const response = await fetch(url, {
+          method,
+          headers: body ? { 'Content-Type': 'application/json' } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
-      const result = await response.json();
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
 
-      if (result.success) {
-        if (successMessage) showToast(successMessage, 'success');
-        await fetchAdmins();
-        await fetchStats();
-        return true;
-      } else {
-        throw new Error(result.error || 'Operation failed');
+        const result = await response.json();
+
+        if (result.success) {
+          if (successMessage) showToast(successMessage, 'success');
+          await fetchAdmins();
+          await fetchStats();
+          return true;
+        } else {
+          throw new Error(result.error || 'Operation failed');
+        }
+      } catch (error) {
+        console.error('API action error:', error);
+        showToast(
+          error instanceof Error ? error.message : 'Operation failed',
+          'error'
+        );
+        return false;
+      } finally {
+        setActionLoading(null);
       }
-    } catch (error) {
-      console.error('API action error:', error);
-      showToast(error instanceof Error ? error.message : 'Operation failed', 'error');
-      return false;
-    } finally {
-      setActionLoading(null);
-    }
-  }, [fetchAdmins, fetchStats, showToast]);
+    },
+    [fetchAdmins, fetchStats, showToast]
+  );
 
   // Handle admin deletion
-  const handleDeleteAdmin = useCallback(async (adminId: string) => {
-    const success = await handleApiAction(
-      `/api/admin/users/${adminId}`,
-      'DELETE',
-      undefined,
-      'Admin deleted successfully'
-    );
-    
-    if (success) {
-      setDeleteDialogOpen(false);
-      setAdminToDelete(null);
-    }
-  }, [handleApiAction]);
+  const handleDeleteAdmin = useCallback(
+    async (adminId: string) => {
+      const success = await handleApiAction(
+        `/api/admin/users/${adminId}`,
+        'DELETE',
+        undefined,
+        'Admin deleted successfully'
+      );
+
+      if (success) {
+        setDeleteDialogOpen(false);
+        setAdminToDelete(null);
+      }
+    },
+    [handleApiAction]
+  );
 
   // Handle admin status update
-  const handleStatusUpdate = useCallback(async (adminId: string, newStatus: string) => {
-    return handleApiAction(
-      `/api/admin/users/${adminId}/status`,
-      'PATCH',
-      { status: newStatus },
-      `Admin status updated to ${newStatus}`
-    );
-  }, [handleApiAction]);
+  const handleStatusUpdate = useCallback(
+    async (adminId: string, newStatus: string) => {
+      return handleApiAction(
+        `/api/admin/users/${adminId}/status`,
+        'PATCH',
+        { status: newStatus },
+        `Admin status updated to ${newStatus}`
+      );
+    },
+    [handleApiAction]
+  );
 
   // Handle change role
-  const handleChangeRole = useCallback(async (adminId: string, role: string) => {
-    const success = await handleApiAction(
-      `/api/admin/users/${adminId}/role`,
-      'PATCH',
-      { role },
-      `Admin role updated to ${role}`
-    );
-    
-    if (success) {
-      setChangeRoleDialog({ open: false, adminId: '', currentRole: '' });
-      setNewRole('');
-    }
-  }, [handleApiAction]);
+  const handleChangeRole = useCallback(
+    async (adminId: string, role: string) => {
+      const success = await handleApiAction(
+        `/api/admin/users/${adminId}/role`,
+        'PATCH',
+        { role },
+        `Admin role updated to ${role}`
+      );
+
+      if (success) {
+        setChangeRoleDialog({ open: false, adminId: '', currentRole: '' });
+        setNewRole('');
+      }
+    },
+    [handleApiAction]
+  );
 
   // Modal handlers
-  const openUpdateStatusDialog = useCallback((adminId: string, currentStatus: string) => {
-    setUpdateStatusDialog({ open: true, adminId, currentStatus });
-    setNewStatus(currentStatus);
-  }, []);
+  const openUpdateStatusDialog = useCallback(
+    (adminId: string, currentStatus: string) => {
+      setUpdateStatusDialog({ open: true, adminId, currentStatus });
+      setNewStatus(currentStatus);
+    },
+    []
+  );
 
-  const openChangeRoleDialog = useCallback((adminId: string, currentRole: string) => {
-    setChangeRoleDialog({ open: true, adminId, currentRole });
-    setNewRole(currentRole);
-  }, []);
+  const openChangeRoleDialog = useCallback(
+    (adminId: string, currentRole: string) => {
+      setChangeRoleDialog({ open: true, adminId, currentRole });
+      setNewRole(currentRole);
+    },
+    []
+  );
 
   // Handle edit admin save
-  const handleEditSave = useCallback(async (adminData: Partial<Admin>) => {
-    if (!editDialog.admin) return;
-    
-    const success = await handleApiAction(
-      `/api/admin/users/${editDialog.admin.id}`,
-      'PATCH',
-      adminData,
-      'Admin updated successfully'
-    );
-    
-    if (success) {
-      setEditDialog({ open: false, admin: null });
-      setEditFormData({});
-    }
-  }, [editDialog.admin, handleApiAction]);
+  const handleEditSave = useCallback(
+    async (adminData: Partial<Admin>) => {
+      if (!editDialog.admin) return;
+
+      const success = await handleApiAction(
+        `/api/admin/users/${editDialog.admin.id}`,
+        'PATCH',
+        adminData,
+        'Admin updated successfully'
+      );
+
+      if (success) {
+        setEditDialog({ open: false, admin: null });
+        setEditFormData({});
+      }
+    },
+    [editDialog.admin, handleApiAction]
+  );
 
   // Pagination handlers
   const handlePageChange = useCallback((newPage: number) => {
-    setPagination(prev => ({ ...prev, page: newPage }));
+    setPagination((prev) => ({ ...prev, page: newPage }));
   }, []);
 
   return (
@@ -527,9 +572,15 @@ const AdminsListPage = () => {
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
-              <select 
+              <select
                 value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                onChange={(e) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    limit: parseInt(e.target.value),
+                    page: 1,
+                  }))
+                }
                 className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
                 <option value={25}>25</option>
@@ -537,7 +588,7 @@ const AdminsListPage = () => {
                 <option value={100}>100</option>
                 <option value={pagination.total || 1000}>All</option>
               </select>
-              
+
               <button
                 onClick={handleRefresh}
                 disabled={adminsLoading}
@@ -547,7 +598,7 @@ const AdminsListPage = () => {
                 Refresh
               </button>
             </div>
-            
+
             {/* Right: Search Controls Only */}
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -557,13 +608,15 @@ const AdminsListPage = () => {
                 />
                 <input
                   type="text"
-                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} admins...`}
+                  placeholder={`Search ${
+                    statusFilter === 'all' ? 'all' : statusFilter
+                  } admins...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-              
+
               <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="username">Username</option>
                 <option value="id">Admin ID</option>
@@ -661,11 +714,11 @@ const AdminsListPage = () => {
                   No admins found
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {debouncedSearchTerm && statusFilter !== 'all' 
+                  {debouncedSearchTerm && statusFilter !== 'all'
                     ? `No ${statusFilter} admins match your search "${debouncedSearchTerm}".`
-                    : debouncedSearchTerm 
+                    : debouncedSearchTerm
                     ? `No admins match your search "${debouncedSearchTerm}".`
-                    : statusFilter !== 'all' 
+                    : statusFilter !== 'all'
                     ? `No ${statusFilter} admins found.`
                     : 'No admins exist yet.'}
                 </p>
@@ -677,43 +730,96 @@ const AdminsListPage = () => {
                   <table className="w-full text-sm min-w-[1400px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Username</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Email</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Role</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Balance</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Registered Date</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Login</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          ID
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Username
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Email
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Role
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Balance
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Registered Date
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Last Login
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {admins.map((admin) => (
-                        <tr key={admin.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                        <tr
+                          key={admin.id}
+                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                        >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{admin.id?.slice(-8) || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {admin.username || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {admin.email || 'null'}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
                               {admin.emailVerified ? (
                                 <>
                                   <FaCheckCircle className="h-3 w-3 text-green-500" />
-                                  <span className="text-xs text-green-600">Verified</span>
+                                  <span className="text-xs text-green-600">
+                                    Verified
+                                  </span>
                                 </>
                               ) : (
                                 <>
                                   <FaTimesCircle className="h-3 w-3 text-red-500" />
-                                  <span className="text-xs text-red-600">Unverified</span>
+                                  <span className="text-xs text-red-600">
+                                    Unverified
+                                  </span>
                                 </>
                               )}
                             </div>
@@ -721,31 +827,54 @@ const AdminsListPage = () => {
                           <td className="p-3">
                             <div className="flex items-center gap-2">
                               {getRoleIcon(admin.role)}
-                              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                admin.role === 'super_admin' 
-                                  ? 'bg-yellow-100 text-yellow-700'
+                              <span
+                                className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                  admin.role === 'super_admin'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : admin.role === 'admin'
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-purple-100 text-purple-700'
+                                }`}
+                              >
+                                {admin.role === 'super_admin'
+                                  ? 'SUPER ADMIN'
                                   : admin.role === 'admin'
-                                  ? 'bg-red-100 text-red-700'
-                                  : 'bg-purple-100 text-purple-700'
-                              }`}>
-                                {admin.role === 'super_admin' ? 'SUPER ADMIN' : admin.role === 'admin' ? 'Admin' : 'MODERATOR'}
+                                  ? 'Admin'
+                                  : 'MODERATOR'}
                               </span>
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="text-left">
-                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div
+                                className="font-semibold text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
                                 {formatCurrency(admin.balance || 0)}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                {admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : 'null'}
+                              <div
+                                className="text-xs"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {admin.createdAt
+                                  ? new Date(
+                                      admin.createdAt
+                                    ).toLocaleDateString()
+                                  : 'null'}
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                {admin.createdAt ? new Date(admin.createdAt).toLocaleTimeString() : 'null'}
+                              <div
+                                className="text-xs"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {admin.createdAt
+                                  ? new Date(
+                                      admin.createdAt
+                                    ).toLocaleTimeString()
+                                  : 'null'}
                               </div>
                             </div>
                           </td>
@@ -753,15 +882,27 @@ const AdminsListPage = () => {
                             <div>
                               {admin.lastLoginAt ? (
                                 <>
-                                  <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                    {new Date(admin.lastLoginAt).toLocaleDateString()}
+                                  <div
+                                    className="text-xs"
+                                    style={{ color: 'var(--text-primary)' }}
+                                  >
+                                    {new Date(
+                                      admin.lastLoginAt
+                                    ).toLocaleDateString()}
                                   </div>
-                                  <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                    {new Date(admin.lastLoginAt).toLocaleTimeString()}
+                                  <div
+                                    className="text-xs"
+                                    style={{ color: 'var(--text-primary)' }}
+                                  >
+                                    {new Date(
+                                      admin.lastLoginAt
+                                    ).toLocaleTimeString()}
                                   </div>
                                 </>
                               ) : (
-                                <div className="text-xs text-gray-500">Never</div>
+                                <div className="text-xs text-gray-500">
+                                  Never
+                                </div>
                               )}
                             </div>
                           </td>
@@ -813,18 +954,31 @@ const AdminsListPage = () => {
           newStatus={newStatus}
           onStatusChange={setNewStatus}
           onClose={() => {
-            setUpdateStatusDialog({ open: false, adminId: '', currentStatus: '' });
+            setUpdateStatusDialog({
+              open: false,
+              adminId: '',
+              currentStatus: '',
+            });
             setNewStatus('');
           }}
           onConfirm={() => {
-            handleStatusUpdate(updateStatusDialog.adminId, newStatus).then((success) => {
-              if (success) {
-                setUpdateStatusDialog({ open: false, adminId: '', currentStatus: '' });
-                setNewStatus('');
+            handleStatusUpdate(updateStatusDialog.adminId, newStatus).then(
+              (success) => {
+                if (success) {
+                  setUpdateStatusDialog({
+                    open: false,
+                    adminId: '',
+                    currentStatus: '',
+                  });
+                  setNewStatus('');
+                }
               }
-            });
+            );
           }}
-          isLoading={actionLoading === `/api/admin/users/${updateStatusDialog.adminId}/status`}
+          isLoading={
+            actionLoading ===
+            `/api/admin/users/${updateStatusDialog.adminId}/status`
+          }
           title="Update Admin Status"
         />
 
@@ -838,14 +992,23 @@ const AdminsListPage = () => {
             setNewRole('');
           }}
           onConfirm={() => {
-            handleChangeRole(changeRoleDialog.adminId, newRole).then((success) => {
-              if (success) {
-                setChangeRoleDialog({ open: false, adminId: '', currentRole: '' });
-                setNewRole('');
+            handleChangeRole(changeRoleDialog.adminId, newRole).then(
+              (success) => {
+                if (success) {
+                  setChangeRoleDialog({
+                    open: false,
+                    adminId: '',
+                    currentRole: '',
+                  });
+                  setNewRole('');
+                }
               }
-            });
+            );
           }}
-          isLoading={actionLoading === `/api/admin/users/${changeRoleDialog.adminId}/role`}
+          isLoading={
+            actionLoading ===
+            `/api/admin/users/${changeRoleDialog.adminId}/role`
+          }
         />
 
         <EditAdminModal
@@ -864,7 +1027,9 @@ const AdminsListPage = () => {
             });
           }}
           onSave={handleEditSave}
-          isLoading={actionLoading === `/api/admin/users/${editDialog.admin?.id}`}
+          isLoading={
+            actionLoading === `/api/admin/users/${editDialog.admin?.id}`
+          }
         />
       </div>
     </div>
@@ -872,7 +1037,13 @@ const AdminsListPage = () => {
 };
 
 // Extracted Components for better organization
-const AdminActions: React.FC<AdminActionsProps> = ({ admin, onEdit, onChangeRole, onDelete, isLoading }) => {
+const AdminActions: React.FC<AdminActionsProps> = ({
+  admin,
+  onEdit,
+  onChangeRole,
+  onDelete,
+  isLoading,
+}) => {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -931,7 +1102,11 @@ const AdminActions: React.FC<AdminActionsProps> = ({ admin, onEdit, onChangeRole
   );
 };
 
-const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoading }) => (
+const Pagination: React.FC<PaginationProps> = ({
+  pagination,
+  onPageChange,
+  isLoading,
+}) => (
   <div className="flex items-center justify-between pt-4 pb-6 border-t">
     <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
       {isLoading ? (
@@ -940,7 +1115,10 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoa
           <span>Loading pagination...</span>
         </div>
       ) : (
-        `Showing ${((pagination.page - 1) * pagination.limit + 1).toLocaleString()} to ${Math.min(
+        `Showing ${(
+          (pagination.page - 1) * pagination.limit +
+          1
+        ).toLocaleString()} to ${Math.min(
           pagination.page * pagination.limit,
           pagination.total
         ).toLocaleString()} of ${pagination.total.toLocaleString()} admins`
@@ -962,7 +1140,9 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoa
         )}
       </span>
       <button
-        onClick={() => onPageChange(Math.min(pagination.totalPages, pagination.page + 1))}
+        onClick={() =>
+          onPageChange(Math.min(pagination.totalPages, pagination.page + 1))
+        }
         disabled={!pagination.hasNext || isLoading}
         className="btn btn-secondary disabled:opacity-50"
       >
@@ -973,23 +1153,35 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoa
 );
 
 // Modal Components
-const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpen, onClose, onConfirm, isLoading }) => {
+const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+}) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4 text-red-600">Delete Admin?</h3>
+        <h3 className="text-lg font-semibold mb-4 text-red-600">
+          Delete Admin?
+        </h3>
         <p className="text-sm text-gray-600 mb-4">
-          Are you sure you want to delete this admin? This action cannot be undone and will permanently remove all admin data.
+          Are you sure you want to delete this admin? This action cannot be
+          undone and will permanently remove all admin data.
         </p>
         <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
+            disabled={isLoading}
+          >
             Cancel
           </button>
-          <button 
-            onClick={onConfirm} 
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-lg hover:bg-red-700 hover:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-lg hover:bg-red-700 hover:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -1007,7 +1199,16 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpe
   );
 };
 
-const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({ isOpen, currentStatus, newStatus, onStatusChange, onClose, onConfirm, isLoading, title }) => {
+const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
+  isOpen,
+  currentStatus,
+  newStatus,
+  onStatusChange,
+  onClose,
+  onConfirm,
+  isLoading,
+  title,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -1027,10 +1228,18 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({ isOpen, currentSt
           </select>
         </div>
         <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
+            disabled={isLoading}
+          >
             Cancel
           </button>
-          <button onClick={onConfirm} className="btn btn-primary" disabled={isLoading}>
+          <button
+            onClick={onConfirm}
+            className="btn btn-primary"
+            disabled={isLoading}
+          >
             {isLoading ? 'Updating...' : 'Update'}
           </button>
         </div>
@@ -1039,7 +1248,15 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({ isOpen, currentSt
   );
 };
 
-const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, newRole, onRoleChange, onClose, onConfirm, isLoading }) => {
+const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
+  isOpen,
+  currentRole,
+  newRole,
+  onRoleChange,
+  onClose,
+  onConfirm,
+  isLoading,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -1059,14 +1276,25 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, 
             <option value="user">User</option>
           </select>
           <div className="text-xs text-gray-500 mt-1">
-            Current role: <span className="font-medium capitalize">{currentRole.replace('_', ' ')}</span>
+            Current role:{' '}
+            <span className="font-medium capitalize">
+              {currentRole.replace('_', ' ')}
+            </span>
           </div>
         </div>
         <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
+            disabled={isLoading}
+          >
             Cancel
           </button>
-          <button onClick={onConfirm} className="btn btn-primary" disabled={isLoading}>
+          <button
+            onClick={onConfirm}
+            className="btn btn-primary"
+            disabled={isLoading}
+          >
             {isLoading ? 'Updating...' : 'Update Role'}
           </button>
         </div>
@@ -1075,7 +1303,13 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, 
   );
 };
 
-const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose, onSave, isLoading }) => {
+const EditAdminModal: React.FC<EditAdminModalProps> = ({
+  isOpen,
+  admin,
+  onClose,
+  onSave,
+  isLoading,
+}) => {
   const [formData, setFormData] = useState<Partial<Admin>>({});
 
   // Initialize form data when modal opens
@@ -1099,17 +1333,18 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
   };
 
   const handleInputChange = (field: keyof Admin, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const generatePassword = () => {
     const length = 12;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    let password = "";
+    const charset =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
     for (let i = 0; i < length; i++) {
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
-    setFormData(prev => ({ ...prev, password: password }));
+    setFormData((prev) => ({ ...prev, password: password }));
   };
 
   // Available permissions
@@ -1123,25 +1358,27 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
   ];
 
   const handlePermissionChange = (permissionId: string, checked: boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      permissions: checked 
+      permissions: checked
         ? [...(prev.permissions || []), permissionId]
-        : (prev.permissions || []).filter(p => p !== permissionId)
+        : (prev.permissions || []).filter((p) => p !== permissionId),
     }));
   };
 
   const handleSelectAllPermissions = (checked: boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      permissions: checked ? availablePermissions.map(p => p.id) : []
+      permissions: checked ? availablePermissions.map((p) => p.id) : [],
     }));
   };
 
   const getSelectAllState = () => {
     const currentPermissions = formData.permissions || [];
-    if (currentPermissions.length === 0) return { checked: false, indeterminate: false };
-    if (currentPermissions.length === availablePermissions.length) return { checked: true, indeterminate: false };
+    if (currentPermissions.length === 0)
+      return { checked: false, indeterminate: false };
+    if (currentPermissions.length === availablePermissions.length)
+      return { checked: true, indeterminate: false };
     return { checked: false, indeterminate: true };
   };
 
@@ -1151,7 +1388,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold mb-4">Edit Admin</h3>
-        
+
         <div className="space-y-4">
           {/* Username */}
           <div className="mb-4">
@@ -1217,7 +1454,8 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Leave blank to keep current password, or click the refresh icon to generate a new one
+              Leave blank to keep current password, or click the refresh icon to
+              generate a new one
             </p>
           </div>
 
@@ -1264,16 +1502,21 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
                       type="checkbox"
                       checked={getSelectAllState().checked}
                       ref={(el) => {
-                        if (el) el.indeterminate = getSelectAllState().indeterminate;
+                        if (el)
+                          el.indeterminate = getSelectAllState().indeterminate;
                       }}
-                      onChange={(e) => handleSelectAllPermissions(e.target.checked)}
+                      onChange={(e) =>
+                        handleSelectAllPermissions(e.target.checked)
+                      }
                       className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
                       disabled={isLoading}
                     />
-                    <span className="text-sm font-medium text-gray-900">Select All Permissions</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      Select All Permissions
+                    </span>
                   </label>
                 </div>
-                
+
                 {/* Individual Permissions */}
                 <div className="grid grid-cols-2 gap-3">
                   {availablePermissions.map((permission) => (
@@ -1283,16 +1526,25 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
                     >
                       <input
                         type="checkbox"
-                        checked={(formData.permissions || []).includes(permission.id)}
-                        onChange={(e) => handlePermissionChange(permission.id, e.target.checked)}
+                        checked={(formData.permissions || []).includes(
+                          permission.id
+                        )}
+                        onChange={(e) =>
+                          handlePermissionChange(
+                            permission.id,
+                            e.target.checked
+                          )
+                        }
                         className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
                         disabled={isLoading}
                       />
-                      <span className="text-sm text-gray-700">{permission.label}</span>
+                      <span className="text-sm text-gray-700">
+                        {permission.label}
+                      </span>
                     </label>
                   ))}
                 </div>
-                
+
                 {/* Status Message */}
                 {formData.permissions && formData.permissions.length === 0 ? (
                   <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
@@ -1300,7 +1552,8 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
                   </p>
                 ) : (
                   <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
-                    {formData.permissions?.length || 0} of {availablePermissions.length} permissions selected.
+                    {formData.permissions?.length || 0} of{' '}
+                    {availablePermissions.length} permissions selected.
                   </p>
                 )}
               </div>
@@ -1309,16 +1562,16 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({ isOpen, admin, onClose,
         </div>
 
         <div className="flex gap-2 justify-end pt-6">
-          <button 
-            onClick={onClose} 
-            className="btn btn-secondary" 
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
             disabled={isLoading}
           >
             Cancel
           </button>
-          <button 
-            onClick={() => onSave(formData)} 
-            className="btn btn-primary" 
+          <button
+            onClick={() => onSave(formData)}
+            className="btn btn-primary"
             disabled={isLoading}
           >
             {isLoading ? 'Updating...' : 'Update'}

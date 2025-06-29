@@ -23,7 +23,7 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
 );
 
 interface FAQItem {
-  id: string;
+  id: number;
   question: string;
   answer: string;
   category: string;

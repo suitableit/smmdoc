@@ -183,7 +183,7 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
   onClose: () => void; 
   onConfirm: (action: 'delete' | 'move', targetCategoryId?: string) => void;
   categoryName: string;
-  categoryId: string;
+  categoryId: number;
   isUpdating: boolean;
   servicesCount: number;
   categoriesData: any;
@@ -978,7 +978,7 @@ const CreateCategoryForm = ({ onClose, showToast }: {
 
 // Edit Category Form Component (integrated)
 const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: { 
-  categoryId: string;
+  categoryId: number;
   categoryName: string;
   onClose: () => void; 
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
@@ -1140,7 +1140,7 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: {
 
 // Edit Service Form Component (integrated)
 const EditServiceForm = ({ serviceId, onClose, showToast }: { 
-  serviceId: string; 
+  serviceId: number; 
   onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
 }) => {
@@ -1713,7 +1713,7 @@ function AdminServicesPage() {
   // Edit Category Modal state
   const [editCategoryModal, setEditCategoryModal] = useState<{
     open: boolean;
-    categoryId: string;
+    categoryId: number;
     categoryName: string;
     closing: boolean;
   }>({
@@ -1726,7 +1726,7 @@ function AdminServicesPage() {
   // Edit Service Modal state with animation
   const [editServiceModal, setEditServiceModal] = useState<{
     open: boolean;
-    serviceId: string;
+    serviceId: number;
     closing: boolean;
   }>({
     open: false,
@@ -1742,7 +1742,7 @@ function AdminServicesPage() {
   const [deleteCategoryModal, setDeleteCategoryModal] = useState<{
     open: boolean;
     categoryName: string;
-    categoryId: string;
+    categoryId: number;
     servicesCount: number;
     closing: boolean;
   }>({
@@ -1752,6 +1752,9 @@ function AdminServicesPage() {
     servicesCount: 0,
     closing: false,
   });
+
+  // NEW: Add state for selected bulk operation
+  const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
 
   // Show toast notification - defined early
   const showToast = useCallback((
@@ -2318,10 +2321,25 @@ function AdminServicesPage() {
     }
   };
 
-  // Batch Operations Handlers
-  const handleBatchOperation = async (operation: string) => {
+  // NEW: Modified Batch Operations Handler - only sets the operation, doesn't execute
+  const handleBatchOperationSelect = (operation: string) => {
     if (selectedServices.length === 0) {
       showToast('No services selected', 'error');
+      return;
+    }
+
+    setSelectedBulkOperation(operation);
+  };
+
+  // NEW: Execute the selected batch operation
+  const executeBatchOperation = async () => {
+    if (selectedServices.length === 0) {
+      showToast('No services selected', 'error');
+      return;
+    }
+
+    if (!selectedBulkOperation) {
+      showToast('No operation selected', 'error');
       return;
     }
 
@@ -2330,7 +2348,7 @@ function AdminServicesPage() {
       const count = selectedServices.length;
       const serviceText = count !== 1 ? 'services' : 'service';
 
-      switch (operation) {
+      switch (selectedBulkOperation) {
         case 'enable':
           showToast(`Enabling ${count} ${serviceText}...`, 'pending');
           await Promise.all(selectedServices.map(serviceId => 
@@ -2407,8 +2425,9 @@ function AdminServicesPage() {
       }
 
       // Clear selection and refresh data for all operations except delete
-      if (operation !== 'delete') {
+      if (selectedBulkOperation !== 'delete') {
         setSelectedServices([]);
+        setSelectedBulkOperation(''); // Clear the selected operation
         mutate('/api/admin/services/get-services');
         mutate('/api/admin/services/stats');
       }
@@ -2864,19 +2883,16 @@ function AdminServicesPage() {
                       {selectedServices.length} selected
                     </span>
                     
-                    {/* Batch Operations Dropdown */}
+                    {/* Modified Batch Operations Dropdown */}
                     <select 
-                      value=""
+                      value={selectedBulkOperation}
                       onChange={(e) => {
-                        if (e.target.value) {
-                          handleBatchOperation(e.target.value);
-                          e.target.value = ""; // Reset selection
-                        }
+                        handleBatchOperationSelect(e.target.value);
                       }}
                       disabled={isUpdating}
                       className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm disabled:opacity-50"
                     >
-                      <option value="" disabled>Batch Operations</option>
+                      <option value="">Batch Operations</option>
                       <option value="enable">Enable Selected Services</option>
                       <option value="disable">Disable Selected Services</option>
                       <option value="make-secret">Make Selected Services Secret</option>
@@ -2888,6 +2904,26 @@ function AdminServicesPage() {
                       <option value="cancel-disable">Cancel Disable Selected Services</option>
                       <option value="delete">Delete Selected Services</option>
                     </select>
+
+                    {/* NEW: Save Changes Button */}
+                    {selectedBulkOperation && (
+                      <button
+                        onClick={executeBatchOperation}
+                        disabled={isUpdating}
+                        className="btn btn-primary flex items-center gap-2 px-4 py-2.5 disabled:opacity-50"
+                      >
+                        {isUpdating ? (
+                          <>
+                            <GradientSpinner size="w-4 h-4" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            Save Changes
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 )}
 

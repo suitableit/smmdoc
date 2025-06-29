@@ -1,9 +1,9 @@
 'use client';
 
 import { PriceDisplay } from '@/components/PriceDisplay';
+import { formatNumber } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { formatNumber } from '@/lib/utils';
 import {
   FaCheckCircle,
   FaEye,
@@ -74,7 +74,7 @@ const Modal = ({
 
 interface ServiceCardProps {
   service: {
-    id: string;
+    id: number;
     name: string;
     rate: number;
     min_order: number;
@@ -83,7 +83,7 @@ interface ServiceCardProps {
     description: string;
     category: {
       category_name: string;
-      id: string;
+      id: number;
     };
     isFavorite?: boolean;
   };

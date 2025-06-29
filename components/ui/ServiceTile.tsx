@@ -4,7 +4,7 @@ import Link from 'next/link';
 import React from 'react';
 
 interface ServiceTileProps {
-  id: string;
+  id: number;
   title: string;
   description?: string;
   price: string | number;
@@ -69,7 +69,9 @@ export const ServiceTile: React.FC<ServiceTileProps> = ({
       <div className="p-4">
         <h4 className="font-medium text-base mb-1 truncate">{title}</h4>
         {description && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{description}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">
+            {description}
+          </p>
         )}
         <div className="flex justify-between items-center">
           <span className="font-bold text-primary">
@@ -84,9 +86,9 @@ export const ServiceTile: React.FC<ServiceTileProps> = ({
   );
 
   return (
-    <div 
+    <div
       className={cn(
-        "bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow transition-all hover:shadow-lg relative",
+        'bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow transition-all hover:shadow-lg relative',
         className
       )}
     >
@@ -95,10 +97,10 @@ export const ServiceTile: React.FC<ServiceTileProps> = ({
           <CardContent />
         </Link>
       ) : (
-        <div onClick={onClick} className={onClick ? "cursor-pointer" : ""}>
+        <div onClick={onClick} className={onClick ? 'cursor-pointer' : ''}>
           <CardContent />
         </div>
       )}
     </div>
   );
-}; 
+};

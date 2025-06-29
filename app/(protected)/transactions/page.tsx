@@ -48,8 +48,8 @@ const Toast = ({
 );
 
 type Transaction = {
-  id: string;
-  invoice_id: string;
+  id: number;
+  invoice_id: number;
   amount: number;
   status: 'Success' | 'Processing' | 'Cancelled' | 'Failed';
   method: string;

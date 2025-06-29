@@ -1,7 +1,7 @@
 interface TransactionEmailData {
   userName: string;
   userEmail: string;
-  transactionId: string;
+  transactionId: number;
   amount: number;
   currency?: string;
   date: string;

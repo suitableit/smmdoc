@@ -26,7 +26,7 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
 );
 
 type Ticket = {
-  id: string;
+  id: number;
   subject: string;
   status:
     | 'open'

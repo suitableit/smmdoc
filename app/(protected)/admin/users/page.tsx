@@ -1,22 +1,22 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FaUsers,
+  FaBan,
   FaCheckCircle,
+  FaCoins,
+  FaEdit,
   FaEllipsisH,
   FaExclamationCircle,
+  FaGift,
   FaSearch,
+  FaSignInAlt,
   FaSync,
   FaTimes,
   FaTimesCircle,
   FaTrash,
-  FaBan,
   FaUserCheck,
-  FaEdit,
-  FaCoins,
-  FaGift,
-  FaSignInAlt,
+  FaUsers,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -52,7 +52,7 @@ const Toast = ({
 
 // Define interfaces for type safety
 interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
   name?: string;
@@ -178,7 +178,10 @@ interface EditUserModalProps {
   isOpen: boolean;
   currentUser: User | null;
   formData: EditUserFormData;
-  onFormDataChange: (field: keyof EditUserFormData, value: string | number | boolean) => void;
+  onFormDataChange: (
+    field: keyof EditUserFormData,
+    value: string | number | boolean
+  ) => void;
   onClose: () => void;
   onConfirm: () => void;
   isLoading: boolean;
@@ -211,7 +214,10 @@ const useDebounce = (value: string, delay: number) => {
   return debouncedValue;
 };
 
-const useClickOutside = (ref: React.RefObject<HTMLElement | null>, handler: () => void) => {
+const useClickOutside = (
+  ref: React.RefObject<HTMLElement | null>,
+  handler: () => void
+) => {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
       if (!ref.current || ref.current.contains(event.target as Node)) {
@@ -276,7 +282,7 @@ const UsersListPage = () => {
   // Modal states
   const [editBalanceDialog, setEditBalanceDialog] = useState<{
     open: boolean;
-    userId: string;
+    userId: number;
     currentBalance: number;
   }>({
     open: false,
@@ -286,7 +292,7 @@ const UsersListPage = () => {
   const [newBalance, setNewBalance] = useState('');
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
-    userId: string;
+    userId: number;
     currentStatus: string;
   }>({
     open: false,
@@ -296,7 +302,7 @@ const UsersListPage = () => {
   const [newStatus, setNewStatus] = useState('');
   const [editDiscountDialog, setEditDiscountDialog] = useState<{
     open: boolean;
-    userId: string;
+    userId: number;
     currentDiscount: number;
   }>({
     open: false,
@@ -306,7 +312,7 @@ const UsersListPage = () => {
   const [newDiscount, setNewDiscount] = useState('');
   const [changeRoleDialog, setChangeRoleDialog] = useState<{
     open: boolean;
-    userId: string;
+    userId: number;
     currentRole: string;
   }>({
     open: false,
@@ -318,7 +324,7 @@ const UsersListPage = () => {
   // Edit User Modal state - cloned from Edit Balance pattern
   const [editUserDialog, setEditUserDialog] = useState<{
     open: boolean;
-    userId: string;
+    userId: number;
     currentUser: User | null;
   }>({
     open: false,
@@ -339,12 +345,15 @@ const UsersListPage = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Memoized filter options
-  const filterOptions = useMemo(() => [
-    { key: 'all', label: 'All', count: stats.totalUsers },
-    { key: 'active', label: 'Active', count: stats.activeUsers },
-    { key: 'suspended', label: 'Suspended', count: stats.suspendedUsers },
-    { key: 'banned', label: 'Banned', count: stats.bannedUsers },
-  ], [stats]);
+  const filterOptions = useMemo(
+    () => [
+      { key: 'all', label: 'All', count: stats.totalUsers },
+      { key: 'active', label: 'Active', count: stats.activeUsers },
+      { key: 'suspended', label: 'Suspended', count: stats.suspendedUsers },
+      { key: 'banned', label: 'Banned', count: stats.bannedUsers },
+    ],
+    [stats]
+  );
 
   // API functions
   const fetchUsers = useCallback(async () => {
@@ -359,15 +368,18 @@ const UsersListPage = () => {
       });
 
       const response = await fetch(`/api/admin/users?${queryParams}`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
       const result = await response.json();
 
       if (result.success) {
         // Client-side filter as backup to ensure no admins slip through
-        const filteredUsers = (result.data || []).filter((user: User) => user.role === 'user');
+        const filteredUsers = (result.data || []).filter(
+          (user: User) => user.role === 'user'
+        );
         setUsers(filteredUsers);
-        setPagination(prev => ({
+        setPagination((prev) => ({
           ...prev,
           ...result.pagination,
         }));
@@ -376,7 +388,10 @@ const UsersListPage = () => {
       }
     } catch (error) {
       console.error('Error fetching users:', error);
-      showToast(error instanceof Error ? error.message : 'Error fetching users', 'error');
+      showToast(
+        error instanceof Error ? error.message : 'Error fetching users',
+        'error'
+      );
       setUsers([]);
     } finally {
       setUsersLoading(false);
@@ -388,14 +403,15 @@ const UsersListPage = () => {
       setStatsLoading(true);
       // Remove role parameter as the API endpoint doesn't support it
       const response = await fetch('/api/admin/users/stats?period=all');
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
       const result = await response.json();
 
       if (result.success) {
         const data = result.data;
         const statusBreakdown: Record<string, number> = {};
-        
+
         if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
           data.statusBreakdown.forEach((item: any) => {
             statusBreakdown[item.status] = item.count || 0;
@@ -433,13 +449,16 @@ const UsersListPage = () => {
   }, [fetchStats]);
 
   // Show toast notification
-  const showToast = useCallback((
-    message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'success'
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  }, []);
+  const showToast = useCallback(
+    (
+      message: string,
+      type: 'success' | 'error' | 'info' | 'pending' = 'success'
+    ) => {
+      setToast({ message, type });
+      setTimeout(() => setToast(null), 4000);
+    },
+    []
+  );
 
   // Utility functions
   const getStatusIcon = (status: string) => {
@@ -456,19 +475,22 @@ const UsersListPage = () => {
       USD: (amt: number) => `$${amt.toFixed(2)}`,
       BDT: (amt: number) => `৳${amt.toFixed(2)}`,
     };
-    return formatters[currency as keyof typeof formatters]?.(amount) || `$${amount.toFixed(2)}`;
+    return (
+      formatters[currency as keyof typeof formatters]?.(amount) ||
+      `$${amount.toFixed(2)}`
+    );
   }, []);
 
   const handleSelectAll = useCallback(() => {
-    setSelectedUsers(prev => 
-      prev.length === users.length ? [] : users.map(user => user.id)
+    setSelectedUsers((prev) =>
+      prev.length === users.length ? [] : users.map((user) => user.id)
     );
   }, [users]);
 
   const handleSelectUser = useCallback((userId: string) => {
-    setSelectedUsers(prev =>
+    setSelectedUsers((prev) =>
       prev.includes(userId)
-        ? prev.filter(id => id !== userId)
+        ? prev.filter((id) => id !== userId)
         : [...prev, userId]
     );
   }, []);
@@ -483,161 +505,196 @@ const UsersListPage = () => {
   }, [fetchUsers, fetchStats, showToast]);
 
   // Generic API action handler
-  const handleApiAction = useCallback(async (
-    url: string,
-    method: string,
-    body?: any,
-    successMessage?: string
-  ) => {
-    try {
-      setActionLoading(url);
-      const response = await fetch(url, {
-        method,
-        headers: body ? { 'Content-Type': 'application/json' } : undefined,
-        body: body ? JSON.stringify(body) : undefined,
-      });
+  const handleApiAction = useCallback(
+    async (
+      url: string,
+      method: string,
+      body?: any,
+      successMessage?: string
+    ) => {
+      try {
+        setActionLoading(url);
+        const response = await fetch(url, {
+          method,
+          headers: body ? { 'Content-Type': 'application/json' } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
-      const result = await response.json();
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
 
-      if (result.success) {
-        if (successMessage) showToast(successMessage, 'success');
-        await fetchUsers();
-        await fetchStats();
-        return true;
-      } else {
-        throw new Error(result.error || 'Operation failed');
+        const result = await response.json();
+
+        if (result.success) {
+          if (successMessage) showToast(successMessage, 'success');
+          await fetchUsers();
+          await fetchStats();
+          return true;
+        } else {
+          throw new Error(result.error || 'Operation failed');
+        }
+      } catch (error) {
+        console.error('API action error:', error);
+        showToast(
+          error instanceof Error ? error.message : 'Operation failed',
+          'error'
+        );
+        return false;
+      } finally {
+        setActionLoading(null);
       }
-    } catch (error) {
-      console.error('API action error:', error);
-      showToast(error instanceof Error ? error.message : 'Operation failed', 'error');
-      return false;
-    } finally {
-      setActionLoading(null);
-    }
-  }, [fetchUsers, fetchStats, showToast]);
+    },
+    [fetchUsers, fetchStats, showToast]
+  );
 
   // Handle user deletion
-  const handleDeleteUser = useCallback(async (userId: string) => {
-    const success = await handleApiAction(
-      `/api/admin/users/${userId}`,
-      'DELETE',
-      undefined,
-      'User deleted successfully'
-    );
-    
-    if (success) {
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
-    }
-  }, [handleApiAction]);
+  const handleDeleteUser = useCallback(
+    async (userId: string) => {
+      const success = await handleApiAction(
+        `/api/admin/users/${userId}`,
+        'DELETE',
+        undefined,
+        'User deleted successfully'
+      );
+
+      if (success) {
+        setDeleteDialogOpen(false);
+        setUserToDelete(null);
+      }
+    },
+    [handleApiAction]
+  );
 
   // Handle user status update
-  const handleStatusUpdate = useCallback(async (userId: string, newStatus: string) => {
-    return handleApiAction(
-      `/api/admin/users/${userId}/status`,
-      'PATCH',
-      { status: newStatus },
-      `User status updated to ${newStatus}`
-    );
-  }, [handleApiAction]);
+  const handleStatusUpdate = useCallback(
+    async (userId: string, newStatus: string) => {
+      return handleApiAction(
+        `/api/admin/users/${userId}/status`,
+        'PATCH',
+        { status: newStatus },
+        `User status updated to ${newStatus}`
+      );
+    },
+    [handleApiAction]
+  );
 
   // Handle edit balance
-  const handleEditBalance = useCallback(async (userId: string, balance: number) => {
-    const success = await handleApiAction(
-      `/api/admin/users/${userId}/balance`,
-      'PATCH',
-      { balance },
-      'User balance updated successfully'
-    );
-    
-    if (success) {
-      setEditBalanceDialog({ open: false, userId: '', currentBalance: 0 });
-      setNewBalance('');
-    }
-  }, [handleApiAction]);
+  const handleEditBalance = useCallback(
+    async (userId: string, balance: number) => {
+      const success = await handleApiAction(
+        `/api/admin/users/${userId}/balance`,
+        'PATCH',
+        { balance },
+        'User balance updated successfully'
+      );
+
+      if (success) {
+        setEditBalanceDialog({ open: false, userId: '', currentBalance: 0 });
+        setNewBalance('');
+      }
+    },
+    [handleApiAction]
+  );
 
   // Handle edit discount
-  const handleEditDiscount = useCallback(async (userId: string, discount: number) => {
-    const success = await handleApiAction(
-      `/api/admin/users/${userId}/discount`,
-      'PATCH',
-      { servicesDiscount: discount },
-      'Services discount updated successfully'
-    );
-    
-    if (success) {
-      setEditDiscountDialog({ open: false, userId: '', currentDiscount: 0 });
-      setNewDiscount('');
-    }
-  }, [handleApiAction]);
+  const handleEditDiscount = useCallback(
+    async (userId: string, discount: number) => {
+      const success = await handleApiAction(
+        `/api/admin/users/${userId}/discount`,
+        'PATCH',
+        { servicesDiscount: discount },
+        'Services discount updated successfully'
+      );
+
+      if (success) {
+        setEditDiscountDialog({ open: false, userId: '', currentDiscount: 0 });
+        setNewDiscount('');
+      }
+    },
+    [handleApiAction]
+  );
 
   // Handle change role
-  const handleChangeRole = useCallback(async (userId: string, role: string) => {
-    const success = await handleApiAction(
-      `/api/admin/users/${userId}/role`,
-      'PATCH',
-      { role },
-      `User role updated to ${role}`
-    );
-    
-    if (success) {
-      setChangeRoleDialog({ open: false, userId: '', currentRole: '' });
-      setNewRole('');
-    }
-  }, [handleApiAction]);
+  const handleChangeRole = useCallback(
+    async (userId: string, role: string) => {
+      const success = await handleApiAction(
+        `/api/admin/users/${userId}/role`,
+        'PATCH',
+        { role },
+        `User role updated to ${role}`
+      );
+
+      if (success) {
+        setChangeRoleDialog({ open: false, userId: '', currentRole: '' });
+        setNewRole('');
+      }
+    },
+    [handleApiAction]
+  );
 
   // Handle reset special pricing
-  const handleResetSpecialPricing = useCallback(async (userId: string) => {
-    return handleApiAction(
-      `/api/admin/users/${userId}/special-pricing`,
-      'PATCH',
-      { specialPricing: false },
-      'Special pricing reset successfully'
-    );
-  }, [handleApiAction]);
+  const handleResetSpecialPricing = useCallback(
+    async (userId: string) => {
+      return handleApiAction(
+        `/api/admin/users/${userId}/special-pricing`,
+        'PATCH',
+        { specialPricing: false },
+        'Special pricing reset successfully'
+      );
+    },
+    [handleApiAction]
+  );
 
   // Handle set new API key
-  const handleSetNewApiKey = useCallback(async (userId: string) => {
-    return handleApiAction(
-      `/api/admin/users/${userId}/api-key`,
-      'POST',
-      {},
-      'New API key generated successfully'
-    );
-  }, [handleApiAction]);
+  const handleSetNewApiKey = useCallback(
+    async (userId: string) => {
+      return handleApiAction(
+        `/api/admin/users/${userId}/api-key`,
+        'POST',
+        {},
+        'New API key generated successfully'
+      );
+    },
+    [handleApiAction]
+  );
 
   // Edit User functions - cloned from Edit Balance pattern
-  const openEditUserDialog = useCallback((userId: string, currentUser: User) => {
-    setEditUserDialog({ open: true, userId, currentUser });
-    setEditUserFormData({
-      username: currentUser.username || '',
-      name: currentUser.name || '',
-      email: currentUser.email || '',
-      balance: (currentUser.balance || 0).toString(),
-      emailVerified: currentUser.emailVerified || false,
-      password: '',
-    });
-  }, []);
+  const openEditUserDialog = useCallback(
+    (userId: string, currentUser: User) => {
+      setEditUserDialog({ open: true, userId, currentUser });
+      setEditUserFormData({
+        username: currentUser.username || '',
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        balance: (currentUser.balance || 0).toString(),
+        emailVerified: currentUser.emailVerified || false,
+        password: '',
+      });
+    },
+    []
+  );
 
-  const handleEditUserFormDataChange = useCallback((field: keyof EditUserFormData, value: string | number | boolean) => {
-    setEditUserFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  }, []);
+  const handleEditUserFormDataChange = useCallback(
+    (field: keyof EditUserFormData, value: string | number | boolean) => {
+      setEditUserFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    },
+    []
+  );
 
   const handleGeneratePassword = useCallback(() => {
     const length = 12;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    let password = "";
+    const charset =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
     for (let i = 0; i < length; i++) {
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
-    setEditUserFormData(prev => ({
+    setEditUserFormData((prev) => ({
       ...prev,
-      password: password
+      password: password,
     }));
   }, []);
 
@@ -657,7 +714,7 @@ const UsersListPage = () => {
       userData,
       'User updated successfully'
     );
-    
+
     if (success) {
       setEditUserDialog({ open: false, userId: '', currentUser: null });
       setEditUserFormData({
@@ -671,37 +728,52 @@ const UsersListPage = () => {
     }
   }, [editUserDialog.userId, editUserFormData, handleApiAction]);
 
-  const handleEditUser = useCallback((userId: string) => {
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      openEditUserDialog(userId, user);
-    }
-  }, [users, openEditUserDialog]);
+  const handleEditUser = useCallback(
+    (userId: string) => {
+      const user = users.find((u) => u.id === userId);
+      if (user) {
+        openEditUserDialog(userId, user);
+      }
+    },
+    [users, openEditUserDialog]
+  );
 
   // Modal handlers
-  const openEditBalanceDialog = useCallback((userId: string, currentBalance: number) => {
-    setEditBalanceDialog({ open: true, userId, currentBalance });
-    setNewBalance(currentBalance.toString());
-  }, []);
+  const openEditBalanceDialog = useCallback(
+    (userId: string, currentBalance: number) => {
+      setEditBalanceDialog({ open: true, userId, currentBalance });
+      setNewBalance(currentBalance.toString());
+    },
+    []
+  );
 
-  const openUpdateStatusDialog = useCallback((userId: string, currentStatus: string) => {
-    setUpdateStatusDialog({ open: true, userId, currentStatus });
-    setNewStatus(currentStatus);
-  }, []);
+  const openUpdateStatusDialog = useCallback(
+    (userId: string, currentStatus: string) => {
+      setUpdateStatusDialog({ open: true, userId, currentStatus });
+      setNewStatus(currentStatus);
+    },
+    []
+  );
 
-  const openEditDiscountDialog = useCallback((userId: string, currentDiscount: number) => {
-    setEditDiscountDialog({ open: true, userId, currentDiscount });
-    setNewDiscount(currentDiscount.toString());
-  }, []);
+  const openEditDiscountDialog = useCallback(
+    (userId: string, currentDiscount: number) => {
+      setEditDiscountDialog({ open: true, userId, currentDiscount });
+      setNewDiscount(currentDiscount.toString());
+    },
+    []
+  );
 
-  const openChangeRoleDialog = useCallback((userId: string, currentRole: string) => {
-    setChangeRoleDialog({ open: true, userId, currentRole });
-    setNewRole(currentRole);
-  }, []);
+  const openChangeRoleDialog = useCallback(
+    (userId: string, currentRole: string) => {
+      setChangeRoleDialog({ open: true, userId, currentRole });
+      setNewRole(currentRole);
+    },
+    []
+  );
 
   // Pagination handlers
   const handlePageChange = useCallback((newPage: number) => {
-    setPagination(prev => ({ ...prev, page: newPage }));
+    setPagination((prev) => ({ ...prev, page: newPage }));
   }, []);
 
   return (
@@ -811,9 +883,15 @@ const UsersListPage = () => {
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
-              <select 
+              <select
                 value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                onChange={(e) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    limit: parseInt(e.target.value),
+                    page: 1,
+                  }))
+                }
                 className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
                 <option value={25}>25</option>
@@ -821,17 +899,19 @@ const UsersListPage = () => {
                 <option value={100}>100</option>
                 <option value={pagination.total || 1000}>All</option>
               </select>
-              
+
               <button
                 onClick={handleRefresh}
                 disabled={usersLoading || statsLoading}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
-                <FaSync className={usersLoading || statsLoading ? 'animate-spin' : ''} />
+                <FaSync
+                  className={usersLoading || statsLoading ? 'animate-spin' : ''}
+                />
                 Refresh
               </button>
             </div>
-            
+
             {/* Right: Search Controls Only */}
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -841,13 +921,15 @@ const UsersListPage = () => {
                 />
                 <input
                   type="text"
-                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} users...`}
+                  placeholder={`Search ${
+                    statusFilter === 'all' ? 'all' : statusFilter
+                  } users...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-              
+
               <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="username">Username</option>
                 <option value="id">User ID</option>
@@ -964,11 +1046,11 @@ const UsersListPage = () => {
                   No users found
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {debouncedSearchTerm && statusFilter !== 'all' 
+                  {debouncedSearchTerm && statusFilter !== 'all'
                     ? `No ${statusFilter} users match your search "${debouncedSearchTerm}".`
-                    : debouncedSearchTerm 
+                    : debouncedSearchTerm
                     ? `No users match your search "${debouncedSearchTerm}".`
-                    : statusFilter !== 'all' 
+                    : statusFilter !== 'all'
                     ? `No ${statusFilter} users found.`
                     : 'No users exist yet.'}
                 </p>
@@ -980,85 +1062,177 @@ const UsersListPage = () => {
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Username</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Email</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Balance</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Spent</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Orders</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Services Discount</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Special Pricing</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Registered Date</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          ID
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Username
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Email
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Balance
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Spent
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Orders
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Services Discount
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Special Pricing
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Registered Date
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {users.map((user) => (
-                        <tr key={user.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                        <tr
+                          key={user.id}
+                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                        >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{user.id?.slice(-8) || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {user.username || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {user.email || 'null'}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
                               {user.emailVerified ? (
                                 <>
                                   <FaCheckCircle className="h-3 w-3 text-green-500" />
-                                  <span className="text-xs text-green-600">Verified</span>
+                                  <span className="text-xs text-green-600">
+                                    Verified
+                                  </span>
                                 </>
                               ) : (
                                 <>
                                   <FaTimesCircle className="h-3 w-3 text-red-500" />
-                                  <span className="text-xs text-red-600">Unverified</span>
+                                  <span className="text-xs text-red-600">
+                                    Unverified
+                                  </span>
                                 </>
                               )}
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="flex items-center justify-start">
-                              <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
-                                user.status === 'active' ? 'bg-green-100 text-green-700' :
-                                user.status === 'suspended' ? 'bg-yellow-100 text-yellow-700' :
-                                user.status === 'banned' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                              }`}>
+                              <span
+                                className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
+                                  user.status === 'active'
+                                    ? 'bg-green-100 text-green-700'
+                                    : user.status === 'suspended'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : user.status === 'banned'
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-green-100 text-green-700'
+                                }`}
+                              >
                                 {user.status || 'active'}
                               </span>
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="text-left">
-                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-                                {formatCurrency(user.balance || 0, user.currency || 'USD')}
+                              <div
+                                className="font-semibold text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {formatCurrency(
+                                  user.balance || 0,
+                                  user.currency || 'USD'
+                                )}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="text-left">
-                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-                                {formatCurrency(user.spent || 0, user.currency || 'USD')}
+                              <div
+                                className="font-semibold text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {formatCurrency(
+                                  user.spent || 0,
+                                  user.currency || 'USD'
+                                )}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="text-center">
-                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div
+                                className="font-semibold text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
                                 {(user.totalOrders || 0).toLocaleString()}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="text-center">
-                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div
+                                className="font-semibold text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
                                 {user.servicesDiscount || 0}%
                               </div>
                             </div>
@@ -1068,20 +1242,44 @@ const UsersListPage = () => {
                               {user.specialPricing ? (
                                 <div className="flex items-center justify-center">
                                   <FaGift className="h-4 w-4 text-purple-500" />
-                                  <span className="text-sm ml-1" style={{ color: 'var(--text-primary)' }}>Yes</span>
+                                  <span
+                                    className="text-sm ml-1"
+                                    style={{ color: 'var(--text-primary)' }}
+                                  >
+                                    Yes
+                                  </span>
                                 </div>
                               ) : (
-                                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>No</span>
+                                <span
+                                  className="text-sm"
+                                  style={{ color: 'var(--text-primary)' }}
+                                >
+                                  No
+                                </span>
                               )}
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'null'}
+                              <div
+                                className="text-xs"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {user.createdAt
+                                  ? new Date(
+                                      user.createdAt
+                                    ).toLocaleDateString()
+                                  : 'null'}
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                {user.createdAt ? new Date(user.createdAt).toLocaleTimeString() : 'null'}
+                              <div
+                                className="text-xs"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {user.createdAt
+                                  ? new Date(
+                                      user.createdAt
+                                    ).toLocaleTimeString()
+                                  : 'null'}
                               </div>
                             </div>
                           </td>
@@ -1164,11 +1362,23 @@ const UsersListPage = () => {
           newBalance={newBalance}
           onBalanceChange={setNewBalance}
           onClose={() => {
-            setEditBalanceDialog({ open: false, userId: '', currentBalance: 0 });
+            setEditBalanceDialog({
+              open: false,
+              userId: '',
+              currentBalance: 0,
+            });
             setNewBalance('');
           }}
-          onConfirm={() => handleEditBalance(editBalanceDialog.userId, parseFloat(newBalance) || 0)}
-          isLoading={actionLoading === `/api/admin/users/${editBalanceDialog.userId}/balance`}
+          onConfirm={() =>
+            handleEditBalance(
+              editBalanceDialog.userId,
+              parseFloat(newBalance) || 0
+            )
+          }
+          isLoading={
+            actionLoading ===
+            `/api/admin/users/${editBalanceDialog.userId}/balance`
+          }
         />
 
         <UpdateStatusModal
@@ -1177,18 +1387,31 @@ const UsersListPage = () => {
           newStatus={newStatus}
           onStatusChange={setNewStatus}
           onClose={() => {
-            setUpdateStatusDialog({ open: false, userId: '', currentStatus: '' });
+            setUpdateStatusDialog({
+              open: false,
+              userId: '',
+              currentStatus: '',
+            });
             setNewStatus('');
           }}
           onConfirm={() => {
-            handleStatusUpdate(updateStatusDialog.userId, newStatus).then((success) => {
-              if (success) {
-                setUpdateStatusDialog({ open: false, userId: '', currentStatus: '' });
-                setNewStatus('');
+            handleStatusUpdate(updateStatusDialog.userId, newStatus).then(
+              (success) => {
+                if (success) {
+                  setUpdateStatusDialog({
+                    open: false,
+                    userId: '',
+                    currentStatus: '',
+                  });
+                  setNewStatus('');
+                }
               }
-            });
+            );
           }}
-          isLoading={actionLoading === `/api/admin/users/${updateStatusDialog.userId}/status`}
+          isLoading={
+            actionLoading ===
+            `/api/admin/users/${updateStatusDialog.userId}/status`
+          }
         />
 
         <EditDiscountModal
@@ -1197,11 +1420,23 @@ const UsersListPage = () => {
           newDiscount={newDiscount}
           onDiscountChange={setNewDiscount}
           onClose={() => {
-            setEditDiscountDialog({ open: false, userId: '', currentDiscount: 0 });
+            setEditDiscountDialog({
+              open: false,
+              userId: '',
+              currentDiscount: 0,
+            });
             setNewDiscount('');
           }}
-          onConfirm={() => handleEditDiscount(editDiscountDialog.userId, parseInt(newDiscount) || 0)}
-          isLoading={actionLoading === `/api/admin/users/${editDiscountDialog.userId}/discount`}
+          onConfirm={() =>
+            handleEditDiscount(
+              editDiscountDialog.userId,
+              parseInt(newDiscount) || 0
+            )
+          }
+          isLoading={
+            actionLoading ===
+            `/api/admin/users/${editDiscountDialog.userId}/discount`
+          }
         />
 
         <ChangeRoleModal
@@ -1214,14 +1449,22 @@ const UsersListPage = () => {
             setNewRole('');
           }}
           onConfirm={() => {
-            handleChangeRole(changeRoleDialog.userId, newRole).then((success) => {
-              if (success) {
-                setChangeRoleDialog({ open: false, userId: '', currentRole: '' });
-                setNewRole('');
+            handleChangeRole(changeRoleDialog.userId, newRole).then(
+              (success) => {
+                if (success) {
+                  setChangeRoleDialog({
+                    open: false,
+                    userId: '',
+                    currentRole: '',
+                  });
+                  setNewRole('');
+                }
               }
-            });
+            );
           }}
-          isLoading={actionLoading === `/api/admin/users/${changeRoleDialog.userId}/role`}
+          isLoading={
+            actionLoading === `/api/admin/users/${changeRoleDialog.userId}/role`
+          }
         />
 
         {/* Edit User Modal - cloned from Edit Balance pattern */}
@@ -1243,7 +1486,9 @@ const UsersListPage = () => {
           }}
           onConfirm={handleEditUserSubmit}
           onGeneratePassword={handleGeneratePassword}
-          isLoading={actionLoading === `/api/admin/users/${editUserDialog.userId}`}
+          isLoading={
+            actionLoading === `/api/admin/users/${editUserDialog.userId}`
+          }
         />
       </div>
     </div>
@@ -1251,18 +1496,18 @@ const UsersListPage = () => {
 };
 
 // Extracted Components for better organization
-const UserActions: React.FC<UserActionsProps> = ({ 
-  user, 
-  onView, 
-  onEditUser, 
-  onEditBalance, 
-  onEditDiscount, 
-  onChangeRole, 
-  onResetSpecialPricing, 
-  onSetNewApiKey, 
-  onUpdateStatus, 
-  onDelete, 
-  isLoading 
+const UserActions: React.FC<UserActionsProps> = ({
+  user,
+  onView,
+  onEditUser,
+  onEditBalance,
+  onEditDiscount,
+  onChangeRole,
+  onResetSpecialPricing,
+  onSetNewApiKey,
+  onUpdateStatus,
+  onDelete,
+  isLoading,
 }) => {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -1382,7 +1627,21 @@ const UserActions: React.FC<UserActionsProps> = ({
   );
 };
 
-const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onSelect, onView, onEditBalance, onEditDiscount, onChangeRole, onResetSpecialPricing, onSetNewApiKey, onUpdateStatus, onDelete, formatCurrency, isLoading }) => (
+const UserCard: React.FC<UserCardProps> = ({
+  user,
+  isSelected,
+  onSelect,
+  onView,
+  onEditBalance,
+  onEditDiscount,
+  onChangeRole,
+  onResetSpecialPricing,
+  onSetNewApiKey,
+  onUpdateStatus,
+  onDelete,
+  formatCurrency,
+  isLoading,
+}) => (
   <div className="card card-padding border-l-4 border-blue-500 mb-4">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-3">
@@ -1394,7 +1653,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onSelect, onView,
         user={user}
         onView={onView}
         onEditUser={(userId: string) => {
-          const foundUser = [user].find(u => u.id === userId);
+          const foundUser = [user].find((u) => u.id === userId);
           if (foundUser) {
             onView(userId);
           }
@@ -1413,25 +1672,54 @@ const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onSelect, onView,
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Username</div>
-          <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>{user.username || 'null'}</div>
+          <div
+            className="text-xs font-medium mb-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Username
+          </div>
+          <div
+            className="font-medium text-sm"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {user.username || 'null'}
+          </div>
         </div>
         <div className="text-right">
-          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Special Pricing</div>
+          <div
+            className="text-xs font-medium mb-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Special Pricing
+          </div>
           {user.specialPricing ? (
             <div className="flex items-center justify-end">
               <FaGift className="h-4 w-4 text-purple-500" />
-              <span className="text-sm ml-1" style={{ color: 'var(--text-primary)' }}>Yes</span>
+              <span
+                className="text-sm ml-1"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Yes
+              </span>
             </div>
           ) : (
-            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>No</span>
+            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+              No
+            </span>
           )}
         </div>
       </div>
 
       <div>
-        <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Email</div>
-        <div className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>{user.email || 'null'}</div>
+        <div
+          className="text-xs font-medium mb-1"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          Email
+        </div>
+        <div className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+          {user.email || 'null'}
+        </div>
         <div className="flex items-center gap-1">
           {user.emailVerified ? (
             <>
@@ -1449,14 +1737,30 @@ const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onSelect, onView,
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Balance</div>
-          <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+          <div
+            className="text-xs font-medium mb-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Balance
+          </div>
+          <div
+            className="font-semibold text-sm"
+            style={{ color: 'var(--text-primary)' }}
+          >
             {formatCurrency(user.balance || 0, user.currency || 'USD')}
           </div>
         </div>
         <div>
-          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Total Spent</div>
-          <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+          <div
+            className="text-xs font-medium mb-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Total Spent
+          </div>
+          <div
+            className="font-semibold text-sm"
+            style={{ color: 'var(--text-primary)' }}
+          >
             {formatCurrency(user.spent || 0, user.currency || 'USD')}
           </div>
         </div>
@@ -1464,14 +1768,30 @@ const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onSelect, onView,
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Total Orders</div>
-          <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+          <div
+            className="text-xs font-medium mb-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Total Orders
+          </div>
+          <div
+            className="font-semibold text-sm"
+            style={{ color: 'var(--text-primary)' }}
+          >
             {(user.totalOrders || 0).toLocaleString()}
           </div>
         </div>
         <div>
-          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Services Discount</div>
-          <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+          <div
+            className="text-xs font-medium mb-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Services Discount
+          </div>
+          <div
+            className="font-semibold text-sm"
+            style={{ color: 'var(--text-primary)' }}
+          >
             {user.servicesDiscount || 0}%
           </div>
         </div>
@@ -1479,13 +1799,22 @@ const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onSelect, onView,
 
       <div>
         <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-          Registered: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'null'}
+          Registered:{' '}
+          {user.createdAt
+            ? new Date(user.createdAt).toLocaleDateString()
+            : 'null'}
         </div>
         <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-          Time: {user.createdAt ? new Date(user.createdAt).toLocaleTimeString() : 'null'}
+          Time:{' '}
+          {user.createdAt
+            ? new Date(user.createdAt).toLocaleTimeString()
+            : 'null'}
         </div>
         {user.lastLoginAt && (
-          <div className="text-sm mt-1" style={{ color: 'var(--text-primary)' }}>
+          <div
+            className="text-sm mt-1"
+            style={{ color: 'var(--text-primary)' }}
+          >
             Last login: {new Date(user.lastLoginAt).toLocaleDateString()}
           </div>
         )}
@@ -1494,7 +1823,11 @@ const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onSelect, onView,
   </div>
 );
 
-const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoading }) => (
+const Pagination: React.FC<PaginationProps> = ({
+  pagination,
+  onPageChange,
+  isLoading,
+}) => (
   <div className="flex items-center justify-between pt-4 pb-6 border-t">
     <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
       {isLoading ? (
@@ -1503,7 +1836,10 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoa
           <span>Loading pagination...</span>
         </div>
       ) : (
-        `Showing ${((pagination.page - 1) * pagination.limit + 1).toLocaleString()} to ${Math.min(
+        `Showing ${(
+          (pagination.page - 1) * pagination.limit +
+          1
+        ).toLocaleString()} to ${Math.min(
           pagination.page * pagination.limit,
           pagination.total
         ).toLocaleString()} of ${pagination.total.toLocaleString()} users`
@@ -1525,7 +1861,9 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoa
         )}
       </span>
       <button
-        onClick={() => onPageChange(Math.min(pagination.totalPages, pagination.page + 1))}
+        onClick={() =>
+          onPageChange(Math.min(pagination.totalPages, pagination.page + 1))
+        }
         disabled={!pagination.hasNext || isLoading}
         className="btn btn-secondary disabled:opacity-50"
       >
@@ -1536,7 +1874,12 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoa
 );
 
 // Modal Components
-const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpen, onClose, onConfirm, isLoading }) => {
+const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -1544,15 +1887,20 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpe
       <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
         <h3 className="text-lg font-semibold mb-4 text-red-600">Delete User</h3>
         <p className="text-sm text-gray-600 mb-4">
-          Are you sure you want to delete this user? This action cannot be undone and will permanently remove all user data.
+          Are you sure you want to delete this user? This action cannot be
+          undone and will permanently remove all user data.
         </p>
         <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
+            disabled={isLoading}
+          >
             Cancel
           </button>
-          <button 
-            onClick={onConfirm} 
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-lg hover:bg-red-700 hover:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-lg hover:bg-red-700 hover:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -1570,7 +1918,15 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpe
   );
 };
 
-const EditBalanceModal: React.FC<EditBalanceModalProps> = ({ isOpen, currentBalance, newBalance, onBalanceChange, onClose, onConfirm, isLoading }) => {
+const EditBalanceModal: React.FC<EditBalanceModalProps> = ({
+  isOpen,
+  currentBalance,
+  newBalance,
+  onBalanceChange,
+  onClose,
+  onConfirm,
+  isLoading,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -1590,10 +1946,18 @@ const EditBalanceModal: React.FC<EditBalanceModalProps> = ({ isOpen, currentBala
           />
         </div>
         <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
+            disabled={isLoading}
+          >
             Cancel
           </button>
-          <button onClick={onConfirm} className="btn btn-primary" disabled={isLoading}>
+          <button
+            onClick={onConfirm}
+            className="btn btn-primary"
+            disabled={isLoading}
+          >
             {isLoading ? 'Updating...' : 'Update'}
           </button>
         </div>
@@ -1602,7 +1966,15 @@ const EditBalanceModal: React.FC<EditBalanceModalProps> = ({ isOpen, currentBala
   );
 };
 
-const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({ isOpen, currentStatus, newStatus, onStatusChange, onClose, onConfirm, isLoading }) => {
+const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
+  isOpen,
+  currentStatus,
+  newStatus,
+  onStatusChange,
+  onClose,
+  onConfirm,
+  isLoading,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -1623,10 +1995,18 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({ isOpen, currentSt
           </select>
         </div>
         <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
+            disabled={isLoading}
+          >
             Cancel
           </button>
-          <button onClick={onConfirm} className="btn btn-primary" disabled={isLoading}>
+          <button
+            onClick={onConfirm}
+            className="btn btn-primary"
+            disabled={isLoading}
+          >
             {isLoading ? 'Updating...' : 'Update'}
           </button>
         </div>
@@ -1635,7 +2015,15 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({ isOpen, currentSt
   );
 };
 
-const EditDiscountModal: React.FC<EditDiscountModalProps> = ({ isOpen, currentDiscount, newDiscount, onDiscountChange, onClose, onConfirm, isLoading }) => {
+const EditDiscountModal: React.FC<EditDiscountModalProps> = ({
+  isOpen,
+  currentDiscount,
+  newDiscount,
+  onDiscountChange,
+  onClose,
+  onConfirm,
+  isLoading,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -1660,10 +2048,18 @@ const EditDiscountModal: React.FC<EditDiscountModalProps> = ({ isOpen, currentDi
           </div>
         </div>
         <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
+            disabled={isLoading}
+          >
             Cancel
           </button>
-          <button onClick={onConfirm} className="btn btn-primary" disabled={isLoading}>
+          <button
+            onClick={onConfirm}
+            className="btn btn-primary"
+            disabled={isLoading}
+          >
             {isLoading ? 'Updating...' : 'Update'}
           </button>
         </div>
@@ -1672,7 +2068,15 @@ const EditDiscountModal: React.FC<EditDiscountModalProps> = ({ isOpen, currentDi
   );
 };
 
-const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, newRole, onRoleChange, onClose, onConfirm, isLoading }) => {
+const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
+  isOpen,
+  currentRole,
+  newRole,
+  onRoleChange,
+  onClose,
+  onConfirm,
+  isLoading,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -1692,14 +2096,23 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, 
             <option value="admin">Admin</option>
           </select>
           <div className="text-xs text-gray-500 mt-1">
-            Current role: <span className="font-medium capitalize">{currentRole}</span>
+            Current role:{' '}
+            <span className="font-medium capitalize">{currentRole}</span>
           </div>
         </div>
         <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
+            disabled={isLoading}
+          >
             Cancel
           </button>
-          <button onClick={onConfirm} className="btn btn-primary" disabled={isLoading}>
+          <button
+            onClick={onConfirm}
+            className="btn btn-primary"
+            disabled={isLoading}
+          >
             {isLoading ? 'Updating...' : 'Update Role'}
           </button>
         </div>
@@ -1709,15 +2122,15 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, 
 };
 
 // Edit User Modal Component - cloned from Edit Balance pattern
-const EditUserModal: React.FC<EditUserModalProps> = ({ 
-  isOpen, 
+const EditUserModal: React.FC<EditUserModalProps> = ({
+  isOpen,
   currentUser,
   formData,
   onFormDataChange,
-  onClose, 
-  onConfirm, 
+  onClose,
+  onConfirm,
   isLoading,
-  onGeneratePassword
+  onGeneratePassword,
 }) => {
   if (!isOpen || !currentUser) return null;
 
@@ -1725,7 +2138,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold mb-4">Edit User</h3>
-        
+
         <div className="space-y-4">
           {/* Username */}
           <div className="mb-4">
@@ -1782,13 +2195,21 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 
           {/* Email Confirmation */}
           <div className="mb-4">
-            <label className={`flex items-center gap-3 ${currentUser.emailVerified ? 'cursor-default' : 'cursor-pointer'}`}>
+            <label
+              className={`flex items-center gap-3 ${
+                currentUser.emailVerified ? 'cursor-default' : 'cursor-pointer'
+              }`}
+            >
               <input
                 type="checkbox"
                 checked={formData.emailVerified}
-                onChange={(e) => onFormDataChange('emailVerified', e.target.checked)}
+                onChange={(e) =>
+                  onFormDataChange('emailVerified', e.target.checked)
+                }
                 className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${
-                  currentUser.emailVerified ? 'opacity-75 cursor-not-allowed' : ''
+                  currentUser.emailVerified
+                    ? 'opacity-75 cursor-not-allowed'
+                    : ''
                 }`}
                 disabled={isLoading || currentUser.emailVerified}
                 readOnly={currentUser.emailVerified}
@@ -1796,15 +2217,16 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               <span className="form-label">
                 Email Confirmed
                 {currentUser.emailVerified && (
-                  <span className="ml-2 text-xs text-green-600 font-medium">(Already Verified)</span>
+                  <span className="ml-2 text-xs text-green-600 font-medium">
+                    (Already Verified)
+                  </span>
                 )}
               </span>
             </label>
             <p className="text-xs text-gray-500 mt-1 ml-7">
-              {currentUser.emailVerified 
-                ? 'This user has already verified their email address' 
-                : 'Check this if the user\'s email is verified'
-              }
+              {currentUser.emailVerified
+                ? 'This user has already verified their email address'
+                : "Check this if the user's email is verified"}
             </p>
           </div>
 
@@ -1831,22 +2253,23 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1 mb-4">
-              Leave blank to keep current password, or click the refresh icon to generate a new one
+              Leave blank to keep current password, or click the refresh icon to
+              generate a new one
             </p>
           </div>
         </div>
 
         <div className="flex gap-2 justify-end">
-          <button 
-            onClick={onClose} 
-            className="btn btn-secondary" 
+          <button
+            onClick={onClose}
+            className="btn btn-secondary"
             disabled={isLoading}
           >
             Cancel
           </button>
-          <button 
-            onClick={onConfirm} 
-            className="btn btn-primary" 
+          <button
+            onClick={onConfirm}
+            className="btn btn-primary"
             disabled={isLoading}
           >
             {isLoading ? 'Updating...' : 'Update'}

@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { FaArrowRight } from 'react-icons/fa';
 
 interface BlogPost {
-  id: string;
+  id: number;
   title: string;
   excerpt: string;
   image: string;

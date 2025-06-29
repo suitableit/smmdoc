@@ -56,7 +56,7 @@ interface TicketFormData {
 }
 
 interface Ticket {
-  id: string;
+  id: number;
   subject: string;
   status: 'New' | 'Answered' | 'Closed' | 'Pending';
   lastUpdate: string;

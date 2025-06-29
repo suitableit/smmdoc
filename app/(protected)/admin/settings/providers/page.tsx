@@ -5,30 +5,25 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { APP_NAME } from '@/lib/constants';
+import React, { useEffect, useState } from 'react';
 import {
-  FaPlus,
-  FaEdit,
-  FaTrash,
-  FaCheck,
-  FaTimes,
-  FaGlobe,
-  FaServer,
   FaChartBar,
-  FaKey,
-  FaCog,
-  FaToggleOn,
-  FaToggleOff,
-  FaExclamationTriangle,
+  FaCheck,
   FaCheckCircle,
-  FaClock,
-  FaPlay,
-  FaPause,
+  FaCog,
+  FaEdit,
+  FaExclamationTriangle,
   FaEye,
   FaEyeSlash,
-  FaSync,
+  FaGlobe,
+  FaPause,
+  FaPlay,
+  FaPlus,
   FaSearch,
+  FaSync,
+  FaTimes,
+  FaTrash
 } from 'react-icons/fa';
-import React, { useEffect, useState } from 'react';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -105,7 +100,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, any>(
 );
 
 interface Provider {
-  id: string;
+  id: number;
   name: string;
   apiUrl: string;
   apiKey: string;

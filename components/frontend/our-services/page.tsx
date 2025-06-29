@@ -58,7 +58,7 @@ const Toast = ({
 );
 
 interface Service {
-  id: string;
+  id: number;
   name: string;
   rate: number;
   min_order: number;
@@ -67,7 +67,7 @@ interface Service {
   description: string;
   category: {
     category_name: string;
-    id: string;
+    id: number;
   };
   isFavorite?: boolean;
 }

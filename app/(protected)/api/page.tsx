@@ -58,7 +58,7 @@ const Toast = ({
 );
 
 interface ServiceType {
-  id: string;
+  id: number;
   name: string;
   parameters: Array<{
     name: string;
@@ -1187,7 +1187,7 @@ axios.post(url, payload)
                 <Link
                   href="/contact-support"
                   className={`btn btn-secondary inline-flex items-center justify-center`}
-                  >
+                >
                   <FaLifeRing className="mr-2 w-4 h-4" />
                   Contact Support
                 </Link>
@@ -1195,7 +1195,7 @@ axios.post(url, payload)
                   href="https://docs.smmdoc.com"
                   target="_blank"
                   className={`btn btn-secondary inline-flex items-center justify-center`}
-                  >
+                >
                   <FaBook className="mr-2 w-4 h-4" />
                   API Documentation
                 </Link>

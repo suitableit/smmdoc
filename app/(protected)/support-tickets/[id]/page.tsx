@@ -13,7 +13,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 interface Message {
-  id: string;
+  id: number;
   content: string;
   isAdmin: boolean;
   createdAt: string;
@@ -24,7 +24,7 @@ interface Message {
 }
 
 interface Ticket {
-  id: string;
+  id: number;
   subject: string;
   description: string;
   status: 'OPEN' | 'CLOSED' | 'PENDING';
