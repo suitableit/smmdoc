@@ -54,7 +54,7 @@ const Toast = ({
 );
 
 interface Service {
-  id: string;
+  id: number;
   name: string;
   updatedAt: string;
   updateText: string;

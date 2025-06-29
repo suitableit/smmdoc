@@ -2,19 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  FaCreditCard,
   FaCheckCircle,
   FaClock,
+  FaCreditCard,
   FaDollarSign,
   FaEllipsisH,
   FaExclamationCircle,
   FaEye,
+  FaPlus,
   FaSearch,
   FaSync,
   FaTimes,
   FaTimesCircle,
-  FaUser,
-  FaPlus
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -53,14 +52,14 @@ const Toast = ({
 
 // Define interfaces for type safety
 interface Transaction {
-  id: string;
+  id: number;
   user: {
-    id: string;
+    id: number;
     email: string;
     name: string;
     username?: string;
   };
-  transactionId: string;
+  transactionId: number;
   amount: number;
   currency: string;
   phone: string;
@@ -277,7 +276,8 @@ const AdminAllTransactionsPage = () => {
   ];
 
   // State management
-  const [transactions, setTransactions] = useState<Transaction[]>(dummyTransactions);
+  const [transactions, setTransactions] =
+    useState<Transaction[]>(dummyTransactions);
   const [stats, setStats] = useState<TransactionStats>({
     totalTransactions: 9,
     pendingTransactions: 4,
@@ -327,7 +327,7 @@ const AdminAllTransactionsPage = () => {
 
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
-    transactionId: string;
+    transactionId: number;
     currentStatus: string;
   }>({
     open: false,
@@ -339,7 +339,7 @@ const AdminAllTransactionsPage = () => {
   // Confirmation modals state
   const [approveConfirmDialog, setApproveConfirmDialog] = useState<{
     open: boolean;
-    transactionId: string;
+    transactionId: number;
     transaction: Transaction | null;
   }>({
     open: false,
@@ -352,7 +352,7 @@ const AdminAllTransactionsPage = () => {
 
   const [cancelConfirmDialog, setCancelConfirmDialog] = useState<{
     open: boolean;
-    transactionId: string;
+    transactionId: number;
     transaction: Transaction | null;
   }>({
     open: false,
@@ -395,7 +395,7 @@ const AdminAllTransactionsPage = () => {
   const fetchAllTransactionsForCounts = async () => {
     try {
       const statusCounts = calculateStatusCounts(dummyTransactions);
-      
+
       setStats((prev) => ({
         ...prev,
         pendingTransactions: statusCounts.pending,
@@ -415,34 +415,36 @@ const AdminAllTransactionsPage = () => {
   const fetchTransactions = async () => {
     try {
       let filteredTransactions = dummyTransactions;
-      
+
       if (statusFilter !== 'all') {
-        filteredTransactions = filteredTransactions.filter(t => 
-          t.admin_status === statusFilter || t.status === statusFilter
+        filteredTransactions = filteredTransactions.filter(
+          (t) => t.admin_status === statusFilter || t.status === statusFilter
         );
       }
-      
+
       if (typeFilter !== 'all') {
-        filteredTransactions = filteredTransactions.filter(t => t.type === typeFilter);
+        filteredTransactions = filteredTransactions.filter(
+          (t) => t.type === typeFilter
+        );
       }
-      
+
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
-        filteredTransactions = filteredTransactions.filter(t =>
-          t.transactionId.toLowerCase().includes(search) ||
-          t.phone?.toLowerCase().includes(search) ||
-          t.user?.username?.toLowerCase().includes(search) ||
-          t.user?.email?.toLowerCase().includes(search)
+        filteredTransactions = filteredTransactions.filter(
+          (t) =>
+            t.transactionId.toLowerCase().includes(search) ||
+            t.phone?.toLowerCase().includes(search) ||
+            t.user?.username?.toLowerCase().includes(search) ||
+            t.user?.email?.toLowerCase().includes(search)
         );
       }
-      
+
       setTransactions(filteredTransactions);
-      setPagination(prev => ({
+      setPagination((prev) => ({
         ...prev,
         total: filteredTransactions.length,
         totalPages: Math.ceil(filteredTransactions.length / prev.limit),
       }));
-      
     } catch (error) {
       console.error('Error fetching transactions:', error);
       showToast('Error fetching transactions', 'error');
@@ -463,14 +465,17 @@ const AdminAllTransactionsPage = () => {
   const fetchStats = async () => {
     try {
       const totalTransactions = dummyTransactions.length;
-      const pendingCount = dummyTransactions.filter(t => 
-        t.admin_status === 'pending' || t.status === 'pending'
+      const pendingCount = dummyTransactions.filter(
+        (t) => t.admin_status === 'pending' || t.status === 'pending'
       ).length;
-      const successCount = dummyTransactions.filter(t => 
-        t.admin_status === 'Success' || t.status === 'completed'
+      const successCount = dummyTransactions.filter(
+        (t) => t.admin_status === 'Success' || t.status === 'completed'
       ).length;
-      const totalVolume = dummyTransactions.reduce((sum, t) => sum + t.amount, 0);
-      
+      const totalVolume = dummyTransactions.reduce(
+        (sum, t) => sum + t.amount,
+        0
+      );
+
       setStats({
         totalTransactions,
         pendingTransactions: pendingCount,
@@ -480,14 +485,19 @@ const AdminAllTransactionsPage = () => {
         statusBreakdown: {
           pending: pendingCount,
           completed: successCount,
-          cancelled: dummyTransactions.filter(t => t.admin_status === 'Cancelled').length,
+          cancelled: dummyTransactions.filter(
+            (t) => t.admin_status === 'Cancelled'
+          ).length,
           Success: successCount,
           Pending: pendingCount,
-          Cancelled: dummyTransactions.filter(t => t.admin_status === 'Cancelled').length,
-          Suspicious: dummyTransactions.filter(t => t.admin_status === 'Suspicious').length,
+          Cancelled: dummyTransactions.filter(
+            (t) => t.admin_status === 'Cancelled'
+          ).length,
+          Suspicious: dummyTransactions.filter(
+            (t) => t.admin_status === 'Suspicious'
+          ).length,
         },
       });
-      
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -578,7 +588,9 @@ const AdminAllTransactionsPage = () => {
         return (
           <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 rounded-full w-fit">
             <FaExclamationCircle className="h-3 w-3 text-purple-500" />
-            <span className="text-xs font-medium text-purple-700">Suspicious</span>
+            <span className="text-xs font-medium text-purple-700">
+              Suspicious
+            </span>
           </div>
         );
       default:
@@ -648,7 +660,12 @@ const AdminAllTransactionsPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        showToast(`Successfully ${balanceForm.action === 'add' ? 'added' : 'deducted'} ${balanceForm.amount} to ${balanceForm.username}'s balance`, 'success');
+        showToast(
+          `Successfully ${
+            balanceForm.action === 'add' ? 'added' : 'deducted'
+          } ${balanceForm.amount} to ${balanceForm.username}'s balance`,
+          'success'
+        );
         setAddDeductBalanceDialog({ open: false });
         setBalanceForm({ username: '', amount: '', action: 'add', notes: '' });
       } else {
@@ -661,7 +678,7 @@ const AdminAllTransactionsPage = () => {
   };
 
   const handleApprove = (transactionId: string) => {
-    const transaction = transactions.find(t => t.id === transactionId);
+    const transaction = transactions.find((t) => t.id === transactionId);
     setApproveConfirmDialog({
       open: true,
       transactionId,
@@ -672,7 +689,7 @@ const AdminAllTransactionsPage = () => {
 
   const confirmApprove = async (transactionId: string) => {
     const transaction = approveConfirmDialog.transaction;
-    
+
     // Only require transaction ID for withdrawal transactions
     if (transaction?.type === 'withdrawal' && !approveTransactionId.trim()) {
       showToast('Please enter a transaction ID', 'error');
@@ -680,27 +697,36 @@ const AdminAllTransactionsPage = () => {
     }
 
     try {
-      const response = await fetch(`/api/admin/funds/${transactionId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          transactionId: transaction?.type === 'withdrawal' ? approveTransactionId.trim() : transaction?.transactionId
-        }),
-      });
+      const response = await fetch(
+        `/api/admin/funds/${transactionId}/approve`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            transactionId:
+              transaction?.type === 'withdrawal'
+                ? approveTransactionId.trim()
+                : transaction?.transactionId,
+          }),
+        }
+      );
 
       const result = await response.json();
 
       if (result.success) {
-        setTransactions(prevTransactions =>
-          prevTransactions.map(transaction =>
+        setTransactions((prevTransactions) =>
+          prevTransactions.map((transaction) =>
             transaction.id === transactionId
-              ? { 
-                  ...transaction, 
-                  admin_status: 'Success', 
+              ? {
+                  ...transaction,
+                  admin_status: 'Success',
                   status: 'completed',
-                  transactionId: transaction.type === 'withdrawal' ? approveTransactionId.trim() : transaction.transactionId
+                  transactionId:
+                    transaction.type === 'withdrawal'
+                      ? approveTransactionId.trim()
+                      : transaction.transactionId,
                 }
               : transaction
           )
@@ -716,13 +742,17 @@ const AdminAllTransactionsPage = () => {
       console.error('Error approving transaction:', error);
       showToast('Error approving transaction', 'error');
     } finally {
-      setApproveConfirmDialog({ open: false, transactionId: '', transaction: null });
+      setApproveConfirmDialog({
+        open: false,
+        transactionId: '',
+        transaction: null,
+      });
       setApproveTransactionId('');
     }
   };
 
   const handleCancel = (transactionId: string) => {
-    const transaction = transactions.find(t => t.id === transactionId);
+    const transaction = transactions.find((t) => t.id === transactionId);
     setCancelConfirmDialog({
       open: true,
       transactionId,
@@ -742,10 +772,14 @@ const AdminAllTransactionsPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        setTransactions(prevTransactions =>
-          prevTransactions.map(transaction =>
+        setTransactions((prevTransactions) =>
+          prevTransactions.map((transaction) =>
             transaction.id === transactionId
-              ? { ...transaction, admin_status: 'Cancelled', status: 'cancelled' }
+              ? {
+                  ...transaction,
+                  admin_status: 'Cancelled',
+                  status: 'cancelled',
+                }
               : transaction
           )
         );
@@ -760,19 +794,29 @@ const AdminAllTransactionsPage = () => {
       console.error('Error cancelling transaction:', error);
       showToast('Error cancelling transaction', 'error');
     } finally {
-      setCancelConfirmDialog({ open: false, transactionId: '', transaction: null });
+      setCancelConfirmDialog({
+        open: false,
+        transactionId: '',
+        transaction: null,
+      });
     }
   };
 
-  const handleStatusUpdate = async (transactionId: string, newStatus: string) => {
+  const handleStatusUpdate = async (
+    transactionId: string,
+    newStatus: string
+  ) => {
     try {
-      const response = await fetch(`/api/admin/transactions/${transactionId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const response = await fetch(
+        `/api/admin/transactions/${transactionId}/status`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
 
       const result = await response.json();
 
@@ -782,7 +826,10 @@ const AdminAllTransactionsPage = () => {
         fetchStats();
         fetchAllTransactionsForCounts();
       } else {
-        showToast(result.error || 'Failed to update transaction status', 'error');
+        showToast(
+          result.error || 'Failed to update transaction status',
+          'error'
+        );
       }
     } catch (error) {
       console.error('Error updating transaction status:', error);
@@ -795,7 +842,10 @@ const AdminAllTransactionsPage = () => {
     setViewDetailsDialog({ open: true, transaction });
   };
 
-  const openUpdateStatusDialog = (transactionId: string, currentStatus: string) => {
+  const openUpdateStatusDialog = (
+    transactionId: string,
+    currentStatus: string
+  ) => {
     setUpdateStatusDialog({ open: true, transactionId, currentStatus });
     setNewStatus(currentStatus);
   };
@@ -818,9 +868,18 @@ const AdminAllTransactionsPage = () => {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <select 
+              <select
                 value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ ...prev, limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value), page: 1 }))}
+                onChange={(e) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    limit:
+                      e.target.value === 'all'
+                        ? 1000
+                        : parseInt(e.target.value),
+                    page: 1,
+                  }))
+                }
                 className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
                 <option value="25">25</option>
@@ -828,13 +887,17 @@ const AdminAllTransactionsPage = () => {
                 <option value="100">100</option>
                 <option value="all">All</option>
               </select>
-              
+
               <button
                 onClick={handleRefresh}
                 disabled={transactionsLoading || statsLoading}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
-                <FaSync className={transactionsLoading || statsLoading ? 'animate-spin' : ''} />
+                <FaSync
+                  className={
+                    transactionsLoading || statsLoading ? 'animate-spin' : ''
+                  }
+                />
                 Refresh
               </button>
 
@@ -846,7 +909,7 @@ const AdminAllTransactionsPage = () => {
                 Add/Deduct User Balance
               </button>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <select
                 value={typeFilter}
@@ -865,13 +928,15 @@ const AdminAllTransactionsPage = () => {
                 />
                 <input
                   type="text"
-                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} transactions...`}
+                  placeholder={`Search ${
+                    statusFilter === 'all' ? 'all' : statusFilter
+                  } transactions...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-              
+
               <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="id">Transaction ID</option>
                 <option value="phone">Phone Number</option>
@@ -990,7 +1055,9 @@ const AdminAllTransactionsPage = () => {
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">Loading transactions...</div>
+                  <div className="text-base font-medium">
+                    Loading transactions...
+                  </div>
                 </div>
               </div>
             ) : transactions.length === 0 ? (
@@ -1006,7 +1073,8 @@ const AdminAllTransactionsPage = () => {
                   No transactions found
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  No transactions match your current filters or no transactions exist yet.
+                  No transactions match your current filters or no transactions
+                  exist yet.
                 </p>
               </div>
             ) : (
@@ -1086,7 +1154,10 @@ const AdminAllTransactionsPage = () => {
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{transaction.id ? formatID(transaction.id.slice(-8)) : 'null'}
+                              #
+                              {transaction.id
+                                ? formatID(transaction.id.slice(-8))
+                                : 'null'}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1106,7 +1177,9 @@ const AdminAllTransactionsPage = () => {
                                 {transaction.transactionId}
                               </div>
                             ) : (
-                              <span className="text-xs text-gray-400">Not assigned</span>
+                              <span className="text-xs text-gray-400">
+                                Not assigned
+                              </span>
                             )}
                           </td>
                           <td className="p-3">
@@ -1137,7 +1210,9 @@ const AdminAllTransactionsPage = () => {
                           </td>
                           <td className="p-3">
                             <div
-                              className={`text-xs font-medium px-2 py-1 rounded capitalize ${getTypeColor(transaction.type)}`}
+                              className={`text-xs font-medium px-2 py-1 rounded capitalize ${getTypeColor(
+                                transaction.type
+                              )}`}
                             >
                               {transaction.type}
                             </div>
@@ -1146,21 +1221,28 @@ const AdminAllTransactionsPage = () => {
                             <div>
                               <div className="text-xs">
                                 {transaction.createdAt
-                                  ? new Date(transaction.createdAt).toLocaleDateString()
+                                  ? new Date(
+                                      transaction.createdAt
+                                    ).toLocaleDateString()
                                   : 'null'}
                               </div>
                               <div className="text-xs">
                                 {transaction.createdAt
-                                  ? new Date(transaction.createdAt).toLocaleTimeString()
+                                  ? new Date(
+                                      transaction.createdAt
+                                    ).toLocaleTimeString()
                                   : 'null'}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
-                            {getStatusBadge(transaction.admin_status || transaction.status)}
+                            {getStatusBadge(
+                              transaction.admin_status || transaction.status
+                            )}
                           </td>
                           <td className="p-3">
-                            {(transaction.admin_status === 'pending' || transaction.status === 'pending') ? (
+                            {transaction.admin_status === 'pending' ||
+                            transaction.status === 'pending' ? (
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => handleApprove(transaction.id)}
@@ -1198,9 +1280,10 @@ const AdminAllTransactionsPage = () => {
                                       <button
                                         onClick={() => {
                                           openViewDetailsDialog(transaction);
-                                          const dropdown = document.querySelector(
-                                            '.absolute.right-0'
-                                          ) as HTMLElement;
+                                          const dropdown =
+                                            document.querySelector(
+                                              '.absolute.right-0'
+                                            ) as HTMLElement;
                                           dropdown?.classList.add('hidden');
                                         }}
                                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -1214,9 +1297,10 @@ const AdminAllTransactionsPage = () => {
                                             transaction.id,
                                             transaction.status
                                           );
-                                          const dropdown = document.querySelector(
-                                            '.absolute.right-0'
-                                          ) as HTMLElement;
+                                          const dropdown =
+                                            document.querySelector(
+                                              '.absolute.right-0'
+                                            ) as HTMLElement;
                                           dropdown?.classList.add('hidden');
                                         }}
                                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -1247,12 +1331,18 @@ const AdminAllTransactionsPage = () => {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{transaction.id ? formatID(transaction.id.slice(-8)) : 'null'}
+                              #
+                              {transaction.id
+                                ? formatID(transaction.id.slice(-8))
+                                : 'null'}
                             </div>
-                            {getStatusBadge(transaction.admin_status || transaction.status)}
+                            {getStatusBadge(
+                              transaction.admin_status || transaction.status
+                            )}
                           </div>
                           <div className="flex items-center">
-                            {(transaction.admin_status === 'pending' || transaction.status === 'pending') ? (
+                            {transaction.admin_status === 'pending' ||
+                            transaction.status === 'pending' ? (
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => handleApprove(transaction.id)}
@@ -1352,7 +1442,9 @@ const AdminAllTransactionsPage = () => {
                                 {transaction.transactionId}
                               </div>
                             ) : (
-                              <span className="text-xs text-gray-400">Not assigned</span>
+                              <span className="text-xs text-gray-400">
+                                Not assigned
+                              </span>
                             )}
                           </div>
                         </div>
@@ -1413,7 +1505,9 @@ const AdminAllTransactionsPage = () => {
                               Type
                             </div>
                             <div
-                              className={`text-xs font-medium px-2 py-1 rounded capitalize w-fit ${getTypeColor(transaction.type)}`}
+                              className={`text-xs font-medium px-2 py-1 rounded capitalize w-fit ${getTypeColor(
+                                transaction.type
+                              )}`}
                             >
                               {transaction.type}
                             </div>
@@ -1427,7 +1521,9 @@ const AdminAllTransactionsPage = () => {
                           >
                             Date:{' '}
                             {transaction.createdAt
-                              ? new Date(transaction.createdAt).toLocaleDateString()
+                              ? new Date(
+                                  transaction.createdAt
+                                ).toLocaleDateString()
                               : 'null'}
                           </div>
                           <div
@@ -1436,7 +1532,9 @@ const AdminAllTransactionsPage = () => {
                           >
                             Time:{' '}
                             {transaction.createdAt
-                              ? new Date(transaction.createdAt).toLocaleTimeString()
+                              ? new Date(
+                                  transaction.createdAt
+                                ).toLocaleTimeString()
                               : 'null'}
                           </div>
                         </div>
@@ -1456,10 +1554,14 @@ const AdminAllTransactionsPage = () => {
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
-                      `Showing ${formatNumber((pagination.page - 1) * pagination.limit + 1)} to ${formatNumber(Math.min(
-                        pagination.page * pagination.limit,
-                        pagination.total
-                      ))} of ${formatNumber(pagination.total)} transactions`
+                      `Showing ${formatNumber(
+                        (pagination.page - 1) * pagination.limit + 1
+                      )} to ${formatNumber(
+                        Math.min(
+                          pagination.page * pagination.limit,
+                          pagination.total
+                        )
+                      )} of ${formatNumber(pagination.total)} transactions`
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -1482,7 +1584,9 @@ const AdminAllTransactionsPage = () => {
                       {transactionsLoading ? (
                         <GradientSpinner size="w-4 h-4" />
                       ) : (
-                        `Page ${formatNumber(pagination.page)} of ${formatNumber(pagination.totalPages)}`
+                        `Page ${formatNumber(
+                          pagination.page
+                        )} of ${formatNumber(pagination.totalPages)}`
                       )}
                     </span>
                     <button
@@ -1507,17 +1611,22 @@ const AdminAllTransactionsPage = () => {
                       <h3 className="text-lg font-semibold mb-4">
                         Transaction Details
                       </h3>
-                      
+
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Transaction ID</label>
+                            <label className="text-sm font-medium text-gray-700">
+                              Transaction ID
+                            </label>
                             <div className="font-mono text-sm bg-gray-50 p-2 rounded">
-                              {viewDetailsDialog.transaction.transactionId || 'Not assigned'}
+                              {viewDetailsDialog.transaction.transactionId ||
+                                'Not assigned'}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Internal ID</label>
+                            <label className="text-sm font-medium text-gray-700">
+                              Internal ID
+                            </label>
                             <div className="font-mono text-sm bg-gray-50 p-2 rounded">
                               #{formatID(viewDetailsDialog.transaction.id)}
                             </div>
@@ -1526,15 +1635,19 @@ const AdminAllTransactionsPage = () => {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">User</label>
+                            <label className="text-sm font-medium text-gray-700">
+                              User
+                            </label>
                             <div className="text-sm bg-gray-50 p-2 rounded">
-                              {viewDetailsDialog.transaction.user?.username || 
-                               viewDetailsDialog.transaction.user?.email || 
-                               'N/A'}
+                              {viewDetailsDialog.transaction.user?.username ||
+                                viewDetailsDialog.transaction.user?.email ||
+                                'N/A'}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Phone</label>
+                            <label className="text-sm font-medium text-gray-700">
+                              Phone
+                            </label>
                             <div className="text-sm bg-gray-50 p-2 rounded">
                               {viewDetailsDialog.transaction.phone || 'N/A'}
                             </div>
@@ -1543,43 +1656,68 @@ const AdminAllTransactionsPage = () => {
 
                         <div className="grid grid-cols-3 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Amount</label>
+                            <label className="text-sm font-medium text-gray-700">
+                              Amount
+                            </label>
                             <div className="text-sm bg-gray-50 p-2 rounded font-semibold">
-                              {viewDetailsDialog.transaction.currency === 'BDT' ? '৳' : '$'}
-                              {formatPrice(viewDetailsDialog.transaction.amount, 2)}
+                              {viewDetailsDialog.transaction.currency === 'BDT'
+                                ? '৳'
+                                : '$'}
+                              {formatPrice(
+                                viewDetailsDialog.transaction.amount,
+                                2
+                              )}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Type</label>
-                            <div className={`text-xs font-medium px-2 py-2 rounded capitalize ${getTypeColor(viewDetailsDialog.transaction.type)}`}>
+                            <label className="text-sm font-medium text-gray-700">
+                              Type
+                            </label>
+                            <div
+                              className={`text-xs font-medium px-2 py-2 rounded capitalize ${getTypeColor(
+                                viewDetailsDialog.transaction.type
+                              )}`}
+                            >
                               {viewDetailsDialog.transaction.type}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Method</label>
+                            <label className="text-sm font-medium text-gray-700">
+                              Method
+                            </label>
                             {displayMethod(viewDetailsDialog.transaction) ? (
                               <div className="text-xs font-medium p-2 text-gray-700 capitalize">
                                 {displayMethod(viewDetailsDialog.transaction)}
                               </div>
                             ) : (
-                              <div className="text-sm bg-gray-50 p-2 rounded text-gray-400">-</div>
+                              <div className="text-sm bg-gray-50 p-2 rounded text-gray-400">
+                                -
+                              </div>
                             )}
                           </div>
                         </div>
 
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Status</label>
+                          <label className="text-sm font-medium text-gray-700">
+                            Status
+                          </label>
                           <div className="flex items-center gap-2 mt-1">
-                            {getStatusIcon(viewDetailsDialog.transaction.admin_status || viewDetailsDialog.transaction.status)}
+                            {getStatusIcon(
+                              viewDetailsDialog.transaction.admin_status ||
+                                viewDetailsDialog.transaction.status
+                            )}
                             <span className="text-sm font-medium capitalize">
-                              {viewDetailsDialog.transaction.admin_status || viewDetailsDialog.transaction.status}
+                              {viewDetailsDialog.transaction.admin_status ||
+                                viewDetailsDialog.transaction.status}
                             </span>
                           </div>
                         </div>
 
                         {viewDetailsDialog.transaction.notes && (
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Notes</label>
+                            <label className="text-sm font-medium text-gray-700">
+                              Notes
+                            </label>
                             <div className="text-sm bg-gray-50 p-2 rounded">
                               {viewDetailsDialog.transaction.notes}
                             </div>
@@ -1588,15 +1726,23 @@ const AdminAllTransactionsPage = () => {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Created</label>
+                            <label className="text-sm font-medium text-gray-700">
+                              Created
+                            </label>
                             <div className="text-sm bg-gray-50 p-2 rounded">
-                              {new Date(viewDetailsDialog.transaction.createdAt).toLocaleString()}
+                              {new Date(
+                                viewDetailsDialog.transaction.createdAt
+                              ).toLocaleString()}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Updated</label>
+                            <label className="text-sm font-medium text-gray-700">
+                              Updated
+                            </label>
                             <div className="text-sm bg-gray-50 p-2 rounded">
-                              {new Date(viewDetailsDialog.transaction.updatedAt).toLocaleString()}
+                              {new Date(
+                                viewDetailsDialog.transaction.updatedAt
+                              ).toLocaleString()}
                             </div>
                           </div>
                         </div>
@@ -1604,7 +1750,12 @@ const AdminAllTransactionsPage = () => {
 
                       <div className="flex justify-end mt-6">
                         <button
-                          onClick={() => setViewDetailsDialog({ open: false, transaction: null })}
+                          onClick={() =>
+                            setViewDetailsDialog({
+                              open: false,
+                              transaction: null,
+                            })
+                          }
                           className="btn btn-secondary"
                         >
                           Close
@@ -1652,7 +1803,10 @@ const AdminAllTransactionsPage = () => {
                         </button>
                         <button
                           onClick={() => {
-                            handleStatusUpdate(updateStatusDialog.transactionId, newStatus);
+                            handleStatusUpdate(
+                              updateStatusDialog.transactionId,
+                              newStatus
+                            );
                             setUpdateStatusDialog({
                               open: false,
                               transactionId: '',
@@ -1670,149 +1824,240 @@ const AdminAllTransactionsPage = () => {
                 )}
 
                 {/* Approve Confirmation Dialog with Transaction ID Input */}
-                {approveConfirmDialog.open && approveConfirmDialog.transaction && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-                      <h3 className="text-lg font-semibold mb-4 text-green-600">
-                        Approve Transaction
-                      </h3>
-                      
-                      <div className="mb-6">
-                        <p className="text-gray-700 mb-4">
-                          Are you sure you want to approve this {approveConfirmDialog.transaction?.type}? This will {approveConfirmDialog.transaction?.type === 'withdrawal' ? 'process the withdrawal and assign a transaction ID' : 'add funds to the user\'s account'}.
-                        </p>
-                        
-                        <div className="bg-gray-50 rounded-lg p-4 space-y-2 mb-4">
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-600">Transaction ID:</span>
-                            <span className="font-mono text-sm">{approveConfirmDialog.transaction.transactionId || 'Not assigned'}</span>
+                {approveConfirmDialog.open &&
+                  approveConfirmDialog.transaction && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                        <h3 className="text-lg font-semibold mb-4 text-green-600">
+                          Approve Transaction
+                        </h3>
+
+                        <div className="mb-6">
+                          <p className="text-gray-700 mb-4">
+                            Are you sure you want to approve this{' '}
+                            {approveConfirmDialog.transaction?.type}? This will{' '}
+                            {approveConfirmDialog.transaction?.type ===
+                            'withdrawal'
+                              ? 'process the withdrawal and assign a transaction ID'
+                              : "add funds to the user's account"}
+                            .
+                          </p>
+
+                          <div className="bg-gray-50 rounded-lg p-4 space-y-2 mb-4">
+                            <div className="flex justify-between">
+                              <span className="font-medium text-gray-600">
+                                Transaction ID:
+                              </span>
+                              <span className="font-mono text-sm">
+                                {approveConfirmDialog.transaction
+                                  .transactionId || 'Not assigned'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium text-gray-600">
+                                User:
+                              </span>
+                              <span>
+                                {approveConfirmDialog.transaction.user
+                                  ?.username ||
+                                  approveConfirmDialog.transaction.user
+                                    ?.email ||
+                                  'N/A'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium text-gray-600">
+                                Amount:
+                              </span>
+                              <span className="font-semibold text-lg text-green-600">
+                                {approveConfirmDialog.transaction.currency ===
+                                'BDT'
+                                  ? '৳'
+                                  : '$'}
+                                {formatPrice(
+                                  approveConfirmDialog.transaction.amount,
+                                  2
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium text-gray-600">
+                                Method:
+                              </span>
+                              <span className="capitalize">
+                                {displayMethod(
+                                  approveConfirmDialog.transaction
+                                ) || '-'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium text-gray-600">
+                                Phone:
+                              </span>
+                              <span>
+                                {approveConfirmDialog.transaction.phone}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-600">User:</span>
-                            <span>{approveConfirmDialog.transaction.user?.username || approveConfirmDialog.transaction.user?.email || 'N/A'}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-600">Amount:</span>
-                            <span className="font-semibold text-lg text-green-600">
-                              {approveConfirmDialog.transaction.currency === 'BDT' ? '৳' : '$'}
-                              {formatPrice(approveConfirmDialog.transaction.amount, 2)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-600">Method:</span>
-                            <span className="capitalize">{displayMethod(approveConfirmDialog.transaction) || '-'}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-600">Phone:</span>
-                            <span>{approveConfirmDialog.transaction.phone}</span>
-                          </div>
+
+                          {/* Transaction ID Input Field - Only for Withdrawals */}
+                          {approveConfirmDialog.transaction?.type ===
+                            'withdrawal' && (
+                            <div className="mb-4">
+                              <label className="form-label mb-2">
+                                Transaction ID *
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Enter transaction ID"
+                                value={approveTransactionId}
+                                onChange={(e) =>
+                                  setApproveTransactionId(e.target.value)
+                                }
+                                className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                                required
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                This transaction ID will be assigned to the
+                                approved withdrawal.
+                              </p>
+                            </div>
+                          )}
                         </div>
 
-                        {/* Transaction ID Input Field - Only for Withdrawals */}
-                        {approveConfirmDialog.transaction?.type === 'withdrawal' && (
-                          <div className="mb-4">
-                            <label className="form-label mb-2">
-                              Transaction ID *
-                            </label>
-                            <input
-                              type="text"
-                              placeholder="Enter transaction ID"
-                              value={approveTransactionId}
-                              onChange={(e) => setApproveTransactionId(e.target.value)}
-                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                              required
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                              This transaction ID will be assigned to the approved withdrawal.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex gap-3 justify-end">
-                        <button
-                          onClick={() => {
-                            setApproveConfirmDialog({ open: false, transactionId: '', transaction: null });
-                            setApproveTransactionId('');
-                          }}
-                          className="btn btn-secondary"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => confirmApprove(approveConfirmDialog.transactionId)}
-                          disabled={approveConfirmDialog.transaction?.type === 'withdrawal' && !approveTransactionId.trim()}
-                          className="btn btn-primary flex items-center gap-2"
-                        >
-                          <FaCheckCircle className="h-4 w-4" />
-                          Approve Transaction
-                        </button>
+                        <div className="flex gap-3 justify-end">
+                          <button
+                            onClick={() => {
+                              setApproveConfirmDialog({
+                                open: false,
+                                transactionId: '',
+                                transaction: null,
+                              });
+                              setApproveTransactionId('');
+                            }}
+                            className="btn btn-secondary"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() =>
+                              confirmApprove(approveConfirmDialog.transactionId)
+                            }
+                            disabled={
+                              approveConfirmDialog.transaction?.type ===
+                                'withdrawal' && !approveTransactionId.trim()
+                            }
+                            className="btn btn-primary flex items-center gap-2"
+                          >
+                            <FaCheckCircle className="h-4 w-4" />
+                            Approve Transaction
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Cancel Confirmation Dialog */}
-                {cancelConfirmDialog.open && cancelConfirmDialog.transaction && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-                      <h3 className="text-lg font-semibold mb-4 text-red-600">
-                        Cancel Transaction
-                      </h3>
-                      
-                      <div className="mb-6">
-                        <p className="text-gray-700 mb-2">
-                          Are you sure you want to cancel this transaction?
-                        </p>
-                        <p className="text-red-600 text-sm font-medium mb-4">
-                            This action cannot be undone and will notify the user.
-                        </p>
-                        
-                        <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-600">Transaction ID:</span>
-                            <span className="font-mono text-sm">{cancelConfirmDialog.transaction.transactionId || 'Not assigned'}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-600">User:</span>
-                            <span>{cancelConfirmDialog.transaction.user?.username || cancelConfirmDialog.transaction.user?.email || 'N/A'}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-600">Amount:</span>
-                            <span className="font-semibold text-lg">
-                              {cancelConfirmDialog.transaction.currency === 'BDT' ? '৳' : '$'}
-                              {formatPrice(cancelConfirmDialog.transaction.amount, 2)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-600">Method:</span>
-                            <span className="capitalize">{displayMethod(cancelConfirmDialog.transaction) || '-'}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-600">Phone:</span>
-                            <span>{cancelConfirmDialog.transaction.phone}</span>
+                {cancelConfirmDialog.open &&
+                  cancelConfirmDialog.transaction && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                        <h3 className="text-lg font-semibold mb-4 text-red-600">
+                          Cancel Transaction
+                        </h3>
+
+                        <div className="mb-6">
+                          <p className="text-gray-700 mb-2">
+                            Are you sure you want to cancel this transaction?
+                          </p>
+                          <p className="text-red-600 text-sm font-medium mb-4">
+                            This action cannot be undone and will notify the
+                            user.
+                          </p>
+
+                          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                            <div className="flex justify-between">
+                              <span className="font-medium text-gray-600">
+                                Transaction ID:
+                              </span>
+                              <span className="font-mono text-sm">
+                                {cancelConfirmDialog.transaction
+                                  .transactionId || 'Not assigned'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium text-gray-600">
+                                User:
+                              </span>
+                              <span>
+                                {cancelConfirmDialog.transaction.user
+                                  ?.username ||
+                                  cancelConfirmDialog.transaction.user?.email ||
+                                  'N/A'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium text-gray-600">
+                                Amount:
+                              </span>
+                              <span className="font-semibold text-lg">
+                                {cancelConfirmDialog.transaction.currency ===
+                                'BDT'
+                                  ? '৳'
+                                  : '$'}
+                                {formatPrice(
+                                  cancelConfirmDialog.transaction.amount,
+                                  2
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium text-gray-600">
+                                Method:
+                              </span>
+                              <span className="capitalize">
+                                {displayMethod(
+                                  cancelConfirmDialog.transaction
+                                ) || '-'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-medium text-gray-600">
+                                Phone:
+                              </span>
+                              <span>
+                                {cancelConfirmDialog.transaction.phone}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex gap-3 justify-end">
-                        <button
-                          onClick={() => setCancelConfirmDialog({ open: false, transactionId: '', transaction: null })}
-                          className="btn btn-secondary"
-                        >
-                          Keep Transaction
-                        </button>
-                        <button
-                          onClick={() => confirmCancel(cancelConfirmDialog.transactionId)}
-                          className="btn btn-primary flex items-center gap-2"
-                        >
-                          <FaTimesCircle className="h-4 w-4" />
-                          Cancel Transaction
-                        </button>
+                        <div className="flex gap-3 justify-end">
+                          <button
+                            onClick={() =>
+                              setCancelConfirmDialog({
+                                open: false,
+                                transactionId: '',
+                                transaction: null,
+                              })
+                            }
+                            className="btn btn-secondary"
+                          >
+                            Keep Transaction
+                          </button>
+                          <button
+                            onClick={() =>
+                              confirmCancel(cancelConfirmDialog.transactionId)
+                            }
+                            className="btn btn-primary flex items-center gap-2"
+                          >
+                            <FaTimesCircle className="h-4 w-4" />
+                            Cancel Transaction
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Add/Deduct User Balance Dialog */}
                 {addDeductBalanceDialog.open && (
@@ -1821,28 +2066,34 @@ const AdminAllTransactionsPage = () => {
                       <h3 className="text-lg font-semibold mb-4">
                         Add/Deduct User Balance
                       </h3>
-                      
+
                       <div className="space-y-4 mb-6">
                         <div>
-                          <label className="form-label mb-2">
-                            Username *
-                          </label>
+                          <label className="form-label mb-2">Username *</label>
                           <input
                             type="text"
                             placeholder="Enter username"
                             value={balanceForm.username}
-                            onChange={(e) => setBalanceForm(prev => ({ ...prev, username: e.target.value }))}
+                            onChange={(e) =>
+                              setBalanceForm((prev) => ({
+                                ...prev,
+                                username: e.target.value,
+                              }))
+                            }
                             className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                           />
                         </div>
 
                         <div>
-                          <label className="form-label mb-2">
-                            Action *
-                          </label>
+                          <label className="form-label mb-2">Action *</label>
                           <select
                             value={balanceForm.action}
-                            onChange={(e) => setBalanceForm(prev => ({ ...prev, action: e.target.value }))}
+                            onChange={(e) =>
+                              setBalanceForm((prev) => ({
+                                ...prev,
+                                action: e.target.value,
+                              }))
+                            }
                             className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                           >
                             <option value="add">Add Balance</option>
@@ -1851,14 +2102,17 @@ const AdminAllTransactionsPage = () => {
                         </div>
 
                         <div>
-                          <label className="form-label mb-2">
-                            Amount *
-                          </label>
+                          <label className="form-label mb-2">Amount *</label>
                           <input
                             type="number"
                             placeholder="Enter amount"
                             value={balanceForm.amount}
-                            onChange={(e) => setBalanceForm(prev => ({ ...prev, amount: e.target.value }))}
+                            onChange={(e) =>
+                              setBalanceForm((prev) => ({
+                                ...prev,
+                                amount: e.target.value,
+                              }))
+                            }
                             className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             min="0"
                             step="0.01"
@@ -1866,14 +2120,17 @@ const AdminAllTransactionsPage = () => {
                         </div>
 
                         <div>
-                          <label className="form-label mb-2">
-                            Notes
-                          </label>
+                          <label className="form-label mb-2">Notes</label>
                           <input
                             type="text"
                             placeholder="Add notes (optional)"
                             value={balanceForm.notes}
-                            onChange={(e) => setBalanceForm(prev => ({ ...prev, notes: e.target.value }))}
+                            onChange={(e) =>
+                              setBalanceForm((prev) => ({
+                                ...prev,
+                                notes: e.target.value,
+                              }))
+                            }
                             className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                           />
                         </div>
@@ -1883,7 +2140,12 @@ const AdminAllTransactionsPage = () => {
                         <button
                           onClick={() => {
                             setAddDeductBalanceDialog({ open: false });
-                            setBalanceForm({ username: '', amount: '', action: 'add', notes: '' });
+                            setBalanceForm({
+                              username: '',
+                              amount: '',
+                              action: 'add',
+                              notes: '',
+                            });
                           }}
                           className="btn btn-secondary"
                         >
@@ -1894,7 +2156,9 @@ const AdminAllTransactionsPage = () => {
                           className="btn btn-primary flex items-center gap-2"
                         >
                           <FaDollarSign className="h-4 w-4" />
-                          {balanceForm.action === 'add' ? 'Add Balance' : 'Deduct Balance'}
+                          {balanceForm.action === 'add'
+                            ? 'Add Balance'
+                            : 'Deduct Balance'}
                         </button>
                       </div>
                     </div>

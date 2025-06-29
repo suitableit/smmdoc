@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 
 // Order type definition
 interface Order {
-  id: string;
+  id: number;
   date: string;
   service: string;
   link: string;

@@ -6,6 +6,7 @@ import {
   FaCheckCircle,
   FaClock,
   FaDollarSign,
+  FaEdit,
   FaEllipsisH,
   FaExclamationCircle,
   FaExternalLinkAlt,
@@ -14,7 +15,6 @@ import {
   FaSync,
   FaTimes,
   FaTimesCircle,
-  FaEdit
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -53,21 +53,21 @@ const Toast = ({
 interface Order {
   id: number;
   user: {
-    id: string;
+    id: number;
     email: string;
     name: string;
     username?: string;
     currency: string;
   };
   service: {
-    id: string;
+    id: number;
     name: string;
     rate: number;
     min_order: number;
     max_order: number;
   };
   category: {
-    id: string;
+    id: number;
     category_name: string;
   };
   qty: number;
@@ -159,7 +159,7 @@ const AdminOrdersPage = () => {
   // New state for action modals
   const [editStartCountDialog, setEditStartCountDialog] = useState<{
     open: boolean;
-    orderId: string;
+    orderId: number;
     currentCount: number;
   }>({
     open: false,
@@ -169,7 +169,7 @@ const AdminOrdersPage = () => {
   const [newStartCount, setNewStartCount] = useState('');
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
-    orderId: string;
+    orderId: number;
     currentStatus: string;
   }>({
     open: false,
@@ -179,7 +179,7 @@ const AdminOrdersPage = () => {
   const [newStatus, setNewStatus] = useState('');
   const [markPartialDialog, setMarkPartialDialog] = useState<{
     open: boolean;
-    orderId: string;
+    orderId: number;
   }>({
     open: false,
     orderId: '',
@@ -382,7 +382,7 @@ const AdminOrdersPage = () => {
   useEffect(() => {
     fetchStats();
     fetchAllOrdersForCounts(); // Get real status counts
-    
+
     // Simulate stats loading delay
     const timer = setTimeout(() => {
       setStatsLoading(false);
@@ -531,16 +531,19 @@ const AdminOrdersPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           orderIds: selectedOrders,
-          status: newStatus 
+          status: newStatus,
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        showToast(`${selectedOrders.length} orders status updated to ${newStatus}`, 'success');
+        showToast(
+          `${selectedOrders.length} orders status updated to ${newStatus}`,
+          'success'
+        );
         fetchOrders();
         fetchStats();
         fetchAllOrdersForCounts();
@@ -746,9 +749,18 @@ const AdminOrdersPage = () => {
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
-              <select 
+              <select
                 value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ ...prev, limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value), page: 1 }))}
+                onChange={(e) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    limit:
+                      e.target.value === 'all'
+                        ? 1000
+                        : parseInt(e.target.value),
+                    page: 1,
+                  }))
+                }
                 className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
                 <option value="25">25</option>
@@ -756,17 +768,21 @@ const AdminOrdersPage = () => {
                 <option value="100">100</option>
                 <option value="all">All</option>
               </select>
-              
+
               <button
                 onClick={handleRefresh}
                 disabled={ordersLoading || statsLoading}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
-                <FaSync className={ordersLoading || statsLoading ? 'animate-spin' : ''} />
+                <FaSync
+                  className={
+                    ordersLoading || statsLoading ? 'animate-spin' : ''
+                  }
+                />
                 Refresh
               </button>
             </div>
-            
+
             {/* Right: Search Controls Only */}
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -776,13 +792,15 @@ const AdminOrdersPage = () => {
                 />
                 <input
                   type="text"
-                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} orders...`}
+                  placeholder={`Search ${
+                    statusFilter === 'all' ? 'all' : statusFilter
+                  } orders...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-              
+
               <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="id">Order ID</option>
                 <option value="url">Order URL</option>
@@ -933,8 +951,6 @@ const AdminOrdersPage = () => {
                 </button>
               </div>
             </div>
-            
-
           </div>
 
           <div style={{ padding: '0 24px' }}>
@@ -947,7 +963,7 @@ const AdminOrdersPage = () => {
                 >
                   {selectedOrders.length} selected
                 </span>
-                <button 
+                <button
                   onClick={openBulkStatusDialog}
                   className="btn btn-primary flex items-center gap-2"
                 >
@@ -1149,11 +1165,14 @@ const AdminOrdersPage = () => {
                           <td className="p-3">
                             <div className="text-right">
                               <div className="font-semibold text-sm text-600">
-                                $
-                                {formatPrice(order.price || 0, 2)}
+                                ${formatPrice(order.price || 0, 2)}
                               </div>
                               <div className="text-xs text-gray-500">
-                                Total: ${formatPrice((order.price || 0) * (order.qty || 1), 2)}
+                                Total: $
+                                {formatPrice(
+                                  (order.price || 0) * (order.qty || 1),
+                                  2
+                                )}
                               </div>
                             </div>
                           </td>
@@ -1215,9 +1234,7 @@ const AdminOrdersPage = () => {
                                 className="font-semibold text-sm"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {order.qty
-                                  ? formatNumber(order.qty)
-                                  : 'null'}
+                                {order.qty ? formatNumber(order.qty) : 'null'}
                               </div>
                               <div className="text-xs text-green-600">
                                 {order.qty && order.remains
@@ -1233,7 +1250,10 @@ const AdminOrdersPage = () => {
                                 className="font-mono text-xs"
                                 style={{ color: 'var(--text-muted)' }}
                               >
-                                #{order.service?.id ? formatID(order.service.id) : 'null'}
+                                #
+                                {order.service?.id
+                                  ? formatID(order.service.id)
+                                  : 'null'}
                               </div>
                               <div
                                 className="font-medium text-sm truncate max-w-44"
@@ -1289,24 +1309,23 @@ const AdminOrdersPage = () => {
                                 className="text-xs"
                                 style={{ color: 'var(--text-muted)' }}
                               >
-                                {order.remains ? formatNumber(order.remains) : 'null'} left
+                                {order.remains
+                                  ? formatNumber(order.remains)
+                                  : 'null'}{' '}
+                                left
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div
-                                className="text-xs"
-                              >
+                              <div className="text-xs">
                                 {order.createdAt
                                   ? new Date(
                                       order.createdAt
                                     ).toLocaleDateString()
                                   : 'null'}
                               </div>
-                              <div
-                                className="text-xs"
-                              >
+                              <div className="text-xs">
                                 {order.createdAt
                                   ? new Date(
                                       order.createdAt
@@ -1330,7 +1349,6 @@ const AdminOrdersPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="flex items-center">
-
                               {/* 3 Dot Menu */}
                               <div className="relative">
                                 <button
@@ -1435,7 +1453,6 @@ const AdminOrdersPage = () => {
                             </div>
                           </div>
                           <div className="flex items-center">
-
                             {/* 3 Dot Menu for Mobile */}
                             <div className="relative">
                               <button
@@ -1543,7 +1560,10 @@ const AdminOrdersPage = () => {
                             className="font-mono text-xs mb-1"
                             style={{ color: 'var(--text-muted)' }}
                           >
-                            #{order.service?.id ? formatID(order.service.id) : 'null'}
+                            #
+                            {order.service?.id
+                              ? formatID(order.service.id)
+                              : 'null'}
                           </div>
                           <div
                             className="font-medium text-sm mb-1"
@@ -1603,7 +1623,10 @@ const AdminOrdersPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              ${order.price ? formatPrice(order.price, 2) : '0.00'}
+                              $
+                              {order.price
+                                ? formatPrice(order.price, 2)
+                                : '0.00'}
                             </div>
                           </div>
                           <div>
@@ -1614,7 +1637,11 @@ const AdminOrdersPage = () => {
                               Total Price
                             </div>
                             <div className="font-semibold text-sm text-blue-600">
-                              ${formatPrice((order.price || 0) * (order.qty || 1), 2)}
+                              $
+                              {formatPrice(
+                                (order.price || 0) * (order.qty || 1),
+                                2
+                              )}
                             </div>
                           </div>
                           <div>
@@ -1625,7 +1652,10 @@ const AdminOrdersPage = () => {
                               Profit
                             </div>
                             <div className="font-semibold text-sm text-green-600">
-                              ${order.profit ? formatPrice(order.profit, 2) : '0.00'}
+                              $
+                              {order.profit
+                                ? formatPrice(order.profit, 2)
+                                : '0.00'}
                             </div>
                           </div>
                         </div>
@@ -1739,9 +1769,7 @@ const AdminOrdersPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div
-                  className="flex items-center justify-between pt-4 pb-6 border-t"
-                >
+                <div className="flex items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -1752,10 +1780,14 @@ const AdminOrdersPage = () => {
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
-                      `Showing ${formatNumber((pagination.page - 1) * pagination.limit + 1)} to ${formatNumber(Math.min(
-                        pagination.page * pagination.limit,
-                        pagination.total
-                      ))} of ${formatNumber(pagination.total)} orders`
+                      `Showing ${formatNumber(
+                        (pagination.page - 1) * pagination.limit + 1
+                      )} to ${formatNumber(
+                        Math.min(
+                          pagination.page * pagination.limit,
+                          pagination.total
+                        )
+                      )} of ${formatNumber(pagination.total)} orders`
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -1778,7 +1810,9 @@ const AdminOrdersPage = () => {
                       {ordersLoading ? (
                         <GradientSpinner size="w-4 h-4" />
                       ) : (
-                        `Page ${formatNumber(pagination.page)} of ${formatNumber(pagination.totalPages)}`
+                        `Page ${formatNumber(
+                          pagination.page
+                        )} of ${formatNumber(pagination.totalPages)}`
                       )}
                     </span>
                     <button
@@ -1804,7 +1838,8 @@ const AdminOrdersPage = () => {
                         Change All Orders Status
                       </h3>
                       <p className="text-sm text-gray-600 mb-4">
-                        This will change the status of {selectedOrders.length} selected order{selectedOrders.length !== 1 ? 's' : ''}.
+                        This will change the status of {selectedOrders.length}{' '}
+                        selected order{selectedOrders.length !== 1 ? 's' : ''}.
                       </p>
                       <div className="mb-4">
                         <label className="form-label mb-2">

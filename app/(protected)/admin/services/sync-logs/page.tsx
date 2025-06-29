@@ -8,7 +8,6 @@ import {
   FaSync,
   FaTimes,
   FaTrash,
-  FaExclamationTriangle
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -44,7 +43,7 @@ const Toast = ({
 
 // Define interface for SyncLog
 interface SyncLog {
-  id: string;
+  id: number;
   slNo: number;
   apiProvider: string;
   serviceName: string;
@@ -70,96 +69,96 @@ const SyncLogsPage = () => {
 
   // Dummy data for sync logs
   const dummySyncLogs: SyncLog[] = [
-    { 
-      id: 'log_001', 
-      slNo: 1, 
-      apiProvider: 'SMM Panel Pro', 
-      serviceName: 'Instagram Followers', 
-      changes: 'Service rate updated: $0.50 → $0.45', 
+    {
+      id: 'log_001',
+      slNo: 1,
+      apiProvider: 'SMM Panel Pro',
+      serviceName: 'Instagram Followers',
+      changes: 'Service rate updated: $0.50 → $0.45',
       changeType: 'updated',
-      when: '2024-01-15T10:30:00Z' 
+      when: '2024-01-15T10:30:00Z',
     },
-    { 
-      id: 'log_002', 
-      slNo: 2, 
-      apiProvider: 'Social Boost API', 
-      serviceName: 'YouTube Views', 
-      changes: 'New service added with rate $1.20', 
+    {
+      id: 'log_002',
+      slNo: 2,
+      apiProvider: 'Social Boost API',
+      serviceName: 'YouTube Views',
+      changes: 'New service added with rate $1.20',
       changeType: 'added',
-      when: '2024-01-15T09:45:00Z' 
+      when: '2024-01-15T09:45:00Z',
     },
-    { 
-      id: 'log_003', 
-      slNo: 3, 
-      apiProvider: 'Growth Engine', 
-      serviceName: 'TikTok Likes', 
-      changes: 'Service discontinued', 
+    {
+      id: 'log_003',
+      slNo: 3,
+      apiProvider: 'Growth Engine',
+      serviceName: 'TikTok Likes',
+      changes: 'Service discontinued',
       changeType: 'deleted',
-      when: '2024-01-15T08:15:00Z' 
+      when: '2024-01-15T08:15:00Z',
     },
-    { 
-      id: 'log_004', 
-      slNo: 4, 
-      apiProvider: 'Viral Marketing', 
-      serviceName: 'Facebook Page Likes', 
-      changes: 'Min/Max quantity updated: 100-50000', 
+    {
+      id: 'log_004',
+      slNo: 4,
+      apiProvider: 'Viral Marketing',
+      serviceName: 'Facebook Page Likes',
+      changes: 'Min/Max quantity updated: 100-50000',
       changeType: 'updated',
-      when: '2024-01-14T16:20:00Z' 
+      when: '2024-01-14T16:20:00Z',
     },
-    { 
-      id: 'log_005', 
-      slNo: 5, 
-      apiProvider: 'SMM Panel Pro', 
-      serviceName: 'Twitter Retweets', 
-      changes: 'API connection failed during sync', 
+    {
+      id: 'log_005',
+      slNo: 5,
+      apiProvider: 'SMM Panel Pro',
+      serviceName: 'Twitter Retweets',
+      changes: 'API connection failed during sync',
       changeType: 'error',
-      when: '2024-01-14T14:10:00Z' 
+      when: '2024-01-14T14:10:00Z',
     },
-    { 
-      id: 'log_006', 
-      slNo: 6, 
-      apiProvider: 'Boost Central', 
-      serviceName: 'LinkedIn Connections', 
-      changes: 'Service status changed to active', 
+    {
+      id: 'log_006',
+      slNo: 6,
+      apiProvider: 'Boost Central',
+      serviceName: 'LinkedIn Connections',
+      changes: 'Service status changed to active',
       changeType: 'updated',
-      when: '2024-01-14T12:30:00Z' 
+      when: '2024-01-14T12:30:00Z',
     },
-    { 
-      id: 'log_007', 
-      slNo: 7, 
-      apiProvider: 'Social Boost API', 
-      serviceName: 'Instagram Story Views', 
-      changes: 'New service added with rate $0.30', 
+    {
+      id: 'log_007',
+      slNo: 7,
+      apiProvider: 'Social Boost API',
+      serviceName: 'Instagram Story Views',
+      changes: 'New service added with rate $0.30',
       changeType: 'added',
-      when: '2024-01-14T11:45:00Z' 
+      when: '2024-01-14T11:45:00Z',
     },
-    { 
-      id: 'log_008', 
-      slNo: 8, 
-      apiProvider: 'Growth Engine', 
-      serviceName: 'Pinterest Saves', 
-      changes: 'Service temporarily disabled', 
+    {
+      id: 'log_008',
+      slNo: 8,
+      apiProvider: 'Growth Engine',
+      serviceName: 'Pinterest Saves',
+      changes: 'Service temporarily disabled',
       changeType: 'updated',
-      when: '2024-01-13T15:25:00Z' 
+      when: '2024-01-13T15:25:00Z',
     },
-    { 
-      id: 'log_009', 
-      slNo: 9, 
-      apiProvider: 'Viral Marketing', 
-      serviceName: 'Telegram Members', 
-      changes: 'Rate increased: $0.80 → $0.95', 
+    {
+      id: 'log_009',
+      slNo: 9,
+      apiProvider: 'Viral Marketing',
+      serviceName: 'Telegram Members',
+      changes: 'Rate increased: $0.80 → $0.95',
       changeType: 'updated',
-      when: '2024-01-13T13:15:00Z' 
+      when: '2024-01-13T13:15:00Z',
     },
-    { 
-      id: 'log_010', 
-      slNo: 10, 
-      apiProvider: 'SMM Panel Pro', 
-      serviceName: 'Discord Members', 
-      changes: 'Service removed from catalog', 
+    {
+      id: 'log_010',
+      slNo: 10,
+      apiProvider: 'SMM Panel Pro',
+      serviceName: 'Discord Members',
+      changes: 'Service removed from catalog',
       changeType: 'deleted',
-      when: '2024-01-13T10:40:00Z' 
-    }
+      when: '2024-01-13T10:40:00Z',
+    },
   ];
 
   // State management
@@ -229,11 +228,11 @@ const SyncLogsPage = () => {
   };
 
   // Filter sync logs based on search term and search category
-  const filteredSyncLogs = syncLogs.filter(log => {
+  const filteredSyncLogs = syncLogs.filter((log) => {
     if (!searchTerm) return true;
-    
+
     const searchLower = searchTerm.toLowerCase();
-    
+
     switch (searchBy) {
       case 'api_provider':
         return log.apiProvider.toLowerCase().includes(searchLower);
@@ -254,12 +253,12 @@ const SyncLogsPage = () => {
   useEffect(() => {
     const total = filteredSyncLogs.length;
     const totalPages = Math.ceil(total / pagination.limit);
-    setPagination(prev => ({
+    setPagination((prev) => ({
       ...prev,
       total,
       totalPages,
       hasNext: prev.page < totalPages,
-      hasPrev: prev.page > 1
+      hasPrev: prev.page > 1,
     }));
   }, [filteredSyncLogs, pagination.limit, pagination.page]);
 
@@ -309,9 +308,9 @@ const SyncLogsPage = () => {
   const handleDeleteLog = async (logId: string) => {
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setSyncLogs(prev => prev.filter(log => log.id !== logId));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setSyncLogs((prev) => prev.filter((log) => log.id !== logId));
       showToast('Sync log deleted successfully', 'success');
       setDeleteDialogOpen(false);
       setLogToDelete(null);
@@ -325,10 +324,15 @@ const SyncLogsPage = () => {
   const handleBulkDelete = async () => {
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setSyncLogs(prev => prev.filter(log => !selectedLogs.includes(log.id)));
-      showToast(`${selectedLogs.length} sync logs deleted successfully`, 'success');
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setSyncLogs((prev) =>
+        prev.filter((log) => !selectedLogs.includes(log.id))
+      );
+      showToast(
+        `${selectedLogs.length} sync logs deleted successfully`,
+        'success'
+      );
       setSelectedLogs([]);
     } catch (error) {
       console.error('Error deleting sync logs:', error);
@@ -356,13 +360,18 @@ const SyncLogsPage = () => {
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
-              <select 
+              <select
                 value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ 
-                  ...prev, 
-                  limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value), 
-                  page: 1 
-                }))}
+                onChange={(e) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    limit:
+                      e.target.value === 'all'
+                        ? 1000
+                        : parseInt(e.target.value),
+                    page: 1,
+                  }))
+                }
                 className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
                 <option value="25">25</option>
@@ -370,7 +379,7 @@ const SyncLogsPage = () => {
                 <option value="100">100</option>
                 <option value="all">All</option>
               </select>
-              
+
               <button
                 onClick={handleRefresh}
                 disabled={logsLoading}
@@ -380,7 +389,7 @@ const SyncLogsPage = () => {
                 Refresh
               </button>
             </div>
-            
+
             {/* Right: Search Controls */}
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -390,14 +399,20 @@ const SyncLogsPage = () => {
                 />
                 <input
                   type="text"
-                  placeholder={`Search ${searchBy === 'all' ? 'sync logs' : searchBy === 'api_provider' ? 'API providers' : 'service names'}...`}
+                  placeholder={`Search ${
+                    searchBy === 'all'
+                      ? 'sync logs'
+                      : searchBy === 'api_provider'
+                      ? 'API providers'
+                      : 'service names'
+                  }...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-              
-              <select 
+
+              <select
                 value={searchBy}
                 onChange={(e) => setSearchBy(e.target.value)}
                 className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
@@ -421,7 +436,7 @@ const SyncLogsPage = () => {
                 >
                   {selectedLogs.length} selected
                 </span>
-                <button 
+                <button
                   onClick={() => setBulkDeleteDialogOpen(true)}
                   className="btn btn-primary flex items-center gap-2"
                 >
@@ -437,7 +452,9 @@ const SyncLogsPage = () => {
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">Loading sync logs...</div>
+                  <div className="text-base font-medium">
+                    Loading sync logs...
+                  </div>
                 </div>
               </div>
             ) : getPaginatedData().length === 0 ? (
@@ -453,7 +470,8 @@ const SyncLogsPage = () => {
                   No sync logs found
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  No sync logs match your search criteria or no sync logs exist yet.
+                  No sync logs match your search criteria or no sync logs exist
+                  yet.
                 </p>
               </div>
             ) : (
@@ -470,7 +488,8 @@ const SyncLogsPage = () => {
                           <input
                             type="checkbox"
                             checked={
-                              selectedLogs.length === getPaginatedData().length &&
+                              selectedLogs.length ===
+                                getPaginatedData().length &&
                               getPaginatedData().length > 0
                             }
                             onChange={handleSelectAll}
@@ -569,14 +588,10 @@ const SyncLogsPage = () => {
                           </td>
                           <td className="p-3">
                             <div>
-                              <div
-                                className="text-xs"
-                              >
+                              <div className="text-xs">
                                 {new Date(log.when).toLocaleDateString()}
                               </div>
-                              <div
-                                className="text-xs"
-                              >
+                              <div className="text-xs">
                                 {new Date(log.when).toLocaleTimeString()}
                               </div>
                             </div>
@@ -621,7 +636,7 @@ const SyncLogsPage = () => {
                             </div>
                             {getChangeTypeBadge(log.changeType)}
                           </div>
-                          
+
                           {/* Actions for Mobile */}
                           <div className="flex items-center gap-1">
                             <button
@@ -712,9 +727,7 @@ const SyncLogsPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div
-                  className="flex items-center justify-between pt-4 pb-6 border-t"
-                >
+                <div className="flex items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -725,7 +738,9 @@ const SyncLogsPage = () => {
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
-                      `Showing ${(pagination.page - 1) * pagination.limit + 1} to ${Math.min(
+                      `Showing ${
+                        (pagination.page - 1) * pagination.limit + 1
+                      } to ${Math.min(
                         pagination.page * pagination.limit,
                         pagination.total
                       )} of ${pagination.total} sync logs`
@@ -777,11 +792,10 @@ const SyncLogsPage = () => {
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">
-                Delete Sync Log
-              </h3>
+              <h3 className="text-lg font-semibold mb-4">Delete Sync Log</h3>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this sync log? This action cannot be undone.
+                Are you sure you want to delete this sync log? This action
+                cannot be undone.
               </p>
               <div className="flex gap-2 justify-end">
                 <button
@@ -812,7 +826,9 @@ const SyncLogsPage = () => {
                 Delete Selected Sync Logs
               </h3>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete {selectedLogs.length} selected sync log{selectedLogs.length !== 1 ? 's' : ''}? This action cannot be undone.
+                Are you sure you want to delete {selectedLogs.length} selected
+                sync log{selectedLogs.length !== 1 ? 's' : ''}? This action
+                cannot be undone.
               </p>
               <div className="flex gap-2 justify-end">
                 <button
@@ -828,7 +844,8 @@ const SyncLogsPage = () => {
                   }}
                   className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm"
                 >
-                  Delete {selectedLogs.length} Log{selectedLogs.length !== 1 ? 's' : ''}
+                  Delete {selectedLogs.length} Log
+                  {selectedLogs.length !== 1 ? 's' : ''}
                 </button>
               </div>
             </div>

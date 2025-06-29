@@ -3,10 +3,23 @@
 import ButtonLoader from '@/components/button-loader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import axiosInstance from '@/lib/axiosInstance';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,9 +29,9 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 const formSchema = z.object({
-  userId: z.string().min(1, { message: "User ID is required" }),
-  amount: z.string().min(1, { message: "Amount is required" }),
-  currency: z.enum(["USD", "BDT"]),
+  userId: z.string().min(1, { message: 'User ID is required' }),
+  amount: z.string().min(1, { message: 'Amount is required' }),
+  currency: z.enum(['USD', 'BDT']),
   note: z.string().optional(),
 });
 
@@ -27,10 +40,12 @@ type FormValues = z.infer<typeof formSchema>;
 export default function AddUserFund() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Array<{ id: string; name: string; email: string }>>([]);
+  const [searchResults, setSearchResults] = useState<
+    Array<{ id: number; name: string; email: string }>
+  >([]);
   const [searching, setSearching] = useState(false);
   const { rate } = useCurrency();
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -44,10 +59,12 @@ export default function AddUserFund() {
   const searchUsers = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    
+
     try {
       setSearching(true);
-      const response = await axiosInstance.get(`/api/admin/users/search?q=${searchQuery}`);
+      const response = await axiosInstance.get(
+        `/api/admin/users/search?q=${searchQuery}`
+      );
       setSearchResults(response.data.users);
     } catch (error) {
       console.error('Error searching users:', error);
@@ -57,7 +74,7 @@ export default function AddUserFund() {
     }
   };
 
-  const selectUser = (user: { id: string; name: string; email: string }) => {
+  const selectUser = (user: { id: number; name: string; email: string }) => {
     form.setValue('userId', user.id);
     setSearchResults([]);
     setSearchQuery(`${user.name} (${user.email})`);
@@ -66,12 +83,14 @@ export default function AddUserFund() {
   const onSubmit = async (data: FormValues) => {
     try {
       setLoading(true);
-      
+
       // Convert amount if needed
       const amountValue = parseFloat(data.amount);
-      const amountInUSD = data.currency === 'BDT' && rate ? amountValue / rate : amountValue;
-      const amountInBDT = data.currency === 'USD' && rate ? amountValue * rate : amountValue;
-      
+      const amountInUSD =
+        data.currency === 'BDT' && rate ? amountValue / rate : amountValue;
+      const amountInBDT =
+        data.currency === 'USD' && rate ? amountValue * rate : amountValue;
+
       const payload = {
         userId: data.userId,
         amountUSD: amountInUSD.toFixed(2),
@@ -79,9 +98,12 @@ export default function AddUserFund() {
         note: data.note || 'Added by admin',
         status: 'COMPLETED', // Admin added funds are automatically approved
       };
-      
-      const response = await axiosInstance.post('/api/admin/funds/add', payload);
-      
+
+      const response = await axiosInstance.post(
+        '/api/admin/funds/add',
+        payload
+      );
+
       if (response.data.success) {
         toast.success('Funds added successfully');
         form.reset();
@@ -114,19 +136,19 @@ export default function AddUserFund() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button 
-              type="submit" 
-              className="mt-auto" 
+            <Button
+              type="submit"
+              className="mt-auto"
               disabled={searching || !searchQuery.trim()}
             >
               {searching ? <ButtonLoader /> : 'Search'}
             </Button>
           </form>
-          
+
           {searchResults.length > 0 && (
             <div className="mt-2 border rounded-md max-h-48 overflow-y-auto">
-              {searchResults.map(user => (
-                <div 
+              {searchResults.map((user) => (
+                <div
                   key={user.id}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
                   onClick={() => selectUser(user)}
@@ -159,15 +181,15 @@ export default function AddUserFund() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="currency"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Currency</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
@@ -184,7 +206,7 @@ export default function AddUserFund() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="note"
@@ -192,19 +214,16 @@ export default function AddUserFund() {
                 <FormItem>
                   <FormLabel>Note (Optional)</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Add a note"
-                      {...field}
-                    />
+                    <Input placeholder="Add a note" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            <Button 
-              type="submit" 
-              className="w-full" 
+
+            <Button
+              type="submit"
+              className="w-full"
               disabled={loading || !form.getValues().userId}
             >
               {loading ? <ButtonLoader /> : 'Add Funds'}
@@ -214,4 +233,4 @@ export default function AddUserFund() {
       </CardContent>
     </Card>
   );
-} 
+}

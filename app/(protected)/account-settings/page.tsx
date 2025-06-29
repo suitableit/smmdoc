@@ -4,7 +4,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 
+import { useCurrentUser } from '@/hooks/use-current-user';
+import { getUserDetails } from '@/lib/actions/getUser';
 import { APP_NAME } from '@/lib/constants';
+import { setUserDetails } from '@/lib/slice/userDetails';
+import React, { useEffect, useState } from 'react';
 import {
   FaCamera,
   FaCheck,
@@ -15,10 +19,10 @@ import {
   FaGlobe,
   FaKey,
   FaShieldAlt,
-  FaUser,
   FaTimes,
+  FaUser,
 } from 'react-icons/fa';
-import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -93,43 +97,27 @@ interface ApiKey {
   key: string;
   createdAt: Date;
   updatedAt: Date;
-  id: string;
-  userId: string;
+  id: number;
+  userid: number;
 }
 
 const ProfilePage = () => {
+  const dispatch = useDispatch();
+  const currentUser = useCurrentUser();
+  const userDetails = useSelector((state: any) => state.userDetails);
+
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Account Settings — ${APP_NAME}`;
   }, []);
 
-  // Mock user data for demonstration
-  const user = {
-    name: 'john',
-    email: 'john.doe@example.com',
-    role: 'User',
-    isTwoFactorEnabled: false,
-  };
-
-  const rate = 120; // Mock exchange rate
-  const userData = {
-    addFunds: [{ amount: 150.5 }],
-    currency: 'USD',
-    orders: [],
-  };
-
-  const [apiKey, setApiKey] = useState<ApiKey | null>({
-    key: 'smmdoc_51NxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date(),
-    id: '1',
-    userId: '1',
-  });
-
+  // State management
+  const [apiKey, setApiKey] = useState<ApiKey | null>(null);
   const [twoFactor, setTwoFactor] = useState<boolean>(false);
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isUserDataLoading, setIsUserDataLoading] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [selectedTimezone, setSelectedTimezone] = useState('21600');
   const [showApiKey, setShowApiKey] = useState(false);
@@ -142,6 +130,12 @@ const ProfilePage = () => {
     newPass: '',
     confirmNewPass: '',
   });
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    fullName: '',
+    email: '',
+  });
+  const [hasProfileChanges, setHasProfileChanges] = useState(false);
 
   const languages = [
     { value: 'en', label: 'English' },
@@ -173,14 +167,60 @@ const ProfilePage = () => {
     },
   ];
 
-  // Simulate initial loading
+  // Load user data on component mount
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPageLoading(false);
-    }, 1000);
+    const loadUserData = async () => {
+      try {
+        setIsUserDataLoading(true);
 
-    return () => clearTimeout(timer);
-  }, []);
+        // Get user details from server
+        const userData = await getUserDetails();
+
+        if (userData) {
+          // Dispatch to Redux store
+          dispatch(setUserDetails(userData));
+
+          // Set component state from userData
+          setTwoFactor(userData.isTwoFactorEnabled || false);
+          setSelectedLanguage(userData.language || 'en');
+          setSelectedTimezone(userData.timezone || '21600');
+
+          // Initialize profile data
+          setProfileData({
+            fullName: userData.fullName || userData.name || '',
+            email: userData.email || '',
+          });
+
+          // Set API key if exists
+          if (userData.apiKey) {
+            setApiKey({
+              key: userData.apiKey,
+              createdAt: userData.apiKeyCreatedAt || new Date(),
+              updatedAt: userData.apiKeyUpdatedAt || new Date(),
+              id: userData.apiKeyId || '1',
+              userId: userData.id,
+            });
+          }
+        } else {
+          showToast('Failed to load user data', 'error');
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        showToast('Error loading user data', 'error');
+      } finally {
+        setIsUserDataLoading(false);
+        setIsPageLoading(false);
+      }
+    };
+
+    // Only load if we have a current user
+    if (currentUser?.id) {
+      loadUserData();
+    } else {
+      setIsPageLoading(false);
+      setIsUserDataLoading(false);
+    }
+  }, [currentUser?.id, dispatch]);
 
   // Show toast notification
   const showToast = (
@@ -188,7 +228,7 @@ const ProfilePage = () => {
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 4000); // Auto hide after 4 seconds
+    setTimeout(() => setToast(null), 4000);
   };
 
   const copyToClipboard = (key: ApiKey | null) => {
@@ -201,40 +241,324 @@ const ProfilePage = () => {
     }
   };
 
+  // Handle password change
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (
+      !formData.currentPass ||
+      !formData.newPass ||
+      !formData.confirmNewPass
+    ) {
+      showToast('Please fill in all password fields', 'error');
+      return;
+    }
+
+    if (formData.newPass !== formData.confirmNewPass) {
+      showToast('New passwords do not match', 'error');
+      return;
+    }
+
+    if (formData.newPass.length < 6) {
+      showToast('Password must be at least 6 characters long', 'error');
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      // Call API to change password
+      const response = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: formData.currentPass,
+          newPassword: formData.newPass,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setFormData({ currentPass: '', newPass: '', confirmNewPass: '' });
+        showToast('Password changed successfully!', 'success');
+      } else {
+        showToast(result.message || 'Failed to change password', 'error');
+      }
+    } catch (error) {
+      console.error('Password change error:', error);
+      showToast('Error changing password', 'error');
+    } finally {
       setIsLoading(false);
-      setFormData({ currentPass: '', newPass: '', confirmNewPass: '' });
-      showToast('Password changed successfully!', 'success');
-    }, 1000);
+    }
   };
 
+  // Handle 2FA toggle
   const handleTwoFactorToggle = async () => {
     const nextState = !twoFactor;
-    setTwoFactor(nextState);
-    showToast(
-      `Two-factor authentication ${
-        nextState ? 'enabled' : 'disabled'
-      } successfully!`,
-      'success'
-    );
+
+    try {
+      const response = await fetch('/api/user/toggle-2fa', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          enabled: nextState,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setTwoFactor(nextState);
+
+        // Update Redux store
+        dispatch(
+          setUserDetails({
+            ...userDetails,
+            isTwoFactorEnabled: nextState,
+          })
+        );
+
+        showToast(
+          `Two-factor authentication ${
+            nextState ? 'enabled' : 'disabled'
+          } successfully!`,
+          'success'
+        );
+      } else {
+        showToast(result.message || 'Failed to toggle 2FA', 'error');
+      }
+    } catch (error) {
+      console.error('2FA toggle error:', error);
+      showToast('Error toggling 2FA', 'error');
+    }
   };
 
+  // Handle API key generation
   const handleApiKeyGeneration = async () => {
-    setApiKey({
-      key: 'smmdoc_' + Math.random().toString(36).substring(2),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      id: Math.random().toString(),
-      userId: '1',
-    });
-    setShowApiKey(true); // Show the newly generated API key
-    showToast('API key generated successfully!', 'success');
+    try {
+      const response = await fetch('/api/user/generate-api-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        const newApiKey = {
+          key: result.apiKey,
+          createdAt: new Date(result.createdAt),
+          updatedAt: new Date(result.updatedAt),
+          id: result.id,
+          userId: result.userId,
+        };
+
+        setApiKey(newApiKey);
+        setShowApiKey(true);
+
+        // Update Redux store
+        dispatch(
+          setUserDetails({
+            ...userDetails,
+            apiKey: result.apiKey,
+            apiKeyCreatedAt: result.createdAt,
+            apiKeyUpdatedAt: result.updatedAt,
+            apiKeyId: result.id,
+          })
+        );
+
+        showToast('API key generated successfully!', 'success');
+      } else {
+        showToast(result.message || 'Failed to generate API key', 'error');
+      }
+    } catch (error) {
+      console.error('API key generation error:', error);
+      showToast('Error generating API key', 'error');
+    }
   };
 
-  if (isPageLoading) {
+  // Handle timezone save
+  const handleTimezoneSave = async () => {
+    try {
+      const response = await fetch('/api/user/update-timezone', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          timezone: selectedTimezone,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        dispatch(
+          setUserDetails({
+            ...userDetails,
+            timezone: selectedTimezone,
+          })
+        );
+
+        showToast('Timezone updated successfully!', 'success');
+      } else {
+        showToast(result.message || 'Failed to update timezone', 'error');
+      }
+    } catch (error) {
+      console.error('Timezone update error:', error);
+      showToast('Error updating timezone', 'error');
+    }
+  };
+
+  // Handle language save
+  const handleLanguageSave = async () => {
+    try {
+      const response = await fetch('/api/user/update-language', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          language: selectedLanguage,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        dispatch(
+          setUserDetails({
+            ...userDetails,
+            language: selectedLanguage,
+          })
+        );
+
+        showToast('Language updated successfully!', 'success');
+      } else {
+        showToast(result.message || 'Failed to update language', 'error');
+      }
+    } catch (error) {
+      console.error('Language update error:', error);
+      showToast('Error updating language', 'error');
+    }
+  };
+
+  // Handle profile update toggle
+  const handleUpdateProfile = () => {
+    if (isEditingProfile) {
+      // Cancel editing - reset to original values
+      setProfileData({
+        fullName: user?.fullName || user?.name || '',
+        email: user?.email || '',
+      });
+      setIsEditingProfile(false);
+      setHasProfileChanges(false);
+    } else {
+      // Enable editing
+      setIsEditingProfile(true);
+    }
+  };
+
+  // Handle profile data changes
+  const handleProfileDataChange = (field: string, value: string) => {
+    setProfileData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    // Check if there are changes
+    const originalFullName = user?.fullName || user?.name || '';
+    const originalEmail = user?.email || '';
+
+    const newData = {
+      ...profileData,
+      [field]: value,
+    };
+
+    const hasChanges =
+      newData.fullName !== originalFullName || newData.email !== originalEmail;
+    setHasProfileChanges(hasChanges);
+  };
+
+  // Handle save profile changes
+  const handleSaveProfileChanges = async () => {
+    if (!hasProfileChanges) return;
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/user/update-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: profileData.fullName,
+          email: profileData.email,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Update Redux store
+        dispatch(
+          setUserDetails({
+            ...userDetails,
+            fullName: profileData.fullName,
+            email: profileData.email,
+            emailVerified: result.emailVerified || userDetails.emailVerified,
+          })
+        );
+
+        setIsEditingProfile(false);
+        setHasProfileChanges(false);
+        showToast('Profile updated successfully!', 'success');
+      } else {
+        showToast(result.message || 'Failed to update profile', 'error');
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      showToast('Error updating profile', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle resend verification email
+  const handleResendVerificationEmail = async () => {
+    try {
+      const response = await fetch('/api/user/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        showToast('Verification email sent successfully!', 'success');
+      } else {
+        showToast(
+          result.message || 'Failed to send verification email',
+          'error'
+        );
+      }
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      showToast('Error sending verification email', 'error');
+    }
+  };
+
+  // Show loading state if page is still loading
+  if (isPageLoading || isUserDataLoading) {
     return (
       <div className="page-container">
         <div className="page-content">
@@ -265,7 +589,7 @@ const ProfilePage = () => {
                 <div className="flex flex-col items-center space-y-4">
                   <div className="relative">
                     <div className="profile-picture">
-                      {user?.name?.charAt(0) || 'M'}
+                      {currentUser?.name?.charAt(0) || 'M'}
                     </div>
                     <button className="profile-picture-edit">
                       <FaCamera className="w-4 h-4" />
@@ -299,28 +623,8 @@ const ProfilePage = () => {
                   <h3 className="card-title">2FA</h3>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <label className="form-label">
-                      Two-factor authentication
-                    </label>
-                    <p
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
-                    >
-                      Email-based option to add an extra layer of protection to
-                      your account.
-                    </p>
-                  </div>
-                  <div className="ml-4">
-                    <Switch
-                      checked={twoFactor}
-                      onCheckedChange={setTwoFactor}
-                      title={`${
-                        twoFactor ? 'Disable' : 'Enable'
-                      } Two-Factor Authentication`}
-                    />
-                  </div>
+                <div className="flex items-center justify-center min-h-[100px]">
+                  <GradientSpinner size="w-8 h-8" />
                 </div>
               </div>
 
@@ -333,29 +637,8 @@ const ProfilePage = () => {
                   <h3 className="card-title">API Keys</h3>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="form-label mb-2">API Key</label>
-                    <div className="api-key-container">
-                      <div className="relative">
-                        <input
-                          type="text"
-                          readOnly
-                          value="********************************"
-                          className="form-field w-full pr-10 font-monow-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                        />
-                      </div>
-
-                      <div className="api-key-buttons">
-                        <button className="btn btn-secondary flex items-center justify-center gap-2">
-                          <FaCopy className="h-4 w-4" />
-                          Copy
-                        </button>
-
-                        <button className="btn btn-primary">Generate</button>
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-center min-h-[150px]">
+                  <GradientSpinner size="w-8 h-8" />
                 </div>
               </div>
 
@@ -368,14 +651,8 @@ const ProfilePage = () => {
                   <h3 className="card-title">Timezone</h3>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="form-group">
-                    <label className="form-label">Select Timezone</label>
-                    <select className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer">
-                      <option>(UTC +6:00) Bangladesh Standard Time</option>
-                    </select>
-                  </div>
-                  <button className="btn btn-primary">Save Timezone</button>
+                <div className="flex items-center justify-center min-h-[120px]">
+                  <GradientSpinner size="w-8 h-8" />
                 </div>
               </div>
             </div>
@@ -384,6 +661,9 @@ const ProfilePage = () => {
       </div>
     );
   }
+
+  // Get user data from Redux store or fallback to current user
+  const user = userDetails.id ? userDetails : currentUser;
 
   return (
     <div className="page-container">
@@ -416,8 +696,25 @@ const ProfilePage = () => {
                   <label className="form-label">Username</label>
                   <input
                     type="text"
-                    value={user?.name || 'msrjihad'}
+                    value={user?.username || user?.name || ''}
                     readOnly
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Full Name</label>
+                  <input
+                    type="text"
+                    value={
+                      isEditingProfile
+                        ? profileData.fullName
+                        : user?.fullName || user?.name || ''
+                    }
+                    onChange={(e) =>
+                      handleProfileDataChange('fullName', e.target.value)
+                    }
+                    readOnly={!isEditingProfile}
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
@@ -426,13 +723,49 @@ const ProfilePage = () => {
                   <label className="form-label">Email</label>
                   <input
                     type="email"
-                    value={user?.email || 'email@example.com'}
-                    readOnly
+                    value={
+                      isEditingProfile ? profileData.email : user?.email || ''
+                    }
+                    onChange={(e) =>
+                      handleProfileDataChange('email', e.target.value)
+                    }
+                    readOnly={!isEditingProfile}
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
+                  {!user?.emailVerified && (
+                    <small className="text-yellow-600 dark:text-yellow-400 mt-1 block">
+                      Email not verified
+                    </small>
+                  )}
                 </div>
 
-                <button className="btn btn-primary">Change Email</button>
+                <div className="flex gap-2">
+                  {isEditingProfile && hasProfileChanges ? (
+                    <button
+                      onClick={handleSaveProfileChanges}
+                      disabled={isLoading}
+                      className="btn btn-primary"
+                    >
+                      {isLoading ? <ButtonLoader /> : 'Save Changes'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleUpdateProfile}
+                      className="btn btn-primary"
+                    >
+                      {isEditingProfile ? 'Cancel' : 'Update Profile'}
+                    </button>
+                  )}
+
+                  {!user?.emailVerified && (
+                    <button
+                      onClick={handleResendVerificationEmail}
+                      className="btn btn-secondary"
+                    >
+                      Resend Verification Email
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -447,9 +780,19 @@ const ProfilePage = () => {
 
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
-                  <div className="profile-picture">
-                    {user?.name?.charAt(0) || 'M'}
-                  </div>
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt="Profile"
+                      className="profile-picture"
+                    />
+                  ) : (
+                    <div className="profile-picture">
+                      {(user?.username || user?.name)
+                        ?.charAt(0)
+                        ?.toUpperCase() || 'U'}
+                    </div>
+                  )}
                   <button className="profile-picture-edit">
                     <FaCamera className="w-4 h-4" />
                   </button>
@@ -467,7 +810,7 @@ const ProfilePage = () => {
                 <h3 className="card-title">Change Password</h3>
               </div>
 
-              <div className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="form-group">
                   <label className="form-label">Current Password</label>
                   <PasswordInput
@@ -479,6 +822,7 @@ const ProfilePage = () => {
                       }))
                     }
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    placeholder="Enter current password"
                   />
                 </div>
 
@@ -493,6 +837,7 @@ const ProfilePage = () => {
                       }))
                     }
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    placeholder="Enter new password"
                   />
                 </div>
 
@@ -507,18 +852,18 @@ const ProfilePage = () => {
                       }))
                     }
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    placeholder="Confirm new password"
                   />
                 </div>
 
                 <button
-                  type="button"
-                  onClick={handleSubmit}
+                  type="submit"
                   disabled={isLoading}
                   className="btn btn-primary w-full"
                 >
                   {isLoading ? <ButtonLoader /> : 'Change Password'}
                 </button>
-              </div>
+              </form>
             </div>
           </div>
 
@@ -575,15 +920,17 @@ const ProfilePage = () => {
                         type="text"
                         readOnly
                         value={
-                          showApiKey
-                            ? apiKey?.key || '••••••••••••••••••••••••••••••••'
-                            : '••••••••••••••••••••••••••••••••'
+                          apiKey && showApiKey
+                            ? apiKey.key
+                            : apiKey
+                            ? '••••••••••••••••••••••••••••••••'
+                            : 'No API key generated'
                         }
                         className="form-field w-full pr-20 font-mono px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       />
 
                       {/* View/Hide Toggle Button */}
-                      {apiKey?.key && (
+                      {apiKey && (
                         <button
                           type="button"
                           onClick={() => setShowApiKey(!showApiKey)}
@@ -599,11 +946,11 @@ const ProfilePage = () => {
                       )}
 
                       {/* Responsive timestamp positioning */}
-                      {apiKey?.key && (
+                      {apiKey && (
                         <div className="api-key-timestamp">
                           <small>
                             Created:{' '}
-                            {new Date(apiKey?.createdAt).toLocaleString(
+                            {new Date(apiKey.createdAt).toLocaleString(
                               'en-US',
                               {
                                 year: 'numeric',
@@ -623,7 +970,7 @@ const ProfilePage = () => {
                         type="button"
                         onClick={() => copyToClipboard(apiKey)}
                         className="btn btn-secondary flex items-center justify-center gap-2"
-                        disabled={!showApiKey && !apiKey?.key}
+                        disabled={!apiKey}
                       >
                         <FaCopy className="h-4 w-4" />
                         {copied ? 'Copied!' : 'Copy'}
@@ -665,7 +1012,12 @@ const ProfilePage = () => {
                     ))}
                   </select>
                 </div>
-                <button className="btn btn-primary">Save Timezone</button>
+                <button
+                  onClick={handleTimezoneSave}
+                  className="btn btn-primary"
+                >
+                  Save Timezone
+                </button>
               </div>
             </div>
 
@@ -693,7 +1045,12 @@ const ProfilePage = () => {
                     ))}
                   </select>
                 </div>
-                <button className="btn btn-primary">Save Language</button>
+                <button
+                  onClick={handleLanguageSave}
+                  className="btn btn-primary"
+                >
+                  Save Language
+                </button>
               </div>
             </div>
           </div>

@@ -45,7 +45,7 @@ const Toast = ({
 
 // Define interface for UserActivityLog
 interface UserActivityLog {
-  id: string;
+  id: number;
   slNo: number;
   username: string;
   details: string;

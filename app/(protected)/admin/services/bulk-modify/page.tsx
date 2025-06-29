@@ -50,22 +50,22 @@ const Toast = ({
 
 // Define interfaces
 interface Category {
-  id: string;
+  id: number;
   category_name: string;
   hideCategory?: string;
   position?: string;
 }
 
 interface Service {
-  id: string;
+  id: number;
   name: string;
   min_order: number;
   max_order: number;
   rate: number;
   description: string;
-  categoryId: string;
+  categoryId: number;
   category?: {
-    id: string;
+    id: number;
     category_name: string;
   };
   status: 'active' | 'inactive';

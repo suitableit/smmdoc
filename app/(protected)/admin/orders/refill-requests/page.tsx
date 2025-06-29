@@ -1,12 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import { formatNumber, formatPrice } from '@/lib/utils';
+import React, { useEffect, useState } from 'react';
 import {
   FaCheckCircle,
   FaClock,
-  FaDollarSign,
-  FaDownload,
   FaExclamationCircle,
   FaExternalLinkAlt,
   FaEye,
@@ -39,14 +37,14 @@ const Toast = ({
 interface Order {
   id: number;
   user: {
-    id: string;
+    id: number;
     email: string;
     name: string;
     currency: string;
     balance: number;
   };
   service: {
-    id: string;
+    id: number;
     name: string;
     rate: number;
     min_order: number;
@@ -54,7 +52,7 @@ interface Order {
     status: string;
   };
   category: {
-    id: string;
+    id: number;
     category_name: string;
   };
   qty: number;
@@ -75,14 +73,14 @@ interface RefillInfo {
   eligible: boolean;
   reason?: string;
   order: {
-    id: string;
+    id: number;
     status: string;
     totalQuantity: number;
     remainingQuantity: number;
     deliveredQuantity: number;
   };
   service: {
-    id: string;
+    id: number;
     name: string;
     rate: number;
     status: string;
@@ -1124,7 +1122,8 @@ const RefillOrdersPage = () => {
                           className="text-sm"
                           style={{ color: 'var(--text-muted)' }}
                         >
-                          Cost: ${formatPrice(refillInfo.refillOptions.full.cost, 2)}
+                          Cost: $
+                          {formatPrice(refillInfo.refillOptions.full.cost, 2)}
                           {refillInfo.refillOptions.full.affordable ? (
                             <span className="text-green-600 ml-2">
                               ✓ Affordable
@@ -1159,7 +1158,9 @@ const RefillOrdersPage = () => {
                       >
                         <div className="font-medium">
                           Remaining Only (
-                          {formatNumber(refillInfo.refillOptions.remaining.quantity)}
+                          {formatNumber(
+                            refillInfo.refillOptions.remaining.quantity
+                          )}
                           )
                         </div>
                         <div
@@ -1167,7 +1168,10 @@ const RefillOrdersPage = () => {
                           style={{ color: 'var(--text-muted)' }}
                         >
                           Cost: $
-                          {formatPrice(refillInfo.refillOptions.remaining.cost, 2)}
+                          {formatPrice(
+                            refillInfo.refillOptions.remaining.cost,
+                            2
+                          )}
                           {refillInfo.refillOptions.remaining.affordable ? (
                             <span className="text-green-600 ml-2">
                               ✓ Affordable

@@ -112,7 +112,7 @@ export const adminNavItems = [
   // Support Section
   {
     title: 'Support Tickets',
-    href: '/admin/support-tickets',
+    href: '/admin/tickets',
     icon: 'FaTicketAlt',
     label: 'Support Tickets',
     roles: ['admin'],
@@ -127,24 +127,10 @@ export const adminNavItems = [
 
   // Analytics Section
   {
-    title: 'Sales Report',
-    href: '/admin/analytics/sales',
+    title: 'Analytics & Reports',
+    href: '/admin/analytics',
     icon: 'FaChartBar',
-    label: 'Sales Report',
-    roles: ['admin'],
-  },
-  {
-    title: 'Trending Services',
-    href: '/admin/analytics/trending',
-    icon: 'FaChartLine',
-    label: 'Trending Services',
-    roles: ['admin'],
-  },
-  {
-    title: 'Export Data',
-    href: '/admin/analytics/export',
-    icon: 'FaFileExport',
-    label: 'Export Data',
+    label: 'Analytics & Reports',
     roles: ['admin'],
   },
 
@@ -154,27 +140,6 @@ export const adminNavItems = [
     href: '/admin/api',
     icon: 'FaCode',
     label: 'API Management',
-    roles: ['admin'],
-  },
-  {
-    title: 'Categories API',
-    href: '/admin/api/categories',
-    icon: 'FaLayerGroup',
-    label: 'Categories API',
-    roles: ['admin'],
-  },
-  {
-    title: 'Services API',
-    href: '/admin/api/services',
-    icon: 'FaBriefcase',
-    label: 'Services API',
-    roles: ['admin'],
-  },
-  {
-    title: 'Funds API',
-    href: '/admin/api/funds',
-    icon: 'FaMoneyBillWave',
-    label: 'Funds API',
     roles: ['admin'],
   },
 

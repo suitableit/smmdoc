@@ -49,7 +49,7 @@ const Toast = ({
 
 // Define interfaces for type safety
 interface Moderator {
-  id: string;
+  id: number;
   username: string;
   email: string;
   name?: string;
@@ -223,7 +223,7 @@ const ModeratorsPage = () => {
   // New state for action modals
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
-    moderatorId: string;
+    moderatorId: number;
     currentStatus: string;
   }>({
     open: false,
@@ -233,7 +233,7 @@ const ModeratorsPage = () => {
   const [newStatus, setNewStatus] = useState('');
   const [changeRoleDialog, setChangeRoleDialog] = useState<{
     open: boolean;
-    moderatorId: string;
+    moderatorId: number;
     currentRole: string;
   }>({
     open: false,

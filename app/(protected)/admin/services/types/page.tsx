@@ -4,13 +4,13 @@ import React, { useEffect, useState } from 'react';
 import {
   FaBox,
   FaCheckCircle,
+  FaEdit,
   FaEllipsisH,
+  FaPlus,
   FaSearch,
   FaSync,
   FaTimes,
   FaTrash,
-  FaEdit,
-  FaPlus
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -46,7 +46,7 @@ const Toast = ({
 
 // Define interface for ServiceType with Service Count
 interface ServiceType {
-  id: string;
+  id: number;
   name: string;
   serviceCount: number;
   createdAt: string;
@@ -69,25 +69,101 @@ const ServiceTypes = () => {
 
   // Dummy data for service types with service counts (including some with 0 counts)
   const dummyServiceTypes: ServiceType[] = [
-    { id: 'st_001', name: 'Social Media Marketing', serviceCount: 15, createdAt: '2024-01-15T10:30:00Z' },
-    { id: 'st_002', name: 'Search Engine Optimization', serviceCount: 8, createdAt: '2024-01-14T14:45:00Z' },
-    { id: 'st_003', name: 'Content Creation', serviceCount: 23, createdAt: '2024-01-13T09:15:00Z' },
-    { id: 'st_004', name: 'Video Marketing', serviceCount: 12, createdAt: '2024-01-12T16:20:00Z' },
-    { id: 'st_005', name: 'Email Marketing', serviceCount: 6, createdAt: '2024-01-11T11:35:00Z' },
-    { id: 'st_006', name: 'Pay Per Click Advertising', serviceCount: 18, createdAt: '2024-01-10T13:50:00Z' },
-    { id: 'st_007', name: 'Influencer Marketing', serviceCount: 0, createdAt: '2024-01-09T08:25:00Z' },
-    { id: 'st_008', name: 'Web Development', serviceCount: 31, createdAt: '2024-01-08T15:40:00Z' },
-    { id: 'st_009', name: 'Graphic Design', serviceCount: 27, createdAt: '2024-01-07T12:10:00Z' },
-    { id: 'st_010', name: 'Analytics & Reporting', serviceCount: 9, createdAt: '2024-01-06T17:30:00Z' },
-    { id: 'st_011', name: 'Podcast Marketing', serviceCount: 0, createdAt: '2024-01-05T14:15:00Z' },
-    { id: 'st_012', name: 'Affiliate Marketing', serviceCount: 3, createdAt: '2024-01-04T16:45:00Z' },
-    { id: 'st_013', name: 'Mobile App Development', serviceCount: 0, createdAt: '2024-01-03T11:20:00Z' },
-    { id: 'st_014', name: 'Brand Strategy', serviceCount: 14, createdAt: '2024-01-02T09:30:00Z' },
-    { id: 'st_015', name: 'Conversion Rate Optimization', serviceCount: 0, createdAt: '2024-01-01T13:10:00Z' }
+    {
+      id: 'st_001',
+      name: 'Social Media Marketing',
+      serviceCount: 15,
+      createdAt: '2024-01-15T10:30:00Z',
+    },
+    {
+      id: 'st_002',
+      name: 'Search Engine Optimization',
+      serviceCount: 8,
+      createdAt: '2024-01-14T14:45:00Z',
+    },
+    {
+      id: 'st_003',
+      name: 'Content Creation',
+      serviceCount: 23,
+      createdAt: '2024-01-13T09:15:00Z',
+    },
+    {
+      id: 'st_004',
+      name: 'Video Marketing',
+      serviceCount: 12,
+      createdAt: '2024-01-12T16:20:00Z',
+    },
+    {
+      id: 'st_005',
+      name: 'Email Marketing',
+      serviceCount: 6,
+      createdAt: '2024-01-11T11:35:00Z',
+    },
+    {
+      id: 'st_006',
+      name: 'Pay Per Click Advertising',
+      serviceCount: 18,
+      createdAt: '2024-01-10T13:50:00Z',
+    },
+    {
+      id: 'st_007',
+      name: 'Influencer Marketing',
+      serviceCount: 0,
+      createdAt: '2024-01-09T08:25:00Z',
+    },
+    {
+      id: 'st_008',
+      name: 'Web Development',
+      serviceCount: 31,
+      createdAt: '2024-01-08T15:40:00Z',
+    },
+    {
+      id: 'st_009',
+      name: 'Graphic Design',
+      serviceCount: 27,
+      createdAt: '2024-01-07T12:10:00Z',
+    },
+    {
+      id: 'st_010',
+      name: 'Analytics & Reporting',
+      serviceCount: 9,
+      createdAt: '2024-01-06T17:30:00Z',
+    },
+    {
+      id: 'st_011',
+      name: 'Podcast Marketing',
+      serviceCount: 0,
+      createdAt: '2024-01-05T14:15:00Z',
+    },
+    {
+      id: 'st_012',
+      name: 'Affiliate Marketing',
+      serviceCount: 3,
+      createdAt: '2024-01-04T16:45:00Z',
+    },
+    {
+      id: 'st_013',
+      name: 'Mobile App Development',
+      serviceCount: 0,
+      createdAt: '2024-01-03T11:20:00Z',
+    },
+    {
+      id: 'st_014',
+      name: 'Brand Strategy',
+      serviceCount: 14,
+      createdAt: '2024-01-02T09:30:00Z',
+    },
+    {
+      id: 'st_015',
+      name: 'Conversion Rate Optimization',
+      serviceCount: 0,
+      createdAt: '2024-01-01T13:10:00Z',
+    },
   ];
 
   // State management
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>(dummyServiceTypes);
+  const [serviceTypes, setServiceTypes] =
+    useState<ServiceType[]>(dummyServiceTypes);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
@@ -99,7 +175,9 @@ const ServiceTypes = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [serviceTypeToDelete, setServiceTypeToDelete] = useState<string | null>(null);
+  const [serviceTypeToDelete, setServiceTypeToDelete] = useState<string | null>(
+    null
+  );
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -110,7 +188,8 @@ const ServiceTypes = () => {
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingServiceType, setEditingServiceType] = useState<ServiceType | null>(null);
+  const [editingServiceType, setEditingServiceType] =
+    useState<ServiceType | null>(null);
   const [editName, setEditName] = useState('');
 
   // Add dialog state
@@ -123,21 +202,22 @@ const ServiceTypes = () => {
   };
 
   // Filter service types based on search term
-  const filteredServiceTypes = serviceTypes.filter(serviceType =>
-    serviceType.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    serviceType.id.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredServiceTypes = serviceTypes.filter(
+    (serviceType) =>
+      serviceType.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      serviceType.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Update pagination when filtered data changes
   useEffect(() => {
     const total = filteredServiceTypes.length;
     const totalPages = Math.ceil(total / pagination.limit);
-    setPagination(prev => ({
+    setPagination((prev) => ({
       ...prev,
       total,
       totalPages,
       hasNext: prev.page < totalPages,
-      hasPrev: prev.page > 1
+      hasPrev: prev.page > 1,
     }));
   }, [filteredServiceTypes.length, pagination.limit]);
 
@@ -170,9 +250,9 @@ const ServiceTypes = () => {
   const handleDeleteServiceType = async (serviceTypeId: string) => {
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setServiceTypes(prev => prev.filter(st => st.id !== serviceTypeId));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setServiceTypes((prev) => prev.filter((st) => st.id !== serviceTypeId));
       showToast('Service type deleted successfully', 'success');
       setDeleteDialogOpen(false);
       setServiceTypeToDelete(null);
@@ -188,14 +268,16 @@ const ServiceTypes = () => {
 
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setServiceTypes(prev => prev.map(st => 
-        st.id === editingServiceType.id 
-          ? { ...st, name: editName.trim() }
-          : st
-      ));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setServiceTypes((prev) =>
+        prev.map((st) =>
+          st.id === editingServiceType.id
+            ? { ...st, name: editName.trim() }
+            : st
+        )
+      );
+
       showToast('Service type updated successfully', 'success');
       setEditDialogOpen(false);
       setEditingServiceType(null);
@@ -212,16 +294,16 @@ const ServiceTypes = () => {
 
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const newServiceType: ServiceType = {
         id: `st_${String(serviceTypes.length + 1).padStart(3, '0')}`,
         name: newServiceTypeName.trim(),
         serviceCount: 0, // New service types start with 0 services
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
-      
-      setServiceTypes(prev => [newServiceType, ...prev]);
+
+      setServiceTypes((prev) => [newServiceType, ...prev]);
       showToast('Service type added successfully', 'success');
       setAddDialogOpen(false);
       setNewServiceTypeName('');
@@ -258,13 +340,18 @@ const ServiceTypes = () => {
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
-              <select 
+              <select
                 value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ 
-                  ...prev, 
-                  limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value), 
-                  page: 1 
-                }))}
+                onChange={(e) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    limit:
+                      e.target.value === 'all'
+                        ? 1000
+                        : parseInt(e.target.value),
+                    page: 1,
+                  }))
+                }
                 className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
                 <option value="25">25</option>
@@ -272,7 +359,7 @@ const ServiceTypes = () => {
                 <option value="100">100</option>
                 <option value="all">All</option>
               </select>
-              
+
               <button
                 onClick={handleRefresh}
                 disabled={serviceTypesLoading}
@@ -290,7 +377,7 @@ const ServiceTypes = () => {
                 Add Service Type
               </button>
             </div>
-            
+
             {/* Right: Search Controls */}
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -317,7 +404,9 @@ const ServiceTypes = () => {
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">Loading service types...</div>
+                  <div className="text-base font-medium">
+                    Loading service types...
+                  </div>
                 </div>
               </div>
             ) : getPaginatedData().length === 0 ? (
@@ -333,7 +422,8 @@ const ServiceTypes = () => {
                   No information was found for you.
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  No service types match your search criteria or no service types exist yet.
+                  No service types match your search criteria or no service
+                  types exist yet.
                 </p>
               </div>
             ) : (
@@ -404,15 +494,15 @@ const ServiceTypes = () => {
                           </td>
                           <td className="p-3">
                             <div>
-                              <div
-                                className="text-xs"
-                              >
-                                {new Date(serviceType.createdAt).toLocaleDateString()}
+                              <div className="text-xs">
+                                {new Date(
+                                  serviceType.createdAt
+                                ).toLocaleDateString()}
                               </div>
-                              <div
-                                className="text-xs"
-                              >
-                                {new Date(serviceType.createdAt).toLocaleTimeString()}
+                              <div className="text-xs">
+                                {new Date(
+                                  serviceType.createdAt
+                                ).toLocaleTimeString()}
                               </div>
                             </div>
                           </td>
@@ -424,11 +514,15 @@ const ServiceTypes = () => {
                                 title="More Actions"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
+                                  const dropdown = e.currentTarget
+                                    .nextElementSibling as HTMLElement;
                                   // Close other dropdowns
-                                  document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                                    if (menu !== dropdown) menu.classList.add('hidden');
-                                  });
+                                  document
+                                    .querySelectorAll('.dropdown-menu')
+                                    .forEach((menu) => {
+                                      if (menu !== dropdown)
+                                        menu.classList.add('hidden');
+                                    });
                                   dropdown.classList.toggle('hidden');
                                 }}
                               >
@@ -441,7 +535,11 @@ const ServiceTypes = () => {
                                   <button
                                     onClick={() => {
                                       openEditDialog(serviceType);
-                                      document.querySelector('.dropdown-menu:not(.hidden)')?.classList.add('hidden');
+                                      document
+                                        .querySelector(
+                                          '.dropdown-menu:not(.hidden)'
+                                        )
+                                        ?.classList.add('hidden');
                                     }}
                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                                   >
@@ -452,7 +550,11 @@ const ServiceTypes = () => {
                                     onClick={() => {
                                       setServiceTypeToDelete(serviceType.id);
                                       setDeleteDialogOpen(true);
-                                      document.querySelector('.dropdown-menu:not(.hidden)')?.classList.add('hidden');
+                                      document
+                                        .querySelector(
+                                          '.dropdown-menu:not(.hidden)'
+                                        )
+                                        ?.classList.add('hidden');
                                     }}
                                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
                                   >
@@ -484,7 +586,7 @@ const ServiceTypes = () => {
                               #{formatID(serviceType.id)}
                             </div>
                           </div>
-                          
+
                           {/* 3 Dot Menu for Mobile */}
                           <div className="relative">
                             <button
@@ -492,7 +594,8 @@ const ServiceTypes = () => {
                               title="More Actions"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
+                                const dropdown = e.currentTarget
+                                  .nextElementSibling as HTMLElement;
                                 dropdown.classList.toggle('hidden');
                               }}
                             >
@@ -505,7 +608,9 @@ const ServiceTypes = () => {
                                 <button
                                   onClick={() => {
                                     openEditDialog(serviceType);
-                                    document.querySelector('.hidden.absolute')?.classList.add('hidden');
+                                    document
+                                      .querySelector('.hidden.absolute')
+                                      ?.classList.add('hidden');
                                   }}
                                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                                 >
@@ -516,7 +621,9 @@ const ServiceTypes = () => {
                                   onClick={() => {
                                     setServiceTypeToDelete(serviceType.id);
                                     setDeleteDialogOpen(true);
-                                    document.querySelector('.hidden.absolute')?.classList.add('hidden');
+                                    document
+                                      .querySelector('.hidden.absolute')
+                                      ?.classList.add('hidden');
                                   }}
                                   className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
                                 >
@@ -572,13 +679,19 @@ const ServiceTypes = () => {
                             className="text-xs"
                             style={{ color: 'var(--text-muted)' }}
                           >
-                            Date: {new Date(serviceType.createdAt).toLocaleDateString()}
+                            Date:{' '}
+                            {new Date(
+                              serviceType.createdAt
+                            ).toLocaleDateString()}
                           </div>
                           <div
                             className="text-xs"
                             style={{ color: 'var(--text-muted)' }}
                           >
-                            Time: {new Date(serviceType.createdAt).toLocaleTimeString()}
+                            Time:{' '}
+                            {new Date(
+                              serviceType.createdAt
+                            ).toLocaleTimeString()}
                           </div>
                         </div>
                       </div>
@@ -587,9 +700,7 @@ const ServiceTypes = () => {
                 </div>
 
                 {/* Pagination */}
-                <div
-                  className="flex items-center justify-between pt-4 pb-6 border-t"
-                >
+                <div className="flex items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -600,7 +711,9 @@ const ServiceTypes = () => {
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
-                      `Showing ${(pagination.page - 1) * pagination.limit + 1} to ${Math.min(
+                      `Showing ${
+                        (pagination.page - 1) * pagination.limit + 1
+                      } to ${Math.min(
                         pagination.page * pagination.limit,
                         pagination.total
                       )} of ${pagination.total} service types`
@@ -656,7 +769,8 @@ const ServiceTypes = () => {
                 Delete Service Type
               </h3>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this service type? This action cannot be undone.
+                Are you sure you want to delete this service type? This action
+                cannot be undone.
               </p>
               <div className="flex gap-2 justify-end">
                 <button
@@ -669,7 +783,10 @@ const ServiceTypes = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={() => serviceTypeToDelete && handleDeleteServiceType(serviceTypeToDelete)}
+                  onClick={() =>
+                    serviceTypeToDelete &&
+                    handleDeleteServiceType(serviceTypeToDelete)
+                  }
                   className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm"
                 >
                   Delete
@@ -683,13 +800,9 @@ const ServiceTypes = () => {
         {editDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">
-                Edit Service Type
-              </h3>
+              <h3 className="text-lg font-semibold mb-4">Edit Service Type</h3>
               <div className="mb-4">
-                <label className="form-label mb-2">
-                  Service Type Name
-                </label>
+                <label className="form-label mb-2">Service Type Name</label>
                 <input
                   type="text"
                   value={editName}
@@ -728,9 +841,7 @@ const ServiceTypes = () => {
                 Add New Service Type
               </h3>
               <div className="mb-4">
-                <label className="form-label mb-2">
-                  Service Type Name
-                </label>
+                <label className="form-label mb-2">Service Type Name</label>
                 <input
                   type="text"
                   value={newServiceTypeName}

@@ -57,7 +57,7 @@ interface CounterItem {
 }
 
 interface Platform {
-  id: string;
+  id: number;
   name: string;
   icon: string;
   title: string;
@@ -599,8 +599,8 @@ const HomePage: React.FC = () => {
                 >
                   Boost your online presence today with our Cheap SMM Panel –
                   the ultimate solution for social media success! SMMDOC is a
-                  SMM Panel with more then 3 years on the market and 1,000+ Orders
-                  processed successfully until now!
+                  SMM Panel with more then 3 years on the market and 1,000+
+                  Orders processed successfully until now!
                 </p>
                 <Link
                   href="/sign-up"

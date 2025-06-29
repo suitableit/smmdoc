@@ -1,31 +1,28 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
-import Link from 'next/link';
 import moment from 'moment';
-import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
 import {
-    FaArrowRight,
-    FaAward,
-    FaBullseye,
-    FaCalendar,
-    FaChartLine,
-    FaCheckCircle,
-    FaClock,
-    FaCog,
-    FaCommentDots,
-    FaDollarSign,
-    FaEye,
-    FaRedo,
-    FaShoppingCart,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
-    FaUserPlus,
-    FaUsers,
+  FaAward,
+  FaBullseye,
+  FaCalendar,
+  FaChartLine,
+  FaCheckCircle,
+  FaClock,
+  FaCog,
+  FaCommentDots,
+  FaDollarSign,
+  FaEye,
+  FaRedo,
+  FaShoppingCart,
+  FaTimes,
+  FaTimesCircle,
+  FaUserPlus,
+  FaUsers,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -58,7 +55,7 @@ const Toast = ({
 
 // User interfaces
 interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
   name?: string;
@@ -77,9 +74,9 @@ interface User {
 }
 
 interface PendingTransaction {
-  id: string;
-  invoice_id: string;
-  userId: string;
+  id: number;
+  invoice_id: number;
+  userId: number;
   username?: string;
   amount: number;
   transaction_id?: string;
@@ -98,7 +95,7 @@ interface PendingTransaction {
 }
 
 type Order = {
-  id: string;
+  id: number;
   usdPrice: number;
   status: 'pending' | 'processing' | 'completed' | 'cancelled';
   createdAt: string;
@@ -195,13 +192,16 @@ export default function AdminDashboardPage() {
       });
 
       const response = await fetch(`/api/admin/users?${queryParams}`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+
       const result = await response.json();
 
       if (result.success) {
         // Client-side filter as backup to ensure no admins slip through
-        const filteredUsers = (result.data || []).filter((user: User) => user.role === 'user');
+        const filteredUsers = (result.data || []).filter(
+          (user: User) => user.role === 'user'
+        );
         // Ensure we only show exactly 5 users maximum
         setLatestUsers(filteredUsers.slice(0, 5));
       } else {
@@ -248,9 +248,9 @@ export default function AdminDashboardPage() {
           admin: 'true',
           status: 'pending',
           limit: 10,
-          offset: 0
+          offset: 0,
         },
-        timeout: 10000 // 10 second timeout
+        timeout: 10000, // 10 second timeout
       });
 
       // Handle the response structure
@@ -302,7 +302,10 @@ export default function AdminDashboardPage() {
       USD: (amt: number) => `${amt.toFixed(2)}`,
       BDT: (amt: number) => `৳${amt.toFixed(2)}`,
     };
-    return formatters[currency as keyof typeof formatters]?.(amount) || `${amount.toFixed(2)}`;
+    return (
+      formatters[currency as keyof typeof formatters]?.(amount) ||
+      `${amount.toFixed(2)}`
+    );
   }, []);
 
   const handleApprove = async (transactionId: string) => {
@@ -584,7 +587,9 @@ export default function AdminDashboardPage() {
                   </div>
                 ) : (
                   <>
-                    <p className="text-2xl font-bold text-teal-600">{stats.todaysOrders || 0}</p>
+                    <p className="text-2xl font-bold text-teal-600">
+                      {stats.todaysOrders || 0}
+                    </p>
                     <p className="text-xs text-teal-600 font-medium mt-1">
                       Fresh Orders
                     </p>
@@ -608,7 +613,9 @@ export default function AdminDashboardPage() {
                   </div>
                 ) : (
                   <>
-                    <p className="text-2xl font-bold text-indigo-600">{stats.newUsersToday || 0}</p>
+                    <p className="text-2xl font-bold text-indigo-600">
+                      {stats.newUsersToday || 0}
+                    </p>
                     <p className="text-xs text-indigo-600 font-medium mt-1">
                       Fresh Registrations
                     </p>
@@ -633,28 +640,28 @@ export default function AdminDashboardPage() {
             <Link
               href="/admin/transactions"
               className={`btn btn-primary w-full flex items-center justify-center gap-2`}
-              >
+            >
               <FaDollarSign className="w-4 h-4" />
               Manage Transactions
             </Link>
             <Link
               href="/admin/users"
               className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
-              >
+            >
               <FaUsers className="w-4 h-4" />
               Manage Users
             </Link>
             <Link
               href="/admin/orders"
               className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
-              >
+            >
               <FaShoppingCart className="w-4 h-4" />
               Manage Orders
             </Link>
             <Link
               href="/admin/services"
               className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
-              >
+            >
               <FaCog className="w-4 h-4" />
               Manage Services
             </Link>
@@ -671,14 +678,12 @@ export default function AdminDashboardPage() {
                 <div className="card-icon">
                   <FaClock />
                 </div>
-                <h3 className="card-title">
-                  Pending Transactions
-                </h3>
+                <h3 className="card-title">Pending Transactions</h3>
               </div>
               <Link
                 href="/admin/transactions"
                 className={`btn btn-secondary flex items-center gap-2`}
-                >
+              >
                 <FaEye className="w-4 h-4" />
                 View More
               </Link>
@@ -790,7 +795,9 @@ export default function AdminDashboardPage() {
                               className="font-medium text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.user?.name || transaction.username || 'N/A'}
+                              {transaction.user?.name ||
+                                transaction.username ||
+                                'N/A'}
                             </span>
                           </td>
                           <td className="p-3">
@@ -826,7 +833,8 @@ export default function AdminDashboardPage() {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.currency === 'USD' || transaction.currency === 'USDT'
+                              {transaction.currency === 'USD' ||
+                              transaction.currency === 'USDT'
                                 ? `$${transaction.amount.toFixed(2)}`
                                 : `৳${transaction.amount.toFixed(2)}`}
                             </div>
@@ -844,7 +852,9 @@ export default function AdminDashboardPage() {
                               className="text-sm font-medium"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.payment_method || transaction.method || 'uddoktapay'}
+                              {transaction.payment_method ||
+                                transaction.method ||
+                                'uddoktapay'}
                             </span>
                           </td>
                           <td className="p-3">
@@ -897,7 +907,9 @@ export default function AdminDashboardPage() {
                               className="font-medium text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.user?.name || transaction.username || 'N/A'}
+                              {transaction.user?.name ||
+                                transaction.username ||
+                                'N/A'}
                             </div>
                           </div>
                           <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 rounded-full">
@@ -937,7 +949,8 @@ export default function AdminDashboardPage() {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.currency === 'USD' || transaction.currency === 'USDT'
+                              {transaction.currency === 'USD' ||
+                              transaction.currency === 'USDT'
                                 ? `$${transaction.amount.toFixed(2)}`
                                 : `৳${transaction.amount.toFixed(2)}`}
                             </div>
@@ -970,7 +983,9 @@ export default function AdminDashboardPage() {
                             className="text-sm"
                             style={{ color: 'var(--text-primary)' }}
                           >
-                            {transaction.payment_method || transaction.method || 'uddoktapay'}
+                            {transaction.payment_method ||
+                              transaction.method ||
+                              'uddoktapay'}
                           </div>
                         </div>
 
@@ -1349,12 +1364,12 @@ export default function AdminDashboardPage() {
                 <h3 className="card-title">Latest Users</h3>
               </div>
               <Link
-              href="/admin/services"
-              className={`btn btn-secondary flex items-center gap-2`}
+                href="/admin/services"
+                className={`btn btn-secondary flex items-center gap-2`}
               >
-              <FaUsers className="w-4 h-4" />
-              View All Users
-            </Link>
+                <FaUsers className="w-4 h-4" />
+                View All Users
+              </Link>
             </div>
           </div>
 
@@ -1379,7 +1394,9 @@ export default function AdminDashboardPage() {
                   No users found
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {latestUsers.length === 0 ? 'No users exist yet.' : 'No users match your criteria.'}
+                  {latestUsers.length === 0
+                    ? 'No users exist yet.'
+                    : 'No users match your criteria.'}
                 </p>
               </div>
             ) : (
@@ -1389,58 +1406,116 @@ export default function AdminDashboardPage() {
                   <table className="w-full text-sm min-w-[600px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Username</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Email</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Balance</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Registered Date</th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          ID
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Username
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Email
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Balance
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Registered Date
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {latestUsers.map((user) => (
-                        <tr key={user.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                        <tr
+                          key={user.id}
+                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                        >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{user.id?.slice(-8) || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {user.username || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div
+                              className="text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
                               {user.email || 'null'}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
                               {user.emailVerified ? (
                                 <>
                                   <FaCheckCircle className="h-3 w-3 text-green-500" />
-                                  <span className="text-xs text-green-600">Verified</span>
+                                  <span className="text-xs text-green-600">
+                                    Verified
+                                  </span>
                                 </>
                               ) : (
                                 <>
                                   <FaTimesCircle className="h-3 w-3 text-red-500" />
-                                  <span className="text-xs text-red-600">Unverified</span>
+                                  <span className="text-xs text-red-600">
+                                    Unverified
+                                  </span>
                                 </>
                               )}
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="text-left">
-                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-                                {formatCurrency(user.balance || 0, user.currency || 'USD')}
+                              <div
+                                className="font-semibold text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {formatCurrency(
+                                  user.balance || 0,
+                                  user.currency || 'USD'
+                                )}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'null'}
+                              <div
+                                className="text-xs"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {user.createdAt
+                                  ? new Date(
+                                      user.createdAt
+                                    ).toLocaleDateString()
+                                  : 'null'}
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
-                                {user.createdAt ? new Date(user.createdAt).toLocaleTimeString() : 'null'}
+                              <div
+                                className="text-xs"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {user.createdAt
+                                  ? new Date(
+                                      user.createdAt
+                                    ).toLocaleTimeString()
+                                  : 'null'}
                               </div>
                             </div>
                           </td>
@@ -1454,7 +1529,10 @@ export default function AdminDashboardPage() {
                 <div className="lg:hidden">
                   <div className="space-y-4">
                     {latestUsers.map((user) => (
-                      <div key={user.id} className="card card-padding border-l-4 border-blue-500 mb-4">
+                      <div
+                        key={user.id}
+                        className="card card-padding border-l-4 border-blue-500 mb-4"
+                      >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
@@ -1465,41 +1543,88 @@ export default function AdminDashboardPage() {
 
                         <div className="space-y-4">
                           <div>
-                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Username</div>
-                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>{user.username || 'null'}</div>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
+                              Username
+                            </div>
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {user.username || 'null'}
+                            </div>
                           </div>
 
                           <div>
-                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Email</div>
-                            <div className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>{user.email || 'null'}</div>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
+                              Email
+                            </div>
+                            <div
+                              className="text-sm mb-1"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {user.email || 'null'}
+                            </div>
                             <div className="flex items-center gap-1">
                               {user.emailVerified ? (
                                 <>
                                   <FaCheckCircle className="h-3 w-3 text-green-500" />
-                                  <span className="text-xs text-green-600">Verified</span>
+                                  <span className="text-xs text-green-600">
+                                    Verified
+                                  </span>
                                 </>
                               ) : (
                                 <>
                                   <FaTimesCircle className="h-3 w-3 text-red-500" />
-                                  <span className="text-xs text-red-600">Unverified</span>
+                                  <span className="text-xs text-red-600">
+                                    Unverified
+                                  </span>
                                 </>
                               )}
                             </div>
                           </div>
 
                           <div>
-                            <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Balance</div>
-                            <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-                              {formatCurrency(user.balance || 0, user.currency || 'USD')}
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
+                              Balance
+                            </div>
+                            <div
+                              className="font-semibold text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {formatCurrency(
+                                user.balance || 0,
+                                user.currency || 'USD'
+                              )}
                             </div>
                           </div>
 
                           <div>
-                            <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                              Registered: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'null'}
+                            <div
+                              className="text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              Registered:{' '}
+                              {user.createdAt
+                                ? new Date(user.createdAt).toLocaleDateString()
+                                : 'null'}
                             </div>
-                            <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                              Time: {user.createdAt ? new Date(user.createdAt).toLocaleTimeString() : 'null'}
+                            <div
+                              className="text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              Time:{' '}
+                              {user.createdAt
+                                ? new Date(user.createdAt).toLocaleTimeString()
+                                : 'null'}
                             </div>
                           </div>
                         </div>

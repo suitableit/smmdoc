@@ -1,18 +1,17 @@
 'use client';
 
-import { formatDistanceToNow } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import {
   FaCheckCircle,
   FaClock,
   FaExclamationTriangle,
   FaEye,
-  FaSearch
+  FaSearch,
 } from 'react-icons/fa';
 
 type Transaction = {
-  id: string;
-  invoice_id: string;
+  id: number;
+  invoice_id: number;
   amount: number;
   status: 'Success' | 'Processing' | 'Cancelled' | 'Failed';
   method: string;
@@ -30,7 +29,10 @@ interface TransactionsListProps {
   onViewDetails: (transactionId: string) => void;
 }
 
-export function TransactionsList({ transactions, onViewDetails }: TransactionsListProps) {
+export function TransactionsList({
+  transactions,
+  onViewDetails,
+}: TransactionsListProps) {
   const { currency, rate } = useCurrency();
 
   // Function to format currency based on selected currency
@@ -50,7 +52,9 @@ export function TransactionsList({ transactions, onViewDetails }: TransactionsLi
         <div className="text-center py-8 flex flex-col items-center">
           <FaSearch className="text-4xl text-gray-400 mb-4" />
           <div className="text-lg font-medium">No transactions found</div>
-          <div className="text-sm text-gray-500">You haven't made any transactions yet.</div>
+          <div className="text-sm text-gray-500">
+            You haven't made any transactions yet.
+          </div>
         </div>
       </div>
     );
@@ -62,19 +66,38 @@ export function TransactionsList({ transactions, onViewDetails }: TransactionsLi
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
-              <th className="text-left py-3 px-4 font-medium text-gray-900">ID</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Date and Time</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Transaction ID</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Amount</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Phone Number</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Method</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-900">Actions</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                ID
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Date and Time
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Transaction ID
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Amount
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Phone Number
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Method
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Status
+              </th>
+              <th className="text-right py-3 px-4 font-medium text-gray-900">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {transactions.map((transaction, index) => (
-              <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
+              <tr
+                key={transaction.id}
+                className="border-b border-gray-100 hover:bg-gray-50"
+              >
                 <td className="py-3 px-4">
                   <span className="text-sm font-medium text-gray-900">
                     {index + 1}
@@ -107,7 +130,9 @@ export function TransactionsList({ transactions, onViewDetails }: TransactionsLi
                 </td>
                 <td className="py-3 px-4">
                   <span className="text-sm text-gray-700">
-                    {transaction.payment_method || transaction.method || 'UddoktaPay'}
+                    {transaction.payment_method ||
+                      transaction.method ||
+                      'UddoktaPay'}
                   </span>
                 </td>
                 <td className="py-3 px-4">

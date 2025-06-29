@@ -105,16 +105,13 @@ export default function SideBarNav({
           ['Support Tickets', 'Contact Messages'].includes(item.title)
         ),
         analytics: items.filter((item) =>
-          ['Sales Report', 'Trending Services', 'Export Data'].includes(
+          ['Analytics & Reports'].includes(
             item.title
           )
         ),
         api: items.filter((item) =>
           [
             'API Management',
-            'Categories API',
-            'Services API',
-            'Funds API',
           ].includes(item.title)
         ),
         reseller: items.filter((item) =>

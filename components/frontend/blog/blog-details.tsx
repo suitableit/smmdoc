@@ -18,7 +18,7 @@ import {
 
 // Types
 interface BlogPost {
-  id: string;
+  id: number;
   title: string;
   excerpt: string;
   date: string;
