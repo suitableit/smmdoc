@@ -496,7 +496,6 @@ Support Manager`,
                   <label className="form-label">Category</label>
                   <div className="mt-1">
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                      <FaTag className="h-3 w-3 mr-1" />
                       {contactDetails.category}
                     </span>
                   </div>

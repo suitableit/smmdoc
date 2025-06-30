@@ -122,14 +122,14 @@ export default function SideBarNav({
         settings: items.filter((item) =>
           [
             'General Settings',
+            'Appearance',
             'Providers',
+            'Payment Currency',
+            'Notification Settings',
             'Email Settings',
-            'SEO Settings',
             'Integrations',
+            'Custom Codes',
           ].includes(item.title)
-        ),
-        security: items.filter((item) =>
-          ['Security Logs', 'Access Control'].includes(item.title)
         ),
         account: items.filter((item) =>
           ['Account Settings', 'Logout'].includes(item.title)

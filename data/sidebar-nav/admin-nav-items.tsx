@@ -169,9 +169,16 @@ export const adminNavItems = [
   // Settings Section
   {
     title: 'General Settings',
-    href: '/admin/settings/general',
+    href: '/admin/settings',
     icon: 'FaCog',
     label: 'General Settings',
+    roles: ['admin'],
+  },
+  {
+    title: 'Appearance',
+    href: '/admin/settings/appearance',
+    icon: 'FaSun',
+    label: 'Appearance',
     roles: ['admin'],
   },
   {
@@ -182,17 +189,24 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
+    title: 'Payment Currency',
+    href: '/admin/settings/currency',
+    icon: 'FaDollarSign',
+    label: 'Payment Currency',
+    roles: ['admin'],
+  },
+  {
+    title: 'Notification Settings',
+    href: '/admin/settings/notifications',
+    icon: 'FaBell',
+    label: 'Notification Settings',
+    roles: ['admin'],
+  },
+  {
     title: 'Email Settings',
     href: '/admin/settings/email',
     icon: 'FaEnvelope',
     label: 'Email Settings',
-    roles: ['admin'],
-  },
-  {
-    title: 'SEO Settings',
-    href: '/admin/settings/seo',
-    icon: 'FaSearch',
-    label: 'SEO Settings',
     roles: ['admin'],
   },
   {
@@ -202,20 +216,11 @@ export const adminNavItems = [
     label: 'Integrations',
     roles: ['admin'],
   },
-
-  // Security Section
   {
-    title: 'Security Logs',
-    href: '/admin/security/logs',
-    icon: 'FaShieldAlt',
-    label: 'Security Logs',
-    roles: ['admin'],
-  },
-  {
-    title: 'Access Control',
-    href: '/admin/security/access',
-    icon: 'FaUserLock',
-    label: 'Access Control',
+    title: 'Custom Codes',
+    href: '/admin/settings/custom-codes',
+    icon: 'FaCode',
+    label: 'Custom Codes',
     roles: ['admin'],
   },
 
