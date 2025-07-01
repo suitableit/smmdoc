@@ -26,9 +26,9 @@ interface AdminSections {
   services: NavItem[];
   management: NavItem[];
   funds: NavItem[];
+  transactions: NavItem[];
   support: NavItem[];
-  analytics: NavItem[];
-  api: NavItem[];
+  additionals: NavItem[];
   reseller: NavItem[];
   settings: NavItem[];
   security: NavItem[];
@@ -48,12 +48,21 @@ interface UserSections {
   [key: string]: NavItem[];
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+interface SideBarNavProps {
+  collapsed?: boolean;
+  user?: {
+    data?: {
+      role?: string;
+    };
+  };
+  setOpen?: () => void;
+}
+
 export default function SideBarNav({
   collapsed = false,
   user,
   setOpen = () => {},
-}: any) {
+}: SideBarNavProps) {
   const path = usePathname() || '';
   const isAdmin = user?.data?.role === 'admin';
 
@@ -61,7 +70,7 @@ export default function SideBarNav({
   const items = useMemo(() => {
     return isAdmin
       ? adminNavItems
-      : userNavItems.filter((item: any) =>
+      : userNavItems.filter((item: NavItem) =>
           item.roles.includes(user?.data?.role || 'user')
         );
   }, [isAdmin, user?.data?.role]);
@@ -85,6 +94,7 @@ export default function SideBarNav({
             'Import Services',
             'Service Types',
             'Modify Bulk Services',
+            'Update Price',
             'API Sync Logs',
           ].includes(item.title)
         ),
@@ -96,6 +106,12 @@ export default function SideBarNav({
             'User Activity Logs',
           ].includes(item.title)
         ),
+        funds: items.filter((item) =>
+          [
+            'Add Funds',
+            'Transfer Funds',
+          ].includes(item.title)
+        ),
         transactions: items.filter((item) =>
           [
             'All Transactions',
@@ -104,31 +120,31 @@ export default function SideBarNav({
         support: items.filter((item) =>
           ['Support Tickets', 'Contact Messages'].includes(item.title)
         ),
-        analytics: items.filter((item) =>
-          ['Analytics & Reports'].includes(
+        additionals: items.filter((item) =>
+          ['Affiliates', 'Analytics & Reports'].includes(
             item.title
           )
         ),
-        api: items.filter((item) =>
-          [
-            'API Management',
-          ].includes(item.title)
-        ),
         reseller: items.filter((item) =>
-          ['Child Panels', 'Commission Settings', 'Reseller Requests'].includes(
+          ['Child Panels'].includes(
             item.title
           )
         ),
         settings: items.filter((item) =>
           [
             'General Settings',
-            'Appearance',
             'Providers',
             'Payment Currency',
             'Notification Settings',
             'Email Settings',
             'Integrations',
             'Custom Codes',
+          ].includes(item.title)
+        ),
+        security: items.filter((item) =>
+          [
+            'Security Settings',
+            'Two Factor Authentication',
           ].includes(item.title)
         ),
         account: items.filter((item) =>
@@ -147,7 +163,7 @@ export default function SideBarNav({
             item.title
           )
         ),
-        transactions: items.filter((item) =>
+        funds: items.filter((item) =>
           ['Add Funds', 'Transfer Funds', 'Transactions'].includes(item.title)
         ),
         support: items.filter((item) =>
@@ -200,7 +216,7 @@ export default function SideBarNav({
   // Memoize the icon rendering function to prevent unnecessary re-renders
   const renderIcon = useMemo(() => {
     return (iconName: string) => {
-      const Icon = (FaIcons as any)[iconName];
+      const Icon = (FaIcons as Record<string, React.ComponentType>)[iconName];
       return Icon ? <Icon /> : null;
     };
   }, []);
@@ -220,7 +236,7 @@ export default function SideBarNav({
               if (item.isLogout) {
                 signOut({ callbackUrl: '/' });
               } else {
-                setOpen(false);
+                setOpen();
               }
             };
 
@@ -305,7 +321,7 @@ export default function SideBarNav({
               if (item.isLogout) {
                 signOut({ callbackUrl: '/' });
               } else {
-                setOpen(false);
+                setOpen();
               }
             };
 
@@ -433,9 +449,9 @@ export default function SideBarNav({
   // Return null if user data is not available yet
   if (!user) return null;
 
-  // Helper function to safely access sections
-  const getSectionItems = (sectionKey: string): NavItem[] => {
-    return (sections as any)[sectionKey] || [];
+  // Helper function to safely access sections with proper typing
+  const getSectionItems = (sectionKey: keyof (AdminSections | UserSections)): NavItem[] => {
+    return sections[sectionKey] || [];
   };
 
   return (
@@ -447,11 +463,11 @@ export default function SideBarNav({
             {renderNavSection('Orders', getSectionItems('orders'))}
             {renderNavSection('Services', getSectionItems('services'))}
             {renderNavSection('Management', getSectionItems('management'))}
+            {renderNavSection('Funds', getSectionItems('funds'))}
             {renderNavSection('Transactions', getSectionItems('transactions'))}
             {renderNavSection('Support', getSectionItems('support'))}
-            {renderNavSection('Analytics', getSectionItems('analytics'))}
-            {renderNavSection('API', getSectionItems('api'))}
-            {renderNavSection('Reseller', getSectionItems('reseller'))}
+            {renderNavSection('Additionals', getSectionItems('additionals'))}
+            {renderNavSection('Reseller Panels', getSectionItems('reseller'))}
             {renderNavSection('Settings', getSectionItems('settings'))}
             {renderNavSection('Security', getSectionItems('security'))}
             {renderNavSection('Account', getSectionItems('account'))}

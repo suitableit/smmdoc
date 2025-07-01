@@ -123,7 +123,7 @@ export const userNavItems = [
   {
     title: 'Affiliate Program',
     href: '/affiliate',
-    icon: 'FaHandshake', // Changed from FaUsers to handshake for partnership/affiliate
+    icon: 'FaNetworkWired', // Changed from FaUsers to handshake for partnership/affiliate
     label: 'Affiliate Program',
     roles: ['user'],
   },

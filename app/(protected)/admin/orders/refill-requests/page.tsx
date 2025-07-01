@@ -1,6 +1,5 @@
 'use client';
 
-import { formatNumber, formatPrice } from '@/lib/utils';
 import React, { useEffect, useState } from 'react';
 import {
   FaCheckCircle,
@@ -12,7 +11,21 @@ import {
   FaSearch,
   FaSync,
   FaTimes,
+  FaTimesCircle,
 } from 'react-icons/fa';
+
+// Import APP_NAME constant
+import { APP_NAME } from '@/lib/constants';
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+
+// Custom Gradient Spinner Component
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
 
 // Toast Component
 const Toast = ({
@@ -40,6 +53,7 @@ interface Order {
     id: number;
     email: string;
     name: string;
+    username?: string;
     currency: string;
     balance: number;
   };
@@ -57,6 +71,7 @@ interface Order {
   };
   qty: number;
   price: number;
+  charge: number;
   usdPrice: number;
   bdtPrice: number;
   currency: string;
@@ -109,12 +124,64 @@ interface RefillInfo {
   };
 }
 
+interface RefillOrderStats {
+  totalEligible: number;
+  partialOrders: number;
+  completedOrders: number;
+  todayRefills: number;
+  totalRefillAmount: number;
+  statusBreakdown: Record<string, number>;
+}
+
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 const RefillOrdersPage = () => {
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Refill Orders — ${APP_NAME}`;
+  }, []);
+
   // State management
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<RefillOrderStats>({
+    totalEligible: 0,
+    partialOrders: 0,
+    completedOrders: 0,
+    todayRefills: 0,
+    totalRefillAmount: 0,
+    statusBreakdown: {},
+  });
+
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  });
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
+  const [selectedBulkAction, setSelectedBulkAction] = useState('');
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
+
+  // Loading states
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+
+  // Refill dialog states
   const [refillDialogOpen, setRefillDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [refillInfo, setRefillInfo] = useState<RefillInfo | null>(null);
@@ -124,59 +191,142 @@ const RefillOrdersPage = () => {
     reason: '',
   });
   const [processing, setProcessing] = useState(false);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-  const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
 
-  const [stats, setStats] = useState({
-    totalRefills: 0,
-    pendingRefills: 0,
-    completedRefills: 0,
-    autoRefillEnabled: 0,
-  });
+  // Calculate status counts from current orders data
+  const calculateStatusCounts = (ordersData: Order[]) => {
+    const counts = {
+      partial: 0,
+      completed: 0,
+    };
 
-  // Data fetching
+    ordersData.forEach((order) => {
+      if (order.status && counts.hasOwnProperty(order.status)) {
+        counts[order.status as keyof typeof counts]++;
+      }
+    });
+
+    return counts;
+  };
+
+  // Fetch eligible orders
   const fetchEligibleOrders = async () => {
     try {
-      setLoading(true);
+      setOrdersLoading(true);
+
       const queryParams = new URLSearchParams({
-        page: '1',
-        limit: '50',
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(searchTerm && { search: searchTerm }),
       });
 
-      const response = await fetch(
-        `/api/admin/orders/refill-orders?${queryParams}`
-      );
+      console.log('Fetching refill orders with params:', queryParams.toString());
+
+      const response = await fetch(`/api/admin/orders/refill-orders?${queryParams}`);
       const result = await response.json();
 
-      if (result.success) {
-        setOrders(result.data);
-        setStats({
-          totalRefills: result.stats.totalEligible,
-          pendingRefills: result.stats.partial,
-          completedRefills: result.stats.completed,
-          autoRefillEnabled: 0, // This would come from settings
-        });
-      } else {
-        showToast(result.error || 'Failed to fetch orders', 'error');
-        setOrders([]);
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to fetch eligible orders');
       }
+
+      console.log('Refill orders fetched successfully:', result);
+
+      setOrders(result.data || []);
+      setPagination({
+        page: result.pagination?.page || 1,
+        limit: result.pagination?.limit || 20,
+        total: result.pagination?.total || 0,
+        totalPages: result.pagination?.totalPages || 0,
+        hasNext: result.pagination?.hasNext || false,
+        hasPrev: result.pagination?.hasPrev || false,
+      });
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      showToast('Error fetching orders', 'error');
+      console.error('Error fetching eligible orders:', error);
+      showToast('Error fetching eligible orders. Please try again.', 'error');
       setOrders([]);
+      setPagination({
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      });
     } finally {
-      setLoading(false);
+      setOrdersLoading(false);
     }
   };
 
+  // Fetch stats
+  const fetchStats = async () => {
+    try {
+      console.log('Fetching refill stats from API...');
+
+      const response = await fetch('/api/admin/orders/refill-orders/stats');
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to fetch stats');
+      }
+
+      console.log('Refill stats fetched successfully:', result);
+
+      setStats({
+        totalEligible: result.totalEligible || 0,
+        partialOrders: result.partialOrders || 0,
+        completedOrders: result.completedOrders || 0,
+        todayRefills: result.todayRefills || 0,
+        totalRefillAmount: result.totalRefillAmount || 0,
+        statusBreakdown: result.statusBreakdown || {},
+      });
+    } catch (error) {
+      console.error('Error fetching refill stats:', error);
+      setStats({
+        totalEligible: 0,
+        partialOrders: 0,
+        completedOrders: 0,
+        todayRefills: 0,
+        totalRefillAmount: 0,
+        statusBreakdown: {},
+      });
+      showToast('Error fetching statistics. Please refresh the page.', 'error');
+    }
+  };
+
+  // Handle search with debouncing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchEligibleOrders();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Load data on component mount and when filters change
   useEffect(() => {
     fetchEligibleOrders();
-  }, [searchTerm, statusFilter]);
+  }, [pagination.page, pagination.limit, statusFilter]);
+
+  useEffect(() => {
+    setStatsLoading(true);
+
+    const loadData = async () => {
+      await Promise.all([fetchStats()]);
+      setStatsLoading(false);
+    };
+
+    loadData();
+  }, []);
+
+  // Update stats when pagination data changes
+  useEffect(() => {
+    if (pagination.total > 0) {
+      setStats((prev) => ({
+        ...prev,
+        totalEligible: pagination.total,
+      }));
+    }
+  }, [pagination.total]);
 
   // Show toast notification
   const showToast = (
@@ -185,6 +335,58 @@ const RefillOrdersPage = () => {
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
+  };
+
+  // Safe ID formatter to prevent slice errors
+  const safeFormatOrderId = (id: any) => {
+    return formatID(String(id || 'null'));
+  };
+
+  // Utility functions
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <FaCheckCircle className="h-3 w-3 text-green-500" />;
+      case 'partial':
+        return <FaExclamationCircle className="h-3 w-3 text-orange-500" />;
+      default:
+        return <FaClock className="h-3 w-3 text-gray-500" />;
+    }
+  };
+
+  const calculateProgress = (qty: number, remains: number) => {
+    return qty > 0 ? Math.round(((qty - remains) / qty) * 100) : 0;
+  };
+
+  const handleSelectAll = () => {
+    if (selectedOrders.length === orders.length && orders.length > 0) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(orders.map((order) => order.id));
+    }
+  };
+
+  const handleSelectOrder = (orderId: number) => {
+    setSelectedOrders((prev) =>
+      prev.includes(orderId)
+        ? prev.filter((id) => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const handleRefresh = async () => {
+    setOrdersLoading(true);
+    setStatsLoading(true);
+
+    try {
+      await Promise.all([fetchEligibleOrders(), fetchStats()]);
+      showToast('Refill orders refreshed successfully!', 'success');
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      showToast('Error refreshing data. Please try again.', 'error');
+    } finally {
+      setStatsLoading(false);
+    }
   };
 
   // Handle refill dialog
@@ -200,10 +402,7 @@ const RefillOrdersPage = () => {
       if (result.success) {
         setRefillInfo(result.data);
       } else {
-        showToast(
-          result.error || 'Failed to fetch refill information',
-          'error'
-        );
+        showToast(result.error || 'Failed to fetch refill information', 'error');
         setRefillDialogOpen(false);
       }
     } catch (error) {
@@ -219,23 +418,18 @@ const RefillOrdersPage = () => {
 
     try {
       setProcessing(true);
-      const response = await fetch(
-        `/api/admin/orders/${selectedOrder.id}/refill`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            refillType: refillForm.type,
-            customQuantity:
-              refillForm.type === 'custom'
-                ? parseInt(refillForm.customQuantity)
-                : undefined,
-            reason: refillForm.reason || 'Admin initiated refill',
-          }),
-        }
-      );
+      const response = await fetch(`/api/admin/orders/${selectedOrder.id}/refill`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refillType: refillForm.type,
+          customQuantity:
+            refillForm.type === 'custom' ? parseInt(refillForm.customQuantity) : undefined,
+          reason: refillForm.reason || 'Admin initiated refill',
+        }),
+      });
 
       const result = await response.json();
 
@@ -257,71 +451,6 @@ const RefillOrdersPage = () => {
     }
   };
 
-  // Filter orders based on search
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.id.includes(searchTerm) ||
-      order.service.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === 'all' || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  // Utility functions
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <FaCheckCircle className="h-3 w-3 text-green-500" />;
-      case 'partial':
-        return <FaExclamationCircle className="h-3 w-3 text-orange-500" />;
-      default:
-        return <FaClock className="h-3 w-3 text-gray-500" />;
-    }
-  };
-
-  const calculateProgress = (qty: number, remains: number) => {
-    return qty > 0 ? Math.round(((qty - remains) / qty) * 100) : 0;
-  };
-
-  const handleSelectAll = () => {
-    if (selectedOrders.length === filteredOrders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(filteredOrders.map((order) => order.id));
-    }
-  };
-
-  const handleSelectOrder = (orderId: number) => {
-    setSelectedOrders((prev) =>
-      prev.includes(orderId)
-        ? prev.filter((id) => id !== orderId)
-        : [...prev, orderId]
-    );
-  };
-
-  const handleRefresh = () => {
-    fetchEligibleOrders();
-    showToast('Orders refreshed successfully!', 'success');
-  };
-
-  if (loading && orders.length === 0) {
-    return (
-      <div className="page-container">
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-2">
-            <FaSync className="h-5 w-5 animate-spin text-blue-500" />
-            <span className="text-lg font-medium">
-              Loading refillable orders...
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="page-container">
       {/* Toast Container */}
@@ -336,233 +465,235 @@ const RefillOrdersPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header mb-6">
-          <div className="flex gap-2">
-            <button
-              onClick={handleRefresh}
-              className="btn btn-primary flex items-center gap-2"
-              disabled={loading}
-            >
-              <FaSync className={loading ? 'animate-spin' : ''} />
-              Refresh
-            </button>
-          </div>
-        </div>
+        {/* Controls Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            {/* Left: Action Buttons */}
+            <div className="flex items-center gap-2">
+              <select
+                value={pagination.limit}
+                onChange={(e) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value),
+                    page: 1,
+                  }))
+                }
+                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+              >
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
+              </select>
 
-        {/* Filter Buttons and Search Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          {/* Left: Filter Buttons */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'all'
-                  ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              All
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'all'
-                    ? 'bg-white/20'
-                    : 'bg-purple-100 text-purple-700'
-                }`}
+              <button
+                onClick={handleRefresh}
+                disabled={ordersLoading || statsLoading}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
-                {filteredOrders.length}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('completed')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'completed'
-                  ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Completed
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'completed'
-                    ? 'bg-white/20'
-                    : 'bg-green-100 text-green-700'
-                }`}
-              >
-                {orders.filter((o) => o.status === 'completed').length}
-              </span>
-            </button>
-            <button
-              onClick={() => setStatusFilter('partial')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                statusFilter === 'partial'
-                  ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Partial
-              <span
-                className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                  statusFilter === 'partial'
-                    ? 'bg-white/20'
-                    : 'bg-orange-100 text-orange-700'
-                }`}
-              >
-                {orders.filter((o) => o.status === 'partial').length}
-              </span>
-            </button>
-          </div>
-
-          {/* Right: Search Bar with Filter Dropdown */}
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="relative flex-1 md:min-w-[300px]">
-              <FaSearch
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                style={{ color: 'var(--text-muted)' }}
-              />
-              <input
-                type="text"
-                placeholder="Search eligible orders..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 pr-4"
-              />
+                <FaSync className={ordersLoading || statsLoading ? 'animate-spin' : ''} />
+                Refresh
+              </button>
             </div>
-            <select className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer">
-              <option value="id">Order ID</option>
-              <option value="url">Order URL</option>
-              <option value="username">Username</option>
-            </select>
+
+            {/* Right: Search Controls */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <FaSearch
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <input
+                  type="text"
+                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} orders...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                />
+              </div>
+
+              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+                <option value="id">Order ID</option>
+                <option value="url">Order URL</option>
+                <option value="username">Username</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* Eligible Orders Table */}
+        {/* Refill Orders Table */}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            <div className="flex items-center gap-2 flex-1">
-              <div className="card-icon">
-                <FaRedo />
-              </div>
-              <h3 className="card-title">
-                Eligible Orders for Refill ({filteredOrders.length})
-              </h3>
-              <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
-                Manage Refills
-              </span>
-            </div>
-            {selectedOrders.length > 0 && (
-              <div className="flex items-center gap-2 mt-4">
-                <span
-                  className="text-sm"
-                  style={{ color: 'var(--text-muted)' }}
+            {/* Filter Buttons */}
+            <div className="mb-4">
+              <div className="block space-y-2">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'all'
+                      ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
                 >
-                  {selectedOrders.length} selected
-                </span>
-                <button className="btn btn-primary flex items-center gap-2">
-                  <FaRedo />
-                  Bulk Refill
+                  All
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'all' ? 'bg-white/20' : 'bg-purple-100 text-purple-700'
+                    }`}
+                  >
+                    {stats.totalEligible}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('partial')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'partial'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Partial
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'partial' ? 'bg-white/20' : 'bg-orange-100 text-orange-700'
+                    }`}
+                  >
+                    {stats.partialOrders}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('completed')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'completed'
+                      ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Completed
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'completed'
+                        ? 'bg-white/20'
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                  >
+                    {stats.completedOrders}
+                  </span>
                 </button>
               </div>
-            )}
+            </div>
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {filteredOrders.length === 0 ? (
+            {/* Bulk Action Section */}
+            {selectedOrders.length > 0 && (
+              <div className="flex items-center gap-2 mb-4 pt-4">
+                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {selectedOrders.length} selected
+                </span>
+                <select
+                  className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                  value={selectedBulkAction}
+                  onChange={(e) => {
+                    setSelectedBulkAction(e.target.value);
+                  }}
+                >
+                  <option value="" disabled>
+                    Bulk Actions
+                  </option>
+                  <option value="bulk_refill">Bulk Refill</option>
+                  <option value="export">Export Selected</option>
+                </select>
+
+                {selectedBulkAction && (
+                  <button
+                    onClick={() => {
+                      if (selectedBulkAction === 'bulk_refill') {
+                        console.log('Bulk refill selected:', selectedOrders);
+                        showToast(`Creating refills for ${selectedOrders.length} selected orders...`, 'info');
+                      } else if (selectedBulkAction === 'export') {
+                        console.log('Export selected:', selectedOrders);
+                        showToast(`Exporting ${selectedOrders.length} selected orders...`, 'info');
+                      }
+                      // Reset after action
+                      setSelectedBulkAction('');
+                      setSelectedOrders([]);
+                    }}
+                    className="btn btn-primary px-3 py-2.5"
+                  >
+                    Apply Action
+                  </button>
+                )}
+              </div>
+            )}
+
+            {ordersLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center flex flex-col items-center">
+                  <GradientSpinner size="w-12 h-12" className="mb-3" />
+                  <div className="text-base font-medium">Loading eligible orders...</div>
+                </div>
+              </div>
+            ) : orders.length === 0 ? (
               <div className="text-center py-12">
                 <FaRedo
                   className="h-16 w-16 mx-auto mb-4"
                   style={{ color: 'var(--text-muted)' }}
                 />
-                <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
-                >
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                   No eligible orders found
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  No orders are currently eligible for refill or no orders match
-                  your filters.
+                  No orders are currently eligible for refill or no orders match your filters.
                 </p>
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View - Hidden on mobile */}
+                {/* Desktop Table View */}
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           <input
                             type="checkbox"
-                            checked={
-                              selectedOrders.length === filteredOrders.length &&
-                              filteredOrders.length > 0
-                            }
+                            checked={selectedOrders.length === orders.length && orders.length > 0}
                             onChange={handleSelectAll}
                             className="rounded border-gray-300 w-4 h-4"
                           />
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          ID
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          Order ID
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           User
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           Service
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           Link
                         </th>
-                        <th
-                          className="text-right p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           Quantity
                         </th>
-                        <th
-                          className="text-right p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           Amount
                         </th>
-                        <th
-                          className="text-center p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           Status
                         </th>
-                        <th
-                          className="text-center p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           Progress
                         </th>
-                        <th
-                          className="text-center p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredOrders.map((order) => (
+                      {orders.map((order) => (
                         <tr
                           key={order.id}
                           className="border-t hover:bg-gray-50 transition-colors duration-200"
@@ -577,21 +708,7 @@ const RefillOrdersPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                              #{order.id}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {order.user.name}
-                            </div>
-                            <div
-                              className="text-xs"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              {order.user.email}
+                              #{safeFormatOrderId(order.id)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -600,13 +717,26 @@ const RefillOrdersPage = () => {
                                 className="font-medium text-sm"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {order.service.name}
+                                {order.user?.username ||
+                                  order.user?.email?.split('@')[0] ||
+                                  order.user?.name ||
+                                  'Unknown'}
                               </div>
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                {order.user?.email || 'No email'}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div>
                               <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
+                                className="font-medium text-sm truncate max-w-44"
+                                style={{ color: 'var(--text-primary)' }}
                               >
-                                {order.category.category_name}
+                                {order.service?.name || 'Unknown Service'}
+                              </div>
+                              <div className="text-xs truncate max-w-44" style={{ color: 'var(--text-muted)' }}>
+                                {order.category?.category_name || 'Unknown Category'}
                               </div>
                             </div>
                           </td>
@@ -624,9 +754,7 @@ const RefillOrdersPage = () => {
                                     : order.link}
                                 </a>
                                 <button
-                                  onClick={() =>
-                                    window.open(order.link, '_blank')
-                                  }
+                                  onClick={() => window.open(order.link, '_blank')}
                                   className="text-green-500 hover:text-green-700 p-1 flex-shrink-0"
                                   title="Open link in new tab"
                                 >
@@ -644,8 +772,7 @@ const RefillOrdersPage = () => {
                                 {formatNumber(order.qty)}
                               </div>
                               <div className="text-xs text-green-600">
-                                {formatNumber(order.qty - order.remains)}{' '}
-                                delivered
+                                {formatNumber(order.qty - order.remains)} delivered
                               </div>
                             </div>
                           </td>
@@ -655,12 +782,9 @@ const RefillOrdersPage = () => {
                                 className="font-semibold text-sm"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                ${formatPrice(order.price, 2)}
+                                ${formatPrice(order.charge || order.price, 2)}
                               </div>
-                              <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
-                              >
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                                 {order.currency}
                               </div>
                             </div>
@@ -668,9 +792,7 @@ const RefillOrdersPage = () => {
                           <td className="p-3 text-center">
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit mx-auto">
                               {getStatusIcon(order.status)}
-                              <span className="text-xs font-medium capitalize">
-                                {order.status}
-                              </span>
+                              <span className="text-xs font-medium capitalize">{order.status}</span>
                             </div>
                           </td>
                           <td className="p-3 text-center">
@@ -685,37 +807,26 @@ const RefillOrdersPage = () => {
                                 <div
                                   className="bg-gradient-to-r from-green-500 to-emerald-500 h-1.5 rounded-full transition-all duration-300"
                                   style={{
-                                    width: `${calculateProgress(
-                                      order.qty,
-                                      order.remains
-                                    )}%`,
+                                    width: `${calculateProgress(order.qty, order.remains)}%`,
                                   }}
                                 />
                               </div>
-                              <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
-                              >
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                                 {order.remains} remaining
                               </div>
                             </div>
                           </td>
                           <td className="p-3 text-center">
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-1">
                               <button
                                 onClick={() => handleOpenRefillDialog(order)}
-                                className="btn btn-primary flex items-center gap-1 text-xs"
+                                className="btn btn-primary p-2"
+                                title="Create Refill"
                               >
                                 <FaRedo className="h-3 w-3" />
-                                Create Refill
                               </button>
                               <button
-                                onClick={() =>
-                                  window.open(
-                                    `/admin/orders/${order.id}`,
-                                    '_blank'
-                                  )
-                                }
+                                onClick={() => window.open(`/admin/orders/${order.id}`, '_blank')}
                                 className="btn btn-secondary p-2"
                                 title="View Order Details"
                               >
@@ -729,18 +840,15 @@ const RefillOrdersPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View - Visible on tablet and mobile */}
+                {/* Mobile Card View */}
                 <div className="lg:hidden">
-                  <div
-                    className="space-y-4"
-                    style={{ padding: '24px 0 24px 0' }}
-                  >
-                    {filteredOrders.map((order) => (
+                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
+                    {orders.map((order) => (
                       <div
                         key={order.id}
                         className="card card-padding border-l-4 border-green-500 mb-4"
                       >
-                        {/* Header with ID and Actions */}
+                        {/* Header with ID and Status */}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <input
@@ -750,23 +858,16 @@ const RefillOrdersPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
                             <div className="font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                              #{order.id}
+                              #{safeFormatOrderId(order.id)}
                             </div>
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                               {getStatusIcon(order.status)}
-                              <span className="text-xs font-medium capitalize">
-                                {order.status}
-                              </span>
+                              <span className="text-xs font-medium capitalize">{order.status}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() =>
-                                window.open(
-                                  `/admin/orders/${order.id}`,
-                                  '_blank'
-                                )
-                              }
+                              onClick={() => window.open(`/admin/orders/${order.id}`, '_blank')}
                               className="btn btn-secondary p-2"
                               title="View Order Details"
                             >
@@ -776,48 +877,31 @@ const RefillOrdersPage = () => {
                         </div>
 
                         {/* User Info */}
-                        <div className="flex items-center justify-between mb-4 pb-4 border-b">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              User
-                            </div>
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {order.user.name}
-                            </div>
-                            <div
-                              className="text-xs"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              {order.user.email}
-                            </div>
+                        <div className="mb-4 pb-4 border-b">
+                          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+                            User
+                          </div>
+                          <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                            {order.user?.username ||
+                              order.user?.email?.split('@')[0] ||
+                              order.user?.name ||
+                              'Unknown'}
+                          </div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {order.user?.email || 'No email'}
                           </div>
                         </div>
 
                         {/* Service Info */}
                         <div className="mb-4">
                           <div
-                            className="font-mono text-xs mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            #{order.service.id}
-                          </div>
-                          <div
                             className="font-medium text-sm mb-1"
                             style={{ color: 'var(--text-primary)' }}
                           >
-                            {order.service.name}
+                            {order.service?.name || 'Unknown Service'}
                           </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            {order.category.category_name}
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {order.category?.category_name || 'Unknown Category'}
                           </div>
                           <div className="flex items-center gap-1 mt-1">
                             <a
@@ -853,7 +937,10 @@ const RefillOrdersPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              ${formatPrice(order.price, 2)} {order.currency}
+                              ${formatPrice(order.charge || order.price, 2)}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              {order.currency}
                             </div>
                           </div>
                           <div>
@@ -864,7 +951,7 @@ const RefillOrdersPage = () => {
                               User Balance
                             </div>
                             <div className="font-semibold text-sm text-green-600">
-                              ${formatPrice(order.user.balance, 2)}
+                              ${formatPrice(order.user?.balance || 0, 2)}
                             </div>
                           </div>
                         </div>
@@ -885,8 +972,7 @@ const RefillOrdersPage = () => {
                               {formatNumber(order.qty)}
                             </div>
                             <div className="text-xs text-green-600">
-                              {formatNumber(order.qty - order.remains)}{' '}
-                              delivered
+                              {formatNumber(order.qty - order.remains)} delivered
                             </div>
                           </div>
                           <div>
@@ -925,17 +1011,11 @@ const RefillOrdersPage = () => {
                             <div
                               className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300"
                               style={{
-                                width: `${calculateProgress(
-                                  order.qty,
-                                  order.remains
-                                )}%`,
+                                width: `${calculateProgress(order.qty, order.remains)}%`,
                               }}
                             />
                           </div>
-                          <div
-                            className="text-xs mt-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
+                          <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                             {order.remains} remaining
                           </div>
                         </div>
@@ -953,19 +1033,11 @@ const RefillOrdersPage = () => {
 
                         {/* Date */}
                         <div className="mt-4 pt-4 border-t">
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Date:{' '}
-                            {new Date(order.createdAt).toLocaleDateString()}
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            Date: {new Date(order.createdAt).toLocaleDateString()}
                           </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Time:{' '}
-                            {new Date(order.createdAt).toLocaleTimeString()}
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            Time: {new Date(order.createdAt).toLocaleTimeString()}
                           </div>
                         </div>
                       </div>
@@ -974,33 +1046,52 @@ const RefillOrdersPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div
-                  className="flex items-center justify-between pt-4 border-t"
-                  style={{ padding: '16px 24px 24px 24px' }}
-                >
-                  <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    Showing 1 to {filteredOrders.length} of{' '}
-                    {filteredOrders.length} orders
+                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    {ordersLoading ? (
+                      <div className="flex items-center gap-2">
+                        <GradientSpinner size="w-4 h-4" />
+                        <span>Loading pagination...</span>
+                      </div>
+                    ) : (
+                      `Showing ${formatNumber(
+                        (pagination.page - 1) * pagination.limit + 1
+                      )} to ${formatNumber(
+                        Math.min(pagination.page * pagination.limit, pagination.total)
+                      )} of ${formatNumber(pagination.total)} orders`
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      disabled={true}
-                      className="btn btn-secondary opacity-50 cursor-not-allowed"
+                      onClick={() =>
+                        setPagination((prev) => ({
+                          ...prev,
+                          page: Math.max(1, prev.page - 1),
+                        }))
+                      }
+                      disabled={!pagination.hasPrev || ordersLoading}
+                      className="btn btn-secondary"
                     >
                       Previous
                     </button>
-                    <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
-                    >
-                      Page 1 of 1
+                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      {ordersLoading ? (
+                        <GradientSpinner size="w-4 h-4" />
+                      ) : (
+                        `Page ${formatNumber(pagination.page)} of ${formatNumber(
+                          pagination.totalPages
+                        )}`
+                      )}
                     </span>
                     <button
-                      disabled={true}
-                      className="btn btn-secondary opacity-50 cursor-not-allowed"
+                      onClick={() =>
+                        setPagination((prev) => ({
+                          ...prev,
+                          page: Math.min(prev.totalPages, prev.page + 1),
+                        }))
+                      }
+                      disabled={!pagination.hasNext || ordersLoading}
+                      className="btn btn-secondary"
                     >
                       Next
                     </button>
@@ -1027,8 +1118,8 @@ const RefillOrdersPage = () => {
             </div>
 
             <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
-              Create a refill order for #{selectedOrder?.id.slice(-8)}. This
-              will create a new order to replace any lost engagement.
+              Create a refill order for #{safeFormatOrderId(selectedOrder?.id)}. This will create a
+              new order to replace any lost engagement.
             </p>
 
             {refillInfo && (
@@ -1042,10 +1133,7 @@ const RefillOrdersPage = () => {
                     >
                       Original Quantity
                     </div>
-                    <div
-                      className="font-semibold"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
+                    <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>
                       {formatNumber(refillInfo.order.totalQuantity)}
                     </div>
                   </div>
@@ -1068,8 +1156,7 @@ const RefillOrdersPage = () => {
                       User Balance
                     </div>
                     <div className="font-semibold text-green-600">
-                      ${formatPrice(refillInfo.user.balance, 2)}{' '}
-                      {refillInfo.user.currency}
+                      ${formatPrice(refillInfo.user.balance, 2)} {refillInfo.user.currency}
                     </div>
                   </div>
                   <div>
@@ -1087,10 +1174,7 @@ const RefillOrdersPage = () => {
 
                 {/* Refill Options */}
                 <div className="space-y-4">
-                  <div
-                    className="text-sm font-medium"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
+                  <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     Refill Type
                   </div>
                   <div className="grid grid-cols-1 gap-3">
@@ -1109,29 +1193,16 @@ const RefillOrdersPage = () => {
                         }
                         className="text-green-600"
                       />
-                      <label
-                        htmlFor="full-refill"
-                        className="flex-1 cursor-pointer"
-                      >
+                      <label htmlFor="full-refill" className="flex-1 cursor-pointer">
                         <div className="font-medium">
-                          Full Refill (
-                          {formatNumber(refillInfo.refillOptions.full.quantity)}
-                          )
+                          Full Refill ({formatNumber(refillInfo.refillOptions.full.quantity)})
                         </div>
-                        <div
-                          className="text-sm"
-                          style={{ color: 'var(--text-muted)' }}
-                        >
-                          Cost: $
-                          {formatPrice(refillInfo.refillOptions.full.cost, 2)}
+                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                          Cost: ${formatPrice(refillInfo.refillOptions.full.cost, 2)}
                           {refillInfo.refillOptions.full.affordable ? (
-                            <span className="text-green-600 ml-2">
-                              ✓ Affordable
-                            </span>
+                            <span className="text-green-600 ml-2">✓ Affordable</span>
                           ) : (
-                            <span className="text-red-600 ml-2">
-                              ✗ Insufficient balance
-                            </span>
+                            <span className="text-red-600 ml-2">✗ Insufficient balance</span>
                           )}
                         </div>
                       </label>
@@ -1152,34 +1223,16 @@ const RefillOrdersPage = () => {
                         }
                         className="text-green-600"
                       />
-                      <label
-                        htmlFor="remaining-refill"
-                        className="flex-1 cursor-pointer"
-                      >
+                      <label htmlFor="remaining-refill" className="flex-1 cursor-pointer">
                         <div className="font-medium">
-                          Remaining Only (
-                          {formatNumber(
-                            refillInfo.refillOptions.remaining.quantity
-                          )}
-                          )
+                          Remaining Only ({formatNumber(refillInfo.refillOptions.remaining.quantity)})
                         </div>
-                        <div
-                          className="text-sm"
-                          style={{ color: 'var(--text-muted)' }}
-                        >
-                          Cost: $
-                          {formatPrice(
-                            refillInfo.refillOptions.remaining.cost,
-                            2
-                          )}
+                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                          Cost: ${formatPrice(refillInfo.refillOptions.remaining.cost, 2)}
                           {refillInfo.refillOptions.remaining.affordable ? (
-                            <span className="text-green-600 ml-2">
-                              ✓ Affordable
-                            </span>
+                            <span className="text-green-600 ml-2">✓ Affordable</span>
                           ) : (
-                            <span className="text-red-600 ml-2">
-                              ✗ Insufficient balance
-                            </span>
+                            <span className="text-red-600 ml-2">✗ Insufficient balance</span>
                           )}
                         </div>
                       </label>
@@ -1189,10 +1242,7 @@ const RefillOrdersPage = () => {
 
                 {/* Reason */}
                 <div className="space-y-2">
-                  <div
-                    className="text-sm font-medium"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
+                  <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     Reason (Optional)
                   </div>
                   <input
@@ -1212,10 +1262,7 @@ const RefillOrdersPage = () => {
             )}
 
             <div className="flex gap-2 justify-end mt-6">
-              <button
-                onClick={() => setRefillDialogOpen(false)}
-                className="btn btn-secondary"
-              >
+              <button onClick={() => setRefillDialogOpen(false)} className="btn btn-secondary">
                 Cancel
               </button>
               <button
