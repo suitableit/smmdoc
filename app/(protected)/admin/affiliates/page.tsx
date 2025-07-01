@@ -1627,7 +1627,7 @@ const AffiliateReferralsPage = () => {
                         Process Payout
                       </h3>
                       <div className="mb-4">
-                        <label className="form-label mb-2">Payout Amount</label>
+                        <label className="form-label mb-2">Payout Amount (in USD)</label>
                         <input
                           type="number"
                           value={payoutAmount}
