@@ -42,6 +42,13 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
+    title: 'Import Services',
+    href: '/admin/services/import',
+    icon: 'FaFileImport',
+    label: 'Import Services',
+    roles: ['admin'],
+  },
+  {
     title: 'Service Types',
     href: '/admin/services/types',
     icon: 'FaShapes',
@@ -56,10 +63,10 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
-    title: 'Import Services',
-    href: '/admin/services/import',
-    icon: 'FaFileImport',
-    label: 'Import Services',
+    title: 'Update Price',
+    href: '/admin/services/update-price',
+    icon: 'FaPercent',
+    label: 'Update Price',
     roles: ['admin'],
   },
   {
@@ -125,7 +132,15 @@ export const adminNavItems = [
     roles: ['admin'],
   },
 
-  // Analytics Section
+  // Additionals Section
+
+  {
+    title: 'Affiliates',
+    href: '/admin/affiliates',
+    icon: 'FaNetworkWired',
+    label: 'Affiliate Referrals',
+    roles: ['admin'],
+  },
   {
     title: 'Analytics & Reports',
     href: '/admin/analytics',
@@ -134,35 +149,12 @@ export const adminNavItems = [
     roles: ['admin'],
   },
 
-  // API Management
-  {
-    title: 'API Management',
-    href: '/admin/api',
-    icon: 'FaCode',
-    label: 'API Management',
-    roles: ['admin'],
-  },
-
-  // Reseller Section
+  // Reseller Panel Section
   {
     title: 'Child Panels',
-    href: '/admin/reseller/panels',
+    href: '/admin/child-panels',
     icon: 'FaUserFriends',
     label: 'Child Panels',
-    roles: ['admin'],
-  },
-  {
-    title: 'Commission Settings',
-    href: '/admin/reseller/commission',
-    icon: 'FaPercentage',
-    label: 'Commission Settings',
-    roles: ['admin'],
-  },
-  {
-    title: 'Reseller Requests',
-    href: '/admin/reseller/requests',
-    icon: 'FaUserPlus',
-    label: 'Reseller Requests',
     roles: ['admin'],
   },
 
