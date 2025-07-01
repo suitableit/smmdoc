@@ -1240,7 +1240,7 @@ const GeneralSettingsPage = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Minimum payout</label>
+                    <label className="form-label">Minimum payout (in USD)</label>
                     <input
                       type="number"
                       min="0"
