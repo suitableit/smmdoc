@@ -66,8 +66,6 @@ const Toast = ({
 interface AffiliateStats {
   visits: number;
   registrations: number;
-  referrals: number;
-  conversionRate: string;
   totalEarnings: string;
   availableEarnings: string;
   commissionRate: string;
@@ -87,8 +85,6 @@ function AffiliateStatsCards() {
   const [stats, setStats] = useState<AffiliateStats>({
     visits: 0,
     registrations: 0,
-    referrals: 0,
-    conversionRate: '0.00%',
     totalEarnings: '$0.00',
     availableEarnings: '$0.00',
     commissionRate: '1%',
@@ -286,7 +282,7 @@ function AffiliateStatsCards() {
           <h3 className="card-title">Affiliate Statistics Overview</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {/* Total Visits */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
@@ -310,33 +306,11 @@ function AffiliateStatsCards() {
           </div>
 
           {/* Registrations */}
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-green-600 dark:text-green-400 font-semibold">
-                  Registrations
-                </div>
-                <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                  {statsLoading ? (
-                    <div className="flex items-center gap-2">
-                      <GradientSpinner size="w-5 h-5" />
-                      <span className="text-sm text-gray-400">Loading...</span>
-                    </div>
-                  ) : (
-                    stats.registrations
-                  )}
-                </div>
-              </div>
-              <FaUsers className="text-green-500 w-5 h-5" />
-            </div>
-          </div>
-
-          {/* Referrals */}
           <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-purple-600 dark:text-purple-400 font-semibold">
-                  Referrals
+                  Registrations
                 </div>
                 <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                   {statsLoading ? (
@@ -345,7 +319,7 @@ function AffiliateStatsCards() {
                       <span className="text-sm text-gray-400">Loading...</span>
                     </div>
                   ) : (
-                    stats.referrals
+                    stats.registrations
                   )}
                 </div>
               </div>

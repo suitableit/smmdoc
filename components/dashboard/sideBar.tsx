@@ -78,7 +78,7 @@ function SideBarContent({
             <div className="flex items-center w-full">
               <div className="logo-container w-full flex items-center">
                 {user?.data?.role === 'admin' ? (
-                  <Link href="/admin">
+                  <Link href="/">
                     <Image
                       src="/sit_logo-landscape-dark.png"
                       alt="Suitable IT Logo"
@@ -89,7 +89,7 @@ function SideBarContent({
                     />
                   </Link>
                 ) : user?.data ? (
-                  <Link href="/dashboard">
+                  <Link href="/">
                     <Image
                       src="/logo.png"
                       alt="User Logo"
