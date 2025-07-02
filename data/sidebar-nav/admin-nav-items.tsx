@@ -132,6 +132,36 @@ export const adminNavItems = [
     roles: ['admin'],
   },
 
+  // Posts Section
+  {
+    title: 'Blogs',
+    href: '/admin/blogs',
+    icon: 'FaRegNewspaper',
+    label: 'Support Tickets',
+    roles: ['admin'],
+  },
+  {
+    title: 'Blog Categories',
+    href: '/admin/blogs/categories',
+    icon: 'FaThList',
+    label: 'Human Ticket',
+    roles: ['admin'],
+  },
+  {
+    title: 'Tags',
+    href: '/admin/blogs/tags',
+    icon: 'FaTags',
+    label: 'Human Ticket',
+    roles: ['admin'],
+  },
+  {
+    title: 'Announcements',
+    href: '/admin/announcements',
+    icon: 'FaBullhorn',
+    label: 'Human Ticket',
+    roles: ['admin'],
+  },
+
   // Additionals Section
 
   {
