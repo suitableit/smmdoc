@@ -399,7 +399,7 @@ const ServiceTypes = () => {
 
         {/* Service Types Table */}
         <div className="card">
-          <div style={{ padding: '0 24px' }}>
+          <div style={{ padding: '24px 24px 0px 24px' }}>
             {serviceTypesLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">

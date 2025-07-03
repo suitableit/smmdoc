@@ -390,76 +390,13 @@ export default function ActivateAffiliatePage() {
           />
         )}
 
-        {/* Header */}
-        <div className="card card-padding">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaNetworkWired className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Join Our Affiliate Program
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Start earning commissions by referring new customers to our platform
-            </p>
-          </div>
-        </div>
-
-        {/* Benefits Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Commission Rate */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <FaPercent className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-2">
-                1% Commission
-              </h3>
-              <p className="text-blue-600 dark:text-blue-400 text-sm">
-                Earn 1% commission on every successful referral order
-              </p>
-            </div>
-          </div>
-
-          {/* Monthly Payouts */}
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <FaDollarSign className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-lg font-semibold text-green-700 dark:text-green-300 mb-2">
-                Monthly Payouts
-              </h3>
-              <p className="text-green-600 dark:text-green-400 text-sm">
-                Get paid monthly via bKash, Nagad, Rocket, Upay, or Bank transfer
-              </p>
-            </div>
-          </div>
-
-          {/* Real-time Tracking */}
-          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <FaUsers className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-lg font-semibold text-purple-700 dark:text-purple-300 mb-2">
-                Real-time Tracking
-              </h3>
-              <p className="text-purple-600 dark:text-purple-400 text-sm">
-                Monitor your referrals and earnings in real-time
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Activation Form */}
         <div className="card card-padding">
           <div className="card-header mb-6">
             <div className="card-icon">
-              <FaRocket />
+              <FaDollarSign />
             </div>
-            <h2 className="card-title">Activate Your Affiliate Account</h2>
+            <h2 className="card-title">Configure Payment Methods</h2>
           </div>
 
           <form onSubmit={handleActivateAccount} className="space-y-6">
@@ -817,101 +754,12 @@ export default function ActivateAffiliatePage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <FaRocket className="w-4 h-4" />
-                    <span>Activate Affiliate Account</span>
+                    <span>Save Changed</span>
                   </div>
                 )}
               </button>
             </div>
           </form>
-        </div>
-
-        {/* About the Affiliate Program Card */}
-        <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
-                <FaUsers className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                About the Affiliate Program
-              </h2>
-            </div>
-
-            <div className="space-y-6">
-              {/* How it works section */}
-              <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
-                    <FaUsers className="w-4 h-4 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    How it works?
-                  </h3>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                  Get unique referral link and share. When someone signs up using
-                  your link and places an order, you'll receive a 1% commission
-                  on their order.
-                </p>
-              </div>
-
-              {/* Payments section */}
-              <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
-                    <FaDollarSign className="w-4 h-4 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Payments
-                  </h3>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                  When your earnings reach $100 or more, you can request a
-                  payment. Payments are processed monthly.
-                </p>
-              </div>
-
-              {/* Terms and Conditions section */}
-              <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
-                    <FaFile className="w-4 h-4 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Terms and Conditions
-                  </h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-gray-600 dark:text-gray-300">
-                      You cannot use your own referral link on your account
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-gray-600 dark:text-gray-300">
-                      Spamming or unethical promotion is prohibited
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-gray-600 dark:text-gray-300">
-                      You can use social media, email, blogs, etc. to share your
-                      referral link
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <FaCheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-gray-600 dark:text-gray-300">
-                      Valid payment method (bKash, Nagad, Rocket, Upay, or Bank account)
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
