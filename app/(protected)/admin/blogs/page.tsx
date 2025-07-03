@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'; // Add router import
 import {
   FaBan,
   FaCheckCircle,
@@ -369,6 +370,8 @@ const dummyStats: BlogStats = {
 };
 
 const BlogsPage = () => {
+  const router = useRouter(); // Add router hook
+
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Blogs — ${APP_NAME}`;
@@ -628,6 +631,11 @@ const BlogsPage = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
+  // Navigation handler for new blog post
+  const handleNewBlogPost = () => {
+    router.push('blogs/new-post');
+  };
+
   // Utility functions
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -856,11 +864,11 @@ const BlogsPage = () => {
               </button>
 
               <button
-                onClick={() => showToast('Create blog functionality coming soon!', 'info')}
+                onClick={handleNewBlogPost}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
                 <FaPlus />
-                New Blog
+                New Blog Post
               </button>
             </div>
 

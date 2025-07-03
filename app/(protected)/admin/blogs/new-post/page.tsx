@@ -16,8 +16,6 @@ import {
   FaGlobe,
   FaLock,
   FaFileAlt,
-  FaHistory,
-  FaArrowLeft,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -63,7 +61,6 @@ interface PostTag {
 }
 
 interface PostFormData {
-  id: string;
   title: string;
   slug: string;
   content: string;
@@ -76,15 +73,12 @@ interface PostFormData {
   status: 'draft' | 'published' | 'scheduled';
   publishDate: string;
   publishTime: string;
-  createdAt: string;
-  updatedAt: string;
-  author: string;
 }
 
-const EditBlogPostPage = () => {
+const NewPostPage = () => {
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Edit Post — ${APP_NAME}`;
+    document.title = `Add New Post — ${APP_NAME}`;
   }, []);
 
   // Dummy data for categories
@@ -112,52 +106,21 @@ const EditBlogPostPage = () => {
     { id: 'pt_010', name: 'API' },
   ];
 
-  // Dummy existing post data (in real app, this would come from API/URL params)
-  const dummyExistingPost: PostFormData = {
-    id: 'post_001',
-    title: 'Getting Started with React Components',
-    slug: 'getting-started-react-components',
-    content: `# Getting Started with React Components
-
-React components are the building blocks of any React application. In this comprehensive guide, we'll explore how to create, manage, and optimize React components for better performance and maintainability.
-
-## What are React Components?
-
-React components are JavaScript functions or classes that return JSX (JavaScript XML) to describe what should appear on the screen. They allow you to split the UI into independent, reusable pieces.
-
-## Functional Components
-
-The most common way to define a component is with a JavaScript function:
-
-\`\`\`jsx
-function Welcome(props) {
-  return <h1>Hello, {props.name}!</h1>;
-}
-\`\`\`
-
-## Props and State
-
-Components can receive data through props and manage their own state using hooks like useState and useEffect.
-
-This is a sample blog post content that demonstrates how the edit functionality works.`,
-    excerpt: 'Learn the fundamentals of React components, from basic functional components to advanced patterns with hooks and state management.',
-    categoryId: 'pc_001',
-    tags: ['React', 'JavaScript', 'Tutorial', 'Frontend'],
-    featuredImage: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop',
-    metaTitle: 'Getting Started with React Components - Complete Guide',
-    metaDescription: 'Master React components with this comprehensive guide covering functional components, props, state management, and best practices for modern React development.',
-    status: 'published',
-    publishDate: '2024-01-15',
-    publishTime: '10:00',
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-20T15:30:00Z',
-    author: 'John Doe'
-  };
-
   // State management
-  const [formData, setFormData] = useState<PostFormData>(dummyExistingPost);
-  const [originalFormData, setOriginalFormData] = useState<PostFormData>(dummyExistingPost);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [formData, setFormData] = useState<PostFormData>({
+    title: '',
+    slug: '',
+    content: '',
+    excerpt: '',
+    categoryId: 'pc_000', // Default to Uncategorized
+    tags: [],
+    featuredImage: '',
+    metaTitle: '',
+    metaDescription: '',
+    status: 'draft',
+    publishDate: new Date().toISOString().split('T')[0],
+    publishTime: new Date().toTimeString().slice(0, 5),
+  });
 
   const [toast, setToast] = useState<{
     message: string;
@@ -167,42 +130,10 @@ This is a sample blog post content that demonstrates how the edit functionality 
   // Loading states
   const [isLoading, setIsLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
-  const [isLoadingPost, setIsLoadingPost] = useState(true);
 
   // Tag input state
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
-
-  // Load existing post data on component mount
-  useEffect(() => {
-    const loadPost = async () => {
-      try {
-        setIsLoadingPost(true);
-        // Simulate API call to fetch post data
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // In real app, you would fetch based on post ID from URL params
-        // const postId = router.query.id;
-        // const postData = await fetchPost(postId);
-        
-        setFormData(dummyExistingPost);
-        setOriginalFormData(dummyExistingPost);
-        
-      } catch (error) {
-        showToast('Error loading post data', 'error');
-      } finally {
-        setIsLoadingPost(false);
-      }
-    };
-
-    loadPost();
-  }, []);
-
-  // Check for unsaved changes
-  useEffect(() => {
-    const hasChanges = JSON.stringify(formData) !== JSON.stringify(originalFormData);
-    setHasUnsavedChanges(hasChanges);
-  }, [formData, originalFormData]);
 
   // Show toast notification
   const showToast = (
@@ -230,15 +161,20 @@ This is a sample blog post content that demonstrates how the edit functionality 
       [field]: value
     }));
 
-    // Auto-generate slug when title changes (only if slug hasn't been manually modified)
+    // Auto-generate slug when title changes
     if (field === 'title' && value) {
-      const generatedSlug = generateSlug(value);
-      if (formData.slug === generateSlug(originalFormData.title)) {
-        setFormData(prev => ({
-          ...prev,
-          slug: generatedSlug
-        }));
-      }
+      setFormData(prev => ({
+        ...prev,
+        slug: generateSlug(value)
+      }));
+    }
+
+    // Auto-generate meta title if not manually set
+    if (field === 'title' && value && !formData.metaTitle) {
+      setFormData(prev => ({
+        ...prev,
+        metaTitle: value
+      }));
     }
   };
 
@@ -321,21 +257,18 @@ This is a sample blog post content that demonstrates how the edit functionality 
       const postData = {
         ...formData,
         status,
-        updatedAt: new Date().toISOString(),
-        publishDate: status === 'scheduled' ? `${formData.publishDate}T${formData.publishTime}` : formData.publishDate,
+        publishDate: status === 'scheduled' ? `${formData.publishDate}T${formData.publishTime}` : new Date().toISOString(),
+        // Author will be automatically set based on current authenticated user
       };
       
-      console.log('Updating post:', postData);
-      
-      // Update the original form data to reflect saved state
-      setOriginalFormData(postData);
+      console.log('Submitting post:', postData);
       
       showToast(
-        status === 'draft' ? 'Post updated and saved as draft!' : 'Post updated and published!',
+        status === 'draft' ? 'Post saved as draft!' : 'Post published successfully!',
         'success'
       );
       
-      // Redirect to posts list after successful publication
+      // Reset form after successful submission
       if (status === 'published') {
         setTimeout(() => {
           window.location.href = '/admin/posts';
@@ -343,7 +276,7 @@ This is a sample blog post content that demonstrates how the edit functionality 
       }
       
     } catch (error) {
-      showToast('Error updating post', 'error');
+      showToast('Error saving post', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -357,28 +290,6 @@ This is a sample blog post content that demonstrates how the edit functionality 
     }
     showToast('Preview functionality coming soon!', 'info');
   };
-
-  // Handle discard changes
-  const handleDiscardChanges = () => {
-    if (window.confirm('Are you sure you want to discard all unsaved changes?')) {
-      setFormData(originalFormData);
-      showToast('Changes discarded', 'info');
-    }
-  };
-
-  // Show loading spinner while post data is being fetched
-  if (isLoadingPost) {
-    return (
-      <div className="page-container">
-        <div className="page-content flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
-            <p className="text-gray-600">Loading post data...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="page-container">
@@ -398,24 +309,11 @@ This is a sample blog post content that demonstrates how the edit functionality 
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <button
-                  onClick={() => window.history.back()}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <FaArrowLeft className="h-4 w-4" />
-                </button>
-                <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                  Edit Post
-                </h1>
-                {hasUnsavedChanges && (
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                    Unsaved changes
-                  </span>
-                )}
-              </div>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                Last updated {new Date(formData.updatedAt).toLocaleDateString()} by {formData.author}
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                Add New Post
+              </h1>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                Create a new blog post with rich content and SEO optimization
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -427,16 +325,6 @@ This is a sample blog post content that demonstrates how the edit functionality 
                 <FaEye className="h-4 w-4" />
                 Preview
               </button>
-              {hasUnsavedChanges && (
-                <button
-                  onClick={handleDiscardChanges}
-                  className="btn btn-outline flex items-center gap-2 px-4 py-2.5"
-                  disabled={isLoading}
-                >
-                  <FaTimes className="h-4 w-4" />
-                  Discard
-                </button>
-              )}
               <button
                 onClick={() => handleSubmit('draft')}
                 className="btn btn-secondary flex items-center gap-2 px-4 py-2.5"
@@ -455,7 +343,7 @@ This is a sample blog post content that demonstrates how the edit functionality 
                 ) : (
                   <FaGlobe className="h-4 w-4" />
                 )}
-                {isLoading ? 'Updating...' : 'Update & Publish'}
+                {isLoading ? 'Publishing...' : 'Publish'}
               </button>
             </div>
           </div>
@@ -559,7 +447,7 @@ This is a sample blog post content that demonstrates how the edit functionality 
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
                     placeholder="SEO description for search engines..."
                   />
-                  <p className="text-xs text-gray-5000 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     {formData.metaDescription.length}/160 characters (recommended)
                   </p>
                 </div>
@@ -569,39 +457,6 @@ This is a sample blog post content that demonstrates how the edit functionality 
 
           {/* Sidebar - Right Column */}
           <div className="space-y-6">
-            {/* Post Info */}
-            <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Post Information
-              </h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Post ID:</span>
-                  <span className="font-mono text-gray-900">{formData.id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Created:</span>
-                  <span className="text-gray-900">
-                    {new Date(formData.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Author:</span>
-                  <span className="text-gray-900">{formData.author}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Current Status:</span>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    formData.status === 'published' ? 'bg-green-100 text-green-800' :
-                    formData.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
-                    {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
             {/* Publish Settings */}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
@@ -775,20 +630,6 @@ This is a sample blog post content that demonstrates how the edit functionality 
                 )}
               </div>
             </div>
-
-            {/* Revision History */}
-            <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Revision History
-              </h3>
-              <button
-                onClick={() => showToast('Revision history coming soon!', 'info')}
-                className="btn btn-outline w-full flex items-center justify-center gap-2 px-4 py-2.5"
-              >
-                <FaHistory className="h-4 w-4" />
-                View History
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -796,4 +637,4 @@ This is a sample blog post content that demonstrates how the edit functionality 
   );
 };
 
-export default EditBlogPostPage;
+export default NewPostPage; 
