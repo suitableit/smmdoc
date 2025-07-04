@@ -391,7 +391,7 @@ export default function AdminDashboardPage() {
 
   if (false) {
     return (
-      <div className="px-8 py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]">
+      <div className="px-4 sm:px-8 py-4 sm:py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]">
         Loading...
       </div>
     );
