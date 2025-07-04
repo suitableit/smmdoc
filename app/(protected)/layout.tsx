@@ -49,7 +49,7 @@ export default function ProtectedLayout({
             className={
               isDashboard
                 ? 'p-0'
-                : 'px-8 py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]'
+                : 'px-4 sm:px-8 py-4 sm:py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]'
             }
           >
             {children}
