@@ -196,7 +196,7 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="px-8 py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]">
+    <div className="px-4 sm:px-8 py-4 sm:py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]">
       {/* Toast Container */}
       <div className="toast-container">
         {toast && (
@@ -210,7 +210,7 @@ const DashboardPage = () => {
 
       <div className="page-content">
         {/* User Information Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           {/* User ID Card */}
           <div className="card card-padding">
             <div className="card-content">
@@ -279,7 +279,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Financial Statistics Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           {/* Balance Card */}
           <div className="card card-padding">
             <div className="card-content">
@@ -356,9 +356,9 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Statistics Overview */}
-          <div className="xl:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6">
             {/* Statistics Overview */}
             <div className="card card-padding">
               <div className="card-header mb-4">
@@ -368,7 +368,7 @@ const DashboardPage = () => {
                 <h3 className="card-title">Order Statistics Overview</h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {/* Completed Orders */}
                 <Link
                   href="/my-orders?status=completed"
@@ -478,7 +478,7 @@ const DashboardPage = () => {
                   <FaHistory />
                 </div>
                 <h3 className="card-title">Recent Orders</h3>
-                <div className="ml-auto">
+                <div className="ml-auto hidden sm:block">
                   <Link
                     href="/my-orders"
                     className={`btn btn-secondary flex items-center gap-2`}
@@ -507,13 +507,13 @@ const DashboardPage = () => {
                         <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                           Date
                         </th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 hidden md:table-cell">
                           Charge
                         </th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 hidden md:table-cell">
                           Quantity
                         </th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                        <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 hidden lg:table-cell">
                           Service
                         </th>
                         <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
@@ -549,19 +549,19 @@ const DashboardPage = () => {
                                 {dateTime.time}
                               </div>
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 hidden md:table-cell">
                               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                 {currency === 'USD'
-                                  ? `$${formatPrice(order.usdPrice || 0, 2)}`
+                                  ? `${formatPrice(order.usdPrice || 0, 2)}`
                                   : `৳${formatPrice(order.bdtPrice || 0, 2)}`}
                               </span>
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 hidden md:table-cell">
                               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                 {formatNumber(order.qty || 0)}
                               </span>
                             </td>
-                            <td className="py-3 px-4 max-w-[200px]">
+                            <td className="py-3 px-4 max-w-[200px] hidden lg:table-cell">
                               <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                                 {order.service?.name || 'N/A'}
                               </div>
@@ -624,7 +624,7 @@ const DashboardPage = () => {
                   <FaTicketAlt />
                 </div>
                 <h3 className="card-title">Support Tickets</h3>
-                <div className="ml-auto">
+                <div className="ml-auto hidden sm:block">
                   <Link
                     href="/support-tickets"
                     className={`btn btn-secondary flex items-center gap-2`}
@@ -659,6 +659,15 @@ const DashboardPage = () => {
                   </div>
                 </div>
               )}
+              <div className="mt-4 sm:hidden">
+                <Link
+                  href="/support-tickets"
+                  className="btn btn-secondary flex w-full items-center justify-center gap-2"
+                >
+                  <FaEye className="w-4 h-4" />
+                  <span className="font-bold text-sm">View All</span>
+                </Link>
+              </div>
             </div>
 
             {/* Quick Actions */}
