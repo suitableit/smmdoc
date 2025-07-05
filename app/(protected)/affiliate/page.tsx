@@ -1068,7 +1068,7 @@ function AffiliateEarningsSection() {
                 <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   Showing {formatNumber((pagination.page - 1) * pagination.limit + 1)} to {formatNumber(Math.min(pagination.page * pagination.limit, pagination.total))} of {formatNumber(pagination.total)} earnings
                 </div>
-                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                <div className="flex flex-row items-center justify-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                     disabled={pagination.page <= 1}
