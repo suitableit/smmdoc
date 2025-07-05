@@ -456,7 +456,6 @@ export default function TransactionsPage() {
               {/* Transactions List */}
               <TransactionsList
                 transactions={filteredTransactions}
-                onViewDetails={handleViewDetails}
               />
             </>
           )}

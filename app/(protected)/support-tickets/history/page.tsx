@@ -420,14 +420,14 @@ export default function TicketsHistory() {
       <div className="page-content">
         {/* Tab Navigation */}
         <div className="card mb-6" style={{ padding: '8px' }}>
-          <div className="flex space-x-2">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
             <button
               onClick={() => {
                 setActiveTab('all');
                 setPage(1);
                 setStatus('all');
               }}
-              className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm ${
+              className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm w-full ${
                 activeTab === 'all'
                   ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
                   : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 hover:text-blue-600'
@@ -442,7 +442,7 @@ export default function TicketsHistory() {
                 setPage(1);
                 setStatus('all');
               }}
-              className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm ${
+              className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm w-full ${
                 activeTab === 'human'
                   ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
                   : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600'
@@ -457,7 +457,7 @@ export default function TicketsHistory() {
                 setPage(1);
                 setStatus('all');
               }}
-              className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm ${
+              className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm w-full ${
                 activeTab === 'ai'
                   ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
                   : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-green-50 hover:text-green-600'

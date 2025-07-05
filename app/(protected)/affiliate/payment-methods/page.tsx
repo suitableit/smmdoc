@@ -366,7 +366,7 @@ export default function ActivateAffiliatePage() {
               </p>
               <a
                 href="/affiliate"
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium rounded-lg hover:opacity-90 transition-opacity duration-200"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium rounded-lg hover:opacity-90 transition-opacity duration-200 w-full justify-center sm:w-auto"
               >
                 <FaRocket className="w-4 h-4 mr-2" />
                 Go to Affiliate Dashboard
@@ -686,11 +686,11 @@ export default function ActivateAffiliatePage() {
                   )}
 
                   {/* Add Button */}
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       type="button"
                       onClick={addPaymentMethod}
-                      className="flex-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
+                      className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
                     >
                       Add Payment Method
                     </button>
@@ -709,7 +709,7 @@ export default function ActivateAffiliatePage() {
                         });
                         setErrors({});
                       }}
-                      className="px-4 py-2 btn-secondary rounded-lg transition-colors duration-200"
+                      className="w-full px-4 py-2 btn-secondary rounded-lg transition-colors duration-200"
                     >
                       Cancel
                     </button>
@@ -741,11 +741,11 @@ export default function ActivateAffiliatePage() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <button
                 type="submit"
                 disabled={loading || formData.paymentMethods.length === 0}
-                className="flex-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
+                className="w-full flex-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
               >
                 {loading ? (
                   <div className="flex items-center justify-center gap-2">
@@ -754,7 +754,7 @@ export default function ActivateAffiliatePage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <span>Save Changed</span>
+                    <span>Save Changes</span>
                   </div>
                 )}
               </button>

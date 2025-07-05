@@ -394,7 +394,6 @@ export default function ContactSupportPage() {
                 {/* Attachments */}
                 <div className="form-group">
                   <label className="form-label" htmlFor="attachments">
-                    <FaFileUpload className="inline mr-2" />
                     Attachments (Optional)
                   </label>
                   <input

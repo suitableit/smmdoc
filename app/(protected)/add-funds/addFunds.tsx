@@ -336,12 +336,12 @@ export function AddFundForm() {
               padding: '20px',
             }}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between mb-4">
               <h4 className="font-semibold text-gray-900">
                 <FaCalculator className="inline mr-2" />
                 Amount Details
               </h4>
-              <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border">
+              <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border mt-2 sm:mt-0 mx-auto sm:mx-0">
                 Rate: 1 USD = {rate} BDT
               </div>
             </div>

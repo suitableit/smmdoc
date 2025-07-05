@@ -131,7 +131,7 @@ export default function TermsPage() {
 
         {/* Last Updated Notice */}
         <div className="card card-padding mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center">
               <div className="card-icon mr-4">
                 <FaFileContract />
@@ -143,7 +143,7 @@ export default function TermsPage() {
                 </p>
               </div>
             </div>
-            <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+            <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full w-full sm:w-auto text-center mx-auto sm:ml-auto">
               Version 1.0
             </div>
           </div>
@@ -153,10 +153,12 @@ export default function TermsPage() {
         <div className="space-y-6">
           {termsData.map((section, index) => (
             <div key={section.id} className="card card-padding">
-              <div className="card-header mb-4">
-                <div className="card-icon">{section.icon}</div>
-                <h3 className="card-title">{section.title}</h3>
-                <span className="ml-auto bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
+              <div className="card-header mb-4 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="card-icon">{section.icon}</div>
+                  <h3 className="card-title">{section.title}</h3>
+                </div>
+                <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium w-full sm:w-auto text-center sm:ml-auto">
                   Section {index + 1}
                 </span>
               </div>
