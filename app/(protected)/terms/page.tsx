@@ -131,8 +131,8 @@ export default function TermsPage() {
 
         {/* Last Updated Notice */}
         <div className="card card-padding mb-6">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+            <div className="flex items-center mb-2 md:mb-0">
               <div className="card-icon mr-4">
                 <FaFileContract />
               </div>
@@ -143,7 +143,7 @@ export default function TermsPage() {
                 </p>
               </div>
             </div>
-            <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full w-full sm:w-auto text-center mx-auto sm:ml-auto">
+            <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
               Version 1.0
             </div>
           </div>

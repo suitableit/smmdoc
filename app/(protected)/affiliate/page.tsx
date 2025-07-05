@@ -332,11 +332,11 @@ function AffiliateStatsCards() {
 
       {/* Your Unique Referral Link Section */}
       <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-xl p-6 shadow-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-          <label className="text-sm font-medium text-white/80 whitespace-nowrap w-full text-center sm:text-left">
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <label className="text-sm font-medium text-white/80 whitespace-nowrap">
             Your Unique Referral Link
           </label>
-          <div className="flex items-center bg-white rounded-lg overflow-hidden shadow-sm flex-1 w-full">
+          <div className="flex items-center bg-white rounded-lg overflow-hidden shadow-sm w-full md:flex-1">
             <input
               type="text"
               value={referralLink}
@@ -782,69 +782,74 @@ function AffiliateEarningsSection() {
 
       {/* Controls Section */}
       <div className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Left: Action Buttons */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-            <div className="flex items-center gap-2 w-full">
-                <select
-                  value={pagination.limit}
-                  onChange={(e) =>
-                    setPagination(prev => ({
-                      ...prev,
-                      limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value),
-                      page: 1,
-                    }))
-                  }
-                  className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm w-full"
-                >
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                  <option value="all">All</option>
-                </select>
+          <div className="w-full md:w-auto flex flex-col md:flex-row items-center gap-2">
+            <div className="w-full md:w-auto flex items-center gap-2">
+              <select
+                value={pagination.limit}
+                onChange={(e) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    limit:
+                      e.target.value === 'all'
+                        ? 1000
+                        : parseInt(e.target.value),
+                    page: 1,
+                  }))
+                }
+                className="w-[20%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+              >
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
+              </select>
 
-                <button
-                  onClick={handleRefresh}
-                  disabled={earningsLoading}
-                  className="btn btn-primary flex items-center justify-center gap-2 px-3 py-2.5 w-full"
-                >
-                  <FaSync className={earningsLoading ? 'animate-spin' : ''} />
-                  Refresh
-                </button>
-              </div>
+              <button
+                onClick={handleRefresh}
+                disabled={earningsLoading}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
+              >
+                <FaSync className={earningsLoading ? 'animate-spin' : ''} />
+                Refresh
+              </button>
+            </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <button
-                  onClick={() => setWithdrawalModalOpen(true)}
-                  className="btn btn-primary flex items-center justify-center gap-2 px-3 py-2.5 w-full"
-                >
-                  <FaDollarSign className="w-4 h-4" />
-                  Request Withdrawal
-                </button>
+            <div className="w-full md:w-auto flex flex-col md:flex-row items-center gap-2">
+              <button
+                onClick={() => setWithdrawalModalOpen(true)}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full md:w-auto mb-2 md:mb-0"
+              >
+                <FaDollarSign className="w-4 h-4" />
+                Request Withdrawal
+              </button>
 
-                <button
-                  onClick={() => router.push('/affiliate/payment-methods')}
-                  className="btn btn-primary flex items-center justify-center gap-2 px-3 py-2.5 w-full"
-                >
-                  <FaCreditCard className="w-4 h-4" />
-                  Payment Methods
-                </button>
-              </div>
+              <button
+                onClick={() => router.push('/affiliate/payment-methods')}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full md:w-auto"
+              >
+                <FaCreditCard className="w-4 h-4" />
+                Payment Methods
+              </button>
+            </div>
           </div>
 
           {/* Right: Search Controls */}
-          <div className="flex items-center justify-center w-full sm:w-auto">
-            <div className="relative w-full">
+          <div className="w-full md:w-auto flex items-center gap-3">
+            <div className="relative w-full md:w-auto">
               <FaSearch
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
                 style={{ color: 'var(--text-muted)' }}
               />
               <input
                 type="text"
-                placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} earnings...`}
+                placeholder={`Search ${
+                  statusFilter === 'all' ? 'all' : statusFilter
+                } earnings...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               />
             </div>
           </div>
