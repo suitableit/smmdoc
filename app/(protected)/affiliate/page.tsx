@@ -332,11 +332,11 @@ function AffiliateStatsCards() {
 
       {/* Your Unique Referral Link Section */}
       <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-xl p-6 shadow-lg">
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-white/80 whitespace-nowrap">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <label className="text-sm font-medium text-white/80 whitespace-nowrap w-full text-center sm:text-left">
             Your Unique Referral Link
           </label>
-          <div className="flex items-center bg-white rounded-lg overflow-hidden shadow-sm flex-1">
+          <div className="flex items-center bg-white rounded-lg overflow-hidden shadow-sm flex-1 w-full">
             <input
               type="text"
               value={referralLink}
@@ -782,55 +782,59 @@ function AffiliateEarningsSection() {
 
       {/* Controls Section */}
       <div className="mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Left: Action Buttons */}
-          <div className="flex items-center gap-2">
-            <select
-              value={pagination.limit}
-              onChange={(e) =>
-                setPagination(prev => ({
-                  ...prev,
-                  limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value),
-                  page: 1,
-                }))
-              }
-              className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-            >
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-              <option value="all">All</option>
-            </select>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 w-full">
+                <select
+                  value={pagination.limit}
+                  onChange={(e) =>
+                    setPagination(prev => ({
+                      ...prev,
+                      limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value),
+                      page: 1,
+                    }))
+                  }
+                  className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm w-full"
+                >
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="all">All</option>
+                </select>
 
-            <button
-              onClick={handleRefresh}
-              disabled={earningsLoading}
-              className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
-            >
-              <FaSync className={earningsLoading ? 'animate-spin' : ''} />
-              Refresh
-            </button>
+                <button
+                  onClick={handleRefresh}
+                  disabled={earningsLoading}
+                  className="btn btn-primary flex items-center justify-center gap-2 px-3 py-2.5 w-full"
+                >
+                  <FaSync className={earningsLoading ? 'animate-spin' : ''} />
+                  Refresh
+                </button>
+              </div>
 
-            <button
-              onClick={() => setWithdrawalModalOpen(true)}
-              className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
-            >
-              <FaDollarSign className="w-4 h-4" />
-              Request Withdrawal
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => setWithdrawalModalOpen(true)}
+                  className="btn btn-primary flex items-center justify-center gap-2 px-3 py-2.5 w-full"
+                >
+                  <FaDollarSign className="w-4 h-4" />
+                  Request Withdrawal
+                </button>
 
-            <button
-              onClick={() => router.push('/affiliate/payment-methods')}
-              className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
-            >
-              <FaCreditCard className="w-4 h-4" />
-              Payment Methods
-            </button>
+                <button
+                  onClick={() => router.push('/affiliate/payment-methods')}
+                  className="btn btn-primary flex items-center justify-center gap-2 px-3 py-2.5 w-full"
+                >
+                  <FaCreditCard className="w-4 h-4" />
+                  Payment Methods
+                </button>
+              </div>
           </div>
 
           {/* Right: Search Controls */}
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex items-center justify-center w-full sm:w-auto">
+            <div className="relative w-full">
               <FaSearch
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
                 style={{ color: 'var(--text-muted)' }}
@@ -840,7 +844,7 @@ function AffiliateEarningsSection() {
                 placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} earnings...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               />
             </div>
           </div>
@@ -954,9 +958,9 @@ function AffiliateEarningsSection() {
             </div>
           ) : (
             <>
-              {/* Desktop Table View */}
-              <div className="hidden lg:block overflow-x-auto">
-                                  <table className="w-full text-sm min-w-[1000px]">
+              {/* Desktop and Mobile Table View */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[700px]">
                   <thead className="sticky top-0 bg-white border-b z-10">
                     <tr>
                       <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -965,7 +969,7 @@ function AffiliateEarningsSection() {
                       <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                         User
                       </th>
-                      <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      <th className="text-left p-3 font-semibold hidden md:table-cell" style={{ color: 'var(--text-primary)' }}>
                         Signup Date
                       </th>
                       <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -974,7 +978,7 @@ function AffiliateEarningsSection() {
                       <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                         Amount
                       </th>
-                      <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      <th className="text-right p-3 font-semibold hidden md:table-cell" style={{ color: 'var(--text-primary)' }}>
                         Commission
                       </th>
                       <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -1009,7 +1013,7 @@ function AffiliateEarningsSection() {
                             </div>
                           </div>
                         </td>
-                        <td className="p-3">
+                        <td className="p-3 hidden md:table-cell">
                           <div>
                             <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                               {new Date(earning.signupDate).toLocaleDateString()}
@@ -1032,13 +1036,15 @@ function AffiliateEarningsSection() {
                             {earning.currency}
                           </div>
                         </td>
-                        <td className="p-3 text-right">
+                        <td className="p-3 text-right hidden md:table-cell">
+                          <td className="p-3 text-right hidden md:table-cell">
                           <div className="text-sm font-semibold text-green-600">
                             ${formatPrice(earning.commission, 2)}
                           </div>
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                             {((earning.commission / earning.amount) * 100).toFixed(1)}%
                           </div>
+                        </td>
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit mx-auto">
@@ -1052,91 +1058,28 @@ function AffiliateEarningsSection() {
                 </table>
               </div>
 
-              {/* Mobile Card View */}
-              <div className="lg:hidden">
-                <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                  {earnings.map((earning) => (
-                    <div
-                      key={earning.id}
-                      className="card card-padding border-l-4 border-green-500 mb-4"
-                    >
-                      {/* Header with ID and Status */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                            #{safeFormatId(earning.id)}
-                          </div>
-                          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
-                            {getStatusIcon(earning.status)}
-                            <span className="text-xs font-medium capitalize">{earning.status}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Service and User Info */}
-                      <div className="mb-4 pb-4 border-b">
-                        <div className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                          {earning.service}
-                        </div>
-                        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          User: {earning.user.username || earning.user.name}
-                        </div>
-                        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          {earning.user.email}
-                        </div>
-                      </div>
-
-                      {/* Financial Info */}
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
-                            Amount
-                          </div>
-                          <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                            ${formatPrice(earning.amount, 2)}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
-                            Commission
-                          </div>
-                          <div className="text-sm font-semibold text-green-600">
-                            ${formatPrice(earning.commission, 2)}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Date */}
-                      <div className="pt-4 border-t">
-                        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Signup: {new Date(earning.signupDate).toLocaleDateString()} at {new Date(earning.signupDate).toLocaleTimeString()}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* Pagination */}
-              <div className="flex items-center justify-between pt-4 pb-6 border-t">
+              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-6 border-t gap-3">
                 <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   Showing {formatNumber((pagination.page - 1) * pagination.limit + 1)} to {formatNumber(Math.min(pagination.page * pagination.limit, pagination.total))} of {formatNumber(pagination.total)} earnings
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                     disabled={pagination.page <= 1}
-                    className="btn btn-secondary"
+                    className="btn btn-secondary w-full sm:w-auto"
                   >
                     Previous
                   </button>
-                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  <span className="text-sm text-center w-full sm:w-auto" style={{ color: 'var(--text-muted)' }}>
                     Page {formatNumber(pagination.page)} of {formatNumber(pagination.totalPages)}
                   </span>
                   <button
-                    onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
+                    onClick={() =>
+                      setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))
+                    }
                     disabled={pagination.page >= pagination.totalPages}
-                    className="btn btn-secondary"
+                    className="btn btn-secondary w-full sm:w-auto"
                   >
                     Next
                   </button>

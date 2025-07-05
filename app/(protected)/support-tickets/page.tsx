@@ -337,7 +337,7 @@ const TicketPage: React.FC = () => {
                   onClick={() => setActiveTab('new')}
                   className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm ${
                     activeTab === 'new'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25'
+                      ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
                       : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600'
                   }`}
                 >

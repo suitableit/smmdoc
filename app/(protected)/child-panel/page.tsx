@@ -222,7 +222,7 @@ const ChildPanel: React.FC = () => {
                     Get Started
                   </button>
                 </div>
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 hidden lg:block">
                   <div className="flex justify-center">
                     <div className="w-48 h-32 bg-purple-100 rounded-lg flex items-center justify-center">
                       <FaServer className="w-16 h-16 text-purple-600" />
@@ -264,9 +264,9 @@ const ChildPanel: React.FC = () => {
                   {faqs.slice(0, 3).map((faq, index) => (
                     <div key={index} className="card">
                       <div className="w-full p-4 text-left flex justify-between items-center">
-                        <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
-                          <FaInfoCircle className="w-4 h-4" />
-                          {faq.question}
+                        <span className="flex items-start gap-2 font-medium text-gray-900 pr-4">
+                          <FaInfoCircle className="w-4 h-4 flex-shrink-0 mt-1" />
+                          <span>{faq.question}</span>
                         </span>
                         <FaChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
                       </div>
@@ -315,7 +315,7 @@ const ChildPanel: React.FC = () => {
                   Get Started
                 </a>
               </div>
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 hidden lg:block">
                 <div className="flex justify-center">
                   <div className="w-48 h-32 bg-purple-100 rounded-lg flex items-center justify-center">
                     <FaServer className="w-16 h-16 text-purple-600" />
@@ -493,9 +493,9 @@ const ChildPanel: React.FC = () => {
                       className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
                       onClick={() => toggleFAQ(index)}
                     >
-                      <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
-                        <FaInfoCircle className="w-4 h-4" />
-                        {faq.question}
+                      <span className="flex items-start gap-2 font-medium text-gray-900 pr-4">
+                        <FaInfoCircle className="w-4 h-4 flex-shrink-0 mt-1" />
+                        <span>{faq.question}</span>
                       </span>
                       <div
                         className={`transform transition-transform duration-200 ${

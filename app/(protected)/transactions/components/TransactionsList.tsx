@@ -26,12 +26,10 @@ type Transaction = {
 
 interface TransactionsListProps {
   transactions: Transaction[];
-  onViewDetails: (transactionId: string) => void;
 }
 
 export function TransactionsList({
   transactions,
-  onViewDetails,
 }: TransactionsListProps) {
   const { currency, rate } = useCurrency();
 
@@ -87,9 +85,7 @@ export function TransactionsList({
               <th className="text-left py-3 px-4 font-medium text-gray-900">
                 Status
               </th>
-              <th className="text-right py-3 px-4 font-medium text-gray-900">
-                Actions
-              </th>
+              
             </tr>
           </thead>
           <tbody>
@@ -138,15 +134,7 @@ export function TransactionsList({
                 <td className="py-3 px-4">
                   <StatusBadge status={transaction.status} />
                 </td>
-                <td className="py-3 px-4 text-right">
-                  <button
-                    onClick={() => onViewDetails(transaction.invoice_id)}
-                    className="flex items-center gap-2 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded hover:bg-blue-50 transition-colors duration-200 ml-auto"
-                  >
-                    <FaEye className="w-3 h-3" />
-                    View
-                  </button>
-                </td>
+                
               </tr>
             ))}
           </tbody>

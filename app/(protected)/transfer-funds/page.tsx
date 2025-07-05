@@ -329,9 +329,9 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
                   padding: '20px',
                 }}
               >
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap items-center justify-between mb-4">
                   <h3 className="card-title">Amount Details</h3>
-                  <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border">
+                  <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border mt-2 sm:mt-0 mx-auto sm:mx-0">
                     Rate: 1 USD = {rate} BDT
                   </div>
                 </div>

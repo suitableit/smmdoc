@@ -749,11 +749,11 @@ export default function ActivateAffiliatePage() {
                   )}
 
                   {/* Add Button */}
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       type="button"
                       onClick={addPaymentMethod}
-                      className="flex-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
+                      className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
                     >
                       Add Payment Method
                     </button>
@@ -772,7 +772,7 @@ export default function ActivateAffiliatePage() {
                         });
                         setErrors({});
                       }}
-                      className="px-4 py-2 btn-secondary rounded-lg transition-colors duration-200"
+                      className="w-full px-4 py-2 btn-secondary rounded-lg transition-colors duration-200"
                     >
                       Cancel
                     </button>

@@ -234,14 +234,16 @@ const FAQPage = () => {
               {Object.entries(groupedFAQs).map(([category, items]) => (
                 <div key={category}>
                   {/* Category Header */}
-                  <div className="card-header mb-3">
-                    <div className="card-icon">
-                      {categoryNames[category]?.icon}
+                  <div className="card-header mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="card-icon">
+                        {categoryNames[category]?.icon}
+                      </div>
+                      <h3 className="card-title">
+                        {categoryNames[category]?.name || category}
+                      </h3>
                     </div>
-                    <h3 className="card-title">
-                      {categoryNames[category]?.name || category}
-                    </h3>
-                    <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
+                    <span className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium w-full sm:w-auto text-center">
                       {items.length}{' '}
                       {items.length === 1 ? 'question' : 'questions'}
                     </span>

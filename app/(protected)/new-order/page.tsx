@@ -1082,7 +1082,7 @@ export default function NewOrderPage() {
               <FaBuffer className="w-5 h-5" />
             </div>
             <h3 className="card-title">Select Platform</h3>
-            <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium">
+            <span className="ml-auto bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium hidden sm:inline-block">
               Choose Your Service
             </span>
           </div>
