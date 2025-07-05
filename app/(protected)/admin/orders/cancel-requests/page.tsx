@@ -10,6 +10,7 @@ import {
   FaSync,
   FaTimes,
   FaTimesCircle,
+  FaExternalLinkAlt,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -101,6 +102,112 @@ interface PaginationInfo {
   hasPrev: boolean;
 }
 
+// Dummy data generator
+const generateDummyData = (): CancelRequest[] => {
+  const services = [
+    'Instagram Followers',
+    'YouTube Views',
+    'TikTok Likes',
+    'Facebook Page Likes',
+    'Twitter Followers',
+    'Instagram Likes',
+    'YouTube Subscribers',
+    'TikTok Followers',
+    'LinkedIn Connections',
+    'Pinterest Followers'
+  ];
+
+  const categories = [
+    'Social Media',
+    'Video Marketing',
+    'Content Boost',
+    'Engagement',
+    'Growth Services'
+  ];
+
+  const sellers = ['Self', 'Auto', 'Manual'];
+  const statuses = ['pending', 'approved', 'declined'];
+  const users = [
+    { name: 'John Doe', username: 'johndoe', email: 'john@example.com' },
+    { name: 'Sarah Smith', username: 'sarahsmith', email: 'sarah@example.com' },
+    { name: 'Mike Johnson', username: 'mikej', email: 'mike@example.com' },
+    { name: 'Emily Davis', username: 'emilyd', email: 'emily@example.com' },
+    { name: 'Alex Brown', username: 'alexb', email: 'alex@example.com' },
+    { name: 'Lisa Wilson', username: 'lisaw', email: 'lisa@example.com' },
+    { name: 'David Chen', username: 'davidc', email: 'david@example.com' },
+    { name: 'Jessica Lee', username: 'jessical', email: 'jessica@example.com' }
+  ];
+
+  const sampleLinks = [
+    'https://instagram.com/p/ABC123xyz',
+    'https://youtube.com/watch?v=dQw4w9WgXcQ',
+    'https://tiktok.com/@user/video/123456789',
+    'https://facebook.com/page/posts/123456',
+    'https://twitter.com/user/status/123456789',
+    'https://linkedin.com/in/user/posts/123456',
+    'https://pinterest.com/pin/123456789'
+  ];
+
+  const cancelReasons = [
+    'Changed my mind about the order',
+    'Found a better price elsewhere',
+    'Order taking too long to process',
+    'No longer need this service',
+    'Made duplicate order by mistake',
+    'Quality not as expected',
+    'Service not working properly'
+  ];
+
+  return Array.from({ length: 25 }, (_, index) => {
+    const user = users[Math.floor(Math.random() * users.length)];
+    const service = services[Math.floor(Math.random() * services.length)];
+    const category = categories[Math.floor(Math.random() * categories.length)];
+    const seller = sellers[Math.floor(Math.random() * sellers.length)];
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const qty = Math.floor(Math.random() * 10000) + 100;
+    const charge = parseFloat((Math.random() * 500 + 5).toFixed(2));
+    const link = sampleLinks[Math.floor(Math.random() * sampleLinks.length)];
+    const reason = cancelReasons[Math.floor(Math.random() * cancelReasons.length)];
+
+    return {
+      id: 1000 + index,
+      order: {
+        id: 50000 + index,
+        service: {
+          id: index + 1,
+          name: service,
+          rate: parseFloat((Math.random() * 0.01).toFixed(4))
+        },
+        category: {
+          id: Math.floor(Math.random() * 5) + 1,
+          category_name: category
+        },
+        qty,
+        price: charge,
+        charge,
+        link,
+        status: ['Completed', 'Processing', 'Pending', 'Cancelled'][Math.floor(Math.random() * 4)],
+        createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        seller
+      },
+      user: {
+        id: index + 1,
+        email: user.email,
+        name: user.name,
+        username: user.username,
+        currency: 'USD'
+      },
+      reason,
+      status: status as 'pending' | 'approved' | 'declined',
+      requestedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+      processedAt: status !== 'pending' ? new Date(Date.now() - Math.random() * 3 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+      processedBy: status !== 'pending' ? 'Admin' : undefined,
+      refundAmount: status === 'approved' ? charge : undefined,
+      adminNotes: status !== 'pending' ? (status === 'approved' ? 'Refund processed successfully' : 'Request denied - order already completed') : undefined
+    };
+  });
+};
+
 const CancelRequestsPage = () => {
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -139,13 +246,13 @@ const CancelRequestsPage = () => {
   } | null>(null);
 
   // Loading states
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [requestsLoading, setRequestsLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [requestsLoading, setRequestsLoading] = useState(false);
 
   // New state for action modals
   const [approveDialog, setApproveDialog] = useState<{
     open: boolean;
-    requestId: number;
+    requestId: string;
     refundAmount: number;
   }>({
     open: false,
@@ -159,7 +266,7 @@ const CancelRequestsPage = () => {
     requestId: number;
   }>({
     open: false,
-    requestId: '',
+    requestId: 0,
   });
   const [declineReason, setDeclineReason] = useState('');
   const [viewDialog, setViewDialog] = useState<{
@@ -171,178 +278,42 @@ const CancelRequestsPage = () => {
   });
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
 
-  // Calculate status counts from current requests data
-  const calculateStatusCounts = (requestsData: CancelRequest[]) => {
-    const counts = {
-      pending: 0,
-      approved: 0,
-      declined: 0,
-    };
+  // Initialize with dummy data
+  useEffect(() => {
+    const dummyData = generateDummyData();
+    setCancelRequests(dummyData);
+    
+    // Calculate stats from dummy data
+    const pending = dummyData.filter(r => r.status === 'pending').length;
+    const approved = dummyData.filter(r => r.status === 'approved').length;
+    const declined = dummyData.filter(r => r.status === 'declined').length;
+    const totalRefund = dummyData
+      .filter(r => r.status === 'approved')
+      .reduce((sum, r) => sum + (r.refundAmount || 0), 0);
 
-    requestsData.forEach((request) => {
-      if (request.status && counts.hasOwnProperty(request.status)) {
-        counts[request.status as keyof typeof counts]++;
+    setStats({
+      totalRequests: dummyData.length,
+      pendingRequests: pending,
+      approvedRequests: approved,
+      declinedRequests: declined,
+      totalRefundAmount: totalRefund,
+      todayRequests: Math.floor(dummyData.length * 0.3),
+      statusBreakdown: {
+        pending,
+        approved,
+        declined
       }
     });
 
-    return counts;
-  };
-
-  // Fetch all cancel requests to calculate real status counts
-  const fetchAllRequestsForCounts = async () => {
-    try {
-      console.log('Fetching all cancel requests for status counts...');
-      const response = await fetch('/api/admin/cancel-requests?limit=1000');
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch cancel requests');
-      }
-
-      const allRequests = result.data || [];
-      const statusCounts = calculateStatusCounts(allRequests);
-
-      console.log('Calculated status counts:', statusCounts);
-
-      setStats((prev) => ({
-        ...prev,
-        pendingRequests: statusCounts.pending,
-        approvedRequests: statusCounts.approved,
-        declinedRequests: statusCounts.declined,
-        statusBreakdown: {
-          ...prev.statusBreakdown,
-          pending: statusCounts.pending,
-          approved: statusCounts.approved,
-          declined: statusCounts.declined,
-        },
-      }));
-    } catch (error) {
-      console.error('Error fetching cancel requests for counts:', error);
-    }
-  };
-
-  const fetchCancelRequests = async () => {
-    try {
-      setRequestsLoading(true);
-
-      const queryParams = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...(statusFilter !== 'all' && { status: statusFilter }),
-        ...(searchTerm && { search: searchTerm }),
-      });
-
-      console.log(
-        'Fetching cancel requests with params:',
-        queryParams.toString()
-      );
-
-      const response = await fetch(`/api/admin/cancel-requests?${queryParams}`);
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch cancel requests');
-      }
-
-      console.log('Cancel requests fetched successfully:', result);
-
-      setCancelRequests(result.data || []);
-      setPagination({
-        page: result.pagination?.page || 1,
-        limit: result.pagination?.limit || 20,
-        total: result.pagination?.total || 0,
-        totalPages: result.pagination?.totalPages || 0,
-        hasNext: result.pagination?.hasNext || false,
-        hasPrev: result.pagination?.hasPrev || false,
-      });
-    } catch (error) {
-      console.error('Error fetching cancel requests:', error);
-      showToast('Error fetching cancel requests. Please try again.', 'error');
-      setCancelRequests([]);
-      setPagination({
-        page: 1,
-        limit: 20,
-        total: 0,
-        totalPages: 0,
-        hasNext: false,
-        hasPrev: false,
-      });
-    } finally {
-      setRequestsLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      console.log('Fetching stats from API...');
-
-      const response = await fetch('/api/admin/cancel-requests/stats');
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch stats');
-      }
-
-      console.log('Stats fetched successfully:', result);
-
-      setStats({
-        totalRequests: result.totalRequests || 0,
-        pendingRequests: result.pendingRequests || 0,
-        approvedRequests: result.approvedRequests || 0,
-        declinedRequests: result.declinedRequests || 0,
-        totalRefundAmount: result.totalRefundAmount || 0,
-        todayRequests: result.todayRequests || 0,
-        statusBreakdown: result.statusBreakdown || {},
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      setStats({
-        totalRequests: 0,
-        pendingRequests: 0,
-        approvedRequests: 0,
-        declinedRequests: 0,
-        totalRefundAmount: 0,
-        todayRequests: 0,
-        statusBreakdown: {},
-      });
-      showToast('Error fetching statistics. Please refresh the page.', 'error');
-    }
-  };
-
-  // Handle search with debouncing
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchCancelRequests();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Load data on component mount and when filters change
-  useEffect(() => {
-    fetchCancelRequests();
-  }, [pagination.page, pagination.limit, statusFilter]);
-
-  useEffect(() => {
-    setStatsLoading(true);
-
-    const loadData = async () => {
-      await Promise.all([fetchStats(), fetchAllRequestsForCounts()]);
-      setStatsLoading(false);
-    };
-
-    loadData();
+    setPagination({
+      page: 1,
+      limit: 20,
+      total: dummyData.length,
+      totalPages: Math.ceil(dummyData.length / 20),
+      hasNext: dummyData.length > 20,
+      hasPrev: false
+    });
   }, []);
-
-  // Update stats when pagination data changes
-  useEffect(() => {
-    if (pagination.total > 0) {
-      setStats((prev) => ({
-        ...prev,
-        totalRequests: pagination.total,
-      }));
-    }
-  }, [pagination.total]);
 
   // Show toast notification
   const showToast = (
@@ -353,10 +324,7 @@ const CancelRequestsPage = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Safe ID formatter to prevent slice errors - following Order page pattern
-  const safeFormatOrderId = (id: any) => {
-    return id || 'null'; // Just return the ID directly like in Order page
-  };
+  
 
   // Utility functions
   const getStatusIcon = (status: string) => {
@@ -381,7 +349,7 @@ const CancelRequestsPage = () => {
         request.order?.seller === 'Self'
     );
 
-    const selectableIds = selectableRequests.map((request) => request.id);
+    const selectableIds = selectableRequests.map((request) => request.id.toString());
 
     if (
       selectedRequests.length === selectableIds.length &&
@@ -408,54 +376,42 @@ const CancelRequestsPage = () => {
     setStatsLoading(true);
 
     try {
-      await Promise.all([
-        fetchCancelRequests(),
-        fetchStats(),
-        fetchAllRequestsForCounts(),
-      ]);
+      const newData = generateDummyData();
+      setCancelRequests(newData);
       showToast('Cancel requests refreshed successfully!', 'success');
     } catch (error) {
       console.error('Error refreshing data:', error);
       showToast('Error refreshing data. Please try again.', 'error');
     } finally {
       setStatsLoading(false);
+      setRequestsLoading(false);
     }
   };
 
   // Handle request approval
   const handleApproveRequest = async (
-    requestId: string,
+    requestId: number,
     refundAmount: number,
     notes: string
   ) => {
     try {
-      const response = await fetch(
-        `/api/admin/cancel-requests/${requestId}/approve`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            refundAmount,
-            adminNotes: notes,
-          }),
-        }
+      setCancelRequests(prev => 
+        prev.map(req => 
+          req.id === requestId 
+            ? { 
+                ...req, 
+                status: 'approved' as const,
+                refundAmount,
+                adminNotes: notes,
+                processedAt: new Date().toISOString(),
+                processedBy: 'Admin'
+              }
+            : req
+        )
       );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to approve cancel request');
-      }
-
       showToast('Cancel request approved successfully', 'success');
-      await Promise.all([
-        fetchCancelRequests(),
-        fetchStats(),
-        fetchAllRequestsForCounts(),
-      ]);
-      setApproveDialog({ open: false, requestId: '', refundAmount: 0 });
+      setApproveDialog({ open: false, requestId: 0, refundAmount: 0 });
       setNewRefundAmount('');
       setAdminNotes('');
     } catch (error) {
@@ -470,34 +426,24 @@ const CancelRequestsPage = () => {
   };
 
   // Handle request decline
-  const handleDeclineRequest = async (requestId: string, reason: string) => {
+  const handleDeclineRequest = async (requestId: number, reason: string) => {
     try {
-      const response = await fetch(
-        `/api/admin/cancel-requests/${requestId}/decline`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            adminNotes: reason,
-          }),
-        }
+      setCancelRequests(prev => 
+        prev.map(req => 
+          req.id === requestId 
+            ? { 
+                ...req, 
+                status: 'declined' as const,
+                adminNotes: reason,
+                processedAt: new Date().toISOString(),
+                processedBy: 'Admin'
+              }
+            : req
+        )
       );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to decline cancel request');
-      }
-
       showToast('Cancel request declined successfully', 'success');
-      await Promise.all([
-        fetchCancelRequests(),
-        fetchStats(),
-        fetchAllRequestsForCounts(),
-      ]);
-      setDeclineDialog({ open: false, requestId: '' });
+      setDeclineDialog({ open: false, requestId: 0 });
       setDeclineReason('');
     } catch (error) {
       console.error('Error declining cancel request:', error);
@@ -512,7 +458,7 @@ const CancelRequestsPage = () => {
 
   // Open approve dialog
   const openApproveDialog = (
-    requestId: string,
+    requestId: number,
     currentRefundAmount: number
   ) => {
     setApproveDialog({
@@ -525,7 +471,7 @@ const CancelRequestsPage = () => {
   };
 
   // Open decline dialog
-  const openDeclineDialog = (requestId: string) => {
+  const openDeclineDialog = (requestId: number) => {
     setDeclineDialog({ open: true, requestId });
     setDeclineReason('');
   };
@@ -546,7 +492,7 @@ const CancelRequestsPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               <select
@@ -584,7 +530,7 @@ const CancelRequestsPage = () => {
             </div>
 
             {/* Right: Search Controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
@@ -597,12 +543,11 @@ const CancelRequestsPage = () => {
                   } requests...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
-                <option value="id">Request ID</option>
+              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="order_id">Order ID</option>
                 <option value="username">Username</option>
               </select>
@@ -699,15 +644,12 @@ const CancelRequestsPage = () => {
           <div style={{ padding: '0 24px' }}>
             {/* Bulk Action Section */}
             {selectedRequests.length > 0 && (
-              <div className="flex items-center gap-2 mb-4 pt-4">
-                <span
-                  className="text-sm"
-                  style={{ color: 'var(--text-muted)' }}
-                >
+              <div className="flex flex-col md:flex-row items-center gap-2 py-4 border-b mb-4 w-full">
+                <span className="text-sm md:w-auto" style={{ color: 'var(--text-muted)' }}>
                   {selectedRequests.length} selected
                 </span>
                 <select
-                  className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                  className="w-full md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
                   value={selectedBulkAction}
                   onChange={(e) => {
                     setSelectedBulkAction(e.target.value);
@@ -740,7 +682,7 @@ const CancelRequestsPage = () => {
                       setSelectedBulkAction('');
                       setSelectedRequests([]);
                     }}
-                    className="btn btn-primary px-3 py-2.5"
+                    className="btn btn-primary px-3 py-2.5 w-full md:w-auto mt-2 md:mt-0"
                   >
                     Save Changes
                   </button>
@@ -796,12 +738,7 @@ const CancelRequestsPage = () => {
                             className="rounded border-gray-300 w-4 h-4"
                           />
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Request ID
-                        </th>
+                        
                         <th
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
@@ -830,19 +767,25 @@ const CancelRequestsPage = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
-                          Charge
+                          Link
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Quantity
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Amount
                         </th>
                         <th
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
                           Status
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Requested
                         </th>
                         <th
                           className="text-left p-3 font-semibold"
@@ -865,34 +808,35 @@ const CancelRequestsPage = () => {
                                 <input
                                   type="checkbox"
                                   checked={selectedRequests.includes(
-                                    request.id
+                                    request.id.toString()
                                   )}
                                   onChange={() =>
-                                    handleSelectRequest(request.id)
+                                    handleSelectRequest(request.id.toString())
                                   }
                                   className="rounded border-gray-300 w-4 h-4"
                                 />
                               )}
                           </td>
-                          <td className="p-3">
-                            <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                              #{formatID(String(request?.id || 'null'))}
-                            </div>
-                          </td>
+                          
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{formatID(String(request.order.id).slice(-8))}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {request.user?.username ||
-                                request.user?.email?.split('@')[0] ||
-                                request.user?.name ||
-                                'Unknown'}
+                            <div>
+                              <div
+                                className="font-medium text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {request.user?.username ||
+                                  request.user?.email?.split('@')[0] ||
+                                  request.user?.name ||
+                                  'Unknown'}
+                              </div>
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                {request.user?.email || 'No email'}
+                              </div>
                             </div>
                           </td>
                           <td className="p-3">
@@ -922,16 +866,30 @@ const CancelRequestsPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="text-left">
-                              <div
-                                className="font-semibold text-sm"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
-                                ${formatPrice(request.order?.charge || 0, 2)}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {formatNumber(request.order?.qty || 0)} qty
-                              </div>
+                            <div className="max-w-32">
+                              {request.order?.link ? (
+                                <a
+                                  href={request.order.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs truncate"
+                                >
+                                  <span className="truncate">{request.order.link}</span>
+                                  <FaExternalLinkAlt className="h-3 w-3 flex-shrink-0" />
+                                </a>
+                              ) : (
+                                <span className="text-gray-400 text-xs">No link</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                              {formatNumber(request.order?.qty || 0)}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                              ${formatPrice(request.order?.charge || 0, 2)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -940,24 +898,6 @@ const CancelRequestsPage = () => {
                               <span className="text-xs font-medium capitalize">
                                 {request.status}
                               </span>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div>
-                              <div className="text-xs">
-                                {request.requestedAt
-                                  ? new Date(
-                                      request.requestedAt
-                                    ).toLocaleDateString()
-                                  : 'Unknown'}
-                              </div>
-                              <div className="text-xs">
-                                {request.requestedAt
-                                  ? new Date(
-                                      request.requestedAt
-                                    ).toLocaleTimeString()
-                                  : ''}
-                              </div>
                             </div>
                           </td>
                           <td className="p-3">
@@ -985,7 +925,7 @@ const CancelRequestsPage = () => {
                                       onClick={() =>
                                         openApproveDialog(
                                           request.id,
-                                          request.refundAmount || 0
+                                          request.refundAmount || request.order?.charge || 0
                                         )
                                       }
                                     >
@@ -1016,20 +956,18 @@ const CancelRequestsPage = () => {
                     {cancelRequests.map((request) => (
                       <div
                         key={request.id}
-                        className="card card-padding border-l-4 border-purple-500 mb-4"
+                        className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
                         {/* Header with ID and Status */}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <input
                               type="checkbox"
-                              checked={selectedRequests.includes(request.id)}
-                              onChange={() => handleSelectRequest(request.id)}
+                              checked={selectedRequests.includes(request.id.toString())}
+                              onChange={() => handleSelectRequest(request.id.toString())}
                               className="rounded border-gray-300 w-4 h-4"
                             />
-                            <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                              #{formatID(String(request?.id || 'null'))}
-                            </div>
+                            
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                               {getStatusIcon(request.status)}
                               <span className="text-xs font-medium capitalize">
@@ -1050,19 +988,8 @@ const CancelRequestsPage = () => {
                           </div>
                         </div>
 
-                        {/* Order and User Info */}
-                        <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Order ID
-                            </div>
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit">
-                              #{formatID(String(request?.order?.id || 'null'))}
-                            </div>
-                          </div>
+                        {/* User Info */}
+                        <div className="flex items-center justify-between mb-4 pb-4 border-b">
                           <div>
                             <div
                               className="text-xs font-medium mb-1"
@@ -1076,8 +1003,23 @@ const CancelRequestsPage = () => {
                             >
                               {request.user?.username ||
                                 request.user?.email?.split('@')[0] ||
+                                request.user?.name ||
                                 'Unknown'}
                             </div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              {request.user?.email || 'No email'}
+                            </div>
+                          </div>
+                          <div
+                            className={`text-xs font-medium px-2 py-1 rounded ${
+                              request.order?.seller === 'Auto'
+                                ? 'bg-green-100 text-green-800'
+                                : request.order?.seller === 'Manual'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {request.order?.seller || 'null'}
                           </div>
                         </div>
 
@@ -1100,22 +1042,33 @@ const CancelRequestsPage = () => {
                         </div>
 
                         {/* Financial Info */}
-                        <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-3 gap-4 mb-4">
                           <div>
                             <div
                               className="text-xs font-medium mb-1"
                               style={{ color: 'var(--text-muted)' }}
                             >
-                              Charge
+                              Quantity
+                            </div>
+                            <div
+                              className="font-semibold text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {formatNumber(request.order?.qty || 0)}
+                            </div>
+                          </div>
+                          <div>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
+                              Amount
                             </div>
                             <div
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
                               ${formatPrice(request.order?.charge || 0, 2)}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {formatNumber(request.order?.qty || 0)} qty
                             </div>
                           </div>
                           <div>
@@ -1135,14 +1088,30 @@ const CancelRequestsPage = () => {
                                   ).toLocaleDateString()
                                 : 'Unknown'}
                             </div>
-                            <div className="text-xs text-gray-500">
-                              {request.requestedAt
-                                ? new Date(
-                                    request.requestedAt
-                                  ).toLocaleTimeString()
-                                : ''}
-                            </div>
                           </div>
+                        </div>
+
+                        {/* Link */}
+                        <div className="mb-4">
+                          <div
+                            className="text-xs font-medium mb-1"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            Link
+                          </div>
+                          {request.order?.link ? (
+                            <a
+                              href={request.order.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs"
+                            >
+                              <span className="truncate">{request.order.link}</span>
+                              <FaExternalLinkAlt className="h-3 w-3 flex-shrink-0" />
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 text-xs">No link provided</span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1150,7 +1119,7 @@ const CancelRequestsPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -1171,7 +1140,7 @@ const CancelRequestsPage = () => {
                       )} of ${formatNumber(pagination.total)} requests`
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
                       onClick={() =>
                         setPagination((prev) => ({
@@ -1247,7 +1216,7 @@ const CancelRequestsPage = () => {
                           onClick={() => {
                             setApproveDialog({
                               open: false,
-                              requestId: '',
+                              requestId: 0,
                               refundAmount: 0,
                             });
                             setNewRefundAmount('');
@@ -1297,15 +1266,6 @@ const CancelRequestsPage = () => {
                         {/* Request Info */}
                         <div className="mb-6">
                           <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Request ID
-                              </label>
-                              <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit mt-1">
-                                #
-                                {formatID(String(viewDialog.request?.id || ''))}
-                              </div>
-                            </div>
                             <div>
                               <label className="text-sm font-medium text-gray-600">
                                 Status
@@ -1366,11 +1326,8 @@ const CancelRequestsPage = () => {
                                 <label className="text-sm font-medium text-gray-600">
                                   Order ID
                                 </label>
-                                <div className="font-mono text-sm bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit mt-1">
-                                  #
-                                  {formatID(
-                                    viewDialog.request.order.id.slice(-8)
-                                  )}
+                                <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit mt-1">
+                                  #{viewDialog.request.order.id}
                                 </div>
                               </div>
                               <div>
@@ -1412,7 +1369,7 @@ const CancelRequestsPage = () => {
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-gray-600">
-                                  Charge
+                                  Amount
                                 </label>
                                 <div className="text-sm text-gray-900 mt-1">
                                   $
@@ -1527,7 +1484,7 @@ const CancelRequestsPage = () => {
                                   setViewDialog({ open: false, request: null });
                                   openApproveDialog(
                                     viewDialog.request!.id,
-                                    viewDialog.request!.refundAmount || 0
+                                    viewDialog.request!.refundAmount || viewDialog.request!.order?.charge || 0
                                   );
                                 }}
                                 className="btn btn-primary flex items-center gap-2"
@@ -1564,7 +1521,7 @@ const CancelRequestsPage = () => {
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => {
-                            setDeclineDialog({ open: false, requestId: '' });
+                            setDeclineDialog({ open: false, requestId: 0 });
                             setDeclineReason('');
                           }}
                           className="btn btn-secondary"

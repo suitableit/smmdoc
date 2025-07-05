@@ -745,7 +745,7 @@ const AdminOrdersPage = () => {
 
         {/* Controls Section - After stats cards */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
@@ -784,7 +784,7 @@ const AdminOrdersPage = () => {
             </div>
 
             {/* Right: Search Controls Only */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
@@ -797,13 +797,12 @@ const AdminOrdersPage = () => {
                   } orders...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="id">Order ID</option>
-                <option value="url">Order URL</option>
                 <option value="username">Username</option>
               </select>
             </div>
@@ -1292,7 +1291,7 @@ const AdminOrdersPage = () => {
                               </div>
                               <div className="w-full bg-gray-200 rounded-full h-1.5">
                                 <div
-                                  className="bg-gradient-to-r from-blue-500 to-green-500 h-1.5 rounded-full transition-all duration-300"
+                                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-1.5 rounded-full transition-all duration-300"
                                   style={{
                                     width: `${
                                       order.qty && order.remains
@@ -1721,7 +1720,7 @@ const AdminOrdersPage = () => {
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
-                              className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
+                              className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] h-2 rounded-full transition-all duration-300"
                               style={{
                                 width: `${
                                   order.qty && order.remains
@@ -1769,7 +1768,7 @@ const AdminOrdersPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -1790,7 +1789,7 @@ const AdminOrdersPage = () => {
                       )} of ${formatNumber(pagination.total)} orders`
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
                       onClick={() =>
                         setPagination((prev) => ({

@@ -467,7 +467,7 @@ const RefillOrdersPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               <select
@@ -509,13 +509,12 @@ const RefillOrdersPage = () => {
                   placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} orders...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="id">Order ID</option>
-                <option value="url">Order URL</option>
                 <option value="username">Username</option>
               </select>
             </div>
@@ -707,7 +706,7 @@ const RefillOrdersPage = () => {
                             />
                           </td>
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{safeFormatOrderId(order.id)}
                             </div>
                           </td>
@@ -747,7 +746,7 @@ const RefillOrdersPage = () => {
                                   href={order.link}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-green-600 hover:text-green-800 text-xs truncate flex-1"
+                                  className="text-blue-600 hover:text-blue-800 text-xs truncate flex-1"
                                 >
                                   {order.link.length > 18
                                     ? order.link.substring(0, 18) + '...'
@@ -755,7 +754,7 @@ const RefillOrdersPage = () => {
                                 </a>
                                 <button
                                   onClick={() => window.open(order.link, '_blank')}
-                                  className="text-green-500 hover:text-green-700 p-1 flex-shrink-0"
+                                  className="text-blue-500 hover:text-blue-700 p-1 flex-shrink-0"
                                   title="Open link in new tab"
                                 >
                                   <FaExternalLinkAlt className="h-3 w-3" />
@@ -805,7 +804,7 @@ const RefillOrdersPage = () => {
                               </div>
                               <div className="w-full bg-gray-200 rounded-full h-1.5">
                                 <div
-                                  className="bg-gradient-to-r from-green-500 to-emerald-500 h-1.5 rounded-full transition-all duration-300"
+                                  className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] h-1.5 rounded-full transition-all duration-300"
                                   style={{
                                     width: `${calculateProgress(order.qty, order.remains)}%`,
                                   }}
@@ -846,7 +845,7 @@ const RefillOrdersPage = () => {
                     {orders.map((order) => (
                       <div
                         key={order.id}
-                        className="card card-padding border-l-4 border-green-500 mb-4"
+                        className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
                         {/* Header with ID and Status */}
                         <div className="flex items-center justify-between mb-4">
@@ -857,7 +856,7 @@ const RefillOrdersPage = () => {
                               onChange={() => handleSelectOrder(order.id)}
                               className="rounded border-gray-300 w-4 h-4"
                             />
-                            <div className="font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               #{safeFormatOrderId(order.id)}
                             </div>
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
@@ -908,7 +907,7 @@ const RefillOrdersPage = () => {
                               href={order.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-green-600 hover:text-green-800 text-xs flex-1 truncate"
+                              className="text-blue-600 hover:text-blue-800 text-xs flex-1 truncate"
                             >
                               {order.link.length > 38
                                 ? order.link.substring(0, 38) + '...'
@@ -916,7 +915,7 @@ const RefillOrdersPage = () => {
                             </a>
                             <button
                               onClick={() => window.open(order.link, '_blank')}
-                              className="text-green-500 hover:text-green-700 p-1 flex-shrink-0"
+                              className="text-blue-500 hover:text-blue-700 p-1 flex-shrink-0"
                               title="Open link in new tab"
                             >
                               <FaExternalLinkAlt className="h-3 w-3" />
@@ -933,10 +932,7 @@ const RefillOrdersPage = () => {
                             >
                               Amount
                             </div>
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
+                            <div className="font-semibold text-sm text-blue-600">
                               ${formatPrice(order.charge || order.price, 2)}
                             </div>
                             <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -1009,7 +1005,7 @@ const RefillOrdersPage = () => {
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
-                              className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300"
+                              className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] h-2 rounded-full transition-all duration-300"
                               style={{
                                 width: `${calculateProgress(order.qty, order.remains)}%`,
                               }}
@@ -1046,8 +1042,11 @@ const RefillOrdersPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
-                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+                  <div
+                    className="text-sm"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
                     {ordersLoading ? (
                       <div className="flex items-center gap-2">
                         <GradientSpinner size="w-4 h-4" />
@@ -1057,11 +1056,14 @@ const RefillOrdersPage = () => {
                       `Showing ${formatNumber(
                         (pagination.page - 1) * pagination.limit + 1
                       )} to ${formatNumber(
-                        Math.min(pagination.page * pagination.limit, pagination.total)
+                        Math.min(
+                          pagination.page * pagination.limit,
+                          pagination.total
+                        )
                       )} of ${formatNumber(pagination.total)} orders`
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
                       onClick={() =>
                         setPagination((prev) => ({
@@ -1074,13 +1076,16 @@ const RefillOrdersPage = () => {
                     >
                       Previous
                     </button>
-                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <span
+                      className="text-sm"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
                       {ordersLoading ? (
                         <GradientSpinner size="w-4 h-4" />
                       ) : (
-                        `Page ${formatNumber(pagination.page)} of ${formatNumber(
-                          pagination.totalPages
-                        )}`
+                        `Page ${formatNumber(
+                          pagination.page
+                        )} of ${formatNumber(pagination.totalPages)}`
                       )}
                     </span>
                     <button
