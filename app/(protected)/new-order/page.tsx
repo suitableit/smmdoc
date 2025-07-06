@@ -1,6 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// HI form Jasmin -dev
 'use client';
 
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -9,35 +7,35 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import {
-    dashboardApi,
-    useGetUserStatsQuery,
+  dashboardApi,
+  useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
-    FaBuffer,
-    FaCheckCircle,
-    FaClock,
-    FaDiscord,
-    FaFacebook,
-    FaGlobe,
-    FaHashtag,
-    FaInfoCircle,
-    FaInstagram,
-    FaLayerGroup,
-    FaLink,
-    FaLinkedin,
-    FaSearch,
-    FaShieldAlt,
-    FaShoppingCart,
-    FaSpotify,
-    FaTachometerAlt,
-    FaTelegram,
-    FaTiktok,
-    FaTimes,
-    FaTwitter,
-    FaYoutube
+  FaBuffer,
+  FaCheckCircle,
+  FaClock,
+  FaDiscord,
+  FaFacebook,
+  FaGlobe,
+  FaHashtag,
+  FaInfoCircle,
+  FaInstagram,
+  FaLayerGroup,
+  FaLink,
+  FaLinkedin,
+  FaSearch,
+  FaShieldAlt,
+  FaShoppingCart,
+  FaSpotify,
+  FaTachometerAlt,
+  FaTelegram,
+  FaTiktok,
+  FaTimes,
+  FaTwitter,
+  FaYoutube,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -754,212 +752,221 @@ function NewOrder() {
                   </div>
                 </div>
               ) : (
-                <form onSubmit={onSubmit} className="space-y-4 w-full max-w-full">
-                {/* Search Input with Dropdown */}
-                <div className="form-group w-full">
-                  <label className="form-label">Search Services</label>
-                  <div className="relative w-full" ref={searchRef}>
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-                      <FaSearch className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    </div>
-                    <input
-                      type="search"
-                      value={search}
-                      onChange={(e) => {
-                        setSearch(e.target.value);
-                        setShowDropdown(true);
-                      }}
-                      onFocus={() => setShowDropdown(true)}
-                      className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                      placeholder="Search services..."
-                      autoComplete="off"
-                      style={{ width: '100%', minWidth: '0' }}
-                    />
-
-                    {/* Search Dropdown */}
-                    {showDropdown && servicesData.length > 0 && (
-                      <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
-                        {servicesData.map((service) => (
-                          <div
-                            key={service.id}
-                            className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
-                            onClick={() =>
-                              handleSearchSelect(service.id, service.categoryId)
-                            }
-                          >
-                            <div className="flex justify-between items-center w-full">
-                              <span className="text-sm text-gray-900 truncate pr-2 flex-1">
-                                {service.name}
-                              </span>
-                              <span className="text-xs text-gray-500 flex-shrink-0">
-                                ${service.rate || '0.00'}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                <form
+                  onSubmit={onSubmit}
+                  className="space-y-4 w-full max-w-full"
+                >
+                  {/* Search Input with Dropdown */}
+                  <div className="form-group w-full">
+                    <label className="form-label">Search Services</label>
+                    <div className="relative w-full" ref={searchRef}>
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                        <FaSearch className="w-4 h-4 text-gray-500 flex-shrink-0" />
                       </div>
-                    )}
-                  </div>
-                </div>
+                      <input
+                        type="search"
+                        value={search}
+                        onChange={(e) => {
+                          setSearch(e.target.value);
+                          setShowDropdown(true);
+                        }}
+                        onFocus={() => setShowDropdown(true)}
+                        className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                        placeholder="Search services..."
+                        autoComplete="off"
+                        style={{ width: '100%', minWidth: '0' }}
+                      />
 
-                {/* Combined Category Dropdown */}
-                <div className="form-group">
-                  <label className="form-label" htmlFor="category">
-                    Category
-                  </label>
-                  <select
-                    id="category"
-                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                    value={selectedCategory}
-                    onChange={(e) => {
-                      setSelectedCategory(e.target.value);
-                      setSelectedService('');
-                      setQty(0);
-                    }}
-                  >
-                    <option value="" disabled>
-                      Select a category
-                    </option>
-                    {/* Only show favorites group if there are favorite categories with services */}
-                    {categoriesWithServices.some((cat) => cat.isFavorite) && (
-                      <optgroup label="Favorites">
+                      {/* Search Dropdown */}
+                      {showDropdown && servicesData.length > 0 && (
+                        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
+                          {servicesData.map((service) => (
+                            <div
+                              key={service.id}
+                              className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                              onClick={() =>
+                                handleSearchSelect(
+                                  service.id,
+                                  service.categoryId
+                                )
+                              }
+                            >
+                              <div className="flex justify-between items-center w-full">
+                                <span className="text-sm text-gray-900 truncate pr-2 flex-1">
+                                  {service.name}
+                                </span>
+                                <span className="text-xs text-gray-500 flex-shrink-0">
+                                  ${service.rate || '0.00'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Combined Category Dropdown */}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="category">
+                      Category
+                    </label>
+                    <select
+                      id="category"
+                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                      value={selectedCategory}
+                      onChange={(e) => {
+                        setSelectedCategory(e.target.value);
+                        setSelectedService('');
+                        setQty(0);
+                      }}
+                    >
+                      <option value="" disabled>
+                        Select a category
+                      </option>
+                      {/* Only show favorites group if there are favorite categories with services */}
+                      {categoriesWithServices.some((cat) => cat.isFavorite) && (
+                        <optgroup label="Favorites">
+                          {categoriesWithServices
+                            .filter((cat) => cat.isFavorite)
+                            .map((favCat) => (
+                              <option
+                                key={`fav-${favCat.id}`}
+                                value={favCat.id}
+                              >
+                                {favCat.category_name}
+                              </option>
+                            ))}
+                        </optgroup>
+                      )}
+                      {/* Regular categories */}
+                      <optgroup label="All Categories">
                         {categoriesWithServices
-                          .filter((cat) => cat.isFavorite)
-                          .map((favCat) => (
-                            <option key={`fav-${favCat.id}`} value={favCat.id}>
-                              {favCat.category_name}
+                          .filter((cat) => !cat.isFavorite)
+                          .map((cat: any) => (
+                            <option key={`reg-${cat.id}`} value={cat.id}>
+                              {cat.category_name}
                             </option>
                           ))}
                       </optgroup>
-                    )}
-                    {/* Regular categories */}
-                    <optgroup label="All Categories">
-                      {categoriesWithServices
-                        .filter((cat) => !cat.isFavorite)
-                        .map((cat: any) => (
-                          <option key={`reg-${cat.id}`} value={cat.id}>
-                            {cat.category_name}
-                          </option>
-                        ))}
-                    </optgroup>
-                  </select>
-                </div>
+                    </select>
+                  </div>
 
-                {/* Service Dropdown */}
-                <div className="form-group">
-                  <label className="form-label" htmlFor="services">
-                    Services
-                  </label>
-                  <select
-                    id="services"
-                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                    value={selectedService}
-                    onChange={(e) => {
-                      setSelectedService(e.target.value);
-                      setQty(0);
-                    }}
-                    disabled={!selectedCategory || services.length === 0}
-                    required
+                  {/* Service Dropdown */}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="services">
+                      Services
+                    </label>
+                    <select
+                      id="services"
+                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                      value={selectedService}
+                      onChange={(e) => {
+                        setSelectedService(e.target.value);
+                        setQty(0);
+                      }}
+                      disabled={!selectedCategory || services.length === 0}
+                      required
+                    >
+                      {services?.map((service: any) => (
+                        <option key={service.id} value={service.id}>
+                          {service.name} - ${service.rate || '0.00'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Link */}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="link">
+                      Link
+                    </label>
+                    <input
+                      type="url"
+                      id="link"
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                      placeholder="https://example.com"
+                      required
+                      value={link}
+                      onChange={(e) => setLink(e.target.value)}
+                      pattern="https?://.+"
+                    />
+                  </div>
+
+                  {/* Quantity */}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="qty">
+                      Quantity
+                    </label>
+                    <input
+                      type="number"
+                      id="qty"
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder="Enter Quantity"
+                      onChange={(e) =>
+                        e.target.value
+                          ? setQty(parseInt(e.target.value))
+                          : setQty(0)
+                      }
+                      min={
+                        services?.find((s) => s.id === selectedService)
+                          ?.min_order || 0
+                      }
+                      max={
+                        services?.find((s) => s.id === selectedService)
+                          ?.max_order || 0
+                      }
+                      value={qty || ''}
+                    />
+                    <small className="text-xs text-gray-500 mt-1">
+                      Min:{' '}
+                      {services?.find((s) => s.id === selectedService)
+                        ?.min_order || 0}{' '}
+                      - Max:{' '}
+                      {services?.find((s) => s.id === selectedService)
+                        ?.max_order || 0}
+                    </small>
+                  </div>
+
+                  {/* Price */}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="price">
+                      Charge (per 1000 = {user?.currency === 'USD' ? '$' : '৳'}
+                      {price.toFixed(2)})
+                    </label>
+                    <input
+                      type="text"
+                      id="price"
+                      readOnly
+                      disabled
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      value={
+                        user?.currency === 'USD'
+                          ? `$ ${totalPrice.toFixed(4)}`
+                          : `৳ ${totalPrice.toFixed(4)}`
+                      }
+                      placeholder="Charge"
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={
+                      isSubmitting || !selectedService || !link || qty < 1
+                    }
+                    className="btn btn-primary w-full"
                   >
-                    {services?.map((service: any) => (
-                      <option key={service.id} value={service.id}>
-                        {service.name} - ${service.rate || '0.00'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Link */}
-                <div className="form-group">
-                  <label className="form-label" htmlFor="link">
-                    Link
-                  </label>
-                  <input
-                    type="url"
-                    id="link"
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                    placeholder="https://example.com"
-                    required
-                    value={link}
-                    onChange={(e) => setLink(e.target.value)}
-                    pattern="https?://.+"
-                  />
-                </div>
-
-                {/* Quantity */}
-                <div className="form-group">
-                  <label className="form-label" htmlFor="qty">
-                    Quantity
-                  </label>
-                  <input
-                    type="number"
-                    id="qty"
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    placeholder="Enter Quantity"
-                    onChange={(e) =>
-                      e.target.value
-                        ? setQty(parseInt(e.target.value))
-                        : setQty(0)
-                    }
-                    min={
-                      services?.find((s) => s.id === selectedService)
-                        ?.min_order || 0
-                    }
-                    max={
-                      services?.find((s) => s.id === selectedService)
-                        ?.max_order || 0
-                    }
-                    value={qty || ''}
-                  />
-                  <small className="text-xs text-gray-500 mt-1">
-                    Min:{' '}
-                    {services?.find((s) => s.id === selectedService)
-                      ?.min_order || 0}{' '}
-                    - Max:{' '}
-                    {services?.find((s) => s.id === selectedService)
-                      ?.max_order || 0}
-                  </small>
-                </div>
-
-                {/* Price */}
-                <div className="form-group">
-                  <label className="form-label" htmlFor="price">
-                    Charge (per 1000 = {user?.currency === 'USD' ? '$' : '৳'}
-                    {price.toFixed(2)})
-                  </label>
-                  <input
-                    type="text"
-                    id="price"
-                    readOnly
-                    disabled
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    value={
-                      user?.currency === 'USD'
-                        ? `$ ${totalPrice.toFixed(4)}`
-                        : `৳ ${totalPrice.toFixed(4)}`
-                    }
-                    placeholder="Charge"
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={
-                    isSubmitting || !selectedService || !link || qty < 1
-                  }
-                  className="btn btn-primary w-full"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <GradientSpinner size="w-4 h-4" className="mr-2" />
-                      Creating Order...
-                    </>
-                  ) : (
-                    'Create Order'
-                  )}
-                </button>
-              </form>
+                    {isSubmitting ? (
+                      <>
+                        <GradientSpinner size="w-4 h-4" className="mr-2" />
+                        Creating Order...
+                      </>
+                    ) : (
+                      'Create Order'
+                    )}
+                  </button>
+                </form>
               )}
             </div>
           </div>
