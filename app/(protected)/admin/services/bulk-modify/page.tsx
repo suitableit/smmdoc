@@ -15,6 +15,7 @@ import {
 
 // Import APP_NAME constant
 import { APP_NAME } from '@/lib/constants';
+import { formatNumber } from '@/lib/utils';
 import { useGetServices } from '@/hooks/service-fetch';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import axiosInstance from '@/lib/axiosInstance';
@@ -354,9 +355,9 @@ const BulkModifyPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             {/* Left: Action Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto mb-2 md:mb-0">
               {/* Page View Dropdown */}
               <select 
                 value={pagination.limit}
@@ -374,20 +375,20 @@ const BulkModifyPage = () => {
               </select>
               
               <button
-                onClick={() => setCategoryModalOpen(true)}
-                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
-              >
-                <FaTag />
-                Select Category
-              </button>
-              
-              <button
                 onClick={handleRefresh}
                 disabled={localServicesLoading || !selectedCategory}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
                 <FaSync className={localServicesLoading ? 'animate-spin' : ''} />
                 Refresh
+              </button>
+
+              <button
+                onClick={() => setCategoryModalOpen(true)}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full md:w-auto"
+              >
+                <FaTag />
+                Select Category
               </button>
 
               {hasChanges && (
@@ -412,8 +413,8 @@ const BulkModifyPage = () => {
             </div>
             
             {/* Right: Search Controls */}
-            <div className="flex items-center gap-3">
-              <div className="relative">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="relative w-full">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
                   style={{ color: 'var(--text-muted)' }}
@@ -423,7 +424,7 @@ const BulkModifyPage = () => {
                   placeholder="Search services..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
             </div>
@@ -715,7 +716,7 @@ const BulkModifyPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -726,13 +727,17 @@ const BulkModifyPage = () => {
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
-                      `Showing ${(pagination.page - 1) * pagination.limit + 1} to ${Math.min(
-                        pagination.page * pagination.limit,
-                        pagination.total
-                      )} of ${pagination.total} services`
+                      `Showing ${formatNumber(
+                        (pagination.page - 1) * pagination.limit + 1
+                      )} to ${formatNumber(
+                        Math.min(
+                          pagination.page * pagination.limit,
+                          pagination.total
+                        )
+                      )} of ${formatNumber(pagination.total)} services`
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
                       onClick={() =>
                         setPagination((prev) => ({
@@ -752,7 +757,9 @@ const BulkModifyPage = () => {
                       {localServicesLoading ? (
                         <GradientSpinner size="w-4 h-4" />
                       ) : (
-                        `Page ${pagination.page} of ${pagination.totalPages}`
+                        `Page ${formatNumber(
+                          pagination.page
+                        )} of ${formatNumber(pagination.totalPages)}`
                       )}
                     </span>
                     <button
