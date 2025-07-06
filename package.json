@@ -53,6 +53,10 @@
     "react-dom": "^19.0.0",
     "react-google-button": "^0.8.0",
     "react-hook-form": "^7.54.2",
+<<<<<<< HEAD
+=======
+    "react-hot-toast": "^2.5.2",
+>>>>>>> 11ca0ab (new order)
     "react-icons": "^5.5.0",
     "react-redux": "^9.2.0",
     "react-slick": "^0.30.3",
