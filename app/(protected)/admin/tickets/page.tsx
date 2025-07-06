@@ -453,7 +453,7 @@ const SupportTicketsPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
@@ -488,7 +488,7 @@ const SupportTicketsPage = () => {
             </div>
 
             {/* Right: Search Controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
@@ -499,11 +499,11 @@ const SupportTicketsPage = () => {
                   placeholder="Search tickets..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="id">Ticket ID</option>
                 <option value="username">Username</option>
                 <option value="subject">Subject</option>
@@ -658,28 +658,30 @@ const SupportTicketsPage = () => {
           <div style={{ padding: '0 24px' }}>
             {/* Selected Tickets Actions - Top of table */}
             {selectedTickets.length > 0 && (
-              <div className="flex items-center gap-2 py-4 border-b mb-4">
-                <span
-                  className="text-sm"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {selectedTickets.length} selected
-                </span>
-                
-                {/* Bulk Operations Dropdown */}
-                <select 
-                  value={selectedBulkOperation}
-                  onChange={(e) => setSelectedBulkOperation(e.target.value)}
-                  disabled={ticketsLoading}
-                  className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm disabled:opacity-50"
-                >
-                  <option value="" disabled>Bulk Operations</option>
-                  <option value="mark_read">Mark all as read</option>
-                  <option value="mark_unread">Mark all as unread</option>
-                  <option value="open_all">Open all</option>
-                  <option value="hold_all">Hold all</option>
-                  <option value="delete_selected">Delete Selected</option>
-                </select>
+              <div className="flex flex-col md:flex-row md:items-center gap-2 py-4 border-b mb-4">
+                <div className="flex items-center gap-2 mb-2 md:mb-0">
+                  <span
+                    className="text-sm"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    {selectedTickets.length} selected
+                  </span>
+                  
+                  {/* Bulk Operations Dropdown */}
+                  <select 
+                    value={selectedBulkOperation}
+                    onChange={(e) => setSelectedBulkOperation(e.target.value)}
+                    disabled={ticketsLoading}
+                    className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm disabled:opacity-50"
+                  >
+                    <option value="" disabled>Bulk Operations</option>
+                    <option value="mark_read">Mark all as read</option>
+                    <option value="mark_unread">Mark all as unread</option>
+                    <option value="open_all">Open all</option>
+                    <option value="hold_all">Hold all</option>
+                    <option value="delete_selected">Delete Selected</option>
+                  </select>
+                </div>
 
                 {/* Save Changes Button - appears when operation is selected */}
                 {selectedBulkOperation && (
@@ -689,7 +691,7 @@ const SupportTicketsPage = () => {
                       setSelectedBulkOperation(''); // Reset after execution
                     }}
                     disabled={ticketsLoading}
-                    className="btn btn-primary flex items-center gap-2 px-4 py-2.5 disabled:opacity-50"
+                    className="btn btn-primary flex items-center gap-2 px-4 py-2.5 disabled:opacity-50 w-full md:w-auto"
                   >
                     Save Changes
                   </button>
@@ -724,7 +726,7 @@ const SupportTicketsPage = () => {
             ) : (
               <React.Fragment>
                 {/* Desktop Table View - Hidden on mobile */}
-                <div className="hidden lg:block overflow-x-auto">
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -953,205 +955,10 @@ const SupportTicketsPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View - Visible on tablet and mobile */}
-                <div className="lg:hidden">
-                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                    {getPaginatedData().map((ticket) => (
-                      <div
-                        key={ticket.id}
-                        className="card card-padding border-l-4 border-blue-500 mb-4"
-                      >
-                        {/* Header with ID and Actions */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedTickets.includes(ticket.id)}
-                              onChange={() => handleSelectTicket(ticket.id)}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {formatTicketID(ticket.id)}
-                            </div>
-                            <span
-                              className={`inline-flex items-center justify-center gap-1 px-2 py-1 rounded-full text-xs font-medium border w-26 ${getStatusColor(
-                                ticket.status
-                              )}`}
-                            >
-                              {getStatusIcon(ticket.status)}
-                              {ticket.status}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {/* View Button for Mobile */}
-                            <button
-                              className="btn btn-secondary p-2"
-                              title="View Ticket"
-                              onClick={() => handleViewTicket(ticket.id)}
-                            >
-                              <FaEye className="h-3 w-3" />
-                            </button>
-
-                            {/* 3 Dot Menu for Mobile */}
-                            <div className="relative">
-                              <button
-                                className="btn btn-secondary p-2"
-                                title="More Actions"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const dropdown = e.currentTarget
-                                    .nextElementSibling as HTMLElement;
-                                  dropdown.classList.toggle('hidden');
-                                }}
-                              >
-                                <FaEllipsisH className="h-3 w-3" />
-                              </button>
-
-                              {/* Dropdown Menu */}
-                              <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                                <div className="py-1">
-                                  <button
-                                    onClick={() => {
-                                      handleToggleReadStatus(ticket.id);
-                                      document
-                                        .querySelector('.hidden.absolute')
-                                        ?.classList.add('hidden');
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                  >
-                                    {ticket.isRead ? (
-                                      <FaEyeSlash className="h-3 w-3" />
-                                    ) : (
-                                      <FaEye className="h-3 w-3" />
-                                    )}
-                                    Mark as {ticket.isRead ? 'Unread' : 'Read'}
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      handleHoldTicket(ticket.id);
-                                      document
-                                        .querySelector('.hidden.absolute')
-                                        ?.classList.add('hidden');
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                  >
-                                    <FaPause className="h-3 w-3" />
-                                    Hold Ticket
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      handleCloseTicket(ticket.id);
-                                      document
-                                        .querySelector('.hidden.absolute')
-                                        ?.classList.add('hidden');
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                  >
-                                    <FaCheck className="h-3 w-3" />
-                                    Close Ticket
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setTicketToDelete(ticket.id);
-                                      setDeleteDialogOpen(true);
-                                      document
-                                        .querySelector('.hidden.absolute')
-                                        ?.classList.add('hidden');
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
-                                  >
-                                    <FaTrash className="h-3 w-3" />
-                                    Delete
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* User */}
-                        <div className="mb-4">
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            User
-                          </div>
-                          <div
-                            className="font-medium text-sm"
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {ticket.username}
-                          </div>
-                        </div>
-
-                        {/* Subject */}
-                        <div className="mb-4">
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Subject
-                          </div>
-                          <div
-                            className={`text-sm ${!ticket.isRead ? 'font-bold' : 'font-normal'}`}
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {ticket.subject}
-                          </div>
-                        </div>
-
-                        {/* Created Date */}
-                        <div className="mb-4">
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Created
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Date: {new Date(ticket.createdAt).toLocaleDateString()}
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Time: {new Date(ticket.createdAt).toLocaleTimeString()}
-                          </div>
-                        </div>
-
-                        {/* Last Updated */}
-                        <div>
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Last Updated
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Date: {new Date(ticket.lastUpdated).toLocaleDateString()}
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Time: {new Date(ticket.lastUpdated).toLocaleTimeString()}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}

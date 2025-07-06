@@ -866,82 +866,93 @@ const AdminAllTransactionsPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <select
-                value={pagination.limit}
-                onChange={(e) =>
-                  setPagination((prev) => ({
-                    ...prev,
-                    limit:
-                      e.target.value === 'all'
-                        ? 1000
-                        : parseInt(e.target.value),
-                    page: 1,
-                  }))
-                }
-                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-              >
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="all">All</option>
-              </select>
-
-              <button
-                onClick={handleRefresh}
-                disabled={transactionsLoading || statsLoading}
-                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
-              >
-                <FaSync
-                  className={
-                    transactionsLoading || statsLoading ? 'animate-spin' : ''
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row items-left gap-2">
+              <div className="flex items-center gap-2 justify-start"> {/* Page View Dropdown and Refresh Button */} 
+                {/* Page View Dropdown */}
+                <select
+                  value={pagination.limit}
+                  onChange={(e) =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      limit:
+                        e.target.value === 'all'
+                          ? 1000
+                          : parseInt(e.target.value),
+                      page: 1,
+                    }))
                   }
-                />
-                Refresh
-              </button>
+                  className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                >
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="all">All</option>
+                </select>
 
-              <button
-                onClick={handleAddDeductBalance}
-                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
-              >
-                <FaPlus />
-                Add/Deduct User Balance
-              </button>
+                <button
+                  onClick={handleRefresh}
+                  disabled={transactionsLoading || statsLoading}
+                  className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
+                >
+                  <FaSync
+                    className={
+                      transactionsLoading || statsLoading ? 'animate-spin' : ''
+                    }
+                  />
+                  Refresh
+                </button>
+              </div>
+
+              {/* Add/Deduct User Balance button */}
+              <div className="w-full md:w-auto">
+                <button
+                  onClick={handleAddDeductBalance}
+                  className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full justify-center"
+                >
+                  <FaPlus />
+                  Add/Deduct User Balance
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            
+
+            
+
+            {/* Search Controls */}
+            <div className="flex flex-col md:flex-row items-center gap-3 justify-center md:justify-start">
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm w-full md:w-auto"
               >
                 <option value="all">All Types</option>
                 <option value="deposit">Deposit</option>
                 <option value="withdrawal">Withdrawal</option>
               </select>
 
-              <div className="relative">
-                <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
-                />
-                <input
-                  type="text"
-                  placeholder={`Search ${
-                    statusFilter === 'all' ? 'all' : statusFilter
-                  } transactions...`}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                />
-              </div>
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="relative w-full">
+                  <FaSearch
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
+                    style={{ color: 'var(--text-muted)' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} transactions...`}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  />
+                </div>
 
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
-                <option value="id">Transaction ID</option>
-                <option value="phone">Phone Number</option>
-                <option value="username">Username</option>
-              </select>
+                <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+                  <option value="id">Transaction ID</option>
+                  <option value="phone">Phone Number</option>
+                  <option value="username">Username</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -1080,7 +1091,7 @@ const AdminAllTransactionsPage = () => {
             ) : (
               <React.Fragment>
                 {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto">
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -1320,230 +1331,9 @@ const AdminAllTransactionsPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
-                <div className="lg:hidden">
-                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                    {transactions.map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="card card-padding border-l-4 border-blue-500 mb-4"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #
-                              {transaction.id
-                                ? formatID(transaction.id.slice(-8))
-                                : 'null'}
-                            </div>
-                            {getStatusBadge(
-                              transaction.admin_status || transaction.status
-                            )}
-                          </div>
-                          <div className="flex items-center">
-                            {transaction.admin_status === 'pending' ||
-                            transaction.status === 'pending' ? (
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleApprove(transaction.id)}
-                                  className="btn btn-primary flex items-center gap-1 px-2 py-1 text-xs bg-green-500 text-white border border-green-500 hover:bg-green-600"
-                                  title="Approve transaction"
-                                >
-                                  <FaCheckCircle className="h-3 w-3" />
-                                </button>
-                                <button
-                                  onClick={() => handleCancel(transaction.id)}
-                                  className="btn btn-secondary flex items-center gap-1 px-2 py-1 text-xs bg-red-500 text-white border border-red-500 hover:bg-red-600"
-                                  title="Cancel transaction"
-                                >
-                                  <FaTimesCircle className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="relative">
-                                <button
-                                  className="btn btn-secondary p-2"
-                                  title="More Actions"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const dropdown = e.currentTarget
-                                      .nextElementSibling as HTMLElement;
-                                    dropdown.classList.toggle('hidden');
-                                  }}
-                                >
-                                  <FaEllipsisH className="h-3 w-3" />
-                                </button>
+                
 
-                                <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                                  <div className="py-1">
-                                    <button
-                                      onClick={() => {
-                                        openViewDetailsDialog(transaction);
-                                        const dropdown = document.querySelector(
-                                          '.absolute.right-0'
-                                        ) as HTMLElement;
-                                        dropdown?.classList.add('hidden');
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                    >
-                                      <FaEye className="h-3 w-3" />
-                                      View Details
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        openUpdateStatusDialog(
-                                          transaction.id,
-                                          transaction.status
-                                        );
-                                        const dropdown = document.querySelector(
-                                          '.absolute.right-0'
-                                        ) as HTMLElement;
-                                        dropdown?.classList.add('hidden');
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                    >
-                                      <FaSync className="h-3 w-3" />
-                                      Update Status
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              User
-                            </div>
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {transaction.user?.username ||
-                                transaction.user?.email?.split('@')[0] ||
-                                transaction.user?.name ||
-                                'null'}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Transaction ID
-                            </div>
-                            {transaction.transactionId ? (
-                              <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit">
-                                {transaction.transactionId}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400">
-                                Not assigned
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Amount
-                            </div>
-                            <div
-                              className="font-semibold text-lg"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {transaction.currency === 'BDT' ? '৳' : '$'}
-                              {formatPrice(transaction.amount, 2)}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Method
-                            </div>
-                            {displayMethod(transaction) ? (
-                              <div className="text-xs font-medium text-gray-700 capitalize">
-                                {displayMethod(transaction)}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Phone
-                            </div>
-                            <span
-                              className="text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {transaction.phone || 'null'}
-                            </span>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Type
-                            </div>
-                            <div
-                              className={`text-xs font-medium px-2 py-1 rounded capitalize w-fit ${getTypeColor(
-                                transaction.type
-                              )}`}
-                            >
-                              {transaction.type}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Date:{' '}
-                            {transaction.createdAt
-                              ? new Date(
-                                  transaction.createdAt
-                                ).toLocaleDateString()
-                              : 'null'}
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Time:{' '}
-                            {transaction.createdAt
-                              ? new Date(
-                                  transaction.createdAt
-                                ).toLocaleTimeString()
-                              : 'null'}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -1925,7 +1715,7 @@ const AdminAllTransactionsPage = () => {
                           )}
                         </div>
 
-                        <div className="flex gap-3 justify-end">
+                        <div className="flex flex-col-reverse md:flex-row gap-3 justify-center md:justify-end">
                           <button
                             onClick={() => {
                               setApproveConfirmDialog({
@@ -1935,7 +1725,7 @@ const AdminAllTransactionsPage = () => {
                               });
                               setApproveTransactionId('');
                             }}
-                            className="btn btn-secondary"
+                            className="btn btn-secondary w-full md:w-auto"
                           >
                             Cancel
                           </button>
@@ -1947,7 +1737,7 @@ const AdminAllTransactionsPage = () => {
                               approveConfirmDialog.transaction?.type ===
                                 'withdrawal' && !approveTransactionId.trim()
                             }
-                            className="btn btn-primary flex items-center gap-2"
+                            className="btn btn-primary flex items-center gap-2 w-full md:w-auto justify-center"
                           >
                             <FaCheckCircle className="h-4 w-4" />
                             Approve Transaction
@@ -2032,7 +1822,7 @@ const AdminAllTransactionsPage = () => {
                           </div>
                         </div>
 
-                        <div className="flex gap-3 justify-end">
+                        <div className="flex flex-col-reverse md:flex-row gap-3 justify-center md:justify-end">
                           <button
                             onClick={() =>
                               setCancelConfirmDialog({
@@ -2041,7 +1831,7 @@ const AdminAllTransactionsPage = () => {
                                 transaction: null,
                               })
                             }
-                            className="btn btn-secondary"
+                            className="btn btn-secondary w-full md:w-auto"
                           >
                             Keep Transaction
                           </button>
@@ -2049,7 +1839,7 @@ const AdminAllTransactionsPage = () => {
                             onClick={() =>
                               confirmCancel(cancelConfirmDialog.transactionId)
                             }
-                            className="btn btn-primary flex items-center gap-2"
+                            className="btn btn-primary flex items-center gap-2 w-full md:w-auto justify-center"
                           >
                             <FaTimesCircle className="h-4 w-4" />
                             Cancel Transaction

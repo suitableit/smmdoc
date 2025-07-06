@@ -405,7 +405,7 @@ const ContactMessagesPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
@@ -448,14 +448,14 @@ const ContactMessagesPage = () => {
                 />
                 <input
                   type="text"
-                  placeholder="Search messages..."
+                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} messages...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="id">Message ID</option>
                 <option value="username">Username</option>
                 <option value="email">Email</option>
@@ -554,26 +554,28 @@ const ContactMessagesPage = () => {
           <div style={{ padding: '0 24px' }}>
             {/* Selected Messages Actions - Top of table */}
             {selectedMessages.length > 0 && (
-              <div className="flex items-center gap-2 py-4 border-b mb-4">
-                <span
-                  className="text-sm"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {selectedMessages.length} selected
-                </span>
-                
-                {/* Bulk Operations Dropdown */}
-                <select 
-                  value={selectedBulkOperation}
-                  onChange={(e) => setSelectedBulkOperation(e.target.value)}
-                  disabled={messagesLoading}
-                  className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm disabled:opacity-50"
-                >
-                  <option value="" disabled>Bulk Operations</option>
-                  <option value="mark_read">Mark all as read</option>
-                  <option value="mark_unread">Mark all as unread</option>
-                  <option value="delete_selected">Delete Selected</option>
-                </select>
+              <div className="flex flex-col md:flex-row md:items-center gap-2 py-4 border-b mb-4">
+                <div className="flex items-center gap-2 mb-2 md:mb-0">
+                  <span
+                    className="text-sm"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    {selectedMessages.length} selected
+                  </span>
+                  
+                  {/* Bulk Operations Dropdown */}
+                  <select 
+                    value={selectedBulkOperation}
+                    onChange={(e) => setSelectedBulkOperation(e.target.value)}
+                    disabled={messagesLoading}
+                    className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm disabled:opacity-50"
+                  >
+                    <option value="" disabled>Bulk Operations</option>
+                    <option value="mark_read">Mark all as read</option>
+                    <option value="mark_unread">Mark all as unread</option>
+                    <option value="delete_selected">Delete Selected</option>
+                  </select>
+                </div>
 
                 {/* Save Changes Button - appears when operation is selected */}
                 {selectedBulkOperation && (
@@ -583,7 +585,7 @@ const ContactMessagesPage = () => {
                       setSelectedBulkOperation(''); // Reset after execution
                     }}
                     disabled={messagesLoading}
-                    className="btn btn-primary flex items-center gap-2 px-4 py-2.5 disabled:opacity-50"
+                    className="btn btn-primary flex items-center gap-2 px-4 py-2.5 disabled:opacity-50 w-full md:w-auto"
                   >
                     Save Changes
                   </button>
@@ -617,8 +619,8 @@ const ContactMessagesPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View - Hidden on mobile */}
-                <div className="hidden lg:block overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -780,143 +782,10 @@ const ContactMessagesPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View - Visible on tablet and mobile */}
-                <div className="lg:hidden">
-                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                    {getPaginatedData().map((message) => (
-                      <div
-                        key={message.id}
-                        className="card card-padding border-l-4 border-blue-500 mb-4"
-                      >
-                        {/* Header with ID and Actions */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedMessages.includes(message.id)}
-                              onChange={() => handleSelectMessage(message.id)}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {formatMessageID(message.id)}
-                            </div>
-                            <span
-                              className={`inline-flex items-center justify-center gap-1 px-2 py-1 rounded-full text-xs font-medium border w-26 ${getStatusColor(
-                                message.status
-                              )}`}
-                            >
-                              {getStatusIcon(message.status)}
-                              {message.status}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {/* Conditional Action Button for Mobile */}
-                            {message.status === 'Replied' ? (
-                              <button
-                                className="btn btn-secondary p-2"
-                                title="View Message"
-                                onClick={() => handleViewEditMessage(message.id)}
-                              >
-                                <FaEye className="h-3 w-3" />
-                              </button>
-                            ) : (
-                              <button
-                                className="btn btn-primary p-2"
-                                title="Edit Message"
-                                onClick={() => handleViewEditMessage(message.id)}
-                              >
-                                <FaEdit className="h-3 w-3" />
-                              </button>
-                            )}
-
-                            {/* Delete Button for Mobile */}
-                            <button
-                              className="btn btn-secondary p-2"
-                              title="Delete Message"
-                              onClick={() => {
-                                setMessageToDelete(message.id);
-                                setDeleteDialogOpen(true);
-                              }}
-                            >
-                              <FaTrash className="h-3 w-3 text-red-600" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* User */}
-                        <div className="mb-4">
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            User
-                          </div>
-                          <div
-                            className="font-medium text-sm"
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {message.username}
-                          </div>
-                        </div>
-
-                        {/* Email */}
-                        <div className="mb-4">
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Email
-                          </div>
-                          <div
-                            className="text-sm"
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {message.email}
-                          </div>
-                        </div>
-
-                        {/* Category */}
-                        <div className="mb-4">
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Category
-                          </div>
-                          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                            {message.category}
-                          </div>
-                        </div>
-
-                        {/* Created Date */}
-                        <div>
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Created
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Date: {new Date(message.createdAt).toLocaleDateString()}
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Time: {new Date(message.createdAt).toLocaleTimeString()}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
