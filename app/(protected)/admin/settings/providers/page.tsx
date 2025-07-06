@@ -829,7 +829,7 @@ const APIProvidersPage = () => {
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Header Card with Action Buttons and Search */}
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleRefresh}
@@ -849,14 +849,14 @@ const APIProvidersPage = () => {
               </div>
               
               <div className="flex items-center gap-2">
-                <div className="relative">
+                <div className="relative w-full">
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                   <input
                     type="text"
                     placeholder="Search providers..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
                 </div>
               </div>
@@ -914,7 +914,7 @@ const APIProvidersPage = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="hidden md:flex items-center justify-between">
                     <div className="text-sm text-gray-500">
                       Last sync: {new Date(provider.lastSync).toLocaleString()}
                     </div>
@@ -943,10 +943,48 @@ const APIProvidersPage = () => {
                       </button>
                       <button
                         onClick={() => handleDeleteProvider(provider.id)}
-                        className="btn btn-danger btn-sm"
+                        className="btn btn-danger btn-sm bg-red-600 hover:bg-red-700"
                         title="Delete Provider"
                       >
-                        <FaTrash className="w-4 h-4 text-red-500" />
+                        <FaTrash className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mobile action buttons */}
+                  <div className="md:hidden mt-4 pt-4 border-t border-gray-200">
+                    <div className="text-sm text-gray-500 mb-4">
+                      Last sync: {new Date(provider.lastSync).toLocaleString()}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <button
+                        onClick={() => handleOpenEditProvider(provider)}
+                        className="btn btn-secondary btn-sm w-full justify-center"
+                      >
+                        <FaEdit className="w-4 h-4 mr-2" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleSyncProvider(provider.id)}
+                        className="btn btn-secondary btn-sm w-full justify-center"
+                        disabled={syncingProvider === provider.id}
+                      >
+                        <FaSync className={`w-4 h-4 mr-2 ${syncingProvider === provider.id ? 'animate-spin' : ''}`} />
+                        Sync
+                      </button>
+                      <button
+                        onClick={() => handleToggleStatus(provider.id)}
+                        className={`btn btn-sm w-full justify-center ${provider.status === 'active' ? 'btn-secondary' : 'btn-primary'}`}
+                      >
+                        {provider.status === 'active' ? <FaPause className="w-4 h-4 mr-2" /> : <FaPlay className="w-4 h-4 mr-2" />}
+                        {provider.status === 'active' ? 'Pause' : 'Resume'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProvider(provider.id)}
+                        className="btn btn-danger btn-sm w-full justify-center bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        <FaTrash className="w-4 h-4 mr-2" />
+                        Delete
                       </button>
                     </div>
                   </div>

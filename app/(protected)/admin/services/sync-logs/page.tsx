@@ -12,6 +12,7 @@ import {
 
 // Import APP_NAME constant
 import { APP_NAME } from '@/lib/constants';
+import { formatNumber } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -186,11 +187,6 @@ const SyncLogsPage = () => {
   // Loading states
   const [logsLoading, setLogsLoading] = useState(false);
 
-  // Utility functions
-  const formatID = (id: string) => {
-    return id.toUpperCase();
-  };
-
   // Get change type badge
   const getChangeTypeBadge = (changeType: string) => {
     switch (changeType) {
@@ -356,7 +352,7 @@ const SyncLogsPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
@@ -391,7 +387,7 @@ const SyncLogsPage = () => {
             </div>
 
             {/* Right: Search Controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
@@ -408,14 +404,14 @@ const SyncLogsPage = () => {
                   }...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
               <select
                 value={searchBy}
                 onChange={(e) => setSearchBy(e.target.value)}
-                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
                 <option value="all">All Fields</option>
                 <option value="api_provider">API Provider</option>
@@ -727,7 +723,7 @@ const SyncLogsPage = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -738,15 +734,17 @@ const SyncLogsPage = () => {
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
-                      `Showing ${
+                      `Showing ${formatNumber(
                         (pagination.page - 1) * pagination.limit + 1
-                      } to ${Math.min(
-                        pagination.page * pagination.limit,
-                        pagination.total
-                      )} of ${pagination.total} sync logs`
+                      )} to ${formatNumber(
+                        Math.min(
+                          pagination.page * pagination.limit,
+                          pagination.total
+                        )
+                      )} of ${formatNumber(pagination.total)} sync logs`
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
                       onClick={() =>
                         setPagination((prev) => ({
@@ -766,7 +764,9 @@ const SyncLogsPage = () => {
                       {logsLoading ? (
                         <GradientSpinner size="w-4 h-4" />
                       ) : (
-                        `Page ${pagination.page} of ${pagination.totalPages}`
+                        `Page ${formatNumber(
+                          pagination.page
+                        )} of ${formatNumber(pagination.totalPages)}`
                       )}
                     </span>
                     <button

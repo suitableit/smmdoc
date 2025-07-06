@@ -930,8 +930,8 @@ const ImportServicesPage = () => {
               <div className="space-y-6">
                 {/* Summary Info */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+                    <div className="mb-2 md:mb-0">
                       <h4 className="font-semibold text-blue-800">
                         Services Ready for Import
                       </h4>
@@ -940,7 +940,7 @@ const ImportServicesPage = () => {
                         profit margin applied
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left md:text-right">
                       <div className="text-sm text-blue-700">
                         <strong>Provider:</strong>{' '}
                         {getProviderName(selectedProvider)}
@@ -950,9 +950,9 @@ const ImportServicesPage = () => {
                 </div>
 
                 {/* Controls */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-2">
                   {/* Left: Search */}
-                  <div className="relative flex-1 max-w-md">
+                  <div className="relative flex-1 md:max-w-md">
                     <FaSearch
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
                       style={{ color: 'var(--text-muted)' }}
@@ -967,9 +967,9 @@ const ImportServicesPage = () => {
                   </div>
 
                   {/* Right: Changes indicator and collapse toggle */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
                     {hasChanges && (
-                      <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center justify-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <FaEdit className="h-4 w-4 text-yellow-600" />
                         <span className="text-sm text-yellow-800 font-medium">
                           You have unsaved changes
@@ -997,7 +997,7 @@ const ImportServicesPage = () => {
                           setCollapsedCategories(newCollapsed);
                         }
                       }}
-                      className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      className="flex items-center justify-center gap-2 px-3 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                       title={
                         Object.keys(groupedServices).every(
                           (cat) => collapsedCategories[cat]
@@ -1461,13 +1461,13 @@ const ImportServicesPage = () => {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex items-center justify-between pt-6 border-t mt-8">
-              <div>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t mt-8">
+              <div className="w-full md:w-auto">
                 {currentStep > 1 && (
                   <button
                     onClick={handlePrevious}
                     disabled={isLoading}
-                    className="btn btn-secondary flex items-center gap-2"
+                    className="btn btn-secondary flex items-center gap-2 w-full justify-center"
                   >
                     <FaChevronLeft />
                     Previous
@@ -1475,12 +1475,12 @@ const ImportServicesPage = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full md:w-auto">
                 {currentStep < 3 ? (
                   <button
                     onClick={handleNext}
                     disabled={isLoading}
-                    className="btn btn-primary flex items-center gap-2"
+                    className="btn btn-primary flex items-center gap-2 w-full justify-center"
                   >
                     Next
                     <FaChevronRight />
@@ -1489,7 +1489,7 @@ const ImportServicesPage = () => {
                   <button
                     onClick={handleSaveServices}
                     disabled={isLoading || services.length === 0}
-                    className="btn btn-primary flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                    className="btn btn-primary flex items-center gap-2 bg-green-600 hover:bg-green-700 w-full justify-center"
                   >
                     {isLoading ? (
                       <>
