@@ -711,33 +711,44 @@ const ModeratorsPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
-              <select 
+              <select
                 value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                onChange={(e) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    limit:
+                      e.target.value === 'all'
+                        ? 1000
+                        : parseInt(e.target.value),
+                    page: 1,
+                  }))
+                }
                 className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-                <option value={pagination.total || 1000}>All</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
               </select>
-              
+
               <button
                 onClick={handleRefresh}
                 disabled={moderatorsLoading}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
-                <FaSync className={moderatorsLoading ? 'animate-spin' : ''} />
+                <FaSync
+                  className={moderatorsLoading ? 'animate-spin' : ''}
+                />
                 Refresh
               </button>
             </div>
-            
+
             {/* Right: Search Controls Only */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
@@ -745,14 +756,16 @@ const ModeratorsPage = () => {
                 />
                 <input
                   type="text"
-                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} moderators...`}
+                  placeholder={`Search ${
+                    statusFilter === 'all' ? 'all' : statusFilter
+                  } moderators...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-              
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+
+              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="username">Username</option>
                 <option value="id">Moderator ID</option>
                 <option value="email">Moderator Email</option>
@@ -1119,7 +1132,7 @@ const ModeratorActions: React.FC<ModeratorActionsProps> = ({ moderator, onEdit, 
 };
 
 const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoading }) => (
-  <div className="flex items-center justify-between pt-4 pb-6 border-t">
+  <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
     <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
       {isLoading ? (
         <div className="flex items-center gap-2">

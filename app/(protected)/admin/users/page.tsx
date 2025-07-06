@@ -879,7 +879,7 @@ const UsersListPage = () => {
 
         {/* Controls Section - After stats cards */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
@@ -913,7 +913,7 @@ const UsersListPage = () => {
             </div>
 
             {/* Right: Search Controls Only */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
@@ -926,11 +926,11 @@ const UsersListPage = () => {
                   } users...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="username">Username</option>
                 <option value="id">User ID</option>
                 <option value="email">User Email</option>
@@ -1057,8 +1057,8 @@ const UsersListPage = () => {
               </div>
             ) : (
               <>
-                {/* Desktop Table View - Hidden on mobile */}
-                <div className="hidden lg:block overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -1308,7 +1308,7 @@ const UsersListPage = () => {
                 </div>
 
                 {/* Mobile Card View */}
-                <div className="lg:hidden">
+                <div className="hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {users.map((user) => (
                       <UserCard
@@ -1828,7 +1828,7 @@ const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
   isLoading,
 }) => (
-  <div className="flex items-center justify-between pt-4 pb-6 border-t">
+  <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
     <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
       {isLoading ? (
         <div className="flex items-center gap-2">
@@ -1845,7 +1845,7 @@ const Pagination: React.FC<PaginationProps> = ({
         ).toLocaleString()} of ${pagination.total.toLocaleString()} users`
       )}
     </div>
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 mt-4 md:mt-0">
       <button
         onClick={() => onPageChange(Math.max(1, pagination.page - 1))}
         disabled={!pagination.hasPrev || isLoading}

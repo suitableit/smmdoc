@@ -828,8 +828,9 @@ const BlogsPage = () => {
         {/* Controls Section */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            {/* Left: Action Buttons */}
+            {/* Left: Action Buttons (Dropdown and Refresh) */}
             <div className="flex items-center gap-2">
+              {/* Page View Dropdown */}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -862,10 +863,13 @@ const BlogsPage = () => {
                 />
                 Refresh
               </button>
+            </div>
 
+            {/* New Blog Post button - now a direct child of the main controls container */}
+            <div className="w-full md:w-auto">
               <button
                 onClick={handleNewBlogPost}
-                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full justify-center"
               >
                 <FaPlus />
                 New Blog Post
@@ -890,7 +894,7 @@ const BlogsPage = () => {
                 />
               </div>
 
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+              <select className="w-full md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="title">Title</option>
                 <option value="author">Author</option>
                 <option value="category">Category</option>
@@ -1008,28 +1012,30 @@ const BlogsPage = () => {
           <div style={{ padding: '0 24px' }}>
             {/* Bulk Action Section */}
             {selectedBlogs.length > 0 && (
-              <div className="flex items-center gap-2 mb-4 pt-4">
-                <span
-                  className="text-sm"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {selectedBlogs.length} selected
-                </span>
-                <select
-                  className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-                  value={selectedBulkAction}
-                  onChange={(e) => {
-                    setSelectedBulkAction(e.target.value);
-                  }}
-                >
-                  <option value="" disabled>
-                    Bulk Actions
-                  </option>
-                  <option value="publish">Publish Selected</option>
-                  <option value="draft">Move to Draft</option>
-                  <option value="archive">Archive Selected</option>
-                  <option value="delete">Delete Selected</option>
-                </select>
+              <div className="flex flex-wrap md:flex-nowrap items-start gap-2">
+                <div className="flex items-center gap-2 mb-2 md:mb-0">
+                  <span
+                    className="text-sm"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    {selectedBlogs.length} selected
+                  </span>
+                  <select
+                    className="w-full md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                    value={selectedBulkAction}
+                    onChange={(e) => {
+                      setSelectedBulkAction(e.target.value);
+                    }}
+                  >
+                    <option value="" disabled>
+                      Bulk Actions
+                    </option>
+                    <option value="publish">Publish Selected</option>
+                    <option value="draft">Move to Draft</option>
+                    <option value="archive">Archive Selected</option>
+                    <option value="delete">Delete Selected</option>
+                  </select>
+                </div>
 
                 {selectedBulkAction && (
                   <button
@@ -1063,7 +1069,7 @@ const BlogsPage = () => {
                       setSelectedBulkAction('');
                       setSelectedBlogs([]);
                     }}
-                    className="btn btn-primary px-3 py-2.5"
+                    className="btn btn-primary px-3 py-2.5 w-full md:w-auto"
                   >
                     Apply Action
                   </button>
@@ -1099,7 +1105,7 @@ const BlogsPage = () => {
             ) : (
               <React.Fragment>
                 {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto">
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -1384,192 +1390,10 @@ const BlogsPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
-                <div className="lg:hidden">
-                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                    {blogs.map((blog) => (
-                      <div
-                        key={blog.id}
-                        className="card card-padding border-l-4 border-purple-500 mb-4"
-                      >
-                        {/* Header with ID and Status */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedBlogs.includes(
-                                blog.id.toString()
-                              )}
-                              onChange={() => handleSelectBlog(blog.id.toString())}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
-                            <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                              #{formatID(blog.id.toString())}
-                            </div>
-                            <div 
-                              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(blog.status)}`}
-                            >
-                              {getStatusIcon(blog.status)}
-                              <span className="capitalize">
-                                {blog.status}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              className="btn btn-secondary p-2"
-                              title="View Details"
-                              onClick={() => {
-                                setViewDialog({ open: true, blog: blog });
-                              }}
-                            >
-                              <FaEye className="h-3 w-3" />
-                            </button>
-
-                            <div className="relative">
-                              <button
-                                className="btn btn-secondary p-2"
-                                title="More Actions"
-                                onClick={() => {
-                                  setDropdownOpen(
-                                    dropdownOpen === blog.id 
-                                      ? null 
-                                      : blog.id
-                                  );
-                                }}
-                              >
-                                <FaEllipsisH className="h-3 w-3" />
-                              </button>
-
-                              {dropdownOpen === blog.id && (
-                                <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
-                                  <button
-                                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                                    onClick={() => {
-                                      setDropdownOpen(null);
-                                      showToast('Edit functionality coming soon!', 'info');
-                                    }}
-                                  >
-                                    <FaEdit className="h-3 w-3 text-blue-600" />
-                                    Edit Blog
-                                  </button>
-                                  <button
-                                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                                    onClick={() => {
-                                      setDropdownOpen(null);
-                                      openStatusDialog(blog.id, blog.status);
-                                    }}
-                                  >
-                                    <FaCheckCircle className="h-3 w-3 text-green-600" />
-                                    Change Status
-                                  </button>
-                                  {blog.status !== 'archived' && (
-                                    <button
-                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
-                                      onClick={() => {
-                                        setDropdownOpen(null);
-                                        openDeleteDialog(blog.id, blog.title);
-                                      }}
-                                    >
-                                      <FaTrash className="h-3 w-3" />
-                                      Delete Blog
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Blog Info */}
-                        <div className="mb-4 pb-4 border-b">
-                          <div
-                            className="font-medium text-sm mb-2"
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {blog.title}
-                          </div>
-                          <div
-                            className="text-xs mb-2"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            {blog.excerpt}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium">
-                              {blog.category?.name || 'Uncategorized'}
-                            </div>
-                            <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-                              <FaUser className="h-3 w-3" />
-                              {blog.author?.name}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Views
-                            </div>
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {formatNumber(blog.views)}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Likes
-                            </div>
-                            <div
-                              className="font-semibold text-sm text-red-600"
-                            >
-                              {formatNumber(blog.likes)}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Comments
-                            </div>
-                            <div
-                              className="font-semibold text-sm text-blue-600"
-                            >
-                              {formatNumber(blog.comments)}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Published Date */}
-                        {blog.status === 'published' && blog.publishedAt && (
-                          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-                            <FaCalendarAlt className="h-3 w-3" />
-                            Published {formatDate(blog.publishedAt)}
-                          </div>
-                        )}
-                        {blog.status === 'scheduled' && blog.scheduledAt && (
-                          <div className="flex items-center gap-2 text-xs text-blue-600">
-                            <FaClock className="h-3 w-3" />
-                            Scheduled for {formatDate(blog.scheduledAt)}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}

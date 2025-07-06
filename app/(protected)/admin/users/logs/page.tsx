@@ -329,7 +329,7 @@ const UserActivityLogsPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
@@ -370,19 +370,17 @@ const UserActivityLogsPage = () => {
                   placeholder={`Search ${searchBy === 'all' ? 'activity logs' : searchBy === 'username' ? 'usernames' : searchBy === 'details' ? 'details' : 'IP addresses'}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
               
               <select 
                 value={searchBy}
                 onChange={(e) => setSearchBy(e.target.value)}
-                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
                 <option value="all">All Fields</option>
                 <option value="username">Username</option>
-                <option value="details">Details</option>
-                <option value="ip_address">IP Address</option>
               </select>
             </div>
           </div>
@@ -436,8 +434,8 @@ const UserActivityLogsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View - Hidden on mobile */}
-                <div className="hidden lg:block overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1000px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -517,7 +515,7 @@ const UserActivityLogsPage = () => {
                           </td>
                           <td className="p-3">
                             <div
-                              className="font-medium text-sm font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded inline-block"
+                              className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded"
                             >
                               {log.username}
                             </div>
@@ -580,7 +578,7 @@ const UserActivityLogsPage = () => {
                 </div>
 
                 {/* Mobile Card View - Visible on tablet and mobile */}
-                <div className="lg:hidden">
+                <div className="hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {getPaginatedData().map((log) => (
                       <div
@@ -683,7 +681,7 @@ const UserActivityLogsPage = () => {
 
                 {/* Pagination */}
                 <div
-                  className="flex items-center justify-between pt-4 pb-6 border-t"
+                  className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t"
                 >
                   <div
                     className="text-sm"

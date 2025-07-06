@@ -19,7 +19,7 @@ import {
   FaExclamationTriangle,
   FaClock,
   FaReply,
-  FaEnvelope,
+  FaTicketAlt,
   FaUser,
   FaCalendarAlt,
   FaBuilding,
@@ -27,7 +27,7 @@ import {
   FaStickyNote,
   FaChevronDown,
   FaChevronUp,
-  FaUserCog,
+  FaUserShield,
   FaPhoneAlt,
   FaMapMarkerAlt,
   FaGlobe,
@@ -407,30 +407,34 @@ const SupportTicketDetailsPage = () => {
       <div className="page-content">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <button 
-              onClick={() => window.history.back()}
-              className="btn btn-primary flex items-center gap-2"
-            >
-              <FaArrowLeft className="h-4 w-4" />
-              Back to Tickets
-            </button>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            {/* 1st line: Back to Tickets button, Status dropdown */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => window.history.back()}
+                className="btn btn-primary flex items-center gap-2"
+              >
+                <FaArrowLeft className="h-4 w-4" />
+                Back to Tickets
+              </button>
 
-            {/* Status Controls */}
-            <select 
-              value={ticketDetails.status}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              className="form-field pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-            >
-              <option value="Open">Open</option>
-              <option value="Answered">Answered</option>
-              <option value="Customer Reply">Customer Reply</option>
-              <option value="On Hold">On Hold</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Closed">Closed</option>
-            </select>
+              {/* Status Controls */}
+              <select 
+                value={ticketDetails.status}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="form-field pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+              >
+                <option value="Open">Open</option>
+                <option value="Answered">Answered</option>
+                <option value="Customer Reply">Customer Reply</option>
+                <option value="On Hold">On Hold</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex flex-row items-center gap-1 md:gap-2">
               <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
                 Ticket {formatTicketID(ticketDetails.id)}
               </h1>
@@ -441,6 +445,7 @@ const SupportTicketDetailsPage = () => {
               )}
             </div>
           </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -450,7 +455,7 @@ const SupportTicketDetailsPage = () => {
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
-                  <FaEnvelope />
+                  <FaTicketAlt />
                 </div>
                 <h3 className="card-title">Ticket Information</h3>
               </div>
@@ -507,7 +512,7 @@ const SupportTicketDetailsPage = () => {
                       message.type === 'staff' ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]' : 'bg-gradient-to-r from-gray-500 to-gray-600'
                     }`}>
                       {message.type === 'customer' ? <FaUser className="h-4 w-4" /> :
-                       message.type === 'staff' ? <FaUserCog className="h-4 w-4" /> :
+                       message.type === 'staff' ? <FaUserShield className="h-4 w-4" /> :
                        <FaExclamationTriangle className="h-4 w-4" />}
                     </div>
                     
