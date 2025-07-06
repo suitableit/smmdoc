@@ -1000,7 +1000,7 @@ const ChildPanelsPage = () => {
           <div style={{ padding: '0 24px' }}>
             {/* Bulk Action Section */}
             {selectedPanels.length > 0 && (
-              <div className="flex items-center gap-2 mb-4 pt-4">
+              <div className="flex flex-wrap items-center gap-2 mb-4 pt-4">
                 <span
                   className="text-sm"
                   style={{ color: 'var(--text-muted)' }}
@@ -1023,35 +1023,37 @@ const ChildPanelsPage = () => {
                 </select>
 
                 {selectedBulkAction && (
-                  <button
-                    onClick={() => {
-                      if (selectedBulkAction === 'activate') {
-                        console.log('Bulk activate selected:', selectedPanels);
-                        showToast(
-                          `Activating ${selectedPanels.length} selected panels...`,
-                          'info'
-                        );
-                      } else if (selectedBulkAction === 'deactivate') {
-                        console.log('Bulk deactivate selected:', selectedPanels);
-                        showToast(
-                          `Deactivating ${selectedPanels.length} selected panels...`,
-                          'info'
-                        );
-                      } else if (selectedBulkAction === 'suspend') {
-                        console.log('Bulk suspend selected:', selectedPanels);
-                        showToast(
-                          `Suspending ${selectedPanels.length} selected panels...`,
-                          'info'
-                        );
-                      }
-                      // Reset after action
-                      setSelectedBulkAction('');
-                      setSelectedPanels([]);
-                    }}
-                    className="btn btn-primary px-3 py-2.5"
-                  >
-                    Apply Action
-                  </button>
+                  <div className="w-full flex justify-center md:w-auto md:block">
+                    <button
+                      onClick={() => {
+                        if (selectedBulkAction === 'activate') {
+                          console.log('Bulk activate selected:', selectedPanels);
+                          showToast(
+                            `Activating ${selectedPanels.length} selected panels...`,
+                            'info'
+                          );
+                        } else if (selectedBulkAction === 'deactivate') {
+                          console.log('Bulk deactivate selected:', selectedPanels);
+                          showToast(
+                            `Deactivating ${selectedPanels.length} selected panels...`,
+                            'info'
+                          );
+                        } else if (selectedBulkAction === 'suspend') {
+                          console.log('Bulk suspend selected:', selectedPanels);
+                          showToast(
+                            `Suspending ${selectedPanels.length} selected panels...`,
+                            'info'
+                          );
+                        }
+                        // Reset after action
+                        setSelectedBulkAction('');
+                        setSelectedPanels([]);
+                      }}
+                      className="btn btn-primary w-full px-3 py-2.5"
+                    >
+                      Apply Action
+                    </button>
+                  </div>
                 )}
               </div>
             )}

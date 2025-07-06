@@ -804,7 +804,7 @@ const ContactMessagesPage = () => {
                       )} of ${pagination.total} messages`
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
                       onClick={() =>
                         setPagination((prev) => ({

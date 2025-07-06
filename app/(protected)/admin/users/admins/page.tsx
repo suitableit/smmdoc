@@ -1129,7 +1129,7 @@ const Pagination: React.FC<PaginationProps> = ({
         ).toLocaleString()} of ${pagination.total.toLocaleString()} admins`
       )}
     </div>
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 mt-4 md:mt-0">
       <button
         onClick={() => onPageChange(Math.max(1, pagination.page - 1))}
         disabled={!pagination.hasPrev || isLoading}
