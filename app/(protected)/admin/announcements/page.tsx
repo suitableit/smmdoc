@@ -641,7 +641,7 @@ const AnnouncementsPage = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="hidden md:flex items-center gap-2 ml-4">
                     <button
                       onClick={() => handleToggleStatus(announcement.id, announcement.status)}
                       className={`p-2 rounded-lg transition-colors ${
@@ -668,6 +668,34 @@ const AnnouncementsPage = () => {
                       <FaTrash className="h-4 w-4" />
                     </button>
                   </div>
+                </div>
+                {/* Mobile action buttons */}
+                <div className="flex md:hidden items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => handleToggleStatus(announcement.id, announcement.status)}
+                    className={`p-2 rounded-lg transition-colors w-full justify-center flex items-center gap-2 text-sm ${
+                      announcement.status === 'active' 
+                        ? 'text-green-600 bg-green-50 hover:bg-green-100' 
+                        : 'text-gray-500 bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    {announcement.status === 'active' ? <FaEye className="h-4 w-4" /> : <FaEyeSlash className="h-4 w-4" />}
+                    <span>{announcement.status === 'active' ? 'Deactivate' : 'Activate'}</span>
+                  </button>
+                  <button
+                    onClick={() => startEditing(announcement)}
+                    className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors w-full justify-center flex items-center gap-2 text-sm"
+                  >
+                    <FaEdit className="h-4 w-4" />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(announcement.id)}
+                    className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors w-full justify-center flex items-center gap-2 text-sm"
+                  >
+                    <FaTrash className="h-4 w-4" />
+                    <span>Delete</span>
+                  </button>
                 </div>
               </div>
             ))

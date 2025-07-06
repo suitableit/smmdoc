@@ -841,7 +841,7 @@ const AffiliateReferralsPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               <select
@@ -879,8 +879,8 @@ const AffiliateReferralsPage = () => {
             </div>
 
             {/* Right: Search Controls */}
-            <div className="flex items-center gap-3">
-              <div className="relative">
+            <div className="flex flex-row items-center gap-3 w-full md:w-auto">
+              <div className="relative flex-1">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
                   style={{ color: 'var(--text-muted)' }}
@@ -892,11 +892,11 @@ const AffiliateReferralsPage = () => {
                   } affiliates...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="username">Username</option>
                 <option value="email">Email</option>
                 <option value="referral_code">Referral Code</option>
@@ -1079,7 +1079,7 @@ const AffiliateReferralsPage = () => {
             ) : (
               <React.Fragment>
                 {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto">
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -1344,221 +1344,10 @@ const AffiliateReferralsPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
-                <div className="lg:hidden">
-                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                    {affiliates.map((affiliate) => (
-                      <div
-                        key={affiliate.id}
-                        className="card card-padding border-l-4 border-purple-500 mb-4"
-                      >
-                        {/* Header with ID and Status */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedAffiliates.includes(
-                                affiliate.id.toString()
-                              )}
-                              onChange={() => handleSelectAffiliate(affiliate.id.toString())}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
-                            <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                              #{formatID(affiliate.id.toString())}
-                            </div>
-                            <div 
-                              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(affiliate.status)}`}
-                            >
-                              {getStatusIcon(affiliate.status)}
-                              <span className="capitalize">
-                                {affiliate.status}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              className="btn btn-secondary p-2"
-                              title="View Details"
-                              onClick={() => {
-                                setViewDialog({ open: true, affiliate: affiliate });
-                              }}
-                            >
-                              <FaEye className="h-3 w-3" />
-                            </button>
-
-                            <div className="relative">
-                              <button
-                                className="btn btn-secondary p-2"
-                                title="More Actions"
-                                onClick={() => {
-                                  setDropdownOpen(
-                                    dropdownOpen === affiliate.id 
-                                      ? null 
-                                      : affiliate.id
-                                  );
-                                }}
-                              >
-                                <FaEllipsisH className="h-3 w-3" />
-                              </button>
-
-                              {dropdownOpen === affiliate.id && (
-                                <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
-                                  {affiliate.requestedCommission > 0 && (
-                                    <button
-                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                                      onClick={() => {
-                                        setDropdownOpen(null);
-                                        openPayoutDialog(
-                                          affiliate.id,
-                                          affiliate.requestedCommission,
-                                          affiliate.totalCommission,
-                                          affiliate.paymentMethod
-                                        );
-                                      }}
-                                    >
-                                      <FaMoneyBillWave className="h-3 w-3 text-green-600" />
-                                      Process Payout
-                                    </button>
-                                  )}
-                                  <button
-                                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                                    onClick={() => {
-                                      setDropdownOpen(null);
-                                      openStatusDialog(affiliate.id, affiliate.status);
-                                    }}
-                                  >
-                                    <FaUserCheck className="h-3 w-3 text-blue-600" />
-                                    Change Status
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* User Info */}
-                        <div className="mb-4 pb-4 border-b">
-                          <div
-                            className="font-medium text-sm mb-1"
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {affiliate.user?.username || 'Unknown'}
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            {affiliate.user?.email || 'No email'}
-                          </div>
-                        </div>
-
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Total Visits
-                            </div>
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {formatNumber(affiliate.totalVisits)}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Sign Ups
-                            </div>
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {formatNumber(affiliate.signUps)}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Conversion Rate
-                            </div>
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {affiliate.conversionRate.toFixed(1)}%
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Total Funds
-                            </div>
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              ${formatPrice(affiliate.totalFunds, 2)}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Commission Info */}
-                        <div className="grid grid-cols-3 gap-4">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Earned
-                            </div>
-                            <div className="font-semibold text-sm text-green-600">
-                              ${formatPrice(affiliate.earnedCommission, 2)}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Requested
-                            </div>
-                            <div className={`font-semibold text-sm ${
-                              affiliate.requestedCommission > 0 
-                                ? 'text-yellow-600' 
-                                : 'text-gray-500'
-                            }`}>
-                              ${formatPrice(affiliate.requestedCommission, 2)}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Total
-                            </div>
-                            <div className="font-semibold text-sm text-blue-600">
-                              ${formatPrice(affiliate.totalCommission, 2)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -1579,7 +1368,7 @@ const AffiliateReferralsPage = () => {
                       )} of ${formatNumber(pagination.total)} affiliates`
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
                       onClick={() =>
                         setPagination((prev) => ({

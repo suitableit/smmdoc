@@ -809,7 +809,7 @@ const ChildPanelsPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               <select
@@ -848,7 +848,7 @@ const ChildPanelsPage = () => {
 
             {/* Right: Search Controls */}
             <div className="flex items-center gap-3">
-              <div className="relative">
+              <div className="relative flex-1">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
                   style={{ color: 'var(--text-muted)' }}
@@ -860,7 +860,7 @@ const ChildPanelsPage = () => {
                   } panels...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
@@ -1085,7 +1085,7 @@ const ChildPanelsPage = () => {
             ) : (
               <React.Fragment>
                 {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto">
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1000px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -1289,119 +1289,10 @@ const ChildPanelsPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
-                <div className="lg:hidden">
-                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                    {childPanels.map((panel, index) => (
-                      <div
-                        key={panel.id}
-                        className="card card-padding border-l-4 border-purple-500 mb-4"
-                      >
-                        {/* Header with ID and Status */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedPanels.includes(
-                                panel.id.toString()
-                              )}
-                              onChange={() => handleSelectPanel(panel.id.toString())}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
-                            <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                              #{(pagination.page - 1) * pagination.limit + index + 1}
-                            </div>
-                            <div 
-                              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(panel.status)}`}
-                            >
-                              {getStatusIcon(panel.status)}
-                              <span className="capitalize">
-                                {panel.status}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              className="btn btn-secondary p-2"
-                              title="View Details"
-                              onClick={() => {
-                                setViewDialog({ open: true, panel: panel });
-                              }}
-                            >
-                              <FaEye className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* User and Domain Info */}
-                        <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              User
-                            </div>
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {panel.user?.username || 'Unknown'}
-                            </div>
-                            <div
-                              className="text-xs"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              {panel.user?.email || 'No email'}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Domain
-                            </div>
-                            <a
-                              href={`https://${panel.domain}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                            >
-                              {panel.domain}
-                            </a>
-                          </div>
-                        </div>
-
-                        {/* Created Date */}
-                        <div>
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Created
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {panel.createdAt
-                              ? new Date(panel.createdAt).toLocaleDateString()
-                              : 'Unknown'}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {panel.createdAt
-                              ? new Date(panel.createdAt).toLocaleTimeString()
-                              : ''}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -1422,7 +1313,7 @@ const ChildPanelsPage = () => {
                       )} of ${formatNumber(pagination.total)} panels`
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
                       onClick={() =>
                         setPagination((prev) => ({
@@ -1548,10 +1439,10 @@ const ChildPanelsPage = () => {
 
                       {/* Tabs */}
                       <div className="border-b border-gray-200 mb-6">
-                        <nav className="-mb-px flex space-x-8">
+                        <nav className="-mb-px flex flex-wrap space-x-0 sm:space-x-8 gap-2">
                           <button
                             onClick={() => setActiveSettingsTab('general')}
-                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                            className={`py-2 px-4 sm:px-1 border-b-2 font-medium text-sm flex-1 text-center ${
                               activeSettingsTab === 'general'
                                 ? 'border-purple-500 text-purple-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -1561,7 +1452,7 @@ const ChildPanelsPage = () => {
                           </button>
                           <button
                             onClick={() => setActiveSettingsTab('appearance')}
-                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                            className={`py-2 px-4 sm:px-1 border-b-2 font-medium text-sm flex-1 text-center ${
                               activeSettingsTab === 'appearance'
                                 ? 'border-purple-500 text-purple-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -1571,7 +1462,7 @@ const ChildPanelsPage = () => {
                           </button>
                           <button
                             onClick={() => setActiveSettingsTab('api')}
-                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                            className={`py-2 px-4 sm:px-1 border-b-2 font-medium text-sm flex-1 text-center ${
                               activeSettingsTab === 'api'
                                 ? 'border-purple-500 text-purple-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -1581,7 +1472,7 @@ const ChildPanelsPage = () => {
                           </button>
                           <button
                             onClick={() => setActiveSettingsTab('features')}
-                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                            className={`py-2 px-4 sm:px-1 border-b-2 font-medium text-sm flex-1 text-center ${
                               activeSettingsTab === 'features'
                                 ? 'border-purple-500 text-purple-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
