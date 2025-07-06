@@ -994,7 +994,7 @@ const AffiliateReferralsPage = () => {
           <div style={{ padding: '0 24px' }}>
             {/* Bulk Action Section */}
             {selectedAffiliates.length > 0 && (
-              <div className="flex items-center gap-2 mb-4 pt-4">
+              <div className="flex flex-wrap items-center gap-2 mb-4 pt-4">
                 <span
                   className="text-sm"
                   style={{ color: 'var(--text-muted)' }}
@@ -1017,35 +1017,37 @@ const AffiliateReferralsPage = () => {
                 </select>
 
                 {selectedBulkAction && (
-                  <button
-                    onClick={() => {
-                      if (selectedBulkAction === 'activate') {
-                        console.log('Bulk activate selected:', selectedAffiliates);
-                        showToast(
-                          `Activating ${selectedAffiliates.length} selected affiliates...`,
-                          'info'
-                        );
-                      } else if (selectedBulkAction === 'deactivate') {
-                        console.log('Bulk deactivate selected:', selectedAffiliates);
-                        showToast(
-                          `Deactivating ${selectedAffiliates.length} selected affiliates...`,
-                          'info'
-                        );
-                      } else if (selectedBulkAction === 'process_payouts') {
-                        console.log('Bulk process payouts selected:', selectedAffiliates);
-                        showToast(
-                          `Processing payouts for ${selectedAffiliates.length} selected affiliates...`,
-                          'info'
-                        );
-                      }
-                      // Reset after action
-                      setSelectedBulkAction('');
-                      setSelectedAffiliates([]);
-                    }}
-                    className="btn btn-primary px-3 py-2.5"
-                  >
-                    Apply Action
-                  </button>
+                  <div className="w-full flex justify-center md:w-auto md:block">
+                    <button
+                      onClick={() => {
+                        if (selectedBulkAction === 'activate') {
+                          console.log('Bulk activate selected:', selectedAffiliates);
+                          showToast(
+                            `Activating ${selectedAffiliates.length} selected affiliates...`,
+                            'info'
+                          );
+                        } else if (selectedBulkAction === 'deactivate') {
+                          console.log('Bulk deactivate selected:', selectedAffiliates);
+                          showToast(
+                            `Deactivating ${selectedAffiliates.length} selected affiliates...`,
+                            'info'
+                          );
+                        } else if (selectedBulkAction === 'process_payouts') {
+                          console.log('Bulk process payouts selected:', selectedAffiliates);
+                          showToast(
+                            `Processing payouts for ${selectedAffiliates.length} selected affiliates...`,
+                            'info'
+                          );
+                        }
+                        // Reset after action
+                        setSelectedBulkAction('');
+                        setSelectedAffiliates([]);
+                      }}
+                      className="btn btn-primary w-full px-3 py-2.5"
+                    >
+                      Apply Action
+                    </button>
+                  </div>
                 )}
               </div>
             )}

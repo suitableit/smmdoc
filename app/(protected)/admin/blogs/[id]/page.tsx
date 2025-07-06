@@ -396,7 +396,7 @@ This is a sample blog post content that demonstrates how the edit functionality 
       <div className="page-content">
         {/* Page Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <button
@@ -418,7 +418,7 @@ This is a sample blog post content that demonstrates how the edit functionality 
                 Last updated {new Date(formData.updatedAt).toLocaleDateString()} by {formData.author}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
               <button
                 onClick={handlePreview}
                 className="btn btn-secondary flex items-center gap-2 px-4 py-2.5"
@@ -791,6 +791,50 @@ This is a sample blog post content that demonstrates how the edit functionality 
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Fixed Action Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex flex-wrap justify-center gap-3 md:hidden z-50">
+        <div className="flex flex-1 gap-3">
+          <button
+            onClick={handlePreview}
+            className="btn btn-secondary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
+            disabled={isLoading}
+          >
+            <FaEye className="h-4 w-4" />
+            Preview
+          </button>
+          {hasUnsavedChanges && (
+            <button
+              onClick={handleDiscardChanges}
+              className="btn btn-outline flex items-center justify-center gap-2 px-4 py-2.5 w-full"
+              disabled={isLoading}
+            >
+              <FaTimes className="h-4 w-4" />
+              Discard
+            </button>
+          )}
+          <button
+            onClick={() => handleSubmit('draft')}
+            className="btn btn-secondary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
+            disabled={isLoading}
+          >
+            <FaSave className="h-4 w-4" />
+            {isLoading ? 'Saving...' : 'Save Draft'}
+          </button>
+        </div>
+        <button
+          onClick={() => handleSubmit('published')}
+          className="btn btn-primary flex items-center justify-center gap-2 px-4 py-2.2 w-full"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <GradientSpinner size="w-4 h-4" />
+          ) : (
+            <FaGlobe className="h-4 w-4" />
+          )}
+          {isLoading ? 'Updating...' : 'Update & Publish'}
+        </button>
       </div>
     </div>
   );
