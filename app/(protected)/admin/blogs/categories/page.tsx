@@ -15,6 +15,7 @@ import {
 
 // Import APP_NAME constant
 import { APP_NAME } from '@/lib/constants';
+import { formatNumber } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -350,10 +351,9 @@ const PostCategoriesPage = () => {
       <div className="page-content">
         {/* Controls Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
-            {/* Left: Action Buttons */}
-            <div className="flex items-center gap-2">
-              {/* Page View Dropdown */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            {/* First line: Page View Dropdown and Refresh Button */}
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -383,18 +383,19 @@ const PostCategoriesPage = () => {
                 Refresh
               </button>
 
+              {/* Add Post Category Button */}
               <button
                 onClick={() => setAddDialogOpen(true)}
-                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full sm:w-auto"
               >
                 <FaPlus />
-                Add Post Category
+                Add New Category
               </button>
             </div>
 
             {/* Right: Search Controls */}
-            <div className="flex items-center gap-3">
-              <div className="relative">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="relative flex-1">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
                   style={{ color: 'var(--text-muted)' }}
@@ -404,7 +405,7 @@ const PostCategoriesPage = () => {
                   placeholder="Search post categories..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
             </div>
@@ -443,7 +444,7 @@ const PostCategoriesPage = () => {
             ) : (
               <React.Fragment>
                 {/* Desktop Table View - Hidden on mobile */}
-                <div className="hidden lg:block overflow-x-auto">
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -594,145 +595,10 @@ const PostCategoriesPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View - Visible on tablet and mobile */}
-                <div className="lg:hidden">
-                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                    {getPaginatedData().map((postCategory) => (
-                      <div
-                        key={postCategory.id}
-                        className="card card-padding border-l-4 border-blue-500 mb-4"
-                      >
-                        {/* Header with ID and Actions */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{formatID(postCategory.id)}
-                            </div>
-                          </div>
-
-                          {/* 3 Dot Menu for Mobile */}
-                          <div className="relative">
-                            <button
-                              className="btn btn-secondary p-2"
-                              title="More Actions"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const dropdown = e.currentTarget
-                                  .nextElementSibling as HTMLElement;
-                                dropdown.classList.toggle('hidden');
-                              }}
-                            >
-                              <FaEllipsisH className="h-3 w-3" />
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                              <div className="py-1">
-                                <button
-                                  onClick={() => {
-                                    openEditDialog(postCategory);
-                                    document
-                                      .querySelector('.hidden.absolute')
-                                      ?.classList.add('hidden');
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                >
-                                  <FaEdit className="h-3 w-3" />
-                                  Edit Post Category
-                                </button>
-                                {postCategory.id !== 'pc_000' && (
-                                  <button
-                                    onClick={() => {
-                                      setPostCategoryToDelete(postCategory.id);
-                                      setDeleteDialogOpen(true);
-                                      document
-                                        .querySelector('.hidden.absolute')
-                                        ?.classList.add('hidden');
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
-                                  >
-                                    <FaTrash className="h-3 w-3" />
-                                    Delete
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Post Category Name */}
-                        <div className="mb-4">
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Name
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {postCategory.name}
-                            </div>
-                            {postCategory.id === 'pc_000' && (
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
-                                Default
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Post Count */}
-                        <div className="mb-4">
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Post Count
-                          </div>
-                          <div
-                            className="font-medium text-sm"
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {postCategory.postCount}
-                          </div>
-                        </div>
-
-                        {/* Created Date */}
-                        <div>
-                          <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Created
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Date:{' '}
-                            {new Date(
-                              postCategory.createdAt
-                            ).toLocaleDateString()}
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Time:{' '}
-                            {new Date(
-                              postCategory.createdAt
-                            ).toLocaleTimeString()}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
@@ -743,15 +609,17 @@ const PostCategoriesPage = () => {
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
-                      `Showing ${
+                      `Showing ${formatNumber(
                         (pagination.page - 1) * pagination.limit + 1
-                      } to ${Math.min(
-                        pagination.page * pagination.limit,
-                        pagination.total
-                      )} of ${pagination.total} post categories`
+                      )} to ${formatNumber(
+                        Math.min(
+                          pagination.page * pagination.limit,
+                          pagination.total
+                        )
+                      )} of ${formatNumber(pagination.total)} post categories`
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
                       onClick={() =>
                         setPagination((prev) => ({
@@ -771,7 +639,9 @@ const PostCategoriesPage = () => {
                       {postCategoriesLoading ? (
                         <GradientSpinner size="w-4 h-4" />
                       ) : (
-                        `Page ${pagination.page} of ${pagination.totalPages}`
+                        `Page ${formatNumber(
+                          pagination.page
+                        )} of ${formatNumber(pagination.totalPages)}`
                       )}
                     </span>
                     <button

@@ -406,7 +406,7 @@ const PostTagsPage = () => {
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full sm:w-auto"
               >
                 <FaPlus />
-                Add Post Tag
+                Add New Tag
               </button>
             </div>
 
