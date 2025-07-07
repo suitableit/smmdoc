@@ -73,7 +73,7 @@ const AvatarFallback = ({ children }: { children: React.ReactNode }) => (
 );
 
 // Enhanced Theme Toggle Component
-const ThemeToggle = () => {
+const ThemeToggle = ({ isMobile = false }: { isMobile?: boolean }) => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -84,7 +84,7 @@ const ThemeToggle = () => {
   if (!mounted) {
     return (
       <div
-        className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center animate-pulse"
+        className={`${isMobile ? 'w-full' : 'h-10 w-10 sm:h-10 sm:w-10'} rounded-lg header-theme-transition flex items-center justify-center animate-pulse`}
         style={{
           backgroundColor: 'var(--dropdown-bg)',
           border: `1px solid var(--header-border)`,
@@ -108,11 +108,61 @@ const ThemeToggle = () => {
     themeOptions.find((option) => option.key === theme) || themeOptions[0];
   const CurrentIcon = currentTheme.icon;
 
+  if (isMobile) {
+    // Mobile version - inline theme options
+    return (
+      <div
+        className="p-2.5 rounded-lg"
+        style={{
+          backgroundColor: 'var(--dropdown-hover)',
+          border: `1px solid var(--header-border)`,
+        }}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span
+            className="font-semibold"
+            style={{ color: 'var(--header-text)', fontSize: '11px' }}
+          >
+            Theme
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          {themeOptions.map((option) => {
+            const IconComponent = option.icon;
+            const isActive = theme === option.key;
+
+            return (
+              <button
+                key={option.key}
+                onClick={() => setTheme(option.key)}
+                className={`flex flex-col items-center gap-1 p-1.5 rounded-md text-center transition-all duration-200 ${
+                  isActive ? 'text-white shadow-sm' : 'hover:opacity-80'
+                }`}
+                style={{
+                  backgroundColor: isActive ? 'var(--primary)' : 'transparent',
+                  color: isActive ? 'white' : 'var(--header-text)',
+                }}
+              >
+                <IconComponent
+                  className={`h-2.5 w-2.5 transition-colors duration-200 ${
+                    isActive ? 'text-white' : ''
+                  }`}
+                />
+                <span className="font-medium" style={{ fontSize: '10px' }}>{option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop version - dropdown
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 group"
+          className="h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 group"
           style={{
             backgroundColor: 'var(--dropdown-bg)',
             border: `1px solid var(--header-border)`,
@@ -163,6 +213,99 @@ const ThemeToggle = () => {
   );
 };
 
+// Mobile Currency Toggle Component
+const MobileCurrencyToggle = () => {
+  const { currency, setCurrency, rate, isLoading } = useCurrency();
+
+  const handleCurrencyChange = async (newCurrency: 'USD' | 'BDT' | 'USDT') => {
+    await setCurrency(newCurrency);
+    window.location.reload();
+  };
+
+  return (
+    <div
+      className="p-2.5 rounded-lg"
+      style={{
+        backgroundColor: 'var(--dropdown-hover)',
+        border: `1px solid var(--header-border)`,
+      }}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span
+          className="font-semibold"
+          style={{ color: 'var(--header-text)', fontSize: '11px' }}
+        >
+          Currency
+        </span>
+        {rate && !isLoading && (
+          <span
+            className="text-xs font-medium opacity-70"
+            style={{ color: 'var(--header-text)', fontSize: '10px' }}
+          >
+            1USD ≈ {rate.toFixed(2)}BDT
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={() => handleCurrencyChange('BDT')}
+          disabled={isLoading}
+          className={`flex items-center gap-1.5 p-1.5 rounded-md transition-all duration-200 ${
+            currency === 'BDT'
+              ? 'text-white shadow-sm'
+              : 'hover:opacity-80'
+          }`}
+          style={{
+            backgroundColor:
+              currency === 'BDT' ? 'var(--primary)' : 'transparent',
+            color: currency === 'BDT' ? 'white' : 'var(--header-text)',
+          }}
+        >
+          <span
+            className={`text-xs font-bold ${
+              currency === 'BDT' ? 'text-white' : ''
+            }`}
+            style={{
+              color:
+                currency === 'BDT' ? 'white' : 'var(--header-text)',
+            }}
+          >
+            ৳
+          </span>
+          <span className="font-medium" style={{ fontSize: '10px' }}>BDT</span>
+        </button>
+        <button
+          onClick={() => handleCurrencyChange('USD')}
+          disabled={isLoading}
+          className={`flex items-center gap-1.5 p-1.5 rounded-md transition-all duration-200 ${
+            currency === 'USD'
+              ? 'text-white shadow-sm'
+              : 'hover:opacity-80'
+          }`}
+          style={{
+            backgroundColor:
+              currency === 'USD' ? 'var(--primary)' : 'transparent',
+            color: currency === 'USD' ? 'white' : 'var(--header-text)',
+          }}
+        >
+          <span
+            className={`text-xs font-bold ${
+              currency === 'USD' ? 'text-white' : ''
+            }`}
+            style={{
+              color:
+                currency === 'USD' ? 'white' : 'var(--header-text)',
+            }}
+          >
+            $
+          </span>
+          <span className="font-medium" style={{ fontSize: '10px' }}>USD</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // Enhanced Mobile Menu Toggle Button (3-dot menu)
 const MobileMenuToggle = ({
   isMenuOpen,
@@ -174,7 +317,7 @@ const MobileMenuToggle = ({
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
       <button
-        className="lg:hidden h-8 w-8 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 group"
+        className="lg:hidden h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 group"
         style={{
           backgroundColor: 'var(--dropdown-bg)',
           border: `1px solid var(--header-border)`,
@@ -310,7 +453,7 @@ const Menu = ({ user }: { user: any }) => {
         aria-label="User menu"
         disabled={isLoggingOut}
       >
-        <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+        <Avatar className="h-10 w-10 sm:h-10 sm:w-10">
           <AvatarImage
             src={user?.photo || user?.image}
             alt={user?.name || 'User'}
@@ -403,6 +546,12 @@ const Menu = ({ user }: { user: any }) => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Mobile Controls Section - Currency and Theme */}
+            <div className="sm:hidden p-2 space-y-2">
+              <MobileCurrencyToggle />
+              <ThemeToggle isMobile={true} />
             </div>
 
             <div className="py-1 sm:py-2">
@@ -514,14 +663,24 @@ const Header = () => {
     <nav
       className="h-16 sm:h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 header-theme-transition"
       style={{
+        height: '4.5rem', // 72px for mobile
         backgroundColor: 'var(--header-bg)',
         borderBottom: `1px solid var(--header-border)`,
         color: 'var(--header-text)',
       }}
     >
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media (min-width: 640px) {
+            nav {
+              height: 5rem !important;
+            }
+          }
+        `
+      }} />
       {/* Mobile Logo - Visible only on mobile */}
       <div className="flex lg:hidden items-center">
-        <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
+        <img src="/logo.png" alt="Logo" className="h-12 w-auto" />
       </div>
 
       {/* Desktop Search - Hidden on mobile */}
@@ -725,13 +884,13 @@ const Header = () => {
       </div>
 
       {/* Right side controls */}
-      <div className="flex items-center gap-2 sm:gap-4 ml-auto">
-        {/* Currency Selector - Now visible on all screens */}
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 sm:gap-4 ml-auto">
+        {/* Currency Selector - Hidden on mobile, visible on desktop */}
+        <div className="hidden sm:flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="h-8 sm:h-10 px-2 sm:px-4 rounded-lg header-theme-transition flex items-center gap-1 sm:gap-2 hover:opacity-80 transition-all duration-200 group min-w-[32px] sm:min-w-[80px] flex-shrink-0"
+                className="h-10 sm:h-10 px-3 sm:px-4 rounded-lg header-theme-transition flex items-center gap-2 sm:gap-2 hover:opacity-80 transition-all duration-200 group min-w-[80px] sm:min-w-[80px] flex-shrink-0"
                 style={{
                   backgroundColor: 'var(--dropdown-bg)',
                   border: `1px solid var(--header-border)`,
@@ -884,14 +1043,14 @@ const Header = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 flex-shrink-0"
+              className="h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 flex-shrink-0"
               style={{
                 backgroundColor: 'var(--dropdown-bg)',
                 border: `1px solid var(--header-border)`,
               }}
             >
               <FaBell
-                className="h-3 w-3 sm:h-4 sm:w-4"
+                className="h-4 w-4 sm:h-4 sm:w-4"
                 style={{ color: 'var(--header-text)' }}
               />
             </button>
@@ -938,8 +1097,8 @@ const Header = () => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Theme Toggle */}
-        <div className="flex items-center">
+        {/* Theme Toggle - Hidden on mobile, visible on desktop */}
+        <div className="hidden sm:flex items-center">
           <ThemeToggle />
         </div>
 
