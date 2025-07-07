@@ -535,15 +535,15 @@ const OurServices: React.FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0d0712] transition-colors duration-200">
       {/* Hero Section */}
-      <section className="pt-20 pb-16 transition-colors duration-200">
+      <section className="pt-[60px] lg:pt-[120px] pb-[30px] lg:pb-[60px] transition-colors duration-200">
         <div className="max-w-[1200px] mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
-            <div className="space-y-6">
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
+            <div>
+              <h1 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight transition-colors duration-200">
                 Services & Pricing
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
+              <p className="text-gray-600 dark:text-gray-300 text-justify text-lg mb-6 leading-relaxed transition-colors duration-200">
                 Discover your ideal social media strategy with SMMDOC's Service
                 & Pricing List. This page offers a clear, concise table of our
                 services across various platforms, along with transparent
@@ -590,7 +590,7 @@ const OurServices: React.FC = () => {
       </section>
 
       {/* Services Table Section */}
-      <section className="py-16 pb-[120px] transition-colors duration-200">
+      <section className="pt-[30px] lg:pt-[60px] pb-[120px] lg:pb-[120px] transition-colors duration-200">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="text-center mb-6">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
