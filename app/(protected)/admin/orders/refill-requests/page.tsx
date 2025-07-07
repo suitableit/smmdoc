@@ -64,6 +64,10 @@ interface Order {
     min_order: number;
     max_order: number;
     status: string;
+    seller?: {
+      type: 'manual' | 'auto';
+      name?: string;
+    };
   };
   category: {
     id: number;
@@ -587,23 +591,25 @@ const RefillOrdersPage = () => {
           <div style={{ padding: '0 24px' }}>
             {/* Bulk Action Section */}
             {selectedOrders.length > 0 && (
-              <div className="flex items-center gap-2 mb-4 pt-4">
-                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {selectedOrders.length} selected
-                </span>
-                <select
-                  className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-                  value={selectedBulkAction}
-                  onChange={(e) => {
-                    setSelectedBulkAction(e.target.value);
-                  }}
-                >
-                  <option value="" disabled>
-                    Bulk Actions
-                  </option>
-                  <option value="bulk_refill">Bulk Refill</option>
-                  <option value="export">Export Selected</option>
-                </select>
+              <div className="flex flex-wrap items-center gap-2 mb-4 pt-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    {selectedOrders.length} selected
+                  </span>
+                  <select
+                    className="w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                    value={selectedBulkAction}
+                    onChange={(e) => {
+                      setSelectedBulkAction(e.target.value);
+                    }}
+                  >
+                    <option value="" disabled>
+                      Bulk Actions
+                    </option>
+                    <option value="bulk_refill">Bulk Refill</option>
+                    <option value="export">Export Selected</option>
+                  </select>
+                </div>
 
                 {selectedBulkAction && (
                   <button
@@ -619,7 +625,7 @@ const RefillOrdersPage = () => {
                       setSelectedBulkAction('');
                       setSelectedOrders([]);
                     }}
-                    className="btn btn-primary px-3 py-2.5"
+                    className="btn btn-primary px-3 py-2.5 whitespace-nowrap w-full sm:w-auto"
                   >
                     Apply Action
                   </button>
@@ -651,7 +657,7 @@ const RefillOrdersPage = () => {
               <React.Fragment>
                 {/* Desktop Table View */}
                 <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full text-sm min-w-[1200px]">
+                  <table className="w-full text-sm min-w-[1300px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -670,6 +676,9 @@ const RefillOrdersPage = () => {
                         </th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           Service
+                        </th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          Seller
                         </th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           Link
@@ -737,6 +746,21 @@ const RefillOrdersPage = () => {
                               <div className="text-xs truncate max-w-44" style={{ color: 'var(--text-muted)' }}>
                                 {order.category?.category_name || 'Unknown Category'}
                               </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div>
+                              <div
+                                className="font-medium text-sm capitalize"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {order.service?.seller?.type || 'Manual'}
+                              </div>
+                              {order.service?.seller?.name && (
+                                <div className="text-xs truncate max-w-32" style={{ color: 'var(--text-muted)' }}>
+                                  {order.service.seller.name}
+                                </div>
+                              )}
                             </div>
                           </td>
                           <td className="p-3">
@@ -902,6 +926,22 @@ const RefillOrdersPage = () => {
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                             {order.category?.category_name || 'Unknown Category'}
                           </div>
+                          
+                          {/* Seller Info */}
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                              Seller:
+                            </span>
+                            <span className="text-xs font-medium capitalize" style={{ color: 'var(--text-primary)' }}>
+                              {order.service?.seller?.type || 'Manual'}
+                            </span>
+                            {order.service?.seller?.name && (
+                              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                ({order.service.seller.name})
+                              </span>
+                            )}
+                          </div>
+                          
                           <div className="flex items-center gap-1 mt-1">
                             <a
                               href={order.link}

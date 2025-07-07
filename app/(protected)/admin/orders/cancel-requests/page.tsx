@@ -644,23 +644,25 @@ const CancelRequestsPage = () => {
           <div style={{ padding: '0 24px' }}>
             {/* Bulk Action Section */}
             {selectedRequests.length > 0 && (
-              <div className="flex flex-col md:flex-row items-center gap-2 py-4 border-b mb-4 w-full">
-                <span className="text-sm md:w-auto" style={{ color: 'var(--text-muted)' }}>
-                  {selectedRequests.length} selected
-                </span>
-                <select
-                  className="w-full md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-                  value={selectedBulkAction}
-                  onChange={(e) => {
-                    setSelectedBulkAction(e.target.value);
-                  }}
-                >
-                  <option value="" disabled>
-                    Bulk Actions
-                  </option>
-                  <option value="approve">Approve Selected</option>
-                  <option value="decline">Decline Selected</option>
-                </select>
+              <div className="flex flex-row flex-wrap items-center gap-2 py-4 border-b mb-4 w-full">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm w-auto" style={{ color: 'var(--text-muted)' }}>
+                    {selectedRequests.length} selected
+                  </span>
+                  <select
+                    className="w-full md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                    value={selectedBulkAction}
+                    onChange={(e) => {
+                      setSelectedBulkAction(e.target.value);
+                    }}
+                  >
+                    <option value="" disabled>
+                      Bulk Actions
+                    </option>
+                    <option value="approve">Approve Selected</option>
+                    <option value="decline">Decline Selected</option>
+                  </select>
+                </div>
 
                 {selectedBulkAction && (
                   <button
@@ -682,9 +684,9 @@ const CancelRequestsPage = () => {
                       setSelectedBulkAction('');
                       setSelectedRequests([]);
                     }}
-                    className="btn btn-primary px-3 py-2.5 w-full md:w-auto mt-2 md:mt-0"
+                    className="btn btn-primary px-3 py-2.5 w-full md:w-auto mt-2 md:mt-0 whitespace-nowrap"
                   >
-                    Save Changes
+                    Apply Action
                   </button>
                 )}
               </div>
