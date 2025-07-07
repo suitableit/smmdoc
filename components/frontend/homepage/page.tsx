@@ -110,6 +110,18 @@ const HomePage: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [openItems, setOpenItems] = useState<number[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Set initial value
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Check if user is authenticated and get user role
   const isAuthenticated = status === 'authenticated' && session?.user;
@@ -155,23 +167,23 @@ const HomePage: React.FC = () => {
   // Statistics data
   const counterData: CounterItem[] = [
     {
-      icon: <FaShoppingCart className="w-10 h-10 text-white" />,
+      icon: <FaShoppingCart className="w-8 h-8 lg:w-10 lg:h-10 text-white" />,
       title: 'Order Completed',
       count: '1,000+',
     },
     {
-      icon: <FaServer className="w-10 h-10 text-white" />,
+      icon: <FaServer className="w-8 h-8 lg:w-10 lg:h-10 text-white" />,
       title: 'Active Services',
       count: '50+',
     },
     {
-      icon: <FaUsers className="w-10 h-10 text-white" />,
+      icon: <FaUsers className="w-8 h-8 lg:w-10 lg:h-10 text-white" />,
       title: 'Active Users',
       count: '500+',
     },
     {
-      icon: <FaShareAlt className="w-10 h-10 text-white" />,
-      title: 'Paid to Affiliate Users',
+      icon: <FaShareAlt className="w-8 h-8 lg:w-10 lg:h-10 text-white" />,
+      title: 'Affiliate Users',
       count: '100+',
     },
   ];
@@ -589,7 +601,7 @@ const HomePage: React.FC = () => {
   // Component to render when user is authenticated
   const AuthenticatedUserContent = () => (
     <div
-      className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200"
+      className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full -mt-[30px] lg:-mt-[0px] pt-[30px] p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200"
     >
       <div className="text-center">
         <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -690,14 +702,17 @@ const HomePage: React.FC = () => {
   return (
     <>
       {/* HERO SECTION */}
-      <section className="flex justify-center items-center pt-[120px] pb-[60px] transition-colors duration-200">
+      <section className="flex justify-center items-center pt-[60px] pb-[30px] lg:pt-[120px] lg:pb-[60px] transition-colors duration-200">
         <div className="max-w-[1200px] mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 2xl:gap-x-20 items-center">
+          <div className={`
+            ${isAuthenticated ? 'flex flex-col-reverse' : 'grid grid-cols-1'}
+            lg:grid lg:grid-cols-2 gap-8 2xl:gap-x-20 items-center
+          `}>
             {/* Left side */}
             <div>
-              <div className="text-center lg:text-left">
+              <div className="text-left">
                 <h1
-                  className="text-5xl lg:text-6xl font-extrabold mb-4 text-gray-900 dark:text-white leading-tight transition-colors duration-200"
+                  className="text-4xl lg:text-6xl font-extrabold mb-4 text-gray-900 dark:text-white leading-tight transition-colors duration-200"
                   data-aos="fade-down"
                   data-aos-duration="500"
                 >
@@ -708,7 +723,7 @@ const HomePage: React.FC = () => {
                   Cheap SMM Panel
                 </h1>
                 <p
-                  className="text-lg mb-6 leading-7 text-gray-600 dark:text-gray-300 w-4/5 lg:w-full mx-auto lg:mx-0 transition-colors duration-200"
+                  className="text-lg mb-6 leading-7 text-gray-600 dark:text-gray-300 lg:w-full mx-auto transition-colors duration-200 text-justify"
                   data-aos="fade-down"
                   data-aos-duration="1000"
                 >
@@ -753,7 +768,7 @@ const HomePage: React.FC = () => {
 
                 {/* Users count section */}
                 <div
-                  className="flex items-center gap-3 justify-center lg:justify-start mt-4"
+                  className="flex items-center gap-3 justify-start mt-4"
                   data-aos="fade-up"
                   data-aos-duration="1200"
                 >
@@ -989,7 +1004,7 @@ const HomePage: React.FC = () => {
 
       {/* Rest of the sections remain the same */}
       {/* STATISTICS SECTION */}
-      <section className="pt-[60px] pb-[60px] transition-colors duration-200">
+      <section className="pt-[30px] pb-[30px] lg:pt-[60px] lg:pb-[60px] transition-colors duration-200">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {counterData.map((item, index) => (
@@ -1000,7 +1015,7 @@ const HomePage: React.FC = () => {
                 data-aos-duration="500"
                 data-aos-delay={index * 100}
               >
-                <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:scale-105 group-hover:-translate-y-1">
+                <div className="w-16 h-16 lg:w-24 lg:h-24 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:scale-105 group-hover:-translate-y-1">
                   {item.icon}
                 </div>
                 <p className="text-lg lg:text-xl text-gray-600 dark:text-gray-300 font-semibold mb-1 transition-colors duration-200">
@@ -1017,24 +1032,24 @@ const HomePage: React.FC = () => {
 
       {/* WHO WE ARE SECTION */}
       <section
-        id="default_sections_v2"
-        className="about-us pt-[60px] pb-[60px] transition-colors duration-200"
+        id="about"
+        className="about-us pt-[30px] pb-[30px] lg:pt-[60px] lg:pb-[60px] transition-colors duration-200"
       >
         <div className="max-w-[1200px] mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
             <div className="default__text__content">
               <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
                 About Us
               </h4>
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight transition-colors duration-200">
+              <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight transition-colors duration-200">
                 Leaders in Social <br />
                 Media{' '}
                 <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                   Enhancement
                 </span>
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed transition-colors duration-200">
+              <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed transition-colors duration-200 text-justify">
                 At SMMDOC, we revolutionize digital success through our
                 budget-friendly and top-notch social media marketing solutions.
                 Since our inception in 2021, we have emerged as the preferred
@@ -1078,25 +1093,22 @@ const HomePage: React.FC = () => {
       {/* PLATFORM SERVICES SECTION */}
       <section
         id="our_services"
-        className="pt-[60px] pb-[60px] transition-colors duration-200"
+        className="pt-[30px] pb-[30px] lg:pt-[60px] lg:pb-[60px] transition-colors duration-200"
       >
         <div className="container mx-auto px-4 max-w-[1200px]">
-          <div className="text-center mb-12">
+          <div className="lg:text-center text-left mb-6">
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               Our Services
             </h4>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
               Comprehensive{' '}
-              <span className="text-[var(--secondary)] dark:text-[var(--secondary)] transition-colors duration-200">
+              <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 SMM
               </span>{' '}
               Solutions
             </h2>
             <p className="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto transition-colors duration-200">
-              At SMMDOC, we revolutionize digital success through our
-              budget-friendly and top-notch social media marketing solutions.
-              Since our inception, we have emerged as the preferred choice for
-              the most affordable SMM panels.
+              Our budget-friendly and top-notch social media marketing solutions.
             </p>
           </div>
 
@@ -1127,9 +1139,9 @@ const HomePage: React.FC = () => {
           </div>
 
           {/* Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mt-8">
+          <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center mt-8">
             <div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
+              <h2 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
                 {activePlatform.title}
               </h2>
               <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed transition-colors duration-200">
@@ -1143,7 +1155,7 @@ const HomePage: React.FC = () => {
               </Link>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-center lg:justify-end">
               <div className="relative group">
                 <Image
                   src="/smm-panel-services.webp"
@@ -1160,15 +1172,15 @@ const HomePage: React.FC = () => {
 
       {/* WHY CHOOSE US SECTION */}
       <section
-        id="whyChooseUs_v2"
-        className="py-24 pb-[120px] transition-colors duration-200"
+        id="whyChooseUs"
+        className="py-12 lg:py-24 pb-[60px] lg:pb-[120px] transition-colors duration-200"
       >
         <div className="max-w-[1200px] mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-left lg:text-center mb-6">
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               Why Choose Us?
             </h4>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
               Unparalleled Quality in <br />
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 SMM Service
@@ -1193,7 +1205,7 @@ const HomePage: React.FC = () => {
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 transition-colors duration-200">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed transition-colors duration-200">
+                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed transition-colors duration-200 text-justify">
                     {feature.description}
                   </p>
                 </div>
@@ -1204,7 +1216,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* HOW IT WORKS SECTION */}
-      <section className="py-0 pb-[60px] transition-colors duration-200">
+      <section className="py-0 pb-[30px] lg:pb-[60px] transition-colors duration-200">
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] py-20 relative overflow-hidden">
           {/* Optional: Add some decorative elements for dark mode */}
@@ -1212,7 +1224,7 @@ const HomePage: React.FC = () => {
 
           <div className="container mx-auto px-4 text-center max-w-7xl relative z-10">
             <h2
-              className="text-4xl lg:text-5xl font-extrabold text-white mb-4"
+              className="text-3xl lg:text-5xl font-extrabold text-white mb-4"
               data-aos="fade-up"
               data-aos-duration="600"
             >
@@ -1234,14 +1246,14 @@ const HomePage: React.FC = () => {
             {steps.map((step, index) => (
               <div
                 key={index}
-                className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl p-8 border border-gray-200 dark:border-gray-700 shadow-xl hover:shadow-2xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 relative pb-16 group hover:-translate-y-2"
+                className={`bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl p-8 border border-gray-200 dark:border-gray-700 shadow-xl hover:shadow-2xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 relative pb-16 group hover:-translate-y-2 ${index !== 0 ? 'mt-10 lg:mt-0' : ''}`}
                 data-aos="fade-up"
                 data-aos-duration="600"
                 data-aos-delay={index * 150}
               >
                 {/* Step Number Badge */}
                 <div className="absolute -top-10 left-1/2 transform -translate-x-1/2">
-                  <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-400 dark:to-orange-500 rounded-full flex flex-col items-center justify-center text-white border-4 border-white dark:border-gray-800 shadow-lg group-hover:scale-110 transition-all duration-300">
+                  <div className="w-20   h-20 bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-400 dark:to-orange-500 rounded-full flex flex-col items-center justify-center text-white border-4 border-white dark:border-gray-800 shadow-lg group-hover:scale-110 transition-all duration-300">
                     <span className="text-lg font-bold">{step.number}</span>
                     <span className="text-xs font-medium">STEP</span>
                   </div>
@@ -1281,7 +1293,7 @@ const HomePage: React.FC = () => {
 
       {/* TESTIMONIALS SECTION */}
       <section
-        className="pt-[60px] pb-[60px] relative transition-colors duration-200"
+        className="pt-[30px] pb-[30px] lg:pt-[60px] lg:pb-[60px] relative transition-colors duration-200"
       >
         <div className="max-w-[1200px] mx-auto px-4">
           {/* Header */}
@@ -1290,7 +1302,7 @@ const HomePage: React.FC = () => {
               <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
                 Success Stories
               </h4>
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
+              <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
                 Transforming{' '}
                 <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                   Social Media
@@ -1324,12 +1336,12 @@ const HomePage: React.FC = () => {
               className="flex transition-transform duration-500 ease-in-out"
               style={{
                 transform: `translateX(-${
-                  currentSlide * (100 / itemsPerPage)
+                  currentSlide * (isMobile ? 100 : (100 / itemsPerPage))
                 }%)`,
               }}
             >
               {testimonials.map((testimonial) => (
-                <div key={testimonial.id} className="w-1/3 flex-shrink-0 px-4">
+                <div key={testimonial.id} className="w-full md:w-1/3 flex-shrink-0 px-4">
                   <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 h-80 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1">
                     <div>
                       <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm leading-relaxed line-clamp-6 transition-colors duration-200">
@@ -1395,14 +1407,14 @@ const HomePage: React.FC = () => {
 
       {/* FAQ SECTION */}
       <section
-        className="pt-[60px] pb-[120px] transition-colors duration-200"
+        className="pt-[30px] pb-[60px] lg:pt-[60px] lg:pb-[120px] transition-colors duration-200"
       >
         <div className="max-w-[1200px] mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-left lg:text-center mb-6">
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               FAQ's
             </h4>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
               People Also Asked to{' '}
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 SMMDOC

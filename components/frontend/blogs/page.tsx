@@ -176,7 +176,7 @@ const BlogPage: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <Section className="pt-[120px]">
+      <Section className="pt-[60px] lg:pt-[120px]">
         <div className="text-center">
           <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
             Our Blog

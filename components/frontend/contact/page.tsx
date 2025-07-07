@@ -332,20 +332,20 @@ const ContactUs: React.FC = () => {
       {/* Page Banner Section */}
       <section className="pt-[60px] pb-[60px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
         <div className="max-w-[1200px] mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
-            <div className="space-y-6">
+            <div>
               <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
                 Contact Us
               </h4>
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
+              <h1 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4 dark:text-white leading-tight transition-colors duration-200">
                 Reach Out to{' '}
                 <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
-                  SMMDOC
+                  SMMDOC{' '}
                 </span>
                 for Your Social Media Solutions
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
+              <p className="text-gray-600 dark:text-gray-300 text-lg text-justify mb-6 leading-relaxed transition-colors duration-200">
                 At SMMDOC, we're always eager to connect with you and discuss
                 how we can elevate your social media presence. Whether you have
                 questions about our services, need assistance in choosing the
@@ -382,7 +382,7 @@ const ContactUs: React.FC = () => {
       {/* How to Contact & Contact Form Section */}
       <section className="pt-[60px] pb-[120px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
         <div className="max-w-[1200px] mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-6">
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
               How to{' '}
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
