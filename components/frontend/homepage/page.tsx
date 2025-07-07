@@ -1407,7 +1407,7 @@ const HomePage: React.FC = () => {
 
       {/* FAQ SECTION */}
       <section
-        className="pt-[30px] pb-[60px] lg:pt-[60px] lg:pb-[120px] transition-colors duration-200"
+        className="pt-[30px] lg:pt-[60px] pb-[120px] transition-colors duration-200"
       >
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="text-left lg:text-center mb-6">
