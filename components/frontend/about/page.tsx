@@ -57,7 +57,7 @@ const Section: React.FC<SectionProps> = ({
   bgColor = 'gray',
 }) => (
   <section
-    className={`pt-[60px] pb-[60px] bg-white dark:bg-[#0d0712] transition-colors duration-200 ${className}`}
+    className={`${className}`}
   >
     <div className="max-w-[1200px] mx-auto px-4">{children}</div>
   </section>
@@ -130,23 +130,23 @@ const About: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero/Banner Section */}
-      <Section className="pt-[80px]">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
+      <Section className="pt-[80px] pb-[30px] lg:pb-[60px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
+          <div>
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               Company Overview
             </h4>
-            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
+            <h1 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight transition-colors duration-200">
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 SMMDOC:
               </span>{' '}
               Pioneering Social Media{' '}
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
-                Marketing
+                Marketing{' '}
               </span>
               in Bangladesh and Beyond
             </h1>
-            <div className="space-y-4 text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
+            <div className="space-y-4 text-gray-600 dark:text-gray-300 text-justify mb-6 text-justify leading-relaxed transition-colors duration-200">
               <p>
                 Founded in 2018, SMMDOC has swiftly risen to prominence as a
                 leading provider of social media marketing (SMM) services in
@@ -177,7 +177,7 @@ const About: React.FC = () => {
               <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
-          <div className="text-center lg:text-right">
+          <div className="-mt-[30px] lg:-mt-[0px] text-center lg:text-right">
             <div className="relative">
               <Image
                 src="/smmdoc-about-us.webp"
@@ -193,8 +193,8 @@ const About: React.FC = () => {
       </Section>
 
       {/* Mission Section */}
-      <Section>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <Section className="pt-[30px] lg:pt-[60px] pb-[30px] lg:pb-[60px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1 text-center lg:text-left">
             <div className="relative">
               <Image
@@ -206,18 +206,18 @@ const About: React.FC = () => {
               />
             </div>
           </div>
-          <div className="order-1 lg:order-2 space-y-6">
+          <div className="order-1 lg:order-2">
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               Mission
             </h4>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4 dark:text-white leading-tight transition-colors duration-200">
               Empowering Businesses with Affordable{' '}
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 Social Media
               </span>{' '}
               Strategies
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
+            <p className="text-gray-600 dark:text-gray-300 mb-6 text-justify leading-relaxed text-justify transition-colors duration-200">
               Our mission at SMMDOC is straightforward – to provide
               high-quality, cost-effective social media marketing services that
               drive business growth and enhance online visibility. We are
@@ -238,20 +238,20 @@ const About: React.FC = () => {
       </Section>
 
       {/* Vision Section */}
-      <Section>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
+      <Section className="pt-[30px] lg:pt-[60px] pb-[30px] lg:pb-[60px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
+          <div>
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               Vision
             </h4>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-6 dark:text-white leading-tight transition-colors duration-200">
               Shaping the Future of
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 {' '}
                 Digital Marketing
               </span>
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
+            <p className="text-gray-600 dark:text-gray-300 mb-6 text-justify leading-relaxed transition-colors duration-200">
               Our vision extends beyond just being a service provider. We aim to
               be the harbinger of innovation in social media marketing,
               constantly adapting to the ever-evolving digital landscape. We
@@ -283,8 +283,8 @@ const About: React.FC = () => {
       </Section>
 
       {/* Team Section */}
-      <Section>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <Section className="pt-[30px] lg:pt-[60px] pb-[30px] lg:pb-[60px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1 text-center lg:text-left">
             <div className="relative">
               <Image
@@ -296,18 +296,18 @@ const About: React.FC = () => {
               />
             </div>
           </div>
-          <div className="order-1 lg:order-2 space-y-6">
+          <div className="order-1 lg:order-2">
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               Our Team
             </h4>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight transition-colors duration-200">
               A Blend of{' '}
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 Expertise
               </span>{' '}
               and Innovation
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
+            <p className="text-gray-600 dark:text-gray-300 mb-6 text-justify leading-relaxed transition-colors duration-200">
               The strength of SMMDOC lies in our diverse team of professionals.
               Comprising seasoned digital marketers, creative strategists, and
               tech-savvy innovators, our team brings a wealth of experience and
@@ -328,12 +328,12 @@ const About: React.FC = () => {
       </Section>
 
       {/* Services Section */}
-      <Section>
-        <div className="text-center mb-16">
+      <Section className="pt-[30px] lg:pt-[60px] pb-[60px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
+        <div className="text-left lg:text-center mb-6">
           <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
             Our Services
           </h4>
-          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-6 transition-colors duration-200">
+          <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-4 transition-colors duration-200">
             Comprehensive Solutions for <br />
             Every{' '}
             <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
@@ -341,7 +341,7 @@ const About: React.FC = () => {
             </span>{' '}
             Need
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-3xl mx-auto transition-colors duration-200">
+          <p className="text-gray-600 dark:text-gray-300  leading-relaxed max-w-3xl mx-auto transition-colors duration-200">
             At SMMDOC, we offer a broad spectrum of social media marketing
             services. <br /> Our solutions are designed to cater to the unique
             requirements of each platform:
@@ -359,8 +359,8 @@ const About: React.FC = () => {
           ))}
         </div>
 
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-300 text-lg mb-6 max-w-2xl mx-auto transition-colors duration-200">
+        <div className="text-left lg:text-center">
+          <p className="text-gray-600 dark:text-gray-300  mb-6 max-w-2xl mx-auto transition-colors duration-200">
             Each service is backed by thorough research and tailored strategies,{' '}
             <br />
             ensuring optimal results and client satisfaction.
@@ -376,12 +376,12 @@ const About: React.FC = () => {
       </Section>
 
       {/* CTA Section */}
-      <Section className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white">
-        <div className="text-center max-w-4xl mx-auto">
+      <Section className="pt-[60px] pb-[60px] bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white">
+        <div className="text-left lg:text-center max-w-4xl mx-auto">
           <h4 className="text-2xl font-bold text-purple-200 mb-2 transition-colors duration-200">
-            Get In Touch
+            Get in Touch
           </h4>
-          <h2 className="text-4xl lg:text-5xl font-bold leading-tight mb-6">
+          <h2 className="text-3xl lg:text-5xl font-bold leading-tight mb-4">
             Connect with Us for{' '}
             <span className="text-yellow-300">
               Unparalleled <br />
@@ -389,7 +389,7 @@ const About: React.FC = () => {
             </span>
             Solutions
           </h2>
-          <p className="text-purple-100 text-lg leading-relaxed mb-8">
+          <p className="text-purple-100 text-justify leading-relaxed mb-6">
             Embark on your journey to social media success with SMMDOC. Reach
             out to us for a consultation, to explore our services, or to start a
             partnership that transforms your digital presence. Our team is ready
@@ -408,20 +408,20 @@ const About: React.FC = () => {
       </Section>
 
       {/* Why Different Section */}
-      <Section>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
+      <Section className="pt-[60px] pb-[120px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
+          <div>
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               Why We Are Different from Others
             </h4>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white leading-tight transition-colors duration-200">
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight transition-colors duration-200">
               Innovative,{' '}
               <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
                 Affordable
               </span>
               , and Client-Focused
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-200">
+            <p className="text-gray-600 dark:text-gray-300 text-justify mb-6 leading-relaxed transition-colors duration-200">
               What sets SMMDOC apart is our commitment to affordability without
               compromising on quality. We offer the cheapest SMM panels in the
               region, making high-quality social media marketing accessible to
