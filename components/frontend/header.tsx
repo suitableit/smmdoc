@@ -51,6 +51,7 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Use props if provided, otherwise try to get session safely
   let session = propSession;
@@ -76,6 +77,27 @@ const Header: React.FC<HeaderProps> = ({
   const userRole = session?.user?.role?.toUpperCase() || '';
   const isAdmin = userRole === 'ADMIN';
   const dashboardRoute = isAdmin ? '/admin' : '/dashboard';
+
+  const closeMenu = () => setIsMenuOpen(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      closeMenu();
+
+      if (enableAuth) {
+        const { signOut } = await import('next-auth/react');
+        await signOut({ callbackUrl: '/', redirect: true });
+      } else {
+        // Custom logout logic
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+      setIsLoggingOut(false);
+      window.location.href = '/';
+    }
+  };
 
   // Enhanced Avatar Components
   const Avatar = ({
@@ -108,7 +130,7 @@ const Header: React.FC<HeaderProps> = ({
   );
 
   // Theme Toggle Component
-  const ThemeToggle = () => {
+  const ThemeToggle = ({ inMenu = false }: { inMenu?: boolean }) => {
     const [theme, setTheme] = useState('system');
     const [mounted, setMounted] = useState(false);
     const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
@@ -159,6 +181,26 @@ const Header: React.FC<HeaderProps> = ({
       { key: 'system', label: 'System', icon: FaDesktop },
     ];
 
+    if (inMenu) {
+      return (
+        <div className="w-full flex justify-around items-center p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          {themeOptions.map((option) => {
+            const IconComponent = option.icon;
+            const isActive = theme === option.key;
+            return (
+              <button
+                key={option.key}
+                onClick={() => handleThemeChange(option.key)}
+                className={`flex-1 flex flex-col items-center justify-center p-2 rounded-md transition-all duration-200 ${isActive ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+                <IconComponent className={`h-5 w-5 mb-1 ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`} />
+                <span className="font-medium text-xs">{option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
     const currentTheme = themeOptions.find((option) => option.key === theme) || themeOptions[2];
     const CurrentIcon = currentTheme.icon;
 
@@ -207,7 +249,6 @@ const Header: React.FC<HeaderProps> = ({
   const UserMenu = ({ user }: { user: any }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
     
     const username = user?.username || user?.email?.split('@')[0] || user?.name || 'User';
     const balance = 0; // Replace with actual balance
@@ -217,22 +258,9 @@ const Header: React.FC<HeaderProps> = ({
       return () => clearTimeout(timer);
     }, []);
 
-    const handleLogout = async () => {
-      try {
-        setIsLoggingOut(true);
-        setIsOpen(false);
-
-        if (enableAuth) {
-          const { signOut } = await import('next-auth/react');
-          await signOut({ callbackUrl: '/', redirect: true });
-        } else {
-          // Custom logout logic
-          window.location.href = '/';
-        }
-      } catch (error) {
-        console.error('Logout failed:', error);
-        window.location.href = '/';
-      }
+    const handleLogoutClick = () => {
+      setIsOpen(false);
+      handleLogout();
     };
 
     return (
@@ -310,7 +338,7 @@ const Header: React.FC<HeaderProps> = ({
               <div className="border-t border-gray-200 dark:border-gray-600"></div>
               <div className="p-1 sm:p-2">
                 <button
-                  onClick={handleLogout}
+                  onClick={handleLogoutClick}
                   disabled={isLoggingOut}
                   className="w-full px-3 sm:px-6 py-2 sm:py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200 flex items-center space-x-2 sm:space-x-3 group rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -330,7 +358,6 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-  const closeMenu = () => setIsMenuOpen(false);
 
   useEffect(() => {
     setMounted(true);
@@ -339,12 +366,12 @@ const Header: React.FC<HeaderProps> = ({
   if (!mounted) return null;
 
   return (
-    <header className="sticky top-0 z-50 bg-white dark:bg-[var(--header-bg)] shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-200">
+    <header className="sticky top-0 z-40 bg-white dark:bg-[var(--header-bg)] shadow-sm dark:shadow-lg dark:shadow-black/20 transition-colors duration-200">
       <nav className="bg-white dark:bg-[var(--header-bg)]">
         <div className="container mx-auto px-4 max-w-[1200px]">
           <div className="flex items-center justify-between py-3">
             <Link href="/" className="flex items-center">
-              <Image src="/logo.png" alt="SMMDOC" width={400} height={50} className="h-16 w-auto max-w-[400px]" priority />
+              <Image src="/logo.png" alt="SMMDOC" width={400} height={50} className="h-14 lg:h-16 w-auto max-w-[400px]" priority />
             </Link>
 
             <div className="hidden lg:flex items-center space-x-1">
@@ -391,39 +418,81 @@ const Header: React.FC<HeaderProps> = ({
               </svg>
             </button>
           </div>
+        </div>
+      </nav>
 
-          {/* Mobile Menu */}
-          <div className={`lg:hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-            <div className="py-4 space-y-2 border-t border-gray-100 dark:border-gray-700">
-              {!isAuthenticated && (
+      {/* Mobile Menu */}
+      <div className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/20 dark:bg-black/40" onClick={closeMenu}></div>
+        
+        {/* Menu Content */}
+        <div className={`relative w-[80%] h-full bg-white dark:bg-[var(--header-bg)] shadow-lg transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <Link href="/" className="flex items-center">
+                <Image src="/logo.png" alt="SMMDOC" width={200} height={25} className="h-12 w-auto" />
+              </Link>
+              <button
+                className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                type="button"
+                onClick={toggleMenu}
+                aria-label="Close navigation menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+          </div>
+          <div className="py-4 space-y-1">
+            {isAuthenticated ? (
+              <>
+                <div className="px-4 py-3">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={session.user?.photo || session.user?.image} alt={session.user?.name || 'User'} />
+                      <AvatarFallback>{(session.user?.username || session.user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{session.user?.username || session.user?.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{session.user?.email}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                <Link href={dashboardRoute} className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>{isAdmin ? 'Admin Panel' : 'Dashboard'}</Link>
+                <Link href="/account-settings" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Profile</Link>
+                <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                <Link href="/about" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>About</Link>
+                <Link href="/our-services" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Services</Link>
+                <Link href="/blogs" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Blogs</Link>
+                <Link href="/contact" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Contact</Link>
+                <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                <button onClick={handleLogout} disabled={isLoggingOut} className="block w-full text-left px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium transition-colors rounded-md disabled:opacity-50">
+                  {isLoggingOut ? 'Signing Out...' : 'Sign Out'}
+                </button>
+              </>
+            ) : (
+              <>
                 <Link href="/sign-in" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Sign In</Link>
-              )}
-
-              <Link href="/about" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>About</Link>
-              <Link href="/our-services" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Services</Link>
-              <Link href="/blogs" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Blogs</Link>
-              <Link href="/contact" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Contact</Link>
-
-              {!isAuthenticated && (
-                <div className="pt-2">
+                <Link href="/about" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>About</Link>
+                <Link href="/our-services" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Services</Link>
+                <Link href="/blogs" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Blogs</Link>
+                <Link href="/contact" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Contact</Link>
+                <div className="pt-2 px-4">
                   <Link href="/sign-up" className="block w-full px-4 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold rounded-md hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-200 text-center" onClick={closeMenu}>Sign Up</Link>
                 </div>
-              )}
+              </>
+            )}
 
-              <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-                <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 font-medium">Theme</div>
-                <div className="flex gap-2 px-4">
-                  <ThemeToggle />
-                </div>
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+              <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 font-medium">Theme</div>
+              <div className="px-4">
+                <ThemeToggle inMenu={true} />
               </div>
             </div>
           </div>
         </div>
-      </nav>
-
-      {isMenuOpen && (
-        <div className="fixed inset-0 bg-black/20 dark:bg-black/40 lg:hidden z-40" onClick={closeMenu} />
-      )}
+      </div>
     </header>
   );
 };
