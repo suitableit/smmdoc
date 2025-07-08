@@ -2696,9 +2696,9 @@ function AdminServicesPage() {
 
         {/* Controls Section - After stats cards */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             {/* Left: Action Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto mb-2 md:mb-0">
               {/* Page View Dropdown */}
               <select 
                 value={pageSize}
@@ -2738,7 +2738,7 @@ function AdminServicesPage() {
 
               <Link
                 href="/admin/services/import"
-                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full md:w-auto"
                 title="Import Services"
               >
                 <FaFileImport />
@@ -2758,11 +2758,11 @@ function AdminServicesPage() {
                   placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} services...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
               
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="id">Service ID</option>
                 <option value="name">Service Name</option>
                 <option value="category">Category</option>
@@ -2927,8 +2927,8 @@ function AdminServicesPage() {
                   </div>
                 )}
 
-                {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto">
+                {/* Servicees Table View */}
+                <div className="lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -3359,414 +3359,8 @@ function AdminServicesPage() {
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
-                <div className="lg:hidden">
-                  {/* Mobile Header with Collapse Toggle */}
-                  <div className="flex justify-between items-center mb-4 p-3 bg-gray-50 rounded-lg border">
-                    <h3 className="font-semibold text-gray-800">Categories & Services</h3>
-                    <button
-                      onClick={toggleAllCategories}
-                      className="p-2 hover:bg-gray-200 rounded transition-colors"
-                      title={allCategoriesCollapsed ? "Expand all categories" : "Collapse all categories"}
-                    >
-                      {allCategoriesCollapsed ? (
-                        <FaChevronDown className="h-4 w-4 text-gray-600" />
-                      ) : (
-                        <FaChevronUp className="h-4 w-4 text-gray-600" />
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="space-y-6">
-                    {(Object.entries(groupedServices) as [string, any[]][]).map(([categoryName, services], categoryIndex) => (
-                      <div key={categoryName} className="space-y-4">
-                        {/* Drop zone before category */}
-                        {draggedCategory && draggedCategory !== categoryName && (
-                          <div 
-                            className={`transition-all duration-200 rounded-lg ${
-                              dropTargetCategory === categoryName && dropPosition === 'before'
-                                ? 'h-12 bg-blue-100 border-2 border-dashed border-blue-400 flex items-center justify-center'
-                                : 'h-2'
-                            }`}
-                            onDragOver={(e) => handleDragOver(e, categoryName)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => handleDrop(e, categoryName)}
-                          >
-                            {dropTargetCategory === categoryName && dropPosition === 'before' && (
-                              <span className="text-blue-600 text-sm font-medium">
-                                Drop here
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Category Header */}
-                        <div 
-                          className={`bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500 ${
-                            draggedCategory === categoryName ? 'opacity-50' : ''
-                          }`}
-                          onDragOver={(e) => handleDragOver(e, categoryName)}
-                          onDragLeave={handleDragLeave}
-                          onDrop={(e) => handleDrop(e, categoryName)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 flex-1">
-                              <FaGripVertical 
-                                className="h-4 w-4 text-gray-400 cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
-                                title="Drag to reorder category"
-                                draggable={true}
-                                onDragStart={(e) => handleDragStart(e, categoryName)}
-                                onDragEnd={handleDragEnd}
-                                style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-                              />
-                              <button
-                                onClick={() => toggleCategory(categoryName)}
-                                className="flex items-center gap-2 hover:bg-gray-100 rounded p-1 transition-colors"
-                              >
-                                {collapsedCategories.includes(categoryName) ? (
-                                  <FaChevronRight className="h-3 w-3" />
-                                ) : (
-                                  <FaChevronDown className="h-3 w-3" />
-                                )}
-                              </button>
-
-                              {/* Category Toggle Button for Mobile */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleCategoryAndServices(categoryName, services);
-                                }}
-                                disabled={isUpdating}
-                                className={`p-1 rounded transition-colors ${
-                                  activeCategoryToggles[categoryName]
-                                    ? 'text-green-600 hover:bg-green-50'
-                                    : 'text-red-600 hover:bg-red-50'
-                                } ${isUpdating ? 'opacity-50 pointer-events-none' : ''}`}
-                                title={`${activeCategoryToggles[categoryName] ? 'Deactivate' : 'Activate'} ${categoryName} category`}
-                              >
-                                {isUpdating ? (
-                                  <GradientSpinner size="w-4 h-4" />
-                                ) : activeCategoryToggles[categoryName] ? (
-                                  <FaToggleOn className="h-4 w-4" />
-                                ) : (
-                                  <FaToggleOff className="h-4 w-4" />
-                                )}
-                              </button>
-
-                              <span className="font-semibold text-md text-gray-800">
-                                {categoryName}
-                              </span>
-                              <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full ml-auto">
-                                {services.length} service{services.length !== 1 ? 's' : ''}
-                              </span>
-                              
-                              {/* Category Edit Icon for Mobile */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const category = categoriesData?.data?.find((cat: any) => cat.category_name === categoryName);
-                                  if (category) {
-                                    editCategory(categoryName, category.id);
-                                  }
-                                }}
-                                disabled={isUpdating}
-                                className="p-1 hover:bg-blue-50 hover:text-blue-600 text-gray-400 rounded transition-colors disabled:opacity-50"
-                                title={`Edit ${categoryName} category`}
-                              >
-                                <FaEdit className="h-3 w-3" />
-                              </button>
-                              
-                              {/* Category Delete Icon for Mobile */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const category = categoriesData?.data?.find((cat: any) => cat.category_name === categoryName);
-                                  if (category) {
-                                    handleOpenDeleteCategoryModal(categoryName, category.id, services.length);
-                                  }
-                                }}
-                                disabled={isUpdating}
-                                className="p-1 hover:bg-red-50 hover:text-red-600 text-gray-400 rounded transition-colors disabled:opacity-50 ml-2"
-                                title={`Delete ${categoryName} category`}
-                              >
-                                <FaTrash className="h-3 w-3" />
-                              </button>
-                            </div>
-                            <input
-                              type="checkbox"
-                              checked={services.every(service => selectedServices.includes(service.id))}
-                              onChange={() => handleSelectCategory(services)}
-                              className="rounded border-gray-300 w-4 h-4 ml-2"
-                              title="Select all services in this category"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Services Cards */}
-                        {!collapsedCategories.includes(categoryName) && (
-                          <div className="space-y-4 ml-4">
-                            {services.length > 0 ? (
-                              services.map((service: any, index: number) => (
-                                <Fragment key={service.id}>
-                                  {/* Drop zone before service */}
-                                  {draggedService && draggedService !== service.id && (
-                                    <div 
-                                      className={`transition-all duration-200 rounded-lg ${
-                                        dropTargetService === service.id && dropPositionService === 'before'
-                                          ? 'h-8 bg-blue-100 border-2 border-dashed border-blue-400 flex items-center justify-center'
-                                          : 'h-1'
-                                      }`}
-                                      onDragOver={(e) => handleServiceDragOver(e, service.id)}
-                                      onDragLeave={handleServiceDragLeave}
-                                      onDrop={(e) => handleServiceDrop(e, service.id, categoryName)}
-                                    >
-                                      {dropTargetService === service.id && dropPositionService === 'before' && (
-                                        <span className="text-blue-600 text-xs font-medium">
-                                          Drop here
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                  
-                                  <div 
-                                    className={`card card-padding border-l-4 border-blue-500 animate-in fade-in slide-in-from-right-1 ${
-                                      draggedService === service.id ? 'opacity-50' : ''
-                                    }`}
-                                    style={{ animationDelay: `${index * 100}ms` }}
-                                    onDragOver={(e) => handleServiceDragOver(e, service.id)}
-                                    onDragLeave={handleServiceDragLeave}
-                                    onDrop={(e) => handleServiceDrop(e, service.id, categoryName)}
-                                  >
-                                    {/* Header with ID and Actions */}
-                                    <div className="flex items-center justify-between mb-4">
-                                      <div className="flex items-center gap-3">
-                                        <FaGripVertical 
-                                          className="h-3 w-3 text-gray-400 cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
-                                          title="Drag to reorder service"
-                                          draggable={true}
-                                          onDragStart={(e) => handleServiceDragStart(e, service.id)}
-                                          onDragEnd={handleServiceDragEnd}
-                                          style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-                                        />
-                                        <input
-                                          type="checkbox"
-                                          checked={selectedServices.includes(service.id)}
-                                          onChange={() => handleSelectService(service.id)}
-                                          className="rounded border-gray-300 w-4 h-4"
-                                        />
-                                        <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                          #{service.id || 'null'}
-                                        </div>
-                                        <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
-                                          {getStatusIcon(service.status)}
-                                          <span className="text-xs font-medium capitalize">
-                                            {service.status || 'null'}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <button 
-                                          onClick={() => handleEditService(service.id)}
-                                          className="btn btn-secondary p-2"
-                                          title="Edit Service"
-                                        >
-                                          <FaEdit className="h-3 w-3" />
-                                        </button>
-                                        
-                                        <div className="relative">
-                                          <button 
-                                            className="btn btn-secondary p-2" 
-                                            title="More Actions"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
-                                              dropdown.classList.toggle('hidden');
-                                            }}
-                                          >
-                                            <FaEllipsisH className="h-3 w-3" />
-                                          </button>
-                                          
-                                          <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                                            <div className="py-1">
-                                              <button
-                                                onClick={() => {
-                                                  toggleServiceStatus(service);
-                                                  const dropdown = document.querySelector('.absolute.right-0') as HTMLElement;
-                                                  dropdown?.classList.add('hidden');
-                                                }}
-                                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                              >
-                                                <FaSync className="h-3 w-3" />
-                                                {service.status === 'active' ? 'Deactivate' : 'Activate'} Service
-                                              </button>
-                                              <button
-                                                onClick={() => {
-                                                  deleteService(service?.id);
-                                                  const dropdown = document.querySelector('.absolute.right-0') as HTMLElement;
-                                                  dropdown?.classList.add('hidden');
-                                                }}
-                                                className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-100 flex items-center gap-2"
-                                              >
-                                                <FaTrash className="h-3 w-3" />
-                                                Delete Service
-                                              </button>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Service Info */}
-                                    <div className="mb-4">
-                                      <div className="font-medium text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
-                                        {service?.name || 'null'}
-                                      </div>
-                                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                        {service.category?.category_name || 'null'} • Type: {service?.service_type || service?.type || 'Standard'}
-                                      </div>
-                                    </div>
-
-                                    {/* Provider and Pricing */}
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                      <div>
-                                        <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
-                                          Provider
-                                        </div>
-                                        <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
-                                          {service?.provider || 'null'}
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
-                                          Price
-                                        </div>
-                                        <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-                                          <PriceDisplay
-                                            amount={service?.rate}
-                                            originalCurrency={user?.currency || ('USD' as any)}
-                                          />
-                                        </div>
-                                        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                          Cost: <PriceDisplay
-                                            amount={service?.provider_price || service?.self_price || service?.cost_price || service?.rate}
-                                            originalCurrency={user?.currency || ('USD' as any)}
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Min/Max and Settings */}
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                      <div>
-                                        <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
-                                          Min / Max Orders
-                                        </div>
-                                        <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
-                                          {formatNumber(service?.min_order || 0)} - {formatNumber(service?.max_order || 0)}
-                                        </div>
-                                      </div>
-                                      <div className="flex gap-4">
-                                        <div>
-                                          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
-                                            Refill
-                                          </div>
-                                          <button
-                                            onClick={() => toggleRefill(service)}
-                                            className={`p-1 rounded transition-colors ${
-                                              service.refill
-                                                ? 'text-green-600 hover:bg-green-50'
-                                                : 'text-red-600 hover:bg-red-50'
-                                            }`}
-                                          >
-                                            {service.refill ? (
-                                              <FaToggleOn className="h-5 w-5" />
-                                            ) : (
-                                              <FaToggleOff className="h-5 w-5" />
-                                            )}
-                                          </button>
-                                        </div>
-                                        <div>
-                                          <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
-                                            Cancel
-                                          </div>
-                                          <button
-                                            onClick={() => toggleCancel(service)}
-                                            className={`p-1 rounded transition-colors ${
-                                              service.cancel
-                                                ? 'text-green-600 hover:bg-green-50'
-                                                : 'text-red-600 hover:bg-red-50'
-                                            }`}
-                                          >
-                                            {service.cancel ? (
-                                              <FaToggleOn className="h-5 w-5" />
-                                            ) : (
-                                              <FaToggleOff className="h-5 w-5" />
-                                            )}
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Drop zone after service */}
-                                  {draggedService && draggedService !== service.id && (
-                                    <div 
-                                      className={`transition-all duration-200 rounded-lg ${
-                                        dropTargetService === service.id && dropPositionService === 'after'
-                                          ? 'h-8 bg-blue-100 border-2 border-dashed border-blue-400 flex items-center justify-center'
-                                          : 'h-1'
-                                      }`}
-                                      onDragOver={(e) => handleServiceDragOver(e, service.id)}
-                                      onDragLeave={handleServiceDragLeave}
-                                      onDrop={(e) => handleServiceDrop(e, service.id, categoryName)}
-                                    >
-                                      {dropTargetService === service.id && dropPositionService === 'after' && (
-                                        <span className="text-blue-600 text-xs font-medium">
-                                          Drop here
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                </Fragment>
-                              ))
-                            ) : (
-                              <div className="p-8 text-center">
-                                <div className="flex flex-col items-center justify-center text-gray-500">
-                                  <FaBox className="h-8 w-8 mb-2 text-gray-400" />
-                                  <p className="text-sm font-medium">No services in this category</p>
-                                  <p className="text-xs">Add services to populate this category</p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Drop zone after category */}
-                        {draggedCategory && draggedCategory !== categoryName && (
-                          <div 
-                            className={`transition-all duration-200 rounded-lg ${
-                              dropTargetCategory === categoryName && dropPosition === 'after'
-                                ? 'h-12 bg-blue-100 border-2 border-dashed border-blue-400 flex items-center justify-center'
-                                : 'h-2'
-                            }`}
-                            onDragOver={(e) => handleDragOver(e, categoryName)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => handleDrop(e, categoryName)}
-                          >
-                            {dropTargetCategory === categoryName && dropPosition === 'after' && (
-                              <span className="text-blue-600 text-sm font-medium">
-                                Drop here
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Pagination */}
-                <div className="flex items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
                     {servicesLoading ? (
                       <div className="flex items-center gap-2">
@@ -3780,7 +3374,7 @@ function AdminServicesPage() {
                       return `Showing ${from} to ${to} of ${totalServices} services`;
                     })()}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
                       disabled={servicesLoading}
                       className="btn btn-secondary disabled:opacity-50"
