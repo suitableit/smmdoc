@@ -55,7 +55,7 @@ function SideBarContent({
       >
         {collapsed ? (
           <>
-            <Link href={user?.data?.role === 'admin' ? '/admin' : '/dashboard'}>
+            <Link href="/">
               <Image
                 src="/favicon.png"
                 alt="Favicon"

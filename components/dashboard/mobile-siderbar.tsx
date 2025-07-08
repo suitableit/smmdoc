@@ -70,31 +70,16 @@ export default function MobileSidebar() {
         <SheetHeader className="p-4 flex items-center border-b border-slate-700/50">
           <div className="flex items-center w-full">
             <div className="logo-container w-full flex items-center">
-              {user?.data?.role === 'admin' ? (
-                <Link href="/admin" onClick={() => setOpen(false)}>
-                  <Image 
-                    src="/sit_logo-landscape-dark.png" 
-                    alt="Suitable IT Logo" 
-                    width={280} 
-                    height={60} 
-                    className="object-cover w-full h-[40px] cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                    priority={true}
-                  />
-                </Link>
-              ) : user?.data ? (
-                <Link href="/dashboard" onClick={() => setOpen(false)}>
-                  <Image 
-                    src="/logo.png" 
-                    alt="User Logo" 
-                    width={280} 
-                    height={60} 
-                    className="object-cover w-full h-[40px] cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                    priority={true}
-                  />
-                </Link>
-              ) : (
-                <div className="w-full h-[40px] bg-slate-700/50 rounded animate-pulse"></div>
-              )}
+              <Link href="/" onClick={() => setOpen(false)}>
+                <Image 
+                  src="/logo.png" 
+                  alt="SMMDOC Logo" 
+                  width={280} 
+                  height={60} 
+                  className="object-cover w-full h-[40px] cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                  priority={true}
+                />
+              </Link>
             </div>
           </div>
         </SheetHeader>
