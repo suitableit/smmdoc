@@ -679,9 +679,9 @@ const Header = () => {
         `
       }} />
       {/* Mobile Logo - Visible only on mobile */}
-      <div className="flex lg:hidden items-center">
+      <Link href="/" className="flex lg:hidden items-center">
         <img src="/logo.png" alt="Logo" className="h-12 w-auto" />
-      </div>
+      </Link>
 
       {/* Desktop Search - Hidden on mobile */}
       <div className="hidden lg:flex items-center gap-3 flex-grow max-w-md">
