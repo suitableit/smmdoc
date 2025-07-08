@@ -1,4 +1,4 @@
-// HI form Jasmin -dev
+// hi from jasmin
 'use client';
 
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -19,6 +19,7 @@ import {
   FaClock,
   FaDiscord,
   FaFacebook,
+  FaFilter,
   FaGlobe,
   FaHashtag,
   FaInfoCircle,
@@ -39,7 +40,6 @@ import {
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
-// Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -48,7 +48,6 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   </div>
 );
 
-// Toast Component
 const Toast = ({
   message,
   type = 'success',
@@ -79,7 +78,6 @@ const Toast = ({
   </div>
 );
 
-// Service Details Card Component
 const ServiceDetailsCard = ({
   selectedService,
   services,
@@ -258,6 +256,7 @@ function NewOrder() {
   const serviceIdFromUrl =
     searchParams.get('sId') || searchParams.get('serviceId');
   const categoryIdFromUrl = searchParams.get('categoryId');
+  const platformFromUrl = searchParams.get('platform');
   const [servicesData, setServicesData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -296,14 +295,12 @@ function NewOrder() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Fetch price and per quantity values for the selected service
   const selected = services?.find((s) => s.id === selectedService);
   const perQty = Number(selected?.perqty) || 1;
   const price = Number(selected?.rate) || 0;
   // Get currency rate
   const { rate: currencyRate, currency } = useCurrency();
 
-  // Calculate total price (matching API calculation: (rate * qty) / 1000)
   let totalPrice = 0;
   if (user?.currency === 'USD') {
     totalPrice = (price * qty) / 1000;
@@ -311,16 +308,14 @@ function NewOrder() {
     totalPrice = ((price * qty) / 1000) * (currencyRate || 121.52);
   }
 
-  // Initialize form loading
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsFormLoading(false);
-    }, 1500); // Simulate loading for 1.5 seconds
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Fetch favorite categories
   useEffect(() => {
     if (user?.id) {
       axiosInstance
@@ -335,7 +330,6 @@ function NewOrder() {
     }
   }, [user?.id]);
 
-  // Check which favorite categories have services
   useEffect(() => {
     const checkFavoriteCategories = async () => {
       const checkedFavorites = await Promise.all(
@@ -362,35 +356,120 @@ function NewOrder() {
     if (favoriteCategories.length > 0) {
       checkFavoriteCategories().then((validFavorites) => {
         if (category?.data) {
-          const combined = [
-            // Only include favorite categories that have services
+          let combined = [
             ...validFavorites.map((favCat) => ({
               ...favCat,
               isFavorite: true,
               category_name: `⭐ ${favCat.name}`,
             })),
-            // Regular categories
+
             ...category.data.map((regCat: any) => ({
               ...regCat,
               isFavorite: false,
             })),
           ];
+
+          if (platformFromUrl && platformFromUrl !== 'Everything') {
+            combined = combined
+              .filter((cat) =>
+                platformFromUrl === 'Others'
+                  ? ![
+                      'Instagram',
+                      'Facebook',
+                      'YouTube',
+                      'TikTok',
+                      'Twitter',
+                      'Telegram',
+                      'Spotify',
+                      'LinkedIn',
+                      'Discord',
+                      'Website',
+                    ].some((keyword) =>
+                      cat.category_name
+                        .toLowerCase()
+                        .includes(keyword.toLowerCase())
+                    )
+                  : cat.category_name
+                      .toLowerCase()
+                      .includes(platformFromUrl.toLowerCase())
+              )
+              .sort((a, b) => {
+                const aMatch = a.category_name
+                  .toLowerCase()
+                  .includes(platformFromUrl.toLowerCase())
+                  ? -1
+                  : 1;
+                const bMatch = b.category_name
+                  .toLowerCase()
+                  .includes(platformFromUrl.toLowerCase())
+                  ? -1
+                  : 1;
+                return aMatch - bMatch;
+              });
+          }
+
           setCombinedCategories(combined);
           setCategoriesWithServices(combined);
+
+          if (!selectedCategory && combined.length > 0) {
+            setSelectedCategory(combined[0].id);
+          }
         }
       });
     } else if (category?.data) {
-      // No favorite categories, just use regular ones
-      const regularCategories = category.data.map((regCat: any) => ({
+      let regularCategories = category.data.map((regCat: any) => ({
         ...regCat,
         isFavorite: false,
       }));
+
+      if (platformFromUrl && platformFromUrl !== 'Everything') {
+        regularCategories = regularCategories
+          .filter((cat) =>
+            platformFromUrl === 'Others'
+              ? ![
+                  'Instagram',
+                  'Facebook',
+                  'YouTube',
+                  'TikTok',
+                  'Twitter',
+                  'Telegram',
+                  'Spotify',
+                  'LinkedIn',
+                  'Discord',
+                  'Website',
+                ].some((keyword) =>
+                  cat.category_name
+                    .toLowerCase()
+                    .includes(keyword.toLowerCase())
+                )
+              : cat.category_name
+                  .toLowerCase()
+                  .includes(platformFromUrl.toLowerCase())
+          )
+          .sort((a, b) => {
+            const aMatch = a.category_name
+              .toLowerCase()
+              .includes(platformFromUrl.toLowerCase())
+              ? -1
+              : 1;
+            const bMatch = b.category_name
+              .toLowerCase()
+              .includes(platformFromUrl.toLowerCase())
+              ? -1
+              : 1;
+            return aMatch - bMatch;
+          });
+      }
+
       setCombinedCategories(regularCategories);
       setCategoriesWithServices(regularCategories);
-    }
-  }, [category, favoriteCategories]);
 
-  // Fetch services based on selected category (both favorite and regular)
+      if (!selectedCategory && regularCategories.length > 0) {
+        setSelectedCategory(regularCategories[0].id);
+      }
+    }
+  }, [category, favoriteCategories, platformFromUrl, selectedCategory]);
+
   useEffect(() => {
     if (selectedCategory) {
       const selectedCat = combinedCategories?.find(
@@ -401,7 +480,6 @@ function NewOrder() {
       setIsServiceDetailsLoading(true);
 
       if (selectedCat?.isFavorite) {
-        // Fetch services from favorite category
         axios
           .post('/api/user/services/favserviceById', {
             favrouteCatId: selectedCategory,
@@ -420,7 +498,6 @@ function NewOrder() {
             setIsServiceDetailsLoading(false);
           });
       } else {
-        // Fetch services from regular category
         axios
           .post('/api/admin/services/catId-by-services', {
             categoryId: selectedCategory,
@@ -457,7 +534,6 @@ function NewOrder() {
     setIsInitializing(false);
   };
 
-  // Initialize with category from URL if provided
   useEffect(() => {
     if (
       categoryIdFromUrl &&
@@ -473,10 +549,8 @@ function NewOrder() {
     }
   }, [categoryIdFromUrl, combinedCategories, selectedCategory]);
 
-  // Initialize with service from URL if provided
   useEffect(() => {
     if (serviceIdFromUrl && !selectedService && category?.data) {
-      // First try to find the service in our existing data
       const allServices = category?.data?.flatMap(
         (cat: any) => cat.services || []
       );
@@ -489,13 +563,11 @@ function NewOrder() {
         setSelectedService(serviceIdFromUrl);
         setSearch(serviceFromUrl.name);
       } else {
-        // If not found, fetch the specific service
         fetchServiceById(serviceIdFromUrl);
       }
     }
   }, [serviceIdFromUrl, category]);
 
-  // Fetch service details by ID
   const fetchServiceById = async (serviceId: string) => {
     try {
       const res = await axiosInstance.get(
@@ -512,13 +584,43 @@ function NewOrder() {
     }
   };
 
-  // Fetch services based on search input
   async function getServices() {
     try {
       const res = await axiosInstance.get(
         `/api/user/services/neworderservice?search=${search}`
       );
-      const fetchedServices = res?.data?.data || [];
+      let fetchedServices = res?.data?.data || [];
+
+      if (platformFromUrl && platformFromUrl !== 'Everything') {
+        fetchedServices = fetchedServices.filter((service) => {
+          const serviceCategory = combinedCategories.find(
+            (cat) => cat.id === service.categoryId
+          );
+          if (!serviceCategory) return false;
+          if (platformFromUrl === 'Others') {
+            return ![
+              'Instagram',
+              'Facebook',
+              'YouTube',
+              'TikTok',
+              'Twitter',
+              'Telegram',
+              'Spotify',
+              'LinkedIn',
+              'Discord',
+              'Website',
+            ].some((keyword) =>
+              serviceCategory.category_name
+                .toLowerCase()
+                .includes(keyword.toLowerCase())
+            );
+          }
+          return serviceCategory.category_name
+            .toLowerCase()
+            .includes(platformFromUrl.toLowerCase());
+        });
+      }
+
       setServicesData(fetchedServices);
     } catch (error) {
       showToast('Error fetching services', 'error');
@@ -535,9 +637,8 @@ function NewOrder() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, platformFromUrl]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -562,11 +663,9 @@ function NewOrder() {
 
   const userData = useSelector((state: any) => state.userDetails);
 
-  // Handle form submission
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Validation checks
     if (!selectedService) {
       showToast('Please select a service', 'error');
       return;
@@ -598,8 +697,6 @@ function NewOrder() {
       return;
     }
 
-    // Check if user has enough balance
-    // Use real-time balance from API, fallback to Redux store, then user object
     const userBalanceAmount =
       userStatsResponse?.data?.balance ||
       userData?.balance ||
@@ -620,12 +717,9 @@ function NewOrder() {
     setIsSubmitting(true);
 
     try {
-      // Get fresh user data to ensure currency is up-to-date
       const currentUserResponse = await axiosInstance.get('/api/user/current');
       const currentUser = currentUserResponse.data;
 
-      // Prepare order data for API (expects array format)
-      // Calculate USD and BDT prices to match API calculation
       const usdPrice = (price * qty) / 1000;
       const bdtPrice = usdPrice * (currencyRate || 121.52);
 
@@ -647,7 +741,7 @@ function NewOrder() {
           price: finalTotalPrice,
           usdPrice: usdPrice,
           bdtPrice: bdtPrice,
-          currency: currentUser?.currency, // Use fresh currency data
+          currency: currentUser?.currency,
           serviceId: selectedService,
           categoryId: selectedCategory,
           userId: user?.id,
@@ -655,7 +749,6 @@ function NewOrder() {
         },
       ];
 
-      // Submit order to API
       const response = await axiosInstance.post(
         '/api/user/create-orders',
         orderPayload
@@ -664,10 +757,8 @@ function NewOrder() {
       if (response.data.success) {
         showToast('Order created successfully!', 'success');
 
-        // Invalidate user stats to refresh balance
         dispatch(dashboardApi.util.invalidateTags(['UserStats']));
 
-        // Also manually refetch user stats for immediate update
         refetchUserStats();
 
         // Reset form
@@ -676,9 +767,6 @@ function NewOrder() {
         setSelectedService('');
         setSelectedCategory('');
         setSearch('');
-
-        // Optionally redirect to orders page
-        // router.push('/my-orders');
       } else {
         showToast(response.data.message || 'Failed to create order', 'error');
       }
@@ -694,7 +782,6 @@ function NewOrder() {
     }
   };
 
-  // Handle search select
   const handleSearchSelect = (serviceId: string, categoryId: string) => {
     const selected = servicesData.find((s) => s.id === serviceId);
 
@@ -710,7 +797,6 @@ function NewOrder() {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -721,9 +807,7 @@ function NewOrder() {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-          {/* Left Column - Order Form */}
           <div className="w-full space-y-4 lg:space-y-6">
-            {/* Tab Navigation */}
             <div className="card" style={{ padding: '8px' }}>
               <div className="flex space-x-2">
                 <button className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg">
@@ -739,6 +823,26 @@ function NewOrder() {
                 </button>
               </div>
             </div>
+
+            {platformFromUrl && platformFromUrl !== 'Everything' && (
+              <div className="flex items-center space-x-3 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-700">
+                <FaFilter className="h-4 w-4 flex-shrink-0 text-purple-600" />
+                <div>
+                  <span>
+                    Showing{' '}
+                    <strong>
+                      {platformFromUrl.replace('Traffic', ' Traffic')} services
+                    </strong>{' '}
+                    only
+                  </span>
+                  <span className="ml-2 text-purple-500">
+                    ({categoriesWithServices.length} categor
+                    {categoriesWithServices.length === 1 ? 'y' : 'ies'}{' '}
+                    available)
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="card card-padding w-full max-w-full">
               {isFormLoading ? (
@@ -756,7 +860,6 @@ function NewOrder() {
                   onSubmit={onSubmit}
                   className="space-y-4 w-full max-w-full"
                 >
-                  {/* Search Input with Dropdown */}
                   <div className="form-group w-full">
                     <label className="form-label">Search Services</label>
                     <div className="relative w-full" ref={searchRef}>
@@ -824,7 +927,7 @@ function NewOrder() {
                       <option value="" disabled>
                         Select a category
                       </option>
-                      {/* Only show favorites group if there are favorite categories with services */}
+
                       {categoriesWithServices.some((cat) => cat.isFavorite) && (
                         <optgroup label="Favorites">
                           {categoriesWithServices
@@ -839,7 +942,7 @@ function NewOrder() {
                             ))}
                         </optgroup>
                       )}
-                      {/* Regular categories */}
+
                       <optgroup label="All Categories">
                         {categoriesWithServices
                           .filter((cat) => !cat.isFavorite)
@@ -852,7 +955,6 @@ function NewOrder() {
                     </select>
                   </div>
 
-                  {/* Service Dropdown */}
                   <div className="form-group">
                     <label className="form-label" htmlFor="services">
                       Services
@@ -901,7 +1003,7 @@ function NewOrder() {
                     <input
                       type="number"
                       id="qty"
-                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="Enter Quantity"
                       onChange={(e) =>
                         e.target.value
@@ -939,7 +1041,7 @@ function NewOrder() {
                       id="price"
                       readOnly
                       disabled
-                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       value={
                         user?.currency === 'USD'
                           ? `$ ${totalPrice.toFixed(4)}`
@@ -949,7 +1051,6 @@ function NewOrder() {
                     />
                   </div>
 
-                  {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={
@@ -971,7 +1072,6 @@ function NewOrder() {
             </div>
           </div>
 
-          {/* Right Column - Service Details */}
           <div className="space-y-6">
             <ServiceDetailsCard
               selectedService={selectedService}
@@ -988,12 +1088,10 @@ function NewOrder() {
 export default function NewOrderPage() {
   const router = useRouter();
 
-  // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `New Order — ${APP_NAME}`;
   }, []);
 
-  // Social media platforms ordered by popularity (most popular first)
   const platforms = [
     {
       name: 'Everything',
@@ -1080,9 +1178,6 @@ export default function NewOrderPage() {
   return (
     <div className="h-full">
       <div className="flex flex-col">
-        {/* Social Media Platforms Grid */}
-
-        {/* Social Media Platforms Grid */}
         <div className="card card-padding mb-6">
           <div className="card-header mb-4">
             <div className="card-icon">

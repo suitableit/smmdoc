@@ -2,7 +2,6 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
@@ -121,6 +120,7 @@ const ProfilePage = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [selectedTimezone, setSelectedTimezone] = useState('21600');
   const [showApiKey, setShowApiKey] = useState(false);
+
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -557,15 +557,13 @@ const ProfilePage = () => {
     }
   };
 
-  // Show loading state if page is still loading
   if (isPageLoading || isUserDataLoading) {
     return (
       <div className="page-container">
         <div className="page-content">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Loading States */}
             <div className="space-y-6">
-              {/* Account Information Card - Loading */}
+              \{' '}
               <div className="card card-padding">
                 <div className="flex items-center justify-center min-h-[200px]">
                   <div className="text-center flex flex-col items-center">
@@ -576,8 +574,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
               </div>
-
-              {/* User Profile Picture Card - Static */}
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
@@ -589,7 +585,7 @@ const ProfilePage = () => {
                 <div className="flex flex-col items-center space-y-4">
                   <div className="relative">
                     <div className="profile-picture">
-                      {currentUser?.name?.charAt(0) || 'M'}
+                      {currentUser?.username?.charAt(0) || 'M'}
                     </div>
                     <button className="profile-picture-edit">
                       <FaCamera className="w-4 h-4" />
@@ -598,7 +594,6 @@ const ProfilePage = () => {
                   <button className="btn btn-primary">Upload Photo</button>
                 </div>
               </div>
-
               {/* Change Password Card - Loading */}
               <div className="card card-padding">
                 <div className="flex items-center justify-center min-h-[300px]">
@@ -662,8 +657,7 @@ const ProfilePage = () => {
     );
   }
 
-  // Get user data from Redux store or fallback to current user
-  const user = userDetails.id ? userDetails : currentUser;
+  const user = currentUser;
 
   return (
     <div className="page-container">
@@ -682,7 +676,6 @@ const ProfilePage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
-            {/* Account Information Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -696,7 +689,7 @@ const ProfilePage = () => {
                   <label className="form-label">Username</label>
                   <input
                     type="text"
-                    value={user?.username || user?.name || ''}
+                    value={user?.username || ''}
                     readOnly
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
@@ -707,9 +700,7 @@ const ProfilePage = () => {
                   <input
                     type="text"
                     value={
-                      isEditingProfile
-                        ? profileData.fullName
-                        : user?.fullName || user?.name || ''
+                      isEditingProfile ? profileData.fullName : user?.name || ''
                     }
                     onChange={(e) =>
                       handleProfileDataChange('fullName', e.target.value)
@@ -732,11 +723,6 @@ const ProfilePage = () => {
                     readOnly={!isEditingProfile}
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   />
-                  {!user?.emailVerified && (
-                    <small className="text-yellow-600 dark:text-yellow-400 mt-1 block">
-                      Email not verified
-                    </small>
-                  )}
                 </div>
 
                 <div className="flex gap-2">
@@ -788,9 +774,7 @@ const ProfilePage = () => {
                     />
                   ) : (
                     <div className="profile-picture">
-                      {(user?.username || user?.name)
-                        ?.charAt(0)
-                        ?.toUpperCase() || 'U'}
+                      {user?.username?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
                   )}
                   <button className="profile-picture-edit">
@@ -929,7 +913,6 @@ const ProfilePage = () => {
                         className="form-field w-full pr-20 font-mono px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       />
 
-                      {/* View/Hide Toggle Button */}
                       {apiKey && (
                         <button
                           type="button"
@@ -945,7 +928,6 @@ const ProfilePage = () => {
                         </button>
                       )}
 
-                      {/* Responsive timestamp positioning */}
                       {apiKey && (
                         <div className="api-key-timestamp">
                           <small>
