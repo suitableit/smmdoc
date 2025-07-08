@@ -1144,7 +1144,7 @@ const HomePage: React.FC = () => {
               <h2 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
                 {activePlatform.title}
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed transition-colors duration-200">
+              <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed text-justify transition-colors duration-200">
                 {activePlatform.description}
               </p>
               <Link
@@ -1344,7 +1344,7 @@ const HomePage: React.FC = () => {
                 <div key={testimonial.id} className="w-full md:w-1/3 flex-shrink-0 px-4">
                   <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 h-80 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1">
                     <div>
-                      <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm leading-relaxed line-clamp-6 transition-colors duration-200">
+                      <p className="text-gray-600 dark:text-gray-300 mb-4 text-justify text-sm leading-relaxed line-clamp-6 transition-colors duration-200">
                         "{testimonial.content}"
                       </p>
                     </div>
