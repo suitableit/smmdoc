@@ -129,7 +129,7 @@ export default function SignInForm() {
           <>
             <div>
               <label
-                htmlFor="email"
+                htmlFor="text"
                 className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200"
               >
                 Username of Email
