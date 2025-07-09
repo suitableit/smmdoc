@@ -26,8 +26,8 @@ export const emailTemplates = {
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 30px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Payment Successful!</h1>
-            <div style="background-color: rgba(255,255,255,0.2); width: 80px; height: 80px; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center;">
-              <div style="color: #ffffff; font-size: 40px;">✓</div>
+            <div style="background-color: rgba(255,255,255,0.2); width: 80px; height: 80px; border-radius: 50%; margin: 20px auto; align-items: center; justify-content: center;">
+              <div style="color: #ffffff; font-size: 55px;">✓</div>
             </div>
           </div>
           
