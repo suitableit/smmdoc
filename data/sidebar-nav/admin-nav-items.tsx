@@ -35,10 +35,10 @@ export const adminNavItems = [
 
   // Services Section
   {
-    title: 'Services',
+    title: 'All Services',
     href: '/admin/services',
     icon: 'FaBriefcase',
-    label: 'Services',
+    label: 'All Services',
     roles: ['admin'],
   },
   {
