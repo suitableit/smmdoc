@@ -29,7 +29,7 @@ interface AdminSections {
   transactions: NavItem[];
   support: NavItem[];
   posts: NavItem[];
-  additionals: NavItem[];
+  additional: NavItem[];
   reseller: NavItem[];
   settings: NavItem[];
   security: NavItem[];
@@ -124,7 +124,7 @@ export default function SideBarNav({
         posts: items.filter((item) =>
           ['Blogs', 'Blog Categories', 'Tags', 'Announcements'].includes(item.title)
         ),
-        additionals: items.filter((item) =>
+        additional: items.filter((item) =>
           ['Affiliates', 'Analytics & Reports'].includes(
             item.title
           )
@@ -471,7 +471,7 @@ export default function SideBarNav({
             {renderNavSection('Transactions', getSectionItems('transactions'))}
             {renderNavSection('Support', getSectionItems('support'))}
             {renderNavSection('Posts', getSectionItems('posts'))}
-            {renderNavSection('Additionals', getSectionItems('additionals'))}
+            {renderNavSection('Additional', getSectionItems('additional'))}
             {renderNavSection('Reseller Panels', getSectionItems('reseller'))}
             {renderNavSection('Settings', getSectionItems('settings'))}
             {renderNavSection('Security', getSectionItems('security'))}
