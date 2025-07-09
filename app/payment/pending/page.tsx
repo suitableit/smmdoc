@@ -1,17 +1,25 @@
 'use client';
 
+import { APP_NAME } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 import {
   FaClock,
   FaEnvelope,
-  FaExclamationTriangle,
   FaInfoCircle,
-  FaPhone,
   FaReceipt,
   FaTelegram,
   FaTimes,
   FaWhatsapp,
 } from 'react-icons/fa';
+
+// Custom Gradient Spinner Component (matching Profile page)
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
 
 // Mock hook for demonstration
 const useSearchParams = () => {
@@ -38,7 +46,7 @@ const useRouter = () => {
   };
 };
 
-// Toast Component
+// Toast Component (matching Profile page style)
 const Toast = ({
   message,
   type = 'info',
@@ -71,14 +79,10 @@ function PaymentPendingContent() {
   const transaction_id = searchParams.get('transaction_id');
   const phone = searchParams.get('phone');
 
-  // Show toast notification
-  const showToast = (
-    message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'info'
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 5000);
-  };
+  // Set document title
+  useEffect(() => {
+    document.title = `Payment Under Review — ${APP_NAME}`;
+  }, []);
 
   useEffect(() => {
     // Show pending toast only once when component mounts
@@ -101,6 +105,7 @@ function PaymentPendingContent() {
     if (amount) params.set('amount', amount);
     if (transaction_id) params.set('transaction_id', transaction_id);
     if (phone) params.set('phone', phone);
+    params.set('status', 'pending'); // Mark as pending transaction
 
     const url = `/transactions${
       params.toString() ? '?' + params.toString() : ''
@@ -113,7 +118,7 @@ function PaymentPendingContent() {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container min-h-screen flex items-center justify-center">
       {/* Toast Container */}
       <div className="toast-container">
         {toast && (
@@ -125,194 +130,102 @@ function PaymentPendingContent() {
         )}
       </div>
 
-      <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">Payment Pending</h1>
-          <p className="page-description">
-            Your payment is being processed and under review
-          </p>
-        </div>
-
+      <div className="page-content max-w-2xl mx-auto w-full px-0 lg:px-4">
         {/* Main Pending Card */}
-        <div className="card card-padding">
+        <div className="card-mobile card card-padding">
           <div className="text-center">
-            {/* Pending Icon */}
-            <div className="pending-icon">
-              <FaClock />
+            {/* Pending Icon - Just Clock */}
+            <div className="flex justify-center mb-6">
+              <FaClock className="lg:w-20 w-16 lg:h-20 h-16 text-orange-500" />
             </div>
 
             {/* Pending Message */}
-            <h2 className="card-title text-center">Payment Under Review</h2>
-            <p
-              className="text-center"
-              style={{ color: '#64748b', marginBottom: '1.5rem' }}
-            >
+            <h2 className="card-title text-center mb-2">Payment Under Review</h2>
+            <p className="text-center mb-6" style={{ color: 'var(--text-muted)' }}>
               Your payment is being processed and requires manual verification.
               You will be notified once approved.
             </p>
 
             {/* Payment Details */}
-            {(invoice_id || amount || transaction_id) && (
-              <div className="details-grid">
-                <h3
-                  className="font-semibold"
-                  style={{ color: '#1e293b', marginBottom: '1rem' }}
-                >
-                  Payment Details
-                </h3>
-
-                {invoice_id && (
-                  <div className="detail-row">
-                    <span className="detail-label">Order ID:</span>
-                    <span className="detail-value">{invoice_id}</span>
+            {(invoice_id || amount || transaction_id || phone) && (
+              <div className="space-y-4 mb-6">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaReceipt />
                   </div>
-                )}
+                  <h3 className="card-title">Payment Details</h3>
+                </div>
 
-                {amount && (
-                  <div className="detail-row">
-                    <span className="detail-label">Amount:</span>
-                    <span className="detail-value">${amount}</span>
+                <div className="space-y-3">
+                  {invoice_id && (
+                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                      <span className="form-label">Order ID:</span>
+                      <span className="font-mono text-sm font-medium">{invoice_id}</span>
+                    </div>
+                  )}
+
+                  {amount && (
+                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                      <span className="form-label">Amount:</span>
+                      <span className="font-semibold text-lg text-orange-600 dark:text-orange-400">${amount}</span>
+                    </div>
+                  )}
+
+                  {transaction_id && (
+                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                      <span className="form-label">Transaction ID:</span>
+                      <span className="font-mono text-sm font-medium">{transaction_id}</span>
+                    </div>
+                  )}
+
+                  {phone && (
+                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                      <span className="form-label">Phone Number:</span>
+                      <span className="font-medium">{phone}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                    <span className="form-label">Status:</span>
+                    <span className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-medium">
+                      <FaClock className="w-4 h-4" />
+                      Pending Review
+                    </span>
                   </div>
-                )}
-
-                {transaction_id && (
-                  <div className="detail-row">
-                    <span className="detail-label">Transaction ID:</span>
-                    <span className="detail-value">{transaction_id}</span>
-                  </div>
-                )}
-
-                <div className="detail-row">
-                  <span className="detail-label">Status:</span>
-                  <span className="status-pending">
-                    <FaClock />
-                    Pending Review
-                  </span>
                 </div>
               </div>
             )}
 
             {/* Info Box */}
-            <div className="info-box">
-              <h4
-                className="font-semibold"
-                style={{ color: '#1e40af', marginBottom: '0.5rem' }}
-              >
+            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-6">
+              <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">
                 What happens next?
               </h4>
-              <ul className="info-list">
-                <li>• Our admin team will review your payment</li>
-                <li>• You will receive an email notification once approved</li>
-                <li>• Funds will be added to your account automatically</li>
-                <li>• This usually takes 1-24 hours</li>
-              </ul>
+              <div className="text-orange-800 dark:text-orange-200 text-sm space-y-1">
+                <p>• Our admin team will review your payment</p>
+                <p>• You will receive an email notification once approved</p>
+                <p>• Funds will be added to your account automatically</p>
+                <p>• This usually takes 1-24 hours</p>
+              </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <button
                 onClick={handleViewTransactions}
-                className="btn btn-primary"
+                className="btn btn-primary w-full flex items-center justify-center gap-2"
               >
-                <FaReceipt style={{ marginRight: '0.5rem' }} />
                 View Transactions
               </button>
 
               <button
                 onClick={handleContactSupport}
-                className="btn btn-secondary"
+                className="btn btn-secondary w-full flex items-center justify-center gap-2"
               >
-                <FaWhatsapp style={{ marginRight: '0.5rem' }} />
+                <FaWhatsapp />
                 Contact Support
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* Important Notes Card */}
-        <div className="card card-padding">
-          <div className="card-header">
-            <div className="card-icon">
-              <FaExclamationTriangle />
-            </div>
-            <h3 className="card-title">Important Notes</h3>
-          </div>
-
-          <ul className="features-list">
-            <li className="feature-item">
-              <FaClock className="feature-icon" />
-              <span>Your payment is being manually verified for security</span>
-            </li>
-            <li className="feature-item">
-              <FaClock className="feature-icon" />
-              <span>Please ensure your transaction details are correct</span>
-            </li>
-            <li className="feature-item">
-              <FaClock className="feature-icon" />
-              <span>You will receive email confirmation once approved</span>
-            </li>
-            <li className="feature-item">
-              <FaClock className="feature-icon" />
-              <span>Contact support if you have any questions</span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Support Card */}
-        <div className="card card-padding">
-          <div className="card-header">
-            <div className="card-icon">
-              <FaPhone />
-            </div>
-            <h3 className="card-title">Need Help?</h3>
-          </div>
-
-          <p
-            style={{
-              color: '#64748b',
-              marginBottom: '1rem',
-              fontSize: '0.875rem',
-            }}
-          >
-            If you have any questions about your payment, feel free to contact
-            our support team:
-          </p>
-
-          <div className="support-grid">
-            <a
-              href="https://wa.me/+8801723139610"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="support-card whatsapp"
-            >
-              <FaWhatsapp className="support-card-icon" />
-              <div>
-                <div className="support-card-title">WhatsApp</div>
-                <div className="support-card-subtitle">+8801723139610</div>
-              </div>
-            </a>
-
-            <a
-              href="https://t.me/Smmdoc"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="support-card telegram"
-            >
-              <FaTelegram className="support-card-icon" />
-              <div>
-                <div className="support-card-title">Telegram</div>
-                <div className="support-card-subtitle">@Smmdoc</div>
-              </div>
-            </a>
-
-            <a href="mailto:support@example.com" className="support-card email">
-              <FaEnvelope className="support-card-icon" />
-              <div>
-                <div className="support-card-title">Email</div>
-                <div className="support-card-subtitle">support@example.com</div>
-              </div>
-            </a>
           </div>
         </div>
       </div>

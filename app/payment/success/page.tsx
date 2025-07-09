@@ -1,5 +1,6 @@
 'use client';
 
+import { APP_NAME } from '@/lib/constants';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import {
@@ -13,7 +14,16 @@ import {
   FaWhatsapp,
 } from 'react-icons/fa';
 
-// Toast Component
+// Custom Gradient Spinner Component (matching Profile page)
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
+// Toast Component (matching Profile page style)
 const Toast = ({
   message,
   type = 'success',
@@ -44,6 +54,11 @@ function PaymentSuccessContent() {
   const amount = searchParams?.get('amount');
   const transaction_id = searchParams?.get('transaction_id');
   const phone = searchParams?.get('phone');
+
+  // Set document title
+  useEffect(() => {
+    document.title = `Payment Success — ${APP_NAME}`;
+  }, []);
 
   useEffect(() => {
     // Show success toast only once when component mounts
@@ -78,7 +93,7 @@ function PaymentSuccessContent() {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container min-h-screen flex items-center justify-center">
       {/* Toast Container */}
       <div className="toast-container">
         {toast && (
@@ -90,171 +105,95 @@ function PaymentSuccessContent() {
         )}
       </div>
 
-      <div className="page-content">
-        {/* Page Header */}
-        <div className="page-header">
-          <h1 className="page-title">Payment Successful!</h1>
-          <p className="page-description">
-            Your transaction has been completed successfully
-          </p>
-        </div>
-
+      <div className="page-content max-w-2xl mx-auto w-full px-0 lg:px-4">
         {/* Main Success Card */}
-        <div className="card card-padding">
+        <div className="card-mobile card card-padding">
           <div className="text-center">
-            {/* Success Icon */}
-            <div className="success-icon">
-              <FaCheckCircle />
+            {/* Success Icon - Just Checkmark */}
+            <div className="flex justify-center mb-6">
+              <FaCheckCircle className="lg:w-20 w-16 lg:h-20 h-16 text-green-500" />
             </div>
 
             {/* Success Message */}
-            <h2 className="card-title text-center">Payment Completed!</h2>
-            <p
-              className="text-center"
-              style={{ color: '#64748b', marginBottom: '1.5rem' }}
-            >
+            <h2 className="card-title text-center mb-2">Payment Completed!</h2>
+            <p className="text-center mb-6" style={{ color: 'var(--text-muted)' }}>
               Funds have been successfully added to your account.
             </p>
 
             {/* Payment Details */}
             {(invoice_id || amount || transaction_id || phone) && (
-              <div className="details-grid">
-                <h3
-                  className="font-semibold"
-                  style={{ color: '#1e293b', marginBottom: '1rem' }}
-                >
-                  Payment Details
-                </h3>
-
-                {invoice_id && (
-                  <div className="detail-row">
-                    <span className="detail-label">Order ID:</span>
-                    <span className="detail-value">{invoice_id}</span>
+              <div className="space-y-4 mb-6">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaReceipt />
                   </div>
-                )}
+                  <h3 className="card-title">Payment Details</h3>
+                </div>
 
-                {amount && (
-                  <div className="detail-row">
-                    <span className="detail-label">Amount:</span>
-                    <span className="detail-value">${amount}</span>
+                <div className="space-y-3">
+                  {invoice_id && (
+                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                      <span className="form-label">Order ID:</span>
+                      <span className="font-mono text-sm font-medium">{invoice_id}</span>
+                    </div>
+                  )}
+
+                  {amount && (
+                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                      <span className="form-label">Amount:</span>
+                      <span className="font-semibold text-lg text-green-600 dark:text-green-400">${amount}</span>
+                    </div>
+                  )}
+
+                  {transaction_id && (
+                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                      <span className="form-label">Transaction ID:</span>
+                      <span className="font-mono text-sm font-medium">{transaction_id}</span>
+                    </div>
+                  )}
+
+                  {phone && (
+                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                      <span className="form-label">Phone Number:</span>
+                      <span className="font-medium">{phone}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                    <span className="form-label">Status:</span>
+                    <span className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
+                      <FaCheckCircle className="w-4 h-4" />
+                      Completed
+                    </span>
                   </div>
-                )}
-
-                {transaction_id && (
-                  <div className="detail-row">
-                    <span className="detail-label">Transaction ID:</span>
-                    <span className="detail-value">{transaction_id}</span>
-                  </div>
-                )}
-
-                {phone && (
-                  <div className="detail-row">
-                    <span className="detail-label">Phone Number:</span>
-                    <span className="detail-value">{phone}</span>
-                  </div>
-                )}
-
-                <div className="detail-row">
-                  <span className="detail-label">Status:</span>
-                  <span className="status-success">
-                    <FaCheckCircle />
-                    Completed
-                  </span>
                 </div>
               </div>
             )}
 
             {/* Info Box */}
-            <div className="info-box">
-              <p className="info-text">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+              <p className="text-blue-800 dark:text-blue-200 text-sm">
                 Your account balance has been updated successfully. You can now
                 use your funds to place orders.
               </p>
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <button
                 onClick={handleViewTransactions}
-                className="btn btn-primary"
+                className="btn btn-primary w-full flex items-center justify-center gap-2"
               >
-                <FaReceipt style={{ marginRight: '0.5rem' }} />
                 View Transactions
-                <FaArrowRight style={{ marginLeft: '0.5rem' }} />
               </button>
 
               <button
                 onClick={handleAddMoreFunds}
-                className="btn btn-secondary"
+                className="btn btn-secondary w-full flex items-center justify-center gap-2"
               >
-                <FaWallet style={{ marginRight: '0.5rem' }} />
+                <FaWallet />
                 Add More Funds
               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* What's Next Card */}
-        <div className="card card-padding">
-          <div className="card-header">
-            <div className="card-icon">
-              <FaReceipt />
-            </div>
-            <h3 className="card-title">What's Next?</h3>
-          </div>
-
-          <ul className="features-list">
-            <li className="feature-item">
-              <FaCheckCircle className="feature-icon" />
-              <span>Your account balance has been updated</span>
-            </li>
-            <li className="feature-item">
-              <FaCheckCircle className="feature-icon" />
-              <span>You can now place orders using your balance</span>
-            </li>
-            <li className="feature-item">
-              <FaCheckCircle className="feature-icon" />
-              <span>Check your email for payment confirmation</span>
-            </li>
-            <li className="feature-item">
-              <FaCheckCircle className="feature-icon" />
-              <span>View transaction history anytime in your dashboard</span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Support Card */}
-        <div className="card card-padding">
-          <div className="text-center">
-            <h3
-              className="font-semibold"
-              style={{ color: '#1e293b', marginBottom: '1rem' }}
-            >
-              Need Help?
-            </h3>
-            <p
-              style={{
-                color: '#64748b',
-                marginBottom: '1rem',
-                fontSize: '0.875rem',
-              }}
-            >
-              Our support team is here to assist you
-            </p>
-
-            <div className="support-links">
-              <a href="https://wa.me/+8801723139610" className="support-link">
-                <FaWhatsapp />
-                WhatsApp
-              </a>
-              <a href="https://t.me/Smmdoc" className="support-link">
-                <FaTelegram />
-                Telegram
-              </a>
-              <a href="mailto:support@example.com" className="support-link">
-                <FaEnvelope />
-                Email
-              </a>
             </div>
           </div>
         </div>
@@ -267,10 +206,14 @@ export default function PaymentSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading payment details...</p>
+        <div className="page-container">
+          <div className="page-content">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center flex flex-col items-center">
+                <GradientSpinner size="w-12 h-12" className="mb-3" />
+                <div className="text-base font-medium">Loading payment details...</div>
+              </div>
+            </div>
           </div>
         </div>
       }
