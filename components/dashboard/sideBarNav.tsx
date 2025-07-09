@@ -24,7 +24,7 @@ interface AdminSections {
   dashboard: NavItem[];
   orders: NavItem[];
   services: NavItem[];
-  management: NavItem[];
+  managements: NavItem[];
   funds: NavItem[];
   transactions: NavItem[];
   support: NavItem[];
@@ -91,7 +91,7 @@ export default function SideBarNav({
         ),
         services: items.filter((item) =>
           [
-            'Services',
+            'All Services',
             'Import Services',
             'Service Types',
             'Modify Bulk Services',
@@ -99,7 +99,7 @@ export default function SideBarNav({
             'API Sync Logs',
           ].includes(item.title)
         ),
-        management: items.filter((item) =>
+        managements: items.filter((item) =>
           [
             'Users',
             'Admins',
@@ -466,7 +466,7 @@ export default function SideBarNav({
             {renderNavSection('', getSectionItems('dashboard'))}
             {renderNavSection('Orders', getSectionItems('orders'))}
             {renderNavSection('Services', getSectionItems('services'))}
-            {renderNavSection('Management', getSectionItems('management'))}
+            {renderNavSection('Managements', getSectionItems('managements'))}
             {renderNavSection('Funds', getSectionItems('funds'))}
             {renderNavSection('Transactions', getSectionItems('transactions'))}
             {renderNavSection('Support', getSectionItems('support'))}
@@ -482,7 +482,7 @@ export default function SideBarNav({
             {renderNavSection('', getSectionItems('core'))}
             {renderNavSection('Orders', getSectionItems('orders'))}
             {renderNavSection('Services', getSectionItems('services'))}
-            {renderNavSection('Fund', getSectionItems('funds'))}
+            {renderNavSection('Funds', getSectionItems('funds'))}
             {renderNavSection('Support', getSectionItems('support'))}
             {renderNavSection('Integrations', getSectionItems('integrations'))}
             {renderNavSection('More', getSectionItems('more'))}
