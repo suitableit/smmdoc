@@ -105,6 +105,12 @@ export async function POST(request: Request) {
       perqty,
       avg_time,
       updateText,
+      serviceTypeId,
+      refill,
+      cancel,
+      refillDays,
+      serviceSpeed,
+      mode,
     } = body;
 
     if (!categoryId || !name) {
@@ -130,6 +136,12 @@ export async function POST(request: Request) {
         perqty: Number(perqty),
         avg_time,
         updateText,
+        serviceTypeId: serviceTypeId || null,
+        refill: refill || false,
+        cancel: cancel || false,
+        refillDays: refillDays || 30,
+        serviceSpeed: serviceSpeed || 'medium',
+        mode: mode || 'manual',
         userId: session.user.id,
       },
     });

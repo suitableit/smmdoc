@@ -1,17 +1,40 @@
+import { currentUser } from '@/lib/actions/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-export async function PUT(request: Request) {
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const url = new URL(request.url);
-    const id = url.searchParams.get('id');
+    const user = await currentUser();
+    const { id } = await params;
     const body = await request.json();
     const { category_name, position, hideCategory } = body;
+
     if (!id || !category_name) {
       return NextResponse.json({
         error: 'Category ID and name are required',
         data: null,
         success: false,
+      });
+    }
+    
+    // Handle position logic - only for the current user's categories
+    if (position === 'top') {
+      // If position is 'top', update all existing 'top' categories to 'bottom'
+      // but exclude the current category being updated
+      await db.category.updateMany({
+        where: {
+          position: 'top',
+          userId: user?.id ?? '',
+          id: {
+            not: id,
+          },
+        },
+        data: {
+          position: 'bottom',
+        },
       });
     }
 
@@ -37,6 +60,7 @@ export async function PUT(request: Request) {
       },
       data: updateData,
     });
+    
     return NextResponse.json({
       error: null,
       message: 'Category updated successfully',
@@ -45,17 +69,19 @@ export async function PUT(request: Request) {
     });
   } catch (error) {
     return NextResponse.json({
-      error: 'Failed to update categories' + error,
+      error: 'Failed to update category: ' + error,
       data: null,
       success: false,
     });
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const url = new URL(request.url);
-    const id = url.searchParams.get('id');
+    const { id } = await params;
     if (!id) {
       return NextResponse.json({
         error: 'Category ID is required',
@@ -63,11 +89,13 @@ export async function GET(request: Request) {
         success: false,
       });
     }
+    
     const result = await db.category.findUnique({
       where: {
         id: id,
       },
     });
+    
     return NextResponse.json(
       {
         error: null,
@@ -79,7 +107,7 @@ export async function GET(request: Request) {
   } catch (error) {
     return NextResponse.json(
       {
-        error: 'Failed to fetch categories' + error,
+        error: 'Failed to fetch category: ' + error,
         data: null,
         success: false,
       },

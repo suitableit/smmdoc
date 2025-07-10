@@ -4,9 +4,14 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const result = await db.category.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [
+        {
+          position: 'asc', // 'top' comes before 'bottom'
+        },
+        {
+          createdAt: 'desc', // Within same position, newer first
+        },
+      ],
       include: {
         user: {
           select: {

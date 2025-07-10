@@ -14,12 +14,31 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { category_name } = validedFields.data;
+    const { category_name, position, hideCategory } = validedFields.data;
+
+    // Handle position logic - only for the current user's categories
+    if (position === 'top') {
+      // If position is 'top', update all existing 'top' categories to 'bottom'
+      await db.category.updateMany({
+        where: {
+          position: 'top',
+          userId: user?.id ?? '',
+        },
+        data: {
+          position: 'bottom',
+        },
+      });
+    }
+
+    let categoryData: any = {
+      category_name: category_name,
+      position: position || 'bottom',
+      hideCategory: hideCategory || 'no',
+      userId: user?.id ?? '',
+    };
+
     await db.category.create({
-      data: {
-        category_name: category_name,
-        userId: user?.id ?? '',
-      },
+      data: categoryData,
     });
 
     return NextResponse.json(
