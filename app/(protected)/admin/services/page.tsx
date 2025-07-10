@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState, useCallback, useMemo, Fragment, useTransition } from 'react';
 import Link from 'next/link';
+import useSWR from 'swr';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -44,6 +45,9 @@ import {
   createServiceSchema,
   CreateServiceSchema,
 } from '@/lib/validators/admin/services/services.validator';
+
+// Fetcher function for useSWR
+const fetcher = (url: string) => axiosInstance.get(url).then(res => res.data);
 import {
   createCategoryDefaultValues,
   createCategorySchema,
@@ -353,11 +357,12 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
 };
 
 // Create Service Form Component (integrated)
-const CreateServiceForm = ({ onClose, showToast }: { 
-  onClose: () => void; 
+const CreateServiceForm = ({ onClose, showToast }: {
+  onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
 }) => {
   const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
+  const { data: serviceTypesData, error: serviceTypesError, isLoading: serviceTypesLoading } = useSWR('/api/admin/service-types', fetcher);
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -520,20 +525,18 @@ const CreateServiceForm = ({ onClose, showToast }: {
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('serviceType')}
-                  disabled={isPending}
-                  required
+                  {...register('serviceTypeId')}
+                  disabled={isPending || serviceTypesLoading}
                 >
                   <option value="">Select Service Type</option>
-                  <option value="followers">Followers</option>
-                  <option value="likes">Likes</option>
-                  <option value="views">Views</option>
-                  <option value="comments">Comments</option>
-                  <option value="shares">Shares</option>
-                  <option value="other">Other</option>
+                  {serviceTypesData?.data?.map((serviceType: any) => (
+                    <option key={serviceType.id} value={serviceType.id}>
+                      {serviceType.name}
+                    </option>
+                  ))}
                 </select>
               </FormControl>
-              <FormMessage>{errors.serviceType?.message}</FormMessage>
+              <FormMessage>{errors.serviceTypeId?.message}</FormMessage>
             </FormItem>
 
             {/* Mode - 100% width - REQUIRED with default manual */}
@@ -787,6 +790,127 @@ const CreateServiceForm = ({ onClose, showToast }: {
             </FormItem>
           </div>
 
+          {/* Refill and Cancel Options */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Refill - 50% width */}
+            <FormItem className="md:col-span-1">
+              <FormLabel
+                className="text-sm font-medium"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Refill Enabled
+              </FormLabel>
+              <FormControl>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    className="form-checkbox h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 rounded"
+                    {...register('refill')}
+                    disabled={isPending}
+                  />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Enable refill for this service
+                  </span>
+                </div>
+              </FormControl>
+              <FormMessage>{errors.refill?.message}</FormMessage>
+            </FormItem>
+
+            {/* Cancel - 50% width */}
+            <FormItem className="md:col-span-1">
+              <FormLabel
+                className="text-sm font-medium"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Cancel Enabled
+              </FormLabel>
+              <FormControl>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    className="form-checkbox h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 rounded"
+                    {...register('cancel')}
+                    disabled={isPending}
+                  />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Enable cancel for this service
+                  </span>
+                </div>
+              </FormControl>
+              <FormMessage>{errors.cancel?.message}</FormMessage>
+            </FormItem>
+          </div>
+
+          {/* Refill Days - Conditional */}
+          {refillValue && (
+            <FormItem>
+              <FormLabel
+                className="text-sm font-medium"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Refill Days
+              </FormLabel>
+              <FormControl>
+                <input
+                  type="number"
+                  placeholder="Enter refill days (default: 30)"
+                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  {...register('refillDays', { valueAsNumber: true })}
+                  disabled={isPending}
+                  min="1"
+                  max="365"
+                />
+              </FormControl>
+              <FormMessage>{errors.refillDays?.message}</FormMessage>
+            </FormItem>
+          )}
+
+          {/* Service Speed and Mode */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Service Speed - 50% width */}
+            <FormItem className="md:col-span-1">
+              <FormLabel
+                className="text-sm font-medium"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Service Speed
+              </FormLabel>
+              <FormControl>
+                <select
+                  className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                  {...register('serviceSpeed')}
+                  disabled={isPending}
+                >
+                  <option value="slow">Slow</option>
+                  <option value="medium">Medium</option>
+                  <option value="fast">Fast</option>
+                </select>
+              </FormControl>
+              <FormMessage>{errors.serviceSpeed?.message}</FormMessage>
+            </FormItem>
+
+            {/* Mode - 50% width */}
+            <FormItem className="md:col-span-1">
+              <FormLabel
+                className="text-sm font-medium"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Processing Mode
+              </FormLabel>
+              <FormControl>
+                <select
+                  className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                  {...register('mode')}
+                  disabled={isPending}
+                >
+                  <option value="manual">Manual</option>
+                  <option value="auto">Auto</option>
+                </select>
+              </FormControl>
+              <FormMessage>{errors.mode?.message}</FormMessage>
+            </FormItem>
+          </div>
+
           {/* Service Description - 100% width - REQUIRED */}
           <FormItem>
             <FormLabel
@@ -853,8 +977,8 @@ const CreateCategoryForm = ({ onClose, showToast }: {
     reset,
     formState: { errors }
   } = useForm<CreateCategorySchema>({
+    resolver: zodResolver(createCategorySchema),
     mode: 'all',
-    // Remove zodResolver to make field optional
     defaultValues: {
       ...createCategoryDefaultValues,
       hideCategory: 'no',
@@ -920,8 +1044,8 @@ const CreateCategoryForm = ({ onClose, showToast }: {
                 {...register('hideCategory')}
                 disabled={isPending}
               >
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
+                <option value="no">No (Category will be visible/active)</option>
+                <option value="yes">Yes (Category will be hidden/deactivated)</option>
               </select>
             </FormControl>
             <FormMessage>{errors.hideCategory?.message}</FormMessage>
@@ -977,10 +1101,10 @@ const CreateCategoryForm = ({ onClose, showToast }: {
 };
 
 // Edit Category Form Component (integrated)
-const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: { 
-  categoryId: number;
+const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: {
+  categoryId: string;
   categoryName: string;
-  onClose: () => void; 
+  onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
 }) => {
   const { data: categoriesData } = useGetCategories();
@@ -992,6 +1116,7 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: {
     reset,
     formState: { errors }
   } = useForm<CreateCategorySchema>({
+    resolver: zodResolver(createCategorySchema),
     mode: 'all',
     defaultValues: {
       ...createCategoryDefaultValues,
@@ -1079,8 +1204,8 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: {
                 {...register('hideCategory')}
                 disabled={isPending}
               >
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
+                <option value="no">No (Category will be visible/active)</option>
+                <option value="yes">Yes (Category will be hidden/deactivated)</option>
               </select>
             </FormControl>
             <FormMessage>{errors.hideCategory?.message}</FormMessage>
@@ -1713,7 +1838,7 @@ function AdminServicesPage() {
   // Edit Category Modal state
   const [editCategoryModal, setEditCategoryModal] = useState<{
     open: boolean;
-    categoryId: number;
+    categoryId: string;
     categoryName: string;
     closing: boolean;
   }>({
@@ -1726,7 +1851,7 @@ function AdminServicesPage() {
   // Edit Service Modal state with animation
   const [editServiceModal, setEditServiceModal] = useState<{
     open: boolean;
-    serviceId: number;
+    serviceId: string;
     closing: boolean;
   }>({
     open: false,
@@ -1742,7 +1867,7 @@ function AdminServicesPage() {
   const [deleteCategoryModal, setDeleteCategoryModal] = useState<{
     open: boolean;
     categoryName: string;
-    categoryId: number;
+    categoryId: string;
     servicesCount: number;
     closing: boolean;
   }>({

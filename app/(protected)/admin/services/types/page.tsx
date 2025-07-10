@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   FaBox,
   FaCheckCircle,
@@ -16,6 +16,7 @@ import {
 // Import APP_NAME constant
 import { APP_NAME } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
+import axiosInstance from '@/lib/axiosInstance';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -47,10 +48,13 @@ const Toast = ({
 
 // Define interface for ServiceType with Service Count
 interface ServiceType {
-  id: number;
+  id: string;
   name: string;
+  description?: string;
+  status: string;
   serviceCount: number;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface PaginationInfo {
@@ -63,112 +67,55 @@ interface PaginationInfo {
 }
 
 const ServiceTypes = () => {
+  // Toast function
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending'
+  ) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // API Functions
+  const fetchServiceTypes = useCallback(async () => {
+    try {
+      setServiceTypesLoading(true);
+      const response = await axiosInstance.get('/api/admin/service-types');
+
+      if (response.data.success) {
+        setServiceTypes(response.data.data);
+        setPagination(prev => ({
+          ...prev,
+          total: response.data.data.length,
+          totalPages: Math.ceil(response.data.data.length / prev.limit)
+        }));
+      } else {
+        showToast('Failed to fetch service types', 'error');
+      }
+    } catch (error) {
+      console.error('Error fetching service types:', error);
+      showToast('Error fetching service types', 'error');
+    } finally {
+      setServiceTypesLoading(false);
+    }
+  }, []);
+
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Service Types — ${APP_NAME}`;
   }, []);
 
-  // Dummy data for service types with service counts (including some with 0 counts)
-  const dummyServiceTypes: ServiceType[] = [
-    {
-      id: 'st_001',
-      name: 'Social Media Marketing',
-      serviceCount: 15,
-      createdAt: '2024-01-15T10:30:00Z',
-    },
-    {
-      id: 'st_002',
-      name: 'Search Engine Optimization',
-      serviceCount: 8,
-      createdAt: '2024-01-14T14:45:00Z',
-    },
-    {
-      id: 'st_003',
-      name: 'Content Creation',
-      serviceCount: 23,
-      createdAt: '2024-01-13T09:15:00Z',
-    },
-    {
-      id: 'st_004',
-      name: 'Video Marketing',
-      serviceCount: 12,
-      createdAt: '2024-01-12T16:20:00Z',
-    },
-    {
-      id: 'st_005',
-      name: 'Email Marketing',
-      serviceCount: 6,
-      createdAt: '2024-01-11T11:35:00Z',
-    },
-    {
-      id: 'st_006',
-      name: 'Pay Per Click Advertising',
-      serviceCount: 18,
-      createdAt: '2024-01-10T13:50:00Z',
-    },
-    {
-      id: 'st_007',
-      name: 'Influencer Marketing',
-      serviceCount: 0,
-      createdAt: '2024-01-09T08:25:00Z',
-    },
-    {
-      id: 'st_008',
-      name: 'Web Development',
-      serviceCount: 31,
-      createdAt: '2024-01-08T15:40:00Z',
-    },
-    {
-      id: 'st_009',
-      name: 'Graphic Design',
-      serviceCount: 27,
-      createdAt: '2024-01-07T12:10:00Z',
-    },
-    {
-      id: 'st_010',
-      name: 'Analytics & Reporting',
-      serviceCount: 9,
-      createdAt: '2024-01-06T17:30:00Z',
-    },
-    {
-      id: 'st_011',
-      name: 'Podcast Marketing',
-      serviceCount: 0,
-      createdAt: '2024-01-05T14:15:00Z',
-    },
-    {
-      id: 'st_012',
-      name: 'Affiliate Marketing',
-      serviceCount: 3,
-      createdAt: '2024-01-04T16:45:00Z',
-    },
-    {
-      id: 'st_013',
-      name: 'Mobile App Development',
-      serviceCount: 0,
-      createdAt: '2024-01-03T11:20:00Z',
-    },
-    {
-      id: 'st_014',
-      name: 'Brand Strategy',
-      serviceCount: 14,
-      createdAt: '2024-01-02T09:30:00Z',
-    },
-    {
-      id: 'st_015',
-      name: 'Conversion Rate Optimization',
-      serviceCount: 0,
-      createdAt: '2024-01-01T13:10:00Z',
-    },
-  ];
+  // Fetch service types on component mount
+  useEffect(() => {
+    fetchServiceTypes();
+  }, [fetchServiceTypes]);
 
   // State management
-  const [serviceTypes, setServiceTypes] =
-    useState<ServiceType[]>(dummyServiceTypes);
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
-    total: dummyServiceTypes.length,
+    total: 0,
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
@@ -185,21 +132,26 @@ const ServiceTypes = () => {
   } | null>(null);
 
   // Loading states
-  const [serviceTypesLoading, setServiceTypesLoading] = useState(false);
+  const [serviceTypesLoading, setServiceTypesLoading] = useState(true);
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingServiceType, setEditingServiceType] =
     useState<ServiceType | null>(null);
   const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
 
   // Add dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newServiceTypeName, setNewServiceTypeName] = useState('');
+  const [newServiceTypeDescription, setNewServiceTypeDescription] = useState('');
+
+
 
   // Utility functions
-  const formatID = (id: string) => {
-    return id.toUpperCase();
+  const formatID = (id: string, index: number) => {
+    // Generate a numeric ID based on the index
+    return String(index + 1).padStart(3, '0');
   };
 
   // Filter service types based on search term
@@ -229,37 +181,29 @@ const ServiceTypes = () => {
     return filteredServiceTypes.slice(startIndex, endIndex);
   };
 
-  // Show toast notification
-  const showToast = (
-    message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'success'
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  };
+
 
   const handleRefresh = () => {
-    setServiceTypesLoading(true);
-    // Simulate loading
-    setTimeout(() => {
-      setServiceTypesLoading(false);
-      showToast('Service types refreshed successfully!', 'success');
-    }, 1000);
+    fetchServiceTypes();
+    showToast('Service types refreshed successfully!', 'success');
   };
 
   // Handle service type deletion
   const handleDeleteServiceType = async (serviceTypeId: string) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await axiosInstance.delete(`/api/admin/service-types/${serviceTypeId}`);
 
-      setServiceTypes((prev) => prev.filter((st) => st.id !== serviceTypeId));
-      showToast('Service type deleted successfully', 'success');
-      setDeleteDialogOpen(false);
-      setServiceTypeToDelete(null);
-    } catch (error) {
+      if (response.data.success) {
+        setServiceTypes((prev) => prev.filter((st) => st.id !== serviceTypeId));
+        showToast('Service type deleted successfully', 'success');
+        setDeleteDialogOpen(false);
+        setServiceTypeToDelete(null);
+      } else {
+        showToast(response.data.error || 'Failed to delete service type', 'error');
+      }
+    } catch (error: any) {
       console.error('Error deleting service type:', error);
-      showToast('Error deleting service type', 'error');
+      showToast(error.response?.data?.error || 'Error deleting service type', 'error');
     }
   };
 
@@ -268,24 +212,32 @@ const ServiceTypes = () => {
     if (!editingServiceType || !editName.trim()) return;
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await axiosInstance.put(`/api/admin/service-types/${editingServiceType.id}`, {
+        name: editName.trim(),
+        description: editDescription.trim() || null,
+        status: editingServiceType.status
+      });
 
-      setServiceTypes((prev) =>
-        prev.map((st) =>
-          st.id === editingServiceType.id
-            ? { ...st, name: editName.trim() }
-            : st
-        )
-      );
+      if (response.data.success) {
+        setServiceTypes((prev) =>
+          prev.map((st) =>
+            st.id === editingServiceType.id
+              ? { ...st, name: editName.trim(), description: editDescription.trim() || undefined }
+              : st
+          )
+        );
 
-      showToast('Service type updated successfully', 'success');
-      setEditDialogOpen(false);
-      setEditingServiceType(null);
-      setEditName('');
-    } catch (error) {
+        showToast('Service type updated successfully', 'success');
+        setEditDialogOpen(false);
+        setEditingServiceType(null);
+        setEditName('');
+        setEditDescription('');
+      } else {
+        showToast(response.data.error || 'Failed to update service type', 'error');
+      }
+    } catch (error: any) {
       console.error('Error updating service type:', error);
-      showToast('Error updating service type', 'error');
+      showToast(error.response?.data?.error || 'Error updating service type', 'error');
     }
   };
 
@@ -294,23 +246,27 @@ const ServiceTypes = () => {
     if (!newServiceTypeName.trim()) return;
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const newServiceType: ServiceType = {
-        id: `st_${String(serviceTypes.length + 1).padStart(3, '0')}`,
+      const response = await axiosInstance.post('/api/admin/service-types', {
         name: newServiceTypeName.trim(),
-        serviceCount: 0, // New service types start with 0 services
-        createdAt: new Date().toISOString(),
-      };
+        description: newServiceTypeDescription.trim() || null
+      });
 
-      setServiceTypes((prev) => [newServiceType, ...prev]);
-      showToast('Service type added successfully', 'success');
-      setAddDialogOpen(false);
-      setNewServiceTypeName('');
-    } catch (error) {
+      if (response.data.success) {
+        const newServiceType = {
+          ...response.data.data,
+          serviceCount: 0
+        };
+        setServiceTypes((prev) => [newServiceType, ...prev]);
+        showToast('Service type added successfully', 'success');
+        setAddDialogOpen(false);
+        setNewServiceTypeName('');
+        setNewServiceTypeDescription('');
+      } else {
+        showToast(response.data.error || 'Failed to add service type', 'error');
+      }
+    } catch (error: any) {
       console.error('Error adding service type:', error);
-      showToast('Error adding service type', 'error');
+      showToast(error.response?.data?.error || 'Error adding service type', 'error');
     }
   };
 
@@ -318,6 +274,7 @@ const ServiceTypes = () => {
   const openEditDialog = (serviceType: ServiceType) => {
     setEditingServiceType(serviceType);
     setEditName(serviceType.name);
+    setEditDescription(serviceType.description || '');
     setEditDialogOpen(true);
   };
 
@@ -450,6 +407,12 @@ const ServiceTypes = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
+                          Description
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
                           Service Count
                         </th>
                         <th
@@ -467,14 +430,14 @@ const ServiceTypes = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {getPaginatedData().map((serviceType) => (
+                      {getPaginatedData().map((serviceType, index) => (
                         <tr
                           key={serviceType.id}
                           className="border-t hover:bg-gray-50 transition-colors duration-200"
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{formatID(serviceType.id)}
+                              #{formatID(serviceType.id, (pagination.page - 1) * pagination.limit + index)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -483,6 +446,14 @@ const ServiceTypes = () => {
                               style={{ color: 'var(--text-primary)' }}
                             >
                               {serviceType.name}
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div
+                              className="text-sm text-gray-600"
+                              style={{ color: 'var(--text-secondary)' }}
+                            >
+                              {serviceType.description || 'No description'}
                             </div>
                           </td>
                           <td className="p-3">
@@ -690,12 +661,23 @@ const ServiceTypes = () => {
                   placeholder="Enter service type name"
                 />
               </div>
+              <div className="mb-4">
+                <label className="form-label mb-2">Description (Optional)</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  placeholder="Enter service type description"
+                  rows={3}
+                />
+              </div>
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => {
                     setEditDialogOpen(false);
                     setEditingServiceType(null);
                     setEditName('');
+                    setEditDescription('');
                   }}
                   className="btn btn-secondary"
                 >
@@ -729,11 +711,22 @@ const ServiceTypes = () => {
                   placeholder="Enter service type name"
                 />
               </div>
+              <div className="mb-4">
+                <label className="form-label mb-2">Description (Optional)</label>
+                <textarea
+                  value={newServiceTypeDescription}
+                  onChange={(e) => setNewServiceTypeDescription(e.target.value)}
+                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  placeholder="Enter service type description"
+                  rows={3}
+                />
+              </div>
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => {
                     setAddDialogOpen(false);
                     setNewServiceTypeName('');
+                    setNewServiceTypeDescription('');
                   }}
                   className="btn btn-secondary"
                 >

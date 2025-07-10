@@ -26,7 +26,7 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
 );
 
 type Ticket = {
-  id: string;
+  id: number;
   subject: string;
   status:
     | 'open'
@@ -170,21 +170,22 @@ export default function TicketsHistory() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Live search functionality for the dropdown
+  // Live search functionality
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchInput.trim()) {
+        // Filter tickets based on search input
         const results = dummyTickets.filter(
           (ticket) =>
             ticket.subject.toLowerCase().includes(searchInput.toLowerCase()) ||
-            ticket.id.toString().includes(searchInput) ||
+            ticket.id.includes(searchInput) ||
             ticket.status.toLowerCase().includes(searchInput.toLowerCase())
         );
         setSearchResults(results);
       } else {
         setSearchResults([]);
       }
-    }, 300); // Debounce time
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchInput]);
@@ -210,6 +211,7 @@ export default function TicketsHistory() {
   const filteredTickets = useMemo(() => {
     let tickets = [...dummyTickets];
 
+    // Filter by tab type
     if (activeTab !== 'all') {
       tickets = tickets.filter((ticket) => ticket.type === activeTab);
     }
@@ -222,7 +224,7 @@ export default function TicketsHistory() {
       tickets = tickets.filter(
         (ticket) =>
           ticket.subject.toLowerCase().includes(search.toLowerCase()) ||
-          ticket.id.toString().includes(search)
+          ticket.id.includes(search)
       );
     }
 
@@ -236,32 +238,27 @@ export default function TicketsHistory() {
     totalPages: Math.ceil(filteredTickets.length / limit),
   };
 
-  // Handle search submit (e.g., pressing Enter)
+  // Handle search submit
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(searchInput);
-    setShowDropdown(false);
     setPage(1);
   };
 
-  // Handle search selection from dropdown
-  const handleSearchSelect = (ticket: Ticket) => {
-    setSearchInput(ticket.subject);
-    setSearch(ticket.subject);
-    setShowDropdown(false);
-    setSearchResults([]);
-    setPage(1);
-  };
-
+  // Calculate counts for each status filter
   const getStatusCount = (statusKey: string) => {
     let tickets = [...dummyTickets];
+
+    // Filter by current tab first
     if (activeTab !== 'all') {
       tickets = tickets.filter((ticket) => ticket.type === activeTab);
     }
+
     if (statusKey === 'all') return tickets.length;
     return tickets.filter((ticket) => ticket.status === statusKey).length;
   };
 
+  // Status filter buttons configuration
   const statusFilters = [
     {
       key: 'all',
@@ -307,6 +304,7 @@ export default function TicketsHistory() {
     },
   ];
 
+  // Get badge color based on status
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'open':
@@ -326,10 +324,13 @@ export default function TicketsHistory() {
     }
   };
 
+  // Get priority badge
   const getPriorityBadge = (priority?: string) => {
     if (!priority) return null;
+
     const baseClasses =
       'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium';
+
     switch (priority) {
       case 'high':
         return (
@@ -358,6 +359,16 @@ export default function TicketsHistory() {
       default:
         return null;
     }
+  };
+
+  // Handle search selection from dropdown
+  const handleSearchSelect = (ticket: Ticket) => {
+    setSearch(ticket.subject);
+    setSearchInput(ticket.subject);
+    setShowDropdown(false);
+    setSearchResults([]);
+    // Optionally filter to show only this ticket
+    setPage(1);
   };
 
   const handleViewTicket = (ticketId: string) => {
@@ -397,6 +408,7 @@ export default function TicketsHistory() {
 
   return (
     <div className="page-container">
+      {/* Toast Container */}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -404,7 +416,9 @@ export default function TicketsHistory() {
           onClose={() => setToastMessage(null)}
         />
       )}
+
       <div className="page-content">
+        {/* Tab Navigation */}
         <div className="card mb-6" style={{ padding: '8px' }}>
           <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
             <button
@@ -454,48 +468,49 @@ export default function TicketsHistory() {
             </button>
           </div>
         </div>
+
+        {/* Tickets Content Card - Everything in one box */}
         <div className="card card-padding">
+          {/* Search Bar with Live Search */}
           <div className="mb-6">
             <div className="relative w-full" ref={searchRef}>
-              <form onSubmit={handleSearch} className="w-full">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-                  <FaSearch className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                </div>
-                <input
-                  type="search"
-                  value={searchInput}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSearchInput(value);
-                    setShowDropdown(true);
-                    // If user clears the input, also clear the main filter
-                    if (!value.trim()) {
-                      setSearch('');
-                      setPage(1);
-                    }
-                  }}
-                  onFocus={() => setShowDropdown(true)}
-                  className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                  placeholder="Search by ticket ID, subject, or status..."
-                  autoComplete="off"
-                  style={{ width: '100%', minWidth: '0' }}
-                />
-              </form>
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                <FaSearch className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              </div>
+              <input
+                type="search"
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setSearch(e.target.value);
+                  setShowDropdown(true);
+                  if (!e.target.value.trim()) {
+                    setPage(1);
+                  }
+                }}
+                onFocus={() => setShowDropdown(true)}
+                className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                placeholder="Search by ticket ID, subject, or status..."
+                autoComplete="off"
+                style={{ width: '100%', minWidth: '0' }}
+              />
+
+              {/* Search Dropdown */}
               {showDropdown && searchResults.length > 0 && (
-                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0 dark:bg-gray-800 dark:border-gray-700">
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
                   {searchResults.map((ticket) => (
                     <div
                       key={ticket.id}
-                      className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 cursor-pointer"
+                      className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
                       onClick={() => handleSearchSelect(ticket)}
                     >
                       <div className="flex justify-between items-center w-full">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <span className="text-sm font-medium text-gray-900">
                               #{ticket.id}
                             </span>
-                            <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                            <span className="text-sm text-gray-700 truncate">
                               {ticket.subject}
                             </span>
                           </div>
@@ -518,7 +533,7 @@ export default function TicketsHistory() {
                             )}
                           </div>
                         </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
+                        <span className="text-xs text-gray-500 flex-shrink-0">
                           {moment(ticket.createdAt).format('DD/MM')}
                         </span>
                       </div>
@@ -528,12 +543,15 @@ export default function TicketsHistory() {
               )}
             </div>
           </div>
+
+          {/* Status Filter Buttons - Updated with Services Page Gradient */}
           <div className="mb-6">
             <div className="flex flex-wrap gap-3">
               {statusFilters.map((filter) => {
                 const IconComponent = filter.icon;
                 const isActive = status === filter.key;
                 const count = getStatusCount(filter.key);
+
                 return (
                   <button
                     key={filter.key}
@@ -554,144 +572,137 @@ export default function TicketsHistory() {
               })}
             </div>
           </div>
-          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+
+          {/* Tickets Table */}
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50 dark:bg-gray-700/50 dark:border-gray-700 rounded-t-lg">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 first:rounded-tl-lg">
+                <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
                     Ticket ID
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
                     Type
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
                     Subject
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
                     Priority
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
                     Status
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
                     Created
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
                     Last Updated
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 last:rounded-tr-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredTickets.length > 0 ? (
-                  filteredTickets
-                    .slice((page - 1) * limit, page * limit)
-                    .map((ticket, index) => {
-                      const isLastRow = index === filteredTickets.length - 1;
-                      return (
-                        <tr
-                          key={ticket.id}
-                          className={`border-b border-gray-100 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/30 ${
-                            isLastRow ? 'last:border-b-0' : ''
+                  filteredTickets.map((ticket, index) => {
+                    const isLastRow = index === filteredTickets.length - 1;
+                    return (
+                      <tr
+                        key={ticket.id}
+                        className={`border-b border-gray-100 hover:bg-gray-50 ${
+                          isLastRow ? 'last:border-b-0' : ''
+                        }`}
+                      >
+                        <td
+                          className={`py-3 px-4 ${
+                            isLastRow ? 'first:rounded-bl-lg' : ''
                           }`}
                         >
-                          <td
-                            className={`py-3 px-4 ${
-                              isLastRow ? 'first:rounded-bl-lg' : ''
-                            }`}
-                          >
-                            <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
-                              #{ticket.id}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-1">
-                              {ticket.type === 'ai' ? (
-                                <>
-                                  <FaRobot className="w-4 h-4 text-purple-600" />
-                                  <span className="text-xs font-medium text-purple-600">
-                                    AI
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <FaUser className="w-4 h-4 text-blue-600" />
-                                  <span className="text-xs font-medium text-blue-600">
-                                    Human
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 max-w-[300px]">
-                            <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
-                              {ticket.subject}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
+                          <span className="text-sm font-mono text-gray-700">
+                            #{ticket.id}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1">
                             {ticket.type === 'ai' ? (
-                              <span className="text-sm text-gray-500 dark:text-gray-400">
-                                N/A
-                              </span>
+                              <>
+                                <FaRobot className="w-4 h-4 text-purple-600" />
+                                <span className="text-xs font-medium text-purple-600">
+                                  AI
+                                </span>
+                              </>
                             ) : (
-                              getPriorityBadge(ticket.priority)
+                              <>
+                                <FaUser className="w-4 h-4 text-blue-600" />
+                                <span className="text-xs font-medium text-blue-600">
+                                  Human
+                                </span>
+                              </>
                             )}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(
-                                ticket.status
-                              )}`}
-                            >
-                              {ticket.status}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {moment(ticket.createdAt).format('DD/MM/YYYY')}
-                            </span>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              {moment(ticket.createdAt).format('HH:mm')}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 whitespace-nowrap">
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {ticket.lastUpdated
-                                ? moment(ticket.lastUpdated).format(
-                                    'DD/MM/YYYY'
-                                  )
-                                : '-'}
-                            </span>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              {ticket.lastUpdated
-                                ? moment(ticket.lastUpdated).format('HH:mm')
-                                : ''}
-                            </div>
-                          </td>
-                          <td
-                            className={`py-3 px-4 ${
-                              isLastRow ? 'last:rounded-br-lg' : ''
-                            }`}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 max-w-[300px]">
+                          <div className="truncate text-sm font-medium text-gray-900">
+                            {ticket.subject}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          {ticket.type === 'ai' ? (
+                            <span className="text-sm text-gray-500">N/A</span>
+                          ) : (
+                            getPriorityBadge(ticket.priority)
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(
+                              ticket.status
+                            )}`}
                           >
-                            <button
-                              onClick={() => handleViewTicket(ticket.id)}
-                              className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/20"
-                              title="View Ticket"
-                            >
-                              View
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
+                            {ticket.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-700">
+                            {moment(ticket.createdAt).format('DD/MM/YYYY')}
+                          </span>
+                          <div className="text-xs text-gray-500">
+                            {moment(ticket.createdAt).format('HH:mm')}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-700">
+                            {ticket.lastUpdated
+                              ? moment(ticket.lastUpdated).format('DD/MM/YYYY')
+                              : '-'}
+                          </span>
+                          <div className="text-xs text-gray-500">
+                            {ticket.lastUpdated
+                              ? moment(ticket.lastUpdated).format('HH:mm')
+                              : ''}
+                          </div>
+                        </td>
+                        <td
+                          className={`py-3 px-4 ${
+                            isLastRow ? 'last:rounded-br-lg' : ''
+                          }`}
+                        >
+                          <button
+                            onClick={() => handleViewTicket(ticket.id)}
+                            className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
+                            title="View Ticket"
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="py-8 text-center text-gray-500 dark:text-gray-400"
-                    >
+                    <td colSpan={8} className="py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center">
                         <FaTicketAlt className="text-4xl text-gray-400 mb-4" />
                         <div className="text-lg font-medium">
@@ -713,21 +724,17 @@ export default function TicketsHistory() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+              <div className="text-sm text-gray-600">
                 Showing{' '}
-                <span className="font-medium text-gray-800 dark:text-gray-200">
-                  {(page - 1) * limit + 1}
-                </span>{' '}
-                to{' '}
-                <span className="font-medium text-gray-800 dark:text-gray-200">
+                <span className="font-medium">{(page - 1) * limit + 1}</span> to{' '}
+                <span className="font-medium">
                   {Math.min(page * limit, pagination.total)}
                 </span>{' '}
-                of{' '}
-                <span className="font-medium text-gray-800 dark:text-gray-200">
-                  {pagination.total}
-                </span>{' '}
+                of <span className="font-medium">{pagination.total}</span>{' '}
                 tickets
               </div>
               <div className="flex gap-2">
@@ -738,6 +745,8 @@ export default function TicketsHistory() {
                 >
                   Previous
                 </button>
+
+                {/* Page numbers */}
                 <div className="flex gap-1">
                   {Array.from(
                     { length: Math.min(5, pagination.totalPages) },
@@ -752,6 +761,7 @@ export default function TicketsHistory() {
                       } else {
                         pageNum = page - 2 + i;
                       }
+
                       return (
                         <button
                           key={pageNum}
@@ -759,7 +769,7 @@ export default function TicketsHistory() {
                           className={`px-3 py-2 text-sm rounded-lg ${
                             page === pageNum
                               ? 'bg-blue-600 text-white'
-                              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                              : 'text-gray-700 hover:bg-gray-100'
                           }`}
                         >
                           {pageNum}
@@ -768,6 +778,7 @@ export default function TicketsHistory() {
                     }
                   )}
                 </div>
+
                 <button
                   onClick={() =>
                     setPage(Math.min(pagination.totalPages, page + 1))

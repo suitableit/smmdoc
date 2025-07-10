@@ -36,7 +36,13 @@ const createServiceSchema = z.object({
     ),
   avg_time: z.string().nonempty('Average time is required'),
   categoryId: z.string().nonempty('Category ID is required'),
+  serviceTypeId: z.string().optional(),
   updateText: z.optional(z.string()),
+  refill: z.boolean().default(false),
+  cancel: z.boolean().default(false),
+  refillDays: z.number().optional().default(30),
+  serviceSpeed: z.enum(['slow', 'medium', 'fast']).default('medium'),
+  mode: z.enum(['manual', 'auto']).default('manual'),
 });
 
 type CreateServiceSchema = z.infer<typeof createServiceSchema>;
@@ -50,7 +56,13 @@ const createServiceDefaultValues: CreateServiceSchema = {
   perqty: '',
   avg_time: '',
   categoryId: '',
+  serviceTypeId: '',
   updateText: '',
+  refill: false,
+  cancel: false,
+  refillDays: 30,
+  serviceSpeed: 'medium',
+  mode: 'manual',
 };
 
 export {
