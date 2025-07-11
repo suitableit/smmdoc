@@ -23,6 +23,12 @@ export async function PUT(request: Request) {
       perqty,
       avg_time,
       updateText,
+      serviceTypeId,
+      refill,
+      cancel,
+      refillDays,
+      serviceSpeed,
+      mode,
     } = body;
     if (!id || !categoryId) {
       return NextResponse.json({
@@ -31,7 +37,7 @@ export async function PUT(request: Request) {
         success: false,
       });
     }
-    // Update the category in the database
+    // Update the service in the database
     await db.service.update({
       where: {
         id: id,
@@ -46,6 +52,12 @@ export async function PUT(request: Request) {
         perqty: Number(perqty),
         avg_time: avg_time,
         updateText: updateText,
+        serviceTypeId: serviceTypeId || null,
+        refill: refill || false,
+        cancel: cancel || false,
+        refillDays: refillDays || 30,
+        serviceSpeed: serviceSpeed || 'medium',
+        mode: mode || 'manual',
       },
     });
     return NextResponse.json({
