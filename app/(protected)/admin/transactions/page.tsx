@@ -1165,7 +1165,6 @@ const AdminAllTransactionsPage = () => {
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #
                               {transaction.id
                                 ? formatID(transaction.id.slice(-8))
                                 : 'null'}
@@ -1418,7 +1417,7 @@ const AdminAllTransactionsPage = () => {
                               Internal ID
                             </label>
                             <div className="font-mono text-sm bg-gray-50 p-2 rounded">
-                              #{formatID(viewDetailsDialog.transaction.id)}
+                              {formatID(viewDetailsDialog.transaction.id)}
                             </div>
                           </div>
                         </div>

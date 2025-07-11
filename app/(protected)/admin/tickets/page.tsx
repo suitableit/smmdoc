@@ -212,7 +212,7 @@ const SupportTicketsPage = () => {
 
   // Utility functions
   const formatTicketID = (id: string) => {
-    return `#${id.padStart(4, '0')}`;
+    return `${id.padStart(4, '0')}`;
   };
 
   const getStatusColor = (status: string) => {

@@ -1197,7 +1197,7 @@ const BlogsPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                              #{formatID(blog.id.toString())}
+                              {formatID(blog.id.toString())}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1581,7 +1581,7 @@ const BlogsPage = () => {
                                 Blog ID
                               </label>
                               <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit mt-1">
-                                #{formatID(viewDialog.blog.id.toString())}
+                                {formatID(viewDialog.blog.id.toString())}
                               </div>
                             </div>
                             <div>
@@ -1697,7 +1697,7 @@ const BlogsPage = () => {
                                 key={index}
                                 className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm"
                               >
-                                #{tag}
+                                {tag}
                               </span>
                             ))}
                           </div>
