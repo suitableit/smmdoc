@@ -508,7 +508,7 @@ export default function TicketsHistory() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-900">
-                              #{ticket.id}
+                              {ticket.id}
                             </span>
                             <span className="text-sm text-gray-700 truncate">
                               {ticket.subject}

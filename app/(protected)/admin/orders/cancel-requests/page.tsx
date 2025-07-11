@@ -822,7 +822,7 @@ const CancelRequestsPage = () => {
                           
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{formatID(String(request.order.id).slice(-8))}
+                              {formatID(String(request.order.id).slice(-8))}
                             </div>
                           </td>
                           <td className="p-3">

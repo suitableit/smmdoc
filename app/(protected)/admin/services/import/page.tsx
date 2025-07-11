@@ -1158,7 +1158,7 @@ const ImportServicesPage = () => {
                                         >
                                           <td className="p-3 pl-8">
                                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit">
-                                              #{service.id}
+                                              {service.id}
                                             </div>
                                           </td>
                                           <td className="p-3">
@@ -1333,7 +1333,7 @@ const ImportServicesPage = () => {
                                       {/* Header */}
                                       <div className="flex items-center justify-between mb-4">
                                         <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                          #{service.id}
+                                          {service.id}
                                         </div>
                                         {editedServices[service.id] && (
                                           <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
