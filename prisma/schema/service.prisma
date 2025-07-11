@@ -9,21 +9,19 @@ model Service {
   updateText       String?           @db.Text
   userId           String
   categoryId       String
-  serviceTypeId    String?
   favrouteCatId    String?
   status           String            @default("active")
-  refill           Boolean           @default(false)
-  cancel           Boolean           @default(false)
-  refillDays       Int?              @default(30)
-  serviceSpeed     String?           @default("medium")
-  mode             String            @default("manual")
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   perqty           Int               @default(1)
+  cancel           Boolean           @default(false)
+  mode             String            @default("manual")
+  refill           Boolean           @default(false)
+  refillDays       Int?              @default(30)
+  serviceSpeed     String?           @default("medium")
+  serviceTypeId    String?
   favoriteServices FavoriteService[]
   newOrders        NewOrder[]
-  category         Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  serviceType      ServiceType?      @relation(fields: [serviceTypeId], references: [id], onDelete: SetNull)
   favrouteCat      FavrouteCat?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 

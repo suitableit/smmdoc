@@ -1,26 +1,25 @@
 model NewOrder {
-  id         Int      @id @default(autoincrement())
-  categoryId String
-  serviceId  String
-  userId     String
-  link       String
-  qty        Int
-  price      Float
-  charge     Float    @default(0)
-  profit     Float    @default(0)
-  avg_time   String
-  status     String   @default("pending")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  remains    Int      @default(0)
-  startCount Int      @default(0)
-  bdtPrice   Float
-  currency   String
-  usdPrice   Float
-  category       Category        @relation(fields: [categoryId], references: [id])
+  id             Int             @id @default(autoincrement())
+  categoryId     String
+  serviceId      String
+  userId         String
+  link           String
+  qty            Int
+  price          Float
+  avg_time       String
+  status         String          @default("pending")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  remains        Int             @default(0)
+  startCount     Int             @default(0)
+  bdtPrice       Float
+  currency       String
+  usdPrice       Float
+  charge         Float           @default(0)
+  profit         Float           @default(0)
+  cancelRequests CancelRequest[]
   service        Service         @relation(fields: [serviceId], references: [id])
   user           User            @relation(fields: [userId], references: [id])
-  cancelRequests CancelRequest[]
 
   @@index([categoryId], map: "NewOrder_categoryId_fkey")
   @@index([serviceId], map: "NewOrder_serviceId_fkey")
