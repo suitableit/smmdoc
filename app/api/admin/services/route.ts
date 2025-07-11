@@ -109,6 +109,8 @@ export async function POST(request: Request) {
       refill,
       cancel,
       refillDays,
+      refillDisplay,
+      personalizedService,
       serviceSpeed,
       mode,
     } = body;
@@ -140,6 +142,8 @@ export async function POST(request: Request) {
         refill: refill || false,
         cancel: cancel || false,
         refillDays: refillDays || 30,
+        refillDisplay: refillDisplay || 24,
+        personalizedService: personalizedService || false,
         serviceSpeed: serviceSpeed || 'medium',
         mode: mode || 'manual',
         userId: session.user.id,

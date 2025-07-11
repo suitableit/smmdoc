@@ -26,6 +26,8 @@ model User {
   sessions              Session[]
   twoFactorConfirmation TwoFactorConfirmation?
   cancelRequests        CancelRequest[]
+  refillRequests        RefillRequest[]
+  processedRefillRequests RefillRequest[]      @relation("ProcessedRefillRequests")
 }
 
 model Account {

@@ -15,6 +15,8 @@ model Service {
   refill           Boolean           @default(false)
   cancel           Boolean           @default(false)
   refillDays       Int?              @default(30)
+  refillDisplay    Int?              @default(24)
+  personalizedService Boolean?       @default(false)
   serviceSpeed     String?           @default("medium")
   mode             String            @default("manual")
   createdAt        DateTime          @default(now())
