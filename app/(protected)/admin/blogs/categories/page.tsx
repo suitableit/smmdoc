@@ -488,7 +488,7 @@ const PostCategoriesPage = () => {
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {formatID(postCategory.id)}
+                              #{formatID(postCategory.id)}
                             </div>
                           </td>
                           <td className="p-3">

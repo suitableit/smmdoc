@@ -18,7 +18,6 @@ model User {
   accounts              Account?
   addFunds              AddFund[]
   apiKeys               ApiKey[]
-  cancelRequests        CancelRequest[]
   Category              Category[]
   favoriteServices      FavoriteService[]
   favouriteCat          FavrouteCat[]
@@ -26,6 +25,7 @@ model User {
   services              Service[]
   sessions              Session[]
   twoFactorConfirmation TwoFactorConfirmation?
+  cancelRequests        CancelRequest[]
 }
 
 model Account {

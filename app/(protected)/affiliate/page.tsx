@@ -999,7 +999,7 @@ function AffiliateEarningsSection() {
                       >
                         <td className="p-3">
                           <div className="font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                            {safeFormatId(earning.id)}
+                            #{safeFormatId(earning.id)}
                           </div>
                         </td>
                         <td className="p-3">

@@ -561,7 +561,7 @@ const BulkModifyPage = () => {
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit">
-                              {formatID(service.id)}
+                              #{formatID(service.id)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -636,7 +636,7 @@ const BulkModifyPage = () => {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {formatID(service.id)}
+                              #{formatID(service.id)}
                             </div>
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                               <FaCheckCircle className={`h-3 w-3 ${service.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />

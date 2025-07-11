@@ -3375,7 +3375,7 @@ function AdminServicesPage() {
                                     </td>
                                     <td className="p-3">
                                       <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                        {service.id || 'null'}
+                                        #{service.id || 'null'}
                                       </div>
                                     </td>
                                     <td className="p-3">
