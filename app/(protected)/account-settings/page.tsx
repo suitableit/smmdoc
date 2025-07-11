@@ -6,6 +6,7 @@
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
 import { APP_NAME } from '@/lib/constants';
+// Hello World!
 import { setUserDetails } from '@/lib/slice/userDetails';
 import React, { useEffect, useState } from 'react';
 import {
