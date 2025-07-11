@@ -10,8 +10,7 @@ import {
   FaRedo,
   FaSearch,
   FaSync,
-  FaTimes,
-  FaTimesCircle,
+  FaTimes
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -226,7 +225,7 @@ const RefillOrdersPage = () => {
 
       console.log('Fetching refill orders with params:', queryParams.toString());
 
-      const response = await fetch(`/api/admin/orders/refill-orders?${queryParams}`);
+      const response = await fetch(`/api/admin/refill-requests?${queryParams}`);
       const result = await response.json();
 
       if (!response.ok) {
@@ -266,7 +265,7 @@ const RefillOrdersPage = () => {
     try {
       console.log('Fetching refill stats from API...');
 
-      const response = await fetch('/api/admin/orders/refill-orders/stats');
+      const response = await fetch('/api/admin/refill-requests/stats');
       const result = await response.json();
 
       if (!response.ok) {

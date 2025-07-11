@@ -1,0 +1,22 @@
+model RefillRequest {
+  id            String    @id @default(cuid())
+  orderId       Int
+  userId        String
+  reason        String
+  status        String    @default("pending") // pending, approved, declined, completed
+  adminNotes    String?
+  processedBy   String?
+  processedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  order         NewOrder  @relation(fields: [orderId], references: [id])
+  user          User      @relation(fields: [userId], references: [id])
+  processedByUser User?   @relation("ProcessedRefillRequests", fields: [processedBy], references: [id])
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}

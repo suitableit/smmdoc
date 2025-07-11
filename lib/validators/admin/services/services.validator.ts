@@ -41,6 +41,8 @@ const createServiceSchema = z.object({
   refill: z.boolean().default(false),
   cancel: z.boolean().default(false),
   refillDays: z.number().optional().default(30),
+  refillDisplay: z.number().optional().default(24),
+  personalizedService: z.boolean().optional().default(false),
   serviceSpeed: z.enum(['slow', 'medium', 'fast']).default('medium'),
   mode: z.enum(['manual', 'auto']).default('manual'),
 });
@@ -61,6 +63,8 @@ const createServiceDefaultValues: CreateServiceSchema = {
   refill: false,
   cancel: false,
   refillDays: 30,
+  refillDisplay: 24,
+  personalizedService: false,
   serviceSpeed: 'medium',
   mode: 'manual',
 };

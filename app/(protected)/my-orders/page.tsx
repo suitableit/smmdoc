@@ -3,7 +3,7 @@
 import useCurrency from '@/hooks/useCurrency';
 import { APP_NAME } from '@/lib/constants';
 import { useGetUserOrdersQuery } from '@/lib/services/userOrderApi';
-import { formatNumber, formatID, formatPrice } from '@/lib/utils';
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import moment from 'moment';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -19,7 +19,7 @@ import {
   FaRss,
   FaSearch,
   FaSpinner,
-  FaTimes,
+  FaTimes
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -55,7 +55,7 @@ const CancelModal = ({
         <h3 className="text-lg font-semibold mb-4">
           Cancel Order #{formatID(orderId || 0)}
         </h3>
-        
+
         <div className="mb-4">
           <label className="form-label mb-2">
             Cancellation Reason <span className="text-red-500">*</span>
@@ -69,7 +69,7 @@ const CancelModal = ({
             required
           />
         </div>
-        
+
         <div className="flex gap-2 justify-end">
           <button
             onClick={onClose}
@@ -124,6 +124,80 @@ const Toast = ({
   </div>
 );
 
+// Refill Modal Component
+const RefillModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  orderId,
+  reason,
+  setReason,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  orderId: number | null;
+  reason: string;
+  setReason: (reason: string) => void;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Request Refill
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <FaTimes />
+          </button>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-sm text-gray-600 mb-2">
+            You are requesting a refill for Order #{orderId ? formatID(orderId) : 'N/A'}
+          </p>
+          <p className="text-xs text-gray-500 mb-4">
+            Refill requests are reviewed within 24 hours.
+          </p>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Reason (Optional)
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Describe the issue (e.g., followers dropped, likes decreased, etc.)"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows={3}
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Submit Request
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function OrdersList() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -134,6 +208,16 @@ export default function OrdersList() {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [cancelModal, setCancelModal] = useState<{
+    isOpen: boolean;
+    orderId: number | null;
+    reason: string;
+  }>({
+    isOpen: false,
+    orderId: null,
+    reason: ''
+  });
+
+  const [refillModal, setRefillModal] = useState<{
     isOpen: boolean;
     orderId: number | null;
     reason: string;
@@ -174,22 +258,22 @@ export default function OrdersList() {
 
   const orders = useMemo(() => {
     let filteredOrders = data?.data || [];
-    
+
     // Filter by status
     if (status !== 'all') {
       filteredOrders = filteredOrders.filter((order: any) => order.status === status);
     }
-    
+
     // Filter by search
     if (search) {
-      filteredOrders = filteredOrders.filter((order: any) => 
+      filteredOrders = filteredOrders.filter((order: any) =>
         order.id.toString().includes(search) ||
         order.service?.name?.toLowerCase().includes(search.toLowerCase()) ||
         order.category?.category_name?.toLowerCase().includes(search.toLowerCase()) ||
         order.link?.toLowerCase().includes(search.toLowerCase())
       );
     }
-    
+
     return filteredOrders;
   }, [data, status, search]);
 
@@ -217,13 +301,45 @@ export default function OrdersList() {
   };
 
   // Handle cancel confirmation
-  const handleCancelConfirm = () => {
-    if (cancelModal.orderId && cancelModal.reason.trim()) {
-      showToast(`Order #${formatID(cancelModal.orderId)} has been cancelled successfully`, 'info');
-      setCancelModal({
-        isOpen: false,
-        orderId: null,
-        reason: ''
+  const handleCancelConfirm = async () => {
+    if (!cancelModal.orderId || !cancelModal.reason.trim()) {
+      setToastMessage({
+        message: 'Please provide a reason for cancellation',
+        type: 'error'
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/user/orders/${cancelModal.orderId}/cancel-request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reason: cancelModal.reason.trim()
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setToastMessage({
+          message: result.data.message || 'Cancel request submitted successfully',
+          type: 'success'
+        });
+        handleCancelClose();
+      } else {
+        setToastMessage({
+          message: result.error || 'Failed to submit cancel request',
+          type: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting cancel request:', error);
+      setToastMessage({
+        message: 'Failed to submit cancel request',
+        type: 'error'
       });
     }
   };
@@ -235,6 +351,57 @@ export default function OrdersList() {
       orderId: null,
       reason: ''
     });
+  };
+
+  const handleRefillClose = () => {
+    setRefillModal({
+      isOpen: false,
+      orderId: null,
+      reason: ''
+    });
+  };
+
+  const handleRefillConfirm = async () => {
+    if (!refillModal.orderId) {
+      setToastMessage({
+        message: 'Invalid order ID',
+        type: 'error'
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/user/orders/${refillModal.orderId}/refill-request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reason: refillModal.reason.trim() || 'Customer requested refill due to drop in count'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setToastMessage({
+          message: result.data.message || 'Refill request submitted successfully',
+          type: 'success'
+        });
+        handleRefillClose();
+      } else {
+        setToastMessage({
+          message: result.error || 'Failed to submit refill request',
+          type: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting refill request:', error);
+      setToastMessage({
+        message: 'Failed to submit refill request',
+        type: 'error'
+      });
+    }
   };
 
   // Calculate counts for each status filter
@@ -352,6 +519,16 @@ export default function OrdersList() {
         orderId={cancelModal.orderId}
         reason={cancelModal.reason}
         setReason={(reason) => setCancelModal(prev => ({ ...prev, reason }))}
+      />
+
+      {/* Refill Modal */}
+      <RefillModal
+        isOpen={refillModal.isOpen}
+        onClose={handleRefillClose}
+        onConfirm={handleRefillConfirm}
+        orderId={refillModal.orderId}
+        reason={refillModal.reason}
+        setReason={(reason) => setRefillModal(prev => ({ ...prev, reason }))}
       />
 
       {/* Toast Container */}
@@ -542,18 +719,26 @@ export default function OrdersList() {
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            {order.service?.refillEnabled && (
+                            {(order.status === 'completed' || order.status === 'partial') && order.service?.refill && (
                               <button
-                                onClick={() => handleRefill(order.id)}
+                                onClick={() => setRefillModal({
+                                  isOpen: true,
+                                  orderId: order.id,
+                                  reason: ''
+                                })}
                                 className="text-green-600 hover:text-green-800 text-xs px-2 py-1 border border-green-300 rounded hover:bg-green-50"
                                 title="Refill Order"
                               >
                                 Refill
                               </button>
                             )}
-                            {order.status === 'pending' && (
+                            {(order.status === 'pending' || order.status === 'processing') && order.service?.cancel && (
                               <button
-                                onClick={() => handleCancel(order.id)}
+                                onClick={() => setCancelModal({
+                                  isOpen: true,
+                                  orderId: order.id,
+                                  reason: ''
+                                })}
                                 className="text-red-600 hover:text-red-800 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50"
                                 title="Cancel Order"
                               >
