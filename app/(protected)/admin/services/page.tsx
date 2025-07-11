@@ -629,6 +629,52 @@ const CreateServiceForm = ({ onClose, showToast }: {
               </FormItem>
             </div>
 
+            {/* Per Quantity and Average Time - 50% width each - REQUIRED */}
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Per Quantity - 50% width - REQUIRED */}
+              <FormItem className="col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Per Quantity <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Enter per quantity"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    {...register('perqty')}
+                    disabled={isPending}
+                    required
+                  />
+                </FormControl>
+                <FormMessage>{errors.perqty?.message}</FormMessage>
+              </FormItem>
+
+              {/* Average Time - 50% width - REQUIRED */}
+              <FormItem className="col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Average Time <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="text"
+                    placeholder="e.g., 1-2 hours, 24 hours"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    {...register('avg_time')}
+                    disabled={isPending}
+                    required
+                  />
+                </FormControl>
+                <FormMessage>{errors.avg_time?.message}</FormMessage>
+              </FormItem>
+            </div>
+
             {/* Refill - 100% width - REQUIRED */}
             <FormItem className="md:col-span-2">
               <FormLabel
@@ -640,12 +686,14 @@ const CreateServiceForm = ({ onClose, showToast }: {
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('refill')}
+                  {...register('refill', {
+                    setValueAs: (value) => value === 'true'
+                  })}
                   disabled={isPending}
                   required
                 >
-                  <option value="off">Off</option>
-                  <option value="on">On</option>
+                  <option value="false">Off</option>
+                  <option value="true">On</option>
                 </select>
               </FormControl>
               <FormMessage>{errors.refill?.message}</FormMessage>
@@ -709,12 +757,14 @@ const CreateServiceForm = ({ onClose, showToast }: {
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('cancel')}
+                  {...register('cancel', {
+                    setValueAs: (value) => value === 'true'
+                  })}
                   disabled={isPending}
                   required
                 >
-                  <option value="off">Off</option>
-                  <option value="on">On</option>
+                  <option value="false">Off</option>
+                  <option value="true">On</option>
                 </select>
               </FormControl>
               <FormMessage>{errors.cancel?.message}</FormMessage>
@@ -1270,6 +1320,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
 }) => {
   const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
+  const { data: serviceTypesData, error: serviceTypesError, isLoading: serviceTypesLoading } = useSWR('/api/admin/service-types', fetcher);
   const { data: serviceData, error: serviceError, isLoading: serviceLoading } = useGetServicesId(serviceId);
   const [isPending, startTransition] = useTransition();
 
@@ -1300,15 +1351,15 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
         rate: String(serviceData.data.rate) || '',
         min_order: String(serviceData.data.min_order) || '0',
         max_order: String(serviceData.data.max_order) || '0',
-        serviceType: serviceData.data.serviceType || serviceData.data.service_type || '',
+        perqty: String(serviceData.data.perqty) || '0',
+        avg_time: serviceData.data.avg_time || '',
+        updateText: serviceData.data.updateText || '',
+        serviceTypeId: serviceData.data.serviceTypeId || '',
         mode: serviceData.data.mode || 'manual',
-        refill: serviceData.data.refill ? 'on' : 'off',
-        refillDays: String(serviceData.data.refillDays || 0),
-        refillDisplay: String(serviceData.data.refillDisplay || 0),
-        cancel: serviceData.data.cancel ? 'on' : 'off',
-        personalizedService: serviceData.data.personalizedService || 'no',
-        orderLink: serviceData.data.orderLink || 'link',
-        serviceSpeed: serviceData.data.serviceSpeed || '',
+        refill: serviceData.data.refill || false,
+        refillDays: serviceData.data.refillDays || 30,
+        cancel: serviceData.data.cancel || false,
+        serviceSpeed: serviceData.data.serviceSpeed || 'medium',
       });
     }
   }, [categoriesData, reset, serviceData]);
@@ -1454,17 +1505,15 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('serviceType')}
-                  disabled={isPending}
-                  required
+                  {...register('serviceTypeId')}
+                  disabled={isPending || serviceTypesLoading}
                 >
                   <option value="">Select Service Type</option>
-                  <option value="followers">Followers</option>
-                  <option value="likes">Likes</option>
-                  <option value="views">Views</option>
-                  <option value="comments">Comments</option>
-                  <option value="shares">Shares</option>
-                  <option value="other">Other</option>
+                  {serviceTypesData?.data?.map((serviceType: any) => (
+                    <option key={serviceType.id} value={serviceType.id}>
+                      {serviceType.name}
+                    </option>
+                  ))}
                 </select>
               </FormControl>
               <FormMessage>{errors.serviceType?.message}</FormMessage>
@@ -1560,6 +1609,52 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
               </FormItem>
             </div>
 
+            {/* Per Quantity and Average Time - 50% width each - REQUIRED */}
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Per Quantity - 50% width - REQUIRED */}
+              <FormItem className="col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Per Quantity <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Enter per quantity"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    {...register('perqty')}
+                    disabled={isPending}
+                    required
+                  />
+                </FormControl>
+                <FormMessage>{errors.perqty?.message}</FormMessage>
+              </FormItem>
+
+              {/* Average Time - 50% width - REQUIRED */}
+              <FormItem className="col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Average Time <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="text"
+                    placeholder="e.g., 1-2 hours, 24 hours"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    {...register('avg_time')}
+                    disabled={isPending}
+                    required
+                  />
+                </FormControl>
+                <FormMessage>{errors.avg_time?.message}</FormMessage>
+              </FormItem>
+            </div>
+
             {/* Refill - 100% width - REQUIRED */}
             <FormItem className="md:col-span-2">
               <FormLabel
@@ -1571,12 +1666,14 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('refill')}
+                  {...register('refill', {
+                    setValueAs: (value) => value === 'true'
+                  })}
                   disabled={isPending}
                   required
                 >
-                  <option value="off">Off</option>
-                  <option value="on">On</option>
+                  <option value="false">Off</option>
+                  <option value="true">On</option>
                 </select>
               </FormControl>
               <FormMessage>{errors.refill?.message}</FormMessage>
@@ -1640,12 +1737,14 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('cancel')}
+                  {...register('cancel', {
+                    setValueAs: (value) => value === 'true'
+                  })}
                   disabled={isPending}
                   required
                 >
-                  <option value="off">Off</option>
-                  <option value="on">On</option>
+                  <option value="false">Off</option>
+                  <option value="true">On</option>
                 </select>
               </FormControl>
               <FormMessage>{errors.cancel?.message}</FormMessage>
