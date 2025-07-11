@@ -1,4 +1,3 @@
-// test
 import '@/assets/styles/globals.css';
 import { auth } from '@/auth';
 import { ThemeProvider } from '@/components/theme-provider';
