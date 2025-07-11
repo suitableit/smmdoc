@@ -595,7 +595,7 @@ const UserActivityLogsPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
                             <div className="font-mono text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                              {log.slNo}
+                              #{log.slNo}
                             </div>
                             <div className="font-medium text-sm font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               {log.username}

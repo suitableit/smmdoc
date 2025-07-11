@@ -469,7 +469,7 @@ export default function OrdersList() {
                           }`}
                         >
                           <span className="text-sm font-mono text-gray-700">
-                            {order.id}
+                            #{order.id}
                           </span>
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
