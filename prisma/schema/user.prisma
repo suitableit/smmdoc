@@ -1,33 +1,33 @@
 model User {
-  id                    String                 @id @default(cuid())
-  name                  String?
-  password              String?
-  email                 String?                @unique
-  role                  Role                   @default(user)
-  emailVerified         DateTime?
-  image                 String?
-  currency              String                 @default("USD")
-  isTwoFactorEnabled    Boolean                @default(false)
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  dollarRate            Float                  @default(121.45)
-  balance               Float                  @default(0)
-  total_deposit         Float                  @default(0) @db.Float
-  total_spent           Float                  @default(0) @db.Float
-  username              String?                @unique
-  accounts              Account?
-  addFunds              AddFund[]
-  apiKeys               ApiKey[]
-  Category              Category[]
-  favoriteServices      FavoriteService[]
-  favouriteCat          FavrouteCat[]
-  newOrders             NewOrder[]
-  services              Service[]
-  sessions              Session[]
-  twoFactorConfirmation TwoFactorConfirmation?
-  cancelRequests        CancelRequest[]
-  refillRequests        RefillRequest[]
-  processedRefillRequests RefillRequest[]      @relation("ProcessedRefillRequests")
+  id                      String                 @id @default(cuid())
+  name                    String?
+  password                String?
+  email                   String?                @unique
+  role                    Role                   @default(user)
+  emailVerified           DateTime?
+  image                   String?
+  currency                String                 @default("USD")
+  isTwoFactorEnabled      Boolean                @default(false)
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  dollarRate              Float                  @default(121.45)
+  balance                 Float                  @default(0)
+  total_deposit           Float                  @default(0) @db.Float
+  total_spent             Float                  @default(0) @db.Float
+  username                String?                @unique
+  accounts                Account?
+  addFunds                AddFund[]
+  apiKeys                 ApiKey[]
+  cancelRequests          CancelRequest[]
+  Category                Category[]
+  favoriteServices        FavoriteService[]
+  favouriteCat            FavrouteCat[]
+  newOrders               NewOrder[]
+  processedRefillRequests RefillRequest[]        @relation("ProcessedRefillRequests")
+  refillRequests          RefillRequest[]
+  services                Service[]
+  sessions                Session[]
+  twoFactorConfirmation   TwoFactorConfirmation?
 }
 
 model Account {

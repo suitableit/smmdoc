@@ -1,33 +1,33 @@
 model Service {
-  id               String            @id @default(cuid())
-  name             String
-  rate             Float
-  min_order        Int
-  max_order        Int
-  avg_time         String
-  description      String            @db.Text
-  updateText       String?           @db.Text
-  userId           String
-  categoryId       String
-  serviceTypeId    String?
-  favrouteCatId    String?
-  status           String            @default("active")
-  refill           Boolean           @default(false)
-  cancel           Boolean           @default(false)
-  refillDays       Int?              @default(30)
-  refillDisplay    Int?              @default(24)
-  personalizedService Boolean?       @default(false)
-  serviceSpeed     String?           @default("medium")
-  mode             String            @default("manual")
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  perqty           Int               @default(1)
-  favoriteServices FavoriteService[]
-  newOrders        NewOrder[]
-  category         Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  serviceType      ServiceType?      @relation(fields: [serviceTypeId], references: [id], onDelete: SetNull)
-  favrouteCat      FavrouteCat?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String            @id @default(cuid())
+  name                String
+  rate                Float
+  min_order           Int
+  max_order           Int
+  avg_time            String
+  description         String            @db.Text
+  updateText          String?           @db.Text
+  userId              String
+  categoryId          String
+  favrouteCatId       String?
+  status              String            @default("active")
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  perqty              Int               @default(1)
+  serviceTypeId       String?
+  cancel              Boolean           @default(false)
+  mode                String            @default("manual")
+  refill              Boolean           @default(false)
+  refillDays          Int?              @default(30)
+  serviceSpeed        String?           @default("medium")
+  personalizedService Boolean?          @default(false)
+  refillDisplay       Int?              @default(24)
+  favoriteServices    FavoriteService[]
+  newOrders           NewOrder[]
+  category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  favrouteCat         FavrouteCat?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
+  serviceType         ServiceType?      @relation(fields: [serviceTypeId], references: [id])
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([categoryId], map: "Service_categoryId_fkey")
