@@ -373,12 +373,13 @@ export default function OrdersList() {
     }
 
     try {
-      const response = await fetch(`/api/user/orders/${refillModal.orderId}/refill-request`, {
+      const response = await fetch('/api/user/refill-requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          orderId: refillModal.orderId,
           reason: refillModal.reason.trim() || 'Customer requested refill due to drop in count'
         })
       });
