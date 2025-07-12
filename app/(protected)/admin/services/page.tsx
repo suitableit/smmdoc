@@ -4,28 +4,28 @@ import Link from 'next/link';
 import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-  FaBox,
-  FaBriefcase,
-  FaCheckCircle,
-  FaChevronDown,
-  FaChevronRight,
-  FaChevronUp,
-  FaEdit,
-  FaEllipsisH,
-  FaExclamationTriangle,
-  FaFileImport,
-  FaGripVertical,
-  FaPlus,
-  FaSave,
-  FaSearch,
-  FaShieldAlt,
-  FaSync,
-  FaTags,
-  FaTimes,
-  FaTimesCircle,
-  FaToggleOff,
-  FaToggleOn,
-  FaTrash
+    FaBox,
+    FaBriefcase,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronRight,
+    FaChevronUp,
+    FaEdit,
+    FaEllipsisH,
+    FaExclamationTriangle,
+    FaFileImport,
+    FaGripVertical,
+    FaPlus,
+    FaSave,
+    FaSearch,
+    FaShieldAlt,
+    FaSync,
+    FaTags,
+    FaTimes,
+    FaTimesCircle,
+    FaToggleOff,
+    FaToggleOn,
+    FaTrash
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
@@ -39,13 +39,13 @@ import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
 import {
-  createCategoryDefaultValues,
-  createCategorySchema,
-  CreateCategorySchema,
+    createCategoryDefaultValues,
+    createCategorySchema,
+    CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
-  createServiceDefaultValues,
-  CreateServiceSchema
+    createServiceDefaultValues,
+    CreateServiceSchema
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
@@ -899,29 +899,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
           </div>
           */}
 
-          {/* Refill Days - Conditional */}
-          {refillValue && (
-            <FormItem>
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Refill Days
-              </FormLabel>
-              <FormControl>
-                <input
-                  type="number"
-                  placeholder="Enter refill days (default: 30)"
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                  {...register('refillDays', { valueAsNumber: true })}
-                  disabled={isPending}
-                  min="1"
-                  max="365"
-                />
-              </FormControl>
-              <FormMessage>{errors.refillDays?.message}</FormMessage>
-            </FormItem>
-          )}
+          {/* Duplicate Refill Days field removed - using the one in grid layout above */}
 
           {/* Service Speed and Mode */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
