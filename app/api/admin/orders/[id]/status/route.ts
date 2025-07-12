@@ -61,9 +61,24 @@ export async function PUT(
       );
     }
     
+    // Convert string ID to integer
+    console.log('Order ID received:', id, 'Type:', typeof id);
+    const orderId = parseInt(id);
+    console.log('Parsed Order ID:', orderId, 'isNaN:', isNaN(orderId));
+    if (isNaN(orderId)) {
+      return NextResponse.json(
+        {
+          error: `Invalid Order ID format. Received: ${id}`,
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
     // Get current order
     const currentOrder = await db.newOrder.findUnique({
-      where: { id },
+      where: { id: orderId },
       include: {
         user: {
           select: {
@@ -86,15 +101,18 @@ export async function PUT(
     });
     
     if (!currentOrder) {
+      console.log('Order not found with ID:', orderId);
       return NextResponse.json(
-        { 
-          error: 'Order not found',
+        {
+          error: `Order not found with ID: ${orderId}`,
           success: false,
-          data: null 
+          data: null
         },
         { status: 404 }
       );
     }
+
+    console.log('Found order:', { id: currentOrder.id, status: currentOrder.status });
     
     const user = currentOrder.user;
     const orderPrice = user.currency === 'USD' ? currentOrder.usdPrice : currentOrder.bdtPrice;
@@ -169,7 +187,7 @@ export async function PUT(
       
       // Update order
       const updatedOrder = await prisma.newOrder.update({
-        where: { id },
+        where: { id: orderId },
         data: updateData,
         include: {
           user: {
@@ -220,6 +238,7 @@ export async function PUT(
     
   } catch (error) {
     console.error('Error updating order status:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
       {
         error: 'Failed to update order status: ' + (error instanceof Error ? error.message : 'Unknown error'),
@@ -254,6 +273,19 @@ export async function PATCH(
     const { id } = params;
     const { status } = await req.json();
 
+    // Convert string ID to integer
+    const orderId = parseInt(id);
+    if (isNaN(orderId)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid Order ID format',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
     // Validate status
     const validStatuses = ['pending', 'processing', 'in_progress', 'completed', 'partial', 'cancelled', 'refunded'];
     if (!validStatuses.includes(status)) {
@@ -269,7 +301,7 @@ export async function PATCH(
 
     // Update order status
     const updatedOrder = await db.newOrder.update({
-      where: { id },
+      where: { id: orderId },
       data: {
         status,
         updatedAt: new Date()
@@ -299,7 +331,8 @@ export async function PATCH(
     });
 
   } catch (error) {
-    console.error('Error updating order status:', error);
+    console.error('Error updating order status (PATCH):', error);
+    console.error('Error stack (PATCH):', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
       {
         error: 'Failed to update order status: ' + (error instanceof Error ? error.message : 'Unknown error'),
@@ -332,21 +365,34 @@ export async function GET(
     }
     
     const { id } = params;
-    
+
     if (!id) {
       return NextResponse.json(
-        { 
+        {
           error: 'Order ID is required',
           success: false,
-          data: null 
+          data: null
         },
         { status: 400 }
       );
     }
-    
+
+    // Convert string ID to integer
+    const orderId = parseInt(id);
+    if (isNaN(orderId)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid Order ID format',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
     // Get current order status
     const order = await db.newOrder.findUnique({
-      where: { id },
+      where: { id: orderId },
       select: {
         id: true,
         status: true,

@@ -2,19 +2,19 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  FaBox,
-  FaCheckCircle,
-  FaClock,
-  FaDollarSign,
-  FaEdit,
-  FaEllipsisH,
-  FaExclamationCircle,
-  FaExternalLinkAlt,
-  FaEye,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
+    FaBox,
+    FaCheckCircle,
+    FaClock,
+    FaDollarSign,
+    FaEdit,
+    FaEllipsisH,
+    FaExclamationCircle,
+    FaExternalLinkAlt,
+    FaEye,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -499,6 +499,7 @@ const AdminOrdersPage = () => {
   // Handle order status update
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
+      console.log('Updating order status:', { orderId, newStatus, orderIdType: typeof orderId });
       const response = await fetch(`/api/admin/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: {
@@ -507,7 +508,11 @@ const AdminOrdersPage = () => {
         body: JSON.stringify({ status: newStatus }),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
       const result = await response.json();
+      console.log('Response data:', result);
 
       if (result.success) {
         showToast(`Order status updated to ${newStatus}`, 'success');
@@ -515,6 +520,7 @@ const AdminOrdersPage = () => {
         fetchStats();
         fetchAllOrdersForCounts();
       } else {
+        console.error('Update failed:', result);
         showToast(result.error || 'Failed to update order status', 'error');
       }
     } catch (error) {
@@ -631,8 +637,8 @@ const AdminOrdersPage = () => {
   };
 
   // Open update status dialog
-  const openUpdateStatusDialog = (orderId: string, currentStatus: string) => {
-    setUpdateStatusDialog({ open: true, orderId, currentStatus });
+  const openUpdateStatusDialog = (orderId: number, currentStatus: string) => {
+    setUpdateStatusDialog({ open: true, orderId: orderId.toString(), currentStatus });
     setNewStatus(currentStatus);
   };
 

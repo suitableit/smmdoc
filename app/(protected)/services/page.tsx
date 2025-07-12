@@ -9,13 +9,13 @@ import { APP_NAME } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
 import { Fragment, useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaClipboardList,
-  FaEye,
-  FaRegStar,
-  FaSearch,
-  FaStar,
-  FaTimes,
+    FaCheckCircle,
+    FaClipboardList,
+    FaEye,
+    FaRegStar,
+    FaSearch,
+    FaStar,
+    FaTimes,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -402,6 +402,12 @@ export default function UserServiceTable() {
                     <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
                       Average time
                     </th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">
+                      Refill
+                    </th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">
+                      Cancel
+                    </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white last:rounded-tr-lg">
                       Action
                     </th>
@@ -413,7 +419,7 @@ export default function UserServiceTable() {
                       <Fragment key={categoryName}>
                         {/* Category Row */}
                         <tr>
-                          <td colSpan={8} className="py-0">
+                          <td colSpan={10} className="py-0">
                             <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 shadow-lg">
                               <h3 className="text-lg font-semibold">
                                 {categoryName}
@@ -493,6 +499,36 @@ export default function UserServiceTable() {
                                 <span className="text-sm text-gray-700 dark:text-gray-300">
                                   {service.avg_time || 'N/A'}
                                 </span>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  {service.refill ? (
+                                    <>
+                                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                      <span className="text-xs text-green-600 font-medium">ON</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                      <span className="text-xs text-red-600 font-medium">OFF</span>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  {service.cancel ? (
+                                    <>
+                                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                      <span className="text-xs text-green-600 font-medium">ON</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                      <span className="text-xs text-red-600 font-medium">OFF</span>
+                                    </>
+                                  )}
+                                </div>
                               </td>
                               <td
                                 className={`py-3 px-4 ${

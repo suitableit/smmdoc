@@ -7,36 +7,37 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import {
-  dashboardApi,
-  useGetUserStatsQuery,
+    dashboardApi,
+    useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
-  FaBuffer,
-  FaCheckCircle,
-  FaClock,
-  FaDiscord,
-  FaFacebook,
-  FaFilter,
-  FaGlobe,
-  FaHashtag,
-  FaInfoCircle,
-  FaInstagram,
-  FaLayerGroup,
-  FaLink,
-  FaLinkedin,
-  FaSearch,
-  FaShieldAlt,
-  FaShoppingCart,
-  FaSpotify,
-  FaTachometerAlt,
-  FaTelegram,
-  FaTiktok,
-  FaTimes,
-  FaTwitter,
-  FaYoutube,
+    FaBuffer,
+    FaCheckCircle,
+    FaClock,
+    FaDiscord,
+    FaFacebook,
+    FaFilter,
+    FaGlobe,
+    FaHashtag,
+    FaInfoCircle,
+    FaInstagram,
+    FaLayerGroup,
+    FaLink,
+    FaLinkedin,
+    FaRedo,
+    FaSearch,
+    FaShieldAlt,
+    FaShoppingCart,
+    FaSpotify,
+    FaTachometerAlt,
+    FaTelegram,
+    FaTiktok,
+    FaTimes,
+    FaTwitter,
+    FaYoutube,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -177,6 +178,44 @@ const ServiceDetailsCard = ({
                 <FaClock className="text-blue-600 text-sm" />
               </div>
               <span className="text-sm">-</span>
+            </div>
+          </div>
+
+          {/* Refill Status */}
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Refill</h4>
+            <div className="flex items-center text-gray-600">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                selected.refill ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                <FaRedo className={`text-sm ${
+                  selected.refill ? 'text-green-600' : 'text-red-600'
+                }`} />
+              </div>
+              <span className={`text-sm font-medium ${
+                selected.refill ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {selected.refill ? 'Available' : 'Not Available'}
+              </span>
+            </div>
+          </div>
+
+          {/* Cancel Status */}
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">Cancel</h4>
+            <div className="flex items-center text-gray-600">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                selected.cancel ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                <FaTimes className={`text-sm ${
+                  selected.cancel ? 'text-green-600' : 'text-red-600'
+                }`} />
+              </div>
+              <span className={`text-sm font-medium ${
+                selected.cancel ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {selected.cancel ? 'Available' : 'Not Available'}
+              </span>
             </div>
           </div>
 

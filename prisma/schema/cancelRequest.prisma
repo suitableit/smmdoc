@@ -1,19 +1,17 @@
 model CancelRequest {
-  id            String    @id @default(cuid())
-  orderId       Int
-  userId        String
-  reason        String
-  status        String    @default("pending") // pending, approved, declined
-  refundAmount  Float?
-  adminNotes    String?
-  processedBy   String?
-  processedAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relations
-  order         NewOrder  @relation(fields: [orderId], references: [id])
-  user          User      @relation(fields: [userId], references: [id])
+  id           String    @id @default(cuid())
+  orderId      Int
+  userId       String
+  reason       String
+  status       String    @default("pending")
+  refundAmount Float?
+  adminNotes   String?
+  processedBy  String?
+  processedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  order        NewOrder  @relation(fields: [orderId], references: [id])
+  user         User      @relation(fields: [userId], references: [id])
 
   @@index([orderId], map: "CancelRequest_orderId_fkey")
   @@index([userId], map: "CancelRequest_userId_fkey")

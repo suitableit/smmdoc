@@ -7,19 +7,19 @@ import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import moment from 'moment';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  FaBan,
-  FaCheck,
-  FaCheckCircle,
-  FaCircleNotch,
-  FaClipboardList,
-  FaClock,
-  FaExclamationTriangle,
-  FaExternalLinkAlt,
-  FaList,
-  FaRss,
-  FaSearch,
-  FaSpinner,
-  FaTimes
+    FaBan,
+    FaCheck,
+    FaCheckCircle,
+    FaCircleNotch,
+    FaClipboardList,
+    FaClock,
+    FaExclamationTriangle,
+    FaExternalLinkAlt,
+    FaList,
+    FaRss,
+    FaSearch,
+    FaSpinner,
+    FaTimes
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -258,6 +258,8 @@ export default function OrdersList() {
 
   const orders = useMemo(() => {
     let filteredOrders = data?.data || [];
+
+
 
     // Filter by status
     if (status !== 'all') {
@@ -719,7 +721,7 @@ export default function OrdersList() {
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            {(order.status === 'completed' || order.status === 'partial') && order.service?.refill && (
+                            {order.status === 'completed' && order.service?.refill && (
                               <button
                                 onClick={() => setRefillModal({
                                   isOpen: true,
@@ -732,7 +734,7 @@ export default function OrdersList() {
                                 Refill
                               </button>
                             )}
-                            {(order.status === 'pending' || order.status === 'processing') && order.service?.cancel && (
+                            {order.status === 'pending' && order.service?.cancel && (
                               <button
                                 onClick={() => setCancelModal({
                                   isOpen: true,

@@ -1,17 +1,17 @@
 import { PriceDisplay } from '@/components/PriceDisplay';
-import { formatNumber } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { formatNumber } from '@/lib/utils';
 import Link from 'next/link';
-import { 
-  FaTimes, 
-  FaDollarSign, 
-  FaArrowDown, 
-  FaArrowUp, 
-  FaClock, 
-  FaRedo,
-  FaCheckCircle,
-  FaTachometerAlt,
-  FaLink
+import {
+    FaArrowDown,
+    FaArrowUp,
+    FaCheckCircle,
+    FaClock,
+    FaDollarSign,
+    FaLink,
+    FaRedo,
+    FaTachometerAlt,
+    FaTimes
 } from 'react-icons/fa';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -143,9 +143,40 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <FaRedo className="text-black w-4 h-4" />
                   <span className="text-gray-700 font-medium">Refill</span>
                 </div>
-                <span className="text-gray-800 font-semibold">
-                  {service?.refill || 'No Refill'}
-                </span>
+                <div className="flex items-center gap-2">
+                  {service?.refill ? (
+                    <>
+                      <span className="text-green-600 font-semibold">Available</span>
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-red-600 font-semibold">Not Available</span>
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Cancel */}
+              <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
+                <div className="flex items-center gap-2">
+                  <FaTimes className="text-black w-4 h-4" />
+                  <span className="text-gray-700 font-medium">Cancel</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {service?.cancel ? (
+                    <>
+                      <span className="text-green-600 font-semibold">Available</span>
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-red-600 font-semibold">Not Available</span>
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Start Time */}

@@ -79,7 +79,9 @@ export async function GET(request: Request) {
             min_order: true,
             max_order: true,
             avg_time: true,
-            status: true
+            status: true,
+            refill: true,
+            cancel: true
           }
         },
         category: {
