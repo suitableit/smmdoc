@@ -1,3 +1,4 @@
+import { auth } from '@/auth';
 import { currentUser } from '@/lib/actions/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
@@ -113,5 +114,83 @@ export async function GET(
       },
       { status: 500 }
     );
+  }
+}
+
+// DELETE /api/admin/categories/[id] - Delete category
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth();
+
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized access. Admin privileges required.',
+          success: false,
+          data: null
+        },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json({
+        error: 'Category ID is required',
+        data: null,
+        success: false,
+      }, { status: 400 });
+    }
+
+    // Check if category exists and get service count
+    const category = await db.category.findUnique({
+      where: { id: id },
+      include: {
+        _count: {
+          select: {
+            services: true
+          }
+        }
+      }
+    });
+
+    if (!category) {
+      return NextResponse.json({
+        error: 'Category not found',
+        success: false,
+        data: null
+      }, { status: 404 });
+    }
+
+    // Delete all services in this category first (cascade delete)
+    if (category._count.services > 0) {
+      await db.service.deleteMany({
+        where: { categoryId: id }
+      });
+    }
+
+    // Delete the category
+    await db.category.delete({
+      where: { id: id }
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: null,
+      message: `Category deleted successfully along with ${category._count.services} service(s)`,
+      error: null
+    });
+
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    return NextResponse.json({
+      error: 'Failed to delete category: ' + (error instanceof Error ? error.message : 'Unknown error'),
+      success: false,
+      data: null
+    }, { status: 500 });
   }
 }
