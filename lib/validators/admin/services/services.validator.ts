@@ -55,7 +55,7 @@ const createServiceDefaultValues: CreateServiceSchema = {
   rate: '',
   min_order: '',
   max_order: '',
-  perqty: '',
+  perqty: '1000',  // Default value 1000 for per quantity
   avg_time: '',
   categoryId: '',
   serviceTypeId: '',
@@ -70,8 +70,8 @@ const createServiceDefaultValues: CreateServiceSchema = {
 };
 
 export {
-  createServiceDefaultValues,
-  createServiceSchema,
-  type CreateServiceSchema
+    createServiceDefaultValues,
+    createServiceSchema,
+    type CreateServiceSchema
 };
 
