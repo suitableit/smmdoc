@@ -2710,37 +2710,41 @@ function AdminServicesPage() {
 
   const deleteCategory = async (action: 'delete' | 'move', targetCategoryId?: string) => {
     const { categoryName, categoryId, servicesCount } = deleteCategoryModal;
-    
+
     try {
       setIsUpdating(true);
-      
+      console.log('Deleting category:', { action, categoryId, categoryName, servicesCount, targetCategoryId });
+
       if (action === 'move' && targetCategoryId) {
         // First move all services to the target category
         showToast(`Moving ${servicesCount} service${servicesCount !== 1 ? 's' : ''} to new category...`, 'pending');
-        
+
         const moveResponse = await axiosInstance.put(`/api/admin/services/move-category`, {
           fromCategoryId: categoryId,
           toCategoryId: targetCategoryId
         });
-        
+
+        console.log('Move response:', moveResponse.data);
+
         if (!moveResponse.data.success) {
           showToast(moveResponse.data.error || 'Failed to move services', 'error');
           return;
         }
       }
-      
+
       // Then delete the category
       showToast(`Deleting "${categoryName}" category...`, 'pending');
-      
+
       const response = await axiosInstance.delete(`/api/admin/categories/${categoryId}`);
-      
+      console.log('Delete category response:', response.data);
+
       if (response.data.success) {
         if (action === 'move') {
           showToast(`Successfully moved ${servicesCount} service${servicesCount !== 1 ? 's' : ''} and deleted "${categoryName}" category`, 'success');
         } else {
-          showToast(`Successfully deleted "${categoryName}" category and all services`, 'success');
+          showToast(response.data.message || `Successfully deleted "${categoryName}" category and all services`, 'success');
         }
-        
+
         mutate('/api/admin/categories');
         mutate('/api/admin/services/get-services');
         mutate('/api/admin/services/stats');
@@ -2749,7 +2753,9 @@ function AdminServicesPage() {
         showToast(response.data.error || 'Failed to delete category', 'error');
       }
     } catch (error: any) {
-      showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
+      console.error('Delete category error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
+      showToast(`Error: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
     }
