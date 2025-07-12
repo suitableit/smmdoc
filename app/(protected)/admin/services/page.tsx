@@ -355,10 +355,10 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
 };
 
 // Create Service Form Component (integrated)
-const CreateServiceForm = ({ onClose, showToast }: {
+const CreateServiceForm: React.FC<{
   onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
-}) => {
+}> = ({ onClose, showToast }) => {
   const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
   const { data: serviceTypesData, error: serviceTypesError, isLoading: serviceTypesLoading } = useSWR('/api/admin/service-types', fetcher);
   const [isPending, startTransition] = useTransition();
@@ -901,31 +901,9 @@ const CreateServiceForm = ({ onClose, showToast }: {
 
           {/* Duplicate Refill Days field removed - using the one in grid layout above */}
 
-          {/* Service Speed and Mode */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Service Speed - 50% width */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Service Speed
-              </FormLabel>
-              <FormControl>
-                <select
-                  className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('serviceSpeed')}
-                  disabled={isPending}
-                >
-                  <option value="slow">Slow</option>
-                  <option value="medium">Medium</option>
-                  <option value="fast">Fast</option>
-                </select>
-              </FormControl>
-              <FormMessage>{errors.serviceSpeed?.message}</FormMessage>
-            </FormItem>
-
-            {/* Mode - 50% width */}
+          {/* Processing Mode - 100% width */}
+          <div className="grid grid-cols-1 gap-6">
+            {/* Mode - 100% width */}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"

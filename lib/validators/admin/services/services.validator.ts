@@ -15,8 +15,8 @@ const createServiceSchema = z.object({
   cancel: z.boolean().default(false),
   refillDays: z.number().optional().default(30),
   refillDisplay: z.number().optional().default(24),
-  personalizedService: z.boolean().optional().default(false),
-  serviceSpeed: z.enum(['slow', 'medium', 'fast']).default('medium'),
+  personalizedService: z.enum(['no', 'yes']).default('no'),
+  serviceSpeed: z.enum(['slow', 'sometimes_slow', 'normal', 'fast']).default('normal'),
   mode: z.enum(['manual', 'auto']).default('manual'),
   orderLink: z.enum(['username', 'url']).optional().default('username'),
 });
@@ -37,8 +37,8 @@ const editServiceSchema = z.object({
   cancel: z.boolean().optional(),
   refillDays: z.number().optional(),
   refillDisplay: z.number().optional(),
-  personalizedService: z.boolean().optional(),
-  serviceSpeed: z.enum(['slow', 'medium', 'fast']).optional(),
+  personalizedService: z.enum(['no', 'yes']).optional(),
+  serviceSpeed: z.enum(['slow', 'sometimes_slow', 'normal', 'fast']).optional(),
   mode: z.enum(['manual', 'auto']).optional(),
   orderLink: z.enum(['username', 'url']).optional(),
 });
@@ -61,8 +61,8 @@ const createServiceDefaultValues: CreateServiceSchema = {
   cancel: false,
   refillDays: 30,
   refillDisplay: 24,
-  personalizedService: false,
-  serviceSpeed: 'medium',
+  personalizedService: 'no',
+  serviceSpeed: 'normal',
   mode: 'manual',
   orderLink: 'username',
 };
