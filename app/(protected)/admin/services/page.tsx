@@ -3429,21 +3429,35 @@ function AdminServicesPage() {
                                       </div>
                                     </td>
                                     <td className="p-3">
-                                      <button
-                                        onClick={() => toggleRefill(service)}
-                                        className={`p-1 rounded transition-colors ${
-                                          service.refill
-                                            ? 'text-green-600 hover:bg-green-50'
-                                            : 'text-red-600 hover:bg-red-50'
-                                        }`}
-                                        title={service.refill ? 'Disable Refill' : 'Enable Refill'}
-                                      >
-                                        {service.refill ? (
-                                          <FaToggleOn className="h-5 w-5" />
-                                        ) : (
-                                          <FaToggleOff className="h-5 w-5" />
+                                      <div className="space-y-2">
+                                        <button
+                                          onClick={() => toggleRefill(service)}
+                                          className={`p-1 rounded transition-colors ${
+                                            service.refill
+                                              ? 'text-green-600 hover:bg-green-50'
+                                              : 'text-red-600 hover:bg-red-50'
+                                          }`}
+                                          title={service.refill ? 'Disable Refill' : 'Enable Refill'}
+                                        >
+                                          {service.refill ? (
+                                            <FaToggleOn className="h-5 w-5" />
+                                          ) : (
+                                            <FaToggleOff className="h-5 w-5" />
+                                          )}
+                                        </button>
+
+                                        {/* Show Refill Details when refill is enabled */}
+                                        {service.refill && (
+                                          <div className="text-xs text-gray-600 space-y-1">
+                                            {service.refillDays && (
+                                              <div>Days: {service.refillDays}</div>
+                                            )}
+                                            {service.refillDisplay && (
+                                              <div>Hours: {service.refillDisplay}</div>
+                                            )}
+                                          </div>
                                         )}
-                                      </button>
+                                      </div>
                                     </td>
                                     <td className="p-3">
                                       <button

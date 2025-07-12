@@ -501,17 +501,31 @@ export default function UserServiceTable() {
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-center">
-                                <div className="flex items-center justify-center gap-1">
-                                  {service.refill ? (
-                                    <>
-                                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                      <span className="text-xs text-green-600 font-medium">ON</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                      <span className="text-xs text-red-600 font-medium">OFF</span>
-                                    </>
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-center gap-1">
+                                    {service.refill ? (
+                                      <>
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <span className="text-xs text-green-600 font-medium">ON</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                        <span className="text-xs text-red-600 font-medium">OFF</span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Show Refill Details when refill is enabled */}
+                                  {service.refill && (
+                                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+                                      {service.refillDays && (
+                                        <div>Days: {service.refillDays}</div>
+                                      )}
+                                      {service.refillDisplay && (
+                                        <div>Hours: {service.refillDisplay}</div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               </td>
