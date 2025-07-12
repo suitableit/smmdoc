@@ -45,8 +45,7 @@ import {
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
   createServiceDefaultValues,
-  createServiceSchema,
-  CreateServiceSchema,
+  CreateServiceSchema
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
@@ -289,7 +288,7 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
                       value={targetCategoryId}
                       onChange={(e) => setTargetCategoryId(e.target.value)}
                       className="w-full pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-gray-900 transition-all duration-200 appearance-none cursor-pointer"
-                      required
+  
                     >
                       <option value="">Choose a category...</option>
                       {availableCategories.map((category: any) => (
@@ -371,8 +370,8 @@ const CreateServiceForm = ({ onClose, showToast }: {
     watch,
     formState: { errors }
   } = useForm<CreateServiceSchema>({
-    mode: 'all',
-    resolver: zodResolver(createServiceSchema),
+    mode: 'onChange',
+    // No resolver to allow empty fields
     defaultValues: {
       ...createServiceDefaultValues,
       mode: 'manual', // Set default mode to manual
@@ -383,9 +382,23 @@ const CreateServiceForm = ({ onClose, showToast }: {
   const refillValue = watch('refill');
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
+    console.log('Form submitted with values:', values);
+
+    // Filter out empty values for create service
+    const filteredValues = Object.fromEntries(
+      Object.entries(values).filter(([key, value]) => {
+        if (value === '' || value === null || value === undefined) return false;
+        return true;
+      })
+    );
+
+    console.log('Filtered values to send:', filteredValues);
+
     startTransition(async () => {
       try {
-        const response = await axiosInstance.post('/api/admin/services', values);
+        console.log('Sending request to API...');
+        const response = await axiosInstance.post('/api/admin/services', filteredValues);
+        console.log('API response:', response.data);
         if (response.data.success) {
           reset();
           showToast(response.data.message, 'success');
@@ -396,6 +409,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
           showToast(response.data.error, 'error');
         }
       } catch (error: any) {
+        console.error('API Error:', error);
         showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
       }
     });
@@ -470,7 +484,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Name <span className="text-red-500">*</span>
+                Service Name
               </FormLabel>
               <FormControl>
                 <input
@@ -491,14 +505,13 @@ const CreateServiceForm = ({ onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Category <span className="text-red-500">*</span>
+                Service Category
               </FormLabel>
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('categoryId')}
                   disabled={isPending}
-                  required
                 >
                   <option value={''} hidden>
                     Select Service Category
@@ -577,7 +590,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('rate')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.rate?.message}</FormMessage>
@@ -599,7 +612,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('min_order')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.min_order?.message}</FormMessage>
@@ -621,7 +634,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('max_order')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.max_order?.message}</FormMessage>
@@ -646,7 +659,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('perqty')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.perqty?.message}</FormMessage>
@@ -667,7 +680,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     {...register('avg_time')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.avg_time?.message}</FormMessage>
@@ -698,52 +711,54 @@ const CreateServiceForm = ({ onClose, showToast }: {
               <FormMessage>{errors.refill?.message}</FormMessage>
             </FormItem>
 
-            {/* Refill Days - 50% width (readonly if refill is off) - REQUIRED */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Refill Days <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Enter refill days"
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  {...register('refillDays')}
-                  disabled={isPending || refillValue === 'off'}
-                  readOnly={refillValue === 'off'}
-                  required
-                />
-              </FormControl>
-              <FormMessage>{errors.refillDays?.message}</FormMessage>
-            </FormItem>
+            {/* Refill Days - 50% width (show only when refill is on) - REQUIRED */}
+            {refillValue === true && (
+              <FormItem className="md:col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Refill Days <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Enter refill days"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    {...register('refillDays')}
+                    disabled={isPending}
 
-            {/* Refill Display - 50% width (readonly if refill is off) - REQUIRED */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Refill Display (in hours){' '}
-                <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Enter refill display hours"
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  {...register('refillDisplay')}
-                  disabled={isPending || refillValue === 'off'}
-                  readOnly={refillValue === 'off'}
-                  required
-                />
-              </FormControl>
-              <FormMessage>{errors.refillDisplay?.message}</FormMessage>
-            </FormItem>
+                  />
+                </FormControl>
+                <FormMessage>{errors.refillDays?.message}</FormMessage>
+              </FormItem>
+            )}
+
+            {/* Refill Display - 50% width (show only when refill is on) - REQUIRED */}
+            {refillValue === true && (
+              <FormItem className="md:col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Refill Display (in hours){' '}
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Enter refill display hours"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    {...register('refillDisplay')}
+                    disabled={isPending}
+
+                  />
+                </FormControl>
+                <FormMessage>{errors.refillDisplay?.message}</FormMessage>
+              </FormItem>
+            )}
 
             {/* Cancel - 50% width - REQUIRED */}
             <FormItem className="md:col-span-1">
@@ -1324,11 +1339,11 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
     watch,
     formState: { errors }
   } = useForm<CreateServiceSchema>({
-    mode: 'all',
-    resolver: zodResolver(createServiceSchema),
+    mode: 'onChange',
+    // No resolver for edit form to allow empty fields
     defaultValues: {
       ...createServiceDefaultValues,
-      mode: 'manual', // Set default mode to manual
+      mode: 'manual',
     },
   });
   
@@ -1358,9 +1373,24 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
   }, [categoriesData, reset, serviceData]);
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
+    console.log('Edit form submitted with values:', values);
+    console.log('Service ID:', serviceId);
+
+    // Filter out empty values and only send changed fields
+    const filteredValues = Object.fromEntries(
+      Object.entries(values).filter(([key, value]) => {
+        if (value === '' || value === null || value === undefined) return false;
+        return true;
+      })
+    );
+
+    console.log('Filtered values to send:', filteredValues);
+
     startTransition(async () => {
       try {
-        const response = await axiosInstance.put(`/api/admin/services/update-services?id=${serviceId}`, values);
+        console.log('Sending edit request to API...');
+        const response = await axiosInstance.put(`/api/admin/services/update-services?id=${serviceId}`, filteredValues);
+        console.log('Edit API response:', response.data);
         if (response.data.success) {
           showToast(response.data.message || 'Service updated successfully', 'success');
           mutate('/api/admin/services/get-services');
@@ -1370,6 +1400,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
           showToast(response.data.error || 'Failed to update service', 'error');
         }
       } catch (error: any) {
+        console.error('Edit API Error:', error);
         showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
       }
     });
@@ -1444,7 +1475,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Name <span className="text-red-500">*</span>
+                Service Name
               </FormLabel>
               <FormControl>
                 <input
@@ -1453,7 +1484,6 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                   className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   {...register('name')}
                   disabled={isPending}
-                  required
                 />
               </FormControl>
               <FormMessage>{errors.name?.message}</FormMessage>
@@ -1465,14 +1495,13 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Category <span className="text-red-500">*</span>
+                Service Category
               </FormLabel>
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('categoryId')}
                   disabled={isPending}
-                  required
                 >
                   <option value={''} hidden>
                     Select Service Category
@@ -1493,7 +1522,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Type <span className="text-red-500">*</span>
+                Service Type
               </FormLabel>
               <FormControl>
                 <select
@@ -1518,14 +1547,13 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Mode <span className="text-red-500">*</span>
+                Mode
               </FormLabel>
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('mode')}
                   disabled={isPending}
-                  required
                 >
                   <option value="manual">Manual</option>
                   <option value="auto">Auto (API)</option>
@@ -1541,8 +1569,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Service Price{' '}
-                  <span className="text-red-500">* (Always USD Price)</span>
+                  Service Price (Always USD Price)
                 </FormLabel>
                 <FormControl>
                   <input
@@ -1551,7 +1578,6 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('rate')}
                     disabled={isPending}
-                    required
                   />
                 </FormControl>
                 <FormMessage>{errors.rate?.message}</FormMessage>
@@ -1563,7 +1589,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Minimum Order <span className="text-red-500">*</span>
+                  Minimum Order
                 </FormLabel>
                 <FormControl>
                   <input
@@ -1573,7 +1599,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('min_order')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.min_order?.message}</FormMessage>
@@ -1595,7 +1621,6 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('max_order')}
                     disabled={isPending}
-                    required
                   />
                 </FormControl>
                 <FormMessage>{errors.max_order?.message}</FormMessage>
@@ -1620,7 +1645,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('perqty')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.perqty?.message}</FormMessage>
@@ -1641,7 +1666,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     {...register('avg_time')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.avg_time?.message}</FormMessage>
@@ -1672,52 +1697,54 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
               <FormMessage>{errors.refill?.message}</FormMessage>
             </FormItem>
 
-            {/* Refill Days - 50% width (readonly if refill is off) - REQUIRED */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Refill Days <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Enter refill days"
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  {...register('refillDays')}
-                  disabled={isPending || refillValue === 'off'}
-                  readOnly={refillValue === 'off'}
-                  required
-                />
-              </FormControl>
-              <FormMessage>{errors.refillDays?.message}</FormMessage>
-            </FormItem>
+            {/* Refill Days - 50% width (show only when refill is on) - REQUIRED */}
+            {refillValue === true && (
+              <FormItem className="md:col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Refill Days <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Enter refill days"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    {...register('refillDays')}
+                    disabled={isPending}
 
-            {/* Refill Display - 50% width (readonly if refill is off) - REQUIRED */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Refill Display (in hours){' '}
-                <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Enter refill display hours"
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  {...register('refillDisplay')}
-                  disabled={isPending || refillValue === 'off'}
-                  readOnly={refillValue === 'off'}
-                  required
-                />
-              </FormControl>
-              <FormMessage>{errors.refillDisplay?.message}</FormMessage>
-            </FormItem>
+                  />
+                </FormControl>
+                <FormMessage>{errors.refillDays?.message}</FormMessage>
+              </FormItem>
+            )}
+
+            {/* Refill Display - 50% width (show only when refill is on) - REQUIRED */}
+            {refillValue === true && (
+              <FormItem className="md:col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Refill Display (in hours){' '}
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Enter refill display hours"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    {...register('refillDisplay')}
+                    disabled={isPending}
+
+                  />
+                </FormControl>
+                <FormMessage>{errors.refillDisplay?.message}</FormMessage>
+              </FormItem>
+            )}
 
             {/* Cancel - 50% width - REQUIRED */}
             <FormItem className="md:col-span-1">
