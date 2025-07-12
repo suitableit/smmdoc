@@ -2508,12 +2508,21 @@ function AdminServicesPage() {
     if (!confirmDelete) return;
 
     try {
-      await axiosInstance.delete(`/api/admin/services/delete-services?id=${id}`);
-      showToast('Service deleted successfully', 'success');
-      mutate('/api/admin/services/get-services');
-      mutate('/api/admin/services/stats');
-    } catch (error) {
-      showToast('Failed to delete service', 'error');
+      console.log('Deleting service with ID:', id);
+      const response = await axiosInstance.delete(`/api/admin/services/delete-services?id=${id}`);
+      console.log('Delete response:', response.data);
+
+      if (response.data.success) {
+        showToast(response.data.message || 'Service deleted successfully', 'success');
+        mutate('/api/admin/services/get-services');
+        mutate('/api/admin/services/stats');
+      } else {
+        showToast(response.data.error || 'Failed to delete service', 'error');
+      }
+    } catch (error: any) {
+      console.error('Delete service error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete service';
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -2524,20 +2533,33 @@ function AdminServicesPage() {
       setIsUpdating(true);
       showToast(`Deleting ${selectedServices.length} service${selectedServices.length !== 1 ? 's' : ''}...`, 'pending');
 
+      console.log('Deleting services:', selectedServices);
+
       // Delete services in parallel
-      const deletePromises = selectedServices.map(serviceId => 
+      const deletePromises = selectedServices.map(serviceId =>
         axiosInstance.delete(`/api/admin/services/delete-services?id=${serviceId}`)
       );
 
-      await Promise.all(deletePromises);
+      const results = await Promise.all(deletePromises);
+      console.log('Delete results:', results);
 
-      showToast(`Successfully deleted ${selectedServices.length} service${selectedServices.length !== 1 ? 's' : ''}`, 'success');
+      // Check if all deletions were successful
+      const failedDeletions = results.filter(result => !result.data.success);
+
+      if (failedDeletions.length > 0) {
+        showToast(`Failed to delete ${failedDeletions.length} service${failedDeletions.length !== 1 ? 's' : ''}`, 'error');
+      } else {
+        showToast(`Successfully deleted ${selectedServices.length} service${selectedServices.length !== 1 ? 's' : ''}`, 'success');
+      }
+
       setSelectedServices([]); // Clear selection
       mutate('/api/admin/services/get-services');
       mutate('/api/admin/services/stats');
       handleCloseDeleteConfirmation();
     } catch (error: any) {
-      showToast(`Error deleting services: ${error.message || 'Something went wrong'}`, 'error');
+      console.error('Bulk delete error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
+      showToast(`Error deleting services: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
     }
