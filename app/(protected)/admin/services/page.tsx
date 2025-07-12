@@ -637,20 +637,20 @@ const CreateServiceForm = ({ onClose, showToast }: {
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Per Quantity <span className="text-red-500">*</span>
+                  Per Quantity
                 </FormLabel>
                 <FormControl>
                   <input
                     type="number"
+                    value="1000"
+                    readOnly
                     min={0}
                     placeholder="Enter per quantity"
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('perqty')}
                     disabled={isPending}
-                    required
                   />
                 </FormControl>
-                <FormMessage>{errors.perqty?.message}</FormMessage>
               </FormItem>
 
               {/* Average Time - 50% width - REQUIRED */}
@@ -1622,15 +1622,14 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                 <FormControl>
                   <input
                     type="number"
-                    min={0}
+                    value="1000"
+                    readOnly
                     placeholder="Enter per quantity"
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('perqty')}
                     disabled={isPending}
-                    required
                   />
                 </FormControl>
-                <FormMessage>{errors.perqty?.message}</FormMessage>
               </FormItem>
 
               {/* Average Time - 50% width - REQUIRED */}
