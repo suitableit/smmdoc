@@ -384,6 +384,17 @@ const CreateServiceForm: React.FC<{
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
     console.log('Form submitted with values:', values);
 
+    // Validate required fields
+    if (!values.categoryId || values.categoryId === '') {
+      showToast('Please select a service category', 'error');
+      return;
+    }
+
+    if (!values.serviceTypeId || values.serviceTypeId === '') {
+      showToast('Please select a service type', 'error');
+      return;
+    }
+
     // Filter out empty values for create service
     const filteredValues = Object.fromEntries(
       Object.entries(values).filter(([key, value]) => {
@@ -512,6 +523,7 @@ const CreateServiceForm: React.FC<{
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('categoryId')}
                   disabled={isPending}
+                  required
                 >
                   <option value={''} hidden>
                     Select Service Category
@@ -539,6 +551,7 @@ const CreateServiceForm: React.FC<{
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('serviceTypeId')}
                   disabled={isPending || serviceTypesLoading}
+                  required
                 >
                   <option value="">Select Service Type</option>
                   {serviceTypesData?.data?.map((serviceType: any) => (
@@ -900,9 +913,9 @@ const CreateServiceForm: React.FC<{
 
           {/* Duplicate Refill Days field removed - using the one in grid layout above */}
 
-          {/* Processing Mode - 100% width */}
+          {/* Processing Mode - 100% width - COMMENTED OUT */}
+          {/*
           <div className="grid grid-cols-1 gap-6">
-            {/* Mode - 100% width */}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -923,6 +936,7 @@ const CreateServiceForm: React.FC<{
               <FormMessage>{errors.mode?.message}</FormMessage>
             </FormItem>
           </div>
+          */}
 
           {/* Service Description - 100% width - REQUIRED */}
           <FormItem>
@@ -1334,6 +1348,17 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
     console.log('Edit form submitted with values:', values);
     console.log('Service ID:', serviceId);
 
+    // Validate required fields
+    if (!values.categoryId || values.categoryId === '') {
+      showToast('Please select a service category', 'error');
+      return;
+    }
+
+    if (!values.serviceTypeId || values.serviceTypeId === '') {
+      showToast('Please select a service type', 'error');
+      return;
+    }
+
     // Filter out empty values and only send changed fields
     const filteredValues = Object.fromEntries(
       Object.entries(values).filter(([key, value]) => {
@@ -1460,6 +1485,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('categoryId')}
                   disabled={isPending}
+                  required
                 >
                   <option value={''} hidden>
                     Select Service Category
@@ -1487,6 +1513,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('serviceTypeId')}
                   disabled={isPending || serviceTypesLoading}
+                  required
                 >
                   <option value="">Select Service Type</option>
                   {serviceTypesData?.data?.map((serviceType: any) => (
