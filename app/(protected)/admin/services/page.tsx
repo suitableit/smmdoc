@@ -839,14 +839,11 @@ const CreateServiceForm = ({ onClose, showToast }: {
             </FormItem>
           </div>
 
-          {/* Refill and Cancel Options */}
+          {/* Refill and Cancel Options - Hidden from UI */}
+          {/*
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Refill - 50% width */}
             <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
+              <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                 Refill Enabled
               </FormLabel>
               <FormControl>
@@ -865,12 +862,8 @@ const CreateServiceForm = ({ onClose, showToast }: {
               <FormMessage>{errors.refill?.message}</FormMessage>
             </FormItem>
 
-            {/* Cancel - 50% width */}
             <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
+              <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                 Cancel Enabled
               </FormLabel>
               <FormControl>
@@ -889,6 +882,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
               <FormMessage>{errors.cancel?.message}</FormMessage>
             </FormItem>
           </div>
+          */}
 
           {/* Refill Days - Conditional */}
           {refillValue && (
