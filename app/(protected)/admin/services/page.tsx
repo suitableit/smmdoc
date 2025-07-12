@@ -4,28 +4,28 @@ import Link from 'next/link';
 import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-    FaBox,
-    FaBriefcase,
-    FaCheckCircle,
-    FaChevronDown,
-    FaChevronRight,
-    FaChevronUp,
-    FaEdit,
-    FaEllipsisH,
-    FaExclamationTriangle,
-    FaFileImport,
-    FaGripVertical,
-    FaPlus,
-    FaSave,
-    FaSearch,
-    FaShieldAlt,
-    FaSync,
-    FaTags,
-    FaTimes,
-    FaTimesCircle,
-    FaToggleOff,
-    FaToggleOn,
-    FaTrash
+  FaBox,
+  FaBriefcase,
+  FaCheckCircle,
+  FaChevronDown,
+  FaChevronRight,
+  FaChevronUp,
+  FaEdit,
+  FaEllipsisH,
+  FaExclamationTriangle,
+  FaFileImport,
+  FaGripVertical,
+  FaPlus,
+  FaSave,
+  FaSearch,
+  FaShieldAlt,
+  FaSync,
+  FaTags,
+  FaTimes,
+  FaTimesCircle,
+  FaToggleOff,
+  FaToggleOn,
+  FaTrash
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
@@ -39,13 +39,13 @@ import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
 import {
-    createCategoryDefaultValues,
-    createCategorySchema,
-    CreateCategorySchema,
+  createCategoryDefaultValues,
+  createCategorySchema,
+  CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
-    createServiceDefaultValues,
-    CreateServiceSchema
+  createServiceDefaultValues,
+  CreateServiceSchema
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
@@ -843,7 +843,6 @@ const CreateServiceForm: React.FC<{
                   disabled={isPending}
                   required
                 >
-                  <option value="">Select Service Speed</option>
                   <option value="slow">Slow</option>
                   <option value="sometimes_slow">Sometimes Slow</option>
                   <option value="normal">Normal</option>
@@ -1320,10 +1319,13 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
         updateText: serviceData.data.updateText || '',
         serviceTypeId: serviceData.data.serviceTypeId || '',
         mode: serviceData.data.mode || 'manual',
-        refill: serviceData.data.refill || false,
+        refill: Boolean(serviceData.data.refill),
         refillDays: serviceData.data.refillDays || 30,
+        refillDisplay: serviceData.data.refillDisplay || 24,
         cancel: serviceData.data.cancel || false,
-        serviceSpeed: serviceData.data.serviceSpeed || 'medium',
+        personalizedService: serviceData.data.personalizedService || 'no',
+        serviceSpeed: serviceData.data.serviceSpeed || 'normal',
+        orderLink: serviceData.data.orderLink || 'username',
       });
     }
   }, [categoriesData, reset, serviceData]);
