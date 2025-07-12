@@ -5,13 +5,13 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/admin/orders - Get all orders with pagination and filtering
 export async function GET(req: NextRequest) {
   try {
-    console.log('Admin orders API called');
+    // console.log('Admin orders API called');
     const session = await auth();
-    console.log('Session:', session?.user?.email, session?.user?.role);
+    // console.log('Session:', session?.user?.email, session?.user?.role);
 
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
-      console.log('Unauthorized access attempt');
+      // console.log('Unauthorized access attempt');
       return NextResponse.json(
         {
           error: 'Unauthorized access. Admin privileges required.',
