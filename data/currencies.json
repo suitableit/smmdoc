@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "code": "USD",
+    "name": "US Dollar",
+    "symbol": "$",
+    "rate": 1,
+    "enabled": true
+  },
+  {
+    "id": 2,
+    "code": "EUR",
+    "name": "Euro",
+    "symbol": "€",
+    "rate": 0.85,
+    "enabled": true
+  },
+  {
+    "id": 3,
+    "code": "GBP",
+    "name": "British Pound",
+    "symbol": "£",
+    "rate": 0.73,
+    "enabled": true
+  },
+  {
+    "id": 4,
+    "code": "JPY",
+    "name": "Japanese Yen",
+    "symbol": "¥",
+    "rate": 150,
+    "enabled": false
+  },
+  {
+    "id": 5,
+    "code": "BDT",
+    "name": "Bangladeshi Taka",
+    "symbol": "৳",
+    "rate": 110,
+    "enabled": true
+  },
+  {
+    "id": 6,
+    "code": "INR",
+    "name": "Indian Rupee",
+    "symbol": "₹",
+    "rate": 83,
+    "enabled": false
+  },
+  {
+    "id": 7,
+    "code": "CAD",
+    "name": "Canadian Dollar",
+    "symbol": "C$",
+    "rate": 1.35,
+    "enabled": true
+  }
+]

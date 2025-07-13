@@ -1,0 +1,27 @@
+// Currency Settings Model
+model CurrencySettings {
+  id                  Int      @id @default(autoincrement())
+  defaultCurrency     String   @default("USD")
+  displayDecimals     Int      @default(2)
+  currencyPosition    String   @default("left") // left, right, left_space, right_space
+  thousandsSeparator  String   @default(",")
+  decimalSeparator    String   @default(".")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("currency_settings")
+}
+
+// Currency Model
+model Currency {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique @db.VarChar(3) // USD, EUR, GBP
+  name      String   @db.VarChar(100)       // US Dollar, Euro
+  symbol    String   @db.VarChar(10)        // $, €, £
+  rate      Decimal  @default(1.0000) @db.Decimal(10, 4) // Exchange rate to USD
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("currencies")
+}

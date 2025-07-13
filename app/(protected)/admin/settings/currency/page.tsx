@@ -2,18 +2,17 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
+ 
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FaCheck,
   FaDollarSign,
   FaEdit,
-  FaPlus,
   FaTimes,
-  FaTrash,
+  FaTrash
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -259,15 +258,22 @@ const PaymentCurrencyPage = () => {
         const response = await fetch('/api/admin/currency-settings');
         if (response.ok) {
           const data = await response.json();
-          
-          if (data.currencySettings) setCurrencySettings(data.currencySettings);
-          if (data.currencies) setCurrencies(data.currencies);
+
+          if (data.success) {
+            if (data.currencySettings) setCurrencySettings(data.currencySettings);
+            if (data.currencies) setCurrencies(data.currencies);
+          } else {
+            // Keep dummy data on API error
+            console.log('API returned error, using dummy data');
+          }
         } else {
-          showToast('Failed to load currency settings', 'error');
+          // Keep dummy data on failed response
+          console.log('API request failed, using dummy data');
         }
       } catch (error) {
         console.error('Error loading currency settings:', error);
-        showToast('Error loading currency settings', 'error');
+        // Keep dummy data on exception
+        console.log('Exception occurred, using dummy data');
       } finally {
         setIsPageLoading(false);
       }
@@ -309,19 +315,41 @@ const PaymentCurrencyPage = () => {
   };
 
   // Currency management functions
-  const addCurrency = () => {
+  const addCurrency = async () => {
     if (newCurrency.code.trim() && newCurrency.name.trim() && newCurrency.symbol.trim()) {
       const newId = Math.max(...currencies.map(c => c.id), 0) + 1;
-      setCurrencies(prev => [...prev, {
+      const newCurrencyItem = {
         id: newId,
         code: newCurrency.code.toUpperCase(),
         name: newCurrency.name,
         symbol: newCurrency.symbol,
         rate: newCurrency.rate,
         enabled: true,
-      }]);
+      };
+
+      // Update local state
+      const updatedCurrencies = [...currencies, newCurrencyItem];
+      setCurrencies(updatedCurrencies);
+
+      // Auto-save to backend
+      try {
+        const response = await fetch('/api/admin/currency-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ currencySettings, currencies: updatedCurrencies }),
+        });
+
+        if (response.ok) {
+          showToast('Currency added and saved successfully!', 'success');
+        } else {
+          showToast('Currency added but failed to save', 'error');
+        }
+      } catch (error) {
+        console.error('Error auto-saving currency:', error);
+        showToast('Currency added but failed to save', 'error');
+      }
+
       setNewCurrency({ code: '', name: '', symbol: '', rate: 1, symbolPosition: 'left' });
-      showToast('Currency added successfully!', 'success');
     }
   };
 
@@ -336,10 +364,12 @@ const PaymentCurrencyPage = () => {
   };
 
   const toggleCurrencyStatus = (id: number) => {
-    setCurrencies(prev => prev.map(c => 
+    setCurrencies(prev => prev.map(c =>
       c.id === id ? { ...c, enabled: !c.enabled } : c
     ));
   };
+
+
 
   // Show loading state
   if (isPageLoading) {
