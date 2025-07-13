@@ -8,11 +8,11 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 import {
-  FaCheck,
-  FaDollarSign,
-  FaEdit,
-  FaTimes,
-  FaTrash
+    FaCheck,
+    FaDollarSign,
+    FaEdit,
+    FaTimes,
+    FaTrash
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -235,9 +235,12 @@ const PaymentCurrencyPage = () => {
   });
 
   const [currencies, setCurrencies] = useState<Currency[]>([
+    { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', rate: 1.0000, enabled: true },
     { id: 2, code: 'EUR', name: 'Euro', symbol: '€', rate: 0.8500, enabled: true },
     { id: 3, code: 'GBP', name: 'British Pound', symbol: '£', rate: 0.7300, enabled: true },
     { id: 4, code: 'JPY', name: 'Japanese Yen', symbol: '¥', rate: 150.0000, enabled: false },
+    { id: 5, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 110.0000, enabled: true },
+    { id: 6, code: 'USDT', name: 'Tether USD', symbol: '₮', rate: 1.0000, enabled: true },
   ]);
 
   // New currency form
@@ -363,10 +366,35 @@ const PaymentCurrencyPage = () => {
     showToast('Currency deleted successfully!', 'success');
   };
 
-  const toggleCurrencyStatus = (id: number) => {
-    setCurrencies(prev => prev.map(c =>
+  const toggleCurrencyStatus = async (id: number) => {
+    const updatedCurrencies = currencies.map(c =>
       c.id === id ? { ...c, enabled: !c.enabled } : c
-    ));
+    );
+
+    setCurrencies(updatedCurrencies);
+
+    // Auto-save to backend
+    try {
+      const response = await fetch('/api/admin/currency-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currencySettings, currencies: updatedCurrencies }),
+      });
+
+      if (response.ok) {
+        const currency = updatedCurrencies.find(c => c.id === id);
+        showToast(`${currency?.code} ${currency?.enabled ? 'enabled' : 'disabled'} successfully!`, 'success');
+      } else {
+        showToast('Failed to save currency status', 'error');
+        // Revert on failure
+        setCurrencies(currencies);
+      }
+    } catch (error) {
+      console.error('Error saving currency status:', error);
+      showToast('Failed to save currency status', 'error');
+      // Revert on failure
+      setCurrencies(currencies);
+    }
   };
 
 

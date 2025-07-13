@@ -54,5 +54,13 @@
     "symbol": "C$",
     "rate": 1.35,
     "enabled": true
+  },
+  {
+    "id": 8,
+    "code": "USDT",
+    "name": "Tether USD",
+    "symbol": "₮",
+    "rate": 1.0000,
+    "enabled": true
   }
 ]
