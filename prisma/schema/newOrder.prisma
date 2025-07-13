@@ -2,7 +2,7 @@ model NewOrder {
   id             Int             @id @default(autoincrement())
   categoryId     String
   serviceId      String
-  userId         String
+  userId         Int
   link           String
   qty            Int
   price          Float

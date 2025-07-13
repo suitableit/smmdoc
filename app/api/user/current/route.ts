@@ -1,20 +1,16 @@
-import { auth } from '@/auth';
+import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const session = await auth();
-    
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json(
-        { success: false, data: null, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-    
+    // Require user authentication
+    const session = await requireAuth();
+
+    console.log(`User current API accessed by: ${session.user.email}`);
+
     const userId = session.user.id;
-    
+
     try {
       const userDetails = await db.user.findUnique({
         where: { id: userId },
@@ -75,6 +71,16 @@ export async function GET() {
     }
     
   } catch (error: any) {
+    console.error('Error in user current API:', error);
+
+    // Handle authentication errors
+    if (error.message === 'Authentication required') {
+      return NextResponse.json(
+        { success: false, data: null, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { success: false, data: null, error: error.message || 'Internal server error' },
       { status: 500 }
