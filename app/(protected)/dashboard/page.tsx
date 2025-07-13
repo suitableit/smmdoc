@@ -243,7 +243,7 @@ const DashboardPage = () => {
                   </div>
                 ) : (
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    #{user?.id ? formatID(user.id) : 'N/A'}
+                    {user?.id ? formatID(user.id) : 'N/A'}
                   </p>
                 )}
               </div>
@@ -555,7 +555,7 @@ const DashboardPage = () => {
                               }`}
                             >
                               <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
-                                #{order.id}
+                                {order.id}
                               </span>
                             </td>
                             <td className="py-3 px-4 whitespace-nowrap">

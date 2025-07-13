@@ -2,18 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaClock,
-  FaCreditCard,
-  FaDollarSign,
-  FaEllipsisH,
-  FaExclamationCircle,
-  FaEye,
-  FaPlus,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
+    FaCheckCircle,
+    FaClock,
+    FaCreditCard,
+    FaDollarSign,
+    FaEllipsisH,
+    FaExclamationCircle,
+    FaEye,
+    FaPlus,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -1165,7 +1165,6 @@ const AdminAllTransactionsPage = () => {
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #
                               {transaction.id
                                 ? formatID(transaction.id.slice(-8))
                                 : 'null'}

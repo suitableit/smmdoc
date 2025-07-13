@@ -7,22 +7,22 @@ import moment from 'moment';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  FaAward,
-  FaBullseye,
-  FaCalendar,
-  FaChartLine,
-  FaCheckCircle,
-  FaClock,
-  FaCog,
-  FaCommentDots,
-  FaDollarSign,
-  FaEye,
-  FaRedo,
-  FaShoppingCart,
-  FaTimes,
-  FaTimesCircle,
-  FaUserPlus,
-  FaUsers,
+    FaAward,
+    FaBullseye,
+    FaCalendar,
+    FaChartLine,
+    FaCheckCircle,
+    FaClock,
+    FaCog,
+    FaCommentDots,
+    FaDollarSign,
+    FaEye,
+    FaRedo,
+    FaShoppingCart,
+    FaTimes,
+    FaTimesCircle,
+    FaUserPlus,
+    FaUsers,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -901,7 +901,7 @@ export default function AdminDashboardPage() {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{transaction.id.slice(-8)}
+                              {transaction.id.slice(-8)}
                             </div>
                             <div
                               className="font-medium text-sm"
@@ -1536,7 +1536,7 @@ export default function AdminDashboardPage() {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{user.id?.slice(-8) || 'null'}
+                              {user.id?.slice(-8) || 'null'}
                             </div>
                           </div>
                         </div>
