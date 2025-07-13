@@ -6,15 +6,24 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userIdParam = searchParams.get('userId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
     const skip = (page - 1) * limit;
-    
-    if (!userId) {
+
+    if (!userIdParam) {
       return NextResponse.json(
         { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Convert string to number
+    const userId = parseInt(userIdParam);
+    if (isNaN(userId)) {
+      return NextResponse.json(
+        { error: 'Invalid user ID format' },
         { status: 400 }
       );
     }
