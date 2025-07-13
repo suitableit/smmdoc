@@ -1,31 +1,27 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'; // Add router import
+import React, { useEffect, useState } from 'react';
 import {
-  FaBan,
-  FaCheckCircle,
-  FaClock,
-  FaEye,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
-  FaEdit,
-  FaTrash,
-  FaPlus,
-  FaNewspaper,
-  FaCalendarAlt,
-  FaUser,
-  FaComments,
-  FaHeart,
-  FaTags,
-  FaEllipsisH,
+    FaBan,
+    FaCheckCircle,
+    FaClock,
+    FaComments,
+    FaEdit,
+    FaEllipsisH,
+    FaEye,
+    FaHeart,
+    FaNewspaper,
+    FaPlus,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTrash
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
 import { APP_NAME } from '@/lib/constants';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+import { formatID, formatNumber } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -1197,7 +1193,7 @@ const BlogsPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                              #{formatID(blog.id.toString())}
+                              {formatID(blog.id.toString())}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1581,7 +1577,7 @@ const BlogsPage = () => {
                                 Blog ID
                               </label>
                               <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit mt-1">
-                                #{formatID(viewDialog.blog.id.toString())}
+                                {formatID(viewDialog.blog.id.toString())}
                               </div>
                             </div>
                             <div>

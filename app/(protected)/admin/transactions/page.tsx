@@ -1417,7 +1417,7 @@ const AdminAllTransactionsPage = () => {
                               Internal ID
                             </label>
                             <div className="font-mono text-sm bg-gray-50 p-2 rounded">
-                              #{formatID(viewDetailsDialog.transaction.id)}
+                              {formatID(viewDetailsDialog.transaction.id)}
                             </div>
                           </div>
                         </div>
