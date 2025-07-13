@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use server';
 
-import { auth } from '@/auth';
+import { getCurrentUser } from '@/lib/auth-helpers';
 import { db } from '../db';
 
 // get full user details from db and set in redux store
 export async function getUserDetails() {
   try {
     // Get current user's session
-    const session = await auth();
-    
+    const session = await getCurrentUser();
+
     // If user is not authenticated, return null
     if (!session?.user?.id) {
       return null;
     }
-    
+
     try {
       // Find the user in the database with all necessary fields including balance
       const user = await db.user.findUnique({
