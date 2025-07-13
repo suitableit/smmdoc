@@ -21,6 +21,7 @@ import {
 
 // Import APP_NAME constant
 import { APP_NAME } from '@/lib/constants';
+import { formatID } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -256,7 +257,7 @@ const ImportServicesPage = () => {
   // Dummy data for services
   const dummyServices: Service[] = [
     {
-      id: 'srv_001',
+      id: '1001',
       name: 'Instagram Followers - High Quality',
       category: 'Instagram Services',
       min: 100,
@@ -267,7 +268,7 @@ const ImportServicesPage = () => {
       type: 'followers',
     },
     {
-      id: 'srv_002',
+      id: '1002',
       name: 'Instagram Likes - Instant',
       category: 'Instagram Services',
       min: 50,
@@ -277,7 +278,7 @@ const ImportServicesPage = () => {
       type: 'likes',
     },
     {
-      id: 'srv_003',
+      id: '1003',
       name: 'Instagram Views - Story',
       category: 'Instagram Services',
       min: 100,
@@ -1158,7 +1159,7 @@ const ImportServicesPage = () => {
                                         >
                                           <td className="p-3 pl-8">
                                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit">
-                                              #{service.id}
+                                              {formatID(service.id)}
                                             </div>
                                           </td>
                                           <td className="p-3">
@@ -1333,7 +1334,7 @@ const ImportServicesPage = () => {
                                       {/* Header */}
                                       <div className="flex items-center justify-between mb-4">
                                         <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                          {service.id}
+                                          {formatID(service.id)}
                                         </div>
                                         {editedServices[service.id] && (
                                           <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
