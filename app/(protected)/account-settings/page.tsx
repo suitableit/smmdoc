@@ -35,7 +35,7 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
 // Mock components and hooks for demonstration
 const ButtonLoader = () => <div className="loading-spinner"></div>;
 
-// Toast/Twist Message Component using CSS classes
+// Toast/Twist Message Component using CSS classe
 const Toast = ({
   message,
   type = 'success',
