@@ -37,7 +37,7 @@ import { useGetServicesId } from '@/hooks/service-fetch-id';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
-import { formatNumber } from '@/lib/utils';
+import { formatID, formatNumber } from '@/lib/utils';
 import {
     createCategoryDefaultValues,
     createCategorySchema,
