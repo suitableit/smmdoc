@@ -4,28 +4,28 @@ import Link from 'next/link';
 import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-  FaBox,
-  FaBriefcase,
-  FaCheckCircle,
-  FaChevronDown,
-  FaChevronRight,
-  FaChevronUp,
-  FaEdit,
-  FaEllipsisH,
-  FaExclamationTriangle,
-  FaFileImport,
-  FaGripVertical,
-  FaPlus,
-  FaSave,
-  FaSearch,
-  FaShieldAlt,
-  FaSync,
-  FaTags,
-  FaTimes,
-  FaTimesCircle,
-  FaToggleOff,
-  FaToggleOn,
-  FaTrash
+    FaBox,
+    FaBriefcase,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronRight,
+    FaChevronUp,
+    FaEdit,
+    FaEllipsisH,
+    FaExclamationTriangle,
+    FaFileImport,
+    FaGripVertical,
+    FaPlus,
+    FaSave,
+    FaSearch,
+    FaShieldAlt,
+    FaSync,
+    FaTags,
+    FaTimes,
+    FaTimesCircle,
+    FaToggleOff,
+    FaToggleOn,
+    FaTrash
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
@@ -39,13 +39,13 @@ import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
 import {
-  createCategoryDefaultValues,
-  createCategorySchema,
-  CreateCategorySchema,
+    createCategoryDefaultValues,
+    createCategorySchema,
+    CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
-  createServiceDefaultValues,
-  CreateServiceSchema
+    createServiceDefaultValues,
+    CreateServiceSchema
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
@@ -3408,7 +3408,7 @@ function AdminServicesPage() {
                                     </td>
                                     <td className="p-3">
                                       <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                        #{service.id || 'null'}
+                                        {service.id ? formatID(service.id) : 'null'}
                                       </div>
                                     </td>
                                     <td className="p-3">
