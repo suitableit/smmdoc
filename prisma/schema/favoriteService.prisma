@@ -1,6 +1,6 @@
 model FavoriteService {
   id        String   @id @default(cuid())
-  userId    String
+  userId    Int
   serviceId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

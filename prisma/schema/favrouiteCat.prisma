@@ -1,7 +1,7 @@
 model FavrouteCat {
   id        String    @id @default(cuid())
   name      String
-  userId    String
+  userId    Int
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   user      User      @relation(fields: [userId], references: [id])
