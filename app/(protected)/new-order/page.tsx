@@ -21,7 +21,6 @@ import {
     FaFacebook,
     FaFilter,
     FaGlobe,
-    FaHashtag,
     FaInfoCircle,
     FaInstagram,
     FaLayerGroup,
@@ -37,7 +36,7 @@ import {
     FaTiktok,
     FaTimes,
     FaTwitter,
-    FaYoutube,
+    FaYoutube
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -133,7 +132,6 @@ const ServiceDetailsCard = ({
       >
         <div className="flex items-center justify-between mb-4">
           <div className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
-            <FaHashtag className="inline mr-1" />
             {selected.id}
           </div>
         </div>

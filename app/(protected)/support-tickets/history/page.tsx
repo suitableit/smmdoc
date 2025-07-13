@@ -4,16 +4,16 @@ import { APP_NAME } from '@/lib/constants';
 import moment from 'moment';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  FaBan,
-  FaCheckCircle,
-  FaClock,
-  FaExclamationTriangle,
-  FaRobot,
-  FaSearch,
-  FaSpinner,
-  FaTicketAlt,
-  FaTimes,
-  FaUser,
+    FaBan,
+    FaCheckCircle,
+    FaClock,
+    FaExclamationTriangle,
+    FaRobot,
+    FaSearch,
+    FaSpinner,
+    FaTicketAlt,
+    FaTimes,
+    FaUser,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -373,7 +373,7 @@ export default function TicketsHistory() {
 
   const handleViewTicket = (ticketId: string) => {
     console.log(`Navigate to ticket ${ticketId}`);
-    showToast(`Opening ticket #${ticketId}`, 'info');
+    showToast(`Opening ticket ${ticketId}`, 'info');
   };
 
   if (error) {
@@ -508,7 +508,7 @@ export default function TicketsHistory() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-900">
-                              #{ticket.id}
+                              {ticket.id}
                             </span>
                             <span className="text-sm text-gray-700 truncate">
                               {ticket.subject}

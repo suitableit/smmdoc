@@ -2,45 +2,27 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  FaArrowLeft,
-  FaBox,
-  FaCheckCircle,
-  FaEdit,
-  FaEllipsisH,
-  FaPlus,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTrash,
-  FaEye,
-  FaEyeSlash,
-  FaPause,
-  FaCheck,
-  FaExclamationTriangle,
-  FaClock,
-  FaReply,
-  FaTicketAlt,
-  FaUser,
-  FaCalendarAlt,
-  FaBuilding,
-  FaPaperclip,
-  FaStickyNote,
-  FaChevronDown,
-  FaChevronUp,
-  FaUserShield,
-  FaPhoneAlt,
-  FaMapMarkerAlt,
-  FaGlobe,
-  FaComments,
-  FaFileAlt,
-  FaImage,
-  FaVideo,
-  FaFilePdf,
-  FaFileWord,
-  FaFileExcel,
-  FaFileArchive,
-  FaSave,
-  FaSpinner,
+    FaArrowLeft,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronUp,
+    FaComments,
+    FaExclamationTriangle,
+    FaEye,
+    FaFileAlt,
+    FaFileArchive,
+    FaFileExcel,
+    FaFilePdf,
+    FaFileWord,
+    FaImage,
+    FaPlus,
+    FaReply,
+    FaStickyNote,
+    FaTicketAlt,
+    FaTimes,
+    FaUser,
+    FaUserShield,
+    FaVideo
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -239,7 +221,7 @@ const SupportTicketDetailsPage = () => {
 
   // Utility functions
   const formatTicketID = (id: string) => {
-    return `#${id.padStart(4, '0')}`;
+    return `${id.padStart(4, '0')}`;
   };
 
   const getStatusColor = (status: string) => {

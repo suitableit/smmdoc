@@ -764,7 +764,7 @@ const RefillOrdersPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{safeFormatOrderId(order.id)}
+                              {safeFormatOrderId(order.id)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -929,7 +929,7 @@ const RefillOrdersPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{safeFormatOrderId(order.id)}
+                              {safeFormatOrderId(order.id)}
                             </div>
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                               {getStatusIcon(order.status)}
