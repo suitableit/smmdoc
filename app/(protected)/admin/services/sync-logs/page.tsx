@@ -628,7 +628,7 @@ const SyncLogsPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{log.slNo}
+                              {log.slNo}
                             </div>
                             {getChangeTypeBadge(log.changeType)}
                           </div>
