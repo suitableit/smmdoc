@@ -2,22 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  FaBan,
-  FaCheckCircle,
-  FaClock,
-  FaEye,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
-  FaUserCheck,
-  FaMoneyBillWave,
-  FaChartLine,
-  FaUsers,
-  FaDollarSign,
-  FaPercentage,
-  FaNetworkWired,
-  FaEllipsisH,
+    FaCheckCircle,
+    FaClock,
+    FaEllipsisH,
+    FaEye,
+    FaMoneyBillWave,
+    FaNetworkWired,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
+    FaUserCheck
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -1189,7 +1184,7 @@ const AffiliateReferralsPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                              #{formatID(affiliate.id.toString())}
+                              {formatID(affiliate.id.toString())}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1586,7 +1581,7 @@ const AffiliateReferralsPage = () => {
                                 Affiliate ID
                               </label>
                               <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit mt-1">
-                                #{formatID(viewDialog.affiliate.id.toString())}
+                                {formatID(viewDialog.affiliate.id.toString())}
                               </div>
                             </div>
                             <div>

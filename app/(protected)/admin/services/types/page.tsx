@@ -1,22 +1,22 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  FaBox,
-  FaCheckCircle,
-  FaEdit,
-  FaEllipsisH,
-  FaPlus,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTrash,
+    FaBox,
+    FaCheckCircle,
+    FaEdit,
+    FaEllipsisH,
+    FaPlus,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTrash,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
+import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
-import axiosInstance from '@/lib/axiosInstance';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -437,7 +437,7 @@ const ServiceTypes = () => {
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{formatID(serviceType.id, (pagination.page - 1) * pagination.limit + index)}
+                              {formatID(serviceType.id, (pagination.page - 1) * pagination.limit + index)}
                             </div>
                           </td>
                           <td className="p-3">
