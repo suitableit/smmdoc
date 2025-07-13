@@ -3,20 +3,20 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  FaCheck,
-  FaCheckCircle,
-  FaChevronDown,
-  FaChevronLeft,
-  FaChevronRight,
-  FaChevronUp,
-  FaEdit,
-  FaExclamationTriangle,
-  FaHandshake,
-  FaList,
-  FaSave,
-  FaSearch,
-  FaSync,
-  FaTimes,
+    FaCheck,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronLeft,
+    FaChevronRight,
+    FaChevronUp,
+    FaEdit,
+    FaExclamationTriangle,
+    FaHandshake,
+    FaList,
+    FaSave,
+    FaSearch,
+    FaSync,
+    FaTimes,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -1333,7 +1333,7 @@ const ImportServicesPage = () => {
                                       {/* Header */}
                                       <div className="flex items-center justify-between mb-4">
                                         <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                          #{service.id}
+                                          {service.id}
                                         </div>
                                         {editedServices[service.id] && (
                                           <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
