@@ -115,13 +115,20 @@ export async function GET(req: NextRequest) {
     ]);
 
     console.log('Orders found:', orders.length, 'Total count:', totalCount);
-    
+
+    // Remove duplicates based on order ID to prevent React key conflicts
+    const uniqueOrders = orders.filter((order, index, self) =>
+      index === self.findIndex(o => o.id === order.id)
+    );
+
+    console.log('Unique orders after deduplication:', uniqueOrders.length);
+
     // Calculate pagination info
     const totalPages = Math.ceil(totalCount / limit);
-    
+
     return NextResponse.json({
       success: true,
-      data: orders,
+      data: uniqueOrders,
       pagination: {
         page,
         limit,

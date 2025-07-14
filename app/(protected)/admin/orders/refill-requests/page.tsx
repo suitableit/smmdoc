@@ -245,7 +245,12 @@ const RefillOrdersPage = () => {
       console.log('Refill requests fetched successfully:', result);
 
       // Transform refill requests to orders format for display
-      const transformedOrders = (result.data || []).map((request: any) => ({
+      const transformedOrders = (result.data || [])
+        .filter((request: any, index: number, self: any[]) =>
+          // Remove duplicates based on order ID
+          index === self.findIndex(r => r.order?.id === request.order?.id)
+        )
+        .map((request: any) => ({
         id: request.order?.id || 0,
         qty: request.order?.qty || 0,
         price: request.order?.price || 0,
@@ -255,7 +260,11 @@ const RefillOrdersPage = () => {
         status: request.order?.status || 'unknown',
         createdAt: request.order?.createdAt || new Date(),
         user: request.user || {},
-        service: { refill: true }, // Since these are refill requests
+        service: {
+          name: request.order?.service?.name || 'Unknown Service',
+          refill: request.order?.service?.refill || true,
+          rate: request.order?.service?.rate || 0
+        },
         category: { category_name: 'Refill Request' },
         refillRequest: request // Store original refill request data
       }));
@@ -749,9 +758,9 @@ const RefillOrdersPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {orders?.map((order) => (
+                      {orders?.map((order, index) => (
                         <tr
-                          key={order.id}
+                          key={`${order.id}-${index}`}
                           className="border-t hover:bg-gray-50 transition-colors duration-200"
                         >
                           <td className="p-3">
@@ -914,9 +923,9 @@ const RefillOrdersPage = () => {
                 {/* Mobile Card View */}
                 <div className="lg:hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                    {orders?.map((order) => (
+                    {orders?.map((order, index) => (
                       <div
-                        key={order.id}
+                        key={`${order.id}-${index}`}
                         className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
                         {/* Header with ID and Status */}
