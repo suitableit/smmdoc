@@ -3471,7 +3471,7 @@ function AdminServicesPage() {
                                     </td>
                                     <td className="p-3">
                                       <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-800 w-fit">
-                                        {service?.service_type || service?.type || 'Standard'}
+                                        {service?.serviceType?.name || 'Standard'}
                                       </div>
                                     </td>
                                     <td className="p-3">

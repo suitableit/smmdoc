@@ -70,6 +70,10 @@ interface Service {
     category_name: string;
     id: number;
   };
+  serviceType?: {
+    id: string;
+    name: string;
+  };
   isFavorite?: boolean;
 }
 
@@ -391,6 +395,9 @@ export default function UserServiceTable() {
                       Service
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                      Type
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
                       Rate per 1000
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
@@ -419,7 +426,7 @@ export default function UserServiceTable() {
                       <Fragment key={categoryName}>
                         {/* Category Row */}
                         <tr>
-                          <td colSpan={10} className="py-0">
+                          <td colSpan={11} className="py-0">
                             <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 shadow-lg">
                               <h3 className="text-lg font-semibold">
                                 {categoryName}
@@ -475,6 +482,11 @@ export default function UserServiceTable() {
                               <td className="py-3 px-4">
                                 <div className="font-medium text-gray-900 dark:text-white">
                                   {service.name}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 w-fit">
+                                  {service?.serviceType?.name || 'Standard'}
                                 </div>
                               </td>
                               <td className="py-3 px-4">
