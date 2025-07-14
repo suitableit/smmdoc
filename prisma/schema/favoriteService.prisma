@@ -8,6 +8,5 @@ model FavoriteService {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, serviceId])
-  @@index([userId])
-  @@index([serviceId])
+  @@index([serviceId], map: "FavoriteService_serviceId_fkey")
 }
