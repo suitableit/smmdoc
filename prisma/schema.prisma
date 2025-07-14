@@ -1,5 +1,5 @@
 model AddFund {
-  id             String    @id @default(cuid())
+  id             Int       @id @default(autoincrement())
   invoice_id     String    @unique
   amount         Float
   spent_amount   Float
@@ -25,7 +25,7 @@ model AddFund {
 }
 
 model User {
-  id                    String                 @id @default(cuid())
+  id                    Int                    @id @default(autoincrement())
   username              String?                @unique
   name                  String?
   password              String?
