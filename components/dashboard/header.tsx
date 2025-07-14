@@ -218,7 +218,7 @@ const MobileCurrencyToggle = () => {
 
   const handleCurrencyChange = async (newCurrency: string) => {
     await setCurrency(newCurrency);
-    window.location.reload();
+    // Live update - no page reload needed
   };
 
   return (
@@ -667,7 +667,7 @@ const Header = () => {
 
   const handleCurrencyChange = async (newCurrency: string) => {
     await setCurrency(newCurrency);
-    window.location.reload();
+    // Live update - no page reload needed
   };
 
   return (
