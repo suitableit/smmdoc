@@ -76,94 +76,43 @@ export async function GET(req: NextRequest) {
       throw new Error('Database connection failed');
     }
 
-    // Get orders with related data - handle relations safely
-    let orders = [];
-    let totalCount = 0;
-
-    try {
-      // First try to get orders without any relations to avoid errors
-      [orders, totalCount] = await Promise.all([
-        db.newOrder.findMany({
-          where: whereClause,
-          orderBy: {
-            createdAt: 'desc'
+    // Get orders with related data using Prisma relations
+    const [orders, totalCount] = await Promise.all([
+      db.newOrder.findMany({
+        where: whereClause,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              currency: true
+            }
           },
-          skip,
-          take: limit
-        }),
-        db.newOrder.count({ where: whereClause })
-      ]);
-
-      // Manually fetch related data for each order to handle null/invalid IDs
-      for (let order of orders) {
-        // Fetch user data
-        if (order.userId) {
-          try {
-            const user = await db.user.findUnique({
-              where: { id: order.userId },
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                currency: true
-              }
-            });
-            order.user = user;
-          } catch (error) {
-            console.warn(`User not found for order ${order.id}:`, error);
-            order.user = null;
+          service: {
+            select: {
+              id: true,
+              name: true,
+              rate: true,
+              min_order: true,
+              max_order: true
+            }
+          },
+          category: {
+            select: {
+              id: true,
+              category_name: true
+            }
           }
-        } else {
-          order.user = null;
-        }
-
-        // Fetch service data
-        if (order.serviceId) {
-          try {
-            const service = await db.service.findUnique({
-              where: { id: order.serviceId },
-              select: {
-                id: true,
-                name: true,
-                rate: true,
-                min_order: true,
-                max_order: true
-              }
-            });
-            order.service = service;
-          } catch (error) {
-            console.warn(`Service not found for order ${order.id}:`, error);
-            order.service = null;
-          }
-        } else {
-          order.service = null;
-        }
-
-        // Fetch category data
-        if (order.categoryId) {
-          try {
-            const category = await db.category.findUnique({
-              where: { id: order.categoryId },
-              select: {
-                id: true,
-                category_name: true
-              }
-            });
-            order.category = category;
-          } catch (error) {
-            console.warn(`Category not found for order ${order.id}:`, error);
-            order.category = null;
-          }
-        } else {
-          order.category = null;
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      // Ultimate fallback: return empty data
-      orders = [];
-      totalCount = 0;
-    }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+        skip,
+        take: limit
+      }),
+      db.newOrder.count({ where: whereClause })
+    ]);
 
     console.log('Orders found:', orders.length, 'Total count:', totalCount);
     
