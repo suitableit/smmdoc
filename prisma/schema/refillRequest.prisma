@@ -9,6 +9,7 @@ model RefillRequest {
   processedAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  order           NewOrder  @relation(fields: [orderId], references: [id])
   processedByUser User?     @relation("ProcessedRefillRequests", fields: [processedBy], references: [id])
   user            User      @relation(fields: [userId], references: [id])
 
