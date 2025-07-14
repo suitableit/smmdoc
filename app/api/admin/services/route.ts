@@ -38,6 +38,7 @@ export async function GET(request: Request) {
         },
         include: {
           category: true,
+          serviceType: true,
         },
       }),
       db.service.count({ where: whereClause }),
