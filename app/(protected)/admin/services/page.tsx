@@ -2493,15 +2493,23 @@ function AdminServicesPage() {
     try {
       setIsUpdating(true);
       const newToggleState = !activeCategoryToggles[categoryName];
-      
+
+      // Find the category data
+      const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === categoryName);
+      if (!categoryData) {
+        showToast('Category not found', 'error');
+        return;
+      }
+
       showToast(`${newToggleState ? 'Activating' : 'Deactivating'} ${services.length} services in ${categoryName}...`, 'pending');
-      
+
       setActiveCategoryToggles(prev => ({
         ...prev,
         [categoryName]: newToggleState
       }));
 
-      const promises = services.map(service => 
+      // Main feature: Toggle all services in category
+      const promises = services.map(service =>
         axiosInstance.post('/api/admin/services/toggle-status', {
           id: service.id,
           status: service.status,
@@ -2509,10 +2517,21 @@ function AdminServicesPage() {
       );
 
       await Promise.all(promises);
-      
+
+      // Extra feature: Update category hideCategory field based on toggle state
+      const hideCategory = newToggleState ? 'no' : 'yes';
+      await axiosInstance.put(`/api/admin/categories/${categoryData.id}`, {
+        category_name: categoryData.category_name,
+        position: categoryData.position,
+        hideCategory: hideCategory
+      });
+
       showToast(`Successfully ${newToggleState ? 'activated' : 'deactivated'} ${categoryName} category`, 'success');
+      mutate('/api/admin/categories');
       mutate('/api/admin/services/get-services');
       mutate('/api/admin/services/stats');
+      // Live refresh parent data
+      if (refreshAllData) refreshAllData();
     } catch (error: any) {
       setActiveCategoryToggles(prev => ({
         ...prev,
@@ -2844,8 +2863,10 @@ function AdminServicesPage() {
       const allCategoryNames = Object.keys(groupedServices);
       
       Object.keys(groupedServices).forEach(categoryName => {
-        const categoryServices = groupedServices[categoryName];
-        initialToggles[categoryName] = categoryServices.some((service: any) => service.status === 'active');
+        // Find the category data to check hideCategory field
+        const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === categoryName);
+        // If hideCategory is "no" then category is active (toggle ON), if "yes" then inactive (toggle OFF)
+        initialToggles[categoryName] = categoryData?.hideCategory === 'no';
       });
       setActiveCategoryToggles(initialToggles);
       
@@ -2858,7 +2879,7 @@ function AdminServicesPage() {
       const allCollapsed = allCategoryNames.length > 0 && allCategoryNames.every(cat => collapsedCategories.includes(cat));
       setAllCategoriesCollapsed(allCollapsed);
     }
-  }, [data?.data, groupedServices, categoryOrder.length, collapsedCategories]);
+  }, [data?.data, groupedServices, categoryOrder.length, collapsedCategories, categoriesData?.data]);
 
   // Handle keyboard events for modal close and body scroll lock
   useEffect(() => {
@@ -3237,7 +3258,20 @@ function AdminServicesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(Object.entries(groupedServices) as [string, any[]][]).map(([categoryName, services], categoryIndex) => (
+                      {(Object.entries(groupedServices) as [string, any[]][])
+                        .sort(([categoryNameA], [categoryNameB]) => {
+                          // Sort categories by position: top categories first, then bottom
+                          const categoryA = categoriesData?.data?.find((cat: any) => cat.category_name === categoryNameA);
+                          const categoryB = categoriesData?.data?.find((cat: any) => cat.category_name === categoryNameB);
+
+                          const positionA = categoryA?.position || 'bottom';
+                          const positionB = categoryB?.position || 'bottom';
+
+                          if (positionA === 'top' && positionB === 'bottom') return -1;
+                          if (positionA === 'bottom' && positionB === 'top') return 1;
+                          return categoryNameA.localeCompare(categoryNameB);
+                        })
+                        .map(([categoryName, services], categoryIndex) => (
                         <Fragment key={categoryName}>
                           {/* Drop zone before category */}
                           {draggedCategory && draggedCategory !== categoryName && (
