@@ -4,28 +4,28 @@ import Link from 'next/link';
 import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-    FaBox,
-    FaBriefcase,
-    FaCheckCircle,
-    FaChevronDown,
-    FaChevronRight,
-    FaChevronUp,
-    FaEdit,
-    FaEllipsisH,
-    FaExclamationTriangle,
-    FaFileImport,
-    FaGripVertical,
-    FaPlus,
-    FaSave,
-    FaSearch,
-    FaShieldAlt,
-    FaSync,
-    FaTags,
-    FaTimes,
-    FaTimesCircle,
-    FaToggleOff,
-    FaToggleOn,
-    FaTrash
+  FaBox,
+  FaBriefcase,
+  FaCheckCircle,
+  FaChevronDown,
+  FaChevronRight,
+  FaChevronUp,
+  FaEdit,
+  FaEllipsisH,
+  FaExclamationTriangle,
+  FaFileImport,
+  FaGripVertical,
+  FaPlus,
+  FaSave,
+  FaSearch,
+  FaShieldAlt,
+  FaSync,
+  FaTags,
+  FaTimes,
+  FaTimesCircle,
+  FaToggleOff,
+  FaToggleOn,
+  FaTrash
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
@@ -39,13 +39,13 @@ import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatID, formatNumber } from '@/lib/utils';
 import {
-    createCategoryDefaultValues,
-    createCategorySchema,
-    CreateCategorySchema,
+  createCategoryDefaultValues,
+  createCategorySchema,
+  CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
-    createServiceDefaultValues,
-    CreateServiceSchema
+  createServiceDefaultValues,
+  CreateServiceSchema
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
@@ -358,7 +358,8 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
 const CreateServiceForm: React.FC<{
   onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
-}> = ({ onClose, showToast }) => {
+  onRefresh?: () => void;
+}> = ({ onClose, showToast, onRefresh }) => {
   const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
   const { data: serviceTypesData, error: serviceTypesError, isLoading: serviceTypesLoading } = useSWR('/api/admin/service-types', fetcher);
   const [isPending, startTransition] = useTransition();
@@ -415,6 +416,8 @@ const CreateServiceForm: React.FC<{
           showToast(response.data.message, 'success');
           mutate('/api/admin/services/get-services');
           mutate('/api/admin/services/stats');
+          // Live refresh parent data
+          if (onRefresh) onRefresh();
           onClose(); // Close modal on success
         } else {
           showToast(response.data.error, 'error');
@@ -993,9 +996,10 @@ const CreateServiceForm: React.FC<{
 };
 
 // Create Category Form Component (integrated)
-const CreateCategoryForm = ({ onClose, showToast }: { 
-  onClose: () => void; 
+const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
+  onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
+  onRefresh?: () => void;
 }) => {
   const [isPending, startTransition] = useTransition();
   const {
@@ -1021,6 +1025,8 @@ const CreateCategoryForm = ({ onClose, showToast }: {
           reset();
           showToast(res.data.message || 'Category created successfully', 'success');
           mutate('/api/admin/categories');
+          // Live refresh parent data
+          if (onRefresh) onRefresh();
           onClose();
         } else {
           showToast(res.data.error || 'Failed to create category', 'error');
@@ -1887,8 +1893,8 @@ function AdminServicesPage() {
 
   // Hooks
   const user = useCurrentUser();
-  const { data, error, isLoading } = useGetServices();
-  const { data: categoriesData } = useGetCategories();
+  const { data, error, isLoading, mutate: refreshServices } = useGetServices();
+  const { data: categoriesData, mutate: refreshCategories } = useGetCategories();
 
   // State declarations
   const [stats, setStats] = useState({
@@ -2175,6 +2181,14 @@ function AdminServicesPage() {
     setCreateCategoryModal(true);
     setCreateCategoryModalClosing(false);
   };
+
+  // Live refresh functions
+  const refreshAllData = useCallback(async () => {
+    await Promise.all([
+      refreshServices(),
+      refreshCategories()
+    ]);
+  }, [refreshServices, refreshCategories]);
 
   const handleCloseEditModal = () => {
     setEditServiceModal(prev => ({ ...prev, closing: true }));
@@ -3712,6 +3726,7 @@ function AdminServicesPage() {
               <CreateServiceForm
                 onClose={handleCloseCreateModal}
                 showToast={showToast}
+                onRefresh={refreshAllData}
               />
             </div>
           </div>
@@ -3734,6 +3749,7 @@ function AdminServicesPage() {
               <CreateCategoryForm
                 onClose={handleCloseCategoryModal}
                 showToast={showToast}
+                onRefresh={refreshAllData}
               />
             </div>
           </div>
