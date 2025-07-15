@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    FaBan,
-    FaCheckCircle,
-    FaClock,
-    FaExternalLinkAlt,
-    FaEye,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
+  FaBan,
+  FaCheckCircle,
+  FaClock,
+  FaEye,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
+  FaExternalLinkAlt,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -822,7 +822,7 @@ const CancelRequestsPage = () => {
                           
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {formatID(String(request.order.id).slice(-8))}
+                              #{formatID(String(request.order.id).slice(-8))}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1329,7 +1329,7 @@ const CancelRequestsPage = () => {
                                   Order ID
                                 </label>
                                 <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit mt-1">
-                                  {viewDialog.request.order.id}
+                                  #{viewDialog.request.order.id}
                                 </div>
                               </div>
                               <div>

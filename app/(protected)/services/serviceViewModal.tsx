@@ -82,7 +82,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
           <div className="bg-[#f3f3f3] mx-6 mb-6 px-6 py-4 rounded-lg">
             <div className="text-center">
               <div className="text-sm text-gray-600 font-medium mb-2">
-                ID: {service?.id ? formatNumber(service.id) : '14832'}
+                #ID: {service?.id || '14832'}
               </div>
               <h2 className="text-lg font-semibold text-gray-800 leading-tight">
                 {service?.name || 'TikTok ~ Followers ~ [100% Real Users] ~ Max 10M ~ 100k/days ~ Instant ~ NO REFILL'}

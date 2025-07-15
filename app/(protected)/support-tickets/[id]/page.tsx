@@ -164,12 +164,12 @@ export default function TicketDetailsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-black font-nunito">
-                Ticket {params.id}
+                Ticket #{params.id}
               </CardTitle>
               <Badge className="font-nunito">Open</Badge>
             </div>
             <CardDescription className="text-black font-nunito">
-              Order 123 Issue - March 20, 2024
+              Order #123 Issue - March 20, 2024
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

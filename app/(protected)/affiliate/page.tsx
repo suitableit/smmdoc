@@ -3,24 +3,28 @@
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
-    FaChartLine,
-    FaCheckCircle,
-    FaCoins,
-    FaCopy,
-    FaCreditCard,
-    FaDollarSign,
-    FaExclamationTriangle,
-    FaLink,
-    FaMousePointer,
-    FaPercent,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaUser,
-    FaUsers
+  FaChartLine,
+  FaCheckCircle,
+  FaCoins,
+  FaCopy,
+  FaDollarSign,
+  FaExclamationTriangle,
+  FaFile,
+  FaLink,
+  FaMousePointer,
+  FaPercent,
+  FaRedo,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaUser,
+  FaUsers,
+  FaEye,
+  FaExternalLinkAlt,
+  FaCreditCard,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -995,7 +999,7 @@ function AffiliateEarningsSection() {
                       >
                         <td className="p-3">
                           <div className="font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                            {safeFormatId(earning.id)}
+                            #{safeFormatId(earning.id)}
                           </div>
                         </td>
                         <td className="p-3">

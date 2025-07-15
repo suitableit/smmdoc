@@ -2,20 +2,23 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    FaBox,
-    FaCheck,
-    FaCheckCircle,
-    FaClock,
-    FaEllipsisH,
-    FaEnvelope,
-    FaEye,
-    FaEyeSlash,
-    FaPause,
-    FaReply,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTrash
+  FaBox,
+  FaCheckCircle,
+  FaEdit,
+  FaEllipsisH,
+  FaPlus,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTrash,
+  FaEye,
+  FaEyeSlash,
+  FaPause,
+  FaCheck,
+  FaExclamationTriangle,
+  FaClock,
+  FaReply,
+  FaEnvelope,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -209,7 +212,7 @@ const SupportTicketsPage = () => {
 
   // Utility functions
   const formatTicketID = (id: string) => {
-    return `${id.padStart(4, '0')}`;
+    return `#${id.padStart(4, '0')}`;
   };
 
   const getStatusColor = (status: string) => {

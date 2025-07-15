@@ -1,5 +1,5 @@
 model AddFund {
-  id             Int       @id @default(autoincrement())
+  id             String    @id @default(cuid())
   invoice_id     String    @unique
   amount         Float
   spent_amount   Float
@@ -17,7 +17,7 @@ model AddFund {
   paid_at        DateTime  @default(now())
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @default(now()) @updatedAt
-  userId         Int
+  userId         String
   currency       String?   @default("BDT")        // Add currency field with default BDT
   user           User      @relation(fields: [userId], references: [id])
 
@@ -25,7 +25,7 @@ model AddFund {
 }
 
 model User {
-  id                    Int                    @id @default(autoincrement())
+  id                    String                 @id @default(cuid())
   username              String?                @unique
   name                  String?
   password              String?

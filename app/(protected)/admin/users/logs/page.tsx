@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    FaBox,
-    FaCheckCircle,
-    FaExternalLinkAlt,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTrash
+  FaBox,
+  FaCheckCircle,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTrash,
+  FaExternalLinkAlt,
+  FaExclamationTriangle
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -237,7 +238,7 @@ const UserActivityLogsPage = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1
     }));
-  }, [filteredActivityLogs.length, pagination.limit]);
+  }, [filteredActivityLogs, pagination.limit, pagination.page]);
 
   // Get paginated data
   const getPaginatedData = () => {

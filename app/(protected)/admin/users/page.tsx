@@ -57,7 +57,7 @@ interface User {
   email: string;
   name?: string;
   balance: number;
-  total_spent: number;
+  spent: number;
   totalOrders: number;
   servicesDiscount: number;
   specialPricing: boolean;
@@ -92,30 +92,30 @@ interface PaginationInfo {
 
 interface UserActionsProps {
   user: User;
-  onView: (userId: number) => void;
-  onEditUser: (userId: number) => void;
-  onEditBalance: (userId: number, currentBalance: number) => void;
-  onEditDiscount: (userId: number, currentDiscount: number) => void;
-  onChangeRole: (userId: number, currentRole: string) => void;
-  onResetSpecialPricing: (userId: number) => Promise<boolean>;
-  onSetNewApiKey: (userId: number) => Promise<boolean>;
-  onUpdateStatus: (userId: number, currentStatus: string) => void;
-  onDelete: (userId: number) => void;
+  onView: (userId: string) => void;
+  onEditUser: (userId: string) => void;
+  onEditBalance: (userId: string, currentBalance: number) => void;
+  onEditDiscount: (userId: string, currentDiscount: number) => void;
+  onChangeRole: (userId: string, currentRole: string) => void;
+  onResetSpecialPricing: (userId: string) => Promise<boolean>;
+  onSetNewApiKey: (userId: string) => Promise<boolean>;
+  onUpdateStatus: (userId: string, currentStatus: string) => void;
+  onDelete: (userId: string) => void;
   isLoading: boolean;
 }
 
 interface UserCardProps {
   user: User;
   isSelected: boolean;
-  onSelect: (userId: number) => void;
-  onView: (userId: number) => void;
-  onEditBalance: (userId: number, currentBalance: number) => void;
-  onEditDiscount: (userId: number, currentDiscount: number) => void;
-  onChangeRole: (userId: number, currentRole: string) => void;
-  onResetSpecialPricing: (userId: number) => Promise<boolean>;
-  onSetNewApiKey: (userId: number) => Promise<boolean>;
-  onUpdateStatus: (userId: number, currentStatus: string) => void;
-  onDelete: (userId: number) => void;
+  onSelect: (userId: string) => void;
+  onView: (userId: string) => void;
+  onEditBalance: (userId: string, currentBalance: number) => void;
+  onEditDiscount: (userId: string, currentDiscount: number) => void;
+  onChangeRole: (userId: string, currentRole: string) => void;
+  onResetSpecialPricing: (userId: string) => Promise<boolean>;
+  onSetNewApiKey: (userId: string) => Promise<boolean>;
+  onUpdateStatus: (userId: string, currentStatus: string) => void;
+  onDelete: (userId: string) => void;
   formatCurrency: (amount: number, currency: string) => string;
   isLoading: boolean;
 }
@@ -268,7 +268,7 @@ const UsersListPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<number | null>(null);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -286,7 +286,7 @@ const UsersListPage = () => {
     currentBalance: number;
   }>({
     open: false,
-    userId: 0,
+    userId: '',
     currentBalance: 0,
   });
   const [newBalance, setNewBalance] = useState('');
@@ -296,7 +296,7 @@ const UsersListPage = () => {
     currentStatus: string;
   }>({
     open: false,
-    userId: 0,
+    userId: '',
     currentStatus: '',
   });
   const [newStatus, setNewStatus] = useState('');
@@ -306,7 +306,7 @@ const UsersListPage = () => {
     currentDiscount: number;
   }>({
     open: false,
-    userId: 0,
+    userId: '',
     currentDiscount: 0,
   });
   const [newDiscount, setNewDiscount] = useState('');
@@ -316,7 +316,7 @@ const UsersListPage = () => {
     currentRole: string;
   }>({
     open: false,
-    userId: 0,
+    userId: '',
     currentRole: '',
   });
   const [newRole, setNewRole] = useState('');
@@ -328,7 +328,7 @@ const UsersListPage = () => {
     currentUser: User | null;
   }>({
     open: false,
-    userId: 0,
+    userId: '',
     currentUser: null,
   });
 
@@ -487,15 +487,15 @@ const UsersListPage = () => {
     );
   }, [users]);
 
-  const handleSelectUser = useCallback((userId: number) => {
+  const handleSelectUser = useCallback((userId: string) => {
     setSelectedUsers((prev) =>
-      prev.includes(userId.toString())
-        ? prev.filter((id) => id !== userId.toString())
-        : [...prev, userId.toString()]
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
     );
   }, []);
 
-  const handleViewUser = useCallback((userId: number) => {
+  const handleViewUser = useCallback((userId: string) => {
     window.open(`/admin/users/${userId}`, '_blank');
   }, []);
 
@@ -549,7 +549,7 @@ const UsersListPage = () => {
 
   // Handle user deletion
   const handleDeleteUser = useCallback(
-    async (userId: number) => {
+    async (userId: string) => {
       const success = await handleApiAction(
         `/api/admin/users/${userId}`,
         'DELETE',
@@ -567,10 +567,10 @@ const UsersListPage = () => {
 
   // Handle user status update
   const handleStatusUpdate = useCallback(
-    async (userId: number, newStatus: string) => {
+    async (userId: string, newStatus: string) => {
       return handleApiAction(
         `/api/admin/users/${userId}/status`,
-        'PUT',
+        'PATCH',
         { status: newStatus },
         `User status updated to ${newStatus}`
       );
@@ -580,16 +580,16 @@ const UsersListPage = () => {
 
   // Handle edit balance
   const handleEditBalance = useCallback(
-    async (userId: number, balance: number) => {
+    async (userId: string, balance: number) => {
       const success = await handleApiAction(
         `/api/admin/users/${userId}/balance`,
-        'PUT',
-        { balance, action: 'set' },
+        'PATCH',
+        { balance },
         'User balance updated successfully'
       );
 
       if (success) {
-        setEditBalanceDialog({ open: false, userId: 0, currentBalance: 0 });
+        setEditBalanceDialog({ open: false, userId: '', currentBalance: 0 });
         setNewBalance('');
       }
     },
@@ -598,16 +598,16 @@ const UsersListPage = () => {
 
   // Handle edit discount
   const handleEditDiscount = useCallback(
-    async (userId: number, discount: number) => {
+    async (userId: string, discount: number) => {
       const success = await handleApiAction(
         `/api/admin/users/${userId}/discount`,
-        'PUT',
-        { discount },
+        'PATCH',
+        { servicesDiscount: discount },
         'Services discount updated successfully'
       );
 
       if (success) {
-        setEditDiscountDialog({ open: false, userId: 0, currentDiscount: 0 });
+        setEditDiscountDialog({ open: false, userId: '', currentDiscount: 0 });
         setNewDiscount('');
       }
     },
@@ -616,16 +616,16 @@ const UsersListPage = () => {
 
   // Handle change role
   const handleChangeRole = useCallback(
-    async (userId: number, role: string) => {
+    async (userId: string, role: string) => {
       const success = await handleApiAction(
         `/api/admin/users/${userId}/role`,
-        'PUT',
+        'PATCH',
         { role },
         `User role updated to ${role}`
       );
 
       if (success) {
-        setChangeRoleDialog({ open: false, userId: 0, currentRole: '' });
+        setChangeRoleDialog({ open: false, userId: '', currentRole: '' });
         setNewRole('');
       }
     },
@@ -634,11 +634,11 @@ const UsersListPage = () => {
 
   // Handle reset special pricing
   const handleResetSpecialPricing = useCallback(
-    async (userId: number) => {
+    async (userId: string) => {
       return handleApiAction(
         `/api/admin/users/${userId}/special-pricing`,
-        'DELETE',
-        undefined,
+        'PATCH',
+        { specialPricing: false },
         'Special pricing reset successfully'
       );
     },
@@ -647,7 +647,7 @@ const UsersListPage = () => {
 
   // Handle set new API key
   const handleSetNewApiKey = useCallback(
-    async (userId: number) => {
+    async (userId: string) => {
       return handleApiAction(
         `/api/admin/users/${userId}/api-key`,
         'POST',
@@ -660,7 +660,7 @@ const UsersListPage = () => {
 
   // Edit User functions - cloned from Edit Balance pattern
   const openEditUserDialog = useCallback(
-    (userId: number, currentUser: User) => {
+    (userId: string, currentUser: User) => {
       setEditUserDialog({ open: true, userId, currentUser });
       setEditUserFormData({
         username: currentUser.username || '',
@@ -710,13 +710,13 @@ const UsersListPage = () => {
 
     const success = await handleApiAction(
       `/api/admin/users/${editUserDialog.userId}`,
-      'PUT',
+      'PATCH',
       userData,
       'User updated successfully'
     );
 
     if (success) {
-      setEditUserDialog({ open: false, userId: 0, currentUser: null });
+      setEditUserDialog({ open: false, userId: '', currentUser: null });
       setEditUserFormData({
         username: '',
         name: '',
@@ -729,7 +729,7 @@ const UsersListPage = () => {
   }, [editUserDialog.userId, editUserFormData, handleApiAction]);
 
   const handleEditUser = useCallback(
-    (userId: number) => {
+    (userId: string) => {
       const user = users.find((u) => u.id === userId);
       if (user) {
         openEditUserDialog(userId, user);
@@ -740,7 +740,7 @@ const UsersListPage = () => {
 
   // Modal handlers
   const openEditBalanceDialog = useCallback(
-    (userId: number, currentBalance: number) => {
+    (userId: string, currentBalance: number) => {
       setEditBalanceDialog({ open: true, userId, currentBalance });
       setNewBalance(currentBalance.toString());
     },
@@ -748,7 +748,7 @@ const UsersListPage = () => {
   );
 
   const openUpdateStatusDialog = useCallback(
-    (userId: number, currentStatus: string) => {
+    (userId: string, currentStatus: string) => {
       setUpdateStatusDialog({ open: true, userId, currentStatus });
       setNewStatus(currentStatus);
     },
@@ -756,7 +756,7 @@ const UsersListPage = () => {
   );
 
   const openEditDiscountDialog = useCallback(
-    (userId: number, currentDiscount: number) => {
+    (userId: string, currentDiscount: number) => {
       setEditDiscountDialog({ open: true, userId, currentDiscount });
       setNewDiscount(currentDiscount.toString());
     },
@@ -764,7 +764,7 @@ const UsersListPage = () => {
   );
 
   const openChangeRoleDialog = useCallback(
-    (userId: number, currentRole: string) => {
+    (userId: string, currentRole: string) => {
       setChangeRoleDialog({ open: true, userId, currentRole });
       setNewRole(currentRole);
     },
@@ -1138,7 +1138,7 @@ const UsersListPage = () => {
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {user.id || 'N/A'}
+                              #{user.id?.slice(-8) || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1211,7 +1211,7 @@ const UsersListPage = () => {
                                 style={{ color: 'var(--text-primary)' }}
                               >
                                 {formatCurrency(
-                                  user.total_spent || 0,
+                                  user.spent || 0,
                                   user.currency || 'USD'
                                 )}
                               </div>
@@ -1314,7 +1314,7 @@ const UsersListPage = () => {
                       <UserCard
                         key={user.id}
                         user={user}
-                        isSelected={selectedUsers.includes(user.id.toString())}
+                        isSelected={selectedUsers.includes(user.id)}
                         onSelect={handleSelectUser}
                         onView={handleViewUser}
                         onEditBalance={openEditBalanceDialog}
@@ -1364,7 +1364,7 @@ const UsersListPage = () => {
           onClose={() => {
             setEditBalanceDialog({
               open: false,
-              userId: 0,
+              userId: '',
               currentBalance: 0,
             });
             setNewBalance('');
@@ -1389,7 +1389,7 @@ const UsersListPage = () => {
           onClose={() => {
             setUpdateStatusDialog({
               open: false,
-              userId: 0,
+              userId: '',
               currentStatus: '',
             });
             setNewStatus('');
@@ -1400,7 +1400,7 @@ const UsersListPage = () => {
                 if (success) {
                   setUpdateStatusDialog({
                     open: false,
-                    userId: 0,
+                    userId: '',
                     currentStatus: '',
                   });
                   setNewStatus('');
@@ -1422,7 +1422,7 @@ const UsersListPage = () => {
           onClose={() => {
             setEditDiscountDialog({
               open: false,
-              userId: 0,
+              userId: '',
               currentDiscount: 0,
             });
             setNewDiscount('');
@@ -1445,7 +1445,7 @@ const UsersListPage = () => {
           newRole={newRole}
           onRoleChange={setNewRole}
           onClose={() => {
-            setChangeRoleDialog({ open: false, userId: 0, currentRole: '' });
+            setChangeRoleDialog({ open: false, userId: '', currentRole: '' });
             setNewRole('');
           }}
           onConfirm={() => {
@@ -1454,7 +1454,7 @@ const UsersListPage = () => {
                 if (success) {
                   setChangeRoleDialog({
                     open: false,
-                    userId: 0,
+                    userId: '',
                     currentRole: '',
                   });
                   setNewRole('');
@@ -1474,7 +1474,7 @@ const UsersListPage = () => {
           formData={editUserFormData}
           onFormDataChange={handleEditUserFormDataChange}
           onClose={() => {
-            setEditUserDialog({ open: false, userId: 0, currentUser: null });
+            setEditUserDialog({ open: false, userId: '', currentUser: null });
             setEditUserFormData({
               username: '',
               name: '',
@@ -1646,7 +1646,7 @@ const UserCard: React.FC<UserCardProps> = ({
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-3">
         <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-          {user.id || 'N/A'}
+          #{user.id?.slice(-8) || 'null'}
         </div>
       </div>
       <UserActions

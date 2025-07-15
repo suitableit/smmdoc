@@ -16,14 +16,10 @@ export const {
   },
   events: {
     async linkAccount({ user }: any) {
-      // Convert string ID to number if needed
-      const userId = typeof user.id === 'string' ? parseInt(user.id) : user.id;
-      if (!isNaN(userId)) {
-        await db.user.update({
-          where: { id: userId },
-          data: { emailVerified: new Date() },
-        });
-      }
+      await db.user.update({
+        where: { id: user.id },
+        data: { emailVerified: new Date() },
+      });
     },
   },
   secret: process.env.NEXTAUTH_SECRET,

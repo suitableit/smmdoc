@@ -1,6 +1,5 @@
 model User {
-  id                      Int                    @id @default(autoincrement())
-  username                String?                @unique
+  id                      String                 @id @default(cuid())
   name                    String?
   password                String?
   email                   String?                @unique
@@ -8,18 +7,14 @@ model User {
   emailVerified           DateTime?
   image                   String?
   currency                String                 @default("USD")
+  isTwoFactorEnabled      Boolean                @default(false)
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
   dollarRate              Float                  @default(121.45)
   balance                 Float                  @default(0)
   total_deposit           Float                  @default(0) @db.Float
   total_spent             Float                  @default(0) @db.Float
-  servicesDiscount        Float                  @default(0)
-  specialPricing          Boolean                @default(false)
-  status                  String                 @default("active")
-  apiKey                  String?                @unique
-  isTwoFactorEnabled      Boolean                @default(false)
-  createdAt               DateTime               @default(now())
-  updatedAt               DateTime               @updatedAt
-  lastLoginAt             DateTime?
+  username                String?                @unique
   accounts                Account?
   addFunds                AddFund[]
   apiKeys                 ApiKey[]
@@ -37,7 +32,7 @@ model User {
 
 model Account {
   id                       String   @id @default(cuid())
-  userId                   Int      @unique
+  userId                   String   @unique
   type                     String
   provider                 String
   providerAccountId        String
@@ -60,7 +55,7 @@ model Account {
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
-  userId       Int
+  userId       String
   expires      DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -104,7 +99,7 @@ model TwoFactorToken {
 
 model TwoFactorConfirmation {
   id        String   @id @default(cuid())
-  userId    Int      @unique
+  userId    String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -112,7 +107,7 @@ model TwoFactorConfirmation {
 
 model ApiKey {
   id        String   @id @default(cuid())
-  userId    Int
+  userId    String
   key       String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

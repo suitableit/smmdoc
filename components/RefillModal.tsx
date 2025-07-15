@@ -39,7 +39,7 @@ export default function RefillModal({
 
         <div className="mb-4">
           <p className="text-sm text-gray-600 mb-2">
-            You are requesting a refill for Order {orderId ? formatID(orderId) : 'N/A'}
+            You are requesting a refill for Order #{orderId ? formatID(orderId) : 'N/A'}
           </p>
           <p className="text-xs text-gray-500 mb-4">
             Refill requests are reviewed within 24 hours. You will be notified once processed.
