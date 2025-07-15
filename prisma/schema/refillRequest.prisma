@@ -1,5 +1,5 @@
 model RefillRequest {
-  id              String    @id @default(cuid())
+  id              Int       @id @default(autoincrement())
   orderId         Int
   userId          Int
   reason          String

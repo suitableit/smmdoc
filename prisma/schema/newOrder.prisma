@@ -1,7 +1,7 @@
 model NewOrder {
   id             Int             @id @default(autoincrement())
-  categoryId     String
-  serviceId      String
+  categoryId     Int
+  serviceId      Int
   userId         Int
   link           String
   qty            Int

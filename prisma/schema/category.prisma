@@ -1,5 +1,5 @@
 model Category {
-  id            String           @id @default(cuid())
+  id            Int              @id @default(autoincrement())
   category_name String
   status        String           @default("active")
   userId        Int

@@ -1,5 +1,5 @@
 model FavrouteCat {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   name      String
   userId    Int
   createdAt DateTime @default(now())
