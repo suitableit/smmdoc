@@ -32,53 +32,34 @@ export async function PUT(request: Request) {
       serviceSpeed,
       mode,
     } = body;
-    if (!id) {
+    if (!id || !categoryId) {
       return NextResponse.json({
-        error: 'Service ID is required',
+        error: 'Service & Category ID and name are required',
         data: null,
         success: false,
       });
     }
-    // Helper function to convert string boolean to actual boolean
-    const toBool = (value: unknown): boolean => {
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') {
-        return value.toLowerCase() === 'true' || value === '1';
-      }
-      return Boolean(value);
-    };
-
-    // Helper function to convert string number to actual number
-    const toNumber = (value: unknown, defaultValue: number = 0): number => {
-      if (typeof value === 'number') return value;
-      if (typeof value === 'string' && value.trim() !== '') {
-        const num = Number(value);
-        return isNaN(num) ? defaultValue : num;
-      }
-      return defaultValue;
-    };
-
-    // Update the service in the database with proper type conversion
+    // Update the service in the database
     await db.service.update({
       where: {
         id: id,
       },
       data: {
-        categoryId: categoryId || '',
-        name: name || '',
-        description: description || '',
-        rate: toNumber(rate, 0),
-        min_order: toNumber(min_order, 0),
-        max_order: toNumber(max_order, 0),
-        perqty: toNumber(perqty, 1000),
-        avg_time: avg_time || '',
-        updateText: updateText || '',
+        categoryId: categoryId,
+        name: name,
+        description: description,
+        rate: Number(rate),
+        min_order: Number(min_order),
+        max_order: Number(max_order),
+        perqty: Number(perqty),
+        avg_time: avg_time,
+        updateText: updateText,
         serviceTypeId: serviceTypeId || null,
-        refill: toBool(refill),
-        cancel: toBool(cancel),
-        refillDays: toNumber(refillDays, 30),
-        refillDisplay: toNumber(refillDisplay, 24),
-        personalizedService: toBool(personalizedService),
+        refill: refill || false,
+        cancel: cancel || false,
+        refillDays: refillDays || 30,
+        refillDisplay: refillDisplay || 24,
+        personalizedService: personalizedService || false,
         serviceSpeed: serviceSpeed || 'medium',
         mode: mode || 'manual',
       },

@@ -149,6 +149,12 @@ const RefillModal = ({
           <h3 className="text-lg font-semibold text-gray-900">
             Request Refill
           </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <FaTimes />
+          </button>
         </div>
 
         <div className="mb-4">
@@ -160,7 +166,7 @@ const RefillModal = ({
           </p>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Reason (Optional)
           </label>
@@ -168,21 +174,21 @@ const RefillModal = ({
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Describe the issue (e.g., followers dropped, likes decreased, etc.)"
-            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
           />
         </div>
 
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="btn btn-secondary"
+            className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="btn btn-primary"
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Submit Request
           </button>
@@ -367,13 +373,12 @@ export default function OrdersList() {
     }
 
     try {
-      const response = await fetch('/api/user/refill-requests', {
+      const response = await fetch(`/api/user/orders/${refillModal.orderId}/refill-request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          orderId: refillModal.orderId,
           reason: refillModal.reason.trim() || 'Customer requested refill due to drop in count'
         })
       });
@@ -643,7 +648,7 @@ export default function OrdersList() {
                           }`}
                         >
                           <span className="text-sm font-mono text-gray-700">
-                            {order.id}
+                            #{order.id}
                           </span>
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">

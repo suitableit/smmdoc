@@ -1,12 +1,12 @@
 model CancelRequest {
-  id           Int       @id @default(autoincrement())
+  id           String    @id @default(cuid())
   orderId      Int
-  userId       Int
+  userId       String
   reason       String
   status       String    @default("pending")
   refundAmount Float?
   adminNotes   String?
-  processedBy  Int?
+  processedBy  String?
   processedAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

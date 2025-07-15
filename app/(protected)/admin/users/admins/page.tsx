@@ -2,18 +2,18 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    FaCheckCircle,
-    FaClock,
-    FaCrown,
-    FaEdit,
-    FaEllipsisH,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
-    FaTrash,
-    FaUserCheck,
-    FaUserShield,
+  FaCheckCircle,
+  FaClock,
+  FaCrown,
+  FaEdit,
+  FaEllipsisH,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
+  FaTrash,
+  FaUserCheck,
+  FaUserShield,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -793,7 +793,7 @@ const AdminsListPage = () => {
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {admin.id?.slice(-8) || 'null'}
+                              #{admin.id?.slice(-8) || 'null'}
                             </div>
                           </td>
                           <td className="p-3">

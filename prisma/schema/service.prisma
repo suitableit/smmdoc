@@ -1,5 +1,5 @@
 model Service {
-  id                  Int               @id @default(autoincrement())
+  id                  String            @id @default(cuid())
   name                String
   rate                Float
   min_order           Int
@@ -7,14 +7,14 @@ model Service {
   avg_time            String
   description         String            @db.Text
   updateText          String?           @db.Text
-  userId              Int
-  categoryId          Int
-  favrouteCatId       Int?
+  userId              String
+  categoryId          String
+  favrouteCatId       String?
   status              String            @default("active")
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
-  perqty              Int               @default(1000)
-  serviceTypeId       Int?
+  perqty              Int               @default(1)
+  serviceTypeId       String?
   cancel              Boolean           @default(false)
   mode                String            @default("manual")
   refill              Boolean           @default(false)

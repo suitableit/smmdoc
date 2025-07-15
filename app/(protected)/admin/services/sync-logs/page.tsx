@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    FaBox,
-    FaCheckCircle,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTrash,
+  FaBox,
+  FaCheckCircle,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTrash,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -256,7 +256,7 @@ const SyncLogsPage = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1,
     }));
-  }, [filteredSyncLogs.length, pagination.limit]);
+  }, [filteredSyncLogs, pagination.limit, pagination.page]);
 
   // Get paginated data
   const getPaginatedData = () => {
@@ -628,7 +628,7 @@ const SyncLogsPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {log.slNo}
+                              #{log.slNo}
                             </div>
                             {getChangeTypeBadge(log.changeType)}
                           </div>

@@ -2,18 +2,19 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    FaCheckCircle,
-    FaClock,
-    FaCog,
-    FaEllipsisH,
-    FaEye,
-    FaGlobe,
-    FaSearch,
-    FaServer,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
-    FaUserCheck
+  FaBan,
+  FaCheckCircle,
+  FaClock,
+  FaEye,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
+  FaUserCheck,
+  FaGlobe,
+  FaServer,
+  FaCog,
+  FaEllipsisH,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -1164,7 +1165,7 @@ const ChildPanelsPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                              {(pagination.page - 1) * pagination.limit + index + 1}
+                              #{(pagination.page - 1) * pagination.limit + index + 1}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1971,7 +1972,7 @@ const ChildPanelsPage = () => {
                                 Panel ID
                               </label>
                               <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit mt-1">
-                                {formatID(viewDialog.panel.id.toString())}
+                                #{formatID(viewDialog.panel.id.toString())}
                               </div>
                             </div>
                             <div>

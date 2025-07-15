@@ -1,11 +1,11 @@
 model FavrouteCat {
-  id        Int      @id @default(autoincrement())
+  id        String    @id @default(cuid())
   name      String
-  userId    Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id])
   services  Service[]
-  user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "FavrouteCat_userId_fkey")
 }

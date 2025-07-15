@@ -1,7 +1,6 @@
 // app/api/currency/route.ts
 import { currentUser } from '@/lib/actions/auth';
 import { updateUserCurrency } from '@/lib/actions/currency';
-import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -19,20 +18,7 @@ export async function POST(req: Request) {
     const { currency } = await req.json();
     console.log('Currency API: Requested currency:', currency);
 
-    // Load available currencies from database to validate
-    let validCurrencies = ['USD', 'BDT', 'USDT']; // fallback
-
-    try {
-      const enabledCurrencies = await db.currency.findMany({
-        where: { enabled: true },
-        select: { code: true }
-      });
-      validCurrencies = enabledCurrencies.map(c => c.code);
-    } catch (error) {
-      console.log('Currency API: Failed to load enabled currencies from DB, using fallback');
-    }
-
-    if (!validCurrencies.includes(currency)) {
+    if (currency !== 'USD' && currency !== 'BDT' && currency !== 'USDT') {
       console.log('Currency API: Invalid currency:', currency);
       return NextResponse.json({ error: 'Invalid currency' }, { status: 400 });
     }
