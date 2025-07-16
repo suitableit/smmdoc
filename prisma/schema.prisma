@@ -53,7 +53,7 @@ model User {
 }
 
 model ServiceType {
-  id          int    @id @default(cuid())
+  id          Int    @id @default(autoincrement())
   name        String    @unique
   description String?
   status      String    @default("active")

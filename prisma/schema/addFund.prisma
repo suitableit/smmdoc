@@ -1,6 +1,6 @@
 model AddFund {
   id               Int                       @id @default(autoincrement())
-  invoice_id       String                    @unique
+  invoice_id       String                    @unique(map: "AddFund_invoice_id_key")
   amount           Float
   email            String
   name             String?
@@ -23,5 +23,6 @@ model AddFund {
   currency         String?                   @default("BDT") @db.VarChar(3)
   user             User                      @relation(fields: [userId], references: [id])
 
-  @@index([userId])
+  @@index([userId], map: "addfund_userId_fkey")
+  @@map("addfund")
 }

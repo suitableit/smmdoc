@@ -13,9 +13,10 @@ model RefillRequest {
   processedByUser User?     @relation("ProcessedRefillRequests", fields: [processedBy], references: [id])
   user            User      @relation(fields: [userId], references: [id])
 
-  @@index([orderId])
-  @@index([userId])
-  @@index([status])
-  @@index([createdAt])
   @@index([processedBy], map: "RefillRequest_processedBy_fkey")
+  @@index([createdAt], map: "RefillRequest_createdAt_idx")
+  @@index([orderId], map: "RefillRequest_orderId_idx")
+  @@index([status], map: "RefillRequest_status_idx")
+  @@index([userId], map: "RefillRequest_userId_idx")
+  @@map("refillrequest")
 }
