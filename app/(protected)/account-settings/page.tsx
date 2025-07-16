@@ -585,7 +585,7 @@ const ProfilePage = () => {
                 <div className="flex flex-col items-center space-y-4">
                   <div className="relative">
                     <div className="profile-picture">
-                      {currentUser?.username?.charAt(0) || 'M'}
+                      {currentUser?.username?.charAt(0) || 'U'}
                     </div>
                     <button className="profile-picture-edit">
                       <FaCamera className="w-4 h-4" />
