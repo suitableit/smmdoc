@@ -70,6 +70,10 @@ interface Service {
     category_name: string;
     id: number;
   };
+  serviceType?: {
+    id: string;
+    name: string;
+  };
   isFavorite?: boolean;
 }
 
@@ -391,6 +395,9 @@ export default function UserServiceTable() {
                       Service
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                      Type
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
                       Rate per 1000
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
@@ -419,7 +426,7 @@ export default function UserServiceTable() {
                       <Fragment key={categoryName}>
                         {/* Category Row */}
                         <tr>
-                          <td colSpan={10} className="py-0">
+                          <td colSpan={11} className="py-0">
                             <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 shadow-lg">
                               <h3 className="text-lg font-semibold">
                                 {categoryName}
@@ -478,6 +485,11 @@ export default function UserServiceTable() {
                                 </div>
                               </td>
                               <td className="py-3 px-4">
+                                <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 w-fit">
+                                  {service?.serviceType?.name || 'Standard'}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                                   <PriceDisplay
                                     amount={service.rate}
@@ -501,17 +513,31 @@ export default function UserServiceTable() {
                                 </span>
                               </td>
                               <td className="py-3 px-4 text-center">
-                                <div className="flex items-center justify-center gap-1">
-                                  {service.refill ? (
-                                    <>
-                                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                      <span className="text-xs text-green-600 font-medium">ON</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                      <span className="text-xs text-red-600 font-medium">OFF</span>
-                                    </>
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-center gap-1">
+                                    {service.refill ? (
+                                      <>
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <span className="text-xs text-green-600 font-medium">ON</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                        <span className="text-xs text-red-600 font-medium">OFF</span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Show Refill Details when refill is enabled */}
+                                  {service.refill && (
+                                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+                                      {service.refillDays && (
+                                        <div>Days: {service.refillDays}</div>
+                                      )}
+                                      {service.refillDisplay && (
+                                        <div>Hours: {service.refillDisplay}</div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               </td>

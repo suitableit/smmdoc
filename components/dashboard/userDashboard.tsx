@@ -14,9 +14,27 @@ export default function UserDashboard() {
 
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
-    const convertedAmount =
-      currency === 'BDT' ? amount : amount / (rate || 121.52);
-    const symbol = currency === 'USD' ? '$' : '৳';
+    // Database balance is stored in BDT, so we need to convert properly
+    let convertedAmount = amount;
+    let symbol = '৳';
+
+    if (currency === 'BDT') {
+      // If showing BDT, use the amount as is (already in BDT)
+      convertedAmount = amount;
+      symbol = '৳';
+    } else if (currency === 'USD') {
+      // If showing USD, convert from BDT to USD
+      const bdtToUsdRate = 110; // BDT to USD rate
+      convertedAmount = amount / bdtToUsdRate;
+      symbol = '$';
+    } else {
+      // For other currencies, convert from BDT using rate
+      const bdtToUsdRate = 110;
+      const usdAmount = amount / bdtToUsdRate;
+      convertedAmount = usdAmount * (rate || 1);
+      symbol = '$'; // Default symbol for other currencies
+    }
+
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
   const stats = response?.data;

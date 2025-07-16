@@ -18,9 +18,10 @@ export default auth(async (req) => {
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
   
-  console.log('Path:', nextUrl.pathname);
-  console.log('User logged in:', isLoggedIn);
-  console.log('User role:', userRole?.role);
+  // Only log for debugging when needed
+  // console.log('Path:', nextUrl.pathname);
+  // console.log('User logged in:', isLoggedIn);
+  // console.log('User role:', userRole?.role);
   
   const callbackUrl =
     nextUrl.searchParams.get('callbackUrl') || DEFAULT_SIGN_IN_REDIRECT;

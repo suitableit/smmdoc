@@ -38,6 +38,7 @@ export async function GET(request: Request) {
         },
         include: {
           category: true,
+          serviceType: true,
         },
       }),
       db.service.count({ where: whereClause }),
@@ -115,39 +116,72 @@ export async function POST(request: Request) {
       mode,
     } = body;
 
-    if (!categoryId || !name) {
-      return NextResponse.json(
-        {
-          error: 'Category ID and name are required',
-          data: null,
-          success: false,
-        },
-        { status: 400 }
-      );
+    // Allow empty fields for service creation
+
+    // Helper function to convert string boolean to actual boolean
+    const toBool = (value: unknown): boolean => {
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') {
+        return value.toLowerCase() === 'true' || value === '1';
+      }
+      return Boolean(value);
+    };
+
+    // Helper function to convert string number to actual number
+    const toNumber = (value: unknown, defaultValue: number = 0): number => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string' && value.trim() !== '') {
+        const num = Number(value);
+        return isNaN(num) ? defaultValue : num;
+      }
+      return defaultValue;
+    };
+
+    // Helper function to convert string to integer for IDs
+    const toInt = (value: unknown): number | undefined => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string' && value.trim() !== '') {
+        const num = parseInt(value);
+        return isNaN(num) ? undefined : num;
+      }
+      return undefined;
+    };
+
+    // Prepare create data - only include fields that are provided and valid
+    const createData: any = {
+      name: name || '',
+      description: description || '',
+      rate: toNumber(rate, 0),
+      min_order: toNumber(min_order, 0),
+      max_order: toNumber(max_order, 0),
+      perqty: toNumber(perqty, 1000),
+      avg_time: avg_time || '',
+      updateText: updateText || '',
+      refill: toBool(refill),
+      cancel: toBool(cancel),
+      refillDays: toNumber(refillDays, 30),
+      refillDisplay: toNumber(refillDisplay, 24),
+      personalizedService: toBool(personalizedService),
+      serviceSpeed: serviceSpeed || 'medium',
+      mode: mode || 'manual',
+      userId: session.user.id,
+    };
+
+    // Add categoryId if provided and valid
+    const categoryIdInt = toInt(categoryId);
+    if (categoryIdInt !== undefined) {
+      createData.categoryId = categoryIdInt;
     }
 
-    // Create the service in the database
+    // Add serviceTypeId if provided and valid
+    const serviceTypeIdInt = toInt(serviceTypeId);
+    if (serviceTypeIdInt !== undefined) {
+      createData.serviceTypeId = serviceTypeIdInt;
+    }
+
+    // Create the service in the database with proper type conversion
     const newService = await db.service.create({
-      data: {
-        categoryId,
-        name,
-        description,
-        rate: Number(rate),
-        min_order: Number(min_order),
-        max_order: Number(max_order),
-        perqty: Number(perqty),
-        avg_time,
-        updateText,
-        serviceTypeId: serviceTypeId || null,
-        refill: refill || false,
-        cancel: cancel || false,
-        refillDays: refillDays || 30,
-        refillDisplay: refillDisplay || 24,
-        personalizedService: personalizedService || false,
-        serviceSpeed: serviceSpeed || 'medium',
-        mode: mode || 'manual',
-        userId: session.user.id,
-      },
+      data: createData,
     });
 
     return NextResponse.json(

@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use server';
 
-import { auth } from '@/auth';
+import { getCurrentUser } from '@/lib/auth-helpers';
 import { db } from '../db';
 
 // get full user details from db and set in redux store
 export async function getUserDetails() {
   try {
     // Get current user's session
-    const session = await auth();
-    
+    const session = await getCurrentUser();
+
     // If user is not authenticated, return null
     if (!session?.user?.id) {
       return null;
     }
-    
+
     try {
       // Find the user in the database with all necessary fields including balance
       const user = await db.user.findUnique({
@@ -101,18 +101,25 @@ export async function getUserDetails() {
         };
       } catch (fallbackError) {
         console.error("Fallback fetch failed:", fallbackError);
-        
-        // Last resort - return session user with zero balance
+
+        // Last resort - return session user with defaults
         return {
           id: session.user.id,
-          name: session.user.name,
-          email: session.user.email,
-          image: session.user.image,
-          role: 'user',
-          addFunds: [],
-          balance: 0,
+          name: session.user.name || null,
+          email: session.user.email || null,
+          role: session.user.role || 'user',
+          image: session.user.image || null,
+          emailVerified: null,
+          currency: session.user.currency || 'USD',
+          dollarRate: session.user.dollarRate || 121.52,
+          isTwoFactorEnabled: session.user.isTwoFactorEnabled || false,
+          balance: session.user.balance || 0,
           total_deposit: 0,
-          total_spent: 0
+          total_spent: 0,
+          username: session.user.username || null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          addFunds: []
         };
       }
     }

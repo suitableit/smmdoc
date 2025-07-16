@@ -1,11 +1,11 @@
 model RefillRequest {
-  id              String    @id @default(cuid())
+  id              Int       @id @default(autoincrement())
   orderId         Int
-  userId          String
+  userId          Int
   reason          String
   status          String    @default("pending")
   adminNotes      String?
-  processedBy     String?
+  processedBy     Int?
   processedAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt

@@ -1,5 +1,5 @@
 model AddFund {
-  id             String    @id @default(cuid())
+  id             Int       @id @default(autoincrement())
   invoice_id     String    @unique
   amount         Float
   spent_amount   Float
@@ -17,7 +17,7 @@ model AddFund {
   paid_at        DateTime  @default(now())
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @default(now()) @updatedAt
-  userId         String
+  userId         Int
   currency       String?   @default("BDT")        // Add currency field with default BDT
   user           User      @relation(fields: [userId], references: [id])
 
@@ -25,7 +25,7 @@ model AddFund {
 }
 
 model User {
-  id                    String                 @id @default(cuid())
+  id                    Int                    @id @default(autoincrement())
   username              String?                @unique
   name                  String?
   password              String?
@@ -53,11 +53,35 @@ model User {
 }
 
 model ServiceType {
-  id          String    @id @default(cuid())
+  id          int    @id @default(cuid())
   name        String    @unique
   description String?
   status      String    @default("active")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   services    Service[]
+}
+
+model Currency {
+  id      Int     @id @default(autoincrement())
+  code    String  @unique
+  name    String
+  symbol  String
+  rate    Decimal @db.Decimal(10, 4)
+  enabled Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CurrencySettings {
+  id                  Int    @id @default(autoincrement())
+  defaultCurrency     String @default("USD")
+  displayDecimals     Int    @default(2)
+  currencyPosition    String @default("left")
+  thousandsSeparator  String @default(",")
+  decimalSeparator    String @default(".")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

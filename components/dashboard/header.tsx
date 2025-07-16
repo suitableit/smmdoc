@@ -35,8 +35,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+    DropdownMenuTrigger
 } from '../ui/dropdown-menu';
 import MobileSidebar from './mobile-siderbar';
 
@@ -215,11 +214,11 @@ const ThemeToggle = ({ isMobile = false }: { isMobile?: boolean }) => {
 
 // Mobile Currency Toggle Component
 const MobileCurrencyToggle = () => {
-  const { currency, setCurrency, rate, isLoading } = useCurrency();
+  const { currency, setCurrency, rate, isLoading, availableCurrencies, currentCurrencyData } = useCurrency();
 
-  const handleCurrencyChange = async (newCurrency: 'USD' | 'BDT' | 'USDT') => {
+  const handleCurrencyChange = async (newCurrency: string) => {
     await setCurrency(newCurrency);
-    window.location.reload();
+    // Live update - no page reload needed
   };
 
   return (
@@ -237,70 +236,46 @@ const MobileCurrencyToggle = () => {
         >
           Currency
         </span>
-        {rate && !isLoading && (
+        {currentCurrencyData && !isLoading && (
           <span
             className="text-xs font-medium opacity-70"
             style={{ color: 'var(--header-text)', fontSize: '10px' }}
           >
-            1USD ≈ {rate.toFixed(2)}BDT
+            1USD ≈ {currentCurrencyData.rate.toFixed(2)}{currentCurrencyData.code}
           </span>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          onClick={() => handleCurrencyChange('BDT')}
-          disabled={isLoading}
-          className={`flex items-center gap-1.5 p-1.5 rounded-md transition-all duration-200 ${
-            currency === 'BDT'
-              ? 'text-white shadow-sm'
-              : 'hover:opacity-80'
-          }`}
-          style={{
-            backgroundColor:
-              currency === 'BDT' ? 'var(--primary)' : 'transparent',
-            color: currency === 'BDT' ? 'white' : 'var(--header-text)',
-          }}
-        >
-          <span
-            className={`text-xs font-bold ${
-              currency === 'BDT' ? 'text-white' : ''
+      <div className={`grid gap-2 ${availableCurrencies.length <= 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+        {availableCurrencies.map((curr) => (
+          <button
+            key={curr.code}
+            onClick={() => handleCurrencyChange(curr.code)}
+            disabled={isLoading}
+            className={`flex items-center gap-1.5 p-1.5 rounded-md transition-all duration-200 ${
+              currency === curr.code
+                ? 'text-white shadow-sm'
+                : 'hover:opacity-80'
             }`}
             style={{
-              color:
-                currency === 'BDT' ? 'white' : 'var(--header-text)',
+              backgroundColor:
+                currency === curr.code ? 'var(--primary)' : 'transparent',
+              color: currency === curr.code ? 'white' : 'var(--header-text)',
             }}
           >
-            ৳
-          </span>
-          <span className="font-medium" style={{ fontSize: '10px' }}>BDT</span>
-        </button>
-        <button
-          onClick={() => handleCurrencyChange('USD')}
-          disabled={isLoading}
-          className={`flex items-center gap-1.5 p-1.5 rounded-md transition-all duration-200 ${
-            currency === 'USD'
-              ? 'text-white shadow-sm'
-              : 'hover:opacity-80'
-          }`}
-          style={{
-            backgroundColor:
-              currency === 'USD' ? 'var(--primary)' : 'transparent',
-            color: currency === 'USD' ? 'white' : 'var(--header-text)',
-          }}
-        >
-          <span
-            className={`text-xs font-bold ${
-              currency === 'USD' ? 'text-white' : ''
-            }`}
-            style={{
-              color:
-                currency === 'USD' ? 'white' : 'var(--header-text)',
-            }}
-          >
-            $
-          </span>
-          <span className="font-medium" style={{ fontSize: '10px' }}>USD</span>
-        </button>
+            <span
+              className={`text-xs font-bold ${
+                currency === curr.code ? 'text-white' : ''
+              }`}
+              style={{
+                color:
+                  currency === curr.code ? 'white' : 'var(--header-text)',
+              }}
+            >
+              {curr.symbol}
+            </span>
+            <span className="font-medium" style={{ fontSize: '10px' }}>{curr.code}</span>
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -349,7 +324,7 @@ const Menu = ({ user }: { user: any }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const { currency, rate } = useCurrency();
+  const { currency, rate, currentCurrencyData } = useCurrency();
   const userData = useSelector((state: any) => state.userDetails);
   const dispatch = useDispatch();
 
@@ -365,10 +340,28 @@ const Menu = ({ user }: { user: any }) => {
 
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
-    const convertedAmount =
-      currency === 'BDT' ? amount : amount / (rate || 121.52);
-    const symbol = currency === 'USD' ? '$' : '৳';
-    return `${symbol}${convertedAmount.toFixed(2)}`;
+    if (!currentCurrencyData) {
+      return `$${amount.toFixed(2)}`;
+    }
+
+    // Database balance is stored in BDT, so we need to convert properly
+    let convertedAmount = amount;
+
+    if (currentCurrencyData.code === 'BDT') {
+      // If showing BDT, use the amount as is (already in BDT)
+      convertedAmount = amount;
+    } else if (currentCurrencyData.code === 'USD') {
+      // If showing USD, convert from BDT to USD
+      const bdtToUsdRate = 110; // BDT to USD rate
+      convertedAmount = amount / bdtToUsdRate;
+    } else {
+      // For other currencies, convert from BDT
+      const bdtToUsdRate = 110;
+      const usdAmount = amount / bdtToUsdRate;
+      convertedAmount = usdAmount * currentCurrencyData.rate;
+    }
+
+    return `${currentCurrencyData.symbol}${convertedAmount.toFixed(2)}`;
   };
 
   useEffect(() => {
@@ -606,7 +599,7 @@ const Menu = ({ user }: { user: any }) => {
 const Header = () => {
   const user = useCurrentUser();
   const dispatch = useDispatch();
-  const { currency, setCurrency, rate, isLoading } = useCurrency();
+  const { currency, setCurrency, rate, isLoading, availableCurrencies, currentCurrencyData } = useCurrency();
   const userData = useSelector((state: any) => state.userDetails);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -620,10 +613,28 @@ const Header = () => {
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
 
   const formatCurrency = (amount: number) => {
-    const convertedAmount =
-      currency === 'BDT' ? amount : amount / (rate || 121.52);
-    const symbol = currency === 'USD' ? '$' : '৳';
-    return `${symbol}${convertedAmount.toFixed(2)}`;
+    if (!currentCurrencyData) {
+      return `$${amount.toFixed(2)}`;
+    }
+
+    // Database balance is stored in BDT, so we need to convert properly
+    let convertedAmount = amount;
+
+    if (currentCurrencyData.code === 'BDT') {
+      // If showing BDT, use the amount as is (already in BDT)
+      convertedAmount = amount;
+    } else if (currentCurrencyData.code === 'USD') {
+      // If showing USD, convert from BDT to USD
+      const bdtToUsdRate = 110; // BDT to USD rate
+      convertedAmount = amount / bdtToUsdRate;
+    } else {
+      // For other currencies, convert from BDT
+      const bdtToUsdRate = 110;
+      const usdAmount = amount / bdtToUsdRate;
+      convertedAmount = usdAmount * currentCurrencyData.rate;
+    }
+
+    return `${currentCurrencyData.symbol}${convertedAmount.toFixed(2)}`;
   };
 
   const toggleMenu = () => {
@@ -654,9 +665,9 @@ const Header = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  const handleCurrencyChange = async (newCurrency: 'USD' | 'BDT' | 'USDT') => {
+  const handleCurrencyChange = async (newCurrency: string) => {
     await setCurrency(newCurrency);
-    window.location.reload();
+    // Live update - no page reload needed
   };
 
   return (
@@ -901,7 +912,7 @@ const Header = () => {
                   className="text-base sm:text-lg font-bold transition-colors duration-200"
                   style={{ color: 'var(--header-text)' }}
                 >
-                  {currency === 'USD' ? '$' : '৳'}
+                  {currentCurrencyData?.symbol || '$'}
                 </span>
                 <span
                   className="hidden sm:block font-medium transition-colors duration-200 text-xs sm:text-sm"
@@ -924,100 +935,61 @@ const Header = () => {
               }}
             >
               <div className="p-1">
-                <button
-                  onClick={() => handleCurrencyChange('BDT')}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
-                    currency === 'BDT'
-                      ? 'text-white shadow-sm'
-                      : 'hover:opacity-80'
-                  }`}
-                  style={{
-                    backgroundColor:
-                      currency === 'BDT' ? 'var(--primary)' : 'transparent',
-                    color: currency === 'BDT' ? 'white' : 'var(--header-text)',
-                  }}
-                >
-                  <span
-                    className={`text-lg font-bold min-w-[24px] ${
-                      currency === 'BDT' ? 'text-white' : ''
+                {availableCurrencies.map((curr) => (
+                  <button
+                    key={curr.code}
+                    onClick={() => handleCurrencyChange(curr.code)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
+                      currency === curr.code
+                        ? 'text-white shadow-sm'
+                        : 'hover:opacity-80'
                     }`}
                     style={{
-                      color:
-                        currency === 'BDT' ? 'white' : 'var(--header-text)',
+                      backgroundColor:
+                        currency === curr.code ? 'var(--primary)' : 'transparent',
+                      color: currency === curr.code ? 'white' : 'var(--header-text)',
                     }}
                   >
-                    ৳
-                  </span>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm">BDT</span>
                     <span
-                      className={`text-xs ${
-                        currency === 'BDT' ? 'text-white/80' : ''
+                      className={`text-lg font-bold min-w-[24px] ${
+                        currency === curr.code ? 'text-white' : ''
                       }`}
                       style={{
                         color:
-                          currency === 'BDT'
-                            ? 'rgba(255,255,255,0.8)'
-                            : 'var(--header-text)',
-                        opacity: currency === 'BDT' ? 1 : 0.7,
+                          currency === curr.code ? 'white' : 'var(--header-text)',
                       }}
                     >
-                      Bangladeshi Taka
+                      {curr.symbol}
                     </span>
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleCurrencyChange('USD')}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
-                    currency === 'USD'
-                      ? 'text-white shadow-sm'
-                      : 'hover:opacity-80'
-                  }`}
-                  style={{
-                    backgroundColor:
-                      currency === 'USD' ? 'var(--primary)' : 'transparent',
-                    color: currency === 'USD' ? 'white' : 'var(--header-text)',
-                  }}
-                >
-                  <span
-                    className={`text-lg font-bold min-w-[24px] ${
-                      currency === 'USD' ? 'text-white' : ''
-                    }`}
-                    style={{
-                      color:
-                        currency === 'USD' ? 'white' : 'var(--header-text)',
-                    }}
-                  >
-                    $
-                  </span>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm">USD</span>
-                    <span
-                      className={`text-xs ${
-                        currency === 'USD' ? 'text-white/80' : ''
-                      }`}
-                      style={{
-                        color:
-                          currency === 'USD'
-                            ? 'rgba(255,255,255,0.8)'
-                            : 'var(--header-text)',
-                        opacity: currency === 'USD' ? 1 : 0.7,
-                      }}
-                    >
-                      US Dollar
-                    </span>
-                  </div>
-                </button>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm">{curr.code}</span>
+                      <span
+                        className={`text-xs ${
+                          currency === curr.code ? 'text-white/80' : ''
+                        }`}
+                        style={{
+                          color:
+                            currency === curr.code
+                              ? 'rgba(255,255,255,0.8)'
+                              : 'var(--header-text)',
+                          opacity: currency === curr.code ? 1 : 0.7,
+                        }}
+                      >
+                        {curr.name}
+                      </span>
+                    </div>
+                  </button>
+                ))}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-          {rate && !isLoading && (
+          {currentCurrencyData && !isLoading && (
             <div className="hidden lg:flex items-center h-10">
               <span
                 className="text-sm font-medium"
                 style={{ color: 'var(--header-text)' }}
               >
-                1USD ≈ {rate.toFixed(2)}BDT
+                1USD ≈ {currentCurrencyData.rate.toFixed(2)}{currentCurrencyData.code}
               </span>
             </div>
           )}

@@ -2,8 +2,8 @@ import { fetcher } from '@/lib/utils';
 import useSWR from 'swr';
 
 export const useGetServices = () => {
-  const { data, error, isLoading } = useSWR(
-    '/api/admin/services/get-services',
+  const { data, error, isLoading, mutate } = useSWR(
+    '/api/admin/services',
     fetcher,
     {
       revalidateOnFocus: false,
@@ -14,5 +14,6 @@ export const useGetServices = () => {
     data,
     error,
     isLoading,
+    mutate,
   };
 };

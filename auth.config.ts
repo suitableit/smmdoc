@@ -37,6 +37,17 @@ export default {
       const existingUser = await getUserById(user.id);
       if (!existingUser) return false;
 
+      // Check if user account is active
+      if (existingUser.status === 'banned') {
+        console.log(`Blocked login attempt for banned user: ${existingUser.email}`);
+        return false;
+      }
+
+      if (existingUser.status === 'suspended') {
+        console.log(`Blocked login attempt for suspended user: ${existingUser.email}`);
+        return false;
+      }
+
       // Temporarily allow sign-in without email verification for development
       // TODO: Re-enable email verification requirement in production
       // if (!existingUser.emailVerified) return false;
@@ -52,12 +63,23 @@ export default {
           where: { id: twoFactorConfirmation.id },
         });
       }
+
+      // Log successful login for security monitoring
+      console.log(`Successful login: ${existingUser.email} (Role: ${existingUser.role})`);
+
       return true;
     },
 
     async session({ token, session }: any) {
       if (token.sub && session.user) {
-        session.user.id = token.sub;
+        // Convert string ID to number if needed
+        const numericId = parseInt(token.sub);
+        if (!isNaN(numericId)) {
+          session.user.id = numericId;
+        } else {
+          // For old string IDs, user needs to re-login
+          session.user.id = null;
+        }
       }
       if (token.role && session.user) {
         session.user.role = token.role as Role;
@@ -72,15 +94,37 @@ export default {
     },
     async jwt({ token }: any) {
       if (!token.sub) return token;
-      const existingUser = await getUserById(token.sub);
-      if (!existingUser) return token;
-      token.role = existingUser.role;
-      token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
-      token.currency = existingUser.currency;
-      token.name = existingUser.name;
-      token.username = existingUser.username;
-      token.email = existingUser.email;
-      token.balance = existingUser.balance;
+
+      // Convert string ID to number if needed
+      const numericId = parseInt(token.sub);
+      if (!isNaN(numericId)) {
+        token.sub = numericId;
+        const existingUser = await getUserById(numericId);
+        if (!existingUser) return token;
+        token.role = existingUser.role;
+        token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
+        token.currency = existingUser.currency;
+        token.name = existingUser.name;
+        token.username = existingUser.username;
+        token.email = existingUser.email;
+        token.balance = existingUser.balance;
+      } else {
+        // For old string IDs, try to get user by email as fallback
+        if (token.email) {
+          const existingUser = await getUserByEmail(token.email);
+          if (existingUser) {
+            token.sub = existingUser.id; // Update to new numeric ID
+            token.role = existingUser.role;
+            token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
+            token.currency = existingUser.currency;
+            token.name = existingUser.name;
+            token.username = existingUser.username;
+            token.email = existingUser.email;
+            token.balance = existingUser.balance;
+          }
+        }
+      }
+
       return token;
     },
   },

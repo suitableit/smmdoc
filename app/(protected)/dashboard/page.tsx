@@ -4,28 +4,27 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
-import { formatNumber, formatID, formatPrice } from '@/lib/utils';
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import moment from 'moment';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
-  FaChartLine,
-  FaCheckCircle,
-  FaClipboardList,
-  FaClock,
-  FaDollarSign,
-  FaExclamationTriangle,
-  FaExternalLinkAlt,
-  FaEye,
-  FaHistory,
-  FaPlus,
-  FaShoppingBag,
-  FaTicketAlt,
-  FaTimes,
-  FaTimesCircle,
-  FaUser,
-  FaWallet,
+    FaChartLine,
+    FaCheckCircle,
+    FaClipboardList,
+    FaClock,
+    FaDollarSign,
+    FaExclamationTriangle,
+    FaEye,
+    FaHistory,
+    FaPlus,
+    FaShoppingBag,
+    FaTicketAlt,
+    FaTimes,
+    FaTimesCircle,
+    FaUser,
+    FaWallet
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -128,9 +127,27 @@ const DashboardPage = () => {
 
   // Format currency values consistently
   const formatCurrency = (amount: number) => {
-    const convertedAmount =
-      currency === 'BDT' ? amount : amount / (currencyRate || 121.52);
-    const symbol = currency === 'USD' ? '$' : '৳';
+    // Database balance is stored in BDT, so we need to convert properly
+    let convertedAmount = amount;
+    let symbol = '৳';
+
+    if (currency === 'BDT') {
+      // If showing BDT, use the amount as is (already in BDT)
+      convertedAmount = amount;
+      symbol = '৳';
+    } else if (currency === 'USD') {
+      // If showing USD, convert from BDT to USD
+      const bdtToUsdRate = 110; // BDT to USD rate
+      convertedAmount = amount / bdtToUsdRate;
+      symbol = '$';
+    } else {
+      // For other currencies, convert from BDT using rate
+      const bdtToUsdRate = 110;
+      const usdAmount = amount / bdtToUsdRate;
+      convertedAmount = usdAmount * (currencyRate || 1);
+      symbol = '$'; // Default symbol for other currencies
+    }
+
     return `${symbol}${formatPrice(convertedAmount, 2)}`;
   };
 
@@ -226,7 +243,7 @@ const DashboardPage = () => {
                   </div>
                 ) : (
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    #{user?.id ? formatID(user.id) : 'N/A'}
+                    {user?.id ? formatID(user.id) : 'N/A'}
                   </p>
                 )}
               </div>
@@ -538,7 +555,7 @@ const DashboardPage = () => {
                               }`}
                             >
                               <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
-                                #{order.id}
+                                {order.id}
                               </span>
                             </td>
                             <td className="py-3 px-4 whitespace-nowrap">
