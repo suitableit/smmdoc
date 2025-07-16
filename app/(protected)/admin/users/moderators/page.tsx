@@ -1,19 +1,19 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FaUserShield,
-  FaCheckCircle,
-  FaEllipsisH,
-  FaEdit,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
-  FaTrash,
-  FaClock,
-  FaUserCheck,
-  FaCrown,
+    FaCheckCircle,
+    FaClock,
+    FaCrown,
+    FaEdit,
+    FaEllipsisH,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
+    FaTrash,
+    FaUserCheck,
+    FaUserShield,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -893,7 +893,7 @@ const ModeratorsPage = () => {
                         <tr key={moderator.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{moderator.id?.slice(-8) || 'null'}
+                              {moderator.id?.slice(-8) || 'null'}
                             </div>
                           </td>
                           <td className="p-3">

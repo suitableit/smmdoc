@@ -1,24 +1,24 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  FaBox,
-  FaCheckCircle,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaSave,
-  FaEdit,
-  FaTag,
-  FaExclamationTriangle
+    FaBox,
+    FaCheckCircle,
+    FaEdit,
+    FaExclamationTriangle,
+    FaSave,
+    FaSearch,
+    FaSync,
+    FaTag,
+    FaTimes
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
+import { useGetCategories } from '@/hooks/categories-fetch';
+import { useGetServices } from '@/hooks/service-fetch';
+import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
-import { useGetServices } from '@/hooks/service-fetch';
-import { useGetCategories } from '@/hooks/categories-fetch';
-import axiosInstance from '@/lib/axiosInstance';
 import { mutate } from 'swr';
 
 // Custom Gradient Spinner Component
@@ -129,6 +129,15 @@ const BulkModifyPage = () => {
     return id.toUpperCase();
   };
 
+  // Show toast notification
+  const showToast = useCallback((
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  }, []);
+
   // Update categories when data is loaded
   useEffect(() => {
     if (categoriesData?.data) {
@@ -154,7 +163,7 @@ const BulkModifyPage = () => {
       setEditedServices({});
       setHasChanges(false);
     }
-  }, [selectedCategory, servicesData]);
+  }, [selectedCategory, servicesData, showToast]);
 
   // Filter services based on search term
   const filteredServices = services.filter(service =>
@@ -176,7 +185,7 @@ const BulkModifyPage = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1
     }));
-  }, [filteredServices, pagination.limit, pagination.page]);
+  }, [filteredServices.length, pagination.limit]);
 
   // Get paginated data
   const getPaginatedData = () => {
@@ -185,14 +194,7 @@ const BulkModifyPage = () => {
     return filteredServices.slice(startIndex, endIndex);
   };
 
-  // Show toast notification
-  const showToast = (
-    message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'success'
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  };
+
 
   // Handle field changes
   const handleFieldChange = (serviceId: string, field: keyof Service, value: string | number) => {
@@ -561,7 +563,7 @@ const BulkModifyPage = () => {
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit">
-                              #{formatID(service.id)}
+                              {formatID(service.id)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -636,7 +638,7 @@ const BulkModifyPage = () => {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              #{formatID(service.id)}
+                              {formatID(service.id)}
                             </div>
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                               <FaCheckCircle className={`h-3 w-3 ${service.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />

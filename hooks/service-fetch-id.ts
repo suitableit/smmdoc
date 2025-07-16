@@ -1,7 +1,7 @@
 import { fetcher } from '@/lib/utils';
 import useSWR from 'swr';
 
-export const useGetServicesId = (id: string) => {
+export const useGetServicesId = (id: string | number) => {
   const { data, error, isLoading } = useSWR(
     `/api/admin/services/update-services?id=${id}`,
     fetcher,

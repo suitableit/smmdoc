@@ -3,11 +3,20 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const userId = searchParams.get('userId');
+  const userIdParam = searchParams.get('userId');
 
-  if (!userId) {
+  if (!userIdParam) {
     return NextResponse.json(
       { error: 'User ID is required.' },
+      { status: 400 }
+    );
+  }
+
+  // Convert string to number
+  const userId = parseInt(userIdParam);
+  if (isNaN(userId)) {
+    return NextResponse.json(
+      { error: 'Invalid user ID format.' },
       { status: 400 }
     );
   }

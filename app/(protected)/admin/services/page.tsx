@@ -1,58 +1,56 @@
 'use client';
-import React, { useEffect, useState, useCallback, useMemo, Fragment, useTransition } from 'react';
-import Link from 'next/link';
-import useSWR from 'swr';
-import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
+import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-    FaArrowUp,
-    FaBriefcase,
-    FaCheckCircle,
-    FaPlus,
-    FaSearch,
-    FaShieldAlt,
-    FaSync,
-    FaTimes,
-    FaBox,
-    FaExclamationTriangle,
-    FaTimesCircle,
-    FaEdit,
-    FaEllipsisH,
-    FaTrash,
-    FaToggleOn,
-    FaToggleOff,
-    FaChevronDown,
-    FaChevronRight,
-    FaChevronUp,
-    FaSave,
-    FaFileImport,
-    FaGripVertical,
-    FaTags
+  FaBox,
+  FaBriefcase,
+  FaCheckCircle,
+  FaChevronDown,
+  FaChevronRight,
+  FaChevronUp,
+  FaEdit,
+  FaEllipsisH,
+  FaExclamationTriangle,
+  FaFileImport,
+  FaGripVertical,
+  FaPlus,
+  FaSave,
+  FaSearch,
+  FaShieldAlt,
+  FaSync,
+  FaTags,
+  FaTimes,
+  FaTimesCircle,
+  FaToggleOff,
+  FaToggleOn,
+  FaTrash
 } from 'react-icons/fa';
+import useSWR from 'swr';
 
 // Import APP_NAME constant
-import { APP_NAME } from '@/lib/constants';
 import { PriceDisplay } from '@/components/PriceDisplay';
-import { useGetServices } from '@/hooks/service-fetch';
-import { useCurrentUser } from '@/hooks/use-current-user';
 import { useGetCategories } from '@/hooks/categories-fetch';
+import { useGetServices } from '@/hooks/service-fetch';
 import { useGetServicesId } from '@/hooks/service-fetch-id';
+import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
-import { formatNumber } from '@/lib/utils';
-import { mutate } from 'swr';
-import {
-  createServiceDefaultValues,
-  createServiceSchema,
-  CreateServiceSchema,
-} from '@/lib/validators/admin/services/services.validator';
-
-// Fetcher function for useSWR
-const fetcher = (url: string) => axiosInstance.get(url).then(res => res.data);
+import { APP_NAME } from '@/lib/constants';
+import { formatID, formatNumber } from '@/lib/utils';
 import {
   createCategoryDefaultValues,
   createCategorySchema,
   CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
+import {
+  createServiceDefaultValues,
+  CreateServiceSchema
+} from '@/lib/validators/admin/services/services.validator';
+import { mutate } from 'swr';
+
+// Fetcher function for useSWR
+const fetcher = (url: string) => axiosInstance.get(url).then(res => res.data);
 
 // Custom Form Components
 const FormField = ({ children }: { children: React.ReactNode }) => (
@@ -290,7 +288,7 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
                       value={targetCategoryId}
                       onChange={(e) => setTargetCategoryId(e.target.value)}
                       className="w-full pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-gray-900 transition-all duration-200 appearance-none cursor-pointer"
-                      required
+  
                     >
                       <option value="">Choose a category...</option>
                       {availableCategories.map((category: any) => (
@@ -357,10 +355,12 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
 };
 
 // Create Service Form Component (integrated)
-const CreateServiceForm = ({ onClose, showToast }: {
+const CreateServiceForm: React.FC<{
   onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
-}) => {
+  onRefresh?: () => void;
+  refreshAllData?: () => Promise<void>;
+}> = ({ onClose, showToast, onRefresh, refreshAllData }) => {
   const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
   const { data: serviceTypesData, error: serviceTypesError, isLoading: serviceTypesLoading } = useSWR('/api/admin/service-types', fetcher);
   const [isPending, startTransition] = useTransition();
@@ -372,8 +372,8 @@ const CreateServiceForm = ({ onClose, showToast }: {
     watch,
     formState: { errors }
   } = useForm<CreateServiceSchema>({
-    mode: 'all',
-    resolver: zodResolver(createServiceSchema),
+    mode: 'onChange',
+    // No resolver to allow empty fields
     defaultValues: {
       ...createServiceDefaultValues,
       mode: 'manual', // Set default mode to manual
@@ -384,19 +384,48 @@ const CreateServiceForm = ({ onClose, showToast }: {
   const refillValue = watch('refill');
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
+    console.log('Form submitted with values:', values);
+
+    // Validate required fields
+    if (!values.categoryId || values.categoryId === '') {
+      showToast('Please select a service category', 'error');
+      return;
+    }
+
+    if (!values.serviceTypeId || values.serviceTypeId === '') {
+      showToast('Please select a service type', 'error');
+      return;
+    }
+
+    // Filter out empty values for create service
+    const filteredValues = Object.fromEntries(
+      Object.entries(values).filter(([key, value]) => {
+        if (value === '' || value === null || value === undefined) return false;
+        return true;
+      })
+    );
+
+    console.log('Filtered values to send:', filteredValues);
+
     startTransition(async () => {
       try {
-        const response = await axiosInstance.post('/api/admin/services', values);
+        console.log('Sending request to API...');
+        const response = await axiosInstance.post('/api/admin/services', filteredValues);
+        console.log('API response:', response.data);
         if (response.data.success) {
           reset();
           showToast(response.data.message, 'success');
-          mutate('/api/admin/services/get-services');
-          mutate('/api/admin/services/stats');
+          // Live refresh all data
+          if (refreshAllData) {
+            await refreshAllData();
+          }
+          if (onRefresh) onRefresh();
           onClose(); // Close modal on success
         } else {
           showToast(response.data.error, 'error');
         }
       } catch (error: any) {
+        console.error('API Error:', error);
         showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
       }
     });
@@ -471,7 +500,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Name <span className="text-red-500">*</span>
+                Service Name
               </FormLabel>
               <FormControl>
                 <input
@@ -492,7 +521,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Category <span className="text-red-500">*</span>
+                Service Category
               </FormLabel>
               <FormControl>
                 <select
@@ -527,6 +556,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('serviceTypeId')}
                   disabled={isPending || serviceTypesLoading}
+                  required
                 >
                   <option value="">Select Service Type</option>
                   {serviceTypesData?.data?.map((serviceType: any) => (
@@ -574,11 +604,12 @@ const CreateServiceForm = ({ onClose, showToast }: {
                 <FormControl>
                   <input
                     type="number"
+                    step="0.01"
+                    min="0"
                     placeholder="Enter service price"
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('rate')}
                     disabled={isPending}
-                    required
                   />
                 </FormControl>
                 <FormMessage>{errors.rate?.message}</FormMessage>
@@ -600,7 +631,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('min_order')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.min_order?.message}</FormMessage>
@@ -622,7 +653,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('max_order')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.max_order?.message}</FormMessage>
@@ -637,20 +668,20 @@ const CreateServiceForm = ({ onClose, showToast }: {
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Per Quantity
+                  Per Quantity (Default: 1000)
                 </FormLabel>
                 <FormControl>
                   <input
                     type="number"
-                    value="1000"
-                    readOnly
-                    min={0}
-                    placeholder="Enter per quantity"
+                    min={1}
+                    placeholder="Enter per quantity (default: 1000)"
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('perqty')}
                     disabled={isPending}
+
                   />
                 </FormControl>
+                <FormMessage>{errors.perqty?.message}</FormMessage>
               </FormItem>
 
               {/* Average Time - 50% width - REQUIRED */}
@@ -668,7 +699,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     {...register('avg_time')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.avg_time?.message}</FormMessage>
@@ -699,52 +730,54 @@ const CreateServiceForm = ({ onClose, showToast }: {
               <FormMessage>{errors.refill?.message}</FormMessage>
             </FormItem>
 
-            {/* Refill Days - 50% width (readonly if refill is off) - REQUIRED */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Refill Days <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Enter refill days"
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  {...register('refillDays')}
-                  disabled={isPending || refillValue === 'off'}
-                  readOnly={refillValue === 'off'}
-                  required
-                />
-              </FormControl>
-              <FormMessage>{errors.refillDays?.message}</FormMessage>
-            </FormItem>
+            {/* Refill Days - 50% width (show only when refill is on) - REQUIRED */}
+            {refillValue === true && (
+              <FormItem className="md:col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Refill Days <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Enter refill days"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    {...register('refillDays')}
+                    disabled={isPending}
 
-            {/* Refill Display - 50% width (readonly if refill is off) - REQUIRED */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Refill Display (in hours){' '}
-                <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Enter refill display hours"
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  {...register('refillDisplay')}
-                  disabled={isPending || refillValue === 'off'}
-                  readOnly={refillValue === 'off'}
-                  required
-                />
-              </FormControl>
-              <FormMessage>{errors.refillDisplay?.message}</FormMessage>
-            </FormItem>
+                  />
+                </FormControl>
+                <FormMessage>{errors.refillDays?.message}</FormMessage>
+              </FormItem>
+            )}
+
+            {/* Refill Display - 50% width (show only when refill is on) - REQUIRED */}
+            {refillValue === true && (
+              <FormItem className="md:col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Refill Display (in hours){' '}
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Enter refill display hours"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    {...register('refillDisplay')}
+                    disabled={isPending}
+
+                  />
+                </FormControl>
+                <FormMessage>{errors.refillDisplay?.message}</FormMessage>
+              </FormItem>
+            )}
 
             {/* Cancel - 50% width - REQUIRED */}
             <FormItem className="md:col-span-1">
@@ -829,7 +862,6 @@ const CreateServiceForm = ({ onClose, showToast }: {
                   disabled={isPending}
                   required
                 >
-                  <option value="">Select Service Speed</option>
                   <option value="slow">Slow</option>
                   <option value="sometimes_slow">Sometimes Slow</option>
                   <option value="normal">Normal</option>
@@ -840,14 +872,11 @@ const CreateServiceForm = ({ onClose, showToast }: {
             </FormItem>
           </div>
 
-          {/* Refill and Cancel Options */}
+          {/* Refill and Cancel Options - Hidden from UI */}
+          {/*
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Refill - 50% width */}
             <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
+              <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                 Refill Enabled
               </FormLabel>
               <FormControl>
@@ -866,12 +895,8 @@ const CreateServiceForm = ({ onClose, showToast }: {
               <FormMessage>{errors.refill?.message}</FormMessage>
             </FormItem>
 
-            {/* Cancel - 50% width */}
             <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
+              <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                 Cancel Enabled
               </FormLabel>
               <FormControl>
@@ -890,56 +915,13 @@ const CreateServiceForm = ({ onClose, showToast }: {
               <FormMessage>{errors.cancel?.message}</FormMessage>
             </FormItem>
           </div>
+          */}
 
-          {/* Refill Days - Conditional */}
-          {refillValue && (
-            <FormItem>
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Refill Days
-              </FormLabel>
-              <FormControl>
-                <input
-                  type="number"
-                  placeholder="Enter refill days (default: 30)"
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                  {...register('refillDays', { valueAsNumber: true })}
-                  disabled={isPending}
-                  min="1"
-                  max="365"
-                />
-              </FormControl>
-              <FormMessage>{errors.refillDays?.message}</FormMessage>
-            </FormItem>
-          )}
+          {/* Duplicate Refill Days field removed - using the one in grid layout above */}
 
-          {/* Service Speed and Mode */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Service Speed - 50% width */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Service Speed
-              </FormLabel>
-              <FormControl>
-                <select
-                  className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('serviceSpeed')}
-                  disabled={isPending}
-                >
-                  <option value="slow">Slow</option>
-                  <option value="medium">Medium</option>
-                  <option value="fast">Fast</option>
-                </select>
-              </FormControl>
-              <FormMessage>{errors.serviceSpeed?.message}</FormMessage>
-            </FormItem>
-
-            {/* Mode - 50% width */}
+          {/* Processing Mode - 100% width - COMMENTED OUT */}
+          {/*
+          <div className="grid grid-cols-1 gap-6">
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -960,6 +942,7 @@ const CreateServiceForm = ({ onClose, showToast }: {
               <FormMessage>{errors.mode?.message}</FormMessage>
             </FormItem>
           </div>
+          */}
 
           {/* Service Description - 100% width - REQUIRED */}
           <FormItem>
@@ -1016,9 +999,10 @@ const CreateServiceForm = ({ onClose, showToast }: {
 };
 
 // Create Category Form Component (integrated)
-const CreateCategoryForm = ({ onClose, showToast }: { 
-  onClose: () => void; 
+const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
+  onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
+  onRefresh?: () => void;
 }) => {
   const [isPending, startTransition] = useTransition();
   const {
@@ -1044,6 +1028,8 @@ const CreateCategoryForm = ({ onClose, showToast }: {
           reset();
           showToast(res.data.message || 'Category created successfully', 'success');
           mutate('/api/admin/categories');
+          // Live refresh parent data
+          if (onRefresh) onRefresh();
           onClose();
         } else {
           showToast(res.data.error || 'Failed to create category', 'error');
@@ -1196,7 +1182,7 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: {
         if (res.data.success) {
           showToast(res.data.message || 'Category updated successfully', 'success');
           mutate('/api/admin/categories');
-          mutate('/api/admin/services/get-services'); // Refresh services to show updated category names
+          mutate('/api/admin/services'); // Refresh services to show updated category names
           onClose();
         } else {
           showToast(res.data.error || 'Failed to update category', 'error');
@@ -1314,10 +1300,11 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: {
 };
 
 // Edit Service Form Component (integrated)
-const EditServiceForm = ({ serviceId, onClose, showToast }: { 
-  serviceId: number; 
+const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
+  serviceId: number;
   onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
+  refreshAllData?: () => Promise<void>;
 }) => {
   const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
   const { data: serviceTypesData, error: serviceTypesError, isLoading: serviceTypesLoading } = useSWR('/api/admin/service-types', fetcher);
@@ -1331,11 +1318,11 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
     watch,
     formState: { errors }
   } = useForm<CreateServiceSchema>({
-    mode: 'all',
-    resolver: zodResolver(createServiceSchema),
+    mode: 'onChange',
+    // No resolver for edit form to allow empty fields
     defaultValues: {
       ...createServiceDefaultValues,
-      mode: 'manual', // Set default mode to manual
+      mode: 'manual',
     },
   });
   
@@ -1351,32 +1338,64 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
         rate: String(serviceData.data.rate) || '',
         min_order: String(serviceData.data.min_order) || '0',
         max_order: String(serviceData.data.max_order) || '0',
-        perqty: String(serviceData.data.perqty) || '0',
+        perqty: String(serviceData.data.perqty) || '1000',
         avg_time: serviceData.data.avg_time || '',
         updateText: serviceData.data.updateText || '',
         serviceTypeId: serviceData.data.serviceTypeId || '',
         mode: serviceData.data.mode || 'manual',
-        refill: serviceData.data.refill || false,
+        refill: Boolean(serviceData.data.refill),
         refillDays: serviceData.data.refillDays || 30,
+        refillDisplay: serviceData.data.refillDisplay || 24,
         cancel: serviceData.data.cancel || false,
-        serviceSpeed: serviceData.data.serviceSpeed || 'medium',
+        personalizedService: serviceData.data.personalizedService || 'no',
+        serviceSpeed: serviceData.data.serviceSpeed || 'normal',
+        orderLink: serviceData.data.orderLink || 'username',
       });
     }
   }, [categoriesData, reset, serviceData]);
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
+    console.log('Edit form submitted with values:', values);
+    console.log('Service ID:', serviceId);
+
+    // Validate required fields
+    if (!values.categoryId || values.categoryId === '') {
+      showToast('Please select a service category', 'error');
+      return;
+    }
+
+    if (!values.serviceTypeId || values.serviceTypeId === '') {
+      showToast('Please select a service type', 'error');
+      return;
+    }
+
+    // Filter out empty values and only send changed fields
+    const filteredValues = Object.fromEntries(
+      Object.entries(values).filter(([key, value]) => {
+        if (value === '' || value === null || value === undefined) return false;
+        return true;
+      })
+    );
+
+    console.log('Filtered values to send:', filteredValues);
+
     startTransition(async () => {
       try {
-        const response = await axiosInstance.put(`/api/admin/services/update-services?id=${serviceId}`, values);
+        console.log('Sending edit request to API...');
+        const response = await axiosInstance.put(`/api/admin/services/update-services?id=${serviceId}`, filteredValues);
+        console.log('Edit API response:', response.data);
         if (response.data.success) {
           showToast(response.data.message || 'Service updated successfully', 'success');
-          mutate('/api/admin/services/get-services');
-          mutate('/api/admin/services/stats');
+          // Live refresh all data
+          if (refreshAllData) {
+            await refreshAllData();
+          }
           onClose(); // Close modal on success
         } else {
           showToast(response.data.error || 'Failed to update service', 'error');
         }
       } catch (error: any) {
+        console.error('Edit API Error:', error);
         showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
       }
     });
@@ -1451,7 +1470,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Name <span className="text-red-500">*</span>
+                Service Name
               </FormLabel>
               <FormControl>
                 <input
@@ -1460,7 +1479,6 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                   className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                   {...register('name')}
                   disabled={isPending}
-                  required
                 />
               </FormControl>
               <FormMessage>{errors.name?.message}</FormMessage>
@@ -1472,7 +1490,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Category <span className="text-red-500">*</span>
+                Service Category
               </FormLabel>
               <FormControl>
                 <select
@@ -1500,13 +1518,14 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Type <span className="text-red-500">*</span>
+                Service Type
               </FormLabel>
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('serviceTypeId')}
                   disabled={isPending || serviceTypesLoading}
+                  required
                 >
                   <option value="">Select Service Type</option>
                   {serviceTypesData?.data?.map((serviceType: any) => (
@@ -1525,14 +1544,13 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Mode <span className="text-red-500">*</span>
+                Mode
               </FormLabel>
               <FormControl>
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('mode')}
                   disabled={isPending}
-                  required
                 >
                   <option value="manual">Manual</option>
                   <option value="auto">Auto (API)</option>
@@ -1548,17 +1566,17 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Service Price{' '}
-                  <span className="text-red-500">* (Always USD Price)</span>
+                  Service Price (Always USD Price)
                 </FormLabel>
                 <FormControl>
                   <input
                     type="number"
+                    step="0.01"
+                    min="0"
                     placeholder="Enter service price"
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('rate')}
                     disabled={isPending}
-                    required
                   />
                 </FormControl>
                 <FormMessage>{errors.rate?.message}</FormMessage>
@@ -1570,7 +1588,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Minimum Order <span className="text-red-500">*</span>
+                  Minimum Order
                 </FormLabel>
                 <FormControl>
                   <input
@@ -1580,7 +1598,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('min_order')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.min_order?.message}</FormMessage>
@@ -1602,7 +1620,6 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('max_order')}
                     disabled={isPending}
-                    required
                   />
                 </FormControl>
                 <FormMessage>{errors.max_order?.message}</FormMessage>
@@ -1617,19 +1634,20 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Per Quantity <span className="text-red-500">*</span>
+                  Per Quantity (Default: 1000) <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
                   <input
                     type="number"
-                    value="1000"
-                    readOnly
-                    placeholder="Enter per quantity"
+                    min={1}
+                    placeholder="Enter per quantity (default: 1000)"
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('perqty')}
                     disabled={isPending}
+
                   />
                 </FormControl>
+                <FormMessage>{errors.perqty?.message}</FormMessage>
               </FormItem>
 
               {/* Average Time - 50% width - REQUIRED */}
@@ -1647,7 +1665,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     {...register('avg_time')}
                     disabled={isPending}
-                    required
+
                   />
                 </FormControl>
                 <FormMessage>{errors.avg_time?.message}</FormMessage>
@@ -1678,52 +1696,54 @@ const EditServiceForm = ({ serviceId, onClose, showToast }: {
               <FormMessage>{errors.refill?.message}</FormMessage>
             </FormItem>
 
-            {/* Refill Days - 50% width (readonly if refill is off) - REQUIRED */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Refill Days <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Enter refill days"
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  {...register('refillDays')}
-                  disabled={isPending || refillValue === 'off'}
-                  readOnly={refillValue === 'off'}
-                  required
-                />
-              </FormControl>
-              <FormMessage>{errors.refillDays?.message}</FormMessage>
-            </FormItem>
+            {/* Refill Days - 50% width (show only when refill is on) - REQUIRED */}
+            {refillValue === true && (
+              <FormItem className="md:col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Refill Days <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Enter refill days"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    {...register('refillDays')}
+                    disabled={isPending}
 
-            {/* Refill Display - 50% width (readonly if refill is off) - REQUIRED */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Refill Display (in hours){' '}
-                <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Enter refill display hours"
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  {...register('refillDisplay')}
-                  disabled={isPending || refillValue === 'off'}
-                  readOnly={refillValue === 'off'}
-                  required
-                />
-              </FormControl>
-              <FormMessage>{errors.refillDisplay?.message}</FormMessage>
-            </FormItem>
+                  />
+                </FormControl>
+                <FormMessage>{errors.refillDays?.message}</FormMessage>
+              </FormItem>
+            )}
+
+            {/* Refill Display - 50% width (show only when refill is on) - REQUIRED */}
+            {refillValue === true && (
+              <FormItem className="md:col-span-1">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Refill Display (in hours){' '}
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Enter refill display hours"
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    {...register('refillDisplay')}
+                    disabled={isPending}
+
+                  />
+                </FormControl>
+                <FormMessage>{errors.refillDisplay?.message}</FormMessage>
+              </FormItem>
+            )}
 
             {/* Cancel - 50% width - REQUIRED */}
             <FormItem className="md:col-span-1">
@@ -1881,8 +1901,30 @@ function AdminServicesPage() {
 
   // Hooks
   const user = useCurrentUser();
-  const { data, error, isLoading } = useGetServices();
-  const { data: categoriesData } = useGetCategories();
+  const { data, error, isLoading, mutate: refreshServices } = useGetServices();
+  const { data: categoriesData, mutate: refreshCategories } = useGetCategories();
+
+  // Global refresh function for live updates
+  const refreshAllData = useCallback(async () => {
+    try {
+      await Promise.all([
+        refreshServices(),
+        refreshCategories(),
+        // Refresh stats
+        fetch('/api/admin/services/stats').then(res => res.json()).then(data => {
+          if (data.data) {
+            setStats(prev => ({
+              ...prev,
+              ...data.data,
+              totalCategories: categoriesData?.data?.length || prev.totalCategories,
+            }));
+          }
+        })
+      ]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
+  }, [refreshServices, refreshCategories, categoriesData?.data?.length]);
 
   // State declarations
   const [stats, setStats] = useState({
@@ -1949,11 +1991,11 @@ function AdminServicesPage() {
   // Edit Service Modal state with animation
   const [editServiceModal, setEditServiceModal] = useState<{
     open: boolean;
-    serviceId: string;
+    serviceId: number;
     closing: boolean;
   }>({
     open: false,
-    serviceId: '',
+    serviceId: 0,
     closing: false,
   });
 
@@ -2152,7 +2194,7 @@ function AdminServicesPage() {
     );
   };
 
-  const handleEditService = (serviceId: string) => {
+  const handleEditService = (serviceId: number) => {
     setEditServiceModal({
       open: true,
       serviceId: serviceId,
@@ -2170,10 +2212,12 @@ function AdminServicesPage() {
     setCreateCategoryModalClosing(false);
   };
 
+
+
   const handleCloseEditModal = () => {
     setEditServiceModal(prev => ({ ...prev, closing: true }));
     setTimeout(() => {
-      setEditServiceModal({ open: false, serviceId: '', closing: false });
+      setEditServiceModal({ open: false, serviceId: 0, closing: false });
     }, 300); // Match animation duration
   };
 
@@ -2415,8 +2459,7 @@ function AdminServicesPage() {
 
       if (response.data.success) {
         showToast(response.data.message, 'success');
-        mutate('/api/admin/services/get-services');
-        mutate('/api/admin/services/stats');
+        await refreshAllData();
       } else {
         showToast('Failed to update service status', 'error');
       }
@@ -2439,7 +2482,7 @@ function AdminServicesPage() {
 
       if (response.data.success) {
         showToast('Refill setting updated', 'success');
-        mutate('/api/admin/services/get-services');
+        await refreshAllData();
       } else {
         showToast('Failed to update refill setting', 'error');
       }
@@ -2460,7 +2503,7 @@ function AdminServicesPage() {
 
       if (response.data.success) {
         showToast('Cancel setting updated', 'success');
-        mutate('/api/admin/services/get-services');
+        await refreshAllData();
       } else {
         showToast('Failed to update cancel setting', 'error');
       }
@@ -2473,15 +2516,23 @@ function AdminServicesPage() {
     try {
       setIsUpdating(true);
       const newToggleState = !activeCategoryToggles[categoryName];
-      
+
+      // Find the category data
+      const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === categoryName);
+      if (!categoryData) {
+        showToast('Category not found', 'error');
+        return;
+      }
+
       showToast(`${newToggleState ? 'Activating' : 'Deactivating'} ${services.length} services in ${categoryName}...`, 'pending');
-      
+
       setActiveCategoryToggles(prev => ({
         ...prev,
         [categoryName]: newToggleState
       }));
 
-      const promises = services.map(service => 
+      // Main feature: Toggle all services in category
+      const promises = services.map(service =>
         axiosInstance.post('/api/admin/services/toggle-status', {
           id: service.id,
           status: service.status,
@@ -2489,10 +2540,17 @@ function AdminServicesPage() {
       );
 
       await Promise.all(promises);
-      
+
+      // Extra feature: Update category hideCategory field based on toggle state
+      const hideCategory = newToggleState ? 'no' : 'yes';
+      await axiosInstance.put(`/api/admin/categories/${categoryData.id}`, {
+        category_name: categoryData.category_name,
+        position: categoryData.position,
+        hideCategory: hideCategory
+      });
+
       showToast(`Successfully ${newToggleState ? 'activated' : 'deactivated'} ${categoryName} category`, 'success');
-      mutate('/api/admin/services/get-services');
-      mutate('/api/admin/services/stats');
+      await refreshAllData();
     } catch (error: any) {
       setActiveCategoryToggles(prev => ({
         ...prev,
@@ -2509,12 +2567,20 @@ function AdminServicesPage() {
     if (!confirmDelete) return;
 
     try {
-      await axiosInstance.delete(`/api/admin/services/delete-services?id=${id}`);
-      showToast('Service deleted successfully', 'success');
-      mutate('/api/admin/services/get-services');
-      mutate('/api/admin/services/stats');
-    } catch (error) {
-      showToast('Failed to delete service', 'error');
+      console.log('Deleting service with ID:', id);
+      const response = await axiosInstance.delete(`/api/admin/services/delete-services?id=${id}`);
+      console.log('Delete response:', response.data);
+
+      if (response.data.success) {
+        showToast(response.data.message || 'Service deleted successfully', 'success');
+        await refreshAllData();
+      } else {
+        showToast(response.data.error || 'Failed to delete service', 'error');
+      }
+    } catch (error: any) {
+      console.error('Delete service error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete service';
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -2525,20 +2591,32 @@ function AdminServicesPage() {
       setIsUpdating(true);
       showToast(`Deleting ${selectedServices.length} service${selectedServices.length !== 1 ? 's' : ''}...`, 'pending');
 
+      console.log('Deleting services:', selectedServices);
+
       // Delete services in parallel
-      const deletePromises = selectedServices.map(serviceId => 
+      const deletePromises = selectedServices.map(serviceId =>
         axiosInstance.delete(`/api/admin/services/delete-services?id=${serviceId}`)
       );
 
-      await Promise.all(deletePromises);
+      const results = await Promise.all(deletePromises);
+      console.log('Delete results:', results);
 
-      showToast(`Successfully deleted ${selectedServices.length} service${selectedServices.length !== 1 ? 's' : ''}`, 'success');
+      // Check if all deletions were successful
+      const failedDeletions = results.filter(result => !result.data.success);
+
+      if (failedDeletions.length > 0) {
+        showToast(`Failed to delete ${failedDeletions.length} service${failedDeletions.length !== 1 ? 's' : ''}`, 'error');
+      } else {
+        showToast(`Successfully deleted ${selectedServices.length} service${selectedServices.length !== 1 ? 's' : ''}`, 'success');
+      }
+
       setSelectedServices([]); // Clear selection
-      mutate('/api/admin/services/get-services');
-      mutate('/api/admin/services/stats');
+      await refreshAllData();
       handleCloseDeleteConfirmation();
     } catch (error: any) {
-      showToast(`Error deleting services: ${error.message || 'Something went wrong'}`, 'error');
+      console.error('Bulk delete error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
+      showToast(`Error deleting services: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -2651,8 +2729,7 @@ function AdminServicesPage() {
       if (selectedBulkOperation !== 'delete') {
         setSelectedServices([]);
         setSelectedBulkOperation(''); // Clear the selected operation
-        mutate('/api/admin/services/get-services');
-        mutate('/api/admin/services/stats');
+        await refreshAllData();
       }
     } catch (error: any) {
       showToast(`Error performing batch operation: ${error.message || 'Something went wrong'}`, 'error');
@@ -2689,46 +2766,50 @@ function AdminServicesPage() {
 
   const deleteCategory = async (action: 'delete' | 'move', targetCategoryId?: string) => {
     const { categoryName, categoryId, servicesCount } = deleteCategoryModal;
-    
+
     try {
       setIsUpdating(true);
-      
+      console.log('Deleting category:', { action, categoryId, categoryName, servicesCount, targetCategoryId });
+
       if (action === 'move' && targetCategoryId) {
         // First move all services to the target category
         showToast(`Moving ${servicesCount} service${servicesCount !== 1 ? 's' : ''} to new category...`, 'pending');
-        
+
         const moveResponse = await axiosInstance.put(`/api/admin/services/move-category`, {
           fromCategoryId: categoryId,
           toCategoryId: targetCategoryId
         });
-        
+
+        console.log('Move response:', moveResponse.data);
+
         if (!moveResponse.data.success) {
           showToast(moveResponse.data.error || 'Failed to move services', 'error');
           return;
         }
       }
-      
+
       // Then delete the category
       showToast(`Deleting "${categoryName}" category...`, 'pending');
-      
+
       const response = await axiosInstance.delete(`/api/admin/categories/${categoryId}`);
-      
+      console.log('Delete category response:', response.data);
+
       if (response.data.success) {
         if (action === 'move') {
           showToast(`Successfully moved ${servicesCount} service${servicesCount !== 1 ? 's' : ''} and deleted "${categoryName}" category`, 'success');
         } else {
-          showToast(`Successfully deleted "${categoryName}" category and all services`, 'success');
+          showToast(response.data.message || `Successfully deleted "${categoryName}" category and all services`, 'success');
         }
-        
-        mutate('/api/admin/categories');
-        mutate('/api/admin/services/get-services');
-        mutate('/api/admin/services/stats');
+
+        await refreshAllData();
         handleCloseDeleteCategoryModal();
       } else {
         showToast(response.data.error || 'Failed to delete category', 'error');
       }
     } catch (error: any) {
-      showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
+      console.error('Delete category error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
+      showToast(`Error: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -2796,8 +2877,10 @@ function AdminServicesPage() {
       const allCategoryNames = Object.keys(groupedServices);
       
       Object.keys(groupedServices).forEach(categoryName => {
-        const categoryServices = groupedServices[categoryName];
-        initialToggles[categoryName] = categoryServices.some((service: any) => service.status === 'active');
+        // Find the category data to check hideCategory field
+        const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === categoryName);
+        // If hideCategory is "no" then category is active (toggle ON), if "yes" then inactive (toggle OFF)
+        initialToggles[categoryName] = categoryData?.hideCategory === 'no';
       });
       setActiveCategoryToggles(initialToggles);
       
@@ -2810,7 +2893,7 @@ function AdminServicesPage() {
       const allCollapsed = allCategoryNames.length > 0 && allCategoryNames.every(cat => collapsedCategories.includes(cat));
       setAllCategoriesCollapsed(allCollapsed);
     }
-  }, [data?.data, groupedServices, categoryOrder.length, collapsedCategories]);
+  }, [data?.data, groupedServices, categoryOrder.length, collapsedCategories, categoriesData?.data]);
 
   // Handle keyboard events for modal close and body scroll lock
   useEffect(() => {
@@ -3189,7 +3272,20 @@ function AdminServicesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(Object.entries(groupedServices) as [string, any[]][]).map(([categoryName, services], categoryIndex) => (
+                      {(Object.entries(groupedServices) as [string, any[]][])
+                        .sort(([categoryNameA], [categoryNameB]) => {
+                          // Sort categories by position: top categories first, then bottom
+                          const categoryA = categoriesData?.data?.find((cat: any) => cat.category_name === categoryNameA);
+                          const categoryB = categoriesData?.data?.find((cat: any) => cat.category_name === categoryNameB);
+
+                          const positionA = categoryA?.position || 'bottom';
+                          const positionB = categoryB?.position || 'bottom';
+
+                          if (positionA === 'top' && positionB === 'bottom') return -1;
+                          if (positionA === 'bottom' && positionB === 'top') return 1;
+                          return categoryNameA.localeCompare(categoryNameB);
+                        })
+                        .map(([categoryName, services], categoryIndex) => (
                         <Fragment key={categoryName}>
                           {/* Drop zone before category */}
                           {draggedCategory && draggedCategory !== categoryName && (
@@ -3374,7 +3470,7 @@ function AdminServicesPage() {
                                     </td>
                                     <td className="p-3">
                                       <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                        #{service.id || 'null'}
+                                        {service.id ? formatID(service.id) : 'null'}
                                       </div>
                                     </td>
                                     <td className="p-3">
@@ -3389,7 +3485,7 @@ function AdminServicesPage() {
                                     </td>
                                     <td className="p-3">
                                       <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-800 w-fit">
-                                        {service?.service_type || service?.type || 'Standard'}
+                                        {service?.serviceType?.name || 'Standard'}
                                       </div>
                                     </td>
                                     <td className="p-3">
@@ -3424,21 +3520,35 @@ function AdminServicesPage() {
                                       </div>
                                     </td>
                                     <td className="p-3">
-                                      <button
-                                        onClick={() => toggleRefill(service)}
-                                        className={`p-1 rounded transition-colors ${
-                                          service.refill
-                                            ? 'text-green-600 hover:bg-green-50'
-                                            : 'text-red-600 hover:bg-red-50'
-                                        }`}
-                                        title={service.refill ? 'Disable Refill' : 'Enable Refill'}
-                                      >
-                                        {service.refill ? (
-                                          <FaToggleOn className="h-5 w-5" />
-                                        ) : (
-                                          <FaToggleOff className="h-5 w-5" />
+                                      <div className="space-y-2">
+                                        <button
+                                          onClick={() => toggleRefill(service)}
+                                          className={`p-1 rounded transition-colors ${
+                                            service.refill
+                                              ? 'text-green-600 hover:bg-green-50'
+                                              : 'text-red-600 hover:bg-red-50'
+                                          }`}
+                                          title={service.refill ? 'Disable Refill' : 'Enable Refill'}
+                                        >
+                                          {service.refill ? (
+                                            <FaToggleOn className="h-5 w-5" />
+                                          ) : (
+                                            <FaToggleOff className="h-5 w-5" />
+                                          )}
+                                        </button>
+
+                                        {/* Show Refill Details when refill is enabled */}
+                                        {service.refill && (
+                                          <div className="text-xs text-gray-600 space-y-1">
+                                            {service.refillDays && (
+                                              <div>Days: {service.refillDays}</div>
+                                            )}
+                                            {service.refillDisplay && (
+                                              <div>Hours: {service.refillDisplay}</div>
+                                            )}
+                                          </div>
                                         )}
-                                      </button>
+                                      </div>
                                     </td>
                                     <td className="p-3">
                                       <button
@@ -3642,6 +3752,7 @@ function AdminServicesPage() {
                 serviceId={editServiceModal.serviceId}
                 onClose={handleCloseEditModal}
                 showToast={showToast}
+                refreshAllData={refreshAllData}
               />
             </div>
           </div>
@@ -3664,6 +3775,8 @@ function AdminServicesPage() {
               <CreateServiceForm
                 onClose={handleCloseCreateModal}
                 showToast={showToast}
+                onRefresh={refreshAllData}
+                refreshAllData={refreshAllData}
               />
             </div>
           </div>
@@ -3686,6 +3799,7 @@ function AdminServicesPage() {
               <CreateCategoryForm
                 onClose={handleCloseCategoryModal}
                 showToast={showToast}
+                onRefresh={refreshAllData}
               />
             </div>
           </div>

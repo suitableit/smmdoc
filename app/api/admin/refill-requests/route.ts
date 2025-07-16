@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') || '';
 
     // Build where clause
-    let whereClause: any = {};
+    const whereClause: any = {};
 
     if (status !== 'all') {
       whereClause.status = status;
@@ -46,51 +46,118 @@ export async function GET(req: NextRequest) {
       where: whereClause,
     });
 
-    // Get refill requests with pagination
-    const refillRequests = await db.refillRequest.findMany({
-      where: whereClause,
-      include: {
-        order: {
-          select: {
-            id: true,
-            qty: true,
-            price: true,
-            usdPrice: true,
-            bdtPrice: true,
-            link: true,
-            status: true,
-            createdAt: true,
-          }
+    // Get refill requests with pagination - safe approach without relations
+    let refillRequests: any[] = [];
+
+    try {
+      refillRequests = await db.refillRequest.findMany({
+        where: whereClause,
+        orderBy: {
+          createdAt: 'desc'
         },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            currency: true,
-          }
-        },
-        processedByUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+        skip: (page - 1) * limit,
+        take: limit
+      });
+
+      // Manually fetch related data to avoid relation errors
+      for (const request of refillRequests) {
+        // Fetch order data with service information
+        if (request.orderId) {
+          try {
+            const order = await db.newOrder.findUnique({
+              where: { id: request.orderId },
+              select: {
+                id: true,
+                qty: true,
+                price: true,
+                usdPrice: true,
+                bdtPrice: true,
+                link: true,
+                status: true,
+                createdAt: true,
+                serviceId: true,
+              }
+            });
+
+            // Fetch service data for the order
+            if (order && order.serviceId) {
+              try {
+                const service = await db.service.findUnique({
+                  where: { id: order.serviceId },
+                  select: {
+                    id: true,
+                    name: true,
+                    rate: true,
+                    refill: true,
+                  }
+                });
+                (order as any).service = service;
+              } catch (error) {
+                console.warn(`Service not found for order ${order.id}`);
+                (order as any).service = null;
+              }
+            }
+
+            (request as any).order = order;
+          } catch (error) {
+            console.warn(`Order not found for refill request ${request.id}`);
+            (request as any).order = null;
           }
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      skip: (page - 1) * limit,
-      take: limit
-    });
+
+        // Fetch user data
+        if (request.userId) {
+          try {
+            const user = await db.user.findUnique({
+              where: { id: request.userId },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                currency: true,
+              }
+            });
+            (request as any).user = user;
+          } catch (error) {
+            console.warn(`User not found for refill request ${request.id}`);
+            (request as any).user = null;
+          }
+        }
+
+        // Fetch processed by user data
+        if (request.processedBy) {
+          try {
+            const processedByUser = await db.user.findUnique({
+              where: { id: request.processedBy },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              }
+            });
+            (request as any).processedByUser = processedByUser;
+          } catch (error) {
+            console.warn(`Processed by user not found for refill request ${request.id}`);
+            (request as any).processedByUser = null;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching refill requests:', error);
+      refillRequests = [];
+    }
+
+    // Remove duplicates based on order ID to prevent React key conflicts
+    const uniqueRefillRequests = refillRequests.filter((request, index, self) =>
+      index === self.findIndex(r => r.orderId === request.orderId)
+    );
 
     // Calculate pagination info
     const totalPages = Math.ceil(totalRequests / limit);
 
     return NextResponse.json({
       success: true,
-      data: refillRequests,
+      data: uniqueRefillRequests,
       pagination: {
         total: totalRequests,
         page,
