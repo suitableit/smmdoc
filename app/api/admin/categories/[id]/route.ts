@@ -177,12 +177,51 @@ export async function DELETE(
       }, { status: 404 });
     }
 
-    // Delete all services in this category first (cascade delete)
-    if (category._count.services > 0) {
-      await db.service.deleteMany({
-        where: { categoryId: categoryId }
+    // Delete all refill requests for orders in this category first
+    let deleteRefillRequestsResult = { count: 0 };
+    try {
+      deleteRefillRequestsResult = await db.refillRequest.deleteMany({
+        where: {
+          order: {
+            categoryId: categoryId
+          }
+        }
       });
+    } catch (error) {
+      console.log('RefillRequest table not found, skipping...');
     }
+
+    console.log(`Deleted ${deleteRefillRequestsResult.count} refill requests in category ${categoryId}`);
+
+    // Delete all cancel requests for orders in this category
+    let deleteCancelRequestsResult = { count: 0 };
+    try {
+      deleteCancelRequestsResult = await db.cancelRequest.deleteMany({
+        where: {
+          order: {
+            categoryId: categoryId
+          }
+        }
+      });
+    } catch (error) {
+      console.log('CancelRequest table not found, skipping...');
+    }
+
+    console.log(`Deleted ${deleteCancelRequestsResult.count} cancel requests in category ${categoryId}`);
+
+    // Delete all orders in this category
+    const deleteOrdersResult = await db.newOrder.deleteMany({
+      where: { categoryId: categoryId }
+    });
+
+    console.log(`Deleted ${deleteOrdersResult.count} orders in category ${categoryId}`);
+
+    // Delete all services in this category (cascade delete)
+    const deleteServicesResult = await db.service.deleteMany({
+      where: { categoryId: categoryId }
+    });
+
+    console.log(`Deleted ${deleteServicesResult.count} services in category ${categoryId}`);
 
     // Delete the category
     await db.category.delete({
@@ -192,7 +231,7 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       data: null,
-      message: `Category deleted successfully along with ${category._count.services} service(s)`,
+      message: `Category "${category.category_name}" deleted successfully along with ${deleteServicesResult.count} service(s), ${deleteOrdersResult.count} order(s), ${deleteRefillRequestsResult.count} refill request(s), and ${deleteCancelRequestsResult.count} cancel request(s)`,
       error: null
     });
 

@@ -91,6 +91,11 @@ export async function PUT(request: NextRequest) {
     );
   } catch (error) {
     console.error('Error moving services:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      name: error instanceof Error ? error.name : 'Unknown error type'
+    });
     return NextResponse.json(
       {
         error: 'Failed to move services: ' + (error instanceof Error ? error.message : 'Unknown error'),
