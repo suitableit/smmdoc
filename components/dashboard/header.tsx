@@ -328,6 +328,9 @@ const Menu = ({ user }: { user: any }) => {
   const userData = useSelector((state: any) => state.userDetails);
   const dispatch = useDispatch();
 
+  const closeMenu = () => setIsOpen(false);
+  const enableAuth = true;
+
   // Check if user is admin
   const isAdmin =
     user?.role?.toLowerCase() === 'admin' ||
@@ -403,38 +406,19 @@ const Menu = ({ user }: { user: any }) => {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      setIsOpen(false);
+      closeMenu();
 
-      dispatch(setUserDetails(null));
-
-      await signOut({
-        callbackUrl: '/',
-        redirect: true,
-      });
+      if (enableAuth) {
+        const { signOut } = await import('next-auth/react');
+        await signOut({ callbackUrl: '/', redirect: true });
+      } else {
+        // Custom logout logic
+        window.location.href = '/';
+      }
     } catch (error) {
       console.error('Logout failed:', error);
       setIsLoggingOut(false);
-
-      try {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        sessionStorage.clear();
-
-        document.cookie.split(';').forEach((c) => {
-          document.cookie = c
-            .replace(/^ +/, '')
-            .replace(
-              /=.*/,
-              '=;expires=' + new Date().toUTCString() + ';path=/'
-            );
-        });
-
-        window.location.href = '/';
-      } catch (fallbackError) {
-        console.error('Fallback logout failed:', fallbackError);
-        window.location.reload();
-      }
+      window.location.href = '/';
     }
   };
 
