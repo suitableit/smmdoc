@@ -4,28 +4,28 @@ import Link from 'next/link';
 import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-  FaBox,
-  FaBriefcase,
-  FaCheckCircle,
-  FaChevronDown,
-  FaChevronRight,
-  FaChevronUp,
-  FaEdit,
-  FaEllipsisH,
-  FaExclamationTriangle,
-  FaFileImport,
-  FaGripVertical,
-  FaPlus,
-  FaSave,
-  FaSearch,
-  FaShieldAlt,
-  FaSync,
-  FaTags,
-  FaTimes,
-  FaTimesCircle,
-  FaToggleOff,
-  FaToggleOn,
-  FaTrash
+    FaBox,
+    FaBriefcase,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronRight,
+    FaChevronUp,
+    FaEdit,
+    FaEllipsisH,
+    FaExclamationTriangle,
+    FaFileImport,
+    FaGripVertical,
+    FaPlus,
+    FaSave,
+    FaSearch,
+    FaShieldAlt,
+    FaSync,
+    FaTags,
+    FaTimes,
+    FaTimesCircle,
+    FaToggleOff,
+    FaToggleOn,
+    FaTrash
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
@@ -39,13 +39,13 @@ import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatID, formatNumber } from '@/lib/utils';
 import {
-  createCategoryDefaultValues,
-  createCategorySchema,
-  CreateCategorySchema,
+    createCategoryDefaultValues,
+    createCategorySchema,
+    CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
-  createServiceDefaultValues,
-  CreateServiceSchema
+    createServiceDefaultValues,
+    CreateServiceSchema
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
@@ -1907,7 +1907,8 @@ function AdminServicesPage() {
   // Global refresh function for live updates
   const refreshAllData = useCallback(async () => {
     try {
-      await Promise.all([
+      // Use Promise.allSettled to ensure all requests complete even if one fails
+      const results = await Promise.allSettled([
         refreshServices(),
         refreshCategories(),
         // Refresh stats
@@ -1921,6 +1922,13 @@ function AdminServicesPage() {
           }
         })
       ]);
+
+      // Log any failed requests for debugging
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Refresh operation ${index} failed:`, result.reason);
+        }
+      });
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
@@ -2795,14 +2803,18 @@ function AdminServicesPage() {
       console.log('Delete category response:', response.data);
 
       if (response.data.success) {
+        // Show success message
         if (action === 'move') {
           showToast(`Successfully moved ${servicesCount} service${servicesCount !== 1 ? 's' : ''} and deleted "${categoryName}" category`, 'success');
         } else {
           showToast(response.data.message || `Successfully deleted "${categoryName}" category and all services`, 'success');
         }
 
-        await refreshAllData();
+        // Close modal immediately
         handleCloseDeleteCategoryModal();
+
+        // Refresh data to update UI
+        await refreshAllData();
       } else {
         showToast(response.data.error || 'Failed to delete category', 'error');
       }

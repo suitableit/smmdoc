@@ -31,10 +31,25 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Convert string IDs to integers
+    const fromCatId = parseInt(fromCategoryId);
+    const toCatId = parseInt(toCategoryId);
+
+    if (isNaN(fromCatId) || isNaN(toCatId)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid category IDs provided',
+          data: null,
+          success: false,
+        },
+        { status: 400 }
+      );
+    }
+
     // Check if both categories exist
     const [fromCategory, toCategory] = await Promise.all([
-      db.category.findUnique({ where: { id: fromCategoryId } }),
-      db.category.findUnique({ where: { id: toCategoryId } })
+      db.category.findUnique({ where: { id: fromCatId } }),
+      db.category.findUnique({ where: { id: toCatId } })
     ]);
 
     if (!fromCategory) {
@@ -61,8 +76,8 @@ export async function PUT(request: NextRequest) {
 
     // Move all services from source category to target category
     const updateResult = await db.service.updateMany({
-      where: { categoryId: fromCategoryId },
-      data: { categoryId: toCategoryId }
+      where: { categoryId: fromCatId },
+      data: { categoryId: toCatId }
     });
 
     return NextResponse.json(

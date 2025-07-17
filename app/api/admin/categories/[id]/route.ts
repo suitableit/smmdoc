@@ -146,9 +146,20 @@ export async function DELETE(
       }, { status: 400 });
     }
 
+    // Convert string ID to integer
+    const categoryId = parseInt(id);
+
+    if (isNaN(categoryId)) {
+      return NextResponse.json({
+        error: 'Invalid category ID provided',
+        data: null,
+        success: false,
+      }, { status: 400 });
+    }
+
     // Check if category exists and get service count
     const category = await db.category.findUnique({
-      where: { id: id },
+      where: { id: categoryId },
       include: {
         _count: {
           select: {
@@ -169,13 +180,13 @@ export async function DELETE(
     // Delete all services in this category first (cascade delete)
     if (category._count.services > 0) {
       await db.service.deleteMany({
-        where: { categoryId: id }
+        where: { categoryId: categoryId }
       });
     }
 
     // Delete the category
     await db.category.delete({
-      where: { id: id }
+      where: { id: categoryId }
     });
 
     return NextResponse.json({
