@@ -217,7 +217,8 @@ export default function TransactionsPage() {
         }
 
         const data = await response.json();
-        let transactionsToShow = data.transactions || [];
+        console.log('API Response:', data);
+        const transactionsToShow = data.transactions || [];
 
         // Check if there's a transaction from URL parameters (for new transactions)
         const urlParams = new URLSearchParams(window.location.search);
@@ -277,7 +278,7 @@ export default function TransactionsPage() {
         setError('Failed to load transactions');
 
         // Fallback to mock data with URL transaction if available
-        let fallbackTransactions = [...mockTransactions];
+        const fallbackTransactions = [...mockTransactions];
 
         const urlParams = new URLSearchParams(window.location.search);
         const invoiceId = urlParams.get('invoice_id');

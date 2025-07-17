@@ -45,15 +45,15 @@ export async function PATCH(
 
     // Update transaction status based on action
     let updateData: any = {};
-    
-    if (status === 'approved') {
+
+    if (status === 'approved' || status === 'Success') {
       updateData = {
         status: 'Success',
-        admin_status: 'approved'
+        admin_status: 'Success'
       };
 
       // Add balance to user account only if not already approved
-      if (transaction.admin_status !== 'approved') {
+      if (transaction.admin_status !== 'Success' && transaction.admin_status !== 'approved') {
         await db.user.update({
           where: { id: transaction.userId },
           data: {
@@ -62,10 +62,25 @@ export async function PATCH(
           }
         });
       }
-    } else if (status === 'cancelled') {
+    } else if (status === 'cancelled' || status === 'Cancelled') {
       updateData = {
         status: 'Cancelled',
-        admin_status: 'cancelled'
+        admin_status: 'Cancelled'
+      };
+    } else if (status === 'Pending' || status === 'pending') {
+      updateData = {
+        status: 'Processing',
+        admin_status: 'Pending'
+      };
+    } else if (status === 'Suspicious') {
+      updateData = {
+        status: 'Processing',
+        admin_status: 'Suspicious'
+      };
+    } else {
+      // For any other status, update admin_status directly
+      updateData = {
+        admin_status: status
       };
     }
 
@@ -77,7 +92,7 @@ export async function PATCH(
 
     return NextResponse.json({
       success: true,
-      message: `Transaction ${status} successfully`,
+      message: `Transaction updated to ${updateData.admin_status || status} successfully`,
       data: updatedTransaction
     });
 
