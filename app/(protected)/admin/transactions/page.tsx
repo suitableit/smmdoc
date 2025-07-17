@@ -1,19 +1,19 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    FaCheckCircle,
-    FaClock,
-    FaCreditCard,
-    FaDollarSign,
-    FaEllipsisH,
-    FaExclamationCircle,
-    FaEye,
-    FaPlus,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
+  FaCheckCircle,
+  FaClock,
+  FaCreditCard,
+  FaDollarSign,
+  FaEllipsisH,
+  FaExclamationCircle,
+  FaEye,
+  FaPlus,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -276,22 +276,21 @@ const AdminAllTransactionsPage = () => {
   ];
 
   // State management
-  const [transactions, setTransactions] =
-    useState<Transaction[]>(dummyTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [stats, setStats] = useState<TransactionStats>({
-    totalTransactions: 9,
-    pendingTransactions: 4,
-    completedTransactions: 5,
-    totalVolume: 7550,
-    todayTransactions: 2,
+    totalTransactions: 0,
+    pendingTransactions: 0,
+    completedTransactions: 0,
+    totalVolume: 0,
+    todayTransactions: 0,
     statusBreakdown: {
-      pending: 4,
-      completed: 5,
-      cancelled: 1,
-      Success: 5,
-      Pending: 4,
-      Cancelled: 1,
-      Suspicious: 1,
+      pending: 0,
+      completed: 0,
+      cancelled: 0,
+      Success: 0,
+      Pending: 0,
+      Cancelled: 0,
+      Suspicious: 0,
     },
   });
 
@@ -392,7 +391,7 @@ const AdminAllTransactionsPage = () => {
   };
 
   // Fetch functions
-  const fetchAllTransactionsForCounts = async () => {
+  const fetchAllTransactionsForCounts = useCallback(async () => {
     try {
       const statusCounts = calculateStatusCounts(dummyTransactions);
 
@@ -410,44 +409,82 @@ const AdminAllTransactionsPage = () => {
     } catch (error) {
       console.error('Error fetching transactions for counts:', error);
     }
-  };
+  }, []);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
-      let filteredTransactions = dummyTransactions;
+      setTransactionsLoading(true);
+
+      // Build query parameters
+      const params = new URLSearchParams({
+        admin: 'true',
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+      });
 
       if (statusFilter !== 'all') {
-        filteredTransactions = filteredTransactions.filter(
-          (t) => t.admin_status === statusFilter || t.status === statusFilter
-        );
+        params.append('status', statusFilter);
       }
 
       if (typeFilter !== 'all') {
-        filteredTransactions = filteredTransactions.filter(
-          (t) => t.type === typeFilter
-        );
+        params.append('type', typeFilter);
       }
 
       if (searchTerm) {
-        const search = searchTerm.toLowerCase();
-        filteredTransactions = filteredTransactions.filter(
-          (t) =>
-            t.transactionId.toLowerCase().includes(search) ||
-            t.phone?.toLowerCase().includes(search) ||
-            t.user?.username?.toLowerCase().includes(search) ||
-            t.user?.email?.toLowerCase().includes(search)
-        );
+        params.append('search', searchTerm);
       }
 
-      setTransactions(filteredTransactions);
-      setPagination((prev) => ({
-        ...prev,
-        total: filteredTransactions.length,
-        totalPages: Math.ceil(filteredTransactions.length / prev.limit),
-      }));
+      const response = await fetch(`/api/transactions?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch transactions');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        setTransactions(result.data || []);
+
+        if (result.pagination) {
+          setPagination({
+            page: result.pagination.page,
+            limit: result.pagination.limit,
+            total: result.pagination.total,
+            totalPages: result.pagination.totalPages,
+            hasNext: result.pagination.hasNext,
+            hasPrev: result.pagination.hasPrev,
+          });
+        }
+
+        if (result.stats) {
+          setStats({
+            totalTransactions: result.stats.totalTransactions,
+            pendingTransactions: result.stats.pendingTransactions,
+            completedTransactions: result.stats.completedTransactions,
+            totalVolume: result.stats.totalVolume,
+            todayTransactions: result.stats.todayTransactions,
+            statusBreakdown: {
+              pending: result.stats.pendingTransactions,
+              completed: result.stats.completedTransactions,
+              cancelled: result.stats.cancelledTransactions || 0,
+              Success: result.stats.completedTransactions,
+              Pending: result.stats.pendingTransactions,
+              Cancelled: result.stats.cancelledTransactions || 0,
+              Suspicious: result.stats.suspiciousTransactions || 0,
+            },
+          });
+        }
+      } else {
+        throw new Error(result.error || 'Failed to fetch transactions');
+      }
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      showToast('Error fetching transactions', 'error');
+      showToast('Failed to fetch transactions', 'error');
       setTransactions([]);
       setPagination({
         page: 1,
@@ -460,48 +497,52 @@ const AdminAllTransactionsPage = () => {
     } finally {
       setTransactionsLoading(false);
     }
-  };
+  }, [pagination.page, pagination.limit, statusFilter, typeFilter, searchTerm]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      const totalTransactions = dummyTransactions.length;
-      const pendingCount = dummyTransactions.filter(
-        (t) => t.admin_status === 'pending' || t.status === 'pending'
-      ).length;
-      const successCount = dummyTransactions.filter(
-        (t) => t.admin_status === 'Success' || t.status === 'completed'
-      ).length;
-      const totalVolume = dummyTransactions.reduce(
-        (sum, t) => sum + t.amount,
-        0
-      );
+      setStatsLoading(true);
 
-      setStats({
-        totalTransactions,
-        pendingTransactions: pendingCount,
-        completedTransactions: successCount,
-        totalVolume,
-        todayTransactions: 2,
-        statusBreakdown: {
-          pending: pendingCount,
-          completed: successCount,
-          cancelled: dummyTransactions.filter(
-            (t) => t.admin_status === 'Cancelled'
-          ).length,
-          Success: successCount,
-          Pending: pendingCount,
-          Cancelled: dummyTransactions.filter(
-            (t) => t.admin_status === 'Cancelled'
-          ).length,
-          Suspicious: dummyTransactions.filter(
-            (t) => t.admin_status === 'Suspicious'
-          ).length,
+      const response = await fetch('/api/transactions/stats', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
         },
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch transaction stats');
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setStats({
+          totalTransactions: result.data.totalTransactions,
+          pendingTransactions: result.data.pendingTransactions,
+          completedTransactions: result.data.completedTransactions,
+          totalVolume: result.data.totalVolume,
+          todayTransactions: result.data.todayTransactions,
+          statusBreakdown: {
+            pending: result.data.pendingTransactions,
+            completed: result.data.completedTransactions,
+            cancelled: result.data.cancelledTransactions || 0,
+            Success: result.data.completedTransactions,
+            Pending: result.data.pendingTransactions,
+            Cancelled: result.data.cancelledTransactions || 0,
+            Suspicious: result.data.suspiciousTransactions || 0,
+          },
+        });
+      } else {
+        throw new Error(result.error || 'Failed to fetch stats');
+      }
     } catch (error) {
       console.error('Error fetching stats:', error);
+      showToast('Failed to fetch transaction stats', 'error');
+    } finally {
+      setStatsLoading(false);
     }
-  };
+  }, []);
 
   // Effects
   useEffect(() => {
@@ -511,18 +552,17 @@ const AdminAllTransactionsPage = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, fetchTransactions]);
 
   useEffect(() => {
     setTransactionsLoading(true);
     fetchTransactions();
-  }, [pagination.page, pagination.limit, statusFilter, typeFilter]);
+  }, [pagination.page, pagination.limit, statusFilter, typeFilter, fetchTransactions]);
 
   useEffect(() => {
     fetchStats();
     fetchAllTransactionsForCounts();
-    setStatsLoading(false);
-  }, []);
+  }, [fetchStats, fetchAllTransactionsForCounts]);
 
   useEffect(() => {
     if (pagination.total > 0) {
@@ -807,22 +847,35 @@ const AdminAllTransactionsPage = () => {
     newStatus: string
   ) => {
     try {
-      const response = await fetch(
-        `/api/admin/transactions/${transactionId}/status`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ status: newStatus }),
-        }
-      );
+      const response = await fetch(`/api/transactions/${transactionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
       const result = await response.json();
 
       if (result.success) {
         showToast(`Transaction status updated to ${newStatus}`, 'success');
-        fetchTransactions();
+
+        // Update local state optimistically
+        setTransactions(prevTransactions =>
+          prevTransactions.map(transaction =>
+            transaction.id.toString() === transactionId
+              ? {
+                  ...transaction,
+                  admin_status: newStatus as 'pending' | 'Success' | 'Cancelled' | 'Suspicious',
+                  status: newStatus === 'Success' ? 'completed' as const :
+                         newStatus === 'Cancelled' ? 'cancelled' as const : 'pending' as const,
+                  updatedAt: new Date().toISOString()
+                }
+              : transaction
+          )
+        );
+
+        // Refresh data
         fetchStats();
         fetchAllTransactionsForCounts();
       } else {
@@ -843,10 +896,10 @@ const AdminAllTransactionsPage = () => {
   };
 
   const openUpdateStatusDialog = (
-    transactionId: string,
+    transactionId: number,
     currentStatus: string
   ) => {
-    setUpdateStatusDialog({ open: true, transactionId, currentStatus });
+    setUpdateStatusDialog({ open: true, transactionId: transactionId.toString(), currentStatus });
     setNewStatus(currentStatus);
   };
 
@@ -1166,7 +1219,7 @@ const AdminAllTransactionsPage = () => {
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               {transaction.id
-                                ? formatID(transaction.id.slice(-8))
+                                ? formatID(transaction.id.toString().slice(-8))
                                 : 'null'}
                             </div>
                           </td>
@@ -1255,14 +1308,14 @@ const AdminAllTransactionsPage = () => {
                             transaction.status === 'pending' ? (
                               <div className="flex items-center gap-2">
                                 <button
-                                  onClick={() => handleApprove(transaction.id)}
+                                  onClick={() => handleApprove(transaction.id.toString())}
                                   className="btn btn-primary flex items-center gap-1 px-3 py-1.5 text-xs bg-green-500 text-white border border-green-500 hover:bg-green-600"
                                   title="Approve"
                                 >
                                   <FaCheckCircle className="h-3 w-3" />
                                 </button>
                                 <button
-                                  onClick={() => handleCancel(transaction.id)}
+                                  onClick={() => handleCancel(transaction.id.toString())}
                                   className="btn btn-secondary flex items-center gap-1 px-3 py-1.5 text-xs bg-red-500 text-white border border-red-500 hover:bg-red-600"
                                   title="Cancel"
                                 >
