@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -14,16 +14,23 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: transactionId } = params;
+    const { id } = await params;
     const body = await request.json();
     const { status } = body;
 
-    if (!transactionId) {
+    if (!id) {
       return NextResponse.json({ error: 'Transaction ID is required' }, { status: 400 });
     }
 
     if (!status) {
       return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+    }
+
+    // Convert string ID to integer
+    const transactionId = parseInt(id);
+
+    if (isNaN(transactionId)) {
+      return NextResponse.json({ error: 'Invalid transaction ID' }, { status: 400 });
     }
 
     // Find the transaction
@@ -85,7 +92,7 @@ export async function PATCH(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -94,7 +101,14 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: transactionId } = params;
+    const { id } = await params;
+
+    // Convert string ID to integer
+    const transactionId = parseInt(id);
+
+    if (isNaN(transactionId)) {
+      return NextResponse.json({ error: 'Invalid transaction ID' }, { status: 400 });
+    }
 
     // Find the transaction
     const transaction = await db.addFund.findUnique({

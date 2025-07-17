@@ -11,10 +11,16 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '10'); // Reduced default limit
+    const limit = parseInt(searchParams.get('limit') || '20'); // Increased for admin view
     const offset = parseInt(searchParams.get('offset') || '0');
+    const page = parseInt(searchParams.get('page') || '1');
     const status = searchParams.get('status');
+    const type = searchParams.get('type');
+    const search = searchParams.get('search') || '';
     const adminView = searchParams.get('admin') === 'true';
+
+    // Calculate skip for pagination
+    const skip = (page - 1) * limit;
 
     // Build where clause
     const where: any = {};
@@ -24,91 +30,160 @@ export async function GET(request: NextRequest) {
       where.userId = session.user.id;
     }
 
+    // Add search functionality for admin view
+    if (search && adminView && session.user.role === 'admin') {
+      where.OR = [
+        { transaction_id: { contains: search, mode: 'insensitive' } },
+        { invoice_id: { contains: search, mode: 'insensitive' } },
+        { sender_number: { contains: search, mode: 'insensitive' } },
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    // Status filtering
     if (status && status !== 'all') {
-      if (status === 'success') {
-        where.status = 'Success';
-      } else if (status === 'pending') {
-        // For admin view, filter by admin_status for pending transactions
-        if (adminView && session.user.role === 'admin') {
-          where.admin_status = 'Pending';
-        } else {
-          where.status = 'Processing';
-        }
+      if (status === 'Success' || status === 'completed') {
+        where.admin_status = 'Success';
+      } else if (status === 'pending' || status === 'Pending') {
+        where.admin_status = 'Pending';
+      } else if (status === 'cancelled' || status === 'Cancelled') {
+        where.admin_status = 'Cancelled';
+      } else if (status === 'Suspicious') {
+        where.admin_status = 'Suspicious';
       } else if (status === 'failed') {
         where.status = { in: ['Failed', 'Cancelled'] };
       }
     }
 
-    // For admin view, if no specific status requested, show only pending
-    if (adminView && session.user.role === 'admin' && !status) {
-      where.admin_status = 'Pending';
+    // Type filtering (deposit/withdrawal)
+    if (type && type !== 'all') {
+      // For now, AddFund table only contains deposits
+      // In future, you might have separate tables for withdrawals
+      if (type === 'withdrawal') {
+        // Return empty result for now as we don't have withdrawal data
+        where.id = -1; // This will return no results
+      }
     }
 
     // Fetch transactions from database (using AddFund model) with timeout
-    const transactions = await Promise.race([
-      db.addFund.findMany({
-        where,
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: Math.min(limit, 100), // Limit to max 100 records
-        skip: offset,
-        select: {
-          id: true,
-          invoice_id: true,
-          amount: true,
-          status: true,
-          method: true,
-          payment_method: true,
-          transaction_id: true,
-          createdAt: true,
-          order_id: true,
-          sender_number: true,
-          currency: true,
-          admin_status: true,
-          userId: true,
-          user: {
-            select: {
-              name: true,
-              email: true,
+    const [transactions, totalCount] = await Promise.all([
+      Promise.race([
+        db.addFund.findMany({
+          where,
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: Math.min(limit, 100), // Limit to max 100 records
+          skip: adminView ? skip : offset, // Use skip for admin pagination, offset for user
+          select: {
+            id: true,
+            invoice_id: true,
+            amount: true,
+            status: true,
+            method: true,
+            payment_method: true,
+            transaction_id: true,
+            createdAt: true,
+            updatedAt: true,
+            order_id: true,
+            sender_number: true,
+            currency: true,
+            admin_status: true,
+            userId: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                username: true,
+              },
             },
           },
-        },
-      }),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Database query timeout')), 10000)
-      )
-    ]) as any[];
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Database query timeout')), 10000)
+        )
+      ]) as any[],
+      // Get total count for pagination (only for admin view)
+      adminView && session.user.role === 'admin'
+        ? db.addFund.count({ where })
+        : Promise.resolve(0)
+    ]);
 
     // Transform data to match frontend interface
-    const transformedTransactions = transactions.map((transaction) => ({
+    const transformedTransactions = transactions.map((transaction: any) => ({
       id: transaction.id,
+      transactionId: transaction.transaction_id || transaction.id,
       invoice_id: transaction.invoice_id || transaction.id,
       amount: transaction.amount,
-      status: mapStatus(transaction.status || 'Processing'),
-      admin_status: transaction.admin_status || 'Pending',
+      status: transaction.status || 'Processing',
+      admin_status: transaction.admin_status || 'pending',
       method: transaction.method || 'uddoktapay',
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || transaction.id,
       createdAt: transaction.createdAt.toISOString(),
-      transaction_type: 'deposit',
-      reference_id: transaction.order_id,
-      sender_number: transaction.sender_number,
-      phone: transaction.sender_number,
+      updatedAt: transaction.updatedAt?.toISOString() || transaction.createdAt.toISOString(),
+      type: 'deposit', // All AddFund records are deposits
+      phone: transaction.sender_number || '',
       currency: transaction.currency || 'BDT',
       userId: transaction.userId,
       user: transaction.user ? {
-        name: transaction.user.name,
-        email: transaction.user.email,
+        id: transaction.user.id,
+        name: transaction.user.name || '',
+        email: transaction.user.email || '',
+        username: transaction.user.username || '',
       } : null,
+      notes: '', // Can be added later if needed
+      processedAt: transaction.admin_status === 'Success' ? transaction.updatedAt?.toISOString() : null,
     }));
 
-    // For admin view, return structured response, otherwise return array for backward compatibility
+    // For admin view, return structured response with pagination
     if (adminView && session.user.role === 'admin') {
+      const totalPages = Math.ceil(totalCount / limit);
+
+      // Calculate stats for admin dashboard
+      const stats = {
+        totalTransactions: totalCount,
+        pendingTransactions: await db.addFund.count({
+          where: { ...where, admin_status: 'Pending' }
+        }),
+        completedTransactions: await db.addFund.count({
+          where: { ...where, admin_status: 'Success' }
+        }),
+        cancelledTransactions: await db.addFund.count({
+          where: { ...where, admin_status: 'Cancelled' }
+        }),
+        suspiciousTransactions: await db.addFund.count({
+          where: { ...where, admin_status: 'Suspicious' }
+        }),
+        totalVolume: await db.addFund.aggregate({
+          where: { ...where, admin_status: 'Success' },
+          _sum: { amount: true }
+        }).then(result => result._sum.amount || 0),
+        todayTransactions: await db.addFund.count({
+          where: {
+            ...where,
+            createdAt: {
+              gte: new Date(new Date().setHours(0, 0, 0, 0))
+            }
+          }
+        })
+      };
+
       return NextResponse.json({
-        transactions: transformedTransactions,
-        total: transactions.length,
-        success: true
+        success: true,
+        data: transformedTransactions,
+        pagination: {
+          page,
+          limit,
+          total: totalCount,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        },
+        stats,
+        error: null
       });
     } else {
       // Return array directly for backward compatibility
@@ -157,39 +232,76 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update transaction status based on action
-    let updateData: any = {};
+    const updateData: Record<string, any> = {
+      updatedAt: new Date()
+    };
 
-    if (status === 'approved') {
-      updateData = {
-        status: 'Success',
-        admin_status: 'approved'
-      };
+    if (status === 'approved' || status === 'Success') {
+      updateData.status = 'Success';
+      updateData.admin_status = 'Success';
 
-      // Add balance to user account
-      await db.user.update({
-        where: { id: transaction.userId },
-        data: {
-          balance: { increment: transaction.amount },
-          total_deposit: { increment: transaction.amount }
-        }
-      });
-    } else if (status === 'cancelled') {
-      updateData = {
-        status: 'Cancelled',
-        admin_status: 'cancelled'
-      };
+      // Add balance to user account only if not already approved
+      if (transaction.admin_status !== 'Success') {
+        await db.user.update({
+          where: { id: transaction.userId },
+          data: {
+            balance: { increment: transaction.amount },
+            total_deposit: { increment: transaction.amount }
+          }
+        });
+      }
+    } else if (status === 'cancelled' || status === 'Cancelled') {
+      updateData.status = 'Cancelled';
+      updateData.admin_status = 'Cancelled';
+
+      // If transaction was previously approved, deduct balance
+      if (transaction.admin_status === 'Success') {
+        await db.user.update({
+          where: { id: transaction.userId },
+          data: {
+            balance: { decrement: transaction.amount },
+            total_deposit: { decrement: transaction.amount }
+          }
+        });
+      }
+    } else if (status === 'Suspicious') {
+      updateData.admin_status = 'Suspicious';
+      updateData.status = 'Processing'; // Keep original status but mark as suspicious
+    } else if (status === 'Pending' || status === 'pending') {
+      updateData.admin_status = 'Pending';
+      updateData.status = 'Processing';
     }
 
     // Update the transaction
     const updatedTransaction = await db.addFund.update({
       where: { id: transactionId },
-      data: updateData
+      data: updateData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            balance: true
+          }
+        }
+      }
     });
 
     return NextResponse.json({
       success: true,
       message: `Transaction ${status} successfully`,
-      data: updatedTransaction
+      data: {
+        id: updatedTransaction.id,
+        transactionId: updatedTransaction.transaction_id,
+        amount: updatedTransaction.amount,
+        status: updatedTransaction.status,
+        admin_status: updatedTransaction.admin_status,
+        currency: updatedTransaction.currency,
+        user: updatedTransaction.user,
+        updatedAt: updatedTransaction.updatedAt.toISOString()
+      },
+      error: null
     });
 
   } catch (error) {
@@ -201,19 +313,4 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// Helper function to map status
-function mapStatus(status: string): string {
-  switch (status?.toLowerCase()) {
-    case 'success':
-    case 'completed':
-      return 'success';
-    case 'processing':
-    case 'pending':
-      return 'pending';
-    case 'failed':
-    case 'cancelled':
-      return 'failed';
-    default:
-      return 'pending';
-  }
-}
+
