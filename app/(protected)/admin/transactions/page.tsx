@@ -792,15 +792,12 @@ const AdminAllTransactionsPage = () => {
   };
 
   const handleCancel = (transactionId: string) => {
-    console.log('handleCancel called with:', transactionId);
     const transaction = transactions.find((t) => t.id.toString() === transactionId);
-    console.log('Found transaction:', transaction);
     setCancelConfirmDialog({
       open: true,
       transactionId: parseInt(transactionId),
       transaction: transaction || null,
     });
-    console.log('Cancel dialog state set');
   };
 
   const confirmCancel = async (transactionId: number) => {
@@ -839,7 +836,7 @@ const AdminAllTransactionsPage = () => {
     } finally {
       setCancelConfirmDialog({
         open: false,
-        transactionId: '',
+        transactionId: 0,
         transaction: null,
       });
     }
@@ -1882,7 +1879,7 @@ const AdminAllTransactionsPage = () => {
                             onClick={() =>
                               setCancelConfirmDialog({
                                 open: false,
-                                transactionId: '',
+                                transactionId: 0,
                                 transaction: null,
                               })
                             }
