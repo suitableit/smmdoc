@@ -792,15 +792,18 @@ const AdminAllTransactionsPage = () => {
   };
 
   const handleCancel = (transactionId: string) => {
-    const transaction = transactions.find((t) => t.id === transactionId);
+    console.log('handleCancel called with:', transactionId);
+    const transaction = transactions.find((t) => t.id.toString() === transactionId);
+    console.log('Found transaction:', transaction);
     setCancelConfirmDialog({
       open: true,
-      transactionId,
+      transactionId: parseInt(transactionId),
       transaction: transaction || null,
     });
+    console.log('Cancel dialog state set');
   };
 
-  const confirmCancel = async (transactionId: string) => {
+  const confirmCancel = async (transactionId: number) => {
     try {
       const response = await fetch(`/api/admin/funds/${transactionId}/cancel`, {
         method: 'POST',
