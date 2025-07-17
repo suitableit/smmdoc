@@ -32,25 +32,40 @@ export const register = async (values: z.infer<typeof signUpSchema>) => {
   }
   
   const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Check if email already exists
   const existingUser = await getUserByEmail(email);
   if (existingUser) {
-    return { success: false, error: "User already exists" };
+    return { success: false, error: "Email already exists" };
   }
-  await db.user.create({
-    data: {
-      username,
-      name,
-      email,
-      password: hashedPassword,
-    },
-  });
 
-  const verificationToken = await generateVerificationToken(email);
-  // Todo send verification email token
-  await sendMail({
-    sendTo: email,
-    subject: "Email Verification",
-    html: `<a href="${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken?.token}">Click here to verify your email</a>`,
+  // Check if username already exists
+  const existingUsername = await db.user.findUnique({
+    where: { username: username }
   });
-  return { success: true, error: "", message: "Registration successful! Please check your email for verification link. You must verify your email before logging in." };
+  if (existingUsername) {
+    return { success: false, error: "Username is already exist" };
+  }
+  try {
+    await db.user.create({
+      data: {
+        username,
+        name,
+        email,
+        password: hashedPassword,
+      },
+    });
+
+    const verificationToken = await generateVerificationToken(email);
+    // Todo send verification email token
+    await sendMail({
+      sendTo: email,
+      subject: "Email Verification",
+      html: `<a href="${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken?.token}">Click here to verify your email</a>`,
+    });
+    return { success: true, error: "", message: "Registration successful! Please check your email for verification link. You must verify your email before logging in." };
+  } catch (error) {
+    console.error('Database error during user creation:', error);
+    return { success: false, error: "Failed to create user account. Please try again." };
+  }
 };

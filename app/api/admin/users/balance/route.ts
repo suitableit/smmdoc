@@ -1,8 +1,8 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
 import { emailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -98,12 +98,12 @@ export async function POST(request: NextRequest) {
       const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: {
-          balance: action === 'add' 
+          balance: action === 'add'
             ? { increment: amount }
             : { decrement: amount },
-          total_deposit: action === 'add' 
+          total_deposit: action === 'add'
             ? { increment: amount }
-            : { decrement: amount }
+            : undefined
         }
       });
 
@@ -124,8 +124,7 @@ export async function POST(request: NextRequest) {
           payment_method: 'Admin Manual Adjustment',
           sender_number: '',
           transaction_id: `MANUAL-${action.toUpperCase()}-${Date.now()}`,
-          currency: 'BDT',
-          notes: notes || `Manual ${action} by admin`
+          currency: 'BDT'
         }
       });
 

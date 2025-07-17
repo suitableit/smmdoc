@@ -2,18 +2,18 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    FaCheckCircle,
-    FaClock,
-    FaCreditCard,
-    FaDollarSign,
-    FaEllipsisH,
-    FaExclamationCircle,
-    FaEye,
-    FaPlus,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
+  FaCheckCircle,
+  FaClock,
+  FaCreditCard,
+  FaDollarSign,
+  FaEllipsisH,
+  FaExclamationCircle,
+  FaEye,
+  FaPlus,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -436,6 +436,8 @@ const AdminAllTransactionsPage = () => {
         params.append('searchType', searchType);
       }
 
+
+
       const response = await fetch(`/api/transactions?${params.toString()}`, {
         method: 'GET',
         headers: {
@@ -503,7 +505,11 @@ const AdminAllTransactionsPage = () => {
       }
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      showToast('Failed to fetch transactions', 'error');
+
+      // Show more specific error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions';
+      showToast(`Database Error: ${errorMessage}`, 'error');
+
       setTransactions([]);
       setPagination({
         page: 1,
@@ -1040,6 +1046,8 @@ const AdminAllTransactionsPage = () => {
                 </select>
               </div>
             </div>
+
+
           </div>
         </div>
 
@@ -1981,21 +1989,24 @@ const AdminAllTransactionsPage = () => {
                         </div>
 
                         <div>
-                          <label className="form-label mb-2">Amount *</label>
-                          <input
-                            type="number"
-                            placeholder="Enter amount"
-                            value={balanceForm.amount}
-                            onChange={(e) =>
-                              setBalanceForm((prev) => ({
-                                ...prev,
-                                amount: e.target.value,
-                              }))
-                            }
-                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            min="0"
-                            step="0.01"
-                          />
+                          <label className="form-label mb-2">Amount (USD) *</label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">$</span>
+                            <input
+                              type="number"
+                              placeholder="0.00"
+                              value={balanceForm.amount}
+                              onChange={(e) =>
+                                setBalanceForm((prev) => ({
+                                  ...prev,
+                                  amount: e.target.value,
+                                }))
+                              }
+                              className="form-field w-full pl-8 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
                         </div>
 
                         <div>

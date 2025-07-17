@@ -41,6 +41,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Test database connection first
+    await db.$queryRaw`SELECT 1`;
+
     // Fetch transactions from database (using AddFund model)
     const transactions = await db.addFund.findMany({
       where,

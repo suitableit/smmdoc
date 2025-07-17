@@ -4,12 +4,12 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { APP_NAME } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 import {
-    FaCheckCircle,
-    FaClock,
-    FaExclamationTriangle,
-    FaReceipt,
-    FaSearch,
-    FaTimes,
+  FaCheckCircle,
+  FaClock,
+  FaExclamationTriangle,
+  FaReceipt,
+  FaSearch,
+  FaTimes,
 } from 'react-icons/fa';
 import { TransactionsList } from './components/TransactionsList';
 
@@ -117,6 +117,10 @@ export default function TransactionsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState({
+    startDate: '',
+    endDate: ''
+  });
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -339,7 +343,7 @@ export default function TransactionsPage() {
     };
 
     fetchTransactions();
-  }, [activeTab, debouncedSearchTerm]);
+  }, [activeTab, debouncedSearchTerm, dateFilter]);
 
   const handleViewDetails = (invoiceId: string) => {
     showToast(`Viewing details for ${invoiceId}`, 'info');
@@ -352,17 +356,25 @@ export default function TransactionsPage() {
       tx.transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tx.payment_method?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (activeTab === 'all') return matchesSearch;
+    // Date filtering
+    const txDate = new Date(tx.createdAt);
+    const matchesDate =
+      (!dateFilter.startDate || txDate >= new Date(dateFilter.startDate)) &&
+      (!dateFilter.endDate || txDate <= new Date(dateFilter.endDate + 'T23:59:59'));
+
+    const matchesAll = matchesSearch && matchesDate;
+
+    if (activeTab === 'all') return matchesAll;
     if (activeTab === 'success')
-      return tx.status === 'Success' && matchesSearch;
+      return tx.status === 'Success' && matchesAll;
     if (activeTab === 'pending')
-      return tx.status === 'Processing' && matchesSearch;
+      return tx.status === 'Processing' && matchesAll;
     if (activeTab === 'failed')
       return (
-        (tx.status === 'Failed' || tx.status === 'Cancelled') && matchesSearch
+        (tx.status === 'Failed' || tx.status === 'Cancelled') && matchesAll
       );
 
-    return matchesSearch;
+    return matchesAll;
   });
 
   const successTransactions = transactions.filter(
@@ -421,6 +433,42 @@ export default function TransactionsPage() {
                     autoComplete="off"
                   />
                 </div>
+              </div>
+
+              {/* Date Filter */}
+              <div className="mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={dateFilter.startDate}
+                      onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="form-field w-full px-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={dateFilter.endDate}
+                      onChange={(e) => setDateFilter(prev => ({ ...prev, endDate: e.target.value }))}
+                      className="form-field w-full px-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
+                    />
+                  </div>
+                </div>
+                {(dateFilter.startDate || dateFilter.endDate) && (
+                  <button
+                    onClick={() => setDateFilter({ startDate: '', endDate: '' })}
+                    className="mt-3 text-sm text-[var(--primary)] hover:text-[var(--secondary)] font-medium"
+                  >
+                    Clear Date Filter
+                  </button>
+                )}
               </div>
 
               {/* Status Filter Buttons - Updated with Services Page Gradient */}
