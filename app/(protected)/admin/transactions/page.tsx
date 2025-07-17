@@ -2,18 +2,18 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaClock,
-  FaCreditCard,
-  FaDollarSign,
-  FaEllipsisH,
-  FaExclamationCircle,
-  FaEye,
-  FaPlus,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
+    FaCheckCircle,
+    FaClock,
+    FaCreditCard,
+    FaDollarSign,
+    FaEllipsisH,
+    FaExclamationCircle,
+    FaEye,
+    FaPlus,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -304,6 +304,7 @@ const AdminAllTransactionsPage = () => {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchType, setSearchType] = useState('id'); // 'id', 'username', 'phone'
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [toast, setToast] = useState<{
@@ -432,6 +433,7 @@ const AdminAllTransactionsPage = () => {
 
       if (searchTerm) {
         params.append('search', searchTerm);
+        params.append('searchType', searchType);
       }
 
       const response = await fetch(`/api/transactions?${params.toString()}`, {
@@ -442,12 +444,17 @@ const AdminAllTransactionsPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`Failed to fetch transactions: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
+      console.log('API Response:', result);
 
+      // Handle both new structured response and legacy array response
       if (result.success) {
+        // New structured response
         setTransactions(result.data || []);
 
         if (result.pagination) {
@@ -479,6 +486,18 @@ const AdminAllTransactionsPage = () => {
             },
           });
         }
+      } else if (Array.isArray(result)) {
+        // Legacy array response - fallback
+        console.log('Using legacy array response');
+        setTransactions(result);
+        setPagination({
+          page: 1,
+          limit: result.length,
+          total: result.length,
+          totalPages: 1,
+          hasNext: false,
+          hasPrev: false,
+        });
       } else {
         throw new Error(result.error || 'Failed to fetch transactions');
       }
@@ -497,7 +516,7 @@ const AdminAllTransactionsPage = () => {
     } finally {
       setTransactionsLoading(false);
     }
-  }, [pagination.page, pagination.limit, statusFilter, typeFilter, searchTerm]);
+  }, [pagination.page, pagination.limit, statusFilter, typeFilter, searchTerm, searchType]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -1010,7 +1029,11 @@ const AdminAllTransactionsPage = () => {
                   />
                 </div>
 
-                <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
+                <select
+                  value={searchType}
+                  onChange={(e) => setSearchType(e.target.value)}
+                  className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                >
                   <option value="id">Transaction ID</option>
                   <option value="phone">Phone Number</option>
                   <option value="username">Username</option>

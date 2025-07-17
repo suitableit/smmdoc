@@ -5,9 +5,9 @@ import { FormSuccess } from '@/components/form-success';
 import { register } from '@/lib/actions/register';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
-  signUpDefaultValues,
-  signUpSchema,
-  SignUpSchema,
+    signUpDefaultValues,
+    signUpSchema,
+    SignUpSchema,
 } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
@@ -21,11 +21,73 @@ export default function SignUpForm() {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
 
+  // Username validation states
+  const [usernameStatus, setUsernameStatus] = useState<{
+    checking: boolean;
+    available: boolean | null;
+    message: string;
+  }>({
+    checking: false,
+    available: null,
+    message: ''
+  });
+
   const form = useForm<SignUpSchema>({
     mode: 'all',
     resolver: zodResolver(signUpSchema),
     defaultValues: signUpDefaultValues,
   });
+
+  // Function to check username availability
+  const checkUsernameAvailability = useCallback(async (username: string) => {
+    if (!username || username.length < 3) {
+      setUsernameStatus({
+        checking: false,
+        available: null,
+        message: ''
+      });
+      return;
+    }
+
+    setUsernameStatus({
+      checking: true,
+      available: null,
+      message: 'Checking username availability...'
+    });
+
+    try {
+      const response = await fetch('/api/auth/check-username', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username }),
+      });
+
+      const result = await response.json();
+
+      if (result.available) {
+        setUsernameStatus({
+          checking: false,
+          available: true,
+          message: 'Username is available'
+        });
+      } else {
+        setUsernameStatus({
+          checking: false,
+          available: false,
+          message: result.error || 'Username is not available'
+        });
+      }
+    } catch (error) {
+      console.error('Error checking username:', error);
+      setUsernameStatus({
+        checking: false,
+        available: null,
+        message: 'Error checking username availability'
+      });
+    }
+  }, []);
 
   // Handle username input transformation
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,17 +96,91 @@ export default function SignUpForm() {
     const cleanedValue = value
       .toLowerCase()
       .replace(/[^a-z0-9._]/g, ''); // Only allow lowercase letters, numbers, dots, and underscores
-    
-    form.setValue('username', cleanedValue, { 
+
+    form.setValue('username', cleanedValue, {
       shouldValidate: true,
       shouldDirty: true,
-      shouldTouch: true 
+      shouldTouch: true
+    });
+
+    // Reset username status when user types
+    setUsernameStatus({
+      checking: false,
+      available: null,
+      message: ''
     });
   };
+
+  // Debounced username check
+  useEffect(() => {
+    const username = form.watch('username');
+
+    if (!username || username.length < 3) {
+      setUsernameStatus({
+        checking: false,
+        available: null,
+        message: ''
+      });
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      checkUsernameAvailability(username);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [form.watch('username'), checkUsernameAvailability]);
 
   const onSubmit: SubmitHandler<SignUpSchema> = async (values) => {
     setError('');
     setSuccess('');
+
+    // Check if username is available before submitting
+    if (usernameStatus.available === false) {
+      setError('Please choose a different username');
+      return;
+    }
+
+    // If username status is still checking or unknown, check it now
+    if (usernameStatus.available === null && values.username) {
+      setUsernameStatus({
+        checking: true,
+        available: null,
+        message: 'Checking username availability...'
+      });
+
+      try {
+        const response = await fetch('/api/auth/check-username', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: values.username }),
+        });
+
+        const result = await response.json();
+
+        if (!result.available) {
+          setUsernameStatus({
+            checking: false,
+            available: false,
+            message: result.error || 'Username is not available'
+          });
+          setError(result.error || 'Username is not available');
+          return;
+        }
+
+        setUsernameStatus({
+          checking: false,
+          available: true,
+          message: 'Username is available'
+        });
+      } catch (error) {
+        console.error('Error checking username:', error);
+        setError('Error checking username availability');
+        return;
+      }
+    }
 
     startTransition(() => {
       register(values)
@@ -97,12 +233,45 @@ export default function SignUpForm() {
               disabled={isPending}
               value={form.watch('username') || ''}
               onChange={handleUsernameChange}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              className={`w-full pl-12 pr-12 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
+                usernameStatus.available === false
+                  ? 'border-red-500 dark:border-red-400'
+                  : usernameStatus.available === true
+                  ? 'border-green-500 dark:border-green-400'
+                  : 'border-gray-300 dark:border-gray-600'
+              }`}
             />
+
+            {/* Username validation status indicator */}
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              {usernameStatus.checking && (
+                <FaSpinner className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
+              )}
+              {!usernameStatus.checking && usernameStatus.available === true && (
+                <FaCheck className="w-4 h-4 text-green-500 dark:text-green-400" />
+              )}
+              {!usernameStatus.checking && usernameStatus.available === false && (
+                <FaTimes className="w-4 h-4 text-red-500 dark:text-red-400" />
+              )}
+            </div>
           </div>
           <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 transition-colors duration-200">
             Only lowercase letters, numbers, dots (.) and underscores (_) are allowed
           </p>
+
+          {/* Username validation message */}
+          {usernameStatus.message && (
+            <p className={`text-sm mt-1 transition-colors duration-200 ${
+              usernameStatus.available === true
+                ? 'text-green-500 dark:text-green-400'
+                : usernameStatus.available === false
+                ? 'text-red-500 dark:text-red-400'
+                : 'text-gray-500 dark:text-gray-400'
+            }`}>
+              {usernameStatus.message}
+            </p>
+          )}
+
           {form.formState.errors.username && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
               {form.formState.errors.username.message}

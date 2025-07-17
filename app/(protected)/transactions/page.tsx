@@ -4,12 +4,12 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { APP_NAME } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaClock,
-  FaExclamationTriangle,
-  FaReceipt,
-  FaSearch,
-  FaTimes,
+    FaCheckCircle,
+    FaClock,
+    FaExclamationTriangle,
+    FaReceipt,
+    FaSearch,
+    FaTimes,
 } from 'react-icons/fa';
 import { TransactionsList } from './components/TransactionsList';
 
@@ -116,6 +116,7 @@ export default function TransactionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -125,6 +126,15 @@ export default function TransactionsPage() {
   useEffect(() => {
     document.title = `Transactions — ${APP_NAME}`;
   }, []);
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Mock data for demonstration
   const mockTransactions = [
@@ -209,8 +219,21 @@ export default function TransactionsPage() {
       try {
         setLoading(true);
 
+        // Build query parameters
+        const params = new URLSearchParams({
+          limit: '50',
+        });
+
+        if (debouncedSearchTerm) {
+          params.append('search', debouncedSearchTerm);
+        }
+
+        if (activeTab !== 'all') {
+          params.append('status', activeTab);
+        }
+
         // Fetch real transactions from API
-        const response = await fetch('/api/user/transactions?limit=50');
+        const response = await fetch(`/api/user/transactions?${params.toString()}`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch transactions');
@@ -316,7 +339,7 @@ export default function TransactionsPage() {
     };
 
     fetchTransactions();
-  }, []);
+  }, [activeTab, debouncedSearchTerm]);
 
   const handleViewDetails = (invoiceId: string) => {
     showToast(`Viewing details for ${invoiceId}`, 'info');
@@ -392,8 +415,7 @@ export default function TransactionsPage() {
                     placeholder="Search transactions..."
                     value={searchTerm}
                     onChange={(e) => {
-                      setSearch(e.target.value);
-                      setPage(1);
+                      setSearchTerm(e.target.value);
                     }}
                     className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     autoComplete="off"
