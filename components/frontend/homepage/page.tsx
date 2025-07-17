@@ -165,17 +165,10 @@ const HomePage: React.FC = () => {
 
             console.log('Redirect URL:', redirectUrl);
 
-            // Force hard reload for admin dashboard to ensure proper session handling
-            if (isAdmin) {
-              setTimeout(() => {
-                window.location.href = redirectUrl;
-              }, 1000);
-            } else {
-              // Use router for regular users
-              setTimeout(() => {
-                router.push(redirectUrl);
-              }, 1000);
-            }
+            // Force a hard reload to ensure the session is updated properly
+            setTimeout(() => {
+              window.location.href = redirectUrl;
+            }, 1000);
           }
         })
         .catch((err) => {
