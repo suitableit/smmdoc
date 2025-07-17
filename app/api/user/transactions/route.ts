@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,19 +14,30 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
     const status = searchParams.get('status');
+    const search = searchParams.get('search') || '';
 
     // Build where clause
     const where: any = {
       userId: session.user.id,
     };
 
+    // Add search functionality
+    if (search) {
+      where.OR = [
+        { transaction_id: { contains: search, mode: 'insensitive' } },
+        { invoice_id: { contains: search, mode: 'insensitive' } },
+        { sender_number: { contains: search, mode: 'insensitive' } },
+        { payment_method: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
     if (status && status !== 'all') {
       if (status === 'success') {
-        where.status = 'Success';
+        where.admin_status = 'Success';
       } else if (status === 'pending') {
-        where.status = 'Processing';
+        where.admin_status = 'Pending';
       } else if (status === 'failed') {
-        where.status = { in: ['Failed', 'Cancelled'] };
+        where.admin_status = { in: ['Failed', 'Cancelled'] };
       }
     }
 

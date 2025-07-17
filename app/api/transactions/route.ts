@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const type = searchParams.get('type');
     const search = searchParams.get('search') || '';
+    const searchType = searchParams.get('searchType') || 'id';
     const adminView = searchParams.get('admin') === 'true';
 
     // Calculate skip for pagination
@@ -32,13 +33,30 @@ export async function GET(request: NextRequest) {
 
     // Add search functionality for admin view
     if (search && adminView && session.user.role === 'admin') {
-      where.OR = [
-        { transaction_id: { contains: search, mode: 'insensitive' } },
-        { invoice_id: { contains: search, mode: 'insensitive' } },
-        { sender_number: { contains: search, mode: 'insensitive' } },
-        { user: { name: { contains: search, mode: 'insensitive' } } },
-        { user: { email: { contains: search, mode: 'insensitive' } } },
-      ];
+      if (searchType === 'id') {
+        // Search by transaction ID or invoice ID
+        where.OR = [
+          { transaction_id: { contains: search, mode: 'insensitive' } },
+          { invoice_id: { contains: search, mode: 'insensitive' } },
+          { id: isNaN(parseInt(search)) ? undefined : parseInt(search) }
+        ].filter(condition => condition.id !== undefined || condition.transaction_id || condition.invoice_id);
+      } else if (searchType === 'username') {
+        // Search by username or user details
+        where.OR = [
+          { user: { name: { contains: search, mode: 'insensitive' } } },
+          { user: { email: { contains: search, mode: 'insensitive' } } },
+          { user: { username: { contains: search, mode: 'insensitive' } } },
+        ];
+      } else {
+        // Default search across all fields
+        where.OR = [
+          { transaction_id: { contains: search, mode: 'insensitive' } },
+          { invoice_id: { contains: search, mode: 'insensitive' } },
+          { sender_number: { contains: search, mode: 'insensitive' } },
+          { user: { name: { contains: search, mode: 'insensitive' } } },
+          { user: { email: { contains: search, mode: 'insensitive' } } },
+        ];
+      }
     }
 
     // Status filtering

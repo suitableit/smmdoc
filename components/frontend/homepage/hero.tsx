@@ -5,9 +5,9 @@ import { FormSuccess } from '@/components/form-success';
 import { login } from '@/lib/actions/login';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
-  signInDefaultValues,
-  SignInSchema,
-  signInSchema,
+    signInDefaultValues,
+    SignInSchema,
+    signInSchema,
 } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn, useSession } from 'next-auth/react';
@@ -17,17 +17,17 @@ import { useSearchParams } from 'next/navigation';
 import React, { useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-  FaArrowRight,
-  FaHome,
-  FaLock,
-  FaTachometerAlt,
-  FaUser,
-  FaUserShield,
+    FaHome,
+    FaLock,
+    FaTachometerAlt,
+    FaUser,
+    FaUserShield
 } from 'react-icons/fa';
 
 const Hero: React.FC = () => {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [urlError, setUrlError] = useState(
     searchParams.get('error') === 'OAuthAccountNotLinked'
@@ -61,12 +61,37 @@ const Hero: React.FC = () => {
         .then((data) => {
           if (data?.error) {
             setError(data.error);
+            return;
           }
-          if (data?.message) {
-            setSuccess(data.message);
-          }
+
           if (data?.twoFactor) {
             setShowTwoFactor(true);
+            return;
+          }
+
+          if (data?.success) {
+            // Get redirect URL
+            const redirectUrl = data.redirectTo || '/dashboard';
+            const isAdmin = data.isAdmin === true;
+
+            // Set appropriate success message
+            setSuccess(isAdmin
+              ? 'Login successful! Redirecting to admin dashboard...'
+              : 'Login successful! Redirecting to dashboard...');
+
+            console.log('Redirect URL:', redirectUrl);
+
+            // Force hard reload for admin dashboard to ensure proper session handling
+            if (isAdmin) {
+              setTimeout(() => {
+                window.location.href = redirectUrl;
+              }, 1000);
+            } else {
+              // Use router for regular users
+              setTimeout(() => {
+                router.push(redirectUrl);
+              }, 1000);
+            }
           }
         })
         .catch((err) => {
