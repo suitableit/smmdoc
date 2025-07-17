@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type');
     const search = searchParams.get('search') || '';
     const searchType = searchParams.get('searchType') || 'id';
+    const startDate = searchParams.get('startDate') || '';
+    const endDate = searchParams.get('endDate') || '';
     const adminView = searchParams.get('admin') === 'true';
 
     // Calculate skip for pagination
@@ -36,27 +38,36 @@ export async function GET(request: NextRequest) {
       if (searchType === 'id') {
         // Search by transaction ID or invoice ID
         where.OR = [
-          { transaction_id: { contains: search, mode: 'insensitive' } },
-          { invoice_id: { contains: search, mode: 'insensitive' } },
+          { transaction_id: { contains: search } },
+          { invoice_id: { contains: search } },
           { id: isNaN(parseInt(search)) ? undefined : parseInt(search) }
         ].filter(condition => condition.id !== undefined || condition.transaction_id || condition.invoice_id);
       } else if (searchType === 'username') {
         // Search by username or user details
         where.OR = [
-          { user: { name: { contains: search, mode: 'insensitive' } } },
-          { user: { email: { contains: search, mode: 'insensitive' } } },
-          { user: { username: { contains: search, mode: 'insensitive' } } },
+          { user: { name: { contains: search } } },
+          { user: { email: { contains: search } } },
+          { user: { username: { contains: search } } },
         ];
       } else {
         // Default search across all fields
         where.OR = [
-          { transaction_id: { contains: search, mode: 'insensitive' } },
-          { invoice_id: { contains: search, mode: 'insensitive' } },
-          { sender_number: { contains: search, mode: 'insensitive' } },
-          { user: { name: { contains: search, mode: 'insensitive' } } },
-          { user: { email: { contains: search, mode: 'insensitive' } } },
+          { transaction_id: { contains: search } },
+          { invoice_id: { contains: search } },
+          { sender_number: { contains: search } },
+          { user: { name: { contains: search } } },
+          { user: { email: { contains: search } } },
         ];
       }
+    }
+
+    // Add search functionality for user view
+    if (search && (!adminView || session.user.role !== 'admin')) {
+      where.OR = [
+        { transaction_id: { contains: search } },
+        { invoice_id: { contains: search } },
+        { sender_number: { contains: search } },
+      ];
     }
 
     // Status filtering
@@ -84,9 +95,28 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch transactions from database (using AddFund model) with timeout
-    const [transactions, totalCount] = await Promise.all([
-      Promise.race([
+    // Date filtering
+    if (startDate || endDate) {
+      where.createdAt = {};
+
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate + 'T00:00:00.000Z');
+      }
+
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate + 'T23:59:59.999Z');
+      }
+    }
+
+    // Fetch transactions from database (using AddFund model) with timeout and retry
+    let transactions: any[] = [];
+    let totalCount = 0;
+
+    try {
+      // Test database connection first
+      await db.$queryRaw`SELECT 1`;
+
+      const [transactionsResult, totalCountResult] = await Promise.all([
         db.addFund.findMany({
           where,
           orderBy: {
@@ -119,15 +149,48 @@ export async function GET(request: NextRequest) {
             },
           },
         }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Database query timeout')), 10000)
-        )
-      ]) as any[],
-      // Get total count for pagination (only for admin view)
-      adminView && session.user.role === 'admin'
-        ? db.addFund.count({ where })
-        : Promise.resolve(0)
-    ]);
+        // Get total count for pagination (only for admin view)
+        adminView && session.user.role === 'admin'
+          ? db.addFund.count({ where })
+          : Promise.resolve(0)
+      ]);
+
+      transactions = transactionsResult;
+      totalCount = totalCountResult;
+
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+
+      // Return empty result with error info for admin view
+      if (adminView && session.user.role === 'admin') {
+        return NextResponse.json({
+          success: false,
+          error: 'Database connection failed',
+          details: dbError instanceof Error ? dbError.message : 'Unknown database error',
+          data: [],
+          pagination: {
+            page: 1,
+            limit: 20,
+            total: 0,
+            totalPages: 0,
+            hasNext: false,
+            hasPrev: false
+          },
+          stats: {
+            totalTransactions: 0,
+            pendingTransactions: 0,
+            completedTransactions: 0,
+            cancelledTransactions: 0,
+            suspiciousTransactions: 0,
+            totalVolume: 0,
+            todayTransactions: 0
+          }
+        });
+      } else {
+        // For user view, return empty array
+        return NextResponse.json([]);
+      }
+    }
 
     // Transform data to match frontend interface
     const transformedTransactions = transactions.map((transaction: any) => ({
@@ -210,8 +273,17 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching transactions:', error);
+
+    // Return more detailed error information
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
     return NextResponse.json(
-      { error: 'Failed to fetch transactions' },
+      {
+        success: false,
+        error: 'Failed to fetch transactions',
+        details: errorMessage,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }

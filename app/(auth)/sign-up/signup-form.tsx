@@ -5,16 +5,16 @@ import { FormSuccess } from '@/components/form-success';
 import { register } from '@/lib/actions/register';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
-    signUpDefaultValues,
-    signUpSchema,
-    SignUpSchema,
+  signUpDefaultValues,
+  signUpSchema,
+  SignUpSchema,
 } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
-import { useState, useTransition } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
+import { FaCheck, FaEnvelope, FaLock, FaSpinner, FaTimes, FaUser } from 'react-icons/fa';
 
 export default function SignUpForm() {
   const [isPending, startTransition] = useTransition();
@@ -23,6 +23,17 @@ export default function SignUpForm() {
 
   // Username validation states
   const [usernameStatus, setUsernameStatus] = useState<{
+    checking: boolean;
+    available: boolean | null;
+    message: string;
+  }>({
+    checking: false,
+    available: null,
+    message: ''
+  });
+
+  // Email validation states
+  const [emailStatus, setEmailStatus] = useState<{
     checking: boolean;
     available: boolean | null;
     message: string;
@@ -89,6 +100,57 @@ export default function SignUpForm() {
     }
   }, []);
 
+  // Function to check email availability
+  const checkEmailAvailability = useCallback(async (email: string) => {
+    if (!email || !email.includes('@')) {
+      setEmailStatus({
+        checking: false,
+        available: null,
+        message: ''
+      });
+      return;
+    }
+
+    setEmailStatus({
+      checking: true,
+      available: null,
+      message: 'Checking email availability...'
+    });
+
+    try {
+      const response = await fetch('/api/auth/check-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+
+      if (result.available) {
+        setEmailStatus({
+          checking: false,
+          available: true,
+          message: 'Email is available'
+        });
+      } else {
+        setEmailStatus({
+          checking: false,
+          available: false,
+          message: result.error || 'Email is not available'
+        });
+      }
+    } catch (error) {
+      console.error('Error checking email:', error);
+      setEmailStatus({
+        checking: false,
+        available: null,
+        message: 'Error checking email availability'
+      });
+    }
+  }, []);
+
   // Handle username input transformation
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -131,6 +193,26 @@ export default function SignUpForm() {
     return () => clearTimeout(timer);
   }, [form.watch('username'), checkUsernameAvailability]);
 
+  // Debounced email check
+  useEffect(() => {
+    const email = form.watch('email');
+
+    if (!email || !email.includes('@')) {
+      setEmailStatus({
+        checking: false,
+        available: null,
+        message: ''
+      });
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      checkEmailAvailability(email);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [form.watch('email'), checkEmailAvailability]);
+
   const onSubmit: SubmitHandler<SignUpSchema> = async (values) => {
     setError('');
     setSuccess('');
@@ -138,6 +220,12 @@ export default function SignUpForm() {
     // Check if username is available before submitting
     if (usernameStatus.available === false) {
       setError('Please choose a different username');
+      return;
+    }
+
+    // Check if email is available before submitting
+    if (emailStatus.available === false) {
+      setError('Please choose a different email address');
       return;
     }
 
@@ -323,9 +411,42 @@ export default function SignUpForm() {
               placeholder="eg: mail@email.com"
               disabled={isPending}
               {...form.register('email')}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              className={`w-full pl-12 pr-12 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
+                emailStatus.available === false
+                  ? 'border-red-500 dark:border-red-400'
+                  : emailStatus.available === true
+                  ? 'border-green-500 dark:border-green-400'
+                  : 'border-gray-300 dark:border-gray-600'
+              }`}
             />
+
+            {/* Email validation status indicator */}
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              {emailStatus.checking && (
+                <FaSpinner className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
+              )}
+              {!emailStatus.checking && emailStatus.available === true && (
+                <FaCheck className="w-4 h-4 text-green-500 dark:text-green-400" />
+              )}
+              {!emailStatus.checking && emailStatus.available === false && (
+                <FaTimes className="w-4 h-4 text-red-500 dark:text-red-400" />
+              )}
+            </div>
           </div>
+
+          {/* Email validation message */}
+          {emailStatus.message && (
+            <p className={`text-sm mt-1 transition-colors duration-200 ${
+              emailStatus.available === true
+                ? 'text-green-500 dark:text-green-400'
+                : emailStatus.available === false
+                ? 'text-red-500 dark:text-red-400'
+                : 'text-gray-500 dark:text-gray-400'
+            }`}>
+              {emailStatus.message}
+            </p>
+          )}
+
           {form.formState.errors.email && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
               {form.formState.errors.email.message}
