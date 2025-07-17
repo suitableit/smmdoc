@@ -4,28 +4,28 @@ import Link from 'next/link';
 import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-    FaBox,
-    FaBriefcase,
-    FaCheckCircle,
-    FaChevronDown,
-    FaChevronRight,
-    FaChevronUp,
-    FaEdit,
-    FaEllipsisH,
-    FaExclamationTriangle,
-    FaFileImport,
-    FaGripVertical,
-    FaPlus,
-    FaSave,
-    FaSearch,
-    FaShieldAlt,
-    FaSync,
-    FaTags,
-    FaTimes,
-    FaTimesCircle,
-    FaToggleOff,
-    FaToggleOn,
-    FaTrash
+  FaBox,
+  FaBriefcase,
+  FaCheckCircle,
+  FaChevronDown,
+  FaChevronRight,
+  FaChevronUp,
+  FaEdit,
+  FaEllipsisH,
+  FaExclamationTriangle,
+  FaFileImport,
+  FaGripVertical,
+  FaPlus,
+  FaSave,
+  FaSearch,
+  FaShieldAlt,
+  FaSync,
+  FaTags,
+  FaTimes,
+  FaTimesCircle,
+  FaToggleOff,
+  FaToggleOn,
+  FaTrash
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
@@ -39,13 +39,13 @@ import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatID, formatNumber } from '@/lib/utils';
 import {
-    createCategoryDefaultValues,
-    createCategorySchema,
-    CreateCategorySchema,
+  createCategoryDefaultValues,
+  createCategorySchema,
+  CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
-    createServiceDefaultValues,
-    CreateServiceSchema
+  createServiceDefaultValues,
+  CreateServiceSchema
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
@@ -2576,17 +2576,33 @@ function AdminServicesPage() {
 
     try {
       console.log('Deleting service with ID:', id);
+
+      // Optimistic update: Remove service from UI immediately
+      const currentData = data?.data || [];
+      const updatedServices = currentData.filter((service: any) => service.id.toString() !== id.toString());
+
+      // Update the cache optimistically
+      refreshServices(
+        { ...data, data: updatedServices },
+        { revalidate: false }
+      );
+
       const response = await axiosInstance.delete(`/api/admin/services/delete-services?id=${id}`);
       console.log('Delete response:', response.data);
 
       if (response.data.success) {
         showToast(response.data.message || 'Service deleted successfully', 'success');
+        // Revalidate to ensure data consistency
         await refreshAllData();
       } else {
+        // Revert optimistic update on failure
+        await refreshAllData();
         showToast(response.data.error || 'Failed to delete service', 'error');
       }
     } catch (error: any) {
       console.error('Delete service error:', error);
+      // Revert optimistic update on error
+      await refreshAllData();
       const errorMessage = error.response?.data?.error || error.message || 'Failed to delete service';
       showToast(errorMessage, 'error');
     }
@@ -2601,6 +2617,21 @@ function AdminServicesPage() {
 
       console.log('Deleting services:', selectedServices);
 
+      // Optimistic update: Remove selected services from UI immediately
+      const currentData = data?.data || [];
+      const updatedServices = currentData.filter((service: any) =>
+        !selectedServices.includes(service.id.toString())
+      );
+
+      // Update the cache optimistically
+      refreshServices(
+        { ...data, data: updatedServices },
+        { revalidate: false }
+      );
+
+      // Clear selection immediately for better UX
+      setSelectedServices([]);
+
       // Delete services in parallel
       const deletePromises = selectedServices.map(serviceId =>
         axiosInstance.delete(`/api/admin/services/delete-services?id=${serviceId}`)
@@ -2614,15 +2645,19 @@ function AdminServicesPage() {
 
       if (failedDeletions.length > 0) {
         showToast(`Failed to delete ${failedDeletions.length} service${failedDeletions.length !== 1 ? 's' : ''}`, 'error');
+        // Revalidate to restore failed deletions
+        await refreshAllData();
       } else {
         showToast(`Successfully deleted ${selectedServices.length} service${selectedServices.length !== 1 ? 's' : ''}`, 'success');
+        // Revalidate to ensure data consistency
+        await refreshAllData();
       }
 
-      setSelectedServices([]); // Clear selection
-      await refreshAllData();
       handleCloseDeleteConfirmation();
     } catch (error: any) {
       console.error('Bulk delete error:', error);
+      // Revert optimistic update on error
+      await refreshAllData();
       const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
       showToast(`Error deleting services: ${errorMessage}`, 'error');
     } finally {
@@ -2803,6 +2838,32 @@ function AdminServicesPage() {
       console.log('Delete category response:', response.data);
 
       if (response.data.success) {
+        // Optimistic update: Remove category and its services from UI immediately
+        const currentCategories = categoriesData?.data || [];
+        const currentServices = data?.data || [];
+
+        // Remove category from categories list
+        const updatedCategories = currentCategories.filter((cat: any) => cat.id.toString() !== categoryId.toString());
+
+        // Remove services from this category if action is 'delete'
+        let updatedServices = currentServices;
+        if (action === 'delete') {
+          updatedServices = currentServices.filter((service: any) => service.categoryId.toString() !== categoryId.toString());
+        }
+
+        // Update both caches optimistically
+        refreshCategories(
+          { ...categoriesData, data: updatedCategories },
+          { revalidate: false }
+        );
+
+        if (action === 'delete') {
+          refreshServices(
+            { ...data, data: updatedServices },
+            { revalidate: false }
+          );
+        }
+
         // Show success message
         if (action === 'move') {
           showToast(`Successfully moved ${servicesCount} service${servicesCount !== 1 ? 's' : ''} and deleted "${categoryName}" category`, 'success');
@@ -2813,13 +2874,15 @@ function AdminServicesPage() {
         // Close modal immediately
         handleCloseDeleteCategoryModal();
 
-        // Refresh data to update UI
+        // Revalidate to ensure data consistency
         await refreshAllData();
       } else {
         showToast(response.data.error || 'Failed to delete category', 'error');
       }
     } catch (error: any) {
       console.error('Delete category error:', error);
+      // Revert optimistic updates on error
+      await refreshAllData();
       const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
       showToast(`Error: ${errorMessage}`, 'error');
     } finally {
