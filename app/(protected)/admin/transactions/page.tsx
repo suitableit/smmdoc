@@ -65,8 +65,8 @@ interface Transaction {
   phone: string;
   method: string;
   type: 'deposit' | 'withdrawal';
-  status: 'pending' | 'completed' | 'cancelled';
-  admin_status: 'pending' | 'Success' | 'Cancelled' | 'Suspicious';
+  status: 'pending' | 'completed' | 'cancelled' | 'Processing' | 'Success' | 'Cancelled';
+  admin_status: 'Pending' | 'pending' | 'Success' | 'Cancelled' | 'Suspicious';
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -330,7 +330,7 @@ const AdminAllTransactionsPage = () => {
     currentStatus: string;
   }>({
     open: false,
-    transactionId: '',
+    transactionId: 0,
     currentStatus: '',
   });
   const [newStatus, setNewStatus] = useState('');
@@ -342,7 +342,7 @@ const AdminAllTransactionsPage = () => {
     transaction: Transaction | null;
   }>({
     open: false,
-    transactionId: '',
+    transactionId: 0,
     transaction: null,
   });
 
@@ -355,7 +355,7 @@ const AdminAllTransactionsPage = () => {
     transaction: Transaction | null;
   }>({
     open: false,
-    transactionId: '',
+    transactionId: 0,
     transaction: null,
   });
 
@@ -584,14 +584,17 @@ const AdminAllTransactionsPage = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
       case 'Pending':
+      case 'pending':
+      case 'Processing':
         return <FaClock className="h-3 w-3 text-yellow-500" />;
-      case 'completed':
       case 'Success':
+      case 'completed':
+      case 'approved':
         return <FaCheckCircle className="h-3 w-3 text-green-500" />;
-      case 'cancelled':
       case 'Cancelled':
+      case 'cancelled':
+      case 'rejected':
         return <FaTimesCircle className="h-3 w-3 text-red-500" />;
       case 'Suspicious':
         return <FaExclamationCircle className="h-3 w-3 text-purple-500" />;
@@ -603,13 +606,17 @@ const AdminAllTransactionsPage = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Success':
+      case 'completed':
+      case 'approved':
         return (
           <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full w-fit">
             <FaCheckCircle className="h-3 w-3 text-green-500" />
             <span className="text-xs font-medium text-green-700">Success</span>
           </div>
         );
+      case 'Pending':
       case 'pending':
+      case 'Processing':
         return (
           <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 rounded-full w-fit">
             <FaClock className="h-3 w-3 text-yellow-500" />
@@ -618,10 +625,11 @@ const AdminAllTransactionsPage = () => {
         );
       case 'Cancelled':
       case 'cancelled':
+      case 'rejected':
         return (
           <div className="flex items-center gap-1 px-2 py-1 bg-red-100 rounded-full w-fit">
             <FaTimesCircle className="h-3 w-3 text-red-500" />
-            <span className="text-xs font-medium text-red-700">Cancelled</span>
+            <span className="text-xs font-medium text-red-700">Cancel</span>
           </div>
         );
       case 'Suspicious':
@@ -718,16 +726,17 @@ const AdminAllTransactionsPage = () => {
   };
 
   const handleApprove = (transactionId: string) => {
-    const transaction = transactions.find((t) => t.id === transactionId);
+    const numericId = parseInt(transactionId);
+    const transaction = transactions.find((t) => t.id === numericId);
     setApproveConfirmDialog({
       open: true,
-      transactionId,
+      transactionId: numericId,
       transaction: transaction || null,
     });
     setApproveTransactionId(''); // Reset transaction ID input
   };
 
-  const confirmApprove = async (transactionId: string) => {
+  const confirmApprove = async (transactionId: number) => {
     const transaction = approveConfirmDialog.transaction;
 
     // Only require transaction ID for withdrawal transactions
@@ -761,11 +770,11 @@ const AdminAllTransactionsPage = () => {
             transaction.id === transactionId
               ? {
                   ...transaction,
-                  admin_status: 'Success',
-                  status: 'completed',
+                  admin_status: 'Success' as const,
+                  status: 'completed' as const,
                   transactionId:
                     transaction.type === 'withdrawal'
-                      ? approveTransactionId.trim()
+                      ? parseInt(approveTransactionId.trim()) || transaction.transactionId
                       : transaction.transactionId,
                 }
               : transaction
@@ -784,7 +793,7 @@ const AdminAllTransactionsPage = () => {
     } finally {
       setApproveConfirmDialog({
         open: false,
-        transactionId: '',
+        transactionId: 0,
         transaction: null,
       });
       setApproveTransactionId('');
@@ -843,7 +852,7 @@ const AdminAllTransactionsPage = () => {
   };
 
   const handleStatusUpdate = async (
-    transactionId: string,
+    transactionId: number,
     newStatus: string
   ) => {
     try {
@@ -863,12 +872,13 @@ const AdminAllTransactionsPage = () => {
         // Update local state optimistically
         setTransactions(prevTransactions =>
           prevTransactions.map(transaction =>
-            transaction.id.toString() === transactionId
+            transaction.id === transactionId
               ? {
                   ...transaction,
                   admin_status: newStatus as 'pending' | 'Success' | 'Cancelled' | 'Suspicious',
                   status: newStatus === 'Success' ? 'completed' as const :
-                         newStatus === 'Cancelled' ? 'cancelled' as const : 'pending' as const,
+                         newStatus === 'Cancelled' ? 'cancelled' as const :
+                         newStatus === 'Pending' ? 'pending' as const : 'pending' as const,
                   updatedAt: new Date().toISOString()
                 }
               : transaction
@@ -899,7 +909,7 @@ const AdminAllTransactionsPage = () => {
     transactionId: number,
     currentStatus: string
   ) => {
-    setUpdateStatusDialog({ open: true, transactionId: transactionId.toString(), currentStatus });
+    setUpdateStatusDialog({ open: true, transactionId, currentStatus });
     setNewStatus(currentStatus);
   };
 
@@ -930,7 +940,7 @@ const AdminAllTransactionsPage = () => {
                       ...prev,
                       limit:
                         e.target.value === 'all'
-                          ? 1000
+                          ? 999999 // Very large number to get all transactions
                           : parseInt(e.target.value),
                       page: 1,
                     }))
@@ -1304,8 +1314,8 @@ const AdminAllTransactionsPage = () => {
                             )}
                           </td>
                           <td className="p-3">
-                            {transaction.admin_status === 'pending' ||
-                            transaction.status === 'pending' ? (
+                            {(transaction.admin_status === 'Pending' || transaction.admin_status === 'pending') ||
+                            (transaction.status === 'pending' || transaction.status === 'Processing') ? (
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => handleApprove(transaction.id.toString())}
@@ -1396,54 +1406,58 @@ const AdminAllTransactionsPage = () => {
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
-                      `Showing ${formatNumber(
-                        (pagination.page - 1) * pagination.limit + 1
-                      )} to ${formatNumber(
-                        Math.min(
-                          pagination.page * pagination.limit,
-                          pagination.total
-                        )
-                      )} of ${formatNumber(pagination.total)} transactions`
+                      pagination.limit > 10000
+                        ? `Showing all ${formatNumber(pagination.total)} transactions`
+                        : `Showing ${formatNumber(
+                            (pagination.page - 1) * pagination.limit + 1
+                          )} to ${formatNumber(
+                            Math.min(
+                              pagination.page * pagination.limit,
+                              pagination.total
+                            )
+                          )} of ${formatNumber(pagination.total)} transactions`
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mt-4 md:mt-0">
-                    <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          page: Math.max(1, prev.page - 1),
-                        }))
-                      }
-                      disabled={!pagination.hasPrev || transactionsLoading}
-                      className="btn btn-secondary"
-                    >
-                      Previous
-                    </button>
-                    <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
-                    >
-                      {transactionsLoading ? (
-                        <GradientSpinner size="w-4 h-4" />
-                      ) : (
-                        `Page ${formatNumber(
-                          pagination.page
-                        )} of ${formatNumber(pagination.totalPages)}`
-                      )}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          page: Math.min(prev.totalPages, prev.page + 1),
-                        }))
-                      }
-                      disabled={!pagination.hasNext || transactionsLoading}
-                      className="btn btn-secondary"
-                    >
-                      Next
-                    </button>
-                  </div>
+                  {pagination.limit <= 10000 && (
+                    <div className="flex items-center gap-2 mt-4 md:mt-0">
+                      <button
+                        onClick={() =>
+                          setPagination((prev) => ({
+                            ...prev,
+                            page: Math.max(1, prev.page - 1),
+                          }))
+                        }
+                        disabled={!pagination.hasPrev || transactionsLoading}
+                        className="btn btn-secondary"
+                      >
+                        Previous
+                      </button>
+                      <span
+                        className="text-sm"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        {transactionsLoading ? (
+                          <GradientSpinner size="w-4 h-4" />
+                        ) : (
+                          `Page ${formatNumber(
+                            pagination.page
+                          )} of ${formatNumber(pagination.totalPages)}`
+                        )}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setPagination((prev) => ({
+                            ...prev,
+                            page: Math.min(prev.totalPages, prev.page + 1),
+                          }))
+                        }
+                        disabled={!pagination.hasNext || transactionsLoading}
+                        className="btn btn-secondary"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* View Details Dialog */}
@@ -1634,7 +1648,7 @@ const AdminAllTransactionsPage = () => {
                           onClick={() => {
                             setUpdateStatusDialog({
                               open: false,
-                              transactionId: '',
+                              transactionId: 0,
                               currentStatus: '',
                             });
                             setNewStatus('');
@@ -1651,7 +1665,7 @@ const AdminAllTransactionsPage = () => {
                             );
                             setUpdateStatusDialog({
                               open: false,
-                              transactionId: '',
+                              transactionId: 0,
                               currentStatus: '',
                             });
                             setNewStatus('');
@@ -1772,7 +1786,7 @@ const AdminAllTransactionsPage = () => {
                             onClick={() => {
                               setApproveConfirmDialog({
                                 open: false,
-                                transactionId: '',
+                                transactionId: 0,
                                 transaction: null,
                               });
                               setApproveTransactionId('');

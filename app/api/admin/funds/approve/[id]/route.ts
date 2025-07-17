@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { sendMail } from '@/lib/nodemailer';
 import { emailTemplates } from '@/lib/email-templates';
+import { sendMail } from '@/lib/nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(
@@ -19,15 +19,15 @@ export async function POST(
       );
     }
     
-    const transactionId = params.id;
-    
-    if (!transactionId) {
+    const transactionId = parseInt(params.id);
+
+    if (!transactionId || isNaN(transactionId)) {
       return NextResponse.json(
-        { error: 'Transaction ID is required' },
+        { error: 'Valid transaction ID is required' },
         { status: 400 }
       );
     }
-    
+
     // Find the transaction
     const transaction = await db.addFund.findUnique({
       where: { id: transactionId },
@@ -65,7 +65,7 @@ export async function POST(
           where: { id: transactionId },
           data: {
             status: "Success",
-            admin_status: "approved",
+            admin_status: "Success",
             updatedAt: new Date(),
           }
         });

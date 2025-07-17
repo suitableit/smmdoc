@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
           orderBy: {
             createdAt: 'desc',
           },
-          take: Math.min(limit, 100), // Limit to max 100 records
+          take: limit > 10000 ? undefined : limit, // No limit for "All" option
           skip: adminView ? skip : offset, // Use skip for admin pagination, offset for user
           select: {
             id: true,
