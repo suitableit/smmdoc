@@ -793,7 +793,7 @@ const ModeratorsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-yellow-50 text-yellow-700'
                     }`}
                   >
                     {stats.totalModerators.toLocaleString()}
@@ -926,7 +926,7 @@ const ModeratorsPage = () => {
                                   ? 'bg-yellow-100 text-yellow-700'
                                   : moderator.role === 'admin'
                                   ? 'bg-red-100 text-red-700'
-                                  : 'bg-purple-100 text-purple-700'
+                                  : 'bg-yellow-50 text-yellow-700'
                               }`}>
                                 {moderator.role === 'super_admin' ? 'SUPER ADMIN' : moderator.role === 'admin' ? 'Admin' : 'Moderator'}
                               </span>
