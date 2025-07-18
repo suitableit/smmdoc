@@ -33,6 +33,7 @@ model User {
   services                Service[]
   sessions                Session[]
   twoFactorConfirmation   TwoFactorConfirmation?
+  activityLogs            ActivityLog[]
 
   @@map("user")
 }

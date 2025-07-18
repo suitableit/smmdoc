@@ -67,6 +67,17 @@ export default {
       // Log successful login for security monitoring
       console.log(`Successful login: ${existingUser.email} (Role: ${existingUser.role})`);
 
+      // Log activity for user login
+      try {
+        if (existingUser.role === 'admin') {
+          await ActivityLogger.adminLogin(existingUser.id, existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`);
+        } else {
+          await ActivityLogger.login(existingUser.id, existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`);
+        }
+      } catch (error) {
+        console.error('Failed to log activity:', error);
+      }
+
       return true;
     },
 

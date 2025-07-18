@@ -7,6 +7,7 @@ import { getTwoFactorTokenByEmail } from '@/data/two-factor-token';
 import { getUserByEmail } from '@/data/user';
 import bcrypt from 'bcryptjs';
 import { AuthError } from 'next-auth';
+import { ActivityLogger } from '../activity-logger';
 import { db } from '../db';
 import { sendMail } from '../nodemailer';
 import { DEFAULT_SIGN_IN_REDIRECT } from '../routes';

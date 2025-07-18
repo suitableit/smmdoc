@@ -101,6 +101,20 @@ export async function POST(req: NextRequest) {
 
       console.log('Payment record created:', payment);
 
+      // Log activity for payment creation
+      try {
+        const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
+        await ActivityLogger.fundAdded(
+          session.user.id,
+          username,
+          amount,
+          'BDT',
+          'uddoktapay'
+        );
+      } catch (error) {
+        console.error('Failed to log payment creation activity:', error);
+      }
+
       // Create payment data object according to UddoktaPay documentation
       const paymentData = {
         full_name: session.user.name || 'User',

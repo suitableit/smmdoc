@@ -58,6 +58,20 @@ export async function POST(req: NextRequest) {
       },
     });
     
+    // Log activity for fund addition
+    try {
+      const username = user.username || user.email?.split('@')[0] || `user${user.id}`;
+      await ActivityLogger.fundAdded(
+        user.id,
+        username,
+        parseFloat(amountUSD),
+        'USD',
+        'admin'
+      );
+    } catch (error) {
+      console.error('Failed to log fund addition activity:', error);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Funds added successfully',

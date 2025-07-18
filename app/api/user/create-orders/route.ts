@@ -271,6 +271,20 @@ export async function POST(request: Request) {
       }
     );
 
+    // Log activity for order creation
+    try {
+      const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
+      await ActivityLogger.orderCreated(
+        session.user.id,
+        username,
+        result.length,
+        totalCost,
+        user.currency
+      );
+    } catch (error) {
+      console.error('Failed to log order creation activity:', error);
+    }
+
     return NextResponse.json(
       {
         success: true,
