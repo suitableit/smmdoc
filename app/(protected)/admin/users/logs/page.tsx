@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    FaBox,
-    FaCheckCircle,
-    FaExternalLinkAlt,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTrash
+  FaBox,
+  FaCheckCircle,
+  FaExternalLinkAlt,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTrash
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -44,7 +44,7 @@ const Toast = ({
 
 // Define interface for UserActivityLog
 interface UserActivityLog {
-  id: number;
+  id: string;
   slNo: number;
   username: string;
   details: string;
@@ -67,116 +67,17 @@ const UserActivityLogsPage = () => {
     document.title = `User Activity Logs — ${APP_NAME}`;
   }, []);
 
-  // Dummy data for user activity logs
-  const dummyActivityLogs: UserActivityLog[] = [
-    { 
-      id: 'log_001', 
-      slNo: 1, 
-      username: 'john_doe', 
-      details: 'User logged in successfully', 
-      ipAddress: '192.168.1.100',
-      history: '2024-01-15T10:30:00Z' 
-    },
-    { 
-      id: 'log_002', 
-      slNo: 2, 
-      username: 'sarah_wilson', 
-      details: 'Created new order #ORD-2024-001', 
-      ipAddress: '203.122.45.67',
-      history: '2024-01-15T09:45:00Z' 
-    },
-    { 
-      id: 'log_003', 
-      slNo: 3, 
-      username: 'mike_johnson', 
-      details: 'Failed login attempt - incorrect password', 
-      ipAddress: '45.123.89.210',
-      history: '2024-01-15T08:15:00Z' 
-    },
-    { 
-      id: 'log_004', 
-      slNo: 4, 
-      username: 'admin', 
-      details: 'Updated user permissions for sarah_wilson', 
-      ipAddress: '192.168.1.1',
-      history: '2024-01-14T16:20:00Z' 
-    },
-    { 
-      id: 'log_005', 
-      slNo: 5, 
-      username: 'emily_brown', 
-      details: 'Downloaded transaction report', 
-      ipAddress: '156.78.234.91',
-      history: '2024-01-14T14:10:00Z' 
-    },
-    { 
-      id: 'log_006', 
-      slNo: 6, 
-      username: 'david_lee', 
-      details: 'Changed account password', 
-      ipAddress: '98.167.45.123',
-      history: '2024-01-14T12:30:00Z' 
-    },
-    { 
-      id: 'log_007', 
-      slNo: 7, 
-      username: 'jane_smith', 
-      details: 'Uploaded new service configuration', 
-      ipAddress: '172.16.0.55',
-      history: '2024-01-14T11:45:00Z' 
-    },
-    { 
-      id: 'log_008', 
-      slNo: 8, 
-      username: 'robert_clark', 
-      details: 'Deleted inactive user account: test_user', 
-      ipAddress: '10.0.0.45',
-      history: '2024-01-13T15:25:00Z' 
-    },
-    { 
-      id: 'log_009', 
-      slNo: 9, 
-      username: 'lisa_garcia', 
-      details: 'Exported customer data to CSV', 
-      ipAddress: '67.234.112.89',
-      history: '2024-01-13T13:15:00Z' 
-    },
-    { 
-      id: 'log_010', 
-      slNo: 10, 
-      username: 'admin', 
-      details: 'System backup completed successfully', 
-      ipAddress: '192.168.1.1',
-      history: '2024-01-13T10:40:00Z' 
-    },
-    { 
-      id: 'log_011', 
-      slNo: 11, 
-      username: 'tom_wilson', 
-      details: 'API key regenerated for security', 
-      ipAddress: '89.123.45.200',
-      history: '2024-01-12T17:20:00Z' 
-    },
-    { 
-      id: 'log_012', 
-      slNo: 12, 
-      username: 'anna_davis', 
-      details: 'Accessed billing dashboard', 
-      ipAddress: '134.56.78.90',
-      history: '2024-01-12T14:55:00Z' 
-    }
-  ];
-
   // State management
-  const [activityLogs, setActivityLogs] = useState<UserActivityLog[]>(dummyActivityLogs);
+  const [activityLogs, setActivityLogs] = useState<UserActivityLog[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
-    total: dummyActivityLogs.length,
-    totalPages: 1,
+    total: 0,
+    totalPages: 0,
     hasNext: false,
     hasPrev: false,
   });
+
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchBy, setSearchBy] = useState('all');
@@ -190,7 +91,55 @@ const UserActivityLogsPage = () => {
   } | null>(null);
 
   // Loading states
-  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsLoading, setLogsLoading] = useState(true);
+
+  // Fetch activity logs from API
+  const fetchActivityLogs = async (page = 1, search = '', searchBy = 'all') => {
+    try {
+      setLogsLoading(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pagination.limit.toString(),
+        search,
+        searchBy
+      });
+
+      const response = await fetch(`/api/admin/activity-logs?${params}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setActivityLogs(result.data || []);
+        setPagination(result.pagination || {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        });
+      } else {
+        console.error('Failed to fetch activity logs:', result.error);
+        showToast('Failed to fetch activity logs', 'error');
+        setActivityLogs([]);
+      }
+    } catch (error) {
+      console.error('Error fetching activity logs:', error);
+      showToast('Error fetching activity logs', 'error');
+      setActivityLogs([]);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  // Load activity logs on component mount and when search changes
+  useEffect(() => {
+    fetchActivityLogs(pagination.page, searchTerm, searchBy);
+  }, [pagination.page, searchTerm, searchBy]);
+
+  // Initial load
+  useEffect(() => {
+    fetchActivityLogs();
+  }, []);
 
   // Utility functions
   const formatID = (id: string) => {
@@ -202,48 +151,15 @@ const UserActivityLogsPage = () => {
     return `https://www.ip-tracker.org/locator/ip-lookup.php?ip=${ipAddress}`;
   };
 
-  // Filter activity logs based on search term and search category
-  const filteredActivityLogs = activityLogs.filter(log => {
-    if (!searchTerm) return true;
-    
-    const searchLower = searchTerm.toLowerCase();
-    
-    switch (searchBy) {
-      case 'username':
-        return log.username.toLowerCase().includes(searchLower);
-      case 'details':
-        return log.details.toLowerCase().includes(searchLower);
-      case 'ip_address':
-        return log.ipAddress.toLowerCase().includes(searchLower);
-      case 'all':
-      default:
-        return (
-          log.username.toLowerCase().includes(searchLower) ||
-          log.details.toLowerCase().includes(searchLower) ||
-          log.ipAddress.toLowerCase().includes(searchLower) ||
-          log.id.toLowerCase().includes(searchLower)
-        );
-    }
-  });
-
-  // Update pagination when filtered data changes
-  useEffect(() => {
-    const total = filteredActivityLogs.length;
-    const totalPages = Math.ceil(total / pagination.limit);
-    setPagination(prev => ({
-      ...prev,
-      total,
-      totalPages,
-      hasNext: prev.page < totalPages,
-      hasPrev: prev.page > 1
-    }));
-  }, [filteredActivityLogs.length, pagination.limit]);
-
-  // Get paginated data
+  // Get current page data (server-side pagination)
   const getPaginatedData = () => {
-    const startIndex = (pagination.page - 1) * pagination.limit;
-    const endIndex = startIndex + pagination.limit;
-    return filteredActivityLogs.slice(startIndex, endIndex);
+    return activityLogs;
+  };
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+    fetchActivityLogs(newPage, searchTerm, searchBy);
   };
 
   // Show toast notification
@@ -273,24 +189,30 @@ const UserActivityLogsPage = () => {
   };
 
   const handleRefresh = () => {
-    setLogsLoading(true);
-    // Simulate loading
-    setTimeout(() => {
-      setLogsLoading(false);
-      showToast('User activity logs refreshed successfully!', 'success');
-    }, 1000);
+    fetchActivityLogs(pagination.page, searchTerm, searchBy);
+    showToast('User activity logs refreshed successfully!', 'success');
   };
 
   // Handle log deletion
   const handleDeleteLog = async (logId: string) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setActivityLogs(prev => prev.filter(log => log.id !== logId));
-      showToast('Activity log deleted successfully', 'success');
-      setDeleteDialogOpen(false);
-      setLogToDelete(null);
+      const response = await fetch(`/api/admin/activity-logs/${logId}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Remove from local state for immediate UI update
+        setActivityLogs(prev => prev.filter(log => log.id !== logId));
+        showToast('Activity log deleted successfully', 'success');
+        setDeleteDialogOpen(false);
+        setLogToDelete(null);
+        // Refresh data to ensure consistency
+        fetchActivityLogs(pagination.page, searchTerm, searchBy);
+      } else {
+        showToast(result.error || 'Failed to delete activity log', 'error');
+      }
     } catch (error) {
       console.error('Error deleting activity log:', error);
       showToast('Error deleting activity log', 'error');
@@ -300,12 +222,27 @@ const UserActivityLogsPage = () => {
   // Handle bulk delete
   const handleBulkDelete = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setActivityLogs(prev => prev.filter(log => !selectedLogs.includes(log.id)));
-      showToast(`${selectedLogs.length} activity logs deleted successfully`, 'success');
-      setSelectedLogs([]);
+      const response = await fetch('/api/admin/activity-logs', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: selectedLogs }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Remove from local state for immediate UI update
+        setActivityLogs(prev => prev.filter(log => !selectedLogs.includes(log.id)));
+        showToast(`${selectedLogs.length} activity logs deleted successfully`, 'success');
+        setSelectedLogs([]);
+        setBulkDeleteDialogOpen(false);
+        // Refresh data to ensure consistency
+        fetchActivityLogs(pagination.page, searchTerm, searchBy);
+      } else {
+        showToast(result.error || 'Failed to delete activity logs', 'error');
+      }
     } catch (error) {
       console.error('Error deleting activity logs:', error);
       showToast('Error deleting activity logs', 'error');
@@ -332,13 +269,17 @@ const UserActivityLogsPage = () => {
             {/* Left: Action Buttons */}
             <div className="flex items-center gap-2">
               {/* Page View Dropdown */}
-              <select 
+              <select
                 value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ 
-                  ...prev, 
-                  limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value), 
-                  page: 1 
-                }))}
+                onChange={(e) => {
+                  const newLimit = e.target.value === 'all' ? 1000 : parseInt(e.target.value);
+                  setPagination(prev => ({
+                    ...prev,
+                    limit: newLimit,
+                    page: 1
+                  }));
+                  fetchActivityLogs(1, searchTerm, searchBy);
+                }}
                 className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
                 <option value="25">25</option>
@@ -700,12 +641,7 @@ const UserActivityLogsPage = () => {
                   </div>
                   <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          page: Math.max(1, prev.page - 1),
-                        }))
-                      }
+                      onClick={() => handlePageChange(Math.max(1, pagination.page - 1))}
                       disabled={!pagination.hasPrev || logsLoading}
                       className="btn btn-secondary"
                     >
@@ -722,12 +658,7 @@ const UserActivityLogsPage = () => {
                       )}
                     </span>
                     <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          page: Math.min(prev.totalPages, prev.page + 1),
-                        }))
-                      }
+                      onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.page + 1))}
                       disabled={!pagination.hasNext || logsLoading}
                       className="btn btn-secondary"
                     >

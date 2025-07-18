@@ -6,11 +6,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
@@ -18,8 +18,9 @@ export async function POST(
         { status: 401 }
       );
     }
-    
-    const transactionId = parseInt(params.id);
+
+    const { id } = await params;
+    const transactionId = parseInt(id);
 
     if (!transactionId || isNaN(transactionId)) {
       return NextResponse.json(

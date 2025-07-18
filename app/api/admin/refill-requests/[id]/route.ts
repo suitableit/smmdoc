@@ -5,24 +5,24 @@ import { NextRequest, NextResponse } from 'next/server';
 // PUT /api/admin/refill-requests/:id - Approve/Decline refill request
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null
         },
         { status: 401 }
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { action, adminNotes } = body; // action: 'approve' | 'decline'
 
