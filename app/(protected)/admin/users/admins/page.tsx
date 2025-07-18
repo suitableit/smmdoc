@@ -2,18 +2,18 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    FaCheckCircle,
-    FaClock,
-    FaCrown,
-    FaEdit,
-    FaEllipsisH,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
-    FaTrash,
-    FaUserCheck,
-    FaUserShield,
+  FaCheckCircle,
+  FaClock,
+  FaCrown,
+  FaEdit,
+  FaEllipsisH,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
+  FaTrash,
+  FaUserCheck,
+  FaUserShield,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -272,7 +272,7 @@ const AdminsListPage = () => {
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
-        role: 'admin,moderator', // Filter for admin roles only
+        role: 'admin', // Filter for admin role only
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
       });
@@ -311,8 +311,8 @@ const AdminsListPage = () => {
   const fetchStats = useCallback(async () => {
     try {
       setStatsLoading(true);
-      // Remove role parameter as the API endpoint doesn't support it
-      const response = await fetch('/api/admin/users/stats?period=all');
+      // Add role parameter to filter admin stats only
+      const response = await fetch('/api/admin/users/stats?period=all&role=admin');
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
 
