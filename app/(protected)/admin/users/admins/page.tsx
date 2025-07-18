@@ -837,7 +837,7 @@ const AdminsListPage = () => {
                                   admin.role === 'super_admin'
                                     ? 'bg-yellow-100 text-yellow-700'
                                     : admin.role === 'admin'
-                                    ? 'bg-red-100 text-red-700'
+                                    ? 'bg-purple-50 text-purple-700'
                                     : 'bg-purple-100 text-purple-700'
                                 }`}
                               >
