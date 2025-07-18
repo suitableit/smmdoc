@@ -197,6 +197,14 @@ export async function PUT(
   }
 }
 
+// PATCH /api/admin/users/[id] - Update user details (alias for PUT)
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return PUT(req, { params });
+}
+
 // DELETE /api/admin/users/[id] - Delete user
 export async function DELETE(
   req: NextRequest,

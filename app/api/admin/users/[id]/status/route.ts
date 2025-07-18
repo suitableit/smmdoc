@@ -111,6 +111,14 @@ export async function PUT(
   }
 }
 
+// PATCH /api/admin/users/[id]/status - Update user status (alias for PUT)
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return PUT(req, { params });
+}
+
 // GET /api/admin/users/[id]/status - Get user status
 export async function GET(
   req: NextRequest,

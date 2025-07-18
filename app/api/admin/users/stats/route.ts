@@ -5,14 +5,14 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null
         },
         { status: 401 }
       );
@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const period = searchParams.get('period') || 'all';
+    const roleFilter = searchParams.get('role') || 'user'; // Default to 'user', can be 'moderator', 'admin', etc.
 
     // Calculate date ranges based on period
     const now = new Date();
@@ -56,38 +57,38 @@ export async function GET(req: NextRequest) {
       totalSpent,
       totalDeposits
     ] = await Promise.all([
-      // Total users (excluding admins)
+      // Total users with specified role
       db.user.count({
         where: {
-          role: 'user',
+          role: roleFilter,
           ...dateFilter
         }
       }),
-      
-      // Total balance across all users
+
+      // Total balance across users with specified role
       db.user.aggregate({
         where: {
-          role: 'user'
+          role: roleFilter
         },
         _sum: {
           balance: true
         }
       }),
-      
-      // Total spent by all users
+
+      // Total spent by users with specified role
       db.user.aggregate({
         where: {
-          role: 'user'
+          role: roleFilter
         },
         _sum: {
           total_spent: true
         }
       }),
-      
-      // Total deposits by all users
+
+      // Total deposits by users with specified role
       db.user.aggregate({
         where: {
-          role: 'user'
+          role: roleFilter
         },
         _sum: {
           total_deposit: true
@@ -99,7 +100,7 @@ export async function GET(req: NextRequest) {
     // For now, we'll consider all users as 'active' since there's no status field
     const activeUsersCount = await db.user.count({
       where: {
-        role: 'user',
+        role: roleFilter,
         ...dateFilter
       }
     });
@@ -117,7 +118,7 @@ export async function GET(req: NextRequest) {
     const dailyRegistrations = await db.user.groupBy({
       by: ['createdAt'],
       where: {
-        role: 'user',
+        role: roleFilter,
         createdAt: {
           gte: thirtyDaysAgo
         }
@@ -150,7 +151,7 @@ export async function GET(req: NextRequest) {
     const currencyBreakdown = await db.user.groupBy({
       by: ['currency'],
       where: {
-        role: 'user'
+        role: roleFilter
       },
       _count: {
         id: true
@@ -163,7 +164,7 @@ export async function GET(req: NextRequest) {
     // Get top users by balance
     const topUsersByBalance = await db.user.findMany({
       where: {
-        role: 'user'
+        role: roleFilter
       },
       select: {
         id: true,
@@ -182,7 +183,7 @@ export async function GET(req: NextRequest) {
     // Get top users by spending
     const topUsersBySpending = await db.user.findMany({
       where: {
-        role: 'user'
+        role: roleFilter
       },
       select: {
         id: true,
