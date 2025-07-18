@@ -90,9 +90,9 @@ interface PaginationInfo {
 
 interface ModeratorActionsProps {
   moderator: Moderator;
-  onEdit: (moderatorId: string) => void;
-  onChangeRole: (moderatorId: string, currentRole: string) => void;
-  onDelete: (moderatorId: string) => void;
+  onEdit: (moderatorId: number) => void;
+  onChangeRole: (moderatorId: number, currentRole: string) => void;
+  onDelete: (moderatorId: number) => void;
   isLoading: boolean;
 }
 
@@ -209,7 +209,7 @@ const ModeratorsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [moderatorToDelete, setModeratorToDelete] = useState<string | null>(null);
+  const [moderatorToDelete, setModeratorToDelete] = useState<number | null>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -227,7 +227,7 @@ const ModeratorsPage = () => {
     currentStatus: string;
   }>({
     open: false,
-    moderatorId: '',
+    moderatorId: 0,
     currentStatus: '',
   });
   const [newStatus, setNewStatus] = useState('');
@@ -237,7 +237,7 @@ const ModeratorsPage = () => {
     currentRole: string;
   }>({
     open: false,
-    moderatorId: '',
+    moderatorId: 0,
     currentRole: '',
   });
   const [newRole, setNewRole] = useState('');
@@ -266,8 +266,37 @@ const ModeratorsPage = () => {
   const fetchModerators = useCallback(async () => {
     try {
       setModeratorsLoading(true);
-      
-      // For now, using dummy data
+
+      // Real API call
+      const queryParams = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        role: 'moderator', // Filter for moderator role only
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
+      });
+
+      const response = await fetch(`/api/admin/users?${queryParams}`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Filter data to only include moderator roles on client side as backup
+        const moderatorData = (result.data || []).filter((user: Moderator) =>
+          user.role === 'moderator'
+        );
+        setModerators(moderatorData);
+        setPagination(prev => ({
+          ...prev,
+          ...result.pagination,
+        }));
+      } else {
+        throw new Error(result.error || 'Failed to fetch moderators');
+      }
+
+      /*
+      // Dummy data (commented out for now)
       const dummyModerators: Moderator[] = [
         {
           id: "mod_001_abcd1234",
@@ -394,7 +423,7 @@ const ModeratorsPage = () => {
       // Filter by search term if provided
       if (debouncedSearchTerm) {
         const searchLower = debouncedSearchTerm.toLowerCase();
-        filteredModerators = filteredModerators.filter(mod => 
+        filteredModerators = filteredModerators.filter(mod =>
           mod.username.toLowerCase().includes(searchLower) ||
           mod.email.toLowerCase().includes(searchLower) ||
           mod.id.toLowerCase().includes(searchLower) ||
@@ -415,35 +444,6 @@ const ModeratorsPage = () => {
         hasNext: endIndex < filteredModerators.length,
         hasPrev: pagination.page > 1,
       }));
-
-      /* 
-      // Real API call (commented out for now)
-      const queryParams = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        role: 'moderator', // Filter for moderator role only
-        ...(statusFilter !== 'all' && { status: statusFilter }),
-        ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
-      });
-
-      const response = await fetch(`/api/admin/users?${queryParams}`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
-      const result = await response.json();
-
-      if (result.success) {
-        // Filter data to only include moderator roles on client side as backup
-        const moderatorData = (result.data || []).filter((user: Moderator) => 
-          user.role === 'moderator'
-        );
-        setModerators(moderatorData);
-        setPagination(prev => ({
-          ...prev,
-          ...result.pagination,
-        }));
-      } else {
-        throw new Error(result.error || 'Failed to fetch moderators');
-      }
       */
     } catch (error) {
       console.error('Error fetching moderators:', error);
@@ -457,34 +457,17 @@ const ModeratorsPage = () => {
   const fetchStats = useCallback(async () => {
     try {
       setStatsLoading(true);
-      
-      // For now, using dummy stats that match our dummy moderator data
-      const dummyStats = {
-        totalModerators: 6,
-        activeModerators: 4, // sarah_mod, alex_moderator, emma_mod, david_moderator
-        inactiveModerators: 2, // mike_support, lisa_support
-        totalBalance: 265.75, // Sum of all balances
-        totalSpent: 972.65, // Sum of all spent amounts
-        todayRegistrations: 2,
-        statusBreakdown: {
-          active: 4,
-          inactive: 2
-        }
-      };
 
-      setStats(dummyStats);
-
-      /* 
-      // Real API call (commented out for now)
-      const response = await fetch('/api/admin/users/stats?period=all');
+      // Real API call for moderator stats
+      const response = await fetch('/api/admin/users/stats?period=all&role=moderator');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+
       const result = await response.json();
 
       if (result.success) {
         const data = result.data;
         const statusBreakdown: Record<string, number> = {};
-        
+
         if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
           data.statusBreakdown.forEach((item: any) => {
             statusBreakdown[item.status] = item.count || 0;
@@ -503,6 +486,23 @@ const ModeratorsPage = () => {
       } else {
         throw new Error(result.error || 'Failed to fetch stats');
       }
+
+      /*
+      // Dummy stats (commented out for now)
+      const dummyStats = {
+        totalModerators: 6,
+        activeModerators: 4, // sarah_mod, alex_moderator, emma_mod, david_moderator
+        inactiveModerators: 2, // mike_support, lisa_support
+        totalBalance: 265.75, // Sum of all balances
+        totalSpent: 972.65, // Sum of all spent amounts
+        todayRegistrations: 2,
+        statusBreakdown: {
+          active: 4,
+          inactive: 2
+        }
+      };
+
+      setStats(dummyStats);
       */
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -553,7 +553,7 @@ const ModeratorsPage = () => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }, []);
 
-  const handleEditModerator = useCallback((moderatorId: string) => {
+  const handleEditModerator = useCallback((moderatorId: number) => {
     const moderator = moderators.find(m => m.id === moderatorId);
     if (moderator) {
       setEditDialog({ open: true, moderator });
@@ -583,17 +583,8 @@ const ModeratorsPage = () => {
   ) => {
     try {
       setActionLoading(url);
-      
-      // For now, simulate successful operations
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-      
-      if (successMessage) showToast(successMessage, 'success');
-      await fetchModerators();
-      await fetchStats();
-      return true;
 
-      /* 
-      // Real API call (commented out for now)
+      // Real API call
       const response = await fetch(url, {
         method,
         headers: body ? { 'Content-Type': 'application/json' } : undefined,
@@ -601,7 +592,7 @@ const ModeratorsPage = () => {
       });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+
       const result = await response.json();
 
       if (result.success) {
@@ -612,6 +603,15 @@ const ModeratorsPage = () => {
       } else {
         throw new Error(result.error || 'Operation failed');
       }
+
+      /*
+      // Simulate successful operations (commented out for now)
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+
+      if (successMessage) showToast(successMessage, 'success');
+      await fetchModerators();
+      await fetchStats();
+      return true;
       */
     } catch (error) {
       console.error('API action error:', error);
@@ -623,14 +623,14 @@ const ModeratorsPage = () => {
   }, [fetchModerators, fetchStats, showToast]);
 
   // Handle moderator deletion
-  const handleDeleteModerator = useCallback(async (moderatorId: string) => {
+  const handleDeleteModerator = useCallback(async (moderatorId: number) => {
     const success = await handleApiAction(
       `/api/admin/users/${moderatorId}`,
       'DELETE',
       undefined,
       'Moderator deleted successfully'
     );
-    
+
     if (success) {
       setDeleteDialogOpen(false);
       setModeratorToDelete(null);
@@ -638,7 +638,7 @@ const ModeratorsPage = () => {
   }, [handleApiAction]);
 
   // Handle moderator status update
-  const handleStatusUpdate = useCallback(async (moderatorId: string, newStatus: string) => {
+  const handleStatusUpdate = useCallback(async (moderatorId: number, newStatus: string) => {
     return handleApiAction(
       `/api/admin/users/${moderatorId}/status`,
       'PATCH',
@@ -648,16 +648,16 @@ const ModeratorsPage = () => {
   }, [handleApiAction]);
 
   // Handle change role
-  const handleChangeRole = useCallback(async (moderatorId: string, role: string) => {
+  const handleChangeRole = useCallback(async (moderatorId: number, role: string) => {
     const success = await handleApiAction(
       `/api/admin/users/${moderatorId}/role`,
       'PATCH',
       { role },
       `Moderator role updated to ${role}`
     );
-    
+
     if (success) {
-      setChangeRoleDialog({ open: false, moderatorId: '', currentRole: '' });
+      setChangeRoleDialog({ open: false, moderatorId: 0, currentRole: '' });
       setNewRole('');
     }
   }, [handleApiAction]);
@@ -680,12 +680,12 @@ const ModeratorsPage = () => {
   }, [editDialog.moderator, handleApiAction]);
 
   // Modal handlers
-  const openUpdateStatusDialog = useCallback((moderatorId: string, currentStatus: string) => {
+  const openUpdateStatusDialog = useCallback((moderatorId: number, currentStatus: string) => {
     setUpdateStatusDialog({ open: true, moderatorId, currentStatus });
     setNewStatus(currentStatus);
   }, []);
 
-  const openChangeRoleDialog = useCallback((moderatorId: string, currentRole: string) => {
+  const openChangeRoleDialog = useCallback((moderatorId: number, currentRole: string) => {
     setChangeRoleDialog({ open: true, moderatorId, currentRole });
     setNewRole(currentRole);
   }, []);
@@ -893,7 +893,7 @@ const ModeratorsPage = () => {
                         <tr key={moderator.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {moderator.id?.slice(-8) || 'null'}
+                              {moderator.id?.toString().slice(-8) || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1013,13 +1013,13 @@ const ModeratorsPage = () => {
           newStatus={newStatus}
           onStatusChange={setNewStatus}
           onClose={() => {
-            setUpdateStatusDialog({ open: false, moderatorId: '', currentStatus: '' });
+            setUpdateStatusDialog({ open: false, moderatorId: 0, currentStatus: '' });
             setNewStatus('');
           }}
           onConfirm={() => {
             handleStatusUpdate(updateStatusDialog.moderatorId, newStatus).then((success) => {
               if (success) {
-                setUpdateStatusDialog({ open: false, moderatorId: '', currentStatus: '' });
+                setUpdateStatusDialog({ open: false, moderatorId: 0, currentStatus: '' });
                 setNewStatus('');
               }
             });
@@ -1034,13 +1034,13 @@ const ModeratorsPage = () => {
           newRole={newRole}
           onRoleChange={setNewRole}
           onClose={() => {
-            setChangeRoleDialog({ open: false, moderatorId: '', currentRole: '' });
+            setChangeRoleDialog({ open: false, moderatorId: 0, currentRole: '' });
             setNewRole('');
           }}
           onConfirm={() => {
             handleChangeRole(changeRoleDialog.moderatorId, newRole).then((success) => {
               if (success) {
-                setChangeRoleDialog({ open: false, moderatorId: '', currentRole: '' });
+                setChangeRoleDialog({ open: false, moderatorId: 0, currentRole: '' });
                 setNewRole('');
               }
             });
