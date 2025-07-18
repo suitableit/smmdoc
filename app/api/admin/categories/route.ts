@@ -37,12 +37,25 @@ export async function POST(request: NextRequest) {
       userId: user?.id ?? '',
     };
 
-    await db.category.create({
+    const newCategory = await db.category.create({
       data: categoryData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            services: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(
-      { success: true, error: null, message: 'Category Created!' },
+      { success: true, error: null, message: 'Category Created!', data: newCategory },
       { status: 201 }
     );
   } catch (error: any) {

@@ -272,7 +272,7 @@ const AdminsListPage = () => {
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
-        role: 'admin,moderator,super_admin', // Filter for admin roles only
+        role: 'admin,moderator', // Filter for admin roles only
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
       });
@@ -286,7 +286,7 @@ const AdminsListPage = () => {
       if (result.success) {
         // Filter data to only include admin roles on client side as backup
         const adminData = (result.data || []).filter((user: Admin) =>
-          ['admin', 'moderator', 'super_admin'].includes(user.role)
+          ['admin', 'moderator'].includes(user.role)
         );
         setAdmins(adminData);
         setPagination((prev) => ({

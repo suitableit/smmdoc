@@ -5,24 +5,24 @@ import { NextRequest, NextResponse } from 'next/server';
 // PUT /api/admin/orders/:id/status - Update order status
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null
         },
         { status: 401 }
       );
     }
-    
-    const { id } = params;
+
+    const { id } = await params;
     const body = await req.json();
     const { status, reason, startCount, remains } = body;
     
@@ -253,7 +253,7 @@ export async function PUT(
 // PATCH /api/admin/orders/:id/status - Simple status update (for frontend compatibility)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -270,7 +270,7 @@ export async function PATCH(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const { status } = await req.json();
 
     // Convert string ID to integer
@@ -347,24 +347,24 @@ export async function PATCH(
 // GET /api/admin/orders/:id/status - Get order status history (if implemented)
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
-    
+
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null
         },
         { status: 401 }
       );
     }
-    
-    const { id } = params;
+
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json(

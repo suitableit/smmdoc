@@ -20,9 +20,22 @@ export async function GET(request: NextRequest) {
     // Build where clause
     const whereClause: any = {};
 
-    // Filter by role
+    // Filter by role - handle multiple roles
     if (role && role !== 'all') {
-      whereClause.role = role;
+      // Check if role contains multiple values (comma-separated)
+      if (role.includes(',')) {
+        const roles = role.split(',').map((r: string) => r.trim());
+        // Validate all roles are valid enum values and cast to proper enum type
+        const validRoles = roles.filter((r: string) => ['user', 'admin', 'moderator'].includes(r)) as ('user' | 'admin' | 'moderator')[];
+        if (validRoles.length > 0) {
+          whereClause.role = { in: validRoles };
+        }
+      } else {
+        // Single role
+        if (['user', 'admin', 'moderator'].includes(role)) {
+          whereClause.role = role as 'user' | 'admin' | 'moderator';
+        }
+      }
     }
 
     // Filter by status

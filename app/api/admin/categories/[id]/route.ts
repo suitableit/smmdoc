@@ -13,14 +13,22 @@ export async function PUT(
     const body = await request.json();
     const { category_name, position, hideCategory } = body;
 
+    if (!user) {
+      return NextResponse.json({
+        error: 'Unauthorized access',
+        data: null,
+        success: false,
+      }, { status: 401 });
+    }
+
     if (!id || !category_name) {
       return NextResponse.json({
         error: 'Category ID and name are required',
         data: null,
         success: false,
-      });
+      }, { status: 400 });
     }
-    
+
     // Handle position logic - only for the current user's categories
     if (position === 'top') {
       // If position is 'top', update all existing 'top' categories to 'bottom'
@@ -28,7 +36,7 @@ export async function PUT(
       await db.category.updateMany({
         where: {
           position: 'top',
-          userId: user?.id ?? '',
+          userId: user.id,
           id: {
             not: parseInt(id),
           },
@@ -40,8 +48,14 @@ export async function PUT(
     }
 
     // Prepare update data
-    let updateData: any = {
+    const updateData: {
+      category_name: string;
+      updatedAt: Date;
+      position?: string;
+      hideCategory?: string;
+    } = {
       category_name: category_name,
+      updatedAt: new Date(),
     };
 
     // Add position if provided
@@ -55,25 +69,35 @@ export async function PUT(
     }
 
     // Update the category in the database
-    await db.category.update({
+    const updatedCategory = await db.category.update({
       where: {
         id: parseInt(id),
+        userId: user.id, // Ensure user can only update their own categories
       },
       data: updateData,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
-    
+
     return NextResponse.json({
       error: null,
       message: 'Category updated successfully',
-      data: null,
+      data: updatedCategory,
       success: true,
     });
   } catch (error) {
+    console.error('Error updating category:', error);
     return NextResponse.json({
-      error: 'Failed to update category: ' + error,
+      error: 'Failed to update category: ' + (error instanceof Error ? error.message : 'Unknown error'),
       data: null,
       success: false,
-    });
+    }, { status: 500 });
   }
 }
 

@@ -30,6 +30,15 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
     return { success: false, error: 'Invalid Credentials!' };
   }
 
+  // Check user status
+  if (existingUser.status === 'banned') {
+    return { success: false, error: "You're banned from our platform! Please contact support." };
+  }
+
+  if (existingUser.status === 'suspended') {
+    return { success: false, error: "You're suspended from our platform! Please contact support." };
+  }
+
   if (!existingUser.emailVerified) {
     const verificationToken = await generateVerificationToken(
       existingUser.email
@@ -113,10 +122,22 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
       email: session?.user?.email,
       role: session?.user?.role
     }, null, 2));
-    
-    return { 
-      success: true, 
-      message: 'Logged in successfully!', 
+
+    // Log successful login activity
+    try {
+      if (isAdmin) {
+        await ActivityLogger.adminLogin(existingUser.id, existingUser.username || existingUser.email || 'Unknown');
+      } else {
+        await ActivityLogger.login(existingUser.id, existingUser.username || existingUser.email || 'Unknown');
+      }
+    } catch (logError) {
+      console.error('Failed to log login activity:', logError);
+      // Don't fail the login if activity logging fails
+    }
+
+    return {
+      success: true,
+      message: 'Logged in successfully!',
       redirectTo: redirectUrl,
       isAdmin: isAdmin
     };
@@ -193,6 +214,15 @@ export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
   const passwordsMatch = await bcrypt.compare(password, existingUser.password);
   if (!passwordsMatch) {
     return { success: false, error: 'Invalid Credentials!' };
+  }
+
+  // Check user status (even for admins)
+  if (existingUser.status === 'banned') {
+    return { success: false, error: "You're banned from our platform! Please contact support." };
+  }
+
+  if (existingUser.status === 'suspended') {
+    return { success: false, error: "You're suspended from our platform! Please contact support." };
   }
 
   try {

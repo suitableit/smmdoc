@@ -1027,7 +1027,10 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
         if (res.data.success) {
           reset();
           showToast(res.data.message || 'Category created successfully', 'success');
+          // Refresh all category-related data for live updates
           mutate('/api/admin/categories');
+          mutate('/api/admin/categories/get-categories');
+          mutate('/api/admin/services'); // Refresh services to show updated category names
           // Live refresh parent data
           if (onRefresh) onRefresh();
           onClose();
@@ -1035,7 +1038,7 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
           showToast(res.data.error || 'Failed to create category', 'error');
         }
       }).catch((error) => {
-        showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
+        showToast(`Error: ${error.response?.data?.error || error.message || 'Something went wrong'}`, 'error');
       });
     });
   };
@@ -1181,14 +1184,16 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: {
       axiosInstance.put(`/api/admin/categories/${categoryId}`, values).then((res) => {
         if (res.data.success) {
           showToast(res.data.message || 'Category updated successfully', 'success');
+          // Refresh all category-related data for live updates
           mutate('/api/admin/categories');
+          mutate('/api/admin/categories/get-categories');
           mutate('/api/admin/services'); // Refresh services to show updated category names
           onClose();
         } else {
           showToast(res.data.error || 'Failed to update category', 'error');
         }
       }).catch((error) => {
-        showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
+        showToast(`Error: ${error.response?.data?.error || error.message || 'Something went wrong'}`, 'error');
       });
     });
   };

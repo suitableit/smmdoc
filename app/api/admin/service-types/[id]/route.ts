@@ -5,24 +5,25 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/admin/service-types/[id] - Get specific service type
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
-    
+
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
-        { 
+        {
           error: 'Unauthorized access. Admin privileges required.',
           success: false,
-          data: null 
+          data: null
         },
         { status: 401 }
       );
     }
 
+    const { id } = await params;
     const serviceType = await db.serviceType.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         services: {
           select: {
