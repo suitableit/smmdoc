@@ -290,7 +290,7 @@ const Header: React.FC<HeaderProps> = ({
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm sm:text-xl font-bold truncate text-gray-900 dark:text-white">{username}</h3>
                     <p className="truncate text-xs sm:text-sm text-gray-600 dark:text-gray-300">{user?.email}</p>
-                    <span className={`inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium mt-1 ${isAdmin ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'}`}>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium mt-1 ${isAdmin ? 'bg-purple-50 text-purple-700' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'}`}>
                       {isAdmin ? 'Admin' : 'User'}
                     </span>
                   </div>
