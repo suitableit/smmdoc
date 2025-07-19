@@ -1,3 +1,25 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  user
+}
+
+enum CategoryPosition {
+  top
+  bottom
+}
+
 model AddFund {
   id             Int       @id @default(autoincrement())
   invoice_id     String    @unique
@@ -103,4 +125,279 @@ model ActivityLog {
   @@index([userId])
   @@index([action])
   @@index([createdAt])
+}
+
+model ApiProvider {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique  // Provider name (smmgen, growfollows, etc.)
+  api_key     String   // Provider API Key
+  login_user  String?  // Username for provider login
+  login_pass  String?  // Password for provider login
+  status      String   @default("inactive") // active, inactive
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("providers")
+  @@index([status])
+  @@index([name])
+}
+
+model Category {
+  id            Int              @id @default(autoincrement())
+  category_name String
+  status        String           @default("active")
+  userId        Int
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  hideCategory  String           @default("no")
+  position      CategoryPosition @default(bottom)
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newOrders     NewOrder[]
+  services      Service[]
+
+  @@index([userId])
+  @@index([position, createdAt])
+  @@map("category")
+}
+
+model Service {
+  id                  Int               @id @default(autoincrement())
+  name                String
+  rate                Float
+  min_order           Int
+  max_order           Int
+  avg_time            String
+  description         String            @db.Text
+  updateText          String?           @db.Text
+  userId              Int
+  categoryId          Int
+  favrouteCatId       Int?
+  status              String            @default("active")
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  perqty              Int               @default(1000)
+  serviceTypeId       Int?
+  cancel              Boolean           @default(false)
+  mode                String            @default("manual")
+  refill              Boolean           @default(false)
+  refillDays          Int?              @default(30)
+  serviceSpeed        String?           @default("medium")
+  personalizedService Boolean?          @default(false)
+  refillDisplay       Int?              @default(24)
+  favoriteServices    FavoriteService[]
+  newOrders           NewOrder[]
+  category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  favrouteCat         FavrouteCat?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
+  serviceType         ServiceType?      @relation(fields: [serviceTypeId], references: [id])
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refillRequests      RefillRequest[]
+
+  @@index([categoryId])
+  @@index([favrouteCatId])
+  @@index([serviceTypeId])
+  @@index([userId])
+  @@map("service")
+}
+
+model NewOrder {
+  id             Int             @id @default(autoincrement())
+  categoryId     Int
+  serviceId      Int
+  userId         Int
+  link           String
+  qty            Int
+  price          Float
+  avg_time       String
+  status         String          @default("pending")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  remains        Int             @default(0)
+  startCount     Int             @default(0)
+  bdtPrice       Float
+  currency       String
+  usdPrice       Float
+  charge         Float           @default(0)
+  profit         Float           @default(0)
+  cancelRequests CancelRequest[]
+  category       Category        @relation(fields: [categoryId], references: [id])
+  service        Service         @relation(fields: [serviceId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
+  refillRequests RefillRequest[]
+
+  @@index([categoryId])
+  @@index([serviceId])
+  @@index([userId])
+  @@map("neworder")
+}
+
+model FavrouteCat {
+  id        Int       @id @default(autoincrement())
+  name      String
+  userId    Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id])
+  services  Service[]
+
+  @@index([userId])
+  @@map("favroutecat")
+}
+
+model FavoriteService {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  serviceId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  service   Service  @relation(fields: [serviceId], references: [id])
+
+  @@unique([userId, serviceId])
+  @@index([serviceId])
+  @@index([userId])
+  @@map("favoriteservice")
+}
+
+model CancelRequest {
+  id           Int       @id @default(autoincrement())
+  orderId      Int
+  userId       Int
+  reason       String
+  status       String    @default("pending")
+  refundAmount Float?
+  adminNotes   String?
+  processedBy  Int?
+  processedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  order        NewOrder  @relation(fields: [orderId], references: [id])
+  user         User      @relation(fields: [userId], references: [id])
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([status])
+  @@map("cancelrequest")
+}
+
+model RefillRequest {
+  id           Int       @id @default(autoincrement())
+  orderId      Int
+  userId       Int
+  serviceId    Int
+  status       String    @default("pending")
+  adminNotes   String?
+  processedBy  Int?
+  processedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  order        NewOrder  @relation(fields: [orderId], references: [id])
+  service      Service   @relation(fields: [serviceId], references: [id])
+  user         User      @relation(fields: [userId], references: [id])
+
+  @@index([orderId])
+  @@index([serviceId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([status])
+  @@map("refillrequest")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  refresh_token_expires_in Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("account")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model VerificationToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expires   DateTime
+  email     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([email, token])
+  @@map("verificationtoken")
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expires   DateTime
+  email     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([email, token])
+  @@map("passwordresettoken")
+}
+
+model TwoFactorToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expires   DateTime
+  email     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([email, token])
+  @@map("twofactortoken")
+}
+
+model TwoFactorConfirmation {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("twofactorconfirmation")
+}
+
+model ApiKey {
+  id          Int      @id @default(autoincrement())
+  name        String
+  key         String   @unique
+  userId      Int
+  permissions Json?
+  lastUsed    DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([key])
+  @@map("apikey")
 }
