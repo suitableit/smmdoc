@@ -13,10 +13,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import React, { useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
+    FaBriefcase,
+    FaEye,
+    FaEyeSlash,
     FaHome,
     FaLock,
     FaTachometerAlt,
@@ -39,6 +42,11 @@ const Hero: React.FC = () => {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
   const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const isAuthenticated = status === 'authenticated' && session?.user;
   const isLoading = status === 'loading';
@@ -390,13 +398,23 @@ const Hero: React.FC = () => {
                             <FaLock className="w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200" />
                           </div>
                           <input
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             id="password"
                             placeholder="Password"
                             disabled={isPending}
                             {...form.register('password')}
-                            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                            className="w-full pl-12 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                           />
+                          <div
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                            onClick={togglePasswordVisibility}
+                          >
+                            {showPassword ? (
+                              <FaEyeSlash className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                            ) : (
+                              <FaEye className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                            )}
+                          </div>
                         </div>
                         {form.formState.errors.password && (
                           <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">

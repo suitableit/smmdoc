@@ -14,12 +14,17 @@ import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { FaCheck, FaEnvelope, FaLock, FaSpinner, FaTimes, FaUser } from 'react-icons/fa';
+import { FaCheck, FaEnvelope, FaEye, FaEyeSlash, FaLock, FaSpinner, FaTimes, FaUser } from 'react-icons/fa';
 
 export default function SignUpForm() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   // Username validation states
   const [usernameStatus, setUsernameStatus] = useState<{
@@ -466,13 +471,23 @@ export default function SignUpForm() {
               <FaLock className="w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200" />
             </div>
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               id="password"
               placeholder="e.g: ********"
               disabled={isPending}
               {...form.register('password')}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              className="w-full pl-12 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
+            <div
+              className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+              onClick={togglePasswordVisibility}
+            >
+              {showPassword ? (
+                <FaEyeSlash className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              ) : (
+                <FaEye className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              )}
+            </div>
           </div>
           {form.formState.errors.password && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
@@ -493,13 +508,23 @@ export default function SignUpForm() {
               <FaLock className="w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200" />
             </div>
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               id="confirmPassword"
               placeholder="e.g: ********"
               disabled={isPending}
               {...form.register('confirmPassword')}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              className="w-full pl-12 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
+            <div
+              className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+              onClick={togglePasswordVisibility}
+            >
+              {showPassword ? (
+                <FaEyeSlash className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              ) : (
+                <FaEye className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              )}
+            </div>
           </div>
           {form.formState.errors.confirmPassword && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
