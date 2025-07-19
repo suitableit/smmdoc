@@ -35,28 +35,15 @@ export async function GET() {
     // Get configured providers from database
     let configuredProviders: any[] = [];
     try {
-      // First ensure providers table exists
-      await db.$executeRaw`
-        CREATE TABLE IF NOT EXISTS \`providers\` (
-          \`id\` int NOT NULL AUTO_INCREMENT,
-          \`name\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-          \`api_key\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-          \`login_user\` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-          \`login_pass\` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-          \`status\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'inactive',
-          \`createdAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-          \`updatedAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-          PRIMARY KEY (\`id\`),
-          UNIQUE KEY \`providers_name_key\` (\`name\`),
-          KEY \`providers_status_idx\` (\`status\`),
-          KEY \`providers_name_idx\` (\`name\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-      `;
-
-      const result = await db.$queryRaw`
-        SELECT id, name, status, createdAt, updatedAt FROM providers
-      `;
-      configuredProviders = Array.isArray(result) ? result : [];
+      configuredProviders = await db.apiProvider.findMany({
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      });
     } catch (error) {
       console.log('Provider table error:', error);
       configuredProviders = [];
@@ -145,30 +132,12 @@ export async function POST(req: NextRequest) {
     // Check if provider already exists and create new provider
     let newProvider: any;
     try {
-      // First ensure providers table exists
-      await db.$executeRaw`
-        CREATE TABLE IF NOT EXISTS \`providers\` (
-          \`id\` int NOT NULL AUTO_INCREMENT,
-          \`name\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-          \`api_key\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-          \`login_user\` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-          \`login_pass\` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-          \`status\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'inactive',
-          \`createdAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-          \`updatedAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-          PRIMARY KEY (\`id\`),
-          UNIQUE KEY \`providers_name_key\` (\`name\`),
-          KEY \`providers_status_idx\` (\`status\`),
-          KEY \`providers_name_idx\` (\`name\`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-      `;
-
       // Check if provider already exists
-      const existingProviders = await db.$queryRaw`
-        SELECT * FROM providers WHERE name = ${selectedProvider}
-      `;
+      const existingProvider = await db.apiProvider.findUnique({
+        where: { name: selectedProvider }
+      });
 
-      if (Array.isArray(existingProviders) && existingProviders.length > 0) {
+      if (existingProvider) {
         return NextResponse.json(
           {
             error: 'Provider already exists',
@@ -180,17 +149,15 @@ export async function POST(req: NextRequest) {
       }
 
       // Create new provider
-      await db.$executeRaw`
-        INSERT INTO providers (name, api_key, login_user, login_pass, status, createdAt, updatedAt)
-        VALUES (${selectedProvider}, ${apiKey}, ${username || null}, ${password || null}, 'inactive', NOW(), NOW())
-      `;
-
-      // Get the created provider
-      const createdProviders = await db.$queryRaw`
-        SELECT * FROM providers WHERE name = ${selectedProvider}
-      `;
-
-      newProvider = Array.isArray(createdProviders) && createdProviders.length > 0 ? createdProviders[0] : null;
+      newProvider = await db.apiProvider.create({
+        data: {
+          name: selectedProvider,
+          api_key: apiKey,
+          login_user: username || null,
+          login_pass: password || null,
+          status: 'inactive'
+        }
+      });
     } catch (error) {
       console.error('Provider creation error:', error);
       return NextResponse.json(
@@ -261,15 +228,10 @@ export async function PUT(req: NextRequest) {
     }
 
     // Update provider status
-    await db.$executeRaw`
-      UPDATE providers SET status = ${status}, updatedAt = NOW() WHERE id = ${parseInt(id)}
-    `;
-
-    // Get updated provider
-    const result = await db.$queryRaw`
-      SELECT * FROM providers WHERE id = ${parseInt(id)}
-    `;
-    const updatedProvider = Array.isArray(result) && result.length > 0 ? result[0] : null;
+    const updatedProvider = await db.apiProvider.update({
+      where: { id: parseInt(id) },
+      data: { status: status }
+    });
 
     return NextResponse.json({
       success: true,
@@ -325,9 +287,9 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete provider
-    await db.$executeRaw`
-      DELETE FROM providers WHERE id = ${parseInt(id)}
-    `;
+    await db.apiProvider.delete({
+      where: { id: parseInt(id) }
+    });
 
     return NextResponse.json({
       success: true,
