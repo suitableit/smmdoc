@@ -35,9 +35,9 @@ export async function GET() {
     // Get configured providers from database
     let configuredProviders: any[] = [];
     try {
-      // First ensure providers table exists
+      // First ensure Provider table exists
       await db.$executeRaw`
-        CREATE TABLE IF NOT EXISTS \`providers\` (
+        CREATE TABLE IF NOT EXISTS \`Provider\` (
           \`id\` int NOT NULL AUTO_INCREMENT,
           \`name\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
           \`api_key\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -47,14 +47,14 @@ export async function GET() {
           \`createdAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
           \`updatedAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
           PRIMARY KEY (\`id\`),
-          UNIQUE KEY \`providers_name_key\` (\`name\`),
-          KEY \`providers_status_idx\` (\`status\`),
-          KEY \`providers_name_idx\` (\`name\`)
+          UNIQUE KEY \`Provider_name_key\` (\`name\`),
+          KEY \`Provider_status_idx\` (\`status\`),
+          KEY \`Provider_name_idx\` (\`name\`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `;
 
       const result = await db.$queryRaw`
-        SELECT id, name, status, createdAt, updatedAt FROM providers
+        SELECT id, name, status, createdAt, updatedAt FROM Provider
       `;
       configuredProviders = Array.isArray(result) ? result : [];
     } catch (error) {
@@ -145,9 +145,9 @@ export async function POST(req: NextRequest) {
     // Check if provider already exists and create new provider
     let newProvider: any;
     try {
-      // First ensure providers table exists
+      // First ensure Provider table exists
       await db.$executeRaw`
-        CREATE TABLE IF NOT EXISTS \`providers\` (
+        CREATE TABLE IF NOT EXISTS \`Provider\` (
           \`id\` int NOT NULL AUTO_INCREMENT,
           \`name\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
           \`api_key\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -157,15 +157,15 @@ export async function POST(req: NextRequest) {
           \`createdAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
           \`updatedAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
           PRIMARY KEY (\`id\`),
-          UNIQUE KEY \`providers_name_key\` (\`name\`),
-          KEY \`providers_status_idx\` (\`status\`),
-          KEY \`providers_name_idx\` (\`name\`)
+          UNIQUE KEY \`Provider_name_key\` (\`name\`),
+          KEY \`Provider_status_idx\` (\`status\`),
+          KEY \`Provider_name_idx\` (\`name\`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `;
 
       // Check if provider already exists
       const existingProviders = await db.$queryRaw`
-        SELECT * FROM providers WHERE name = ${selectedProvider}
+        SELECT * FROM Provider WHERE name = ${selectedProvider}
       `;
 
       if (Array.isArray(existingProviders) && existingProviders.length > 0) {
@@ -181,13 +181,13 @@ export async function POST(req: NextRequest) {
 
       // Create new provider
       await db.$executeRaw`
-        INSERT INTO providers (name, api_key, login_user, login_pass, status, createdAt, updatedAt)
+        INSERT INTO Provider (name, api_key, login_user, login_pass, status, createdAt, updatedAt)
         VALUES (${selectedProvider}, ${apiKey}, ${username || null}, ${password || null}, 'inactive', NOW(), NOW())
       `;
 
       // Get the created provider
       const createdProviders = await db.$queryRaw`
-        SELECT * FROM providers WHERE name = ${selectedProvider}
+        SELECT * FROM Provider WHERE name = ${selectedProvider}
       `;
 
       newProvider = Array.isArray(createdProviders) && createdProviders.length > 0 ? createdProviders[0] : null;

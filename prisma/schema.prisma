@@ -127,7 +127,7 @@ model ActivityLog {
   @@index([createdAt])
 }
 
-model ApiProvider {
+model Provider {
   id          Int      @id @default(autoincrement())
   name        String   @unique  // Provider name (smmgen, growfollows, etc.)
   api_key     String   // Provider API Key
@@ -137,7 +137,6 @@ model ApiProvider {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@map("providers")
   @@index([status])
   @@index([name])
 }
