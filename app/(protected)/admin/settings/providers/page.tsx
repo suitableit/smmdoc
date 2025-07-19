@@ -2,9 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
 
-import { APP_NAME } from '@/lib/constants';
 import React, { useEffect, useState } from 'react';
 import {
   FaChartBar,
@@ -24,6 +22,8 @@ import {
   FaTimes,
   FaTrash
 } from 'react-icons/fa';
+
+import { APP_NAME } from '@/lib/constants';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -124,69 +124,15 @@ const APIProvidersPage = () => {
     document.title = `API Providers — ${APP_NAME}`;
   }, []);
 
-  // Mock providers data
-  const [providers, setProviders] = useState<Provider[]>([
-    {
-      id: '1',
-      name: 'SocialBoost API',
-      apiUrl: 'https://api.socialboost.com/v2',
-      apiKey: '*********************',
-      status: 'active',
-      services: 245,
-      orders: 12450,
-      importedServices: 230,
-      activeServices: 220,
-      currentBalance: 1250.75,
-      successRate: 98.5,
-      avgResponseTime: 150,
-      createdAt: new Date('2024-01-15'),
-      lastSync: new Date(),
-      description: 'High-quality social media services with fast delivery',
-      category: 'Social Media'
-    },
-    {
-      id: '2',
-      name: 'InstantGrow Provider',
-      apiUrl: 'https://api.instantgrow.net/v1',
-      apiKey: '**********************',
-      status: 'active',
-      services: 180,
-      orders: 8320,
-      importedServices: 165,
-      activeServices: 158,
-      currentBalance: 890.50,
-      successRate: 96.2,
-      avgResponseTime: 200,
-      createdAt: new Date('2024-02-10'),
-      lastSync: new Date(Date.now() - 300000), // 5 minutes ago
-      description: 'Instant delivery for Instagram and TikTok services',
-      category: 'Instagram'
-    },
-    {
-      id: '3',
-      name: 'QuickSMM Services',
-      apiUrl: 'https://api.quicksmm.com/v3',
-      apiKey: 'qs_live_**********************',
-      status: 'inactive',
-      services: 95,
-      orders: 0,
-      importedServices: 0,
-      activeServices: 0,
-      currentBalance: 500.00,
-      successRate: 0,
-      avgResponseTime: 0,
-      createdAt: new Date(),
-      lastSync: new Date(),
-      description: 'New provider currently inactive',
-      category: 'Multi-Platform'
-    }
-  ]);
+  // Real providers data from API
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [availableProviders, setAvailableProviders] = useState<any[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
+  const [syncingProvider, setSyncingProvider] = useState<number | null>(null);
   const [syncingAll, setSyncingAll] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -214,44 +160,58 @@ const APIProvidersPage = () => {
     password: '',
   });
 
-  const availableProviders = [
-    { 
-      value: 'smmgen', 
-      label: 'SMMGen',
-      apiUrl: 'https://api.smmgen.com/v2',
-      category: 'Multi-Platform',
-      description: 'Premium SMM services with fast delivery'
-    },
-    { 
-      value: 'growfollows', 
-      label: 'Growfollows',
-      apiUrl: 'https://api.growfollows.com/v1',
-      category: 'Social Media',
-      description: 'High-quality social media growth services'
-    },
-    { 
-      value: 'attpanel', 
-      label: 'ATTPANEL',
-      apiUrl: 'https://api.attpanel.com/v3',
-      category: 'Multi-Platform',
-      description: 'Reliable SMM panel with competitive prices'
-    },
-    { 
-      value: 'smmcoder', 
-      label: 'SMMCoder',
-      apiUrl: 'https://api.smmcoder.com/v2',
-      category: 'Social Media',
-      description: 'Advanced SMM solutions for all platforms'
-    },
-  ];
+  // Fetch providers data
+  const fetchProviders = async () => {
+    try {
+      const response = await fetch('/api/admin/providers');
+      const result = await response.json();
 
-  // Simulate initial loading
+      if (result.success) {
+        console.log('Fetched providers:', result.data.providers);
+        // Set all available providers for dropdown
+        setAvailableProviders(result.data.providers);
+
+        // Convert configured providers to Provider format for UI
+        const uiProviders = result.data.providers
+          .filter((p: any) => p.configured)
+          .map((p: any) => ({
+            id: p.id,
+            name: p.label,
+            apiUrl: p.apiUrl,
+            apiKey: '*********************',
+            status: p.status,
+            services: 0,
+            orders: 0,
+            importedServices: 0,
+            activeServices: 0,
+            currentBalance: 0,
+            successRate: 0,
+            avgResponseTime: 0,
+            createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+            lastSync: p.updatedAt ? new Date(p.updatedAt) : new Date(),
+            description: p.description,
+            category: p.category
+          }));
+        setProviders(uiProviders);
+        console.log('Available providers for dropdown:', result.data.providers);
+      } else {
+        console.error('Failed to fetch providers:', result.error);
+        showToast('Failed to fetch providers', 'error');
+      }
+    } catch (error) {
+      console.error('Error fetching providers:', error);
+      showToast('Failed to fetch providers', 'error');
+    }
+  };
+
+  // Initial loading
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const loadData = async () => {
+      await fetchProviders();
       setIsPageLoading(false);
-    }, 1000);
+    };
 
-    return () => clearTimeout(timer);
+    loadData();
   }, []);
 
   // Show toast notification
@@ -266,29 +226,23 @@ const APIProvidersPage = () => {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     showToast('Refreshing providers data...', 'pending');
-    
-    // Simulate refresh operation
-    setTimeout(() => {
-      // Update last sync time for all providers and simulate data refresh
-      setProviders(prev => prev.map(provider => ({
-        ...provider,
-        lastSync: new Date(),
-        // Simulate slight changes in data
-        orders: provider.orders + Math.floor(Math.random() * 10),
-        currentBalance: provider.currentBalance + (Math.random() * 10 - 5),
-      })));
-      
-      setIsRefreshing(false);
+
+    try {
+      await fetchProviders();
       showToast('Providers data refreshed successfully!', 'success');
-    }, 2000);
+    } catch (error) {
+      showToast('Failed to refresh providers data', 'error');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleAddProvider = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     const selectedProviderData = availableProviders.find(p => p.value === formData.selectedProvider);
-    
+
     if (!selectedProviderData) {
       showToast('Please select a provider', 'error');
       setIsLoading(false);
@@ -301,39 +255,45 @@ const APIProvidersPage = () => {
       setIsLoading(false);
       return;
     }
-    
-    setTimeout(() => {
-      const newProvider: Provider = {
-        id: Date.now().toString(),
-        name: selectedProviderData.label,
-        apiUrl: selectedProviderData.apiUrl,
-        apiKey: formData.apiKey,
-        status: 'inactive',
-        services: 0,
-        orders: 0,
-        importedServices: 0,
-        activeServices: 0,
-        currentBalance: 0,
-        successRate: 0,
-        avgResponseTime: 0,
-        createdAt: new Date(),
-        lastSync: new Date(),
-        description: selectedProviderData.description,
-        category: selectedProviderData.category,
-      };
 
-      setProviders(prev => [...prev, newProvider]);
-      setFormData({ 
-        selectedProvider: '', 
-        apiKey: '', 
-        syncEnabled: true, 
-        username: '', 
-        password: '' 
+    try {
+      const response = await fetch('/api/admin/providers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          selectedProvider: formData.selectedProvider,
+          apiKey: formData.apiKey,
+          username: formData.username,
+          password: formData.password
+        })
       });
-      setShowAddForm(false);
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Refresh providers list
+        await fetchProviders();
+
+        setFormData({
+          selectedProvider: '',
+          apiKey: '',
+          syncEnabled: true,
+          username: '',
+          password: ''
+        });
+        setShowAddForm(false);
+        showToast(result.message || 'Provider added successfully!', 'success');
+      } else {
+        showToast(result.error || 'Failed to add provider', 'error');
+      }
+    } catch (error) {
+      console.error('Error adding provider:', error);
+      showToast('Failed to add provider', 'error');
+    } finally {
       setIsLoading(false);
-      showToast('Provider added successfully!', 'success');
-    }, 1000);
+    }
   };
 
   const handleOpenEditProvider = (provider: Provider) => {
@@ -389,25 +349,61 @@ const APIProvidersPage = () => {
     }, 1000);
   };
 
-  const handleToggleStatus = async (providerId: string) => {
-    setProviders(prev => prev.map(provider => 
-      provider.id === providerId 
-        ? { 
-            ...provider, 
-            status: provider.status === 'active' ? 'inactive' : 'active' as 'active' | 'inactive'
-          }
-        : provider
-    ));
-    
-    const provider = providers.find(p => p.id === providerId);
-    const newStatus = provider?.status === 'active' ? 'inactive' : 'active';
-    showToast(`Provider ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`, 'success');
+  const handleToggleStatus = async (providerId: number) => {
+    try {
+      const provider = providers.find(p => p.id === providerId);
+      const newStatus = provider?.status === 'active' ? 'inactive' : 'active';
+
+      const response = await fetch('/api/admin/providers', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: providerId,
+          status: newStatus
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update local state
+        setProviders(prev => prev.map(provider =>
+          provider.id === providerId
+            ? { ...provider, status: newStatus as 'active' | 'inactive' }
+            : provider
+        ));
+        showToast(result.message || `Provider ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`, 'success');
+      } else {
+        showToast(result.error || 'Failed to update provider status', 'error');
+      }
+    } catch (error) {
+      console.error('Error toggling provider status:', error);
+      showToast('Failed to update provider status', 'error');
+    }
   };
 
-  const handleDeleteProvider = async (providerId: string) => {
+  const handleDeleteProvider = async (providerId: number) => {
     if (window.confirm('Are you sure you want to delete this provider?')) {
-      setProviders(prev => prev.filter(provider => provider.id !== providerId));
-      showToast('Provider deleted successfully!', 'success');
+      try {
+        const response = await fetch(`/api/admin/providers?id=${providerId}`, {
+          method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Update local state
+          setProviders(prev => prev.filter(provider => provider.id !== providerId));
+          showToast(result.message || 'Provider deleted successfully!', 'success');
+        } else {
+          showToast(result.error || 'Failed to delete provider', 'error');
+        }
+      } catch (error) {
+        console.error('Error deleting provider:', error);
+        showToast('Failed to delete provider', 'error');
+      }
     }
   };
 
@@ -425,19 +421,25 @@ const APIProvidersPage = () => {
     }, 3000); // 3 second delay for sync all operation
   };
 
-  const handleSyncProvider = async (providerId: string) => {
+  const handleSyncProvider = async (providerId: number) => {
     setSyncingProvider(providerId);
-    
-    // Simulate sync operation
-    setTimeout(() => {
-      setProviders(prev => prev.map(provider => 
-        provider.id === providerId 
-          ? { ...provider, lastSync: new Date() }
-          : provider
-      ));
+
+    try {
+      // Here you would call the provider's sync API
+      // For now, simulate sync operation
+      setTimeout(() => {
+        setProviders(prev => prev.map(provider =>
+          provider.id === providerId
+            ? { ...provider, lastSync: new Date() }
+            : provider
+        ));
+        setSyncingProvider(null);
+        showToast('Provider synchronized successfully!', 'success');
+      }, 2000);
+    } catch (error) {
       setSyncingProvider(null);
-      showToast('Provider synchronized successfully!', 'success');
-    }, 2000); // 2 second delay to show spinning animation
+      showToast('Failed to sync provider', 'error');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -537,8 +539,8 @@ const APIProvidersPage = () => {
                     <label className="form-label">Select Provider</label>
                     <select
                       value={formData.selectedProvider}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
                         selectedProvider: e.target.value,
                         // Clear other fields when changing provider
                         apiKey: '',
@@ -550,7 +552,9 @@ const APIProvidersPage = () => {
                       required
                     >
                       <option value="">Choose a provider...</option>
-                      {availableProviders.map((provider) => (
+                      {availableProviders
+                        .filter((provider: any) => !provider.configured)
+                        .map((provider: any) => (
                         <option key={provider.value} value={provider.value}>
                           {provider.label}
                         </option>
