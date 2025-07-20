@@ -1,4 +1,5 @@
 import { auth } from '@/auth';
+import { ActivityLogger } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
