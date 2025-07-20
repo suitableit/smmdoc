@@ -4,12 +4,12 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { APP_NAME } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaClock,
-  FaExclamationTriangle,
-  FaReceipt,
-  FaSearch,
-  FaTimes,
+    FaCheckCircle,
+    FaClock,
+    FaExclamationTriangle,
+    FaReceipt,
+    FaSearch,
+    FaTimes,
 } from 'react-icons/fa';
 import { TransactionsList } from './components/TransactionsList';
 
@@ -60,6 +60,7 @@ type Transaction = {
   reference_id?: string;
   sender_number?: string;
   phone?: string;
+  currency?: string;
 };
 
 // Helper function for formatting amount - will be replaced with dynamic currency

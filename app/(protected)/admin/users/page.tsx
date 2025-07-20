@@ -615,9 +615,9 @@ const UsersListPage = () => {
 
       if (result.success) {
         showToast(
-          `Successfully ${
+          result.message || `Successfully ${
             balanceForm.action === 'add' ? 'added' : 'deducted'
-          } $${balanceForm.amount} ${balanceForm.action === 'add' ? 'to' : 'from'} ${addDeductBalanceDialog.currentUser.username}'s balance`,
+          } balance ${balanceForm.action === 'add' ? 'to' : 'from'} ${addDeductBalanceDialog.currentUser.username}`,
           'success'
         );
         setAddDeductBalanceDialog({ open: false, userId: 0, currentUser: null });
@@ -2015,9 +2015,9 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
 
       if (result.success) {
         showModalToast(
-          `Successfully ${
+          result.message || `Successfully ${
             balanceForm.action === 'add' ? 'added' : 'deducted'
-          } $${balanceForm.amount} ${balanceForm.action === 'add' ? 'to' : 'from'} ${currentUser.username}'s balance`,
+          } balance ${balanceForm.action === 'add' ? 'to' : 'from'} ${currentUser.username}`,
           'success'
         );
         onClose();

@@ -134,12 +134,12 @@ export async function POST(request: NextRequest) {
       });
 
       // Create a transaction record for this manual balance adjustment
-      // Store the actual amount that was added/deducted from user balance (always in BDT)
+      // Store the original amount and currency that admin used
       const transactionRecord = await prisma.addFund.create({
         data: {
           userId: user.id,
           invoice_id: `MANUAL-${Date.now()}`,
-          amount: amountToAdd, // Store actual BDT amount that was added/deducted
+          amount: amount, // Store original admin input amount
           spent_amount: 0,
           fee: 0,
           email: user.email || '',
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
           payment_method: 'Admin Manual Adjustment',
           sender_number: '',
           transaction_id: action === 'add' ? 'Added by Admin' : 'Deduct by Admin',
-          currency: 'BDT' // Always store as BDT since user balance is in BDT
+          currency: transactionCurrency // Store admin's currency (USD or BDT)
         }
       });
 

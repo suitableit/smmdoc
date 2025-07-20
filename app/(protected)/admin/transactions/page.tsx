@@ -798,9 +798,9 @@ const AdminAllTransactionsPage = () => {
 
       if (result.success) {
         showToast(
-          `Successfully ${
+          result.message || `Successfully ${
             balanceForm.action === 'add' ? 'added' : 'deducted'
-          } $${balanceForm.amount} ${balanceForm.action === 'add' ? 'to' : 'from'} ${balanceForm.username}'s balance`,
+          } balance ${balanceForm.action === 'add' ? 'to' : 'from'} ${balanceForm.username}`,
           'success'
         );
         setAddDeductBalanceDialog({ open: false });
