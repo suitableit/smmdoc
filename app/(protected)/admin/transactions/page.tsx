@@ -64,6 +64,7 @@ interface Transaction {
   amount: number;
   currency: string;
   phone: string;
+  sender_number?: string;
   method: string;
   type: 'deposit' | 'withdrawal';
   status: 'pending' | 'completed' | 'cancelled' | 'Processing' | 'Success' | 'Cancelled';
@@ -1382,7 +1383,7 @@ const AdminAllTransactionsPage = () => {
                               className="text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.phone || 'null'}
+                              {transaction.phone || transaction.sender_number || 'N/A'}
                             </span>
                           </td>
                           <td className="p-3">

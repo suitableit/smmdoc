@@ -118,7 +118,7 @@ export function TransactionsList({
                 </td>
                 <td className="py-3 px-4">
                   <span className="text-sm text-gray-700">
-                    {transaction.sender_number || transaction.phone || 'N/A'}
+                    {transaction.phone || transaction.sender_number || 'N/A'}
                   </span>
                 </td>
                 <td className="py-3 px-4">
