@@ -1,12 +1,10 @@
 'use client';
 
-import { useCurrency } from '@/contexts/CurrencyContext';
 import {
   FaCheckCircle,
   FaClock,
   FaExclamationTriangle,
-  FaEye,
-  FaSearch,
+  FaSearch
 } from 'react-icons/fa';
 
 type Transaction = {
@@ -22,6 +20,7 @@ type Transaction = {
   reference_id?: string;
   sender_number?: string;
   phone?: string;
+  currency?: string;
 };
 
 interface TransactionsListProps {
@@ -31,14 +30,12 @@ interface TransactionsListProps {
 export function TransactionsList({
   transactions,
 }: TransactionsListProps) {
-  const { currency, rate } = useCurrency();
 
-  // Function to format currency based on selected currency
-  const formatTransactionCurrency = (amount: number) => {
-    // Transactions are stored in BDT, so we need to convert if USD is selected
-    if (currency === 'USD' && rate) {
-      const amountInUSD = amount / rate;
-      return `$${amountInUSD.toFixed(2)}`;
+  // Function to format currency based on transaction's original currency
+  const formatTransactionCurrency = (amount: number, transactionCurrency?: string) => {
+    // Display amount in the currency it was originally added/deducted
+    if (transactionCurrency === 'USD' || transactionCurrency === 'USDT') {
+      return `$${amount.toFixed(2)}`;
     } else {
       return `৳${amount.toFixed(2)}`;
     }
@@ -116,7 +113,7 @@ export function TransactionsList({
                 </td>
                 <td className="py-3 px-4">
                   <span className="text-sm font-medium text-gray-900">
-                    {formatTransactionCurrency(transaction.amount)}
+                    {formatTransactionCurrency(transaction.amount, transaction.currency)}
                   </span>
                 </td>
                 <td className="py-3 px-4">

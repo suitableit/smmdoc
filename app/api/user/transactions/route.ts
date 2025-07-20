@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
       reference_id: transaction.order_id,
       sender_number: transaction.sender_number,
       phone: transaction.sender_number,
+      currency: transaction.currency || 'BDT', // Include currency field
     }));
 
     return NextResponse.json({
