@@ -59,7 +59,7 @@ interface Transaction {
     name: string;
     username?: string;
   };
-  transactionId: number;
+  transactionId: number | string;
   amount: number;
   currency: string;
   phone: string;
@@ -71,6 +71,7 @@ interface Transaction {
   createdAt: string;
   updatedAt: string;
   processedAt?: string;
+  notes?: string;
 }
 
 interface TransactionStats {
@@ -373,6 +374,16 @@ const AdminAllTransactionsPage = () => {
     action: 'add',
     notes: '',
   });
+
+  // Username search states
+  const [usernameSearching, setUsernameSearching] = useState(false);
+  const [userFound, setUserFound] = useState<{
+    id: number;
+    username: string;
+    name: string;
+    email: string;
+  } | null>(null);
+  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
 
   // Calculate status counts
   const calculateStatusCounts = (transactionsData: Transaction[]) => {
@@ -705,9 +716,56 @@ const AdminAllTransactionsPage = () => {
     setAddDeductBalanceDialog({ open: true });
   };
 
+  // Username search function
+  const searchUsername = async (username: string) => {
+    if (!username.trim()) {
+      setUserFound(null);
+      return;
+    }
+
+    try {
+      setUsernameSearching(true);
+      const response = await fetch(`/api/admin/users/search?q=${encodeURIComponent(username)}`);
+      const result = await response.json();
+
+      console.log('Search result for:', username, result); // Debug log
+
+      if (result.users && result.users.length > 0) {
+        // Find exact username match first, otherwise take first result
+        const exactMatch = result.users.find((user: any) =>
+          user.username?.toLowerCase() === username.toLowerCase()
+        );
+        const foundUser = exactMatch || result.users[0];
+        console.log('Found user:', foundUser); // Debug log
+        setUserFound(foundUser);
+      } else {
+        console.log('No users found for:', username); // Debug log
+        setUserFound(null);
+      }
+    } catch (error) {
+      console.error('Error searching username:', error);
+      setUserFound(null);
+    } finally {
+      setUsernameSearching(false);
+    }
+  };
+
+  // Debounced username search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (balanceForm.username.trim()) {
+        searchUsername(balanceForm.username.trim());
+      } else {
+        setUserFound(null);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [balanceForm.username]);
+
   const handleBalanceSubmit = async () => {
-    if (!balanceForm.username || !balanceForm.amount) {
-      showToast('Please fill in all required fields', 'error');
+    if (!balanceForm.username || !balanceForm.amount || !userFound) {
+      showToast('Please fill in all required fields and ensure user is found', 'error');
       return;
     }
 
@@ -717,6 +775,7 @@ const AdminAllTransactionsPage = () => {
     }
 
     try {
+      setBalanceSubmitting(true);
       const response = await fetch('/api/admin/users/balance', {
         method: 'POST',
         headers: {
@@ -741,12 +800,17 @@ const AdminAllTransactionsPage = () => {
         );
         setAddDeductBalanceDialog({ open: false });
         setBalanceForm({ username: '', amount: '', action: 'add', notes: '' });
+        setUserFound(null);
+        // Refresh transactions to show new admin transaction
+        fetchTransactions();
       } else {
         showToast(result.error || 'Failed to update user balance', 'error');
       }
     } catch (error) {
       console.error('Error updating user balance:', error);
       showToast('Error updating user balance', 'error');
+    } finally {
+      setBalanceSubmitting(false);
     }
   };
 
@@ -1278,7 +1342,9 @@ const AdminAllTransactionsPage = () => {
                           <td className="p-3">
                             {transaction.transactionId ? (
                               <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded max-w-32 truncate">
-                                {transaction.transactionId}
+                                {transaction.transactionId === 'Added by Admin' || transaction.transactionId === 'Deduct by Admin'
+                                  ? (transaction.notes || transaction.transactionId)
+                                  : transaction.transactionId}
                               </div>
                             ) : (
                               <span className="text-xs text-gray-400">
@@ -1957,18 +2023,48 @@ const AdminAllTransactionsPage = () => {
                       <div className="space-y-4 mb-6">
                         <div>
                           <label className="form-label mb-2">Username *</label>
-                          <input
-                            type="text"
-                            placeholder="Enter username"
-                            value={balanceForm.username}
-                            onChange={(e) =>
-                              setBalanceForm((prev) => ({
-                                ...prev,
-                                username: e.target.value,
-                              }))
-                            }
-                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                          />
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Enter username"
+                              value={balanceForm.username}
+                              onChange={(e) => {
+                                setBalanceForm((prev) => ({
+                                  ...prev,
+                                  username: e.target.value,
+                                }));
+                                if (!e.target.value.trim()) {
+                                  setUserFound(null);
+                                }
+                              }}
+                              className="form-field w-full px-4 py-3 pr-10 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                            />
+                            {usernameSearching && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--primary)]"></div>
+                              </div>
+                            )}
+                          </div>
+                          {userFound && (
+                            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span className="text-sm text-green-700 font-medium">
+                                  User found: {userFound.name || userFound.username} ({userFound.email})
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                          {balanceForm.username && !usernameSearching && !userFound && (
+                            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                <span className="text-sm text-red-700">
+                                  User not found
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         <div>
@@ -2036,6 +2132,9 @@ const AdminAllTransactionsPage = () => {
                               action: 'add',
                               notes: '',
                             });
+                            setUserFound(null);
+                            setUsernameSearching(false);
+                            setBalanceSubmitting(false);
                           }}
                           className="btn btn-secondary"
                         >
@@ -2043,12 +2142,22 @@ const AdminAllTransactionsPage = () => {
                         </button>
                         <button
                           onClick={handleBalanceSubmit}
-                          className="btn btn-primary flex items-center gap-2"
+                          disabled={!balanceForm.username || !balanceForm.amount || !userFound || balanceSubmitting}
+                          className="btn btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <FaDollarSign className="h-4 w-4" />
-                          {balanceForm.action === 'add'
-                            ? 'Add Balance'
-                            : 'Deduct Balance'}
+                          {balanceSubmitting ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              {balanceForm.action === 'add' ? 'Adding...' : 'Deducting...'}
+                            </>
+                          ) : (
+                            <>
+                              <FaDollarSign className="h-4 w-4" />
+                              {balanceForm.action === 'add'
+                                ? 'Add Balance'
+                                : 'Deduct Balance'}
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>

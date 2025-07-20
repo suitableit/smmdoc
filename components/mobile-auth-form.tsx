@@ -90,13 +90,13 @@ const MobileAuthForm = ({
               ` : ''}
               
               <div class="space-y-1">
-                <label class="text-xs">Email</label>
-                <input 
-                  type="email" 
+                <label class="text-xs">Username or Email</label>
+                <input
+                  type="text"
                   name="email"
-                  placeholder="eg: smm@gmail.com" 
+                  placeholder="eg: john or john@example.com"
                   value="${formData.email}"
-                  class="w-full h-8 text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+                  class="w-full h-8 text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   required
                 />
               </div>

@@ -22,25 +22,31 @@ export async function GET(req: NextRequest) {
         users: [],
       });
     }
+
+    console.log(`Searching for users with query: "${query}"`);
     
-    // Search users by name, email or ID
+    // Search users by name, email, username or ID
     const users = await db.user.findMany({
       where: {
         OR: [
           { name: { contains: query } },
           { email: { contains: query } },
-          { id: { contains: query } },
+          { username: { contains: query } },
+          ...(isNaN(parseInt(query)) ? [] : [{ id: parseInt(query) }]),
         ],
       },
       select: {
         id: true,
         name: true,
         email: true,
+        username: true,
         role: true,
       },
       take: 10, // Limit results
     });
-    
+
+    console.log(`Search query: "${query}", Found ${users.length} users:`, users);
+
     return NextResponse.json({
       users,
     });

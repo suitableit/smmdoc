@@ -78,23 +78,35 @@ export async function PUT(
       );
     }
 
-    // Update user status
-    const updatedUser = await db.user.update({
-      where: { id: userId },
-      data: { status },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        status: true,
-        updatedAt: true,
+    // Update user status and invalidate sessions if suspended or banned
+    const updatedUser = await db.$transaction(async (prisma) => {
+      // Update user status
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: { status },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          status: true,
+          updatedAt: true,
+        }
+      });
+
+      // If user is suspended or banned, invalidate all their sessions
+      if (status === 'suspended' || status === 'banned') {
+        await prisma.session.deleteMany({
+          where: { userId: userId }
+        });
       }
+
+      return user;
     });
 
     return NextResponse.json({
       success: true,
       data: updatedUser,
-      message: `User status updated to ${status} successfully`,
+      message: `User status updated to ${status} successfully${status === 'suspended' || status === 'banned' ? ' and user sessions invalidated' : ''}`,
       error: null
     });
 

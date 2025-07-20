@@ -887,7 +887,7 @@ const HomePage: React.FC = () => {
                               <FaUser className="w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200" />
                             </div>
                             <input
-                              type="email"
+                              type="text"
                               id="email"
                               placeholder="Username or Email"
                               disabled={isPending}

@@ -4,7 +4,7 @@ import * as z from 'zod';
 import { auth, signIn } from '@/auth';
 import { getTwoFactorConfirmationByUserId } from '@/data/two-factor-confirmation';
 import { getTwoFactorTokenByEmail } from '@/data/two-factor-token';
-import { getUserByEmail } from '@/data/user';
+import { getUserByEmail, getUserByUsername } from '@/data/user';
 import bcrypt from 'bcryptjs';
 import { AuthError } from 'next-auth';
 import { ActivityLogger } from '../activity-logger';
@@ -20,7 +20,13 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
     return { success: false, error: 'Invalid Fields!' };
   }
   const { email, password, code } = validedFields.data;
-  const existingUser = await getUserByEmail(email);
+
+  // Check if input is email or username
+  const isEmail = email.includes('@');
+
+  const existingUser = isEmail
+    ? await getUserByEmail(email)
+    : await getUserByUsername(email);
   if (!existingUser || !existingUser.password || !existingUser.email) {
     return { success: false, error: 'User does not exist!' };
   }

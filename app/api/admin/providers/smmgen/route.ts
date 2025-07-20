@@ -8,7 +8,6 @@ export const SMMGEN_CONFIG = {
   label: "SMMGen",
   description: "Premium SMM services with fast delivery",
   apiUrl: "https://api.smmgen.com/v2",
-  category: "Multi-Platform",
 
   // Parameter Mapping (Their parameter -> Our parameter)
   parameterMapping: {
@@ -202,7 +201,6 @@ export async function PUT(req: NextRequest) {
         rate: parseFloat(service.rate),
         min_order: parseInt(service.min),
         max_order: parseInt(service.max),
-        category: service.category || 'General',
         description: service.description || service.name,
         provider: 'smmgen'
       }));

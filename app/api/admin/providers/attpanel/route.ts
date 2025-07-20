@@ -8,7 +8,6 @@ export const ATTPANEL_CONFIG = {
   label: "ATTPANEL",
   description: "Reliable SMM panel with competitive prices",
   apiUrl: "https://api.attpanel.com/v3",
-  category: "Multi-Platform",
 
   // Parameter Mapping (Their parameter -> Our parameter)
   parameterMapping: {

@@ -3,11 +3,30 @@ import z from 'zod';
 const signInSchema = z.object({
   email: z
     .string()
-    .nonempty('Email is required')
-    .email('Invalid email address'),
+    .min(1, 'Username or Email is required')
+    .refine((value) => {
+      // Allow either email format or username format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const usernameRegex = /^[a-zA-Z0-9._-]+$/;
+
+      // If it contains @, validate as email
+      if (value.includes('@')) {
+        return emailRegex.test(value);
+      }
+
+      // Otherwise validate as username
+      return usernameRegex.test(value) && value.length >= 3;
+    }, {
+      message: (val) => {
+        if (val.input.includes('@')) {
+          return 'Please enter a valid email address';
+        }
+        return 'Username must be at least 3 characters and contain only letters, numbers, dots, underscores, and hyphens';
+      }
+    }),
   password: z
     .string()
-    .nonempty('Password is required')
+    .min(1, 'Password is required')
     .min(5, 'Password must be at least 5 characters'),
   code: z.optional(z.string()),
 });

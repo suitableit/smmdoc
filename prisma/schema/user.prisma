@@ -21,6 +21,7 @@ model User {
   updatedAt               DateTime               @updatedAt
   lastLoginAt             DateTime?
   accounts                Account?
+  activityLogs            ActivityLog[]
   addFunds                AddFund[]
   apiKeys                 ApiKey[]
   cancelRequests          CancelRequest[]
@@ -33,7 +34,6 @@ model User {
   services                Service[]
   sessions                Session[]
   twoFactorConfirmation   TwoFactorConfirmation?
-  activityLogs            ActivityLog[]
 
   @@map("user")
 }

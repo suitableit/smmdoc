@@ -115,7 +115,6 @@ interface Provider {
   createdAt: Date;
   lastSync: Date;
   description?: string;
-  category: string;
 }
 
 const APIProvidersPage = () => {
@@ -189,8 +188,7 @@ const APIProvidersPage = () => {
             avgResponseTime: 0,
             createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
             lastSync: p.updatedAt ? new Date(p.updatedAt) : new Date(),
-            description: p.description,
-            category: p.category
+            description: p.description
           }));
         setProviders(uiProviders);
         console.log('Available providers for dropdown:', result.data.providers);
@@ -602,9 +600,6 @@ const APIProvidersPage = () => {
                   {/* Login Credentials */}
                   <div className="space-y-4">
                     <h4 className="text-lg font-medium text-gray-900 dark:text-white">Login Credentials</h4>
-                    <p style={{marginTop: "5px"}} className="text-sm text-gray-600 dark:text-gray-400">
-                      This will be used to fetch Refill Status from provider (/refill). Works only with Rental Panel.
-                    </p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="form-group">
@@ -763,9 +758,6 @@ const APIProvidersPage = () => {
                   {/* Login Credentials */}
                   <div className="space-y-4">
                     <h4 className="text-lg font-medium text-gray-900 dark:text-white">Login Credentials</h4>
-                    <p style={{marginTop: "5px"}} className="text-sm text-gray-600 dark:text-gray-400">
-                      This will be used to fetch Refill Status from provider (/refill). Works only with Rental Panel.
-                    </p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="form-group">
@@ -877,10 +869,9 @@ const APIProvidersPage = () => {
             {/* Providers List */}
             <div className="space-y-4">
               {providers
-                .filter(provider => 
-                  searchQuery === '' || 
+                .filter(provider =>
+                  searchQuery === '' ||
                   provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  provider.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   provider.status.toLowerCase().includes(searchQuery.toLowerCase())
                 )
                 .map((provider) => (
@@ -1002,10 +993,9 @@ const APIProvidersPage = () => {
               ))}
               
               {/* No Results Message */}
-              {providers.filter(provider => 
-                searchQuery === '' || 
+              {providers.filter(provider =>
+                searchQuery === '' ||
                 provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                provider.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 provider.status.toLowerCase().includes(searchQuery.toLowerCase())
               ).length === 0 && searchQuery !== '' && (
                 <div className="card card-padding text-center py-12">
