@@ -2,21 +2,22 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FaBan,
-  FaCheckCircle,
-  FaCoins,
-  FaEdit,
-  FaEllipsisH,
-  FaExclamationCircle,
-  FaGift,
-  FaSearch,
-  FaSignInAlt,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
-  FaTrash,
-  FaUserCheck,
-  FaUsers,
+    FaBan,
+    FaCheckCircle,
+    FaCoins,
+    FaDollarSign,
+    FaEdit,
+    FaEllipsisH,
+    FaExclamationCircle,
+    FaGift,
+    FaSearch,
+    FaSignInAlt,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
+    FaTrash,
+    FaUserCheck,
+    FaUsers,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -94,7 +95,7 @@ interface UserActionsProps {
   user: User;
   onView: (userId: number) => void;
   onEditUser: (userId: number) => void;
-  onEditBalance: (userId: number, currentBalance: number) => void;
+  onEditBalance: (userId: number) => void;
   onEditDiscount: (userId: number, currentDiscount: number) => void;
   onChangeRole: (userId: number, currentRole: string) => void;
   onResetSpecialPricing: (userId: number) => Promise<boolean>;
@@ -109,7 +110,7 @@ interface UserCardProps {
   isSelected: boolean;
   onSelect: (userId: number) => void;
   onView: (userId: number) => void;
-  onEditBalance: (userId: number, currentBalance: number) => void;
+  onEditBalance: (userId: number) => void;
   onEditDiscount: (userId: number, currentDiscount: number) => void;
   onChangeRole: (userId: number, currentRole: string) => void;
   onResetSpecialPricing: (userId: number) => Promise<boolean>;
@@ -133,14 +134,13 @@ interface DeleteConfirmationModalProps {
   isLoading: boolean;
 }
 
-interface EditBalanceModalProps {
+interface AddDeductBalanceModalProps {
   isOpen: boolean;
-  currentBalance: number;
-  newBalance: string;
-  onBalanceChange: (value: string) => void;
+  userId: number;
+  currentUser: User | null;
   onClose: () => void;
-  onConfirm: () => void;
   isLoading: boolean;
+  onBalanceUpdate: () => void;
 }
 
 interface UpdateStatusModalProps {
@@ -280,16 +280,23 @@ const UsersListPage = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Modal states
-  const [editBalanceDialog, setEditBalanceDialog] = useState<{
+  const [addDeductBalanceDialog, setAddDeductBalanceDialog] = useState<{
     open: boolean;
     userId: number;
-    currentBalance: number;
+    currentUser: User | null;
   }>({
     open: false,
     userId: 0,
-    currentBalance: 0,
+    currentUser: null,
   });
-  const [newBalance, setNewBalance] = useState('');
+
+  // Add/Deduct Balance form state
+  const [balanceForm, setBalanceForm] = useState({
+    amount: '',
+    action: 'add',
+    notes: '',
+  });
+  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
     userId: number;
@@ -578,23 +585,56 @@ const UsersListPage = () => {
     [handleApiAction]
   );
 
-  // Handle edit balance
-  const handleEditBalance = useCallback(
-    async (userId: number, balance: number) => {
-      const success = await handleApiAction(
-        `/api/admin/users/${userId}/balance`,
-        'PUT',
-        { balance, action: 'set' },
-        'User balance updated successfully'
-      );
+  // Handle add/deduct balance
+  const handleBalanceSubmit = useCallback(async () => {
+    if (!balanceForm.amount || !addDeductBalanceDialog.currentUser) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
 
-      if (success) {
-        setEditBalanceDialog({ open: false, userId: 0, currentBalance: 0 });
-        setNewBalance('');
+    if (parseFloat(balanceForm.amount) <= 0) {
+      showToast('Amount must be greater than 0', 'error');
+      return;
+    }
+
+    try {
+      setBalanceSubmitting(true);
+      const response = await fetch('/api/admin/users/balance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: addDeductBalanceDialog.currentUser.username,
+          amount: parseFloat(balanceForm.amount),
+          action: balanceForm.action,
+          notes: balanceForm.notes,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast(
+          `Successfully ${
+            balanceForm.action === 'add' ? 'added' : 'deducted'
+          } ${balanceForm.amount} to ${addDeductBalanceDialog.currentUser.username}'s balance`,
+          'success'
+        );
+        setAddDeductBalanceDialog({ open: false, userId: 0, currentUser: null });
+        setBalanceForm({ amount: '', action: 'add', notes: '' });
+        // Refresh users list
+        fetchUsers();
+      } else {
+        showToast(result.error || 'Failed to update user balance', 'error');
       }
-    },
-    [handleApiAction]
-  );
+    } catch (error) {
+      console.error('Error updating balance:', error);
+      showToast('Failed to update user balance', 'error');
+    } finally {
+      setBalanceSubmitting(false);
+    }
+  }, [balanceForm, addDeductBalanceDialog.currentUser, fetchUsers]);
 
   // Handle edit discount
   const handleEditDiscount = useCallback(
@@ -739,12 +779,15 @@ const UsersListPage = () => {
   );
 
   // Modal handlers
-  const openEditBalanceDialog = useCallback(
-    (userId: number, currentBalance: number) => {
-      setEditBalanceDialog({ open: true, userId, currentBalance });
-      setNewBalance(currentBalance.toString());
+  const openAddDeductBalanceDialog = useCallback(
+    (userId: number) => {
+      const user = users.find((u) => u.id === userId);
+      if (user) {
+        setAddDeductBalanceDialog({ open: true, userId, currentUser: user });
+        setBalanceForm({ amount: '', action: 'add', notes: '' });
+      }
     },
-    []
+    [users]
   );
 
   const openUpdateStatusDialog = useCallback(
@@ -1288,7 +1331,7 @@ const UsersListPage = () => {
                               user={user}
                               onView={handleViewUser}
                               onEditUser={handleEditUser}
-                              onEditBalance={openEditBalanceDialog}
+                              onEditBalance={openAddDeductBalanceDialog}
                               onEditDiscount={openEditDiscountDialog}
                               onChangeRole={openChangeRoleDialog}
                               onResetSpecialPricing={handleResetSpecialPricing}
@@ -1317,7 +1360,7 @@ const UsersListPage = () => {
                         isSelected={selectedUsers.includes(user.id.toString())}
                         onSelect={handleSelectUser}
                         onView={handleViewUser}
-                        onEditBalance={openEditBalanceDialog}
+                        onEditBalance={openAddDeductBalanceDialog}
                         onEditDiscount={openEditDiscountDialog}
                         onChangeRole={openChangeRoleDialog}
                         onResetSpecialPricing={handleResetSpecialPricing}
@@ -1356,29 +1399,24 @@ const UsersListPage = () => {
           isLoading={actionLoading === `/api/admin/users/${userToDelete}`}
         />
 
-        <EditBalanceModal
-          isOpen={editBalanceDialog.open}
-          currentBalance={editBalanceDialog.currentBalance}
-          newBalance={newBalance}
-          onBalanceChange={setNewBalance}
+        <AddDeductBalanceModal
+          isOpen={addDeductBalanceDialog.open}
+          userId={addDeductBalanceDialog.userId}
+          currentUser={addDeductBalanceDialog.currentUser}
           onClose={() => {
-            setEditBalanceDialog({
+            setAddDeductBalanceDialog({
               open: false,
               userId: 0,
-              currentBalance: 0,
+              currentUser: null,
             });
-            setNewBalance('');
+            setBalanceForm({ amount: '', action: 'add', notes: '' });
+            setBalanceSubmitting(false);
           }}
-          onConfirm={() =>
-            handleEditBalance(
-              editBalanceDialog.userId,
-              parseFloat(newBalance) || 0
-            )
-          }
-          isLoading={
-            actionLoading ===
-            `/api/admin/users/${editBalanceDialog.userId}/balance`
-          }
+          isLoading={balanceSubmitting}
+          onBalanceUpdate={() => {
+            fetchUsers();
+            fetchStats();
+          }}
         />
 
         <UpdateStatusModal
@@ -1550,13 +1588,13 @@ const UserActions: React.FC<UserActionsProps> = ({
               </button>
               <button
                 onClick={() => {
-                  onEditBalance(user.id, user.balance || 0);
+                  onEditBalance(user.id);
                   setIsOpen(false);
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
               >
                 <FaCoins className="h-3 w-3" />
-                Edit Balance
+                Add/Deduct Balance
               </button>
               <button
                 onClick={() => {
@@ -1918,47 +1956,179 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   );
 };
 
-const EditBalanceModal: React.FC<EditBalanceModalProps> = ({
+const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
   isOpen,
-  currentBalance,
-  newBalance,
-  onBalanceChange,
+  userId,
+  currentUser,
   onClose,
-  onConfirm,
   isLoading,
+  onBalanceUpdate,
 }) => {
-  if (!isOpen) return null;
+  const [balanceForm, setBalanceForm] = useState({
+    amount: '',
+    action: 'add',
+    notes: '',
+  });
+  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
+
+  // Simple toast function for this modal
+  const showModalToast = (message: string, type: 'success' | 'error') => {
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 z-[9999] px-4 py-2 rounded-lg text-white font-medium ${
+      type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    }`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      if (document.body.contains(toast)) {
+        document.body.removeChild(toast);
+      }
+    }, 3000);
+  };
+
+  const handleBalanceSubmit = async () => {
+    if (!balanceForm.amount || !currentUser) {
+      showModalToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    if (parseFloat(balanceForm.amount) <= 0) {
+      showModalToast('Amount must be greater than 0', 'error');
+      return;
+    }
+
+    try {
+      setBalanceSubmitting(true);
+      const response = await fetch('/api/admin/users/balance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: currentUser.username,
+          amount: parseFloat(balanceForm.amount),
+          action: balanceForm.action,
+          notes: balanceForm.notes,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showModalToast(
+          `Successfully ${
+            balanceForm.action === 'add' ? 'added' : 'deducted'
+          } ${balanceForm.amount} to ${currentUser.username}'s balance`,
+          'success'
+        );
+        onClose();
+        onBalanceUpdate();
+      } else {
+        showModalToast(result.error || 'Failed to update user balance', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating balance:', error);
+      showModalToast('Failed to update user balance', 'error');
+    } finally {
+      setBalanceSubmitting(false);
+    }
+  };
+
+  if (!isOpen || !currentUser) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Edit User Balance</h3>
-        <div className="mb-4">
-          <label className="form-label mb-2">New Balance Amount (in USD)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={newBalance}
-            onChange={(e) => onBalanceChange(e.target.value)}
-            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            placeholder="Enter new balance amount"
-            disabled={isLoading}
-          />
+      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+        <h3 className="text-lg font-semibold mb-4">Add/Deduct User Balance</h3>
+
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="text-sm text-gray-600">User: <span className="font-medium">{currentUser.name || currentUser.username}</span></div>
+          <div className="text-sm text-gray-600">Current Balance: <span className="font-medium">${currentUser.balance?.toFixed(2) || '0.00'}</span></div>
         </div>
-        <div className="flex gap-2 justify-end">
+
+        <div className="space-y-4 mb-6">
+          <div>
+            <label className="form-label mb-2">Action *</label>
+            <select
+              value={balanceForm.action}
+              onChange={(e) =>
+                setBalanceForm((prev) => ({
+                  ...prev,
+                  action: e.target.value,
+                }))
+              }
+              className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+            >
+              <option value="add">Add Balance</option>
+              <option value="deduct">Deduct Balance</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="form-label mb-2">Amount (USD) *</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">$</span>
+              <input
+                type="number"
+                placeholder="0.00"
+                value={balanceForm.amount}
+                onChange={(e) =>
+                  setBalanceForm((prev) => ({
+                    ...prev,
+                    amount: e.target.value,
+                  }))
+                }
+                className="form-field w-full pl-8 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                min="0"
+                step="0.01"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="form-label mb-2">Notes</label>
+            <input
+              type="text"
+              placeholder="Add notes (optional)"
+              value={balanceForm.notes}
+              onChange={(e) =>
+                setBalanceForm((prev) => ({
+                  ...prev,
+                  notes: e.target.value,
+                }))
+              }
+              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
             className="btn btn-secondary"
-            disabled={isLoading}
           >
             Cancel
           </button>
           <button
-            onClick={onConfirm}
-            className="btn btn-primary"
-            disabled={isLoading}
+            onClick={handleBalanceSubmit}
+            disabled={!balanceForm.amount || balanceSubmitting}
+            className="btn btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Updating...' : 'Update'}
+            {balanceSubmitting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                {balanceForm.action === 'add' ? 'Adding...' : 'Deducting...'}
+              </>
+            ) : (
+              <>
+                <FaDollarSign className="h-4 w-4" />
+                {balanceForm.action === 'add'
+                  ? 'Add Balance'
+                  : 'Deduct Balance'}
+              </>
+            )}
           </button>
         </div>
       </div>

@@ -143,9 +143,46 @@ export async function PUT(
       );
     }
 
+    // Check for unique constraint violations before updating
+    if (username !== undefined && username !== existingUser.username) {
+      const usernameExists = await db.user.findUnique({
+        where: { username: username },
+        select: { id: true }
+      });
+
+      if (usernameExists && usernameExists.id !== userId) {
+        return NextResponse.json(
+          {
+            error: 'Username is already taken by another user',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (email !== undefined && email !== existingUser.email) {
+      const emailExists = await db.user.findUnique({
+        where: { email: email },
+        select: { id: true }
+      });
+
+      if (emailExists && emailExists.id !== userId) {
+        return NextResponse.json(
+          {
+            error: 'Email is already taken by another user',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Prepare update data
     const updateData: any = {};
-    
+
     if (username !== undefined) updateData.username = username;
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
@@ -266,15 +303,23 @@ export async function DELETE(
       );
     }
 
-    // Delete user (this will cascade delete related records)
-    await db.user.delete({
-      where: { id: userId }
+    // Delete user and invalidate sessions
+    await db.$transaction(async (prisma) => {
+      // First, delete all user sessions to log them out immediately
+      await prisma.session.deleteMany({
+        where: { userId: userId }
+      });
+
+      // Then delete the user (this will cascade delete other related records)
+      await prisma.user.delete({
+        where: { id: userId }
+      });
     });
 
     return NextResponse.json({
       success: true,
       data: null,
-      message: 'User deleted successfully',
+      message: 'User deleted successfully and sessions invalidated',
       error: null
     });
 

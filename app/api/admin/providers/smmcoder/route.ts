@@ -8,7 +8,6 @@ export const SMMCODER_CONFIG = {
   label: "SMMCoder",
   description: "Advanced SMM solutions for all platforms",
   apiUrl: "https://api.smmcoder.com/v2",
-  category: "Social Media",
 
   // Parameter Mapping (Their parameter -> Our parameter)
   parameterMapping: {

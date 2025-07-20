@@ -8,7 +8,6 @@ export const GROWFOLLOWS_CONFIG = {
   label: "Growfollows",
   description: "High-quality social media growth services",
   apiUrl: "https://api.growfollows.com/v1",
-  category: "Social Media",
 
   // Parameter Mapping (Their parameter -> Our parameter)
   parameterMapping: {

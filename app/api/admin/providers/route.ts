@@ -35,6 +35,26 @@ export async function GET() {
     // Get configured providers from database
     let configuredProviders: any[] = [];
     try {
+      // First ensure api_providers table exists and rename if needed
+      await db.$executeRaw`
+        CREATE TABLE IF NOT EXISTS \`api_providers\` (
+          \`id\` int NOT NULL AUTO_INCREMENT,
+          \`name\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+          \`api_key\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+          \`login_user\` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+          \`login_pass\` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+          \`status\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'inactive',
+          \`createdAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          \`updatedAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+          PRIMARY KEY (\`id\`),
+          UNIQUE KEY \`api_providers_name_key\` (\`name\`),
+          KEY \`api_providers_status_idx\` (\`status\`),
+          KEY \`api_providers_name_idx\` (\`name\`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `;
+
+
+
       configuredProviders = await db.apiProvider.findMany({
         select: {
           id: true,

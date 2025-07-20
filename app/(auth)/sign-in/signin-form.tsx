@@ -4,9 +4,9 @@ import { FormSuccess } from '@/components/form-success';
 import { login } from '@/lib/actions/login';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
-  signInDefaultValues,
-  SignInSchema,
-  signInSchema,
+    signInDefaultValues,
+    SignInSchema,
+    signInSchema,
 } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { FaEye, FaEyeSlash, FaLock, FaSignInAlt, FaUser } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
 
 export default function SignInForm() {
   const router = useRouter();
@@ -135,19 +135,19 @@ export default function SignInForm() {
           <>
             <div>
               <label
-                htmlFor="text"
+                htmlFor="email"
                 className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200"
               >
-                Username of Email
+                Username or Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaUser className="w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200" />
                 </div>
                 <input
-                  type="email"
+                  type="text"
                   id="email"
-                  placeholder="eg: john"
+                  placeholder="eg: john or john@example.com"
                   disabled={isPending}
                   {...form.register('email')}
                   className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"

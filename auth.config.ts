@@ -6,7 +6,8 @@ import type { NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import { getTwoFactorConfirmationByUserId } from './data/two-factor-confirmation';
-import { getUserByEmail, getUserById } from './data/user';
+import { getUserByEmail, getUserById, getUserByUsername } from './data/user';
+import { ActivityLogger } from './lib/activity-logger';
 import { db } from './lib/db';
 import { signInSchema } from './lib/validators/auth.validator';
 
@@ -21,7 +22,14 @@ export default {
         const validedFields = signInSchema.safeParse(credentials);
         if (validedFields.success) {
           const { email, password } = validedFields.data;
-          const user = await getUserByEmail(email);
+
+          // Check if input is email or username
+          const isEmail = email.includes('@');
+
+          const user = isEmail
+            ? await getUserByEmail(email)
+            : await getUserByUsername(email);
+
           if (!user || !user.password) return null;
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (passwordsMatch) return user;

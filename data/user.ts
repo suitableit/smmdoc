@@ -9,6 +9,15 @@ export const getUserByEmail = async (email: string) => {
   }
 };
 
+export const getUserByUsername = async (username: string) => {
+  try {
+    const user = await db.user.findUnique({ where: { username } });
+    return user;
+  } catch {
+    return null;
+  }
+};
+
 // Helper function to get user ID mapping from old string ID to new int ID
 const getUserIdMapping = async (oldStringId: string): Promise<number | null> => {
   try {
