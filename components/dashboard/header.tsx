@@ -7,7 +7,6 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import { setUserDetails } from '@/lib/slice/userDetails';
-import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -341,7 +340,7 @@ const Menu = ({ user }: { user: any }) => {
   const { data: userStatsResponse } = useGetUserStatsQuery();
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
 
-  // Format currency values consistently
+  // Format currency values consistently using dynamic rates from admin settings
   const formatCurrency = (amount: number) => {
     if (!currentCurrencyData) {
       return `$${amount.toFixed(2)}`;
@@ -354,12 +353,14 @@ const Menu = ({ user }: { user: any }) => {
       // If showing BDT, use the amount as is (already in BDT)
       convertedAmount = amount;
     } else if (currentCurrencyData.code === 'USD') {
-      // If showing USD, convert from BDT to USD
-      const bdtToUsdRate = 110; // BDT to USD rate
+      // If showing USD, convert from BDT to USD using dynamic rate from admin settings
+      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
+      const bdtToUsdRate = bdtCurrency?.rate || 121; // Use admin set rate or fallback
       convertedAmount = amount / bdtToUsdRate;
     } else {
-      // For other currencies, convert from BDT
-      const bdtToUsdRate = 110;
+      // For other currencies, convert from BDT using dynamic rates
+      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
+      const bdtToUsdRate = bdtCurrency?.rate || 121;
       const usdAmount = amount / bdtToUsdRate;
       convertedAmount = usdAmount * currentCurrencyData.rate;
     }
@@ -608,12 +609,14 @@ const Header = () => {
       // If showing BDT, use the amount as is (already in BDT)
       convertedAmount = amount;
     } else if (currentCurrencyData.code === 'USD') {
-      // If showing USD, convert from BDT to USD
-      const bdtToUsdRate = 110; // BDT to USD rate
+      // If showing USD, convert from BDT to USD using dynamic rate from admin settings
+      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
+      const bdtToUsdRate = bdtCurrency?.rate || 121; // Use admin set rate or fallback
       convertedAmount = amount / bdtToUsdRate;
     } else {
-      // For other currencies, convert from BDT
-      const bdtToUsdRate = 110;
+      // For other currencies, convert from BDT using dynamic rates
+      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
+      const bdtToUsdRate = bdtCurrency?.rate || 121;
       const usdAmount = amount / bdtToUsdRate;
       convertedAmount = usdAmount * currentCurrencyData.rate;
     }

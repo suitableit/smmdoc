@@ -168,12 +168,14 @@ export function CurrencyProvider({
       // If showing BDT, use the amount as is (already in BDT)
       convertedAmount = amount;
     } else if (currentCurrencyData.code === 'USD') {
-      // If showing USD, convert from BDT to USD
-      const bdtToUsdRate = 110; // BDT to USD rate
+      // If showing USD, convert from BDT to USD using dynamic rate from admin settings
+      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
+      const bdtToUsdRate = bdtCurrency?.rate || 121; // Use admin set rate or fallback
       convertedAmount = amount / bdtToUsdRate;
     } else {
-      // For other currencies, convert from BDT
-      const bdtToUsdRate = 110;
+      // For other currencies, convert from BDT using dynamic rates
+      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
+      const bdtToUsdRate = bdtCurrency?.rate || 121;
       const usdAmount = amount / bdtToUsdRate;
       convertedAmount = usdAmount * currentCurrencyData.rate;
     }

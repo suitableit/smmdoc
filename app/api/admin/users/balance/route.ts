@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { username, amount, action, notes } = body;
+    const { username, amount, action, notes, adminCurrency } = body;
 
     // Validation
     if (!username || !amount || !action) {
@@ -65,7 +65,8 @@ export async function POST(request: NextRequest) {
         username: true,
         name: true,
         email: true,
-        balance: true
+        balance: true,
+        dollarRate: true
       }
     });
 
@@ -80,17 +81,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Determine currency and conversion logic
+    const isAdminUSD = adminCurrency === 'USD' || adminCurrency === 'USDT';
+    const currentRate = user.dollarRate || 121.45;
+
+    let amountToAdd: number;
+    let transactionCurrency: string;
+    let errorCurrencySymbol: string;
+    let successMessage: string;
+
+    if (isAdminUSD) {
+      // Admin is using USD - convert to BDT for user balance
+      amountToAdd = amount * currentRate;
+      transactionCurrency = 'USD';
+      errorCurrencySymbol = '$';
+      successMessage = `Successfully ${action === 'add' ? 'added' : 'deducted'} $${amount} ${action === 'add' ? 'to' : 'from'} ${user.username}'s balance`;
+    } else {
+      // Admin is using BDT - add BDT directly to user balance
+      amountToAdd = amount;
+      transactionCurrency = 'BDT';
+      errorCurrencySymbol = '৳';
+      successMessage = `Successfully ${action === 'add' ? 'added' : 'deducted'} ৳${amount} ${action === 'add' ? 'to' : 'from'} ${user.username}'s balance`;
+    }
+
     // Check if deducting more than available balance
-    if (action === 'deduct' && user.balance < amount) {
+    if (action === 'deduct' && user.balance < amountToAdd) {
       return NextResponse.json(
         {
-          error: `Insufficient balance. User has ৳${user.balance}, trying to deduct ৳${amount}`,
+          error: `Insufficient balance. User has ৳${user.balance.toFixed(2)}, trying to deduct ${errorCurrencySymbol}${amount}`,
           success: false,
           data: null
         },
         { status: 400 }
       );
     }
+
+
 
     // Use database transaction to ensure consistency
     const result = await db.$transaction(async (prisma) => {
@@ -99,20 +125,21 @@ export async function POST(request: NextRequest) {
         where: { id: user.id },
         data: {
           balance: action === 'add'
-            ? { increment: amount }
-            : { decrement: amount },
+            ? { increment: amountToAdd }
+            : { decrement: amountToAdd },
           total_deposit: action === 'add'
-            ? { increment: amount }
+            ? { increment: amountToAdd }
             : undefined
         }
       });
 
       // Create a transaction record for this manual balance adjustment
+      // Store the actual amount that was added/deducted from user balance (always in BDT)
       const transactionRecord = await prisma.addFund.create({
         data: {
           userId: user.id,
           invoice_id: `MANUAL-${Date.now()}`,
-          amount: amount,
+          amount: amountToAdd, // Store actual BDT amount that was added/deducted
           spent_amount: 0,
           fee: 0,
           email: user.email || '',
@@ -124,7 +151,7 @@ export async function POST(request: NextRequest) {
           payment_method: 'Admin Manual Adjustment',
           sender_number: '',
           transaction_id: action === 'add' ? 'Added by Admin' : 'Deduct by Admin',
-          currency: 'BDT'
+          currency: 'BDT' // Always store as BDT since user balance is in BDT
         }
       });
 
@@ -135,16 +162,17 @@ export async function POST(request: NextRequest) {
     try {
       // Send email notification to user
       if (user.email) {
-        const notificationMessage = action === 'add' 
-          ? `৳${amount} has been added to your account by admin.`
-          : `৳${amount} has been deducted from your account by admin.`;
+        const displayAmount = isAdminUSD ? `$${amount}` : `৳${amount}`;
+        const notificationMessage = action === 'add'
+          ? `${displayAmount} has been added to your account by admin.`
+          : `${displayAmount} has been deducted from your account by admin.`;
 
         const emailData = emailTemplates.paymentSuccess({
           userName: user.name || 'Customer',
           userEmail: user.email,
           transactionId: result.transactionRecord.id,
           amount: amount,
-          currency: 'BDT',
+          currency: transactionCurrency,
           date: new Date().toLocaleDateString(),
           userId: user.id.toString()
         });
@@ -166,7 +194,7 @@ export async function POST(request: NextRequest) {
         userEmail: user.email || '',
         transactionId: result.transactionRecord.id,
         amount: amount,
-        currency: 'BDT',
+        currency: transactionCurrency,
         date: new Date().toLocaleDateString(),
         userId: user.id.toString()
       });
@@ -185,13 +213,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully ${action === 'add' ? 'added' : 'deducted'} ৳${amount} ${action === 'add' ? 'to' : 'from'} ${user.username}'s balance`,
+      message: successMessage,
       data: {
         userId: user.id,
         username: user.username,
         previousBalance: user.balance,
         newBalance: result.updatedUser.balance,
         amount: amount,
+        amountAdded: amountToAdd,
+        adminCurrency: transactionCurrency,
         action: action,
         transactionId: result.transactionRecord.id
       }

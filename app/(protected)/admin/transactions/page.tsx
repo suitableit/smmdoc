@@ -16,7 +16,8 @@ import {
   FaTimesCircle,
 } from 'react-icons/fa';
 
-// Import APP_NAME constant
+// Import APP_NAME constant and useCurrency hook
+import useCurrency from '@/hooks/useCurrency';
 import { APP_NAME } from '@/lib/constants';
 const formatID = (id) => id;
 const formatNumber = (num) => num.toLocaleString();
@@ -97,6 +98,9 @@ const AdminAllTransactionsPage = () => {
   useEffect(() => {
     document.title = `All Transactions — ${APP_NAME}`;
   }, []);
+
+  // Currency hook
+  const { currency, currentCurrencyData } = useCurrency();
 
   // Dummy data for testing - Updated to show empty Transaction IDs for pending withdrawals
   const dummyTransactions: Transaction[] = [
@@ -786,6 +790,7 @@ const AdminAllTransactionsPage = () => {
           amount: parseFloat(balanceForm.amount),
           action: balanceForm.action,
           notes: balanceForm.notes,
+          adminCurrency: currency, // Pass admin's current currency
         }),
       });
 
@@ -795,7 +800,7 @@ const AdminAllTransactionsPage = () => {
         showToast(
           `Successfully ${
             balanceForm.action === 'add' ? 'added' : 'deducted'
-          } ${balanceForm.amount} to ${balanceForm.username}'s balance`,
+          } $${balanceForm.amount} ${balanceForm.action === 'add' ? 'to' : 'from'} ${balanceForm.username}'s balance`,
           'success'
         );
         setAddDeductBalanceDialog({ open: false });
@@ -1357,8 +1362,10 @@ const AdminAllTransactionsPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.currency === 'BDT' ? '৳' : '$'}
-                              {formatPrice(transaction.amount, 2)}
+                              {transaction.currency === 'USD' || transaction.currency === 'USDT'
+                                ? `$${formatPrice(transaction.amount, 2)}`
+                                : `৳${formatPrice(transaction.amount, 2)}`
+                              }
                             </div>
                           </td>
                           <td className="p-3">
@@ -2085,9 +2092,9 @@ const AdminAllTransactionsPage = () => {
                         </div>
 
                         <div>
-                          <label className="form-label mb-2">Amount (USD) *</label>
+                          <label className="form-label mb-2">Amount ({currency}) *</label>
                           <div className="relative">
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">$</span>
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">{currentCurrencyData?.symbol || '$'}</span>
                             <input
                               type="number"
                               placeholder="0.00"

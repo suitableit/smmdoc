@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
+import useCurrency from '@/hooks/useCurrency';
 import { APP_NAME } from '@/lib/constants';
 
 // Custom Gradient Spinner Component
@@ -241,6 +242,9 @@ const UsersListPage = () => {
   useEffect(() => {
     document.title = `All Users — ${APP_NAME}`;
   }, []);
+
+  // Currency hook
+  const { currency, currentCurrencyData, formatCurrency: formatCurrencyFromContext } = useCurrency();
 
   // State management
   const [users, setUsers] = useState<User[]>([]);
@@ -477,16 +481,10 @@ const UsersListPage = () => {
     return icons[status as keyof typeof icons] || icons.active;
   };
 
-  const formatCurrency = useCallback((amount: number, currency: string) => {
-    const formatters = {
-      USD: (amt: number) => `$${amt.toFixed(2)}`,
-      BDT: (amt: number) => `৳${amt.toFixed(2)}`,
-    };
-    return (
-      formatters[currency as keyof typeof formatters]?.(amount) ||
-      `$${amount.toFixed(2)}`
-    );
-  }, []);
+  // Use currency context formatting function
+  const formatCurrency = useCallback((amount: number) => {
+    return formatCurrencyFromContext(amount);
+  }, [formatCurrencyFromContext]);
 
   const handleSelectAll = useCallback(() => {
     setSelectedUsers((prev) =>
@@ -609,6 +607,7 @@ const UsersListPage = () => {
           amount: parseFloat(balanceForm.amount),
           action: balanceForm.action,
           notes: balanceForm.notes,
+          adminCurrency: currency, // Pass admin's current currency
         }),
       });
 
@@ -618,7 +617,7 @@ const UsersListPage = () => {
         showToast(
           `Successfully ${
             balanceForm.action === 'add' ? 'added' : 'deducted'
-          } ${balanceForm.amount} to ${addDeductBalanceDialog.currentUser.username}'s balance`,
+          } $${balanceForm.amount} ${balanceForm.action === 'add' ? 'to' : 'from'} ${addDeductBalanceDialog.currentUser.username}'s balance`,
           'success'
         );
         setAddDeductBalanceDialog({ open: false, userId: 0, currentUser: null });
@@ -1240,10 +1239,7 @@ const UsersListPage = () => {
                                 className="font-semibold text-sm"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {formatCurrency(
-                                  user.balance || 0,
-                                  user.currency || 'USD'
-                                )}
+                                {formatCurrency(user.balance || 0)}
                               </div>
                             </div>
                           </td>
@@ -1253,10 +1249,7 @@ const UsersListPage = () => {
                                 className="font-semibold text-sm"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {formatCurrency(
-                                  user.total_spent || 0,
-                                  user.currency || 'USD'
-                                )}
+                                {formatCurrency(user.total_spent || 0)}
                               </div>
                             </div>
                           </td>
@@ -1964,6 +1957,9 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
   isLoading,
   onBalanceUpdate,
 }) => {
+  // Get currency from context
+  const { currency, currentCurrencyData } = useCurrency();
+
   const [balanceForm, setBalanceForm] = useState({
     amount: '',
     action: 'add',
@@ -2011,6 +2007,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
           amount: parseFloat(balanceForm.amount),
           action: balanceForm.action,
           notes: balanceForm.notes,
+          adminCurrency: currency, // Pass admin's current currency
         }),
       });
 
@@ -2020,7 +2017,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
         showModalToast(
           `Successfully ${
             balanceForm.action === 'add' ? 'added' : 'deducted'
-          } ${balanceForm.amount} to ${currentUser.username}'s balance`,
+          } $${balanceForm.amount} ${balanceForm.action === 'add' ? 'to' : 'from'} ${currentUser.username}'s balance`,
           'success'
         );
         onClose();
@@ -2067,9 +2064,9 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
           </div>
 
           <div>
-            <label className="form-label mb-2">Amount (USD) *</label>
+            <label className="form-label mb-2">Amount ({currency}) *</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">$</span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">{currentCurrencyData?.symbol || '$'}</span>
               <input
                 type="number"
                 placeholder="0.00"
