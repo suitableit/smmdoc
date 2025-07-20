@@ -249,10 +249,10 @@ async function fixForeignKeyAndSetup() {
 
     // Step 8: Restore Orders
     console.log('\n📦 Restoring Orders...');
-    const [previousOrders] = await previousConnection.execute('SELECT * FROM NewOrder ORDER BY id DESC');
+    const [previousOrders] = await previousConnection.execute('SELECT * FROM neworder ORDER BY id DESC');
     console.log(`Found ${previousOrders.length} orders`);
 
-    await currentConnection.execute('DELETE FROM NewOrder');
+    await currentConnection.execute('DELETE FROM neworder');
 
     for (const order of previousOrders) {
       try {
@@ -261,7 +261,7 @@ async function fixForeignKeyAndSetup() {
         const mappedServiceId = serviceMapping[order.serviceId] || 1;
         
         await currentConnection.execute(`
-          INSERT INTO NewOrder (id, userId, serviceId, categoryId, link, qty, price, charge, profit, 
+          INSERT INTO neworder (id, userId, serviceId, categoryId, link, qty, price, charge, profit, 
                                avg_time, status, remains, startCount, bdtPrice, currency, usdPrice, createdAt, updatedAt)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
@@ -333,7 +333,7 @@ async function fixForeignKeyAndSetup() {
     const [finalServices] = await currentConnection.execute('SELECT COUNT(*) as count FROM Service');
     const [finalServicesWithType] = await currentConnection.execute('SELECT COUNT(*) as count FROM Service WHERE serviceTypeId IS NOT NULL');
     const [finalServicesNullType] = await currentConnection.execute('SELECT COUNT(*) as count FROM Service WHERE serviceTypeId IS NULL');
-    const [finalOrders] = await currentConnection.execute('SELECT COUNT(*) as count FROM NewOrder');
+    const [finalOrders] = await currentConnection.execute('SELECT COUNT(*) as count FROM neworder');
     const [finalRefills] = await currentConnection.execute('SELECT COUNT(*) as count FROM RefillRequest');
 
     console.log(`\n🎉 COMPLETE DATABASE SETUP FINISHED!`);
@@ -350,7 +350,7 @@ async function fixForeignKeyAndSetup() {
     // Test relations with NULL handling
     const [testRelations] = await currentConnection.execute(`
       SELECT o.id, s.name as serviceName, c.category_name, u.email, st.name as serviceTypeName
-      FROM NewOrder o
+      FROM neworder o
       LEFT JOIN Service s ON o.serviceId = s.id
       LEFT JOIN Category c ON o.categoryId = c.id
       LEFT JOIN User u ON o.userId = u.id

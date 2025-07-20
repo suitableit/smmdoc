@@ -89,7 +89,7 @@ async function restoreServicesOnly() {
     // Test service-order relation
     const [testOrder] = await currentConnection.execute(`
       SELECT o.id, o.serviceId, s.name as serviceName
-      FROM NewOrder o
+      FROM neworder o
       JOIN Service s ON o.serviceId = s.id
       LIMIT 3
     `);
