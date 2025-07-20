@@ -18,7 +18,10 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get('role') || 'user'; // Default to user role
 
     // Build where clause
-    const whereClause: any = {};
+    const whereClause: any = {
+      // Exclude deleted users by default
+      status: { not: 'deleted' }
+    };
 
     // Filter by role - handle multiple roles
     if (role && role !== 'all') {
@@ -40,7 +43,13 @@ export async function GET(request: NextRequest) {
 
     // Filter by status
     if (status && status !== 'all') {
-      whereClause.status = status;
+      if (status === 'deleted') {
+        // If specifically requesting deleted users, override the default filter
+        whereClause.status = 'deleted';
+      } else {
+        // For other statuses, combine with not deleted filter
+        whereClause.status = { not: 'deleted', equals: status };
+      }
     }
 
     // Search functionality

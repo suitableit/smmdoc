@@ -25,11 +25,15 @@ export async function invalidateUserSessions(userId: number | string) {
         });
         channel.close();
       }
+      console.log(`Successfully invalidated sessions for user ${userId}`);
     } else {
-      console.error('Failed to invalidate sessions on server');
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.warn(`Failed to invalidate sessions on server: ${errorData.error || response.statusText}`);
+      // Don't throw error, just log warning - user deletion should still proceed
     }
   } catch (error) {
-    console.error('Error invalidating user sessions:', error);
+    console.warn('Error invalidating user sessions:', error);
+    // Don't throw error, just log warning - user deletion should still proceed
   }
 }
 

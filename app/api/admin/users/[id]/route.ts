@@ -303,54 +303,50 @@ export async function DELETE(
       );
     }
 
-    // Delete user and all related data
-    await db.$transaction(async (prisma) => {
-      // First, delete all user sessions to log them out immediately
-      await prisma.session.deleteMany({
+    // Soft delete approach - mark user as deleted first, then cleanup
+    try {
+      // First, mark user as deleted to prevent login
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          status: 'deleted',
+          email: `deleted_${userId}_${Date.now()}@deleted.com`,
+          name: `Deleted User ${userId}`,
+          username: `deleted_${userId}`,
+          // Clear sensitive data
+          password: null,
+          emailVerified: null,
+          image: null,
+          balance: 0
+        }
+      });
+
+      // Then delete sessions to log them out immediately
+      await db.session.deleteMany({
         where: { userId: userId }
       });
 
-      // Delete related data that has RESTRICT constraints
-      // Delete refill requests first (they reference orders)
-      await prisma.refillRequest.deleteMany({
-        where: { userId: userId }
-      });
+      // Delete user API keys for security (optional cleanup)
+      try {
+        await db.apiKey.deleteMany({
+          where: { userId: userId }
+        });
+      } catch (error) {
+        console.warn('Could not delete API keys:', error);
+      }
 
-      // Delete cancel requests
-      await prisma.cancelRequest.deleteMany({
-        where: { userId: userId }
-      });
-
-      // Delete orders
-      await prisma.newOrder.deleteMany({
-        where: { userId: userId }
-      });
-
-      // Delete add funds
-      await prisma.addFund.deleteMany({
-        where: { userId: userId }
-      });
-
-      // Delete favorite categories
-      await prisma.favrouteCat.deleteMany({
-        where: { userId: userId }
-      });
-
-      // Delete API keys
-      await prisma.apiKey.deleteMany({
-        where: { userId: userId }
-      });
-
-      // Delete account (OAuth accounts)
-      await prisma.account.deleteMany({
-        where: { userId: userId }
-      });
-
-      // Finally delete the user (this will cascade delete other records like categories, services, etc.)
-      await prisma.user.delete({
-        where: { id: userId }
-      });
-    });
+      // Delete OAuth accounts (optional cleanup)
+      try {
+        await db.account.deleteMany({
+          where: { userId: userId }
+        });
+      } catch (error) {
+        console.warn('Could not delete OAuth accounts:', error);
+      }
+    } catch (error) {
+      console.error('Error during user deletion process:', error);
+      throw error;
+    }
 
     return NextResponse.json({
       success: true,
