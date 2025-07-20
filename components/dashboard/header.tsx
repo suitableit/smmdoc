@@ -11,30 +11,30 @@ import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
-  FaBell,
-  FaChevronDown,
-  FaCog,
-  FaDesktop,
-  FaEllipsisV,
-  FaFileContract,
-  FaHeadset,
-  FaMoneyBillWave,
-  FaMoon,
-  FaPlus,
-  FaSearch,
-  FaShoppingCart,
-  FaSignOutAlt,
-  FaSun,
-  FaTicketAlt,
-  FaUserCog,
-  FaUsers,
-  FaWallet,
+    FaBell,
+    FaChevronDown,
+    FaCog,
+    FaDesktop,
+    FaEllipsisV,
+    FaFileContract,
+    FaHeadset,
+    FaMoneyBillWave,
+    FaMoon,
+    FaPlus,
+    FaSearch,
+    FaShoppingCart,
+    FaSignOutAlt,
+    FaSun,
+    FaTicketAlt,
+    FaUserCog,
+    FaUsers,
+    FaWallet,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger
 } from '../ui/dropdown-menu';
 import MobileSidebar from './mobile-siderbar';
 
@@ -342,7 +342,7 @@ const Menu = ({ user }: { user: any }) => {
 
   // Format currency values consistently using dynamic rates from admin settings
   const formatCurrency = (amount: number) => {
-    if (!currentCurrencyData) {
+    if (!currentCurrencyData || !availableCurrencies || availableCurrencies.length === 0) {
       return `$${amount.toFixed(2)}`;
     }
 
@@ -354,12 +354,12 @@ const Menu = ({ user }: { user: any }) => {
       convertedAmount = amount;
     } else if (currentCurrencyData.code === 'USD') {
       // If showing USD, convert from BDT to USD using dynamic rate from admin settings
-      const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
+      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
       const bdtToUsdRate = bdtCurrency?.rate || 121; // Use admin set rate or fallback
       convertedAmount = amount / bdtToUsdRate;
     } else {
       // For other currencies, convert from BDT using dynamic rates
-      const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
+      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
       const bdtToUsdRate = bdtCurrency?.rate || 121;
       const usdAmount = amount / bdtToUsdRate;
       convertedAmount = usdAmount * currentCurrencyData.rate;
@@ -598,7 +598,7 @@ const Header = () => {
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
 
   const formatCurrency = (amount: number) => {
-    if (!currentCurrencyData) {
+    if (!currentCurrencyData || !availableCurrencies || availableCurrencies.length === 0) {
       return `$${amount.toFixed(2)}`;
     }
 
@@ -610,12 +610,12 @@ const Header = () => {
       convertedAmount = amount;
     } else if (currentCurrencyData.code === 'USD') {
       // If showing USD, convert from BDT to USD using dynamic rate from admin settings
-      const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
+      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
       const bdtToUsdRate = bdtCurrency?.rate || 121; // Use admin set rate or fallback
       convertedAmount = amount / bdtToUsdRate;
     } else {
       // For other currencies, convert from BDT using dynamic rates
-      const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
+      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
       const bdtToUsdRate = bdtCurrency?.rate || 121;
       const usdAmount = amount / bdtToUsdRate;
       convertedAmount = usdAmount * currentCurrencyData.rate;
