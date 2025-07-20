@@ -439,12 +439,12 @@ const AdminOrdersPage = () => {
   // Function to format currency based on order currency
   const formatCurrency = (amount: number, currency: string) => {
     if (currency === 'USD') {
-      return `${formatPrice(amount, 2)}`;
+      return `$${formatPrice(amount, 2)}`;
     } else if (currency === 'BDT') {
       return `৳${formatPrice(amount, 2)}`;
     } else {
       // Default fallback
-      return `${formatPrice(amount, 2)}`;
+      return `$${formatPrice(amount, 2)}`;
     }
   };
 
