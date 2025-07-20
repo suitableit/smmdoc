@@ -2095,7 +2095,9 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
           <div>
             <label className="form-label mb-2">Amount ({currency}) <span className="text-red-500">*</span></label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">{currentCurrencyData?.symbol || '$'}</span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
+                {balanceForm.action === 'deduct' ? '-' : ''}{currentCurrencyData?.symbol || '$'}
+              </span>
               <input
                 type="number"
                 placeholder="0.00"
