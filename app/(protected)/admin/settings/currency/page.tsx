@@ -239,7 +239,7 @@ const PaymentCurrencyPage = () => {
     { id: 2, code: 'EUR', name: 'Euro', symbol: '€', rate: 0.8500, enabled: true },
     { id: 3, code: 'GBP', name: 'British Pound', symbol: '£', rate: 0.7300, enabled: true },
     { id: 4, code: 'JPY', name: 'Japanese Yen', symbol: '¥', rate: 150.0000, enabled: false },
-    { id: 5, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 110.0000, enabled: true },
+    { id: 5, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 121.0000, enabled: true },
     { id: 6, code: 'USDT', name: 'Tether USD', symbol: '₮', rate: 1.0000, enabled: true },
   ]);
 
