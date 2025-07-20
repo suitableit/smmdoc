@@ -1346,9 +1346,18 @@ const AdminAllTransactionsPage = () => {
                           </td>
                           <td className="p-3">
                             {transaction.transactionId ? (
-                              <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded max-w-32 truncate">
-                                {transaction.transactionId === 'Added by Admin' || transaction.transactionId === 'Deduct by Admin'
-                                  ? (transaction.notes || transaction.transactionId)
+                              <div
+                                className={`text-xs px-2 py-1 rounded ${
+                                  transaction.transactionId === 'Deducted by Admin'
+                                    ? 'font-mono bg-red-100 text-red-700'
+                                    : transaction.transactionId === 'Added by Admin'
+                                    ? 'font-mono bg-green-100 text-green-700'
+                                    : ''
+                                }`}
+                              >
+                                {transaction.transactionId === 'Added by Admin' ||
+                                transaction.transactionId === 'Deducted by Admin'
+                                  ? transaction.notes || transaction.transactionId
                                   : transaction.transactionId}
                               </div>
                             ) : (
