@@ -87,7 +87,7 @@ const ServiceDetailsCard = ({
   services: any[];
   isLoading?: boolean;
 }) => {
-  const selected = services?.find((s) => s.id === selectedService);
+  const selected = services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService);
 
   if (isLoading) {
     return (
@@ -332,7 +332,7 @@ function NewOrder() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const selected = services?.find((s) => s.id === selectedService);
+  const selected = services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService);
   const perQty = Number(selected?.perqty) || 1;
   const price = Number(selected?.rate) || 0;
   // Get currency rate
@@ -753,8 +753,8 @@ function NewOrder() {
           usdPrice: usdPrice,
           bdtPrice: bdtPrice,
           currency: currentUser?.currency,
-          serviceId: selectedService,
-          categoryId: selectedCategory,
+          serviceId: parseInt(selectedService),
+          categoryId: parseInt(selectedCategory),
           userId: user?.id,
           avg_time: selected?.avg_time || '',
         },
@@ -1025,21 +1025,21 @@ function NewOrder() {
                           : setQty(0)
                       }
                       min={
-                        services?.find((s) => s.id === selectedService)
+                        services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
                           ?.min_order || 0
                       }
                       max={
-                        services?.find((s) => s.id === selectedService)
+                        services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
                           ?.max_order || 0
                       }
                       value={qty || ''}
                     />
                     <small className="text-xs text-gray-500 mt-1">
                       Min:{' '}
-                      {services?.find((s) => s.id === selectedService)
+                      {services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
                         ?.min_order || 0}{' '}
                       - Max:{' '}
-                      {services?.find((s) => s.id === selectedService)
+                      {services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
                         ?.max_order || 0}
                     </small>
                   </div>
