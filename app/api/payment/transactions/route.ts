@@ -16,6 +16,21 @@ export async function GET(req: NextRequest) {
         where: {
           userId: session.user.id,
         },
+        select: {
+          id: true,
+          invoice_id: true,
+          amount: true,
+          status: true,
+          admin_status: true,
+          method: true,
+          payment_method: true,
+          transaction_id: true,
+          sender_number: true,
+          currency: true,
+          createdAt: true,
+          updatedAt: true,
+          userId: true,
+        },
         orderBy: {
           createdAt: "desc",
         },
@@ -42,4 +57,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

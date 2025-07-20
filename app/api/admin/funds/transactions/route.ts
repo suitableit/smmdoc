@@ -37,7 +37,20 @@ export async function GET(req: NextRequest) {
     // Get transactions with pagination
     const transactions = await db.addFund.findMany({
       where: whereCondition,
-      include: {
+      select: {
+        id: true,
+        invoice_id: true,
+        amount: true,
+        status: true,
+        admin_status: true,
+        method: true,
+        payment_method: true,
+        transaction_id: true,
+        sender_number: true,
+        currency: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true,
         user: {
           select: {
             id: true,
@@ -72,4 +85,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}
