@@ -7,36 +7,36 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import {
-    dashboardApi,
-    useGetUserStatsQuery,
+  dashboardApi,
+  useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
-    FaBuffer,
-    FaCheckCircle,
-    FaClock,
-    FaDiscord,
-    FaFacebook,
-    FaFilter,
-    FaGlobe,
-    FaInfoCircle,
-    FaInstagram,
-    FaLayerGroup,
-    FaLink,
-    FaLinkedin,
-    FaRedo,
-    FaSearch,
-    FaShieldAlt,
-    FaShoppingCart,
-    FaSpotify,
-    FaTachometerAlt,
-    FaTelegram,
-    FaTiktok,
-    FaTimes,
-    FaTwitter,
-    FaYoutube
+  FaBuffer,
+  FaCheckCircle,
+  FaClock,
+  FaDiscord,
+  FaFacebook,
+  FaFilter,
+  FaGlobe,
+  FaInfoCircle,
+  FaInstagram,
+  FaLayerGroup,
+  FaLink,
+  FaLinkedin,
+  FaRedo,
+  FaSearch,
+  FaShieldAlt,
+  FaShoppingCart,
+  FaSpotify,
+  FaTachometerAlt,
+  FaTelegram,
+  FaTiktok,
+  FaTimes,
+  FaTwitter,
+  FaYoutube
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -313,7 +313,7 @@ function NewOrder() {
   const [link, setLink] = useState('');
   const [services, setServices] = useState<any[]>([]);
   const [selectedService, setSelectedService] = useState<string>('');
-  const [isInitializing, setIsInitializing] = useState(true);
+
   const [favoriteCategories, setFavoriteCategories] = useState<any[]>([]);
   const [combinedCategories, setCombinedCategories] = useState<any[]>([]);
   const [categoriesWithServices, setCategoriesWithServices] = useState<any[]>(
@@ -508,68 +508,42 @@ function NewOrder() {
   }, [category, favoriteCategories, platformFromUrl, selectedCategory]);
 
   useEffect(() => {
-    if (selectedCategory) {
-      const selectedCat = combinedCategories?.find(
-        (cat) => cat?.id === selectedCategory
-      );
-      if (!selectedCat) return;
+    if (!selectedCategory) return;
 
-      setIsServiceDetailsLoading(true);
+    console.log('Selected category changed:', selectedCategory);
+    setIsServiceDetailsLoading(true);
+    setServices([]);
+    setSelectedService('');
 
-      if (selectedCat?.isFavorite) {
-        axios
-          .post('/api/user/services/favserviceById', {
-            favrouteCatId: selectedCategory,
-          })
-          .then((res) => {
-            const fetchedServices = res?.data?.data || [];
+    // Always fetch services by categoryId (not favorite logic)
+    axios
+      .post('/api/admin/services/catId-by-services', {
+        categoryId: parseInt(selectedCategory),
+      })
+      .then((res) => {
+        const fetchedServices = res?.data?.data || [];
+        console.log('Fetched services for category', selectedCategory, ':', fetchedServices);
+        setServices(fetchedServices);
+        if (fetchedServices?.length > 0) {
+          setSelectedService(fetchedServices[0]?.id);
+          console.log('Auto-selected service:', fetchedServices[0]?.id);
+        } else {
+          setSelectedService('');
+          console.log('No services found for category:', selectedCategory);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching services:', error);
+        showToast('Error fetching services', 'error');
+        setServices([]);
+        setSelectedService('');
+      })
+      .finally(() => {
+        setIsServiceDetailsLoading(false);
+      });
+  }, [selectedCategory]);
 
-            setServices(fetchedServices);
-            setSelectedService(selectedCategory);
-            handleServiceSelection(fetchedServices);
-          })
-          .catch(() => {
-            showToast('Error fetching favorite category services', 'error');
-          })
-          .finally(() => {
-            setIsServiceDetailsLoading(false);
-          });
-      } else {
-        axios
-          .post('/api/admin/services/catId-by-services', {
-            categoryId: selectedCategory,
-          })
-          .then((res) => {
-            const fetchedServices = res?.data?.data || [];
-            setServices(fetchedServices);
-            handleServiceSelection(fetchedServices);
-          })
-          .catch(() => {
-            showToast('Error fetching services', 'error');
-          })
-          .finally(() => {
-            setIsServiceDetailsLoading(false);
-          });
-      }
-    }
-  }, [selectedCategory, combinedCategories]);
 
-  const handleServiceSelection = (fetchedServices: any[]) => {
-    if (serviceIdFromUrl && isInitializing) {
-      const serviceFromUrl = fetchedServices.find(
-        (s: any) => s.id === serviceIdFromUrl
-      );
-      if (serviceFromUrl) {
-        setSelectedService(serviceIdFromUrl);
-        setSearch(serviceFromUrl.name);
-      }
-    } else if (fetchedServices?.length > 0) {
-      setSelectedService(fetchedServices[0]?.id);
-    } else {
-      setSelectedService('');
-    }
-    setIsInitializing(false);
-  };
 
   useEffect(() => {
     if (
@@ -972,7 +946,7 @@ function NewOrder() {
                             .map((favCat) => (
                               <option
                                 key={`fav-${favCat.id}`}
-                                value={favCat.id}
+                                value={String(favCat.id)}
                               >
                                 {favCat.category_name}
                               </option>
@@ -984,7 +958,7 @@ function NewOrder() {
                         {categoriesWithServices
                           .filter((cat) => !cat.isFavorite)
                           .map((cat: any) => (
-                            <option key={`reg-${cat.id}`} value={cat.id}>
+                            <option key={`reg-${cat.id}`} value={String(cat.id)}>
                               {cat.category_name}
                             </option>
                           ))}
@@ -1007,8 +981,11 @@ function NewOrder() {
                       disabled={!selectedCategory || services.length === 0}
                       required
                     >
+                      <option value="" disabled>
+                        {services.length === 0 ? 'No services available' : 'Select a service'}
+                      </option>
                       {services?.map((service: any) => (
-                        <option key={service.id} value={service.id}>
+                        <option key={service.id} value={String(service.id)}>
                           {service.name} - ${service.rate || '0.00'}
                         </option>
                       ))}
