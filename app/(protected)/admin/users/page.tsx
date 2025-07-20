@@ -66,6 +66,7 @@ interface User {
   specialPricing: boolean;
   status: 'active' | 'suspended' | 'banned';
   currency: string;
+  dollarRate?: number;
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
@@ -1977,6 +1978,24 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
   });
   const [balanceSubmitting, setBalanceSubmitting] = useState(false);
 
+  // Function to convert user balance to admin's currency for display
+  const getDisplayBalance = () => {
+    if (!currentUser) return '0.00';
+    
+    const userBalance = currentUser.balance || 0;
+    const userRate = currentUser.dollarRate || 121.45;
+    const isAdminUSD = currency === 'USD' || currency === 'USDT';
+    
+    if (isAdminUSD) {
+      // Convert BDT to USD for display
+      const convertedBalance = userBalance / userRate;
+      return convertedBalance.toFixed(2);
+    } else {
+      // Show BDT directly
+      return userBalance.toFixed(2);
+    }
+  };
+
   // Simple toast function for this modal
   const showModalToast = (message: string, type: 'success' | 'error') => {
     // Create a simple toast notification
@@ -2052,7 +2071,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
 
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-600">User: <span className="font-medium">{currentUser.username}</span></div>
-          <div className="text-sm text-gray-600">Current Balance: <span className="font-medium">${currentUser.balance?.toFixed(2) || '0.00'}</span></div>
+          <div className="text-sm text-gray-600">Current Balance: <span className="font-medium">{currentCurrencyData?.symbol || '$'}{getDisplayBalance()}</span></div>
         </div>
 
         <div className="space-y-4 mb-6">

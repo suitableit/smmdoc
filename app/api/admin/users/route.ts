@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
         total_spent: true,
         total_deposit: true,
         currency: true,
+        dollarRate: true,
         role: true,
         status: true,
         emailVerified: true,
