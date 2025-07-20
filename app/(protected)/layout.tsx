@@ -2,8 +2,10 @@
 
 import Header from '@/components/dashboard/header';
 import SideBar from '@/components/dashboard/sideBar';
+import { checkSessionValidity, setupSessionInvalidationListener } from '@/lib/session-invalidation';
+import { signOut, useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ProtectedLayout({
   children,
@@ -11,6 +13,37 @@ export default function ProtectedLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
   const isDashboard = pathname === '/dashboard';
+  const { data: session } = useSession();
+
+  // Setup session invalidation listener
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const cleanup = setupSessionInvalidationListener(
+      session.user.id,
+      () => {
+        // Force logout when session is invalidated
+        signOut({ callbackUrl: '/auth/signin' });
+      }
+    );
+
+    return cleanup;
+  }, [session?.user?.id]);
+
+  // Periodic session validity check (fallback)
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const checkInterval = setInterval(async () => {
+      const isValid = await checkSessionValidity();
+      if (!isValid) {
+        console.log('Session is no longer valid, logging out...');
+        signOut({ callbackUrl: '/auth/signin' });
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(checkInterval);
+  }, [session?.user?.id]);
 
   return (
     <div className="flex min-h-screen">

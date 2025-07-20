@@ -2,27 +2,28 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    FaBan,
-    FaCheckCircle,
-    FaCoins,
-    FaDollarSign,
-    FaEdit,
-    FaEllipsisH,
-    FaExclamationCircle,
-    FaGift,
-    FaSearch,
-    FaSignInAlt,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
-    FaTrash,
-    FaUserCheck,
-    FaUsers,
+  FaBan,
+  FaCheckCircle,
+  FaCoins,
+  FaDollarSign,
+  FaEdit,
+  FaEllipsisH,
+  FaExclamationCircle,
+  FaGift,
+  FaSearch,
+  FaSignInAlt,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
+  FaTrash,
+  FaUserCheck,
+  FaUsers,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
 import useCurrency from '@/hooks/useCurrency';
 import { APP_NAME } from '@/lib/constants';
+import { invalidateUserSessions } from '@/lib/session-invalidation';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -563,6 +564,8 @@ const UsersListPage = () => {
       );
 
       if (success) {
+        // Broadcast session invalidation for live logout
+        await invalidateUserSessions(userId);
         setDeleteDialogOpen(false);
         setUserToDelete(null);
       }
@@ -573,12 +576,19 @@ const UsersListPage = () => {
   // Handle user status update
   const handleStatusUpdate = useCallback(
     async (userId: number, newStatus: string) => {
-      return handleApiAction(
+      const success = await handleApiAction(
         `/api/admin/users/${userId}/status`,
         'PUT',
         { status: newStatus },
         `User status updated to ${newStatus}`
       );
+
+      // If user is suspended or banned, broadcast session invalidation for live logout
+      if (success && (newStatus === 'suspended' || newStatus === 'banned')) {
+        await invalidateUserSessions(userId);
+      }
+
+      return success;
     },
     [handleApiAction]
   );
