@@ -9,13 +9,13 @@ async function checkFieldTypes() {
     // Check NewOrder field types
     const orderSample = await prisma.$queryRaw`
       SELECT categoryId, serviceId, userId 
-      FROM NewOrder 
+      FROM neworder 
       LIMIT 1
     `;
     
     if (orderSample.length > 0) {
       const order = orderSample[0];
-      console.log('📋 NewOrder field types:');
+      console.log('📋 neworder field types:');
       console.log(`   categoryId: ${order.categoryId} (type: ${typeof order.categoryId})`);
       console.log(`   serviceId: ${order.serviceId} (type: ${typeof order.serviceId})`);
       console.log(`   userId: ${order.userId} (type: ${typeof order.userId})`);
@@ -55,9 +55,9 @@ async function checkFieldTypes() {
     console.log('\n🔍 Checking table structures...');
     
     const newOrderStructure = await prisma.$queryRaw`
-      DESCRIBE NewOrder
+      DESCRIBE neworder
     `;
-    console.log('\n📊 NewOrder table structure:');
+    console.log('\n📊 neworder table structure:');
     newOrderStructure.forEach(col => {
       if (['categoryId', 'serviceId', 'userId'].includes(col.Field)) {
         console.log(`   ${col.Field}: ${col.Type} (Null: ${col.Null}, Key: ${col.Key})`);

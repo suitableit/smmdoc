@@ -56,7 +56,7 @@ async function completeBackup() {
     // Clear all tables
     console.log('\n🗑️ Clearing all tables...');
     await currentConnection.execute('DELETE FROM RefillRequest WHERE id IS NOT NULL');
-    await currentConnection.execute('DELETE FROM NewOrder WHERE id > 0');
+    await currentConnection.execute('DELETE FROM neworder WHERE id > 0');
     await currentConnection.execute('DELETE FROM Service WHERE id IS NOT NULL');
     await currentConnection.execute('DELETE FROM Category WHERE id IS NOT NULL');
     await currentConnection.execute('DELETE FROM ServiceType WHERE id IS NOT NULL');
@@ -168,7 +168,7 @@ async function completeBackup() {
     // Backup Orders
     console.log('\n📊 Backing up Orders...');
     const [previousOrders] = await previousConnection.execute(`
-      SELECT * FROM NewOrder ORDER BY id DESC LIMIT 100
+      SELECT * FROM neworder ORDER BY id DESC LIMIT 100
     `);
     console.log(`Found ${previousOrders.length} orders`);
 
@@ -177,7 +177,7 @@ async function completeBackup() {
         const mappedUserId = userIdMapping[order.userId] || 1;
         
         await currentConnection.execute(`
-          INSERT INTO NewOrder (id, userId, serviceId, categoryId, link, qty, price, charge, profit, 
+          INSERT INTO neworder (id, userId, serviceId, categoryId, link, qty, price, charge, profit, 
                                avg_time, status, remains, startCount, bdtPrice, currency, usdPrice, createdAt, updatedAt)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         `, [
@@ -247,9 +247,9 @@ async function completeBackup() {
       await currentConnection.execute(`
         ALTER TABLE RefillRequest 
         ADD CONSTRAINT RefillRequest_orderId_fkey 
-        FOREIGN KEY (orderId) REFERENCES NewOrder(id)
+        FOREIGN KEY (orderId) REFERENCES neworder(id)
       `);
-      console.log('✅ Added RefillRequest -> NewOrder FK');
+      console.log('✅ Added RefillRequest -> neworder FK');
     } catch (error) {
       console.log(`⚠️ FK constraint error: ${error.message}`);
     }
@@ -273,7 +273,7 @@ async function completeBackup() {
     const [userCount] = await currentConnection.execute('SELECT COUNT(*) as count FROM User');
     const [categoryCount] = await currentConnection.execute('SELECT COUNT(*) as count FROM Category');
     const [serviceCount] = await currentConnection.execute('SELECT COUNT(*) as count FROM Service');
-    const [orderCount] = await currentConnection.execute('SELECT COUNT(*) as count FROM NewOrder');
+    const [orderCount] = await currentConnection.execute('SELECT COUNT(*) as count FROM neworder');
     const [refillCount] = await currentConnection.execute('SELECT COUNT(*) as count FROM RefillRequest');
 
     console.log(`\n🎉 Complete backup finished successfully!`);

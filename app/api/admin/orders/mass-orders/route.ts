@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
           WHEN COUNT(CASE WHEN o.status = 'processing' THEN 1 END) > 0 THEN 'processing'
           ELSE 'pending'
         END as status
-      FROM "NewOrder" o
+      FROM "neworder" o
       JOIN "User" u ON o.userId = u.id
       WHERE 1=1
         ${
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
         SELECT 
           u.id as userId,
           DATE_TRUNC('minute', o.createdAt) as orderBatch
-        FROM "NewOrder" o
+        FROM "neworder" o
         JOIN "User" u ON o.userId = u.id
         WHERE 1=1
           ${
@@ -165,7 +165,7 @@ export async function GET(req: NextRequest) {
             WHEN COUNT(CASE WHEN status = 'processing' THEN 1 END) > 0 THEN 'processing'
             ELSE 'pending'
           END as status
-        FROM "NewOrder"
+        FROM "neworder"
         GROUP BY userId, DATE_TRUNC('minute', createdAt)
       ) as grouped_orders
     `;
