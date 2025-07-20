@@ -2041,13 +2041,13 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
         <h3 className="text-lg font-semibold mb-4">Add/Deduct User Balance</h3>
 
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <div className="text-sm text-gray-600">User: <span className="font-medium">{currentUser.name || currentUser.username}</span></div>
+          <div className="text-sm text-gray-600">User: <span className="font-medium">{currentUser.username}</span></div>
           <div className="text-sm text-gray-600">Current Balance: <span className="font-medium">${currentUser.balance?.toFixed(2) || '0.00'}</span></div>
         </div>
 
         <div className="space-y-4 mb-6">
           <div>
-            <label className="form-label mb-2">Action *</label>
+            <label className="form-label mb-2">Action <span className="text-red-500">*</span></label>
             <select
               value={balanceForm.action}
               onChange={(e) =>
@@ -2064,7 +2064,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
           </div>
 
           <div>
-            <label className="form-label mb-2">Amount ({currency}) *</label>
+            <label className="form-label mb-2">Amount ({currency}) <span className="text-red-500">*</span></label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">{currentCurrencyData?.symbol || '$'}</span>
               <input

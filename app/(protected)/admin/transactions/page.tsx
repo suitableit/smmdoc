@@ -2029,7 +2029,7 @@ const AdminAllTransactionsPage = () => {
 
                       <div className="space-y-4 mb-6">
                         <div>
-                          <label className="form-label mb-2">Username *</label>
+                          <label className="form-label mb-2">Username <span className="text-red-500">*</span></label>
                           <div className="relative">
                             <input
                               type="text"
@@ -2057,7 +2057,7 @@ const AdminAllTransactionsPage = () => {
                               <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                                 <span className="text-sm text-green-700 font-medium">
-                                  User found: {userFound.name || userFound.username} ({userFound.email})
+                                  User found: {userFound.username} ({userFound.email})
                                 </span>
                               </div>
                             </div>
@@ -2075,7 +2075,7 @@ const AdminAllTransactionsPage = () => {
                         </div>
 
                         <div>
-                          <label className="form-label mb-2">Action *</label>
+                          <label className="form-label mb-2">Action <span className="text-red-500">*</span></label>
                           <select
                             value={balanceForm.action}
                             onChange={(e) =>
@@ -2092,7 +2092,7 @@ const AdminAllTransactionsPage = () => {
                         </div>
 
                         <div>
-                          <label className="form-label mb-2">Amount ({currency}) *</label>
+                          <label className="form-label mb-2">Amount ({currency}) <span className="text-red-500">*</span></label>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">{currentCurrencyData?.symbol || '$'}</span>
                             <input
