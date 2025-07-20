@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
           method: 'manual_adjustment',
           payment_method: 'Admin Manual Adjustment',
           sender_number: '',
-          transaction_id: action === 'add' ? 'Added by Admin' : 'Deduct by Admin',
+          transaction_id: action === 'add' ? 'Added by Admin' : 'Deducted by Admin',
           currency: transactionCurrency // Store admin's currency (USD or BDT)
         }
       });
