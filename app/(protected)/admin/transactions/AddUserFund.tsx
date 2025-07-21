@@ -4,21 +4,21 @@ import ButtonLoader from '@/components/button-loader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import axiosInstance from '@/lib/axiosInstance';
@@ -41,7 +41,7 @@ export default function AddUserFund() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<
-    Array<{ id: number; name: string; email: string }>
+    Array<{ id: number; name: string; email: string; username: string }>
   >([]);
   const [searching, setSearching] = useState(false);
   const { rate, availableCurrencies, currentCurrencyData } = useCurrency();
@@ -74,10 +74,10 @@ export default function AddUserFund() {
     }
   };
 
-  const selectUser = (user: { id: number; name: string; email: string }) => {
+  const selectUser = (user: { id: number; name: string; email: string; username: string }) => {
     form.setValue('userId', user.id);
     setSearchResults([]);
-    setSearchQuery(`${user.name} (${user.email})`);
+    setSearchQuery(user.username || user.name);
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -160,8 +160,8 @@ export default function AddUserFund() {
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
                   onClick={() => selectUser(user)}
                 >
-                  <div className="font-medium">{user.name}</div>
-                  <div className="text-sm text-gray-500">{user.email}</div>
+                  <div className="font-medium">{user.username || user.name}</div>
+                  <div className="text-sm text-gray-500">{user.name}</div>
                 </div>
               ))}
             </div>
