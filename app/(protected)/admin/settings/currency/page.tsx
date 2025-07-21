@@ -429,6 +429,10 @@ const PaymentCurrencyPage = () => {
 
     // Auto-save to backend
     try {
+      console.log('=== Deleting Currency - Frontend ===');
+      console.log('Updated currencies:', updatedCurrencies.map(c => c.code));
+      console.log('Deleted currency:', currencyToDelete.code);
+
       const response = await fetch('/api/admin/currency-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -440,6 +444,11 @@ const PaymentCurrencyPage = () => {
         clearCurrencyCache();
         await refreshCurrencyData();
         showToast(`${currencyToDelete.code} deleted successfully!`, 'success');
+
+        // Trigger currency update event for header refresh
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('currencyUpdated'));
+        }, 500);
       } else {
         showToast('Failed to delete currency', 'error');
         // Revert on failure

@@ -72,6 +72,10 @@ export function CurrencyProvider({
   const refreshCurrencyData = async () => {
     clearCurrencyCache();
     await loadCurrencyData();
+
+    // Force re-render by updating state
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 100);
   };
 
   useEffect(() => {
