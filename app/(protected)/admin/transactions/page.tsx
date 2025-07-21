@@ -2,18 +2,18 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    FaCheckCircle,
-    FaClock,
-    FaCreditCard,
-    FaDollarSign,
-    FaEllipsisH,
-    FaExclamationCircle,
-    FaEye,
-    FaPlus,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
+  FaCheckCircle,
+  FaClock,
+  FaCreditCard,
+  FaDollarSign,
+  FaEllipsisH,
+  FaExclamationCircle,
+  FaEye,
+  FaPlus,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant and useCurrency hook

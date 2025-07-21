@@ -4,8 +4,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
  
 
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
+import { clearCurrencyCache } from '@/lib/currency-utils';
 import { useEffect, useState } from 'react';
 import {
     FaCheck,
@@ -211,6 +213,7 @@ interface Currency {
 
 const PaymentCurrencyPage = () => {
   const currentUser = useCurrentUser();
+  const { refreshCurrencyData } = useCurrency();
 
   // Set document title
   useEffect(() => {
@@ -305,6 +308,9 @@ const PaymentCurrencyPage = () => {
       });
 
       if (response.ok) {
+        // Clear cache and refresh currency data across the app
+        clearCurrencyCache();
+        await refreshCurrencyData();
         showToast('Currency settings saved successfully!', 'success');
       } else {
         showToast('Failed to save currency settings', 'error');
@@ -343,6 +349,9 @@ const PaymentCurrencyPage = () => {
         });
 
         if (response.ok) {
+          // Clear cache and refresh currency data across the app
+          clearCurrencyCache();
+          await refreshCurrencyData();
           showToast('Currency added and saved successfully!', 'success');
         } else {
           showToast('Currency added but failed to save', 'error');
@@ -356,9 +365,34 @@ const PaymentCurrencyPage = () => {
     }
   };
 
-  const editCurrency = (id: number, updates: Partial<Currency>) => {
-    setCurrencies(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
-    showToast('Currency updated successfully!', 'success');
+  const editCurrency = async (id: number, updates: Partial<Currency>) => {
+    const updatedCurrencies = currencies.map(c => c.id === id ? { ...c, ...updates } : c);
+    setCurrencies(updatedCurrencies);
+
+    // Auto-save to backend
+    try {
+      const response = await fetch('/api/admin/currency-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currencySettings, currencies: updatedCurrencies }),
+      });
+
+      if (response.ok) {
+        // Clear cache and refresh currency data across the app
+        clearCurrencyCache();
+        await refreshCurrencyData();
+        showToast('Currency updated and saved successfully!', 'success');
+      } else {
+        showToast('Currency updated but failed to save', 'error');
+        // Revert on failure
+        setCurrencies(currencies);
+      }
+    } catch (error) {
+      console.error('Error auto-saving currency:', error);
+      showToast('Currency updated but failed to save', 'error');
+      // Revert on failure
+      setCurrencies(currencies);
+    }
   };
 
   const deleteCurrency = (id: number) => {
@@ -382,6 +416,9 @@ const PaymentCurrencyPage = () => {
       });
 
       if (response.ok) {
+        // Clear cache and refresh currency data across the app
+        clearCurrencyCache();
+        await refreshCurrencyData();
         const currency = updatedCurrencies.find(c => c.id === id);
         showToast(`${currency?.code} ${currency?.enabled ? 'enabled' : 'disabled'} successfully!`, 'success');
       } else {

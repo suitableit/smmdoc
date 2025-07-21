@@ -16,7 +16,7 @@ export default function ModernOrderForm({
   type,
   darkMode = false,
 }: OrderFormProps) {
-  const { currency } = useCurrency();
+  const { currency, formatCurrency, currentCurrencyData, convertAmount } = useCurrency();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedService, setSelectedService] = useState('');
   const [link, setLink] = useState('');
@@ -65,11 +65,14 @@ export default function ModernOrderForm({
   // Update price when quantity or service changes
   useEffect(() => {
     if (currentService && quantity) {
-      setPrice((currentService.price * quantity) / 1000);
+      const basePrice = (currentService.price * quantity) / 1000;
+      // Convert from USD to selected currency
+      const convertedPrice = convertAmount(basePrice, 'USD', currency);
+      setPrice(convertedPrice);
     } else {
       setPrice(0);
     }
-  }, [currentService, quantity]);
+  }, [currentService, quantity, currency, convertAmount]);
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -223,7 +226,7 @@ export default function ModernOrderForm({
                 darkMode ? 'text-gray-300' : 'text-gray-700'
               } mb-2 block`}
             >
-              Budget ({currency === 'USD' ? '$' : '৳'})
+              Budget ({currentCurrencyData?.symbol || '$'})
             </Label>
             <Input
               id="customBudget"
@@ -506,7 +509,7 @@ export default function ModernOrderForm({
                 ? 'bg-gray-700 border-gray-600 text-white'
                 : 'border-gray-300 bg-gray-100'
             }`}
-            value={`${currency === 'USD' ? '$' : '৳'}${price.toFixed(4)}`}
+            value={formatCurrency(price)}
             readOnly
             disabled
           />
