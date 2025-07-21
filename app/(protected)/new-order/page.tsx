@@ -1056,6 +1056,16 @@ function NewOrder() {
                       {services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
                         ?.max_order || 0}
                     </small>
+                    {qty > 0 && qty < (selected?.min_order || 0) && (
+                      <div className="text-red-500 text-xs mt-1">
+                        ⚠️ Quantity must be at least {selected?.min_order || 0}
+                      </div>
+                    )}
+                    {qty > (selected?.max_order || 999999) && (
+                      <div className="text-red-500 text-xs mt-1">
+                        ⚠️ Quantity cannot exceed {selected?.max_order || 0}
+                      </div>
+                    )}
                   </div>
 
                   {/* Price */}
@@ -1083,7 +1093,12 @@ function NewOrder() {
                   <button
                     type="submit"
                     disabled={
-                      isSubmitting || !selectedService || !link || qty < 1
+                      isSubmitting ||
+                      !selectedService ||
+                      !link ||
+                      qty < 1 ||
+                      qty < (selected?.min_order || 0) ||
+                      qty > (selected?.max_order || 999999)
                     }
                     className="btn btn-primary w-full"
                   >
@@ -1092,6 +1107,16 @@ function NewOrder() {
                         <GradientSpinner size="w-4 h-4" className="mr-2" />
                         Creating Order...
                       </>
+                    ) : qty > 0 && qty < (selected?.min_order || 0) ? (
+                      `Minimum ${selected?.min_order || 0} required`
+                    ) : qty > (selected?.max_order || 999999) ? (
+                      `Maximum ${selected?.max_order || 0} allowed`
+                    ) : !selectedService ? (
+                      'Select a service first'
+                    ) : !link ? (
+                      'Enter link'
+                    ) : qty < 1 ? (
+                      'Enter quantity'
                     ) : (
                       'Create Order'
                     )}
