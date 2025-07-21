@@ -152,8 +152,30 @@ export async function POST(request: Request) {
       });
     }
 
-    // Update currencies
+    // Update currencies - First get existing currencies to find deleted ones
     if (currencies && Array.isArray(currencies)) {
+      // Get current currencies from database
+      const existingCurrencies = await db.currency.findMany({
+        select: { code: true }
+      });
+
+      const existingCodes = existingCurrencies.map(c => c.code);
+      const newCodes = currencies.map(c => c.code);
+
+      // Find currencies to delete (exist in DB but not in new list)
+      const codesToDelete = existingCodes.filter(code => !newCodes.includes(code));
+
+      // Delete removed currencies (except core currencies)
+      const coreCurrencies = ['USD', 'BDT'];
+      for (const codeToDelete of codesToDelete) {
+        if (!coreCurrencies.includes(codeToDelete)) {
+          await db.currency.delete({
+            where: { code: codeToDelete }
+          });
+        }
+      }
+
+      // Upsert remaining currencies
       for (const currency of currencies) {
         await db.currency.upsert({
           where: { code: currency.code },
