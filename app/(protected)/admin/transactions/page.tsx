@@ -355,6 +355,7 @@ const AdminAllTransactionsPage = () => {
 
   // New state for approve transaction ID input
   const [approveTransactionId, setApproveTransactionId] = useState('');
+  const [defaultTransactionId, setDefaultTransactionId] = useState('');
 
   const [cancelConfirmDialog, setCancelConfirmDialog] = useState<{
     open: boolean;
@@ -823,19 +824,27 @@ const AdminAllTransactionsPage = () => {
   const handleApprove = (transactionId: string) => {
     const numericId = parseInt(transactionId);
     const transaction = transactions.find((t) => t.id === numericId);
+
+    // Generate a default transaction ID based on type and timestamp
+    const timestamp = new Date().getTime();
+    const prefix = transaction?.type === 'deposit' ? 'DEP' : 'WDR';
+    const defaultId = `${prefix}-${transaction?.id || ''}-${timestamp.toString().slice(-6)}`;
+
+    setDefaultTransactionId(defaultId);
+    setApproveTransactionId(defaultId); // Set default transaction ID
+
     setApproveConfirmDialog({
       open: true,
       transactionId: numericId,
       transaction: transaction || null,
     });
-    setApproveTransactionId(''); // Reset transaction ID input
   };
 
   const confirmApprove = async (transactionId: number) => {
     const transaction = approveConfirmDialog.transaction;
 
-    // Only require transaction ID for withdrawal transactions
-    if (transaction?.type === 'withdrawal' && !approveTransactionId.trim()) {
+    // For deposit transactions, require transaction ID
+    if (transaction?.type === 'deposit' && !approveTransactionId.trim()) {
       showToast('Please enter a transaction ID', 'error');
       return;
     }
@@ -1876,7 +1885,7 @@ const AdminAllTransactionsPage = () => {
                             <input
                               type="text"
                               placeholder="Enter transaction ID"
-                              value="User Transaction ID"
+                              value={approveTransactionId}
                               onChange={(e) =>
                                 setApproveTransactionId(e.target.value)
                               }
@@ -1884,34 +1893,11 @@ const AdminAllTransactionsPage = () => {
                               required
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              This transaction ID will be assigned to the
-                              approved withdrawal.
+                              This transaction ID will be assigned to the approved {approveConfirmDialog.transaction?.type}.
                             </p>
                           </div>
 
-                          {/* Transaction ID Input Field - Only for Withdrawals */}
-                          {approveConfirmDialog.transaction?.type ===
-                            'withdrawal' && (
-                            <div className="mb-4">
-                              <label className="form-label mb-2">
-                                Transaction ID *
-                              </label>
-                              <input
-                                type="text"
-                                placeholder="Enter transaction ID"
-                                value={approveTransactionId}
-                                onChange={(e) =>
-                                  setApproveTransactionId(e.target.value)
-                                }
-                                className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                                required
-                              />
-                              <p className="text-xs text-gray-500 mt-1">
-                                This transaction ID will be assigned to the
-                                approved withdrawal.
-                              </p>
-                            </div>
-                          )}
+                          {/* Transaction ID field is now unified above */}
                         </div>
 
                         <div className="flex flex-col-reverse md:flex-row gap-3 justify-center md:justify-end">
