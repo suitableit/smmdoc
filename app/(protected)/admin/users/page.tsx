@@ -2,22 +2,22 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FaBan,
-  FaCheckCircle,
-  FaCoins,
-  FaDollarSign,
-  FaEdit,
-  FaEllipsisH,
-  FaExclamationCircle,
-  FaGift,
-  FaSearch,
-  FaSignInAlt,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
-  FaTrash,
-  FaUserCheck,
-  FaUsers,
+    FaBan,
+    FaCheckCircle,
+    FaCoins,
+    FaDollarSign,
+    FaEdit,
+    FaEllipsisH,
+    FaExclamationCircle,
+    FaGift,
+    FaSearch,
+    FaSignInAlt,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
+    FaTrash,
+    FaUserCheck,
+    FaUsers,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -1969,7 +1969,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
   onBalanceUpdate,
 }) => {
   // Get currency from context
-  const { currency, currentCurrencyData } = useCurrency();
+  const { currency, currentCurrencyData, availableCurrencies, convertAmount } = useCurrency();
 
   const [balanceForm, setBalanceForm] = useState({
     amount: '',
@@ -2071,7 +2071,9 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
 
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-600">User: <span className="font-medium">{currentUser.username}</span></div>
-          <div className="text-sm text-gray-600">Current Balance: <span className="font-medium">{currentCurrencyData?.symbol || '$'}{getDisplayBalance()}</span></div>
+          <div className="text-sm text-gray-600">User Currency: <span className="font-medium">{currentUser.currency || 'USD'}</span></div>
+          <div className="text-sm text-gray-600">Current Balance: <span className="font-medium">৳{currentUser.balance?.toFixed(2) || '0.00'}</span> <span className="text-xs text-gray-500">(stored in BDT)</span></div>
+          <div className="text-sm text-gray-600">Admin Currency: <span className="font-medium">{currency}</span></div>
         </div>
 
         <div className="space-y-4 mb-6">
@@ -2130,6 +2132,25 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
               className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
           </div>
+
+          {/* Conversion Preview */}
+          {balanceForm.amount && parseFloat(balanceForm.amount) > 0 && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="text-sm text-blue-800">
+                <div className="font-medium mb-1">Conversion Preview:</div>
+                <div>Admin Amount: {currentCurrencyData?.symbol || '$'}{balanceForm.amount} ({currency})</div>
+                <div>Will be stored as: ৳{(() => {
+                  const amount = parseFloat(balanceForm.amount);
+                  if (currency === 'BDT') {
+                    return amount.toFixed(2);
+                  }
+                  // Use the convertAmount function from context
+                  const convertedAmount = convertAmount(amount, currency, 'BDT');
+                  return convertedAmount.toFixed(2);
+                })()} (BDT)</div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3 justify-end">

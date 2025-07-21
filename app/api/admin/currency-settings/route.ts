@@ -55,6 +55,13 @@ const defaultCurrencies = [
     rate: 1.0000,
     enabled: true,
   },
+  {
+    code: 'XCD',
+    name: 'East Caribbean Dollar',
+    symbol: 'EC$',
+    rate: 2.7000,
+    enabled: true,
+  },
 ];
 
 // GET - Load currency settings and currencies from database

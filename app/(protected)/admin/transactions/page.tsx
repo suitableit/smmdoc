@@ -2,23 +2,24 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaClock,
-  FaCreditCard,
-  FaDollarSign,
-  FaEllipsisH,
-  FaExclamationCircle,
-  FaEye,
-  FaPlus,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
+    FaCheckCircle,
+    FaClock,
+    FaCreditCard,
+    FaDollarSign,
+    FaEllipsisH,
+    FaExclamationCircle,
+    FaEye,
+    FaPlus,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant and useCurrency hook
-import useCurrency from '@/hooks/useCurrency';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { APP_NAME } from '@/lib/constants';
+import { convertCurrency } from '@/lib/currency-utils';
 const formatID = (id) => id;
 const formatNumber = (num) => num.toLocaleString();
 const formatPrice = (price, decimals = 2) => price.toFixed(decimals);
@@ -100,8 +101,31 @@ const AdminAllTransactionsPage = () => {
     document.title = `All Transactions — ${APP_NAME}`;
   }, []);
 
-  // Currency hook
-  const { currency, currentCurrencyData } = useCurrency();
+  // Currency hook for dynamic formatting
+  const { currency, currentCurrencyData, availableCurrencies } = useCurrency();
+
+  // Dynamic currency formatting function
+  const formatTransactionCurrency = useCallback((amount: number, currency: string) => {
+    // Find currency data from available currencies
+    const currencyInfo = availableCurrencies?.find(c => c.code === currency);
+
+    if (currencyInfo) {
+      return `${currencyInfo.symbol}${formatPrice(amount, 2)}`;
+    }
+
+    // Fallback to hardcoded formats
+    switch (currency) {
+      case 'USD':
+      case 'USDT':
+        return `$${formatPrice(amount, 2)}`;
+      case 'BDT':
+        return `৳${formatPrice(amount, 2)}`;
+      case 'XCD':
+        return `$${formatPrice(amount, 2)}`;
+      default:
+        return `${currency} ${formatPrice(amount, 2)}`;
+    }
+  }, [availableCurrencies]);
 
   // Dummy data for testing - Updated to show empty Transaction IDs for pending withdrawals
   const dummyTransactions: Transaction[] = [
@@ -1381,10 +1405,7 @@ const AdminAllTransactionsPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {transaction.currency === 'USD' || transaction.currency === 'USDT'
-                                ? `$${formatPrice(transaction.amount, 2)}`
-                                : `৳${formatPrice(transaction.amount, 2)}`
-                              }
+                              {formatTransactionCurrency(transaction.amount, transaction.currency)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1639,12 +1660,9 @@ const AdminAllTransactionsPage = () => {
                               Amount
                             </label>
                             <div className="text-sm bg-gray-50 p-2 rounded font-semibold">
-                              {viewDetailsDialog.transaction.currency === 'BDT'
-                                ? '৳'
-                                : '$'}
-                              {formatPrice(
+                              {formatTransactionCurrency(
                                 viewDetailsDialog.transaction.amount,
-                                2
+                                viewDetailsDialog.transaction.currency
                               )}
                             </div>
                           </div>
@@ -1849,13 +1867,9 @@ const AdminAllTransactionsPage = () => {
                                 Amount:
                               </span>
                               <span className="font-semibold text-lg text-green-600">
-                                {approveConfirmDialog.transaction.currency ===
-                                'BDT'
-                                  ? '৳'
-                                  : '$'}
-                                {formatPrice(
+                                {formatTransactionCurrency(
                                   approveConfirmDialog.transaction.amount,
-                                  2
+                                  approveConfirmDialog.transaction.currency
                                 )}
                               </span>
                             </div>
@@ -1977,13 +1991,9 @@ const AdminAllTransactionsPage = () => {
                                 Amount:
                               </span>
                               <span className="font-semibold text-lg">
-                                {cancelConfirmDialog.transaction.currency ===
-                                'BDT'
-                                  ? '৳'
-                                  : '$'}
-                                {formatPrice(
+                                {formatTransactionCurrency(
                                   cancelConfirmDialog.transaction.amount,
-                                  2
+                                  cancelConfirmDialog.transaction.currency
                                 )}
                               </span>
                             </div>
@@ -2058,6 +2068,13 @@ const AdminAllTransactionsPage = () => {
                                 }));
                                 if (!e.target.value.trim()) {
                                   setUserFound(null);
+                                } else {
+                                  // Search username with debounce
+                                  setTimeout(() => {
+                                    if (e.target.value === balanceForm.username) {
+                                      searchUsername(e.target.value);
+                                    }
+                                  }, 500);
                                 }
                               }}
                               className="form-field w-full px-4 py-3 pr-10 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
@@ -2145,6 +2162,29 @@ const AdminAllTransactionsPage = () => {
                             className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                           />
                         </div>
+
+                        {/* Conversion Preview */}
+                        {balanceForm.amount && parseFloat(balanceForm.amount) > 0 && userFound && (
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="text-sm text-blue-800">
+                              <div className="font-medium mb-1">Conversion Preview:</div>
+                              <div>Admin Amount: {currentCurrencyData?.symbol || '$'}{balanceForm.amount} ({currency})</div>
+                              <div>Will be stored as: ৳{(() => {
+                                const amount = parseFloat(balanceForm.amount);
+                                if (currency === 'BDT') {
+                                  return amount.toFixed(2);
+                                }
+                                // Use the same convertCurrency function as the API
+                                if (availableCurrencies && availableCurrencies.length > 0) {
+                                  const convertedAmount = convertCurrency(amount, currency, 'BDT', availableCurrencies);
+                                  return convertedAmount.toFixed(2);
+                                }
+                                return '0.00';
+                              })()} (BDT)</div>
+                              <div className="text-xs text-blue-600 mt-1">User: {userFound.username}</div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex gap-3 justify-end">

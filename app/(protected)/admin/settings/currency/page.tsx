@@ -13,6 +13,7 @@ import {
     FaCheck,
     FaDollarSign,
     FaEdit,
+    FaSync,
     FaTimes,
     FaTrash
 } from 'react-icons/fa';
@@ -223,6 +224,7 @@ const PaymentCurrencyPage = () => {
   // State management
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isUpdatingRates, setIsUpdatingRates] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -434,6 +436,75 @@ const PaymentCurrencyPage = () => {
     }
   };
 
+  // Fix currency rates manually
+  const fixCurrencyRates = async () => {
+    setIsUpdatingRates(true);
+    showToast('Fixing currency rates...', 'pending');
+
+    try {
+      const response = await fetch('/api/admin/currency-rates/fix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Clear cache and refresh currency data across the app
+        clearCurrencyCache();
+        await refreshCurrencyData();
+
+        // Reload local currencies data
+        const settingsResponse = await fetch('/api/admin/currency-settings');
+        if (settingsResponse.ok) {
+          const settingsData = await settingsResponse.json();
+          if (settingsData.success && settingsData.currencies) {
+            setCurrencies(settingsData.currencies);
+          }
+        }
+
+        showToast(`Currency rates fixed successfully! Updated ${data.data.totalUpdated} currencies`, 'success');
+      } else {
+        showToast(data.error || 'Failed to fix currency rates', 'error');
+      }
+    } catch (error) {
+      console.error('Error fixing currency rates:', error);
+      showToast('Failed to fix currency rates', 'error');
+    } finally {
+      setIsUpdatingRates(false);
+    }
+  };
+
+  // Update currency rates automatically
+  const updateCurrencyRates = async () => {
+    setIsUpdatingRates(true);
+    showToast('Updating currency rates...', 'pending');
+
+    try {
+      const response = await fetch('/api/admin/currency-rates/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Clear cache and refresh currency data across the app
+        clearCurrencyCache();
+        await refreshCurrencyData();
+
+        showToast(`Currency rates updated successfully! (${data.data.source})`, 'success');
+      } else {
+        showToast(data.error || 'Failed to update currency rates', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating currency rates:', error);
+      showToast('Failed to update currency rates', 'error');
+    } finally {
+      setIsUpdatingRates(false);
+    }
+  };
+
 
 
   // Show loading state
@@ -483,6 +554,48 @@ const PaymentCurrencyPage = () => {
             </div>
 
             <div className="space-y-4">
+              {/* Auto Update Button */}
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Exchange rates management
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={fixCurrencyRates}
+                    disabled={isUpdatingRates}
+                    className="btn btn-primary btn-sm flex items-center gap-2"
+                  >
+                    {isUpdatingRates ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Fixing...
+                      </>
+                    ) : (
+                      <>
+                        🔧 Fix Rates
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={updateCurrencyRates}
+                    disabled={isUpdatingRates}
+                    className="btn btn-secondary btn-sm flex items-center gap-2"
+                  >
+                    {isUpdatingRates ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <FaSync />
+                        Auto Update
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
               {/* Header */}
               <div className="grid grid-cols-6 gap-3 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400">
                 <span className="text-center">Status</span>
