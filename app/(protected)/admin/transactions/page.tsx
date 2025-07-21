@@ -825,13 +825,18 @@ const AdminAllTransactionsPage = () => {
     const numericId = parseInt(transactionId);
     const transaction = transactions.find((t) => t.id === numericId);
 
-    // Generate a default transaction ID based on type and timestamp
-    const timestamp = new Date().getTime();
-    const prefix = transaction?.type === 'deposit' ? 'DEP' : 'WDR';
-    const defaultId = `${prefix}-${transaction?.id || ''}-${timestamp.toString().slice(-6)}`;
+    // Use actual transaction ID as default, fallback to generated ID if not available
+    let defaultId = transaction?.transactionId?.toString() || '';
+    
+    // If no actual transaction ID exists, generate one based on type and timestamp
+    if (!defaultId) {
+      const timestamp = new Date().getTime();
+      const prefix = transaction?.type === 'deposit' ? 'DEP' : 'WDR';
+      defaultId = `${prefix}-${transaction?.id || ''}-${timestamp.toString().slice(-6)}`;
+    }
 
     setDefaultTransactionId(defaultId);
-    setApproveTransactionId(defaultId); // Set default transaction ID
+    setApproveTransactionId(defaultId); // Set actual transaction ID as default
 
     setApproveConfirmDialog({
       open: true,
@@ -1879,7 +1884,7 @@ const AdminAllTransactionsPage = () => {
                             </label>
                             <input
                               type="text"
-                              placeholder="Enter transaction ID"
+                              placeholder="Current transaction ID (editable)"
                               value={approveTransactionId}
                               onChange={(e) =>
                                 setApproveTransactionId(e.target.value)
@@ -1888,7 +1893,7 @@ const AdminAllTransactionsPage = () => {
                               required
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              This transaction ID will be assigned to the approved {approveConfirmDialog.transaction?.type}.
+                              Current transaction ID is shown above. You can edit it if needed. This ID will be assigned to the approved {approveConfirmDialog.transaction?.type}.
                             </p>
                           </div>
 
