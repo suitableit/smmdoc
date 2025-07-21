@@ -189,12 +189,12 @@ export async function POST(request: NextRequest) {
       });
 
       // Create a transaction record for this manual balance adjustment
-      // Store the original amount and currency that admin used
+      // Store the converted BDT amount that was actually added to user's balance
       const transactionRecord = await prisma.addFund.create({
         data: {
           userId: user.id,
           invoice_id: `MANUAL-${Date.now()}`,
-          amount: amount, // Store original admin input amount
+          amount: amountToAdd, // Store converted BDT amount that was actually added
           spent_amount: 0,
           fee: 0,
           email: user.email || '',
@@ -203,10 +203,10 @@ export async function POST(request: NextRequest) {
           admin_status: 'Success',
           order_id: `MANUAL-${action.toUpperCase()}-${Date.now()}`,
           method: 'manual_adjustment',
-          payment_method: 'Admin Manual Adjustment',
+          payment_method: `Admin Manual Adjustment (${adminCurrencySymbol}${amount} ${adminCurrency})`,
           sender_number: '',
           transaction_id: action === 'add' ? 'Added by Admin' : 'Deducted by Admin',
-          currency: transactionCurrency // Store admin's currency (USD or BDT)
+          currency: 'BDT' // Always store as BDT since that's what's added to balance
         }
       });
 
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
     try {
       // Send email notification to user
       if (user.email) {
-        const displayAmount = isAdminUSD ? `$${amount}` : `৳${amount}`;
+        const displayAmount = `${adminCurrencySymbol}${amount}`;
         const notificationMessage = action === 'add'
           ? `${displayAmount} has been added to your account by admin.`
           : `${displayAmount} has been deducted from your account by admin.`;
