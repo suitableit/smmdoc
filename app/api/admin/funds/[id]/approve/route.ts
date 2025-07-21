@@ -22,9 +22,21 @@ export async function POST(
     const { id } = await params;
     const transactionId = parseInt(id);
 
+    // Get request body
+    const body = await req.json();
+    const { modifiedTransactionId, transactionType } = body;
+
     if (!transactionId || isNaN(transactionId)) {
       return NextResponse.json(
         { error: 'Valid transaction ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // For deposit transactions, require modified transaction ID
+    if (transactionType === 'deposit' && !modifiedTransactionId?.trim()) {
+      return NextResponse.json(
+        { error: 'Transaction ID is required for deposit approval' },
         { status: 400 }
       );
     }
@@ -34,14 +46,14 @@ export async function POST(
       where: { id: transactionId },
       include: { user: true }
     });
-    
+
     if (!transaction) {
       return NextResponse.json(
         { error: 'Transaction not found' },
         { status: 404 }
       );
     }
-    
+
     // Check if transaction is in pending status
     if (transaction.admin_status !== 'Pending' && transaction.admin_status !== 'pending') {
       return NextResponse.json(
@@ -53,15 +65,22 @@ export async function POST(
     try {
       // Use Prisma transaction to ensure both operations succeed or fail together
       await db.$transaction(async (prisma) => {
-        // Update the transaction status
+        // Update the transaction status and transaction ID if provided
+        const updateData: any = {
+          status: "Success",
+          admin_status: "Success",
+        };
+
+        // If modified transaction ID is provided, update it
+        if (modifiedTransactionId?.trim()) {
+          updateData.transaction_id = modifiedTransactionId.trim();
+        }
+
         await prisma.addFund.update({
           where: { id: transactionId },
-          data: {
-            status: "Success",
-            admin_status: "Success",
-          }
+          data: updateData
         });
-        
+
         // Update user balance
         const user = await prisma.user.update({
           where: { id: transaction.userId },
@@ -70,7 +89,7 @@ export async function POST(
             total_deposit: { increment: transaction.amount }
           }
         });
-        
+
         console.log(`User ${transaction.userId} balance updated. New balance: ${user.balance}`);
       });
 
@@ -79,7 +98,7 @@ export async function POST(
         const emailData = emailTemplates.paymentSuccess({
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
-          transactionId: transaction.transaction_id || 'N/A',
+          transactionId: modifiedTransactionId?.trim() || transaction.transaction_id || 'N/A',
           amount: transaction.amount,
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
@@ -100,7 +119,8 @@ export async function POST(
           id: transaction.id,
           status: 'approved',
           amount: transaction.amount,
-          userId: transaction.userId
+          userId: transaction.userId,
+          transactionId: modifiedTransactionId?.trim() || transaction.transaction_id
         }
       });
       

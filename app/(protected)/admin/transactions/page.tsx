@@ -2,18 +2,18 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaClock,
-  FaCreditCard,
-  FaDollarSign,
-  FaEllipsisH,
-  FaExclamationCircle,
-  FaEye,
-  FaPlus,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
+    FaCheckCircle,
+    FaClock,
+    FaCreditCard,
+    FaDollarSign,
+    FaEllipsisH,
+    FaExclamationCircle,
+    FaEye,
+    FaPlus,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant and useCurrency hook
@@ -858,10 +858,8 @@ const AdminAllTransactionsPage = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            transactionId:
-              transaction?.type === 'withdrawal'
-                ? approveTransactionId.trim()
-                : transaction?.transactionId,
+            modifiedTransactionId: approveTransactionId.trim(),
+            transactionType: transaction?.type,
           }),
         }
       );
@@ -876,10 +874,7 @@ const AdminAllTransactionsPage = () => {
                   ...transaction,
                   admin_status: 'Success' as const,
                   status: 'completed' as const,
-                  transactionId:
-                    transaction.type === 'withdrawal'
-                      ? parseInt(approveTransactionId.trim()) || transaction.transactionId
-                      : transaction.transactionId,
+                  transactionId: approveTransactionId.trim() || transaction.transactionId,
                 }
               : transaction
           )
@@ -1919,8 +1914,9 @@ const AdminAllTransactionsPage = () => {
                               confirmApprove(approveConfirmDialog.transactionId)
                             }
                             disabled={
-                              approveConfirmDialog.transaction?.type ===
-                                'withdrawal' && !approveTransactionId.trim()
+                              (approveConfirmDialog.transaction?.type === 'deposit' ||
+                               approveConfirmDialog.transaction?.type === 'withdrawal') &&
+                              !approveTransactionId.trim()
                             }
                             className="btn btn-primary flex items-center gap-2 w-full md:w-auto justify-center"
                           >
