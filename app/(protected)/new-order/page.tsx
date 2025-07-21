@@ -7,36 +7,36 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import {
-  dashboardApi,
-  useGetUserStatsQuery,
+    dashboardApi,
+    useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
-  FaBuffer,
-  FaCheckCircle,
-  FaClock,
-  FaDiscord,
-  FaFacebook,
-  FaFilter,
-  FaGlobe,
-  FaInfoCircle,
-  FaInstagram,
-  FaLayerGroup,
-  FaLink,
-  FaLinkedin,
-  FaRedo,
-  FaSearch,
-  FaShieldAlt,
-  FaShoppingCart,
-  FaSpotify,
-  FaTachometerAlt,
-  FaTelegram,
-  FaTiktok,
-  FaTimes,
-  FaTwitter,
-  FaYoutube
+    FaBuffer,
+    FaCheckCircle,
+    FaClock,
+    FaDiscord,
+    FaFacebook,
+    FaFilter,
+    FaGlobe,
+    FaInfoCircle,
+    FaInstagram,
+    FaLayerGroup,
+    FaLink,
+    FaLinkedin,
+    FaRedo,
+    FaSearch,
+    FaShieldAlt,
+    FaShoppingCart,
+    FaSpotify,
+    FaTachometerAlt,
+    FaTelegram,
+    FaTiktok,
+    FaTimes,
+    FaTwitter,
+    FaYoutube
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -335,14 +335,25 @@ function NewOrder() {
   const selected = services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService);
   const perQty = Number(selected?.perqty) || 1;
   const price = Number(selected?.rate) || 0;
-  // Get currency rate
-  const { rate: currencyRate, currency } = useCurrency();
+  // Get currency data
+  const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
 
+  // Calculate price properly based on user's selected currency
   let totalPrice = 0;
-  if (user?.currency === 'USD') {
-    totalPrice = (price * qty) / 1000;
+  const baseUsdPrice = (price * qty) / 1000; // Service rate is in USD per 1000
+
+  if (currency === 'USD') {
+    totalPrice = baseUsdPrice;
+  } else if (currency === 'BDT') {
+    // Convert USD to BDT using admin set rate
+    const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
+    const usdToBdtRate = bdtCurrency?.rate || 121; // Use admin set rate
+    totalPrice = baseUsdPrice * usdToBdtRate;
   } else {
-    totalPrice = ((price * qty) / 1000) * (currencyRate || 121.52);
+    // For other currencies, convert USD to that currency
+    const targetCurrency = availableCurrencies?.find(c => c.code === currency);
+    const conversionRate = targetCurrency?.rate || 1;
+    totalPrice = baseUsdPrice * conversionRate;
   }
 
   useEffect(() => {
@@ -732,7 +743,10 @@ function NewOrder() {
       const currentUser = currentUserResponse.data;
 
       const usdPrice = (price * qty) / 1000;
-      const bdtPrice = usdPrice * (currencyRate || 121.52);
+      // Use admin set BDT rate for conversion
+      const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
+      const usdToBdtRate = bdtCurrency?.rate || 121;
+      const bdtPrice = usdPrice * usdToBdtRate;
 
       // Debug log to verify price calculation
       console.log('Price Calculation Debug:', {
@@ -1047,8 +1061,7 @@ function NewOrder() {
                   {/* Price */}
                   <div className="form-group">
                     <label className="form-label" htmlFor="price">
-                      Charge (per 1000 = {user?.currency === 'USD' ? '$' : '৳'}
-                      {price.toFixed(2)})
+                      Charge (per 1000 = ${price.toFixed(2)})
                     </label>
                     <input
                       type="text"
@@ -1057,9 +1070,11 @@ function NewOrder() {
                       disabled
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       value={
-                        user?.currency === 'USD'
+                        currency === 'USD'
                           ? `$ ${totalPrice.toFixed(4)}`
-                          : `৳ ${totalPrice.toFixed(4)}`
+                          : currency === 'BDT'
+                          ? `৳ ${totalPrice.toFixed(2)}`
+                          : `${currentCurrencyData?.symbol || '$'}${totalPrice.toFixed(2)}`
                       }
                       placeholder="Charge"
                     />

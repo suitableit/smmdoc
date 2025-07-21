@@ -1,6 +1,6 @@
 'use client';
 
-import useCurrency from '@/hooks/useCurrency';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { APP_NAME } from '@/lib/constants';
 import { useGetUserOrdersQuery } from '@/lib/services/userOrderApi';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
@@ -220,7 +220,7 @@ export default function OrdersList() {
     orderId: null,
     reason: ''
   });
-  const { currency } = useCurrency();
+  const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
 
   // Get real user orders from API
   const { data, isLoading, error } = useGetUserOrdersQuery({
@@ -675,7 +675,9 @@ export default function OrdersList() {
                           <span className="text-sm font-medium text-gray-900">
                             {currency === 'USD'
                               ? `$${formatPrice(order.usdPrice || 0)}`
-                              : `৳${formatPrice(order.bdtPrice || 0)}`}
+                              : currency === 'BDT'
+                              ? `৳${formatPrice(order.bdtPrice || 0)}`
+                              : `${currentCurrencyData?.symbol || '$'}${formatPrice(order.price || 0)}`}
                           </span>
                         </td>
                         <td className="py-3 px-4">

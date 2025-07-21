@@ -2,22 +2,23 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    FaBox,
-    FaCheckCircle,
-    FaClock,
-    FaDollarSign,
-    FaEdit,
-    FaEllipsisH,
-    FaExclamationCircle,
-    FaExternalLinkAlt,
-    FaEye,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
+  FaBox,
+  FaCheckCircle,
+  FaClock,
+  FaDollarSign,
+  FaEdit,
+  FaEllipsisH,
+  FaExclamationCircle,
+  FaExternalLinkAlt,
+  FaEye,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { APP_NAME } from '@/lib/constants';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 
@@ -120,6 +121,9 @@ const AdminOrdersPage = () => {
   useEffect(() => {
     document.title = `All Orders — ${APP_NAME}`;
   }, []);
+
+  // Get currency data
+  const { availableCurrencies } = useCurrency();
 
   // State management
   const [orders, setOrders] = useState<Order[]>([]);
@@ -442,9 +446,13 @@ const AdminOrdersPage = () => {
       return `$${formatPrice(amount, 2)}`;
     } else if (currency === 'BDT') {
       return `৳${formatPrice(amount, 2)}`;
-    } else {
-      // Default fallback
+    } else if (currency === 'XCD') {
       return `$${formatPrice(amount, 2)}`;
+    } else {
+      // For other currencies, try to find the symbol from available currencies
+      const currencyData = availableCurrencies?.find(c => c.code === currency);
+      const symbol = currencyData?.symbol || '$';
+      return `${symbol}${formatPrice(amount, 2)}`;
     }
   };
 
@@ -1170,14 +1178,10 @@ const AdminOrdersPage = () => {
                           <td className="p-3">
                             <div className="text-right">
                               <div className="font-semibold text-sm text-600">
-                                ${formatPrice(order.price || 0, 2)}
+                                ${formatPrice(order.usdPrice || 0, 2)}
                               </div>
                               <div className="text-xs text-gray-500">
-                                Total: $
-                                {formatPrice(
-                                  (order.price || 0) * (order.qty || 1),
-                                  2
-                                )}
+                                Rate: ${order.service?.rate || 0}/1000 × {order.qty || 1}
                               </div>
                             </div>
                           </td>
@@ -1626,10 +1630,7 @@ const AdminOrdersPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              $
-                              {order.price
-                                ? formatPrice(order.price, 2)
-                                : '0.00'}
+                              ${formatPrice(order.usdPrice || 0, 2)}
                             </div>
                           </div>
                           <div>
@@ -1640,11 +1641,7 @@ const AdminOrdersPage = () => {
                               Total Price
                             </div>
                             <div className="font-semibold text-sm text-blue-600">
-                              $
-                              {formatPrice(
-                                (order.price || 0) * (order.qty || 1),
-                                2
-                              )}
+                              ${formatPrice(order.usdPrice || 0, 2)}
                             </div>
                           </div>
                           <div>

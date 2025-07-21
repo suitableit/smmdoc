@@ -1,16 +1,15 @@
 // contexts/CurrencyContext.tsx
 'use client';
 
+import {
+    clearCurrencyCache,
+    convertCurrency,
+    Currency,
+    CurrencySettings,
+    fetchCurrencyData,
+    formatCurrencyAmount
+} from '@/lib/currency-utils';
 import { createContext, useContext, useEffect, useState } from 'react';
-
-type Currency = {
-  id: number;
-  code: string;
-  name: string;
-  symbol: string;
-  rate: number;
-  enabled: boolean;
-};
 
 type CurrencyContextType = {
   currency: string;
@@ -18,9 +17,11 @@ type CurrencyContextType = {
   rate: number | null;
   isLoading: boolean;
   formatCurrency: (amount: number) => string;
-  convertAmount: (amount: number) => number;
+  convertAmount: (amount: number, fromCurrency?: string, toCurrency?: string) => number;
   availableCurrencies: Currency[];
   currentCurrencyData: Currency | null;
+  currencySettings: CurrencySettings | null;
+  refreshCurrencyData: () => Promise<void>;
 };
 
 const CurrencyContext = createContext<CurrencyContextType>({
@@ -32,6 +33,8 @@ const CurrencyContext = createContext<CurrencyContextType>({
   convertAmount: (amount: number) => amount,
   availableCurrencies: [],
   currentCurrencyData: null,
+  currencySettings: null,
+  refreshCurrencyData: async () => {},
 });
 
 export function CurrencyProvider({
@@ -49,28 +52,30 @@ export function CurrencyProvider({
   const [isClient, setIsClient] = useState(false);
   const [availableCurrencies, setAvailableCurrencies] = useState<Currency[]>([]);
   const [currentCurrencyData, setCurrentCurrencyData] = useState<Currency | null>(null);
+  const [currencySettings, setCurrencySettings] = useState<CurrencySettings | null>(null);
 
-  // Load available currencies from admin settings
+  // Load currency data from admin settings
+  const loadCurrencyData = async () => {
+    try {
+      setIsLoading(true);
+      const { currencies, settings } = await fetchCurrencyData();
+      setAvailableCurrencies(currencies);
+      setCurrencySettings(settings);
+    } catch (error) {
+      console.error('Error loading currency data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Refresh currency data function
+  const refreshCurrencyData = async () => {
+    clearCurrencyCache();
+    await loadCurrencyData();
+  };
+
   useEffect(() => {
-    const fetchCurrencies = async () => {
-      try {
-        const response = await fetch('/api/currencies/enabled');
-        if (response.ok) {
-          const data = await response.json();
-          setAvailableCurrencies(data.currencies || []);
-        }
-      } catch (error) {
-        console.error('Error loading currencies:', error);
-        // Fallback to default currencies
-        setAvailableCurrencies([
-          { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', rate: 1.0000, enabled: true },
-          { id: 5, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 110.0000, enabled: true },
-          { id: 6, code: 'USDT', name: 'Tether USD', symbol: '₮', rate: 1.0000, enabled: true },
-        ]);
-      }
-    };
-
-    fetchCurrencies();
+    loadCurrencyData();
   }, []);
 
   // Handle client-side hydration
@@ -157,37 +162,22 @@ export function CurrencyProvider({
   };
 
   const formatCurrency = (amount: number): string => {
-    if (!currentCurrencyData) {
+    if (!currentCurrencyData || !currencySettings) {
       return `$${amount.toFixed(2)}`;
     }
 
-    // Database balance is stored in BDT, so we need to convert properly
-    let convertedAmount = amount;
+    // Convert amount to selected currency
+    const convertedAmount = convertCurrency(amount, 'BDT', currentCurrencyData.code, availableCurrencies);
 
-    if (currentCurrencyData.code === 'BDT') {
-      // If showing BDT, use the amount as is (already in BDT)
-      convertedAmount = amount;
-    } else if (currentCurrencyData.code === 'USD') {
-      // If showing USD, convert from BDT to USD using dynamic rate from admin settings
-      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
-      const bdtToUsdRate = bdtCurrency?.rate || 121; // Use admin set rate or fallback
-      convertedAmount = amount / bdtToUsdRate;
-    } else {
-      // For other currencies, convert from BDT using dynamic rates
-      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
-      const bdtToUsdRate = bdtCurrency?.rate || 121;
-      const usdAmount = amount / bdtToUsdRate;
-      convertedAmount = usdAmount * currentCurrencyData.rate;
-    }
-
-    return `${currentCurrencyData.symbol}${convertedAmount.toFixed(2)}`;
+    // Format using admin settings
+    return formatCurrencyAmount(convertedAmount, currentCurrencyData.code, availableCurrencies, currencySettings);
   };
 
-  const convertAmount = (amount: number): number => {
-    if (!currentCurrencyData) {
+  const convertAmount = (amount: number, fromCurrency?: string, toCurrency?: string): number => {
+    if (!fromCurrency || !toCurrency) {
       return amount;
     }
-    return amount * currentCurrencyData.rate;
+    return convertCurrency(amount, fromCurrency, toCurrency, availableCurrencies);
   };
 
   // Prevent hydration mismatch by not rendering until client is ready
@@ -202,7 +192,9 @@ export function CurrencyProvider({
           formatCurrency,
           convertAmount,
           availableCurrencies: [],
-          currentCurrencyData: null
+          currentCurrencyData: null,
+          currencySettings: null,
+          refreshCurrencyData
         }}
       >
         {children}
@@ -220,7 +212,9 @@ export function CurrencyProvider({
         formatCurrency,
         convertAmount,
         availableCurrencies,
-        currentCurrencyData
+        currentCurrencyData,
+        currencySettings,
+        refreshCurrencyData
       }}
     >
       {children}
