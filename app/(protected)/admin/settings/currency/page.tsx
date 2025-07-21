@@ -181,13 +181,19 @@ const CurrencyItem = ({
             >
               <FaEdit className="w-3 h-3" />
             </button>
-            <button
-              onClick={() => onDelete(currency.id)}
-              className="p-1 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
-              title="Delete"
-            >
-              <FaTrash className="w-3 h-3" />
-            </button>
+            {['USD', 'BDT'].includes(currency.code) ? (
+              <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded text-xs text-blue-700 dark:text-blue-300 font-medium">
+                <span>Core</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => onDelete(currency.id)}
+                className="p-1 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+                title="Delete"
+              >
+                <FaTrash className="w-3 h-3" />
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -397,9 +403,54 @@ const PaymentCurrencyPage = () => {
     }
   };
 
-  const deleteCurrency = (id: number) => {
-    setCurrencies(prev => prev.filter(c => c.id !== id));
-    showToast('Currency deleted successfully!', 'success');
+  const deleteCurrency = async (id: number) => {
+    // Get currency info for confirmation
+    const currencyToDelete = currencies.find(c => c.id === id);
+    if (!currencyToDelete) {
+      showToast('Currency not found', 'error');
+      return;
+    }
+
+    // Check if it's a core currency that shouldn't be deleted
+    const coreCurrencies = ['USD', 'BDT'];
+    if (coreCurrencies.includes(currencyToDelete.code)) {
+      showToast(`Cannot delete ${currencyToDelete.code} - it's a core currency`, 'error');
+      return;
+    }
+
+    // Confirm deletion
+    if (!confirm(`Are you sure you want to delete ${currencyToDelete.code} (${currencyToDelete.name})?`)) {
+      return;
+    }
+
+    // Update local state first
+    const updatedCurrencies = currencies.filter(c => c.id !== id);
+    setCurrencies(updatedCurrencies);
+
+    // Auto-save to backend
+    try {
+      const response = await fetch('/api/admin/currency-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currencySettings, currencies: updatedCurrencies }),
+      });
+
+      if (response.ok) {
+        // Clear cache and refresh currency data across the app
+        clearCurrencyCache();
+        await refreshCurrencyData();
+        showToast(`${currencyToDelete.code} deleted successfully!`, 'success');
+      } else {
+        showToast('Failed to delete currency', 'error');
+        // Revert on failure
+        setCurrencies(currencies);
+      }
+    } catch (error) {
+      console.error('Error deleting currency:', error);
+      showToast('Error deleting currency', 'error');
+      // Revert on failure
+      setCurrencies(currencies);
+    }
   };
 
   const toggleCurrencyStatus = async (id: number) => {
