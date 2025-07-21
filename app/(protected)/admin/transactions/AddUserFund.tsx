@@ -4,21 +4,21 @@ import ButtonLoader from '@/components/button-loader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import axiosInstance from '@/lib/axiosInstance';
@@ -31,7 +31,7 @@ import { z } from 'zod';
 const formSchema = z.object({
   userId: z.string().min(1, { message: 'User ID is required' }),
   amount: z.string().min(1, { message: 'Amount is required' }),
-  currency: z.enum(['USD', 'BDT']),
+  currency: z.string().min(1, { message: 'Currency is required' }),
   note: z.string().optional(),
 });
 
@@ -44,14 +44,14 @@ export default function AddUserFund() {
     Array<{ id: number; name: string; email: string }>
   >([]);
   const [searching, setSearching] = useState(false);
-  const { rate } = useCurrency();
+  const { rate, availableCurrencies, currentCurrencyData } = useCurrency();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       userId: '',
       amount: '',
-      currency: 'USD',
+      currency: currentCurrencyData?.code || 'USD',
       note: '',
     },
   });
@@ -84,12 +84,19 @@ export default function AddUserFund() {
     try {
       setLoading(true);
 
-      // Convert amount if needed
+      // Convert amount based on selected currency
       const amountValue = parseFloat(data.amount);
-      const amountInUSD =
-        data.currency === 'BDT' && rate ? amountValue / rate : amountValue;
-      const amountInBDT =
-        data.currency === 'USD' && rate ? amountValue * rate : amountValue;
+      const selectedCurrency = availableCurrencies?.find(c => c.code === data.currency);
+      const currencyRate = selectedCurrency?.rate || 1;
+
+      // Convert to USD (base currency) first
+      let amountInUSD = amountValue;
+      if (data.currency !== 'USD') {
+        amountInUSD = amountValue / currencyRate;
+      }
+
+      // Convert to BDT for storage (database stores in BDT)
+      const amountInBDT = amountInUSD * (rate || 121.45);
 
       const payload = {
         userId: data.userId,
@@ -198,8 +205,11 @@ export default function AddUserFund() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="BDT">BDT</SelectItem>
+                      {availableCurrencies?.filter(c => c.enabled).map((currency) => (
+                        <SelectItem key={currency.code} value={currency.code}>
+                          {currency.code} - {currency.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

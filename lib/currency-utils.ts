@@ -1,5 +1,4 @@
 // lib/currency-utils.ts
-'use client';
 
 export interface Currency {
   id: number;
@@ -143,16 +142,35 @@ export function convertCurrency(
   const fromCurrencyData = currencies.find(c => c.code === fromCurrency);
   const toCurrencyData = currencies.find(c => c.code === toCurrency);
 
+  console.log('Currency conversion debug:', {
+    amount,
+    fromCurrency,
+    toCurrency,
+    fromCurrencyData: fromCurrencyData ? { code: fromCurrencyData.code, rate: fromCurrencyData.rate } : null,
+    toCurrencyData: toCurrencyData ? { code: toCurrencyData.code, rate: toCurrencyData.rate } : null
+  });
+
   if (!fromCurrencyData || !toCurrencyData) {
+    console.warn('Currency not found, returning original amount');
     return amount;
   }
 
-  // Convert to USD first (base currency)
-  const usdAmount = fromCurrencyData.code === 'USD' ? amount : amount / fromCurrencyData.rate;
-  
-  // Convert from USD to target currency
-  const convertedAmount = toCurrencyData.code === 'USD' ? usdAmount : usdAmount * toCurrencyData.rate;
+  // Convert using rates (USD is base currency with rate 1.0000)
+  let convertedAmount: number;
 
+  if (fromCurrency === 'USD') {
+    // From USD to other currency
+    convertedAmount = amount * Number(toCurrencyData.rate);
+  } else if (toCurrency === 'USD') {
+    // From other currency to USD
+    convertedAmount = amount / Number(fromCurrencyData.rate);
+  } else {
+    // Between two non-USD currencies (via USD)
+    const usdAmount = amount / Number(fromCurrencyData.rate);
+    convertedAmount = usdAmount * Number(toCurrencyData.rate);
+  }
+
+  console.log('Conversion result:', { original: amount, converted: convertedAmount });
   return convertedAmount;
 }
 

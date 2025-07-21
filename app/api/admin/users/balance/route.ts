@@ -4,6 +4,52 @@ import { emailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Server-side currency conversion function
+function serverConvertCurrency(
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string,
+  currencies: any[]
+): number {
+  if (fromCurrency === toCurrency) {
+    return amount;
+  }
+
+  const fromCurrencyData = currencies.find(c => c.code === fromCurrency);
+  const toCurrencyData = currencies.find(c => c.code === toCurrency);
+
+  console.log('Server currency conversion debug:', {
+    amount,
+    fromCurrency,
+    toCurrency,
+    fromCurrencyData: fromCurrencyData ? { code: fromCurrencyData.code, rate: fromCurrencyData.rate } : null,
+    toCurrencyData: toCurrencyData ? { code: toCurrencyData.code, rate: toCurrencyData.rate } : null
+  });
+
+  if (!fromCurrencyData || !toCurrencyData) {
+    console.warn('Currency not found, returning original amount');
+    return amount;
+  }
+
+  // Convert using rates (USD is base currency with rate 1.0000)
+  let convertedAmount: number;
+
+  if (fromCurrency === 'USD') {
+    // From USD to other currency
+    convertedAmount = amount * Number(toCurrencyData.rate);
+  } else if (toCurrency === 'USD') {
+    // From other currency to USD
+    convertedAmount = amount / Number(fromCurrencyData.rate);
+  } else {
+    // Between two non-USD currencies (via USD)
+    const usdAmount = amount / Number(fromCurrencyData.rate);
+    convertedAmount = usdAmount * Number(toCurrencyData.rate);
+  }
+
+  console.log('Server conversion result:', { original: amount, converted: convertedAmount });
+  return convertedAmount;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -81,28 +127,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine currency and conversion logic
-    const isAdminUSD = adminCurrency === 'USD' || adminCurrency === 'USDT';
-    const currentRate = user.dollarRate || 121.45;
+    // Get available currencies for conversion directly from database
+    const availableCurrencies = await db.currency.findMany({
+      where: { enabled: true },
+      orderBy: { code: 'asc' }
+    });
 
+    // Find admin currency info
+    const adminCurrencyInfo = availableCurrencies.find((c: any) => c.code === adminCurrency);
+    const adminCurrencySymbol = adminCurrencyInfo?.symbol || '$';
+
+    // Convert admin's amount to BDT (database storage currency)
     let amountToAdd: number;
-    let transactionCurrency: string;
-    let errorCurrencySymbol: string;
-    let successMessage: string;
 
-    if (isAdminUSD) {
-      // Admin is using USD - convert to BDT for user balance
-      amountToAdd = amount * currentRate;
-      transactionCurrency = 'USD';
-      errorCurrencySymbol = '$';
-      successMessage = `Successfully ${action === 'add' ? 'added' : 'deducted'} $${amount} ${action === 'add' ? 'to' : 'from'} ${user.username}'s balance`;
-    } else {
-      // Admin is using BDT - add BDT directly to user balance
+    console.log('Currency conversion:', {
+      adminCurrency,
+      amount,
+      availableCurrencies: availableCurrencies.map(c => ({ code: c.code, rate: c.rate }))
+    });
+
+    if (adminCurrency === 'BDT') {
+      // Admin using BDT - direct amount
       amountToAdd = amount;
-      transactionCurrency = 'BDT';
-      errorCurrencySymbol = '৳';
-      successMessage = `Successfully ${action === 'add' ? 'added' : 'deducted'} ৳${amount} ${action === 'add' ? 'to' : 'from'} ${user.username}'s balance`;
+    } else {
+      // Convert admin currency to BDT using dynamic rates
+      amountToAdd = serverConvertCurrency(amount, adminCurrency, 'BDT', availableCurrencies);
+      console.log('Converted amount:', { original: amount, converted: amountToAdd });
     }
+
+    const transactionCurrency = adminCurrency;
+    const errorCurrencySymbol = adminCurrencySymbol;
+    const successMessage = `Successfully ${action === 'add' ? 'added' : 'deducted'} ${adminCurrencySymbol}${amount} ${action === 'add' ? 'to' : 'from'} ${user.username}'s balance`;
 
     // Check if deducting more than available balance
     if (action === 'deduct' && user.balance < amountToAdd) {
@@ -229,11 +284,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error updating user balance:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { 
-        error: 'Failed to update user balance',
+      {
+        error: 'Failed to update user balance: ' + (error instanceof Error ? error.message : String(error)),
         success: false,
-        data: null 
+        data: null
       },
       { status: 500 }
     );
