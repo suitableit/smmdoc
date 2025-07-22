@@ -407,36 +407,82 @@ const APIProvidersPage = () => {
 
   const handleSyncAllProviders = async () => {
     setSyncingAll(true);
-    
-    // Simulate sync all operation
-    setTimeout(() => {
-      setProviders(prev => prev.map(provider => ({ 
-        ...provider, 
-        lastSync: new Date() 
-      })));
+
+    try {
+      const response = await fetch('/api/admin/providers/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          syncType: 'all',
+          profitMargin: 20
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const totals = result.data.totals;
+        showToast(
+          `All providers synchronized! Updated: ${totals.updated}, Created: ${totals.created}, Price changes: ${totals.priceChanges}`,
+          'success'
+        );
+
+        // Update last sync time
+        setProviders(prev => prev.map(provider => ({
+          ...provider,
+          lastSync: new Date()
+        })));
+      } else {
+        showToast(`Sync failed: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error syncing providers:', error);
+      showToast('Failed to sync providers', 'error');
+    } finally {
       setSyncingAll(false);
-      showToast('All providers synchronized successfully!', 'success');
-    }, 3000); // 3 second delay for sync all operation
+    }
   };
 
   const handleSyncProvider = async (providerId: number) => {
     setSyncingProvider(providerId);
 
     try {
-      // Here you would call the provider's sync API
-      // For now, simulate sync operation
-      setTimeout(() => {
+      const response = await fetch('/api/admin/providers/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          providerId,
+          syncType: 'all',
+          profitMargin: 20
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const providerResult = result.data.results[0];
+        if (providerResult) {
+          showToast(
+            `${providerResult.provider} synchronized! Updated: ${providerResult.updated}, Created: ${providerResult.created}`,
+            'success'
+          );
+        } else {
+          showToast('Provider synchronized successfully!', 'success');
+        }
+
         setProviders(prev => prev.map(provider =>
           provider.id === providerId
             ? { ...provider, lastSync: new Date() }
             : provider
         ));
-        setSyncingProvider(null);
-        showToast('Provider synchronized successfully!', 'success');
-      }, 2000);
+      } else {
+        showToast(`Sync failed: ${result.error}`, 'error');
+      }
     } catch (error) {
-      setSyncingProvider(null);
+      console.error('Error syncing provider:', error);
       showToast('Failed to sync provider', 'error');
+    } finally {
+      setSyncingProvider(null);
     }
   };
 
