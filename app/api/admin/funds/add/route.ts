@@ -39,23 +39,37 @@ export async function POST(req: NextRequest) {
     // Generate unique invoice ID
     const invoiceId = `ADMIN-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
-    // Create the fund record
-    const addFund = await db.addFund.create({
-      data: {
-        invoice_id: invoiceId,
-        amount: parseFloat(amountUSD),
-        spent_amount: 0,
-        email: user.email || '',
-        name: user.name || '',
-        status: status || 'COMPLETED',
-        method: 'admin',
-        payment_method: 'admin',
-        transaction_id: `ADMIN-${Date.now()}`,
-        order_id: `ADMIN-${Date.now()}`,
-        date: new Date(),
-        userId: userId,
-        currency: 'USD', // Admin added funds are in USD
-      },
+    // Use transaction to create fund record and update user balance
+    const result = await db.$transaction(async (prisma) => {
+      // Create the fund record
+      const addFund = await prisma.addFund.create({
+        data: {
+          invoice_id: invoiceId,
+          amount: parseFloat(amountUSD),
+          spent_amount: 0,
+          email: user.email || '',
+          name: user.name || '',
+          status: status || 'COMPLETED',
+          method: 'admin',
+          payment_method: 'admin',
+          transaction_id: `ADMIN-${Date.now()}`,
+          order_id: `ADMIN-${Date.now()}`,
+          date: new Date(),
+          userId: userId,
+          currency: 'USD', // Admin added funds are in USD
+        },
+      });
+
+      // Update user balance (USD amount)
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          balance: { increment: parseFloat(amountUSD) }, // Legacy field
+          balanceUSD: { increment: parseFloat(amountUSD) }, // New USD balance field
+        }
+      });
+
+      return { addFund, updatedUser };
     });
     
     // Log activity for fund addition
@@ -75,7 +89,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Funds added successfully',
-      data: addFund,
+      data: result.addFund,
     });
     
   } catch (error) {

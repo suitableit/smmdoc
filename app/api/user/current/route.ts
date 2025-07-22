@@ -23,6 +23,8 @@ export async function GET() {
           image: true,
           currency: true,
           balance: true,
+          balanceUSD: true,
+          preferredCurrency: true,
           total_deposit: true,
           total_spent: true,
           createdAt: true,

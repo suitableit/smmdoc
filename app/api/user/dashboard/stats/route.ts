@@ -21,6 +21,7 @@ export async function GET() {
         total_deposit: true,
         total_spent: true,
         currency: true,
+        dollarRate: true,
         addFunds: true,
       }
     });
@@ -127,6 +128,8 @@ export async function GET() {
       success: true,
       data: {
         balance: userBalance,
+        currency: user.currency,
+        dollarRate: user.dollarRate,
         totalDeposit: totalDeposit,
         totalSpent: totalSpent,
         totalOrders,

@@ -93,11 +93,12 @@ export async function GET(req: NextRequest) {
               }
             });
             
-            // Update user balance
+            // Update user balance (payment.amount is already in USD)
             const user = await prisma.user.update({
               where: { id: payment.userId },
               data: {
-                balance: { increment: payment.amount },
+                balance: { increment: payment.amount }, // Legacy field
+                balanceUSD: { increment: payment.amount }, // New USD balance field
                 total_deposit: { increment: payment.amount }
               }
             });

@@ -5,22 +5,22 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import {
-  addFundDefaultValues,
-  addFundSchema,
-  AddFundSchema,
+    addFundDefaultValues,
+    addFundSchema,
+    AddFundSchema,
 } from '@/lib/validators/user/addFundValidator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-  FaCalculator,
-  FaCheckCircle,
-  FaCreditCard,
-  FaExchangeAlt,
-  FaShieldAlt,
-  FaSpinner,
-  FaTimes,
-  FaWallet,
+    FaCalculator,
+    FaCheckCircle,
+    FaCreditCard,
+    FaExchangeAlt,
+    FaShieldAlt,
+    FaSpinner,
+    FaTimes,
+    FaWallet,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -97,7 +97,7 @@ export function AddFundForm() {
   };
 
   const [activeCurrency, setActiveCurrency] = useState<'USD' | 'BDT'>(
-    globalCurrency
+    globalCurrency === 'USD' ? 'USD' : 'BDT'
   );
 
   const form = useForm<AddFundSchema>({
@@ -108,8 +108,7 @@ export function AddFundForm() {
 
   // Change active currency based on global currency real-time
   useEffect(() => {
-    setActiveCurrency(globalCurrency);
-    const newCurrency = globalCurrency === user?.currency ? 'USD' : 'BDT';
+    const newCurrency = (globalCurrency === 'USD' || globalCurrency === 'BDT') ? globalCurrency : 'BDT';
     setActiveCurrency(newCurrency);
 
     form.setValue('amountUSD', '0', { shouldValidate: true });
@@ -147,9 +146,9 @@ export function AddFundForm() {
   });
 
   const handleUSDChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!rate) return;
+    const currentRate = rate || 120; // Use fallback rate if not available
     const usdValue = parseFloat(e.target.value) || 0;
-    const bdtValue = usdValue * rate;
+    const bdtValue = usdValue * currentRate;
 
     // Update form values
     form.setValue('amountUSD', e.target.value, { shouldValidate: true });
@@ -167,9 +166,9 @@ export function AddFundForm() {
   };
 
   const handleBDTChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!rate) return;
+    const currentRate = rate || 120; // Use fallback rate if not available
     const bdtValue = parseFloat(e.target.value) || 0;
-    const usdValue = bdtValue / rate;
+    const usdValue = bdtValue / currentRate;
 
     // Update form values
     form.setValue('amountBDT', e.target.value, { shouldValidate: true });
@@ -187,9 +186,10 @@ export function AddFundForm() {
   const onSubmit: SubmitHandler<AddFundSchema> = async (values) => {
     startTransition(async () => {
       try {
+        const currentRate = rate || 120; // Use fallback rate
         const amountInBDT =
           activeCurrency === 'USD'
-            ? parseFloat(values.amountUSD || '0') * (rate ?? 1)
+            ? parseFloat(values.amountUSD || '0') * currentRate
             : parseFloat(values.amountBDT || '0');
 
         if (!user?.name || !user?.email || !values.phone || amountInBDT <= 0) {
@@ -206,7 +206,8 @@ export function AddFundForm() {
 
         const formValues = {
           method: 'uddoktapay',
-          amount: finalAmount.toString(),
+          amount: activeCurrency === 'USD' ? values.amountUSD : values.amountBDT,
+          currency: activeCurrency, // Send user's selected currency
           userId: user?.id,
           full_Name: user?.name || 'John Doe',
           email: user?.email || 'customer@example.com',
@@ -342,7 +343,7 @@ export function AddFundForm() {
                 Amount Details
               </h4>
               <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border mt-2 sm:mt-0 mx-auto sm:mx-0">
-                Rate: 1 USD = {rate} BDT
+                Rate: 1 USD = {rate || 120} BDT
               </div>
             </div>
 
@@ -466,14 +467,14 @@ export function AddFundForm() {
                 {totalAmount.amount.toFixed(2)} {totalAmount.currency}
               </span>
             </div>
-            {totalAmount.currency === 'BDT' && rate && (
+            {totalAmount.currency === 'BDT' && (
               <div className="text-sm text-gray-600">
-                ≈ ${(totalAmount.amount / rate).toFixed(2)} USD
+                ≈ ${(totalAmount.amount / (rate || 120)).toFixed(2)} USD
               </div>
             )}
-            {totalAmount.currency === 'USD' && rate && (
+            {totalAmount.currency === 'USD' && (
               <div className="text-sm text-gray-600">
-                ≈ ৳{(totalAmount.amount * rate).toFixed(2)} BDT
+                ≈ ৳{(totalAmount.amount * (rate || 120)).toFixed(2)} BDT
               </div>
             )}
           </div>

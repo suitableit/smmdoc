@@ -2,12 +2,12 @@
 'use client';
 
 import {
-    clearCurrencyCache,
-    convertCurrency,
-    Currency,
-    CurrencySettings,
-    fetchCurrencyData,
-    formatCurrencyAmount
+  clearCurrencyCache,
+  convertCurrency,
+  Currency,
+  CurrencySettings,
+  fetchCurrencyData,
+  formatCurrencyAmount
 } from '@/lib/currency-utils';
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -100,8 +100,15 @@ export function CurrencyProvider({
       const currencyData = availableCurrencies.find(c => c.code === currency);
       setCurrentCurrencyData(currencyData || null);
 
-      // Update rate based on current currency
-      if (currencyData) {
+      // Calculate USD to BDT rate for add funds page
+      const usdData = availableCurrencies.find(c => c.code === 'USD');
+      const bdtData = availableCurrencies.find(c => c.code === 'BDT');
+
+      if (usdData && bdtData) {
+        // USD to BDT conversion rate
+        const usdToBdtRate = Number(bdtData.rate) / Number(usdData.rate);
+        setRate(usdToBdtRate);
+      } else if (currencyData) {
         setRate(currencyData.rate);
       }
     }
@@ -111,30 +118,42 @@ export function CurrencyProvider({
     const fetchRate = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/exchange-rate', { 
+
+        // First try to get BDT rate from database currencies
+        if (availableCurrencies.length > 0) {
+          const bdtData = availableCurrencies.find(c => c.code === 'BDT');
+          if (bdtData) {
+            setRate(Number(bdtData.rate));
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Fallback to external API if database rate not available
+        const response = await fetch('/api/exchange-rate', {
           method: 'GET',
           cache: 'no-store',
           headers: {
             'Cache-Control': 'no-cache'
           }
         });
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch: ${response.statusText}`);
         }
-        
+
         const data = await response.json();
-        setRate(data.rate || 121.45); // Fallback rate if rate is not in response
+        setRate(data.rate || 120); // Use 120 as fallback (database BDT rate)
       } catch (error) {
         console.error('Failed to fetch exchange rate:', error);
-        setRate(121.45); // Fallback rate
+        setRate(120); // Use database BDT rate as fallback
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchRate();
-  }, []);
+  }, [availableCurrencies]);
 
   const setCurrency = async (newCurrency: string) => {
     try {

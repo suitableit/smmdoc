@@ -183,3 +183,107 @@ export function getCurrencyByCode(code: string, currencies: Currency[]): Currenc
 export function clearCurrencyCache(): void {
   currencyCache = null;
 }
+
+// ===== MULTI-CURRENCY STORAGE FUNCTIONS =====
+
+/**
+ * Convert amount from any currency to USD (base currency)
+ */
+export function convertToUSD(
+  amount: number,
+  fromCurrency: string,
+  currencies: Currency[]
+): number {
+  if (fromCurrency === 'USD') {
+    return amount;
+  }
+
+  const fromCurrencyData = currencies.find(c => c.code === fromCurrency);
+  if (!fromCurrencyData) {
+    console.warn(`Currency ${fromCurrency} not found, treating as USD`);
+    return amount;
+  }
+
+  // Convert to USD by dividing by the rate
+  return amount / Number(fromCurrencyData.rate);
+}
+
+/**
+ * Convert amount from USD to target currency
+ */
+export function convertFromUSD(
+  amountUSD: number,
+  toCurrency: string,
+  currencies: Currency[]
+): number {
+  if (toCurrency === 'USD') {
+    return amountUSD;
+  }
+
+  const toCurrencyData = currencies.find(c => c.code === toCurrency);
+  if (!toCurrencyData) {
+    console.warn(`Currency ${toCurrency} not found, returning USD amount`);
+    return amountUSD;
+  }
+
+  // Convert from USD by multiplying by the rate
+  return amountUSD * Number(toCurrencyData.rate);
+}
+
+/**
+ * Format currency with proper conversion and display
+ */
+export async function formatCurrencyWithConversion(
+  amountUSD: number,
+  displayCurrency: string,
+  showOriginalUSD: boolean = false
+): Promise<string> {
+  try {
+    const { currencies, settings } = await fetchCurrencyData();
+
+    // Convert USD amount to display currency
+    const convertedAmount = convertFromUSD(amountUSD, displayCurrency, currencies);
+
+    // Format the converted amount
+    const formattedAmount = formatCurrencyAmount(convertedAmount, displayCurrency, currencies, settings);
+
+    if (showOriginalUSD && displayCurrency !== 'USD') {
+      const formattedUSD = formatCurrencyAmount(amountUSD, 'USD', currencies, settings);
+      return `${formattedAmount} (${formattedUSD})`;
+    }
+
+    return formattedAmount;
+  } catch (error) {
+    console.error('Error formatting currency:', error);
+    return `$${amountUSD.toFixed(2)}`;
+  }
+}
+
+/**
+ * Get exchange rate between two currencies
+ */
+export function getExchangeRate(
+  fromCurrency: string,
+  toCurrency: string,
+  currencies: Currency[]
+): number {
+  if (fromCurrency === toCurrency) {
+    return 1;
+  }
+
+  const fromCurrencyData = currencies.find(c => c.code === fromCurrency);
+  const toCurrencyData = currencies.find(c => c.code === toCurrency);
+
+  if (!fromCurrencyData || !toCurrencyData) {
+    return 1;
+  }
+
+  if (fromCurrency === 'USD') {
+    return Number(toCurrencyData.rate);
+  } else if (toCurrency === 'USD') {
+    return 1 / Number(fromCurrencyData.rate);
+  } else {
+    // Cross rate via USD
+    return Number(toCurrencyData.rate) / Number(fromCurrencyData.rate);
+  }
+}
