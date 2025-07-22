@@ -58,6 +58,8 @@ model User {
   currency              String                 @default("USD")
   dollarRate            Float                  @default(121.45)
   balance               Float                  @default(0)
+  balanceUSD            Float                  @default(0) // Store balance in USD for conversion
+  preferredCurrency     String                 @default("USD") // User's display preference
   accounts              Account[]
   sessions              Session[]
   apiKeys               ApiKey[]
@@ -150,6 +152,7 @@ model Service {
   id                  Int               @id @default(autoincrement())
   name                String
   rate                Float
+  rateUSD             Float             @default(0) // Store price in USD for conversion
   min_order           Int
   max_order           Int
   avg_time            String

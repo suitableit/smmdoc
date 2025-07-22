@@ -1,13 +1,49 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
+// Helper function to fetch currency data
+async function fetchCurrencyData() {
+  try {
+    const currencies = await db.currency.findMany({
+      where: { enabled: true },
+      select: {
+        code: true,
+        symbol: true,
+        rate: true,
+      },
+    });
+    return { currencies };
+  } catch (error) {
+    console.error('Error fetching currency data:', error);
+    return { currencies: [] };
+  }
+}
+
+// Helper function to convert from USD to target currency
+function convertFromUSD(usdAmount: number, targetCurrency: string, currencies: any[]) {
+  if (targetCurrency === 'USD') {
+    return usdAmount;
+  }
+
+  const targetCurrencyData = currencies.find(c => c.code === targetCurrency);
+  if (!targetCurrencyData) {
+    return usdAmount; // Fallback to USD if currency not found
+  }
+
+  return usdAmount * targetCurrencyData.rate;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
+    const currency = searchParams.get('currency') || 'USD'; // Get user's preferred currency
     const skip = (page - 1) * limit;
+
+    // Get currency data for conversion
+    const { currencies } = await fetchCurrencyData();
     
     // Base where clause - only return active services
     const whereClause = {
@@ -47,13 +83,28 @@ export async function GET(request: Request) {
       }),
       db.service.count({ where: whereClause }),
     ]);
-    
+
+    // Convert service prices to user's preferred currency
+    const servicesWithConvertedPrices = services.map(service => {
+      // Assume service.rate is stored in USD (or use rateUSD if available)
+      const priceUSD = service.rateUSD || service.rate;
+      const convertedPrice = convertFromUSD(priceUSD, currency, currencies);
+
+      return {
+        ...service,
+        rate: convertedPrice, // Converted price in user's currency
+        rateUSD: priceUSD, // Original USD price
+        displayCurrency: currency, // Currency being displayed
+      };
+    });
+
     return NextResponse.json(
       {
-        data: services || [],
+        data: servicesWithConvertedPrices || [],
         total,
         page,
         totalPages: Math.ceil(total / limit),
+        currency: currency, // Include currency info in response
       },
       { status: 200 }
     );

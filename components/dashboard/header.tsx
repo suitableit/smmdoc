@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
@@ -240,7 +241,7 @@ const MobileCurrencyToggle = () => {
             className="text-xs font-medium opacity-70"
             style={{ color: 'var(--header-text)', fontSize: '10px' }}
           >
-            1USD ≈ {currentCurrencyData.rate.toFixed(2)}{currentCurrencyData.code}
+            1USD = {currentCurrencyData.code === 'USD' ? '1.00USD' : `${currentCurrencyData.rate.toFixed(2)}${currentCurrencyData.code}`}
           </span>
         )}
       </div>
@@ -339,34 +340,9 @@ const Menu = ({ user }: { user: any }) => {
   // Get balance from API for real-time data
   const { data: userStatsResponse } = useGetUserStatsQuery();
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
+  const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
 
-  // Format currency values consistently using dynamic rates from admin settings
-  const formatCurrency = (amount: number) => {
-    if (!currentCurrencyData || !availableCurrencies || availableCurrencies.length === 0) {
-      return `$${amount.toFixed(2)}`;
-    }
 
-    // Database balance is stored in BDT, so we need to convert properly
-    let convertedAmount = amount;
-
-    if (currentCurrencyData.code === 'BDT') {
-      // If showing BDT, use the amount as is (already in BDT)
-      convertedAmount = amount;
-    } else if (currentCurrencyData.code === 'USD') {
-      // If showing USD, convert from BDT to USD using dynamic rate from admin settings
-      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
-      const bdtToUsdRate = bdtCurrency?.rate || 121; // Use admin set rate or fallback
-      convertedAmount = amount / bdtToUsdRate;
-    } else {
-      // For other currencies, convert from BDT using dynamic rates
-      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
-      const bdtToUsdRate = bdtCurrency?.rate || 121;
-      const usdAmount = amount / bdtToUsdRate;
-      convertedAmount = usdAmount * currentCurrencyData.rate;
-    }
-
-    return `${currentCurrencyData.symbol}${convertedAmount.toFixed(2)}`;
-  };
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
@@ -518,7 +494,11 @@ const Menu = ({ user }: { user: any }) => {
                       <div className="h-4 sm:h-6 w-16 sm:w-24 bg-white/20 rounded animate-pulse"></div>
                     ) : (
                       <p className="text-lg sm:text-2xl font-bold">
-                        {formatCurrency(balance)}
+                        <PriceDisplay
+                          amount={balance}
+                          originalCurrency="BDT"
+                          className="text-white"
+                        />
                       </p>
                     )}
                   </div>
@@ -596,29 +576,37 @@ const Header = () => {
 
   const { data: userStatsResponse } = useGetUserStatsQuery();
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
+  const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
 
   const formatCurrency = (amount: number) => {
     if (!currentCurrencyData || !availableCurrencies || availableCurrencies.length === 0) {
       return `$${amount.toFixed(2)}`;
     }
 
-    // Database balance is stored in BDT, so we need to convert properly
+    // Database balance is stored in user's preferred currency (from user.currency field)
+    // We need to get user's stored currency and convert to display currency
     let convertedAmount = amount;
 
-    if (currentCurrencyData.code === 'BDT') {
-      // If showing BDT, use the amount as is (already in BDT)
+    if (currentCurrencyData.code === userStoredCurrency) {
+      // If display currency matches stored currency, use amount as is
       convertedAmount = amount;
-    } else if (currentCurrencyData.code === 'USD') {
-      // If showing USD, convert from BDT to USD using dynamic rate from admin settings
-      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
-      const bdtToUsdRate = bdtCurrency?.rate || 121; // Use admin set rate or fallback
-      convertedAmount = amount / bdtToUsdRate;
     } else {
-      // For other currencies, convert from BDT using dynamic rates
-      const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
-      const bdtToUsdRate = bdtCurrency?.rate || 121;
-      const usdAmount = amount / bdtToUsdRate;
-      convertedAmount = usdAmount * currentCurrencyData.rate;
+      // Convert between currencies using rates
+      const storedCurrencyData = availableCurrencies.find(c => c.code === userStoredCurrency);
+
+      if (storedCurrencyData && currentCurrencyData) {
+        if (userStoredCurrency === 'USD') {
+          // Convert from USD to target currency
+          convertedAmount = amount * currentCurrencyData.rate;
+        } else if (currentCurrencyData.code === 'USD') {
+          // Convert from stored currency to USD
+          convertedAmount = amount / storedCurrencyData.rate;
+        } else {
+          // Convert between two non-USD currencies (via USD)
+          const usdAmount = amount / storedCurrencyData.rate;
+          convertedAmount = usdAmount * currentCurrencyData.rate;
+        }
+      }
     }
 
     return `${currentCurrencyData.symbol}${convertedAmount.toFixed(2)}`;
@@ -989,7 +977,7 @@ const Header = () => {
                 className="text-sm font-medium"
                 style={{ color: 'var(--header-text)' }}
               >
-                1USD ≈ {currentCurrencyData.rate.toFixed(2)}{currentCurrencyData.code}
+                1USD = {currentCurrencyData.code === 'USD' ? '1.00USD' : `${currentCurrencyData.rate.toFixed(2)}${currentCurrencyData.code}`}
               </span>
             </div>
           )}
@@ -1007,7 +995,13 @@ const Header = () => {
             }}
           >
             <FaWallet className="text-white h-4 w-4" />
-            <span className="font-bold text-sm">{formatCurrency(balance)}</span>
+            <span className="font-bold text-sm">
+              <PriceDisplay
+                amount={balance}
+                originalCurrency="BDT"
+                className="text-white"
+              />
+            </span>
           </Link>
         )}
 

@@ -2,6 +2,7 @@ model Service {
   id                  Int               @id @default(autoincrement())
   name                String
   rate                Float
+  rateUSD             Float             @default(0) // Store price in USD for conversion
   min_order           Int
   max_order           Int
   avg_time            String

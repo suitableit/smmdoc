@@ -1,6 +1,8 @@
 // app/api/uddoktapay/route.ts
 
 import { auth } from '@/auth';
+import { ActivityLogger } from '@/lib/activity-logger';
+import { convertCurrency, convertToUSD, fetchCurrencyData } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -62,11 +64,15 @@ export async function POST(req: NextRequest) {
     const invoice_id = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const order_id = `ORD-${Date.now()}`;
 
-    // Parse the amount value
+    // Get currency data for conversion
+    const { currencies } = await fetchCurrencyData();
+
+    // Parse the amount value and currency
     let amount = parseFloat(body.amount);
+    const currency = body.currency || 'BDT'; // Default to BDT if not specified
 
     // Log the amount for debugging
-    console.log('Parsed amount:', amount, 'Type:', typeof amount);
+    console.log('Parsed amount:', amount, 'Currency:', currency, 'Type:', typeof amount);
 
     if (isNaN(amount) || amount <= 0) {
       console.error('Invalid amount:', amount);
@@ -76,15 +82,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ensure the amount is an integer
-    amount = Math.round(amount);
+    // Convert amount to USD for storage (base currency)
+    const amountUSD = convertToUSD(amount, currency, currencies);
+
+    // For payment gateway, we need BDT amount (UddoktaPay works with BDT)
+    const amountBDT = currency === 'BDT' ? amount : convertCurrency(amount, currency, 'BDT', currencies);
+
+    console.log('Currency conversion:', {
+      original: amount,
+      currency: currency,
+      amountUSD: amountUSD,
+      amountBDT: amountBDT
+    });
 
     // Create a payment record in the database
     try {
       const payment = await db.addFund.create({
         data: {
           invoice_id,
-          amount: amount,
+          amount: amountUSD, // Store USD amount as base currency
           spent_amount: 0,
           fee: 0,
           email: session.user.email || '',
@@ -95,7 +111,7 @@ export async function POST(req: NextRequest) {
           method: body.method || 'uddoktapay',
           sender_number: body.phone, // Store phone number
           userId: session.user.id,
-          currency: 'BDT', // Store currency as BDT since amounts are in BDT
+          currency: currency, // Store original currency for reference
         },
       });
 
@@ -107,8 +123,8 @@ export async function POST(req: NextRequest) {
         await ActivityLogger.fundAdded(
           session.user.id,
           username,
-          amount,
-          'BDT',
+          amountUSD, // Log USD amount
+          'USD',
           'uddoktapay'
         );
       } catch (error) {
@@ -116,16 +132,20 @@ export async function POST(req: NextRequest) {
       }
 
       // Create payment data object according to UddoktaPay documentation
+      // UddoktaPay requires BDT amount
       const paymentData = {
         full_name: session.user.name || 'User',
         email: session.user.email || 'user@example.com',
-        amount: amount.toString(),
+        amount: Math.round(amountBDT).toString(), // Use BDT amount for payment gateway
         phone: body.phone,
         metadata: {
           user_id: session.user.id,
           order_id: order_id,
+          original_currency: currency,
+          original_amount: amount,
+          usd_amount: amountUSD
         },
-        redirect_url: `http://localhost:3000/payment/uddoktapay-verify?invoice_id=${invoice_id}&amount=${amount}`,
+        redirect_url: `http://localhost:3000/payment/uddoktapay-verify?invoice_id=${invoice_id}&amount=${Math.round(amountBDT)}`,
         cancel_url: `http://localhost:3000/transactions?status=cancelled`,
         webhook_url: `http://localhost:3000/api/payment/webhook`,
       };

@@ -673,11 +673,28 @@ export default function OrdersList() {
                         </td>
                         <td className="py-3 px-4">
                           <span className="text-sm font-medium text-gray-900">
-                            {currency === 'USD'
-                              ? `$${formatPrice(order.usdPrice || 0)}`
-                              : currency === 'BDT'
-                              ? `৳${formatPrice(order.bdtPrice || 0)}`
-                              : `${currentCurrencyData?.symbol || '$'}${formatPrice(order.price || 0)}`}
+                            {(() => {
+                              // Order has stored prices in both USD and BDT
+                              const usdPrice = order.usdPrice || 0;
+                              const bdtPrice = order.bdtPrice || 0;
+
+                              if (!currentCurrencyData) {
+                                return `$${formatPrice(usdPrice)}`;
+                              }
+
+                              let displayAmount = 0;
+
+                              if (currentCurrencyData.code === 'USD') {
+                                displayAmount = usdPrice;
+                              } else if (currentCurrencyData.code === 'BDT') {
+                                displayAmount = bdtPrice;
+                              } else {
+                                // Convert from USD to other currency
+                                displayAmount = usdPrice * currentCurrencyData.rate;
+                              }
+
+                              return `${currentCurrencyData.symbol}${formatPrice(displayAmount)}`;
+                            })()}
                           </span>
                         </td>
                         <td className="py-3 px-4">

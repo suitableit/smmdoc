@@ -57,7 +57,7 @@ const Toast = ({
 
 const DashboardPage = () => {
   const user = useCurrentUser();
-  const { currency, rate: currencyRate } = useCurrency();
+  const { currency, rate: currencyRate, currentCurrencyData } = useCurrency();
   const router = useRouter();
   const { data: userStatsResponse, error, isLoading } = useGetUserStatsQuery();
   const userStats = userStatsResponse?.data;
@@ -568,9 +568,28 @@ const DashboardPage = () => {
                             </td>
                             <td className="py-3 px-4 hidden md:table-cell">
                               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {currency === 'USD'
-                                  ? `${formatPrice(order.usdPrice || 0, 2)}`
-                                  : `৳${formatPrice(order.bdtPrice || 0, 2)}`}
+                                {(() => {
+                                  // Order has stored prices in both USD and BDT
+                                  const usdPrice = order.usdPrice || 0;
+                                  const bdtPrice = order.bdtPrice || 0;
+
+                                  if (!currentCurrencyData) {
+                                    return `$${formatPrice(usdPrice, 2)}`;
+                                  }
+
+                                  let displayAmount = 0;
+
+                                  if (currentCurrencyData.code === 'USD') {
+                                    displayAmount = usdPrice;
+                                  } else if (currentCurrencyData.code === 'BDT') {
+                                    displayAmount = bdtPrice;
+                                  } else {
+                                    // Convert from USD to other currency
+                                    displayAmount = usdPrice * currentCurrencyData.rate;
+                                  }
+
+                                  return `${currentCurrencyData.symbol}${formatPrice(displayAmount, 2)}`;
+                                })()}
                               </span>
                             </td>
                             <td className="py-3 px-4 hidden md:table-cell">
