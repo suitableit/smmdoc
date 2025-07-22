@@ -3,20 +3,20 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-    FaCheck,
-    FaCheckCircle,
-    FaChevronDown,
-    FaChevronLeft,
-    FaChevronRight,
-    FaChevronUp,
-    FaEdit,
-    FaExclamationTriangle,
-    FaHandshake,
-    FaList,
-    FaSave,
-    FaSearch,
-    FaSync,
-    FaTimes,
+  FaCheck,
+  FaCheckCircle,
+  FaChevronDown,
+  FaChevronLeft,
+  FaChevronRight,
+  FaChevronUp,
+  FaEdit,
+  FaExclamationTriangle,
+  FaHandshake,
+  FaList,
+  FaSave,
+  FaSearch,
+  FaSync,
+  FaTimes,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -131,7 +131,7 @@ const StepProgress = ({ currentStep }: { currentStep: number }) => {
 
 // Define interfaces
 interface Provider {
-  id: number;
+  id: string | number;
   name: string;
   url: string;
   status: 'active' | 'inactive';
@@ -166,7 +166,38 @@ const ImportServicesPage = () => {
     document.title = `Import Services — ${APP_NAME}`;
   }, []);
 
-  // Dummy data for providers
+  // Real providers data from API
+  const [realProviders, setRealProviders] = useState<Provider[]>([]);
+
+  // Fetch real providers on component mount
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const response = await fetch('/api/admin/providers');
+        const result = await response.json();
+
+        if (result.success) {
+          const formattedProviders = result.data.providers
+            .filter((p: any) => p.configured && p.status === 'active')
+            .map((p: any) => ({
+              id: p.id?.toString() || '',
+              name: p.label,
+              url: p.apiUrl,
+              status: p.status,
+              description: `${p.label} - Ready for service import`
+            }));
+          setRealProviders(formattedProviders);
+        }
+      } catch (error) {
+        console.error('Error fetching providers:', error);
+        showToast('Failed to fetch providers', 'error');
+      }
+    };
+
+    fetchProviders();
+  }, []);
+
+  // Dummy data for providers (fallback)
   const dummyProviders: Provider[] = [
     {
       id: 'provider_001',
@@ -447,7 +478,7 @@ const ImportServicesPage = () => {
   };
 
   // Handle category selection
-  const handleCategorySelect = (categoryId: string) => {
+  const handleCategorySelect = (categoryId: string | number) => {
     setApiCategories((prev) =>
       prev.map((cat) =>
         cat.id === categoryId ? { ...cat, selected: !cat.selected } : cat
@@ -463,53 +494,94 @@ const ImportServicesPage = () => {
     );
   };
 
-  // Load categories from API (simulated)
+  // Load categories from API
   const loadCategories = async () => {
     setCategoriesLoading(true);
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Real API call to fetch categories
+      const response = await fetch(`/api/admin/services/import?action=categories&providerId=${selectedProvider}`);
+      const result = await response.json();
+
+      if (result.success) {
+        const categories = result.data.categories.map((cat: any) => ({
+          ...cat,
+          selected: false
+        }));
+
+        setApiCategories(categories);
+
+        showToast(
+          `Loaded ${categories.length} categories from ${result.data.provider}`,
+          'success'
+        );
+      } else {
+        showToast(`Failed to load categories: ${result.error}`, 'error');
+        // Fallback to dummy data
+        setApiCategories(dummyApiCategories);
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      showToast('Failed to load categories', 'error');
+      // Fallback to dummy data
+      setApiCategories(dummyApiCategories);
+    } finally {
       setCategoriesLoading(false);
       setIsLoading(false);
-      showToast(
-        `Loaded ${dummyApiCategories.length} categories from ${getProviderName(
-          selectedProvider
-        )}`,
-        'success'
-      );
-    }, 2000);
+    }
   };
 
   // Get provider name
   const getProviderName = (providerId: string) => {
-    const provider = dummyProviders.find((p) => p.id === providerId);
+    const allProviders = realProviders.length > 0 ? realProviders : dummyProviders;
+    const provider = allProviders.find((p) => p.id?.toString() === providerId);
     return provider ? provider.name : 'Unknown Provider';
   };
 
   // Load services for selected categories
-  const loadServicesForCategories = () => {
-    const selectedCategoryNames = apiCategories
-      .filter((cat) => cat.selected)
-      .map((cat) => cat.name);
+  const loadServicesForCategories = async () => {
+    setIsLoading(true);
 
-    const categoryServices = dummyServices.filter((service) =>
-      selectedCategoryNames.includes(service.category)
-    );
+    try {
+      const selectedCategoryNames = apiCategories
+        .filter((cat) => cat.selected)
+        .map((cat) => cat.name);
 
-    // Store original provider price and apply profit margin to sale price
-    const servicesWithProfit = categoryServices.map((service) => ({
-      ...service,
-      providerPrice: service.rate, // Store original provider price
-      rate: parseFloat((service.rate * (1 + profitPercent / 100)).toFixed(2)), // Calculate initial sale price
-      percent: profitPercent, // Set initial percent from Step 1
-    }));
+      if (selectedCategoryNames.length === 0) {
+        setServices([]);
+        setIsLoading(false);
+        return;
+      }
 
-    setServices(servicesWithProfit);
-    showToast(
-      `Loaded ${servicesWithProfit.length} services for customization`,
-      'success'
-    );
+      // Real API call to fetch services for selected categories
+      const response = await fetch(`/api/admin/services/import?action=services&providerId=${selectedProvider}&categories=${selectedCategoryNames.join(',')}`);
+      const result = await response.json();
+
+      if (result.success) {
+        const categoryServices = result.data.services || [];
+
+        // Store original provider price and apply profit margin to sale price
+        const servicesWithProfit = categoryServices.map((service: any) => ({
+          ...service,
+          providerPrice: service.rate, // Store original provider price
+          rate: parseFloat((service.rate * (1 + profitPercent / 100)).toFixed(2)), // Calculate initial sale price
+          percent: profitPercent, // Set initial percent from Step 1
+        }));
+
+        setServices(servicesWithProfit);
+        showToast(`Loaded ${servicesWithProfit.length} services from selected categories`, 'success');
+      } else {
+        showToast(`Failed to load services: ${result.error}`, 'error');
+        setServices([]);
+      }
+    } catch (error) {
+      console.error('Error loading services:', error);
+      showToast('Failed to load services', 'error');
+      setServices([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Calculate sale price based on provider price and percentage
@@ -526,14 +598,17 @@ const ImportServicesPage = () => {
 
   // Handle field changes in step 3
   const handleFieldChange = (
-    serviceId: string,
+    serviceId: string | number,
     field: keyof Service,
     value: string | number
   ) => {
+    const id = serviceId?.toString();
+    if (!id) return;
+
     setEditedServices((prev) => ({
       ...prev,
-      [serviceId]: {
-        ...prev[serviceId],
+      [id]: {
+        ...prev[id],
         [field]: value,
       },
     }));
@@ -542,13 +617,18 @@ const ImportServicesPage = () => {
 
   // Get current value (edited value or original value)
   const getCurrentValue = (service: Service, field: keyof Service) => {
-    return editedServices[service.id]?.[field] !== undefined
-      ? editedServices[service.id][field]
+    if (!service || !service.id) return service?.[field];
+
+    const serviceId = service.id?.toString();
+    if (!serviceId) return service[field];
+
+    return editedServices[serviceId]?.[field] !== undefined
+      ? editedServices[serviceId][field]
       : service[field];
   };
 
   // Navigate to next step
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 1) {
       if (!selectedProvider) {
         showToast('Please select a provider', 'error');
@@ -559,7 +639,7 @@ const ImportServicesPage = () => {
         return;
       }
       setCurrentStep(2);
-      loadCategories();
+      await loadCategories();
     } else if (currentStep === 2) {
       const selectedCategories = apiCategories.filter((cat) => cat.selected);
       if (selectedCategories.length === 0) {
@@ -567,7 +647,7 @@ const ImportServicesPage = () => {
         return;
       }
       setCurrentStep(3);
-      loadServicesForCategories();
+      await loadServicesForCategories();
     }
   };
 
@@ -584,18 +664,59 @@ const ImportServicesPage = () => {
       setIsLoading(true);
       showToast('Importing services...', 'pending');
 
-      // Simulate API call to save services
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      // Real API call to import services
+      const response = await fetch('/api/admin/services/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          providerId: parseInt(selectedProvider),
+          profitMargin: profitPercent,
+          services: services.map(service => ({
+            ...service,
+            ...editedServices[service.id] // Include any edits
+          }))
+        }),
+      });
 
-      const totalServices = services.length;
-      const modifiedServices = Object.keys(editedServices).length;
+      const result = await response.json();
 
-      showToast(
-        `Successfully imported ${totalServices} services${
-          modifiedServices > 0 ? ` (${modifiedServices} customized)` : ''
-        }`,
-        'success'
-      );
+      if (result.success) {
+        const { imported, skipped, errors, provider } = result.data;
+
+        showToast(
+          `Successfully imported ${imported} services from ${provider}${
+            skipped > 0 ? ` (${skipped} skipped)` : ''
+          }${errors > 0 ? ` (${errors} errors)` : ''}`,
+          'success'
+        );
+
+        // Force refresh categories and services cache
+        try {
+          await fetch('/api/admin/categories/get-categories', {
+            method: 'GET',
+            cache: 'no-store'
+          });
+          await fetch('/api/admin/services', {
+            method: 'GET',
+            cache: 'no-store'
+          });
+        } catch (refreshError) {
+          console.log('Cache refresh error (non-critical):', refreshError);
+        }
+
+      } else {
+        showToast(`Failed to import services: ${result.error}`, 'error');
+        setIsLoading(false);
+        return;
+      }
+
+      // Reset form
+      setCurrentStep(1);
+      setSelectedProvider('');
+      setServices([]);
+      setEditedServices({});
 
       // Redirect to services page after short delay
       setTimeout(() => {
@@ -657,7 +778,7 @@ const ImportServicesPage = () => {
                     className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   >
                     <option value="">-- Select API Provider --</option>
-                    {dummyProviders.map((provider) => (
+                    {(realProviders.length > 0 ? realProviders : dummyProviders).map((provider) => (
                       <option
                         key={provider.id}
                         value={provider.id}
@@ -674,7 +795,7 @@ const ImportServicesPage = () => {
                         style={{ color: 'var(--text-muted)' }}
                       >
                         {
-                          dummyProviders.find((p) => p.id === selectedProvider)
+                          (realProviders.length > 0 ? realProviders : dummyProviders).find((p) => p.id?.toString() === selectedProvider)
                             ?.description
                         }
                       </div>
@@ -991,7 +1112,7 @@ const ImportServicesPage = () => {
                           setCollapsedCategories({});
                         } else {
                           // Collapse all
-                          const newCollapsed = {};
+                          const newCollapsed: { [key: string]: boolean } = {};
                           allCategories.forEach((cat) => {
                             newCollapsed[cat] = true;
                           });
@@ -1147,7 +1268,7 @@ const ImportServicesPage = () => {
                                     (categoryServices.length > 0 ? (
                                       categoryServices.map((service, index) => (
                                         <tr
-                                          key={service.id}
+                                          key={`${category}-${service.id}-${index}`}
                                           className={`border-t hover:bg-gray-50 transition-colors duration-200 animate-in fade-in slide-in-from-left-1 ${
                                             editedServices[service.id]
                                               ? 'bg-yellow-50'
@@ -1321,7 +1442,7 @@ const ImportServicesPage = () => {
                                 {categoryServices.length > 0 ? (
                                   categoryServices.map((service, index) => (
                                     <div
-                                      key={service.id}
+                                      key={`${category}-${service.id}-${index}`}
                                       className={`card card-padding border-l-4 border-blue-500 animate-in fade-in slide-in-from-right-1 ${
                                         editedServices[service.id]
                                           ? 'bg-yellow-50'
