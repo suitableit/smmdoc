@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
-import { sendMail } from '@/lib/nodemailer';
 import { emailTemplates } from '@/lib/email-templates';
+import { sendMail } from '@/lib/nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -106,12 +106,16 @@ export async function POST(req: NextRequest) {
               }
             });
             
-            // Update user balance
+            // Use original amount if available, otherwise calculate from USD amount
+            const originalAmount = payment.original_amount || payment.amount;
+
+            // Update user balance with original currency amount
             const user = await prisma.user.update({
               where: { id: payment.userId },
               data: {
-                balance: { increment: payment.amount },
-                total_deposit: { increment: payment.amount }
+                balance: { increment: originalAmount }, // Add original amount in user's currency
+                balanceUSD: { increment: payment.amount }, // USD balance for internal calculations
+                total_deposit: { increment: originalAmount } // Track total deposit in user's currency
               }
             });
             

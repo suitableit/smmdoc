@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
         id: true,
         invoice_id: true,
         amount: true,
+        original_amount: true,
         status: true,
         admin_status: true,
         method: true,

@@ -82,15 +82,21 @@ export async function POST(req: NextRequest) {
         
         // If the payment was successful, update the user's balance
         if (paymentStatus === "Success" && payment.user) {
-          // Update user balance
+          // Use original amount if available, otherwise calculate from USD amount
+          const originalAmount = payment.original_amount || payment.amount;
+
+          // Update user balance with original currency amount
           const user = await prisma.user.update({
             where: { id: payment.userId },
             data: {
               balance: {
-                increment: payment.amount
+                increment: originalAmount // Add original amount in user's currency
+              },
+              balanceUSD: {
+                increment: payment.amount // USD balance for internal calculations
               },
               total_deposit: {
-                increment: payment.amount
+                increment: originalAmount // Track total deposit in user's currency
               }
             }
           });

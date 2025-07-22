@@ -101,6 +101,7 @@ export async function POST(req: NextRequest) {
         data: {
           invoice_id,
           amount: amountUSD, // Store USD amount as base currency
+          original_amount: amount, // Store original amount in user's currency
           spent_amount: 0,
           fee: 0,
           email: session.user.email || '',
