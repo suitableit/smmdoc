@@ -154,8 +154,8 @@ export async function PATCH(
           userName: result.currentUser.name || 'Customer',
           userEmail: result.currentUser.email,
           transactionId: Number(transaction.transaction_id) || transaction.id,
-          amount: transaction.amount,
-          currency: 'BDT',
+          amount: transaction.currency === 'USD' ? transaction.amount : transaction.amount * 120, // Show original amount
+          currency: transaction.currency || 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
         });

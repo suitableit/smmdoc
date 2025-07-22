@@ -2,21 +2,22 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    FaCheckCircle,
-    FaClock,
-    FaCreditCard,
-    FaDollarSign,
-    FaEllipsisH,
-    FaExclamationCircle,
-    FaEye,
-    FaPlus,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
+  FaCheckCircle,
+  FaClock,
+  FaCreditCard,
+  FaDollarSign,
+  FaEllipsisH,
+  FaExclamationCircle,
+  FaEye,
+  FaPlus,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant and useCurrency hook
+import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { APP_NAME } from '@/lib/constants';
 import { convertCurrency } from '@/lib/currency-utils';
@@ -63,6 +64,7 @@ interface Transaction {
   };
   transactionId: number | string;
   amount: number;
+  original_amount?: number;
   currency: string;
   phone: string;
   sender_number?: string;
@@ -74,7 +76,6 @@ interface Transaction {
   createdAt: string;
   updatedAt: string;
   processedAt?: string;
-  notes?: string;
 }
 
 interface TransactionStats {
@@ -1401,12 +1402,11 @@ const AdminAllTransactionsPage = () => {
                             )}
                           </td>
                           <td className="p-3">
-                            <div
+                            <PriceDisplay
+                              amount={transaction.original_amount || transaction.amount}
+                              originalCurrency={transaction.currency === 'USD' || transaction.currency === 'USDT' ? 'USD' : 'BDT'}
                               className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {formatTransactionCurrency(transaction.amount, transaction.currency)}
-                            </div>
+                            />
                           </td>
                           <td className="p-3">
                             <span
@@ -1660,10 +1660,10 @@ const AdminAllTransactionsPage = () => {
                               Amount
                             </label>
                             <div className="text-sm bg-gray-50 p-2 rounded font-semibold">
-                              {formatTransactionCurrency(
-                                viewDetailsDialog.transaction.amount,
-                                viewDetailsDialog.transaction.currency
-                              )}
+                              <PriceDisplay
+                                amount={viewDetailsDialog.transaction.original_amount || viewDetailsDialog.transaction.amount}
+                                originalCurrency={viewDetailsDialog.transaction.currency === 'USD' || viewDetailsDialog.transaction.currency === 'USDT' ? 'USD' : 'BDT'}
+                              />
                             </div>
                           </div>
                           <div>
@@ -1868,7 +1868,7 @@ const AdminAllTransactionsPage = () => {
                               </span>
                               <span className="font-semibold text-lg text-green-600">
                                 {formatTransactionCurrency(
-                                  approveConfirmDialog.transaction.amount,
+                                  approveConfirmDialog.transaction.original_amount || approveConfirmDialog.transaction.amount,
                                   approveConfirmDialog.transaction.currency
                                 )}
                               </span>
@@ -1992,7 +1992,7 @@ const AdminAllTransactionsPage = () => {
                               </span>
                               <span className="font-semibold text-lg">
                                 {formatTransactionCurrency(
-                                  cancelConfirmDialog.transaction.amount,
+                                  cancelConfirmDialog.transaction.original_amount || cancelConfirmDialog.transaction.amount,
                                   cancelConfirmDialog.transaction.currency
                                 )}
                               </span>

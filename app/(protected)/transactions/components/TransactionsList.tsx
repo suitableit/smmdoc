@@ -1,10 +1,10 @@
 'use client';
 
 import {
-  FaCheckCircle,
-  FaClock,
-  FaExclamationTriangle,
-  FaSearch
+    FaCheckCircle,
+    FaClock,
+    FaExclamationTriangle,
+    FaSearch
 } from 'react-icons/fa';
 
 type Transaction = {

@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     const transformedTransactions = transactions.map((transaction) => ({
       id: transaction.id,
       invoice_id: transaction.invoice_id || transaction.id,
-      amount: transaction.amount,
+      amount: transaction.original_amount || transaction.amount, // Use original amount if available
       status: mapStatus(transaction.status || 'Processing'),
       method: transaction.method || 'uddoktapay',
       payment_method: transaction.payment_method || 'UddoktaPay',
