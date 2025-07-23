@@ -4,28 +4,28 @@ import Link from 'next/link';
 import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-    FaBox,
-    FaBriefcase,
-    FaCheckCircle,
-    FaChevronDown,
-    FaChevronRight,
-    FaChevronUp,
-    FaEdit,
-    FaEllipsisH,
-    FaExclamationTriangle,
-    FaFileImport,
-    FaGripVertical,
-    FaPlus,
-    FaSave,
-    FaSearch,
-    FaShieldAlt,
-    FaSync,
-    FaTags,
-    FaTimes,
-    FaTimesCircle,
-    FaToggleOff,
-    FaToggleOn,
-    FaTrash
+  FaBox,
+  FaBriefcase,
+  FaCheckCircle,
+  FaChevronDown,
+  FaChevronRight,
+  FaChevronUp,
+  FaEdit,
+  FaEllipsisH,
+  FaExclamationTriangle,
+  FaFileImport,
+  FaGripVertical,
+  FaPlus,
+  FaSave,
+  FaSearch,
+  FaShieldAlt,
+  FaSync,
+  FaTags,
+  FaTimes,
+  FaTimesCircle,
+  FaToggleOff,
+  FaToggleOn,
+  FaTrash
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
@@ -39,13 +39,13 @@ import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatID, formatNumber } from '@/lib/utils';
 import {
-    createCategoryDefaultValues,
-    createCategorySchema,
-    CreateCategorySchema,
+  createCategoryDefaultValues,
+  createCategorySchema,
+  CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
-    createServiceDefaultValues,
-    CreateServiceSchema
+  createServiceDefaultValues,
+  CreateServiceSchema
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
@@ -2547,8 +2547,13 @@ function AdminServicesPage() {
       setIsUpdating(true);
       const newToggleState = !activeCategoryToggles[categoryName];
 
+      // Extract actual category name from display name (remove ID part)
+      const actualCategoryName = categoryName.includes(' (ID: ')
+        ? categoryName.split(' (ID: ')[0]
+        : categoryName;
+
       // Find the category data
-      const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === categoryName);
+      const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
       if (!categoryData) {
         showToast('Category not found', 'error');
         return;
@@ -2974,8 +2979,13 @@ function AdminServicesPage() {
       const allCategoryNames = Object.keys(groupedServices);
       
       Object.keys(groupedServices).forEach(categoryName => {
+        // Extract actual category name from display name (remove ID part)
+        const actualCategoryName = categoryName.includes(' (ID: ')
+          ? categoryName.split(' (ID: ')[0]
+          : categoryName;
+
         // Find the category data to check hideCategory field
-        const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === categoryName);
+        const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
         // If hideCategory is "no" then category is active (toggle ON), if "yes" then inactive (toggle OFF)
         initialToggles[categoryName] = categoryData?.hideCategory === 'no';
       });
@@ -3372,9 +3382,17 @@ function AdminServicesPage() {
                     <tbody>
                       {(Object.entries(groupedServices) as [string, any[]][])
                         .sort(([categoryNameA], [categoryNameB]) => {
+                          // Extract actual category names from display names (remove ID part)
+                          const actualCategoryNameA = categoryNameA.includes(' (ID: ')
+                            ? categoryNameA.split(' (ID: ')[0]
+                            : categoryNameA;
+                          const actualCategoryNameB = categoryNameB.includes(' (ID: ')
+                            ? categoryNameB.split(' (ID: ')[0]
+                            : categoryNameB;
+
                           // Sort categories by position: top categories first, then bottom
-                          const categoryA = categoriesData?.data?.find((cat: any) => cat.category_name === categoryNameA);
-                          const categoryB = categoriesData?.data?.find((cat: any) => cat.category_name === categoryNameB);
+                          const categoryA = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryNameA);
+                          const categoryB = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryNameB);
 
                           const positionA = categoryA?.position || 'bottom';
                           const positionB = categoryB?.position || 'bottom';
@@ -3472,9 +3490,13 @@ function AdminServicesPage() {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      const category = categoriesData?.data?.find((cat: any) => cat.category_name === categoryName);
+                                      // Extract actual category name from display name (remove ID part)
+                                      const actualCategoryName = categoryName.includes(' (ID: ')
+                                        ? categoryName.split(' (ID: ')[0]
+                                        : categoryName;
+                                      const category = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
                                       if (category) {
-                                        editCategory(categoryName, category.id);
+                                        editCategory(actualCategoryName, category.id);
                                       }
                                     }}
                                     disabled={isUpdating}
@@ -3488,9 +3510,13 @@ function AdminServicesPage() {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      const category = categoriesData?.data?.find((cat: any) => cat.category_name === categoryName);
+                                      // Extract actual category name from display name (remove ID part)
+                                      const actualCategoryName = categoryName.includes(' (ID: ')
+                                        ? categoryName.split(' (ID: ')[0]
+                                        : categoryName;
+                                      const category = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
                                       if (category) {
-                                        handleOpenDeleteCategoryModal(categoryName, category.id, services.length);
+                                        handleOpenDeleteCategoryModal(actualCategoryName, category.id, services.length);
                                       }
                                     }}
                                     disabled={isUpdating}
