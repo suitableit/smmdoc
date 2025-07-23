@@ -118,11 +118,19 @@ export async function GET(req: NextRequest) {
         selectedCategories.includes(service.category)
       );
 
+      // Format services with proper ID and description
+      const formattedServices = filteredServices.map((service: any, index: number) => ({
+        ...service,
+        id: service.service || service.id || `srv_${index + 1}`, // Ensure ID exists
+        description: service.description || service.name || 'No description available', // Ensure description exists
+        category: service.category || 'Uncategorized'
+      }));
+
       return NextResponse.json({
         success: true,
         data: {
-          services: filteredServices,
-          total: filteredServices.length,
+          services: formattedServices,
+          total: formattedServices.length,
           provider: provider.name
         },
         error: null
@@ -368,20 +376,37 @@ export async function POST(req: NextRequest) {
       rate: Number(c.rate)
     }));
 
-    // Get default category for unmapped services
-    let defaultCategory = await db.category.findFirst({
-      where: { category_name: 'Imported Services' }
-    });
+    // Create a map to store categories by name for efficient lookup
+    const categoryMap = new Map();
 
-    if (!defaultCategory) {
-      defaultCategory = await db.category.create({
-        data: {
-          category_name: 'Imported Services',
-          status: 'active',
-          userId: session.user.id
-        }
+    // Function to get or create category
+    const getOrCreateCategory = async (categoryName: string) => {
+      if (categoryMap.has(categoryName)) {
+        return categoryMap.get(categoryName);
+      }
+
+      // Try to find existing category
+      let category = await db.category.findFirst({
+        where: { category_name: categoryName }
       });
-    }
+
+      // If not found, create new category
+      if (!category) {
+        category = await db.category.create({
+          data: {
+            category_name: categoryName,
+            status: 'active',
+            userId: session.user.id,
+            position: 'bottom',
+            hideCategory: 'no'
+          }
+        });
+        console.log(`✅ Created new category: ${categoryName}`);
+      }
+
+      categoryMap.set(categoryName, category);
+      return category;
+    };
 
     // Process and import services
     const importedServices = [];
@@ -390,18 +415,22 @@ export async function POST(req: NextRequest) {
 
     for (const providerService of providerServices) {
       try {
-        // Skip if service already exists
+        console.log(`🔍 Processing service: ${providerService.name} (ID: ${providerService.service || providerService.id})`);
+
+        // Check if service already exists with exact same provider service ID
         const existingService = await db.service.findFirst({
           where: {
-            name: providerService.name,
-            description: { contains: provider.name }
+            updateText: {
+              contains: `"providerServiceId":"${providerService.service || providerService.id}"`
+            }
           }
         });
 
         if (existingService) {
+          console.log(`⏭️ Skipping service: ${providerService.name} - Already exists`);
           skippedServices.push({
             name: providerService.name,
-            reason: 'Already exists'
+            reason: 'Already exists with same provider service ID'
           });
           continue;
         }
@@ -409,15 +438,20 @@ export async function POST(req: NextRequest) {
         // Calculate price with profit margin
         const providerRate = parseFloat(providerService.rate) || 0;
         const markupRate = providerRate * (1 + profitMargin / 100);
-        
+
         // Convert to USD for storage
         const rateUSD = convertToUSD(markupRate, 'USD', currencies);
+
+        // Get or create category based on provider service category
+        const categoryName = providerService.category || 'Imported Services';
+        const serviceCategory = await getOrCreateCategory(categoryName);
 
         // Create service
         console.log('🔥 Creating service:', {
           name: providerService.name,
           rate: markupRate,
-          categoryId: defaultCategory.id,
+          category: categoryName,
+          categoryId: serviceCategory.id,
           userId: session.user.id
         });
 
@@ -431,7 +465,7 @@ export async function POST(req: NextRequest) {
             max_order: parseInt(providerService.max) || 10000,
             avg_time: '0-1 Hours',
             userId: session.user.id,
-            categoryId: defaultCategory.id,
+            categoryId: serviceCategory.id, // Use dynamic category instead of default
             status: 'active',
             perqty: 1000,
             // Store provider info for order forwarding
@@ -439,12 +473,13 @@ export async function POST(req: NextRequest) {
               provider: provider.name,
               providerId: provider.id,
               providerServiceId: providerService.service || providerService.id,
-              originalRate: providerRate
+              originalRate: providerRate,
+              category: categoryName // Store original category name
             })
           }
         });
 
-        console.log('✅ Service created successfully:', newService.id);
+        console.log(`✅ Successfully created service: ${newService.name} (ID: ${newService.id})`);
 
         importedServices.push({
           id: newService.id,
