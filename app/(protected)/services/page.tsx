@@ -9,13 +9,13 @@ import { APP_NAME } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
 import { Fragment, useEffect, useState } from 'react';
 import {
-    FaCheckCircle,
-    FaClipboardList,
-    FaEye,
-    FaRegStar,
-    FaSearch,
-    FaStar,
-    FaTimes,
+  FaCheckCircle,
+  FaClipboardList,
+  FaEye,
+  FaRegStar,
+  FaSearch,
+  FaStar,
+  FaTimes,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -94,8 +94,9 @@ export default function UserServiceTable() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-
-  const limit = 50;
+  const [limit, setLimit] = useState('50');
+  const [isShowAll, setIsShowAll] = useState(false);
+  const [allCategories, setAllCategories] = useState<any[]>([]);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -150,21 +151,46 @@ export default function UserServiceTable() {
             })) || [];
 
           setServices(servicesData);
-          // Group services by category
-          const grouped = servicesData.reduce(
-            (acc: Record<string, Service[]>, service: Service) => {
-              const categoryName =
-                service.category?.category_name || 'Uncategorized';
-              if (!acc[categoryName]) {
-                acc[categoryName] = [];
-              }
-              acc[categoryName].push(service);
-              return acc;
-            },
-            {}
-          );
+
+          // Group services by category ID to handle duplicate names
+          const groupedById: Record<string, { category: any; services: Service[] }> = {};
+
+          // First, initialize all categories if available
+          if (data.allCategories && data.allCategories.length > 0) {
+            data.allCategories.forEach((category: any) => {
+              const categoryKey = `${category.category_name}_${category.id}`;
+              groupedById[categoryKey] = {
+                category: category,
+                services: []
+              };
+            });
+          }
+
+          // Then add services to their respective categories
+          servicesData.forEach((service: Service) => {
+            const categoryId = service.category?.id;
+            const categoryName = service.category?.category_name || 'Uncategorized';
+            const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
+
+            if (!groupedById[categoryKey]) {
+              groupedById[categoryKey] = {
+                category: service.category || { id: 0, category_name: 'Uncategorized' },
+                services: []
+              };
+            }
+            groupedById[categoryKey].services.push(service);
+          });
+
+          // Convert to the format expected by the UI
+          const grouped: Record<string, Service[]> = {};
+          Object.values(groupedById).forEach(({ category, services }) => {
+            grouped[category.category_name] = services;
+          });
+
           setGroupedServices(grouped);
           setTotalPages(data.totalPages || 1);
+          setIsShowAll(data.isShowAll || false);
+          setAllCategories(data.allCategories || []);
           return;
         }
 
@@ -199,19 +225,41 @@ export default function UserServiceTable() {
 
           setServices(servicesWithFavorites);
 
-          // Group services by category
-          const grouped = servicesWithFavorites.reduce(
-            (acc: Record<string, Service[]>, service: Service) => {
-              const categoryName =
-                service.category?.category_name || 'Uncategorized';
-              if (!acc[categoryName]) {
-                acc[categoryName] = [];
-              }
-              acc[categoryName].push(service);
-              return acc;
-            },
-            {}
-          );
+          // Group services by category ID to handle duplicate names
+          const groupedById: Record<string, { category: any; services: Service[] }> = {};
+
+          // First, initialize all categories if available
+          if (data.allCategories && data.allCategories.length > 0) {
+            data.allCategories.forEach((category: any) => {
+              const categoryKey = `${category.category_name}_${category.id}`;
+              groupedById[categoryKey] = {
+                category: category,
+                services: []
+              };
+            });
+          }
+
+          // Then add services to their respective categories
+          servicesWithFavorites.forEach((service: Service) => {
+            const categoryId = service.category?.id;
+            const categoryName = service.category?.category_name || 'Uncategorized';
+            const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
+
+            if (!groupedById[categoryKey]) {
+              groupedById[categoryKey] = {
+                category: service.category || { id: 0, category_name: 'Uncategorized' },
+                services: []
+              };
+            }
+            groupedById[categoryKey].services.push(service);
+          });
+
+          // Convert to the format expected by the UI
+          const grouped: Record<string, Service[]> = {};
+          Object.values(groupedById).forEach(({ category, services }) => {
+            grouped[category.category_name] = services;
+          });
+
           setGroupedServices(grouped);
         } catch (favError) {
           console.error('Error fetching favorites:', favError);
@@ -224,23 +272,89 @@ export default function UserServiceTable() {
 
           setServices(servicesData);
 
-          // Group services by category
-          const grouped = servicesData.reduce(
-            (acc: Record<string, Service[]>, service: Service) => {
-              const categoryName =
-                service.category?.category_name || 'Uncategorized';
-              if (!acc[categoryName]) {
-                acc[categoryName] = [];
-              }
-              acc[categoryName].push(service);
-              return acc;
-            },
-            {}
-          );
+          // Group services by category ID to handle duplicate names
+          const groupedById: Record<string, { category: any; services: Service[] }> = {};
+
+          // First, initialize all categories if available
+          if (data.allCategories && data.allCategories.length > 0) {
+            data.allCategories.forEach((category: any) => {
+              const categoryKey = `${category.category_name}_${category.id}`;
+              groupedById[categoryKey] = {
+                category: category,
+                services: []
+              };
+            });
+          }
+
+          // Then add services to their respective categories
+          servicesData.forEach((service: Service) => {
+            const categoryId = service.category?.id;
+            const categoryName = service.category?.category_name || 'Uncategorized';
+            const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
+
+            if (!groupedById[categoryKey]) {
+              groupedById[categoryKey] = {
+                category: service.category || { id: 0, category_name: 'Uncategorized' },
+                services: []
+              };
+            }
+            groupedById[categoryKey].services.push(service);
+          });
+
+          // Convert to the format expected by the UI
+          const grouped: Record<string, Service[]> = {};
+          Object.values(groupedById).forEach(({ category, services }) => {
+            grouped[category.category_name] = services;
+          });
+
           setGroupedServices(grouped);
         }
 
         setTotalPages(data.totalPages || 1);
+        setIsShowAll(data.isShowAll || false);
+        setAllCategories(data.allCategories || []);
+
+        // Update grouped services to include empty categories
+        if (data.allCategories && data.allCategories.length > 0) {
+          const servicesData = data?.data || [];
+
+          // Group services by category ID to handle duplicate names
+          const groupedById: Record<string, { category: any; services: Service[] }> = {};
+
+          // First, initialize all categories
+          data.allCategories.forEach((category: any) => {
+            groupedById[category.id] = {
+              category: category,
+              services: []
+            };
+          });
+
+          // Then add services to their respective categories
+          servicesData.forEach((service: Service) => {
+            const categoryId = service.category?.id?.toString() || 'uncategorized';
+            if (groupedById[categoryId]) {
+              groupedById[categoryId].services.push(service);
+            } else {
+              // Handle uncategorized services
+              if (!groupedById['uncategorized']) {
+                groupedById['uncategorized'] = {
+                  category: { id: 'uncategorized', category_name: 'Uncategorized' },
+                  services: []
+                };
+              }
+              groupedById['uncategorized'].services.push(service);
+            }
+          });
+
+          // Convert to the format expected by the UI (category name as key)
+          const grouped: Record<string, Service[]> = {};
+          Object.values(groupedById).forEach(({ category, services }) => {
+            const displayName = `${category.category_name} (ID: ${category.id})`;
+            grouped[displayName] = services;
+          });
+
+          setGroupedServices(grouped);
+        }
       } catch (error) {
         console.error('Error fetching services:', error);
         showToast('Error fetching services. Please try again later.', 'error');
@@ -261,6 +375,11 @@ export default function UserServiceTable() {
 
   const handleNext = () => {
     if (page < totalPages) setPage(page + 1);
+  };
+
+  const handleLimitChange = (newLimit: string) => {
+    setLimit(newLimit);
+    setPage(1); // Reset to first page when changing limit
   };
 
   const toggleFavorite = async (serviceId: string) => {
@@ -360,21 +479,43 @@ export default function UserServiceTable() {
       <div className="page-content">
         {/* All Services Content Card - Everything in one box */}
         <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
-          {/* Search Bar */}
+          {/* Search Bar and Controls */}
           <div className="mb-6">
-            <div className="form-group mb-0">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <FaSearch className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Search Input */}
+              <div className="flex-1">
+                <div className="form-group mb-0">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <FaSearch className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    </div>
+                    <input
+                      type="search"
+                      placeholder="Search services..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                      autoComplete="off"
+                    />
+                  </div>
                 </div>
-                <input
-                  type="search"
-                  placeholder="Search services..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                  autoComplete="off"
-                />
+              </div>
+
+              {/* Show Per Page Dropdown */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                  Show:
+                </span>
+                <select
+                  value={limit}
+                  onChange={(e) => handleLimitChange(e.target.value)}
+                  className="pl-4 pr-8 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm min-w-[80px]"
+                >
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="all">All</option>
+                </select>
               </div>
             </div>
           </div>
@@ -590,8 +731,8 @@ export default function UserServiceTable() {
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
+          {/* Pagination - Hide when showing all */}
+          {!isShowAll && totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 Page <span className="font-medium">{page}</span> of{' '}
@@ -612,6 +753,15 @@ export default function UserServiceTable() {
                 >
                   Next
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Show total count when displaying all */}
+          {isShowAll && (
+            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
+                Showing all <span className="font-medium">{services.length}</span> services
               </div>
             </div>
           )}
