@@ -4,28 +4,28 @@ import Link from 'next/link';
 import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-  FaBox,
-  FaBriefcase,
-  FaCheckCircle,
-  FaChevronDown,
-  FaChevronRight,
-  FaChevronUp,
-  FaEdit,
-  FaEllipsisH,
-  FaExclamationTriangle,
-  FaFileImport,
-  FaGripVertical,
-  FaPlus,
-  FaSave,
-  FaSearch,
-  FaShieldAlt,
-  FaSync,
-  FaTags,
-  FaTimes,
-  FaTimesCircle,
-  FaToggleOff,
-  FaToggleOn,
-  FaTrash
+    FaBox,
+    FaBriefcase,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronRight,
+    FaChevronUp,
+    FaEdit,
+    FaEllipsisH,
+    FaExclamationTriangle,
+    FaFileImport,
+    FaGripVertical,
+    FaPlus,
+    FaSave,
+    FaSearch,
+    FaShieldAlt,
+    FaSync,
+    FaTags,
+    FaTimes,
+    FaTimesCircle,
+    FaToggleOff,
+    FaToggleOn,
+    FaTrash
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
@@ -39,13 +39,13 @@ import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatID, formatNumber } from '@/lib/utils';
 import {
-  createCategoryDefaultValues,
-  createCategorySchema,
-  CreateCategorySchema,
+    createCategoryDefaultValues,
+    createCategorySchema,
+    CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
-  createServiceDefaultValues,
-  CreateServiceSchema
+    createServiceDefaultValues,
+    CreateServiceSchema
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
@@ -2065,23 +2065,40 @@ function AdminServicesPage() {
       return matchesSearch;
     });
 
-    // Initialize grouped object with all categories
-    const grouped: Record<string, any[]> = {};
-    
+    // Initialize grouped object with all categories using ID-based keys
+    const groupedById: Record<string, { category: any; services: any[] }> = {};
+
     // Add all categories from categoriesData, even if empty
     if (categoriesData?.data) {
       categoriesData.data.forEach((category: any) => {
-        grouped[category.category_name] = [];
+        const categoryKey = `${category.category_name}_${category.id}`;
+        groupedById[categoryKey] = {
+          category: category,
+          services: []
+        };
       });
     }
 
-    // Group filtered services by category
+    // Group filtered services by category ID
     filtered.forEach((service: any) => {
+      const categoryId = service.category?.id;
       const categoryName = service.category?.category_name || 'Uncategorized';
-      if (!grouped[categoryName]) {
-        grouped[categoryName] = [];
+      const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
+
+      if (!groupedById[categoryKey]) {
+        groupedById[categoryKey] = {
+          category: service.category || { id: 0, category_name: 'Uncategorized' },
+          services: []
+        };
       }
-      grouped[categoryName].push(service);
+      groupedById[categoryKey].services.push(service);
+    });
+
+    // Convert to the format expected by the UI (category name with ID as key)
+    const grouped: Record<string, any[]> = {};
+    Object.values(groupedById).forEach(({ category, services }) => {
+      const displayName = `${category.category_name} (ID: ${category.id})`;
+      grouped[displayName] = services;
     });
 
     // Apply custom service order within each category

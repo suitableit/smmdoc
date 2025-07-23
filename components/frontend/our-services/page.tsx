@@ -88,8 +88,8 @@ const ServicesTable: React.FC = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-
-  const limit = 50;
+  const [limit, setLimit] = useState('50');
+  const [isShowAll, setIsShowAll] = useState(false);
 
   // Show toast notification
   const showToast = (
@@ -230,6 +230,35 @@ const ServicesTable: React.FC = () => {
         }
 
         setTotalPages(data.totalPages || 1);
+        setIsShowAll(data.isShowAll || false);
+
+        // Update grouped services to include empty categories
+        if (data.allCategories && data.allCategories.length > 0) {
+          const servicesData = data?.data || [];
+
+          // Group services by category
+          const grouped = servicesData.reduce(
+            (acc: Record<string, Service[]>, service: Service) => {
+              const categoryName =
+                service.category?.category_name || 'Uncategorized';
+              if (!acc[categoryName]) {
+                acc[categoryName] = [];
+              }
+              acc[categoryName].push(service);
+              return acc;
+            },
+            {}
+          );
+
+          // Add empty categories
+          data.allCategories.forEach((category: any) => {
+            if (!grouped[category.category_name]) {
+              grouped[category.category_name] = [];
+            }
+          });
+
+          setGroupedServices(grouped);
+        }
       } catch (error) {
         console.error('Error fetching services:', error);
         showToast('Error fetching services. Please try again later.', 'error');

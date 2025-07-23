@@ -37,14 +37,18 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limitParam = searchParams.get('limit') || '50';
     const search = searchParams.get('search') || '';
     const currency = searchParams.get('currency') || 'USD'; // Get user's preferred currency
-    const skip = (page - 1) * limit;
+
+    // Handle "all" option for limit
+    const isShowAll = limitParam === 'all';
+    const limit = isShowAll ? undefined : parseInt(limitParam);
+    const skip = isShowAll ? undefined : (page - 1) * limit!;
 
     // Get currency data for conversion
     const { currencies } = await fetchCurrencyData();
-    
+
     // Base where clause - only return active services
     const whereClause = {
       status: 'active', // Only return active services
@@ -68,11 +72,11 @@ export async function GET(request: Request) {
         : {})
     };
 
-    const [services, total] = await Promise.all([
+    const [services, total, allCategories] = await Promise.all([
       db.service.findMany({
         where: whereClause,
-        skip,
-        take: limit,
+        ...(skip !== undefined && { skip }),
+        ...(limit !== undefined && { take: limit }),
         orderBy: {
           createdAt: 'desc',
         },
@@ -82,6 +86,14 @@ export async function GET(request: Request) {
         },
       }),
       db.service.count({ where: whereClause }),
+      // Fetch all categories to show empty ones too
+      db.category.findMany({
+        orderBy: [
+          { position: 'asc' },
+          { updatedAt: 'desc' },
+          { createdAt: 'desc' },
+        ],
+      }),
     ]);
 
     // Convert service prices to user's preferred currency
@@ -103,8 +115,11 @@ export async function GET(request: Request) {
         data: servicesWithConvertedPrices || [],
         total,
         page,
-        totalPages: Math.ceil(total / limit),
+        totalPages: isShowAll ? 1 : Math.ceil(total / limit!),
         currency: currency, // Include currency info in response
+        isShowAll,
+        limit: limitParam,
+        allCategories: allCategories || [], // Include all categories for empty category display
       },
       { status: 200 }
     );
