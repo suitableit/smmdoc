@@ -111,7 +111,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Min Order</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {formatNumber(service?.min_order || 10)}
+                  {(service?.min_order || 10).toString()}
                 </span>
               </div>
 
@@ -122,7 +122,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Max order</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {formatNumber(service?.max_order || 10000000)}
+                  {(service?.max_order || 10000000).toString()}
                 </span>
               </div>
 

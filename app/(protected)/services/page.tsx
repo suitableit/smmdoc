@@ -155,15 +155,17 @@ export default function UserServiceTable() {
           // Group services by category ID to handle duplicate names
           const groupedById: Record<string, { category: any; services: Service[] }> = {};
 
-          // First, initialize all categories if available
+          // First, initialize only active categories (not hidden)
           if (data.allCategories && data.allCategories.length > 0) {
-            data.allCategories.forEach((category: any) => {
-              const categoryKey = `${category.category_name}_${category.id}`;
-              groupedById[categoryKey] = {
-                category: category,
-                services: []
-              };
-            });
+            data.allCategories
+              .filter((category: any) => category.hideCategory !== 'yes') // Only show active categories
+              .forEach((category: any) => {
+                const categoryKey = `${category.category_name}_${category.id}`;
+                groupedById[categoryKey] = {
+                  category: category,
+                  services: []
+                };
+              });
           }
 
           // Then add services to their respective categories
@@ -228,15 +230,17 @@ export default function UserServiceTable() {
           // Group services by category ID to handle duplicate names
           const groupedById: Record<string, { category: any; services: Service[] }> = {};
 
-          // First, initialize all categories if available
+          // First, initialize only active categories (not hidden)
           if (data.allCategories && data.allCategories.length > 0) {
-            data.allCategories.forEach((category: any) => {
-              const categoryKey = `${category.category_name}_${category.id}`;
-              groupedById[categoryKey] = {
-                category: category,
-                services: []
-              };
-            });
+            data.allCategories
+              .filter((category: any) => category.hideCategory !== 'yes') // Only show active categories
+              .forEach((category: any) => {
+                const categoryKey = `${category.category_name}_${category.id}`;
+                groupedById[categoryKey] = {
+                  category: category,
+                  services: []
+                };
+              });
           }
 
           // Then add services to their respective categories
@@ -275,15 +279,17 @@ export default function UserServiceTable() {
           // Group services by category ID to handle duplicate names
           const groupedById: Record<string, { category: any; services: Service[] }> = {};
 
-          // First, initialize all categories if available
+          // First, initialize only active categories (not hidden)
           if (data.allCategories && data.allCategories.length > 0) {
-            data.allCategories.forEach((category: any) => {
-              const categoryKey = `${category.category_name}_${category.id}`;
-              groupedById[categoryKey] = {
-                category: category,
-                services: []
-              };
-            });
+            data.allCategories
+              .filter((category: any) => category.hideCategory !== 'yes') // Only show active categories
+              .forEach((category: any) => {
+                const categoryKey = `${category.category_name}_${category.id}`;
+                groupedById[categoryKey] = {
+                  category: category,
+                  services: []
+                };
+              });
           }
 
           // Then add services to their respective categories

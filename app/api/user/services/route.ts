@@ -86,8 +86,11 @@ export async function GET(request: Request) {
         },
       }),
       db.service.count({ where: whereClause }),
-      // Fetch all categories to show empty ones too
+      // Fetch only active categories (not hidden) to show empty ones too
       db.category.findMany({
+        where: {
+          hideCategory: 'no', // Only show categories that are not hidden
+        },
         orderBy: [
           { position: 'asc' },
           { updatedAt: 'desc' },

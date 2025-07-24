@@ -96,5 +96,13 @@ export function formatPrice(amount: number, decimals: number = 2): string {
 export function formatID(id: number | string): string {
   const number = typeof id === 'string' ? parseInt(id) : id;
   if (isNaN(number)) return String(id);
-  return formatNumber(number);
+  // Return ID without comma separators
+  return number.toString();
+}
+
+export function formatCount(count: number | string): string {
+  const number = typeof count === 'string' ? parseInt(count) : count;
+  if (isNaN(number)) return '0';
+  // Return count without comma separators
+  return number.toString();
 }

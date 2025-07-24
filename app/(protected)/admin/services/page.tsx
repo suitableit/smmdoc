@@ -37,7 +37,7 @@ import { useGetServicesId } from '@/hooks/service-fetch-id';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
-import { formatID, formatNumber } from '@/lib/utils';
+import { formatID } from '@/lib/utils';
 import {
   createCategoryDefaultValues,
   createCategorySchema,
@@ -1140,11 +1140,12 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
 };
 
 // Edit Category Form Component (integrated)
-const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: {
+const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refreshAllData }: {
   categoryId: string;
   categoryName: string;
   onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
+  refreshAllData?: () => Promise<void>;
 }) => {
   const { data: categoriesData } = useGetCategories();
   const [isPending, startTransition] = useTransition();
@@ -1167,7 +1168,7 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: {
   // Pre-populate form with existing category data
   useEffect(() => {
     if (categoriesData?.data && categoryId) {
-      const category = categoriesData.data.find((cat: any) => cat.id === categoryId);
+      const category = categoriesData.data.find((cat: any) => cat.id === parseInt(categoryId));
       if (category) {
         reset({
           category_name: category.category_name || '',
@@ -1179,22 +1180,30 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast }: {
   }, [categoriesData, categoryId, reset]);
 
   const onSubmit: SubmitHandler<CreateCategorySchema> = async (values) => {
-    startTransition(() => {
-      // handle form submission for updating
-      axiosInstance.put(`/api/admin/categories/${categoryId}`, values).then((res) => {
+    startTransition(async () => {
+      try {
+        // handle form submission for updating
+        const res = await axiosInstance.put(`/api/admin/categories/${categoryId}`, values);
         if (res.data.success) {
           showToast(res.data.message || 'Category updated successfully', 'success');
+
           // Refresh all category-related data for live updates
           mutate('/api/admin/categories');
           mutate('/api/admin/categories/get-categories');
           mutate('/api/admin/services'); // Refresh services to show updated category names
+
+          // Call refreshAllData for live action updates
+          if (refreshAllData) {
+            await refreshAllData();
+          }
+
           onClose();
         } else {
           showToast(res.data.error || 'Failed to update category', 'error');
         }
-      }).catch((error) => {
+      } catch (error: any) {
         showToast(`Error: ${error.response?.data?.error || error.message || 'Something went wrong'}`, 'error');
-      });
+      }
     });
   };
 
@@ -2542,18 +2551,27 @@ function AdminServicesPage() {
     }
   };
 
+  // Helper function to extract actual category name from display name (remove ID part)
+  const getActualCategoryName = (displayCategoryName: string) => {
+    return displayCategoryName.includes(' (ID: ')
+      ? displayCategoryName.split(' (ID: ')[0]
+      : displayCategoryName;
+  };
+
   const toggleCategoryAndServices = async (categoryName: string, services: any[]) => {
     try {
       setIsUpdating(true);
       const newToggleState = !activeCategoryToggles[categoryName];
 
-      // Extract actual category name from display name (remove ID part)
-      const actualCategoryName = categoryName.includes(' (ID: ')
-        ? categoryName.split(' (ID: ')[0]
-        : categoryName;
+      // Extract category ID from the display name (e.g., "asdsdf (ID: 25)" -> "25")
+      const categoryIdMatch = categoryName.match(/\(ID:\s*(\d+)\)/);
+      if (!categoryIdMatch) {
+        showToast('Invalid category format', 'error');
+        return;
+      }
 
-      // Find the category data
-      const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
+      const categoryId = parseInt(categoryIdMatch[1]);
+      const categoryData = categoriesData?.data?.find((cat: any) => cat.id === categoryId);
       if (!categoryData) {
         showToast('Category not found', 'error');
         return;
@@ -2979,15 +2997,19 @@ function AdminServicesPage() {
       const allCategoryNames = Object.keys(groupedServices);
       
       Object.keys(groupedServices).forEach(categoryName => {
-        // Extract actual category name from display name (remove ID part)
-        const actualCategoryName = categoryName.includes(' (ID: ')
-          ? categoryName.split(' (ID: ')[0]
-          : categoryName;
-
-        // Find the category data to check hideCategory field
-        const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
-        // If hideCategory is "no" then category is active (toggle ON), if "yes" then inactive (toggle OFF)
-        initialToggles[categoryName] = categoryData?.hideCategory === 'no';
+        // Extract category ID from the display name (e.g., "asdsdf (ID: 25)" -> "25")
+        const categoryIdMatch = categoryName.match(/\(ID:\s*(\d+)\)/);
+        if (categoryIdMatch) {
+          const categoryId = parseInt(categoryIdMatch[1]);
+          const categoryData = categoriesData?.data?.find((cat: any) => cat.id === categoryId);
+          // If hideCategory is "no" then category is active (toggle ON), if "yes" then inactive (toggle OFF)
+          initialToggles[categoryName] = categoryData?.hideCategory === 'no';
+        } else {
+          // Fallback for categories without ID format
+          const actualCategoryName = getActualCategoryName(categoryName);
+          const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
+          initialToggles[categoryName] = categoryData?.hideCategory === 'no';
+        }
       });
       setActiveCategoryToggles(initialToggles);
       
@@ -3098,7 +3120,7 @@ function AdminServicesPage() {
                     </div>
                   ) : (
                     <p className={`text-2xl font-bold ${stat.textColor}`}>
-                      {stat.value.toLocaleString()}
+                      {stat.value.toString()}
                     </p>
                   )}
                 </div>
@@ -3207,7 +3229,7 @@ function AdminServicesPage() {
                         : 'bg-purple-100 text-purple-700'
                     }`}
                   >
-                    {stats.totalServices.toLocaleString()}
+                    {stats.totalServices.toString()}
                   </span>
                 </button>
                 <button
@@ -3226,7 +3248,7 @@ function AdminServicesPage() {
                         : 'bg-green-100 text-green-700'
                     }`}
                   >
-                    {stats.activeServices.toLocaleString()}
+                    {stats.activeServices.toString()}
                   </span>
                 </button>
                 <button
@@ -3245,7 +3267,7 @@ function AdminServicesPage() {
                         : 'bg-red-100 text-red-700'
                     }`}
                   >
-                    {stats.inactiveServices.toLocaleString()}
+                    {stats.inactiveServices.toString()}
                   </span>
                 </button>
               </div>
@@ -3382,13 +3404,9 @@ function AdminServicesPage() {
                     <tbody>
                       {(Object.entries(groupedServices) as [string, any[]][])
                         .sort(([categoryNameA], [categoryNameB]) => {
-                          // Extract actual category names from display names (remove ID part)
-                          const actualCategoryNameA = categoryNameA.includes(' (ID: ')
-                            ? categoryNameA.split(' (ID: ')[0]
-                            : categoryNameA;
-                          const actualCategoryNameB = categoryNameB.includes(' (ID: ')
-                            ? categoryNameB.split(' (ID: ')[0]
-                            : categoryNameB;
+                          // Extract actual category names and find category data
+                          const actualCategoryNameA = getActualCategoryName(categoryNameA);
+                          const actualCategoryNameB = getActualCategoryName(categoryNameB);
 
                           // Sort categories by position: top categories first, then bottom
                           const categoryA = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryNameA);
@@ -3490,13 +3508,10 @@ function AdminServicesPage() {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      // Extract actual category name from display name (remove ID part)
-                                      const actualCategoryName = categoryName.includes(' (ID: ')
-                                        ? categoryName.split(' (ID: ')[0]
-                                        : categoryName;
+                                      const actualCategoryName = getActualCategoryName(categoryName);
                                       const category = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
                                       if (category) {
-                                        editCategory(actualCategoryName, category.id);
+                                        editCategory(actualCategoryName, category.id.toString());
                                       }
                                     }}
                                     disabled={isUpdating}
@@ -3510,10 +3525,7 @@ function AdminServicesPage() {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      // Extract actual category name from display name (remove ID part)
-                                      const actualCategoryName = categoryName.includes(' (ID: ')
-                                        ? categoryName.split(' (ID: ')[0]
-                                        : categoryName;
+                                      const actualCategoryName = getActualCategoryName(categoryName);
                                       const category = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
                                       if (category) {
                                         handleOpenDeleteCategoryModal(actualCategoryName, category.id, services.length);
@@ -3643,7 +3655,7 @@ function AdminServicesPage() {
                                     <td className="p-3">
                                       <div>
                                         <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                                          {formatNumber(service?.min_order || 0)} - {formatNumber(service?.max_order || 0)}
+                                          {(service?.min_order || 0).toString()} - {(service?.max_order || 0).toString()}
                                         </div>
                                         <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                                           Min / Max
@@ -3955,6 +3967,7 @@ function AdminServicesPage() {
                 categoryName={editCategoryModal.categoryName}
                 onClose={handleCloseEditCategoryModal}
                 showToast={showToast}
+                refreshAllData={refreshAllData}
               />
             </div>
           </div>

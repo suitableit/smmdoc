@@ -4,14 +4,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { Fragment, useEffect, useState } from 'react';
 import {
-  FaArrowRight,
-  FaCheckCircle,
-  FaClipboardList,
-  FaEye,
-  FaRegStar,
-  FaSearch,
-  FaStar,
-  FaTimes,
+    FaArrowRight,
+    FaCheckCircle,
+    FaClipboardList,
+    FaEye,
+    FaRegStar,
+    FaSearch,
+    FaStar,
+    FaTimes,
 } from 'react-icons/fa';
 
 import { PriceDisplay } from '@/components/PriceDisplay';
@@ -488,12 +488,12 @@ const ServicesTable: React.FC = () => {
                           </td>
                           <td className="py-3 px-4">
                             <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {service.min_order?.toLocaleString()}
+                              {service.min_order?.toString()}
                             </span>
                           </td>
                           <td className="py-3 px-4">
                             <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {service.max_order?.toLocaleString()}
+                              {service.max_order?.toString()}
                             </span>
                           </td>
                           <td className="py-3 px-4">
