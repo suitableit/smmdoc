@@ -616,26 +616,7 @@ const PaymentCurrencyPage = () => {
             <div className="space-y-4">
               {/* Auto Update Button */}
               <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Exchange rates management
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={fixCurrencyRates}
-                    disabled={isUpdatingRates}
-                    className="btn btn-primary btn-sm flex items-center gap-2"
-                  >
-                    {isUpdatingRates ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Fixing...
-                      </>
-                    ) : (
-                      <>
-                        Fix Rates
-                      </>
-                    )}
-                  </button>
+                <div className="flex flex-wrap-reverse md:flex-nowrap gap-2">
                   <button
                     onClick={updateCurrencyRates}
                     disabled={isUpdatingRates}
@@ -653,32 +634,54 @@ const PaymentCurrencyPage = () => {
                       </>
                     )}
                   </button>
+                  <button
+                    onClick={fixCurrencyRates}
+                    disabled={isUpdatingRates}
+                    className="btn btn-primary btn-sm flex items-center gap-2"
+                  >
+                    {isUpdatingRates ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Fixing...
+                      </>
+                    ) : (
+                      <>
+                        Fix Rates
+                      </>
+                    )}
+                  </button>
                 </div>
+                
               </div>
 
-              {/* Header */}
-              <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400">
-                <div className="grid grid-cols-12 gap-3 flex-1">
-                  <span className="text-left col-span-2">Status</span>
-                  <span className="text-left col-span-2">Code</span>
-                  <span className="text-left col-span-4">Name</span>
-                  <span className="text-left col-span-2">Symbol</span>
-                  <span className="text-left col-span-2">Rate</span>
-                </div>
-                <div className="w-20 text-center">Action</div>
-              </div>
+              {/* Header and Currency List Container */}
+              <div className="overflow-x-auto">
+                <div className="min-w-[600px]">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400">
+                    <div className="grid grid-cols-12 gap-3 flex-1">
+                      <span className="text-left col-span-2">Status</span>
+                      <span className="text-left col-span-2">Code</span>
+                      <span className="text-left col-span-4">Name</span>
+                      <span className="text-left col-span-2">Symbol</span>
+                      <span className="text-left col-span-2">Rate</span>
+                    </div>
+                    <div className="w-20 text-center">Action</div>
+                  </div>
 
-              {/* Currency List */}
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {currencies.map((currency) => (
-                  <CurrencyItem
-                    key={currency.id}
-                    currency={currency}
-                    onEdit={editCurrency}
-                    onDelete={deleteCurrency}
-                    onToggleStatus={toggleCurrencyStatus}
-                  />
-                ))}
+                  {/* Currency List */}
+                  <div className="space-y-2 max-h-96 overflow-y-auto mt-2">
+                    {currencies.map((currency) => (
+                      <CurrencyItem
+                        key={currency.id}
+                        currency={currency}
+                        onEdit={editCurrency}
+                        onDelete={deleteCurrency}
+                        onToggleStatus={toggleCurrencyStatus}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Add New Currency */}
