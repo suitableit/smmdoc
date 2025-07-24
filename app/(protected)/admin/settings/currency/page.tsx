@@ -101,8 +101,8 @@ const CurrencyItem = ({
     <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg min-h-[60px]">
       {isEditing ? (
         <div className="flex items-center gap-3 w-full">
-          <div className="grid grid-cols-5 gap-3 flex-1 items-center">
-            <div className="flex justify-start">
+          <div className="grid grid-cols-12 gap-3 flex-1 items-center">
+            <div className="flex justify-start col-span-2">
               <Switch
                 checked={currency.enabled}
                 onClick={() => onToggleStatus(currency.id)}
@@ -115,14 +115,14 @@ const CurrencyItem = ({
               onChange={(e) => setEditValues(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
               placeholder="USD"
               maxLength={3}
-              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none col-span-2"
             />
             <input
               type="text"
               value={editValues.name}
               onChange={(e) => setEditValues(prev => ({ ...prev, name: e.target.value }))}
               placeholder="US Dollar"
-              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none col-span-4"
             />
             <input
               type="text"
@@ -130,7 +130,7 @@ const CurrencyItem = ({
               onChange={(e) => setEditValues(prev => ({ ...prev, symbol: e.target.value }))}
               placeholder="$"
               maxLength={3}
-              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none col-span-2"
             />
             <input
               type="number"
@@ -138,10 +138,10 @@ const CurrencyItem = ({
               onChange={(e) => setEditValues(prev => ({ ...prev, rate: parseFloat(e.target.value) || 1 }))}
               step="0.0001"
               min="0"
-              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none col-span-2"
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2 w-20">
             <button
               onClick={handleSave}
               className="p-1 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
@@ -160,20 +160,20 @@ const CurrencyItem = ({
         </div>
       ) : (
         <div className="flex items-center gap-3 w-full">
-          <div className="grid grid-cols-5 gap-3 flex-1 text-sm items-center">
-            <div className="flex justify-start">
+          <div className="grid grid-cols-12 gap-3 flex-1 text-sm items-center">
+            <div className="flex justify-start col-span-2">
               <Switch
                 checked={currency.enabled}
                 onClick={() => onToggleStatus(currency.id)}
                 title={`${currency.enabled ? 'Disable' : 'Enable'} ${currency.code}`}
               />
             </div>
-            <span className="font-mono font-semibold text-left">{currency.code}</span>
-            <span className="text-left">{currency.name}</span>
-            <span className="font-mono text-left">{currency.symbol}</span>
-            <span className="text-left font-mono">{currency.rate.toFixed(4)}</span>
+            <span className="font-mono font-semibold text-left col-span-2">{currency.code}</span>
+            <span className="text-left col-span-4">{currency.name}</span>
+            <span className="font-mono text-left col-span-2">{currency.symbol}</span>
+            <span className="text-left font-mono col-span-2">{currency.rate.toFixed(4)}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2 w-20">
             <button
               onClick={() => setIsEditing(true)}
               className="p-1 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
@@ -616,26 +616,7 @@ const PaymentCurrencyPage = () => {
             <div className="space-y-4">
               {/* Auto Update Button */}
               <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Exchange rates management
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={fixCurrencyRates}
-                    disabled={isUpdatingRates}
-                    className="btn btn-primary btn-sm flex items-center gap-2"
-                  >
-                    {isUpdatingRates ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Fixing...
-                      </>
-                    ) : (
-                      <>
-                        🔧 Fix Rates
-                      </>
-                    )}
-                  </button>
+                <div className="flex flex-wrap-reverse md:flex-nowrap gap-2">
                   <button
                     onClick={updateCurrencyRates}
                     disabled={isUpdatingRates}
@@ -653,30 +634,54 @@ const PaymentCurrencyPage = () => {
                       </>
                     )}
                   </button>
+                  <button
+                    onClick={fixCurrencyRates}
+                    disabled={isUpdatingRates}
+                    className="btn btn-primary btn-sm flex items-center gap-2"
+                  >
+                    {isUpdatingRates ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Fixing...
+                      </>
+                    ) : (
+                      <>
+                        Fix Rates
+                      </>
+                    )}
+                  </button>
                 </div>
+                
               </div>
 
-              {/* Header */}
-              <div className="grid grid-cols-6 gap-3 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400">
-                <span className="text-center">Status</span>
-                <span className="text-center">Code</span>
-                <span className="text-center">Name</span>
-                <span className="text-center">Symbol</span>
-                <span className="text-center">Rate</span>
-                <span className="text-center">Action</span>
-              </div>
+              {/* Header and Currency List Container */}
+              <div className="overflow-x-auto">
+                <div className="min-w-[600px]">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400">
+                    <div className="grid grid-cols-12 gap-3 flex-1">
+                      <span className="text-left col-span-2">Status</span>
+                      <span className="text-left col-span-2">Code</span>
+                      <span className="text-left col-span-4">Name</span>
+                      <span className="text-left col-span-2">Symbol</span>
+                      <span className="text-left col-span-2">Rate</span>
+                    </div>
+                    <div className="w-20 text-center">Action</div>
+                  </div>
 
-              {/* Currency List */}
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {currencies.map((currency) => (
-                  <CurrencyItem
-                    key={currency.id}
-                    currency={currency}
-                    onEdit={editCurrency}
-                    onDelete={deleteCurrency}
-                    onToggleStatus={toggleCurrencyStatus}
-                  />
-                ))}
+                  {/* Currency List */}
+                  <div className="space-y-2 max-h-96 overflow-y-auto mt-2">
+                    {currencies.map((currency) => (
+                      <CurrencyItem
+                        key={currency.id}
+                        currency={currency}
+                        onEdit={editCurrency}
+                        onDelete={deleteCurrency}
+                        onToggleStatus={toggleCurrencyStatus}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Add New Currency */}
