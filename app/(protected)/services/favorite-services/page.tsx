@@ -6,7 +6,6 @@ import ServiceViewModal from '@/app/(protected)/services/serviceViewModal';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
-import { formatNumber } from '@/lib/utils';
 import { Fragment, useEffect, useState } from 'react';
 import {
   FaCheckCircle,
@@ -417,12 +416,12 @@ export default function FavoriteServices() {
                               </td>
                               <td className="py-3 px-4">
                                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  {formatNumber(service.min_order || 0)}
+                                  {(service.min_order || 0).toString()}
                                 </span>
                               </td>
                               <td className="py-3 px-4">
                                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  {formatNumber(service.max_order || 0)}
+                                  {(service.max_order || 0).toString()}
                                 </span>
                               </td>
                               <td className="py-3 px-4">

@@ -3,20 +3,20 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  FaCheck,
-  FaCheckCircle,
-  FaChevronDown,
-  FaChevronLeft,
-  FaChevronRight,
-  FaChevronUp,
-  FaEdit,
-  FaExclamationTriangle,
-  FaHandshake,
-  FaList,
-  FaSave,
-  FaSearch,
-  FaSync,
-  FaTimes,
+    FaCheck,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronLeft,
+    FaChevronRight,
+    FaChevronUp,
+    FaEdit,
+    FaExclamationTriangle,
+    FaHandshake,
+    FaList,
+    FaSave,
+    FaSearch,
+    FaSync,
+    FaTimes,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -989,7 +989,7 @@ const ImportServicesPage = () => {
                               <td className="p-3">
                                 <div className="flex items-center gap-2">
                                   <span className="font-semibold text-blue-600">
-                                    {category.servicesCount.toLocaleString()}
+                                    {category.servicesCount.toString()}
                                   </span>
                                   <span
                                     className="text-xs"
@@ -1037,7 +1037,7 @@ const ImportServicesPage = () => {
                             {apiCategories
                               .filter((cat) => cat.selected)
                               .reduce((sum, cat) => sum + cat.servicesCount, 0)
-                              .toLocaleString()}
+                              .toString()}
                           </p>
                         </div>
                       </div>
