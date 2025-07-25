@@ -7,7 +7,7 @@ export const ATTPANEL_CONFIG = {
   value: "attpanel",
   label: "ATTPANEL",
   description: "Reliable SMM panel with competitive prices",
-  apiUrl: "https://api.attpanel.com/v3",
+  apiUrl: "https://attpanel.com/api/v2",
 
   // Parameter Mapping (Their parameter -> Our parameter)
   parameterMapping: {

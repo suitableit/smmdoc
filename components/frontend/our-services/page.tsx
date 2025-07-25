@@ -4,14 +4,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React, { Fragment, useEffect, useState } from 'react';
 import {
-    FaArrowRight,
-    FaCheckCircle,
-    FaClipboardList,
-    FaEye,
-    FaRegStar,
-    FaSearch,
-    FaStar,
-    FaTimes,
+  FaArrowRight,
+  FaCheckCircle,
+  FaClipboardList,
+  FaEye,
+  FaRegStar,
+  FaSearch,
+  FaStar,
+  FaTimes,
 } from 'react-icons/fa';
 
 import { PriceDisplay } from '@/components/PriceDisplay';
@@ -281,7 +281,7 @@ const ServicesTable: React.FC = () => {
     if (page < totalPages) setPage(page + 1);
   };
 
-  const toggleFavorite = async (serviceId: string) => {
+  const toggleFavorite = async (serviceId: number) => {
     if (!user?.id) {
       showToast('You need to be logged in to favorite services', 'error');
       return;
@@ -488,12 +488,12 @@ const ServicesTable: React.FC = () => {
                           </td>
                           <td className="py-3 px-4">
                             <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {service.min_order?.toString()}
+                              {`${service.min_order || 0}`}
                             </span>
                           </td>
                           <td className="py-3 px-4">
                             <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {service.max_order?.toString()}
+                              {`${service.max_order || 0}`}
                             </span>
                           </td>
                           <td className="py-3 px-4">

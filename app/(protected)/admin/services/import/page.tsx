@@ -3,20 +3,20 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-    FaCheck,
-    FaCheckCircle,
-    FaChevronDown,
-    FaChevronLeft,
-    FaChevronRight,
-    FaChevronUp,
-    FaEdit,
-    FaExclamationTriangle,
-    FaHandshake,
-    FaList,
-    FaSave,
-    FaSearch,
-    FaSync,
-    FaTimes,
+  FaCheck,
+  FaCheckCircle,
+  FaChevronDown,
+  FaChevronLeft,
+  FaChevronRight,
+  FaChevronUp,
+  FaEdit,
+  FaExclamationTriangle,
+  FaHandshake,
+  FaList,
+  FaSave,
+  FaSearch,
+  FaSync,
+  FaTimes,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -178,13 +178,13 @@ const ImportServicesPage = () => {
 
         if (result.success) {
           const formattedProviders = result.data.providers
-            .filter((p: any) => p.configured && p.status === 'active')
+            .filter((p: any) => p.configured) // Show both active and inactive configured providers
             .map((p: any) => ({
               id: p.id?.toString() || '',
               name: p.label,
               url: p.apiUrl,
               status: p.status,
-              description: `${p.label} - Ready for service import`
+              description: `${p.label} - ${p.status === 'active' ? 'Ready for service import' : 'Provider is inactive'}`
             }));
           setRealProviders(formattedProviders);
         }
@@ -562,12 +562,19 @@ const ImportServicesPage = () => {
         const categoryServices = result.data.services || [];
 
         // Store original provider price and apply profit margin to sale price
-        const servicesWithProfit = categoryServices.map((service: any) => ({
-          ...service,
-          providerPrice: service.rate, // Store original provider price
-          rate: parseFloat((service.rate * (1 + profitPercent / 100)).toFixed(2)), // Calculate initial sale price
-          percent: profitPercent, // Set initial percent from Step 1
-        }));
+        const servicesWithProfit = categoryServices.map((service: any) => {
+          const providerPrice = service.rate;
+          const salePrice = parseFloat((providerPrice * (1 + profitPercent / 100)).toFixed(2));
+
+          console.log(`🔥 Service: ${service.name}, Provider: $${providerPrice}, Sale: $${salePrice}, Profit: ${profitPercent}%`);
+
+          return {
+            ...service,
+            providerPrice: providerPrice, // Store original provider price
+            rate: salePrice, // Calculate initial sale price
+            percent: profitPercent, // Set initial percent from Step 1
+          };
+        });
 
         setServices(servicesWithProfit);
         showToast(`Loaded ${servicesWithProfit.length} services from selected categories`, 'success');
@@ -586,8 +593,12 @@ const ImportServicesPage = () => {
 
   // Calculate sale price based on provider price and percentage
   const calculateSalePrice = (service: Service, percentage: number) => {
-    const providerPrice = service.providerPrice || service.rate;
-    return parseFloat((providerPrice * (1 + percentage / 100)).toFixed(2));
+    const providerPrice = service.providerPrice || 0;
+    const salePrice = parseFloat((providerPrice * (1 + percentage / 100)).toFixed(2));
+
+    console.log(`💰 Calculating: Provider $${providerPrice} + ${percentage}% = $${salePrice}`);
+
+    return salePrice;
   };
 
   // Get current sale price (recalculated based on current percentage)
@@ -634,6 +645,17 @@ const ImportServicesPage = () => {
         showToast('Please select a provider', 'error');
         return;
       }
+
+      // Check if selected provider is active
+      const selectedProviderData = (realProviders.length > 0 ? realProviders : dummyProviders).find(
+        (p) => p.id?.toString() === selectedProvider
+      );
+
+      if (selectedProviderData?.status === 'inactive') {
+        showToast('Selected provider is inactive. Please select an active provider.', 'error');
+        return;
+      }
+
       if (profitPercent < 0 || profitPercent > 100) {
         showToast('Profit percent must be between 0 and 100', 'error');
         return;
@@ -783,22 +805,49 @@ const ImportServicesPage = () => {
                         key={provider.id}
                         value={provider.id}
                         disabled={provider.status === 'inactive'}
+                        style={{
+                          color: provider.status === 'inactive' ? '#9CA3AF' : 'inherit',
+                          fontStyle: provider.status === 'inactive' ? 'italic' : 'normal'
+                        }}
                       >
-                        {provider.name} ({provider.status})
+                        {provider.name} {provider.status === 'inactive' ? '(inactive)' : '(active)'}
                       </option>
                     ))}
                   </select>
                   {selectedProvider && (
-                    <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                      <div
-                        className="text-sm"
-                        style={{ color: 'var(--text-muted)' }}
-                      >
-                        {
-                          (realProviders.length > 0 ? realProviders : dummyProviders).find((p) => p.id?.toString() === selectedProvider)
-                            ?.description
+                    <div className="mt-2 space-y-2">
+                      {(() => {
+                        const selectedProviderData = (realProviders.length > 0 ? realProviders : dummyProviders).find(
+                          (p) => p.id?.toString() === selectedProvider
+                        );
+
+                        if (selectedProviderData?.status === 'inactive') {
+                          return (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <FaExclamationTriangle className="text-red-500 w-4 h-4" />
+                                <div className="text-sm text-red-700 font-medium">
+                                  This provider is inactive and cannot be used for importing services.
+                                </div>
+                              </div>
+                              <div className="text-xs text-red-600 mt-1">
+                                Please select an active provider to continue.
+                              </div>
+                            </div>
+                          );
                         }
-                      </div>
+
+                        return (
+                          <div className="p-3 bg-gray-50 rounded-lg">
+                            <div
+                              className="text-sm"
+                              style={{ color: 'var(--text-muted)' }}
+                            >
+                              {selectedProviderData?.description}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
@@ -1314,8 +1363,7 @@ const ImportServicesPage = () => {
                                               </div>
                                               <div className="text-xs text-gray-500">
                                                 Provider: $
-                                                {service.providerPrice ||
-                                                  service.rate}
+                                                {service.providerPrice ? service.providerPrice.toFixed(2) : '0.00'}
                                               </div>
                                             </div>
                                           </td>
@@ -1494,19 +1542,19 @@ const ImportServicesPage = () => {
                                           <label className="form-label mb-2">
                                             Price (USD)
                                           </label>
-                                          <div
-                                            className="font-semibold text-sm bg-gray-50 px-3 py-2 rounded"
-                                            style={{
-                                              color: 'var(--text-primary)',
-                                            }}
-                                          >
-                                            $
-                                            {
-                                              getCurrentValue(
-                                                service,
-                                                'rate'
-                                              ) as number
-                                            }
+                                          <div className="space-y-1">
+                                            <div
+                                              className="font-semibold text-sm bg-gray-50 px-3 py-2 rounded"
+                                              style={{
+                                                color: 'var(--text-primary)',
+                                              }}
+                                            >
+                                              ${getCurrentSalePrice(service)}
+                                            </div>
+                                            <div className="text-xs text-gray-500 px-3">
+                                              Provider: $
+                                              {service.providerPrice ? service.providerPrice.toFixed(2) : '0.00'}
+                                            </div>
                                           </div>
                                         </div>
                                         <div>
@@ -1601,8 +1649,16 @@ const ImportServicesPage = () => {
                 {currentStep < 3 ? (
                   <button
                     onClick={handleNext}
-                    disabled={isLoading}
-                    className="btn btn-primary flex items-center gap-2 w-full justify-center"
+                    disabled={
+                      isLoading ||
+                      (currentStep === 1 && (
+                        !selectedProvider ||
+                        (realProviders.length > 0 ? realProviders : dummyProviders).find(
+                          (p) => p.id?.toString() === selectedProvider
+                        )?.status === 'inactive'
+                      ))
+                    }
+                    className="btn btn-primary flex items-center gap-2 w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                     <FaChevronRight />

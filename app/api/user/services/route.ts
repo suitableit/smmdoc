@@ -80,9 +80,30 @@ export async function GET(request: Request) {
         orderBy: {
           createdAt: 'desc',
         },
-        include: {
-          category: true,
-          serviceType: true,
+        select: {
+          id: true,
+          name: true,
+          rate: true,
+          rateUSD: true,
+          min_order: true,
+          max_order: true,
+          avg_time: true,
+          description: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          category: {
+            select: {
+              id: true,
+              category_name: true,
+            }
+          },
+          serviceType: {
+            select: {
+              id: true,
+              name: true,
+            }
+          },
         },
       }),
       db.service.count({ where: whereClause }),
