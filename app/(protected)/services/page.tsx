@@ -2,12 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import ServiceViewModal from '@/app/(protected)/services/serviceViewModal';
-import { PriceDisplay } from '@/components/PriceDisplay';
-import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
-import { formatNumber } from '@/lib/utils';
-import { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import {
   FaCheckCircle,
   FaClipboardList,
@@ -17,6 +12,12 @@ import {
   FaStar,
   FaTimes,
 } from 'react-icons/fa';
+
+import ServiceViewModal from '@/app/(protected)/services/serviceViewModal';
+import { PriceDisplay } from '@/components/PriceDisplay';
+import { useCurrentUser } from '@/hooks/use-current-user';
+import { APP_NAME } from '@/lib/constants';
+import { formatNumber } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -77,7 +78,7 @@ interface Service {
   isFavorite?: boolean;
 }
 
-export default function UserServiceTable() {
+const UserServiceTable: React.FC = () => {
   const user = useCurrentUser();
   const [services, setServices] = useState<Service[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -94,9 +95,11 @@ export default function UserServiceTable() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-  const [limit, setLimit] = useState('50');
+  const [limit, setLimit] = useState('20');
   const [isShowAll, setIsShowAll] = useState(false);
   const [allCategories, setAllCategories] = useState<any[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreData, setHasMoreData] = useState(true);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -121,27 +124,38 @@ export default function UserServiceTable() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    const fetchServices = async () => {
+  // Optimized fetch function with better performance
+  const fetchServices = React.useCallback(async (isLoadMore = false) => {
+    if (isLoadMore) {
+      setIsLoadingMore(true);
+    } else {
       setLoading(true);
-      try {
-        // First fetch the services
-        const response = await fetch(
-          `/api/user/services?page=${page}&limit=${limit}&search=${debouncedSearch}`,
-          {
-            method: 'GET',
-            cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache',
-            },
-          }
-        );
+    }
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch services: ${response.statusText}`);
+    try {
+      // Use smaller limit for better performance
+      const effectiveLimit = limit === 'all' ? '100' : limit;
+      const currentPage = isLoadMore ? page + 1 : page;
+
+      const response = await fetch(
+        `/api/user/services?page=${currentPage}&limit=${effectiveLimit}&search=${debouncedSearch}`,
+        {
+          method: 'GET',
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
         }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch services: ${response.statusText}`);
+      }
 
         const data = await response.json();
+
+        // Check if we have more data for pagination
+        setHasMoreData(data.page < data.totalPages);
 
         if (!user?.id) {
           const servicesData =
@@ -150,49 +164,61 @@ export default function UserServiceTable() {
               isFavorite: false,
             })) || [];
 
-          setServices(servicesData);
-
-          // Group services by category ID to handle duplicate names
-          const groupedById: Record<string, { category: any; services: Service[] }> = {};
-
-          // First, initialize only active categories (not hidden)
-          if (data.allCategories && data.allCategories.length > 0) {
-            data.allCategories
-              .filter((category: any) => category.hideCategory !== 'yes') // Only show active categories
-              .forEach((category: any) => {
-                const categoryKey = `${category.category_name}_${category.id}`;
-                groupedById[categoryKey] = {
-                  category: category,
-                  services: []
-                };
-              });
+          // For load more, append to existing services
+          if (isLoadMore) {
+            setServices(prev => [...prev, ...servicesData]);
+            setPage(currentPage);
+          } else {
+            setServices(servicesData);
           }
 
-          // Then add services to their respective categories
-          servicesData.forEach((service: Service) => {
-            const categoryId = service.category?.id;
-            const categoryName = service.category?.category_name || 'Uncategorized';
-            const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
+          // Optimize grouping - only process if not loading more or if categories changed
+          if (!isLoadMore || allCategories.length === 0) {
+            const groupedById: Record<string, { category: any; services: Service[] }> = {};
 
-            if (!groupedById[categoryKey]) {
-              groupedById[categoryKey] = {
-                category: service.category || { id: 0, category_name: 'Uncategorized' },
-                services: []
-              };
+            // First, initialize only active categories (not hidden)
+            if (data.allCategories && data.allCategories.length > 0) {
+              data.allCategories
+                .filter((category: any) => category.hideCategory !== 'yes') // Only show active categories
+                .forEach((category: any) => {
+                  const categoryKey = `${category.category_name}_${category.id}`;
+                  groupedById[categoryKey] = {
+                    category: category,
+                    services: []
+                  };
+                });
             }
-            groupedById[categoryKey].services.push(service);
-          });
 
-          // Convert to the format expected by the UI
-          const grouped: Record<string, Service[]> = {};
-          Object.values(groupedById).forEach(({ category, services }) => {
-            grouped[category.category_name] = services;
-          });
+            // Then add services to their respective categories
+            const allServicesForGrouping = isLoadMore ? [...services, ...servicesData] : servicesData;
+            allServicesForGrouping.forEach((service: Service) => {
+              const categoryId = service.category?.id;
+              const categoryName = service.category?.category_name || 'Uncategorized';
+              const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
 
-          setGroupedServices(grouped);
-          setTotalPages(data.totalPages || 1);
-          setIsShowAll(data.isShowAll || false);
-          setAllCategories(data.allCategories || []);
+              if (!groupedById[categoryKey]) {
+                groupedById[categoryKey] = {
+                  category: service.category || { id: 0, category_name: 'Uncategorized' },
+                  services: []
+                };
+              }
+              groupedById[categoryKey].services.push(service);
+            });
+
+            // Convert to the format expected by the UI
+            const grouped: Record<string, Service[]> = {};
+            Object.values(groupedById).forEach(({ category, services }) => {
+              grouped[category.category_name] = services;
+            });
+
+            setGroupedServices(grouped);
+          }
+
+          if (!isLoadMore) {
+            setTotalPages(data.totalPages || 1);
+            setIsShowAll(data.isShowAll || false);
+            setAllCategories(data.allCategories || []);
+          }
           return;
         }
 
@@ -364,28 +390,51 @@ export default function UserServiceTable() {
       } catch (error) {
         console.error('Error fetching services:', error);
         showToast('Error fetching services. Please try again later.', 'error');
-        setServices([]);
-        setGroupedServices({});
-        setTotalPages(1);
+        if (!isLoadMore) {
+          setServices([]);
+          setGroupedServices({});
+          setTotalPages(1);
+        }
       } finally {
-        setLoading(false);
+        if (isLoadMore) {
+          setIsLoadingMore(false);
+        } else {
+          setLoading(false);
+        }
       }
-    };
+    }, [user?.id, limit]);
 
-    fetchServices();
-  }, [page, debouncedSearch, user?.id, limit]);
+  // Initial load and search changes
+  useEffect(() => {
+    fetchServices(false);
+  }, [fetchServices, page, debouncedSearch]);
+
+  // Load more function
+  const loadMoreServices = React.useCallback(() => {
+    if (!isLoadingMore && hasMoreData && page < totalPages) {
+      fetchServices(true);
+    }
+  }, [fetchServices, isLoadingMore, hasMoreData, page, totalPages]);
 
   const handlePrevious = () => {
-    if (page > 1) setPage(page - 1);
+    if (page > 1) {
+      setPage(page - 1);
+      setHasMoreData(true);
+    }
   };
 
   const handleNext = () => {
-    if (page < totalPages) setPage(page + 1);
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
   };
 
   const handleLimitChange = (newLimit: string) => {
     setLimit(newLimit);
     setPage(1); // Reset to first page when changing limit
+    setServices([]); // Clear existing services
+    setGroupedServices({});
+    setHasMoreData(true);
   };
 
   const toggleFavorite = async (serviceId: string) => {
@@ -517,10 +566,9 @@ export default function UserServiceTable() {
                   onChange={(e) => handleLimitChange(e.target.value)}
                   className="pl-4 pr-8 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm min-w-[80px]"
                 >
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                  <option value="all">All</option>
+                  <option value="20">20 (Fast)</option>
+                  <option value="50">50 (Recommended)</option>
+                  <option value="100">100 (Slower)</option>
                 </select>
               </div>
             </div>
@@ -528,141 +576,152 @@ export default function UserServiceTable() {
 
           {/* Services by Category */}
           {Object.keys(groupedServices).length > 0 ? (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 rounded-t-lg">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white first:rounded-tl-lg">
-                      Fav
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                      ID
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                      Service
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                      Type
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                      Rate per 1000
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                      Min order
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                      Max order
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                      Average time
-                    </th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">
-                      Refill
-                    </th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">
-                      Cancel
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white last:rounded-tr-lg">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(groupedServices).map(
-                    ([categoryName, categoryServices]) => (
-                      <Fragment key={categoryName}>
-                        {/* Category Row */}
-                        <tr>
-                          <td colSpan={11} className="py-0">
-                            <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 shadow-lg">
-                              <h3 className="text-lg font-semibold">
-                                {categoryName}
-                              </h3>
-                            </div>
-                          </td>
-                        </tr>
+            <div className="space-y-6">
+              {Object.entries(groupedServices).map(
+                ([categoryName, categoryServices]) => (
+                  <div key={categoryName} className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+                    {/* Category Header */}
+                    <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-4 px-6">
+                      <h3 className="text-lg font-semibold">
+                        {categoryName}
+                      </h3>
+                    </div>
 
-                        {/* Category Services */}
-                        {categoryServices.map((service, index) => {
-                          const isLastInCategory =
-                            index === categoryServices.length - 1;
-                          const isLastCategory =
-                            Object.keys(groupedServices).indexOf(
-                              categoryName
-                            ) ===
-                            Object.keys(groupedServices).length - 1;
-                          const isLastRow = isLastInCategory && isLastCategory;
-
-                          return (
-                            <tr
-                              key={service.id}
-                              className={`border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30 ${
-                                isLastRow ? 'last:border-b-0' : ''
-                              }`}
-                            >
-                              <td
-                                className={`py-3 px-4 ${
-                                  isLastRow ? 'first:rounded-bl-lg' : ''
-                                }`}
+                    {/* Services Table for this Category */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
+                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              Fav
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              ID
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              Service
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              Type
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              Rate per 1000
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              Min order
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              Max order
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              Average time
+                            </th>
+                            <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              Refill
+                            </th>
+                            <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              Cancel
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {/* Category Services */}
+                          {categoryServices.length > 0 ? (
+                            categoryServices.map((service, index) => (
+                              <tr
+                                key={service.id}
+                                className="border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30 last:border-b-0"
                               >
-                                <button
-                                  onClick={() => toggleFavorite(service.id)}
-                                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors duration-200"
-                                  title={
-                                    service.isFavorite
-                                      ? 'Remove from favorites'
-                                      : 'Add to favorites'
-                                  }
-                                >
-                                  {service.isFavorite ? (
-                                    <FaStar className="w-4 h-4 text-yellow-500" />
-                                  ) : (
-                                    <FaRegStar className="w-4 h-4 text-gray-400 hover:text-yellow-500" />
-                                  )}
-                                </button>
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
-                                  {service.id}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4">
-                                <div className="font-medium text-gray-900 dark:text-white">
-                                  {service.name}
-                                </div>
-                              </td>
-                              <td className="py-3 px-4">
-                                <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 w-fit">
-                                  {service?.serviceType?.name || 'Standard'}
-                                </div>
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                  <PriceDisplay
-                                    amount={service.rate}
-                                    originalCurrency={'USD'}
-                                  />
-                                </span>
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  {formatNumber(service.min_order || 0)}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  {formatNumber(service.max_order || 0)}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="text-sm text-gray-700 dark:text-gray-300">
-                                  {service.avg_time || 'N/A'}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4 text-center">
-                                <div className="space-y-1">
+                                <td className="py-3 px-4">
+                                  <button
+                                    onClick={() => toggleFavorite(service.id)}
+                                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors duration-200"
+                                    title={
+                                      service.isFavorite
+                                        ? 'Remove from favorites'
+                                        : 'Add to favorites'
+                                    }
+                                  >
+                                    {service.isFavorite ? (
+                                      <FaStar className="w-4 h-4 text-yellow-500" />
+                                    ) : (
+                                      <FaRegStar className="w-4 h-4 text-gray-400 hover:text-yellow-500" />
+                                    )}
+                                  </button>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                                    {service.id}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="font-medium text-gray-900 dark:text-white">
+                                    {service.name}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 w-fit">
+                                    {service?.serviceType?.name || 'Standard'}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                    <PriceDisplay
+                                      amount={service.rate}
+                                      originalCurrency={'USD'}
+                                    />
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    {formatNumber(service.min_order || 0)}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    {formatNumber(service.max_order || 0)}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    {service.avg_time || 'N/A'}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-center gap-1">
+                                      {service.refill ? (
+                                        <>
+                                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                          <span className="text-xs text-green-600 font-medium">ON</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                          <span className="text-xs text-red-600 font-medium">OFF</span>
+                                        </>
+                                      )}
+                                    </div>
+
+                                    {/* Show Refill Details when refill is enabled */}
+                                    {service.refill && (
+                                      <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+                                        {service.refillDays && (
+                                          <div>Days: {service.refillDays}</div>
+                                        )}
+                                        {service.refillDisplay && (
+                                          <div>Hours: {service.refillDisplay}</div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-center">
                                   <div className="flex items-center justify-center gap-1">
-                                    {service.refill ? (
+                                    {service.cancel ? (
                                       <>
                                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                                         <span className="text-xs text-green-600 font-medium">ON</span>
@@ -674,56 +733,34 @@ export default function UserServiceTable() {
                                       </>
                                     )}
                                   </div>
-
-                                  {/* Show Refill Details when refill is enabled */}
-                                  {service.refill && (
-                                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
-                                      {service.refillDays && (
-                                        <div>Days: {service.refillDays}</div>
-                                      )}
-                                      {service.refillDisplay && (
-                                        <div>Hours: {service.refillDisplay}</div>
-                                      )}
-                                    </div>
-                                  )}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <button
+                                    onClick={() => handleViewDetails(service)}
+                                    className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--primary)] dark:text-[var(--secondary)] hover:text-[#4F0FD8] dark:hover:text-[#A121E8] border border-[var(--primary)] dark:border-[var(--secondary)] rounded hover:bg-[var(--primary)]/10 dark:hover:bg-[var(--secondary)]/10 transition-colors duration-200"
+                                  >
+                                    <FaEye className="w-3 h-3" />
+                                    Details
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={11} className="py-8 text-center">
+                                <div className="flex flex-col items-center justify-center text-gray-500">
+                                  <FaClipboardList className="text-4xl mb-2" />
+                                  <p className="text-sm font-medium">No services in this category</p>
                                 </div>
-                              </td>
-                              <td className="py-3 px-4 text-center">
-                                <div className="flex items-center justify-center gap-1">
-                                  {service.cancel ? (
-                                    <>
-                                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                      <span className="text-xs text-green-600 font-medium">ON</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                      <span className="text-xs text-red-600 font-medium">OFF</span>
-                                    </>
-                                  )}
-                                </div>
-                              </td>
-                              <td
-                                className={`py-3 px-4 ${
-                                  isLastRow ? 'last:rounded-br-lg' : ''
-                                }`}
-                              >
-                                <button
-                                  onClick={() => handleViewDetails(service)}
-                                  className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--primary)] dark:text-[var(--secondary)] hover:text-[#4F0FD8] dark:hover:text-[#A121E8] border border-[var(--primary)] dark:border-[var(--secondary)] rounded hover:bg-[var(--primary)]/10 dark:hover:bg-[var(--secondary)]/10 transition-colors duration-200"
-                                >
-                                  <FaEye className="w-3 h-3" />
-                                  Details
-                                </button>
                               </td>
                             </tr>
-                          );
-                        })}
-                      </Fragment>
-                    )
-                  )}
-                </tbody>
-              </table>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           ) : (
             <div className="text-center py-8 flex flex-col items-center">
@@ -737,7 +774,27 @@ export default function UserServiceTable() {
             </div>
           )}
 
-          {/* Pagination - Hide when showing all */}
+          {/* Load More Button - Better for performance */}
+          {!isShowAll && hasMoreData && (
+            <div className="flex justify-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+              <button
+                onClick={loadMoreServices}
+                disabled={isLoadingMore}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <GradientSpinner size="w-4 h-4" />
+                    Loading more...
+                  </>
+                ) : (
+                  'Load More Services'
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Traditional Pagination - Hide when showing all */}
           {!isShowAll && totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -763,14 +820,23 @@ export default function UserServiceTable() {
             </div>
           )}
 
-          {/* Show total count when displaying all */}
-          {isShowAll && (
-            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-              <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
-                Showing all <span className="font-medium">{services.length}</span> services
-              </div>
+          {/* Performance indicator */}
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
+              {isShowAll ? (
+                <>Showing all <span className="font-medium">{services.length}</span> services</>
+              ) : (
+                <>
+                  Loaded <span className="font-medium">{services.length}</span> services
+                  {hasMoreData && (
+                    <span className="ml-2 text-blue-600 dark:text-blue-400">
+                      • More available
+                    </span>
+                  )}
+                </>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -784,4 +850,6 @@ export default function UserServiceTable() {
       )}
     </div>
   );
-}
+};
+
+export default UserServiceTable;

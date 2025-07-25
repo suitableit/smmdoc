@@ -27,6 +27,201 @@ const PROVIDER_CONFIGS = {
   }
 };
 
+// POST - Handle services request with categories in body to avoid URL length limits
+export async function POST(req: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (!session?.user || session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { action, providerId, categories, page = 1, limit = 1000 } = body;
+
+    console.log('🔥 POST Services request:', { action, providerId, categories: categories?.length, page, limit });
+
+    // Handle services request
+    if (action === 'services' && providerId && categories && Array.isArray(categories)) {
+      try {
+        const provider = await db.apiProvider.findUnique({
+          where: { id: parseInt(providerId) }
+        });
+
+        if (!provider) {
+          console.log('❌ Provider not found:', providerId);
+          return NextResponse.json(
+            { error: 'Provider not found', success: false, data: null },
+            { status: 404 }
+          );
+        }
+
+        console.log('✅ Provider found:', provider.name);
+
+        const providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
+        if (!providerConfig) {
+          console.log('❌ Provider config not found for:', provider.name.toLowerCase());
+          return NextResponse.json(
+            { error: 'Provider configuration not found', success: false, data: null },
+            { status: 400 }
+          );
+        }
+
+        // Fetch services from provider API
+        let providerServices = null;
+
+        if (provider.name.toLowerCase() === 'smmcoder') {
+          // SMMCoder API requires POST method with form data
+          const smmcoderUrls = [
+            'https://smmcoder.com/api/v2',
+            'https://smmcoder.com/api'
+          ];
+
+          for (const baseUrl of smmcoderUrls) {
+            try {
+              const formData = new FormData();
+              formData.append('key', provider.api_key);
+              formData.append('action', 'services');
+
+              console.log(`🔄 Trying SMMCoder API: ${baseUrl}`);
+              const response = await fetch(baseUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                  providerServices = data;
+                  console.log(`✅ SMMCoder API success: ${baseUrl} - ${data.length} services`);
+                  break;
+                }
+              }
+            } catch (error) {
+              console.log(`❌ SMMCoder API failed: ${baseUrl}`, error);
+              continue;
+            }
+          }
+        } else {
+          // For other providers, use GET method
+          const urls = [providerConfig.apiUrl, ...providerConfig.alternativeUrls];
+
+          for (const baseUrl of urls) {
+            try {
+              const apiUrl = `${baseUrl}${providerConfig.endpoints.services}?key=${provider.api_key}&action=services`;
+              console.log(`🔄 Trying API: ${baseUrl}`);
+
+              const response = await fetch(apiUrl, {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                  providerServices = data;
+                  console.log(`✅ API success: ${baseUrl} - ${data.length} services`);
+                  break;
+                }
+              }
+            } catch (error) {
+              console.log(`❌ API failed: ${baseUrl}`, error);
+              continue;
+            }
+          }
+        }
+
+        if (!providerServices || !Array.isArray(providerServices)) {
+          console.log('❌ No services fetched from provider:', {
+            providerServices: providerServices ? 'exists but not array' : 'null/undefined',
+            type: typeof providerServices,
+            isArray: Array.isArray(providerServices)
+          });
+          return NextResponse.json(
+            { error: 'Failed to fetch services from provider', success: false, data: null },
+            { status: 500 }
+          );
+        }
+
+        console.log(`✅ Fetched ${providerServices.length} services from ${provider.name}`);
+
+        // Filter services by selected categories
+        console.log('🔍 Filtering by categories:', categories);
+
+        const filteredServices = providerServices.filter((service: any) => {
+          const serviceCategory = service.category || 'Uncategorized';
+          const matches = categories.includes(serviceCategory);
+          return matches;
+        });
+
+        console.log(`📊 Filtered to ${filteredServices.length} services from ${providerServices.length} total`);
+
+        // Apply pagination
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedServices = filteredServices.slice(startIndex, endIndex);
+
+        console.log(`📄 Pagination: Page ${page}, Limit ${limit}, Start: ${startIndex}, End: ${endIndex}`);
+        console.log(`📄 Returning ${paginatedServices.length} services from ${filteredServices.length} total`);
+
+        // Format services with proper ID and description
+        const formattedServices = paginatedServices.map((service: any, index: number) => ({
+          ...service,
+          id: service.service || service.id || `srv_${startIndex + index + 1}`, // Ensure ID exists with proper indexing
+          description: service.description || service.name || 'No description available', // Ensure description exists
+          category: service.category || 'Uncategorized'
+        }));
+
+        console.log(`✅ Returning ${formattedServices.length} formatted services for page ${page}`);
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            services: formattedServices,
+            pagination: {
+              page: page,
+              limit: limit,
+              total: filteredServices.length,
+              totalPages: Math.ceil(filteredServices.length / limit),
+              hasMore: endIndex < filteredServices.length,
+              returned: formattedServices.length
+            },
+            provider: provider.name
+          },
+          error: null
+        });
+
+      } catch (error) {
+        console.error('❌ Error in services request:', error);
+        return NextResponse.json(
+          {
+            error: `Failed to fetch services: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            success: false,
+            data: null
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      { error: 'Invalid request parameters', success: false, data: null },
+      { status: 400 }
+    );
+
+  } catch (error) {
+    console.error('❌ POST request error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', success: false, data: null },
+      { status: 500 }
+    );
+  }
+}
+
 // GET - Get available providers for import or categories
 export async function GET(req: NextRequest) {
   try {
@@ -43,19 +238,26 @@ export async function GET(req: NextRequest) {
 
     // If requesting services for selected categories
     if (action === 'services' && providerId && categories) {
+      try {
+        console.log('🔥 Services request:', { providerId, categories });
+
       const provider = await db.apiProvider.findUnique({
         where: { id: parseInt(providerId) }
       });
 
       if (!provider) {
+        console.log('❌ Provider not found:', providerId);
         return NextResponse.json(
           { error: 'Provider not found', success: false, data: null },
           { status: 404 }
         );
       }
 
+      console.log('✅ Provider found:', provider.name);
+
       const providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
       if (!providerConfig) {
+        console.log('❌ Provider config not found for:', provider.name.toLowerCase());
         return NextResponse.json(
           { error: 'Provider configuration not found', success: false, data: null },
           { status: 400 }
@@ -162,17 +364,33 @@ export async function GET(req: NextRequest) {
       }
 
       if (!providerServices || !Array.isArray(providerServices)) {
+        console.log('❌ No services fetched from provider:', {
+          providerServices: providerServices ? 'exists but not array' : 'null/undefined',
+          type: typeof providerServices,
+          isArray: Array.isArray(providerServices)
+        });
         return NextResponse.json(
           { error: 'Failed to fetch services from provider', success: false, data: null },
           { status: 500 }
         );
       }
 
+      console.log(`✅ Fetched ${providerServices.length} services from ${provider.name}`);
+
       // Filter services by selected categories
-      const selectedCategories = categories.split(',');
-      const filteredServices = providerServices.filter((service: any) =>
-        selectedCategories.includes(service.category)
-      );
+      const selectedCategories = categories.split(',').map(cat => cat.trim());
+      console.log('🔍 Filtering by categories:', selectedCategories);
+
+      const filteredServices = providerServices.filter((service: any) => {
+        const serviceCategory = service.category || 'Uncategorized';
+        const matches = selectedCategories.includes(serviceCategory);
+        if (!matches) {
+          console.log(`⚠️ Service "${service.name}" category "${serviceCategory}" not in selected categories`);
+        }
+        return matches;
+      });
+
+      console.log(`📊 Filtered to ${filteredServices.length} services from ${providerServices.length} total`);
 
       // Format services with proper ID and description
       const formattedServices = filteredServices.map((service: any, index: number) => ({
@@ -181,6 +399,8 @@ export async function GET(req: NextRequest) {
         description: service.description || service.name || 'No description available', // Ensure description exists
         category: service.category || 'Uncategorized'
       }));
+
+      console.log(`✅ Returning ${formattedServices.length} formatted services`);
 
       return NextResponse.json({
         success: true,
@@ -191,6 +411,18 @@ export async function GET(req: NextRequest) {
         },
         error: null
       });
+
+      } catch (error) {
+        console.error('❌ Error in services request:', error);
+        return NextResponse.json(
+          {
+            error: `Failed to fetch services: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            success: false,
+            data: null
+          },
+          { status: 500 }
+        );
+      }
     }
 
     // If requesting categories for a specific provider
@@ -397,8 +629,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST - Import services from selected provider
-export async function POST(req: NextRequest) {
+// PUT - Import services from selected provider
+export async function PUT(req: NextRequest) {
   try {
     const session = await auth();
 
