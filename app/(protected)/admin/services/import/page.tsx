@@ -807,10 +807,10 @@ const ImportServicesPage = () => {
                         disabled={provider.status === 'inactive'}
                         style={{
                           color: provider.status === 'inactive' ? '#9CA3AF' : 'inherit',
-                          fontStyle: provider.status === 'inactive' ? 'italic' : 'normal'
+                          fontStyle: provider.status === 'inactive'
                         }}
                       >
-                        {provider.name} {provider.status === 'inactive' ? '(inactive)' : '(active)'}
+                        {provider.name} {provider.status === 'inactive' ? '(inactive)' : ''}
                       </option>
                     ))}
                   </select>
