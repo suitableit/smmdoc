@@ -7,7 +7,7 @@ export const SMMGEN_CONFIG = {
   value: "smmgen",
   label: "SMMGen",
   description: "Premium SMM services with fast delivery",
-  apiUrl: "https://api.smmgen.com/v2",
+  apiUrl: "https://smmgen.com/api/v2",
 
   // Parameter Mapping (Their parameter -> Our parameter)
   parameterMapping: {

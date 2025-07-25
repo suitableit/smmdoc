@@ -3,22 +3,26 @@ import { convertToUSD } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Provider configurations
+// Provider configurations with multiple API URL options
 const PROVIDER_CONFIGS = {
   smmgen: {
     apiUrl: "https://api.smmgen.com/v2",
+    alternativeUrls: ["https://smmgen.com/api/v2", "https://smmgen.com/api"],
     endpoints: { services: "/services", balance: "/balance" }
   },
   growfollows: {
-    apiUrl: "https://api.growfollows.com/v2", 
+    apiUrl: "https://api.growfollows.com/v2",
+    alternativeUrls: ["https://growfollows.com/api/v2", "https://growfollows.com/api"],
     endpoints: { services: "/services", balance: "/balance" }
   },
   attpanel: {
-    apiUrl: "https://api.attpanel.com/v3",
+    apiUrl: "https://attpanel.com/api/v2",
+    alternativeUrls: ["https://api.attpanel.com/v3", "https://attpanel.com/api"],
     endpoints: { services: "/services", balance: "/balance" }
   },
   smmcoder: {
     apiUrl: "https://smmcoder.com/api/v2",
+    alternativeUrls: ["https://smmcoder.com/api"],
     endpoints: { services: "/services", balance: "/balance" }
   }
 };
@@ -92,16 +96,68 @@ export async function GET(req: NextRequest) {
           }
         }
       } else {
-        // For other providers, use GET method
-        try {
-          const servicesUrl = `${providerConfig.apiUrl}${providerConfig.endpoints.services}?key=${provider.api_key}`;
-          const response = await fetch(servicesUrl);
+        // For other providers, try both POST and GET methods with multiple URLs
+        const baseUrls = [providerConfig.apiUrl, ...(providerConfig.alternativeUrls || [])];
 
-          if (response.ok) {
-            providerServices = await response.json();
+        for (const baseUrl of baseUrls) {
+          console.log(`🔥 Trying provider ${provider.name} with URL: ${baseUrl}`);
+
+          try {
+            // Try POST method first (standard for most SMM panels)
+            const formData = new FormData();
+            formData.append('key', provider.api_key);
+            formData.append('action', 'services');
+
+            console.log(`📤 POST request to ${baseUrl} with key: ${provider.api_key.substring(0, 10)}...`);
+
+            const postResponse = await fetch(baseUrl, {
+              method: 'POST',
+              body: formData,
+            });
+
+            console.log(`📥 POST Response status: ${postResponse.status} for ${baseUrl}`);
+
+            if (postResponse.ok) {
+              const data = await postResponse.json();
+              console.log(`📊 POST Response data type: ${Array.isArray(data) ? 'Array' : typeof data}, length: ${Array.isArray(data) ? data.length : 'N/A'}`);
+
+              if (Array.isArray(data) && data.length > 0) {
+                providerServices = data;
+                console.log(`✅ SUCCESS with POST ${baseUrl}! Found ${data.length} services`);
+                break;
+              }
+            } else {
+              const errorText = await postResponse.text();
+              console.log(`❌ POST Error response: ${errorText}`);
+            }
+          } catch (error) {
+            console.error(`❌ POST method failed for ${baseUrl}:`, error);
           }
-        } catch (error) {
-          console.error('Error fetching services:', error);
+
+          // If POST failed, try GET method
+          try {
+            const servicesUrl = `${baseUrl}${providerConfig.endpoints.services}?key=${provider.api_key}&action=services`;
+            console.log(`📤 GET request to ${servicesUrl}`);
+
+            const getResponse = await fetch(servicesUrl);
+            console.log(`📥 GET Response status: ${getResponse.status} for ${servicesUrl}`);
+
+            if (getResponse.ok) {
+              const data = await getResponse.json();
+              console.log(`📊 GET Response data type: ${Array.isArray(data) ? 'Array' : typeof data}, length: ${Array.isArray(data) ? data.length : 'N/A'}`);
+
+              if (Array.isArray(data) && data.length > 0) {
+                providerServices = data;
+                console.log(`✅ SUCCESS with GET ${servicesUrl}! Found ${data.length} services`);
+                break;
+              }
+            } else {
+              const errorText = await getResponse.text();
+              console.log(`❌ GET Error response: ${errorText}`);
+            }
+          } catch (error) {
+            console.error(`❌ GET method failed for ${baseUrl}:`, error);
+          }
         }
       }
 
@@ -158,9 +214,6 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      // Try multiple URLs for SMMCoder
-      let servicesUrl = `${providerConfig.apiUrl}${providerConfig.endpoints.services}?key=${provider.api_key}`;
-
       // For SMMCoder, use POST method as per their API documentation
       let providerServices = null;
       let workingUrl = null;
@@ -208,15 +261,45 @@ export async function GET(req: NextRequest) {
           }
         }
       } else {
-        // For other providers, use GET method
-        const testUrls = [servicesUrl];
-        console.log('Testing URLs for categories:', testUrls);
+        // For other providers, try both POST and GET methods with multiple URLs
+        const baseUrls = [providerConfig.apiUrl, ...(providerConfig.alternativeUrls || [])];
+        console.log('Testing URLs for categories:', baseUrls);
 
-        for (const testUrl of testUrls) {
+        for (const baseUrl of baseUrls) {
           try {
-            console.log('Trying URL:', testUrl);
+            console.log('Trying POST method for:', baseUrl);
 
-            const response = await fetch(testUrl, {
+            // Try POST method first (standard for most SMM panels)
+            const formData = new FormData();
+            formData.append('key', provider.api_key);
+            formData.append('action', 'services');
+
+            const postResponse = await fetch(baseUrl, {
+              method: 'POST',
+              body: formData,
+            });
+
+            console.log(`POST Response status for ${baseUrl}:`, postResponse.status);
+
+            if (postResponse.ok) {
+              const data = await postResponse.json();
+              if (Array.isArray(data) && data.length > 0) {
+                providerServices = data;
+                workingUrl = baseUrl;
+                console.log(`SUCCESS with POST ${baseUrl}! Found ${data.length} services`);
+                break;
+              }
+            }
+          } catch (postError) {
+            console.log(`POST failed with ${baseUrl}:`, postError instanceof Error ? postError.message : postError);
+          }
+
+          // If POST failed, try GET method
+          try {
+            console.log('Trying GET method for:', baseUrl);
+            const getUrl = `${baseUrl}${providerConfig.endpoints.services}?key=${provider.api_key}&action=services`;
+
+            const getResponse = await fetch(getUrl, {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
@@ -224,19 +307,19 @@ export async function GET(req: NextRequest) {
               }
             });
 
-            console.log(`Response status for ${testUrl}:`, response.status);
+            console.log(`GET Response status for ${getUrl}:`, getResponse.status);
 
-            if (response.ok) {
-              const data = await response.json();
+            if (getResponse.ok) {
+              const data = await getResponse.json();
               if (Array.isArray(data) && data.length > 0) {
                 providerServices = data;
-                workingUrl = testUrl;
-                console.log(`SUCCESS with ${testUrl}! Found ${data.length} services`);
+                workingUrl = getUrl;
+                console.log(`SUCCESS with GET ${getUrl}! Found ${data.length} services`);
                 break;
               }
             }
-          } catch (urlError) {
-            console.log(`Failed with ${testUrl}:`, urlError instanceof Error ? urlError.message : urlError);
+          } catch (getError) {
+            console.log(`GET failed with ${baseUrl}:`, getError instanceof Error ? getError.message : getError);
           }
         }
       }
@@ -282,15 +365,18 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Default: Get configured providers
+    // Default: Get all configured providers (both active and inactive)
     const configuredProviders = await db.apiProvider.findMany({
-      where: { status: 'active' },
       select: {
         id: true,
         name: true,
         api_key: true,
         status: true
-      }
+      },
+      orderBy: [
+        { status: 'desc' }, // Active providers first
+        { name: 'asc' }     // Then alphabetical
+      ]
     });
 
     return NextResponse.json({

@@ -2,12 +2,12 @@
 'use client';
 
 import {
-  clearCurrencyCache,
-  convertCurrency,
-  Currency,
-  CurrencySettings,
-  fetchCurrencyData,
-  formatCurrencyAmount
+    clearCurrencyCache,
+    convertCurrency,
+    Currency,
+    CurrencySettings,
+    fetchCurrencyData,
+    formatCurrencyAmount
 } from '@/lib/currency-utils';
 import { createContext, useContext, useEffect, useState } from 'react';
 

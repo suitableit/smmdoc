@@ -6,15 +6,15 @@ import { NextRequest, NextResponse } from 'next/server';
 // Provider configurations
 const PROVIDER_CONFIGS = {
   smmgen: {
-    apiUrl: "https://api.smmgen.com/v2",
+    apiUrl: "https://smmgen.com/api/v2",
     endpoints: { services: "/services", balance: "/balance" }
   },
   growfollows: {
-    apiUrl: "https://api.growfollows.com/v2", 
+    apiUrl: "https://growfollows.com/api/v2",
     endpoints: { services: "/services", balance: "/balance" }
   },
   attpanel: {
-    apiUrl: "https://api.attpanel.com/v3",
+    apiUrl: "https://attpanel.com/api/v2",
     endpoints: { services: "/services", balance: "/balance" }
   },
   smmcoder: {
