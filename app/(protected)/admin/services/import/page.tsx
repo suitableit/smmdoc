@@ -146,7 +146,7 @@ interface ApiCategory {
 }
 
 interface Service {
-  id: number;
+  id: string | number;
   name: string;
   category: string;
   min: number;
@@ -433,6 +433,11 @@ const ImportServicesPage = () => {
 
   // Step 3 state
   const [services, setServices] = useState<Service[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalServices, setTotalServices] = useState(0);
+  const [hasMoreServices, setHasMoreServices] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const [toast, setToast] = useState<{
     message: string;
@@ -444,7 +449,7 @@ const ImportServicesPage = () => {
     const filteredServices = services.filter(
       (service) =>
         service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -539,9 +544,15 @@ const ImportServicesPage = () => {
     return provider ? provider.name : 'Unknown Provider';
   };
 
-  // Load services for selected categories
-  const loadServicesForCategories = async () => {
-    setIsLoading(true);
+  // Load services for selected categories with pagination
+  const loadServicesForCategories = async (page = 1, append = false) => {
+    if (!append) {
+      setIsLoading(true);
+      setServices([]); // Clear existing services for new load
+      setCurrentPage(1);
+    } else {
+      setLoadingMore(true);
+    }
 
     try {
       const selectedCategoryNames = apiCategories
@@ -551,19 +562,59 @@ const ImportServicesPage = () => {
       if (selectedCategoryNames.length === 0) {
         setServices([]);
         setIsLoading(false);
+        setLoadingMore(false);
         return;
       }
 
-      // Real API call to fetch services for selected categories
-      const response = await fetch(`/api/admin/services/import?action=services&providerId=${selectedProvider}&categories=${selectedCategoryNames.join(',')}`);
-      const result = await response.json();
+      // Use POST method to avoid URL length limits with many categories
+      const response = await fetch('/api/admin/services/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'services',
+          providerId: selectedProvider,
+          categories: selectedCategoryNames,
+          page: page,
+          limit: 1000 // Load 1000 services per batch
+        })
+      });
+
+      console.log('🔥 API Response status:', response.status);
+      console.log('🔥 API Response headers:', response.headers.get('content-type'));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🔥 API Error response:', errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const responseText = await response.text();
+      console.log('🔥 Raw API Response:', responseText.substring(0, 500));
+
+      if (!responseText.trim()) {
+        throw new Error('Empty response from API');
+      }
+
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('🔥 JSON Parse Error:', parseError);
+        console.error('🔥 Response text:', responseText);
+        throw new Error('Invalid JSON response from API');
+      }
 
       if (result.success) {
         const categoryServices = result.data.services || [];
+        const pagination = result.data.pagination;
+
+        console.log('📄 Pagination info:', pagination);
 
         // Store original provider price and apply profit margin to sale price
         const servicesWithProfit = categoryServices.map((service: any) => {
-          const providerPrice = service.rate;
+          const providerPrice = parseFloat(service.rate) || 0;
           const salePrice = parseFloat((providerPrice * (1 + profitPercent / 100)).toFixed(2));
 
           console.log(`🔥 Service: ${service.name}, Provider: $${providerPrice}, Sale: $${salePrice}, Profit: ${profitPercent}%`);
@@ -576,24 +627,51 @@ const ImportServicesPage = () => {
           };
         });
 
-        setServices(servicesWithProfit);
-        showToast(`Loaded ${servicesWithProfit.length} services from selected categories`, 'success');
+        // Update pagination state
+        setCurrentPage(pagination.page);
+        setTotalPages(pagination.totalPages);
+        setTotalServices(pagination.total);
+        setHasMoreServices(pagination.hasMore);
+
+        if (append) {
+          // Append new services to existing ones
+          setServices(prev => [...prev, ...servicesWithProfit]);
+          showToast(`Loaded ${servicesWithProfit.length} more services (${services.length + servicesWithProfit.length}/${pagination.total} total)`, 'success');
+        } else {
+          // Replace services with new ones
+          setServices(servicesWithProfit);
+          showToast(`Loaded ${servicesWithProfit.length} services from selected categories (${pagination.total} total available)`, 'success');
+        }
       } else {
         showToast(`Failed to load services: ${result.error}`, 'error');
-        setServices([]);
+        if (!append) {
+          setServices([]);
+        }
       }
     } catch (error) {
       console.error('Error loading services:', error);
       showToast('Failed to load services', 'error');
-      setServices([]);
+      if (!append) {
+        setServices([]);
+      }
     } finally {
       setIsLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // Load more services (next page)
+  const loadMoreServices = async () => {
+    if (hasMoreServices && !loadingMore && !isLoading) {
+      const nextPage = currentPage + 1;
+      console.log(`🔄 Loading more services - Page ${nextPage}`);
+      await loadServicesForCategories(nextPage, true);
     }
   };
 
   // Calculate sale price based on provider price and percentage
   const calculateSalePrice = (service: Service, percentage: number) => {
-    const providerPrice = service.providerPrice || 0;
+    const providerPrice = parseFloat(service.providerPrice?.toString() || '0') || 0;
     const salePrice = parseFloat((providerPrice * (1 + percentage / 100)).toFixed(2));
 
     console.log(`💰 Calculating: Provider $${providerPrice} + ${percentage}% = $${salePrice}`);
@@ -688,7 +766,7 @@ const ImportServicesPage = () => {
 
       // Real API call to import services
       const response = await fetch('/api/admin/services/import', {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -1099,6 +1177,27 @@ const ImportServicesPage = () => {
             {/* Step 3: Customize Services */}
             {currentStep === 3 && (
               <div className="space-y-6">
+                {/* Loading State */}
+                {isLoading && (
+                  <div className="flex items-center justify-center py-20">
+                    <div className="text-center flex flex-col items-center">
+                      <GradientSpinner size="w-16 h-16" className="mb-4" />
+                      <div className="text-lg font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                        Loading Services...
+                      </div>
+                      <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                        Fetching services from {getProviderName(selectedProvider)} for selected categories
+                      </div>
+                      <div className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                        This may take a few moments for large datasets
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Services Content - Only show when not loading */}
+                {!isLoading && (
+                  <>
                 {/* Summary Info */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
@@ -1107,9 +1206,14 @@ const ImportServicesPage = () => {
                         Services Ready for Import
                       </h4>
                       <p className="text-sm text-blue-700">
-                        {services.length} services loaded with {profitPercent}%
+                        {services.length} services loaded{totalServices > 0 && ` of ${totalServices} total`} with {profitPercent}%
                         profit margin applied
                       </p>
+                      {hasMoreServices && (
+                        <p className="text-xs text-blue-600 mt-1">
+                          📄 Page {currentPage} of {totalPages} • {totalServices - services.length} more services available
+                        </p>
+                      )}
                     </div>
                     <div className="text-left md:text-right">
                       <div className="text-sm text-blue-700">
@@ -1363,7 +1467,7 @@ const ImportServicesPage = () => {
                                               </div>
                                               <div className="text-xs text-gray-500">
                                                 Provider: $
-                                                {service.providerPrice ? service.providerPrice.toFixed(2) : '0.00'}
+                                                {service.providerPrice ? parseFloat(service.providerPrice.toString()).toFixed(2) : '0.00'}
                                               </div>
                                             </div>
                                           </td>
@@ -1553,7 +1657,7 @@ const ImportServicesPage = () => {
                                             </div>
                                             <div className="text-xs text-gray-500 px-3">
                                               Provider: $
-                                              {service.providerPrice ? service.providerPrice.toFixed(2) : '0.00'}
+                                              {service.providerPrice ? parseFloat(service.providerPrice.toString()).toFixed(2) : '0.00'}
                                             </div>
                                           </div>
                                         </div>
@@ -1625,7 +1729,32 @@ const ImportServicesPage = () => {
                         )
                       )}
                     </div>
+
+                    {/* Load More Button */}
+                    {hasMoreServices && !isLoading && (
+                      <div className="flex justify-center py-6">
+                        <button
+                          onClick={loadMoreServices}
+                          disabled={loadingMore}
+                          className="btn btn-primary flex items-center gap-2 px-6 py-3"
+                        >
+                          {loadingMore ? (
+                            <>
+                              <GradientSpinner size="w-4 h-4" />
+                              Loading More...
+                            </>
+                          ) : (
+                            <>
+                              <FaChevronDown />
+                              Load More Services ({totalServices - services.length} remaining)
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </>
+                )}
+                </>
                 )}
               </div>
             )}
