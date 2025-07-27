@@ -41,10 +41,9 @@ export async function GET(request: Request) {
     const search = searchParams.get('search') || '';
     const currency = searchParams.get('currency') || 'USD'; // Get user's preferred currency
 
-    // Handle "all" option for limit - allow unlimited for better UX like smmgen.com
-    const isShowAll = limitParam === 'all';
-    const limit = isShowAll ? undefined : parseInt(limitParam);
-    const skip = isShowAll ? undefined : (page - 1) * limit!;
+    // Categories pagination - limit categories, not services
+    const categoryLimit = parseInt(limitParam);
+    const categorySkip = (page - 1) * categoryLimit;
 
     // Get currency data for conversion
     const { currencies } = await fetchCurrencyData();
@@ -72,53 +71,86 @@ export async function GET(request: Request) {
         : {})
     };
 
-    const [services, total, allCategories] = await Promise.all([
-      db.service.findMany({
-        where: whereClause,
-        ...(skip !== undefined && { skip }),
-        ...(limit !== undefined && { take: limit }),
-        orderBy: {
-          createdAt: 'desc',
-        },
-        select: {
-          id: true,
-          name: true,
-          rate: true,
-          rateUSD: true,
-          min_order: true,
-          max_order: true,
-          avg_time: true,
-          description: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
-          category: {
-            select: {
-              id: true,
-              category_name: true,
-            }
-          },
-          serviceType: {
-            select: {
-              id: true,
-              name: true,
-            }
-          },
-        },
-      }),
-      db.service.count({ where: whereClause }),
-      // Fetch only active categories (not hidden) to show empty ones too
+    // First get paginated categories
+    const [paginatedCategories, totalCategories] = await Promise.all([
       db.category.findMany({
         where: {
           hideCategory: 'no', // Only show categories that are not hidden
         },
+        skip: categorySkip,
+        take: categoryLimit,
         orderBy: [
+          { id: 'asc' }, // Order by ID first (1, 2, 3...)
           { position: 'asc' },
-          { updatedAt: 'desc' },
-          { createdAt: 'desc' },
+          { createdAt: 'asc' },
         ],
       }),
+      db.category.count({
+        where: {
+          hideCategory: 'no',
+        },
+      }),
     ]);
+
+    // Get all services for the paginated categories
+    const categoryIds = paginatedCategories.map(cat => cat.id);
+
+    const services = await db.service.findMany({
+      where: {
+        status: 'active',
+        categoryId: {
+          in: categoryIds,
+        },
+        ...(search
+          ? {
+              OR: [
+                {
+                  name: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  description: {
+                    contains: search,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            }
+          : {})
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        id: true,
+        name: true,
+        rate: true,
+        rateUSD: true,
+        min_order: true,
+        max_order: true,
+        avg_time: true,
+        description: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        category: {
+          select: {
+            id: true,
+            category_name: true,
+          }
+        },
+        serviceType: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+      },
+    });
+
+
 
     // Convert service prices to user's preferred currency
     const servicesWithConvertedPrices = services.map(service => {
@@ -137,13 +169,13 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         data: servicesWithConvertedPrices || [],
-        total,
+        total: services.length, // Total services in current page
         page,
-        totalPages: isShowAll ? 1 : Math.ceil(total / limit!),
+        totalPages: Math.ceil(totalCategories / categoryLimit),
+        totalCategories,
         currency: currency, // Include currency info in response
-        isShowAll,
         limit: limitParam,
-        allCategories: allCategories || [], // Include all categories for empty category display
+        allCategories: paginatedCategories || [], // Include paginated categories
       },
       { status: 200 }
     );

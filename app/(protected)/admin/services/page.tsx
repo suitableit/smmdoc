@@ -1959,7 +1959,7 @@ function AdminServicesPage() {
   const [servicesLoading, setServicesLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [pageSize, setPageSize] = useState('500'); // Default to 500 services per page
+  const [pageSize, setPageSize] = useState('10'); // Default to 10 categories per page
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalServices, setTotalServices] = useState(0);
@@ -2145,9 +2145,10 @@ function AdminServicesPage() {
     // Initialize grouped object with all categories using ID-based keys
     const groupedById: Record<string, { category: any; services: any[] }> = {};
 
-    // Add all categories from categoriesData, even if empty
-    if (categoriesData?.data) {
-      categoriesData.data.forEach((category: any) => {
+    // Add all categories from API response (allCategories), even if empty (including duplicates)
+    if (data?.allCategories) {
+      data.allCategories.forEach((category: any) => {
+        // Use unique key with ID to handle duplicate names
         const categoryKey = `${category.category_name}_${category.id}`;
         groupedById[categoryKey] = {
           category: category,
@@ -2171,12 +2172,21 @@ function AdminServicesPage() {
       groupedById[categoryKey].services.push(service);
     });
 
-    // Convert to the format expected by the UI (category name with ID as key)
+    // Convert to the format expected by the UI and sort by ID first, then position
     const grouped: Record<string, any[]> = {};
-    Object.values(groupedById).forEach(({ category, services }) => {
-      const displayName = `${category.category_name} (ID: ${category.id})`;
-      grouped[displayName] = services;
-    });
+    Object.values(groupedById)
+      .sort((a, b) => {
+        // Sort by ID first (1, 2, 3...)
+        const idDiff = (a.category.id || 999) - (b.category.id || 999);
+        if (idDiff !== 0) return idDiff;
+        // Then by position if IDs are same
+        return (a.category.position || 999) - (b.category.position || 999);
+      })
+      .forEach(({ category, services }) => {
+        // Use category name with ID to handle duplicates
+        const displayName = `${category.category_name} (ID: ${category.id})`;
+        grouped[displayName] = services;
+      });
 
     // Apply custom service order within each category
     Object.keys(grouped).forEach(category => {
@@ -3912,7 +3922,7 @@ function AdminServicesPage() {
                         <span>Loading services...</span>
                       </div>
                     ) : (
-                      `Showing page ${currentPage} of ${totalPages} (${totalServices} total services)`
+                      `Showing page ${currentPage} of ${totalPages} (${data?.totalCategories || 0} total categories)`
                     )}
                   </div>
 
@@ -3925,10 +3935,10 @@ function AdminServicesPage() {
                         onChange={(e) => handlePageSizeChange(e.target.value)}
                         className="pl-3 pr-8 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-gray-900 transition-all duration-200 appearance-none cursor-pointer text-sm"
                       >
-                        <option value="100">100 per page</option>
-                        <option value="250">250 per page</option>
-                        <option value="500">500 per page</option>
-                        <option value="1000">1000 per page</option>
+                        <option value="10">10 categories per page</option>
+                        <option value="20">20 categories per page</option>
+                        <option value="50">50 categories per page</option>
+                        <option value="100">100 categories per page</option>
                       </select>
                     </div>
 
