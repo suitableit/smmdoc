@@ -6,55 +6,73 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limitParam = searchParams.get('limit') || '500';
+    const limitParam = searchParams.get('limit') || '10';
     const search = searchParams.get('search') || '';
 
-    // Handle "all" option for limit - allow unlimited like smmgen.com for better UX
-    const isShowAll = limitParam === 'all';
-    const limit = isShowAll ? undefined : parseInt(limitParam);
-    const skip = isShowAll ? undefined : (page - 1) * limit!;
-    const whereClause = search
-      ? {
-          OR: [
-            {
-              name: {
-                contains: search,
-                mode: 'insensitive',
-              },
-            },
-            {
-              description: {
-                contains: search,
-                mode: 'insensitive',
-              },
-            },
-          ],
-        }
-      : {};
-
-    const [services, total] = await Promise.all([
-      db.service.findMany({
-        where: whereClause,
-        ...(isShowAll ? {} : { skip, take: limit }),
-        orderBy: {
-          createdAt: 'desc',
-        },
-        include: {
-          category: true,
-          serviceType: true,
-        },
+    // Categories pagination - limit categories, not services
+    const categoryLimit = parseInt(limitParam);
+    const categorySkip = (page - 1) * categoryLimit;
+    // First get paginated categories
+    const [paginatedCategories, totalCategories] = await Promise.all([
+      db.category.findMany({
+        skip: categorySkip,
+        take: categoryLimit,
+        orderBy: [
+          { id: 'asc' }, // Order by ID first (1, 2, 3...)
+          { position: 'asc' },
+          { createdAt: 'asc' },
+        ],
       }),
-      db.service.count({ where: whereClause }),
+      db.category.count(),
     ]);
+
+    // Get all services for the paginated categories
+    const categoryIds = paginatedCategories.map(cat => cat.id);
+
+    const whereClause = {
+      categoryId: {
+        in: categoryIds,
+      },
+      ...(search
+        ? {
+            OR: [
+              {
+                name: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                description: {
+                  contains: search,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          }
+        : {})
+    };
+
+    const services = await db.service.findMany({
+      where: whereClause,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        category: true,
+        serviceType: true,
+      },
+    });
 
     return NextResponse.json(
       {
         data: services || [],
-        total,
+        total: services.length, // Total services in current page
         page,
-        totalPages: isShowAll ? 1 : Math.ceil(total / limit),
-        isShowAll,
+        totalPages: Math.ceil(totalCategories / categoryLimit),
+        totalCategories,
         limit: limitParam,
+        allCategories: paginatedCategories || [], // Include paginated categories
       },
       { status: 200 }
     );

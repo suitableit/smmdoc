@@ -103,7 +103,7 @@ const UserServiceTable: React.FC = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-  const [limit, setLimit] = useState('100'); // Load 100 services per page
+  const [limit, setLimit] = useState('50'); // Load 50 categories per page
   const [hasMoreData, setHasMoreData] = useState(true);
   const [favoriteServices, setFavoriteServices] = useState<Service[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
@@ -157,6 +157,8 @@ const UserServiceTable: React.FC = () => {
       }
 
         const data = await response.json();
+
+
 
         // Update pagination info
         setTotalPages(data.totalPages || 1);
@@ -237,10 +239,11 @@ const UserServiceTable: React.FC = () => {
     // Group services by category
     const groupedById: Record<string, { category: any; services: Service[] }> = {};
 
-    // Initialize all active categories
+    // Initialize all active categories (including duplicates by name)
     categoriesData
       .filter((category: any) => category.hideCategory !== 'yes')
       .forEach((category: any) => {
+        // Use unique key with ID to handle duplicate names
         const categoryKey = `${category.category_name}_${category.id}`;
         groupedById[categoryKey] = {
           category: category,
@@ -263,13 +266,25 @@ const UserServiceTable: React.FC = () => {
       groupedById[categoryKey].services.push(service);
     });
 
-    // Convert to the format expected by the UI and sort by position
+    // Convert to the format expected by the UI and sort by ID first, then position
     const grouped: Record<string, Service[]> = {};
     Object.values(groupedById)
-      .sort((a, b) => (a.category.position || 999) - (b.category.position || 999))
+      .sort((a, b) => {
+        // Sort by ID first (1, 2, 3...)
+        const idDiff = (a.category.id || 999) - (b.category.id || 999);
+        if (idDiff !== 0) return idDiff;
+        // Then by position if IDs are same
+        return (a.category.position || 999) - (b.category.position || 999);
+      })
       .forEach(({ category, services }) => {
-        grouped[category.category_name] = services;
+        // Use category name with ID to handle duplicates
+        const displayName = `${category.category_name} (ID: ${category.id})`;
+        grouped[displayName] = services;
       });
+
+
+
+
 
     setGroupedServices(grouped);
 
@@ -278,6 +293,9 @@ const UserServiceTable: React.FC = () => {
     Object.keys(grouped).forEach(categoryName => {
       initialExpanded[categoryName] = true; // Expand all categories by default
     });
+
+
+
     setExpandedCategories(initialExpanded);
   }, []);
 
@@ -806,7 +824,7 @@ const UserServiceTable: React.FC = () => {
                                 </td>
                               </tr>
                             ))
-                          )}
+                        )}
                           {expandedCategories[categoryName] && categoryServices.length === 0 && (
                             <tr>
                               <td colSpan={11} className="py-8 text-center">
@@ -838,12 +856,12 @@ const UserServiceTable: React.FC = () => {
 
 
           {/* Pagination Controls - Hide when showing all */}
-          {totalPages > 1 && limit !== 'all' && (
+          {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 Page <span className="font-medium">{page}</span> of{' '}
                 <span className="font-medium">{totalPages}</span>
-                {' '}({totalServices} total services)
+                {' '}({Object.keys(groupedServices).length} categories shown)
               </div>
               <div className="flex gap-2">
                 <button
