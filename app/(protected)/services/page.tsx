@@ -2,15 +2,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FaCheckCircle,
+  FaChevronDown,
+  FaChevronUp,
   FaClipboardList,
   FaEye,
+  FaHeart,
+  FaInfinity,
+  FaRegHeart,
   FaRegStar,
   FaSearch,
   FaStar,
-  FaTimes,
+  FaTimes
 } from 'react-icons/fa';
 
 import ServiceViewModal from '@/app/(protected)/services/serviceViewModal';
@@ -76,6 +81,10 @@ interface Service {
     name: string;
   };
   isFavorite?: boolean;
+  refill?: boolean;
+  cancel?: boolean;
+  refillDays?: number;
+  refillDisplay?: number;
 }
 
 const UserServiceTable: React.FC = () => {
@@ -95,11 +104,15 @@ const UserServiceTable: React.FC = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-  const [limit, setLimit] = useState('20');
-  const [isShowAll, setIsShowAll] = useState(false);
-  const [allCategories, setAllCategories] = useState<any[]>([]);
+  const [limit, setLimit] = useState('100'); // Load 100 services per page
+  const [isShowAll, setIsShowAll] = useState(false); // Don't show all by default
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMoreData, setHasMoreData] = useState(true);
+  const [favoriteServices, setFavoriteServices] = useState<Service[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [showFavoritesFirst, setShowFavoritesFirst] = useState(true);
+  const [totalServices, setTotalServices] = useState(0);
+  const [displayLimit] = useState(50); // Services to show in favorites section
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -124,7 +137,7 @@ const UserServiceTable: React.FC = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Optimized fetch function with better performance
+  // Optimized fetch function with pagination for better performance
   const fetchServices = React.useCallback(async (isLoadMore = false) => {
     if (isLoadMore) {
       setIsLoadingMore(true);
@@ -133,12 +146,9 @@ const UserServiceTable: React.FC = () => {
     }
 
     try {
-      // Use smaller limit for better performance
-      const effectiveLimit = limit === 'all' ? '100' : limit;
       const currentPage = isLoadMore ? page + 1 : page;
-
       const response = await fetch(
-        `/api/user/services?page=${currentPage}&limit=${effectiveLimit}&search=${debouncedSearch}`,
+        `/api/user/services?page=${currentPage}&limit=all&search=${debouncedSearch}&showAll=true`,
         {
           method: 'GET',
           cache: 'no-store',
@@ -154,8 +164,11 @@ const UserServiceTable: React.FC = () => {
 
         const data = await response.json();
 
-        // Check if we have more data for pagination
-        setHasMoreData(data.page < data.totalPages);
+        // Update pagination info
+        setTotalPages(data.totalPages || 1);
+        setTotalServices(data.total || 0);
+        setHasMoreData(currentPage < (data.totalPages || 1));
+        setIsShowAll(data.isShowAll || false);
 
         if (!user?.id) {
           const servicesData =
@@ -172,58 +185,16 @@ const UserServiceTable: React.FC = () => {
             setServices(servicesData);
           }
 
-          // Optimize grouping - only process if not loading more or if categories changed
-          if (!isLoadMore || allCategories.length === 0) {
-            const groupedById: Record<string, { category: any; services: Service[] }> = {};
 
-            // First, initialize only active categories (not hidden)
-            if (data.allCategories && data.allCategories.length > 0) {
-              data.allCategories
-                .filter((category: any) => category.hideCategory !== 'yes') // Only show active categories
-                .forEach((category: any) => {
-                  const categoryKey = `${category.category_name}_${category.id}`;
-                  groupedById[categoryKey] = {
-                    category: category,
-                    services: []
-                  };
-                });
-            }
 
-            // Then add services to their respective categories
-            const allServicesForGrouping = isLoadMore ? [...services, ...servicesData] : servicesData;
-            allServicesForGrouping.forEach((service: Service) => {
-              const categoryId = service.category?.id;
-              const categoryName = service.category?.category_name || 'Uncategorized';
-              const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
-
-              if (!groupedById[categoryKey]) {
-                groupedById[categoryKey] = {
-                  category: service.category || { id: 0, category_name: 'Uncategorized' },
-                  services: []
-                };
-              }
-              groupedById[categoryKey].services.push(service);
-            });
-
-            // Convert to the format expected by the UI
-            const grouped: Record<string, Service[]> = {};
-            Object.values(groupedById).forEach(({ category, services }) => {
-              grouped[category.category_name] = services;
-            });
-
-            setGroupedServices(grouped);
-          }
-
-          if (!isLoadMore) {
-            setTotalPages(data.totalPages || 1);
-            setIsShowAll(data.isShowAll || false);
-            setAllCategories(data.allCategories || []);
-          }
+          // Process services data for grouping
+          const allServicesForGrouping = isLoadMore ? [...services, ...servicesData] : servicesData;
+          processServicesData(allServicesForGrouping, data.allCategories || []);
           return;
         }
 
+        // For logged-in users, fetch favorite status
         try {
-          // Then fetch favorite status
           const favResponse = await fetch(
             `/api/user/services/favorite-status?userId=${user.id}`,
             {
@@ -235,179 +206,134 @@ const UserServiceTable: React.FC = () => {
             }
           );
 
-          if (!favResponse.ok) {
-            throw new Error(
-              `Failed to fetch favorites: ${favResponse.statusText}`
-            );
-          }
+          if (favResponse.ok) {
+            const favData = await favResponse.json();
+            const favoriteServiceIds = favData.favoriteServiceIds || [];
 
-          const favData = await favResponse.json();
-          const favoriteServiceIds = favData.favoriteServiceIds || [];
-
-          // Merge favorite status with services
-          const servicesWithFavorites =
-            data?.data?.map((service: Service) => ({
+            const servicesWithFavorites = data?.data?.map((service: Service) => ({
               ...service,
               isFavorite: favoriteServiceIds.includes(service.id),
             })) || [];
 
-          setServices(servicesWithFavorites);
-
-          // Group services by category ID to handle duplicate names
-          const groupedById: Record<string, { category: any; services: Service[] }> = {};
-
-          // First, initialize only active categories (not hidden)
-          if (data.allCategories && data.allCategories.length > 0) {
-            data.allCategories
-              .filter((category: any) => category.hideCategory !== 'yes') // Only show active categories
-              .forEach((category: any) => {
-                const categoryKey = `${category.category_name}_${category.id}`;
-                groupedById[categoryKey] = {
-                  category: category,
-                  services: []
-                };
-              });
-          }
-
-          // Then add services to their respective categories
-          servicesWithFavorites.forEach((service: Service) => {
-            const categoryId = service.category?.id;
-            const categoryName = service.category?.category_name || 'Uncategorized';
-            const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
-
-            if (!groupedById[categoryKey]) {
-              groupedById[categoryKey] = {
-                category: service.category || { id: 0, category_name: 'Uncategorized' },
-                services: []
-              };
+            // For load more, append to existing services
+            if (isLoadMore) {
+              setServices(prev => [...prev, ...servicesWithFavorites]);
+              setPage(currentPage);
+            } else {
+              setServices(servicesWithFavorites);
             }
-            groupedById[categoryKey].services.push(service);
-          });
 
-          // Convert to the format expected by the UI
-          const grouped: Record<string, Service[]> = {};
-          Object.values(groupedById).forEach(({ category, services }) => {
-            grouped[category.category_name] = services;
-          });
 
-          setGroupedServices(grouped);
+
+            // Process services data for grouping
+            const allServicesForGrouping = isLoadMore ? [...services, ...servicesWithFavorites] : servicesWithFavorites;
+            processServicesData(allServicesForGrouping, data.allCategories || []);
+          } else {
+            throw new Error('Failed to fetch favorites');
+          }
         } catch (favError) {
           console.error('Error fetching favorites:', favError);
-          // If favorite fetch fails, still show services without favorites
-          const servicesData =
-            data?.data?.map((service: Service) => ({
-              ...service,
-              isFavorite: false,
-            })) || [];
+          const servicesData = data?.data?.map((service: Service) => ({
+            ...service,
+            isFavorite: false,
+          })) || [];
 
-          setServices(servicesData);
-
-          // Group services by category ID to handle duplicate names
-          const groupedById: Record<string, { category: any; services: Service[] }> = {};
-
-          // First, initialize only active categories (not hidden)
-          if (data.allCategories && data.allCategories.length > 0) {
-            data.allCategories
-              .filter((category: any) => category.hideCategory !== 'yes') // Only show active categories
-              .forEach((category: any) => {
-                const categoryKey = `${category.category_name}_${category.id}`;
-                groupedById[categoryKey] = {
-                  category: category,
-                  services: []
-                };
-              });
+          // For load more, append to existing services
+          if (isLoadMore) {
+            setServices(prev => [...prev, ...servicesData]);
+            setPage(currentPage);
+          } else {
+            setServices(servicesData);
           }
 
-          // Then add services to their respective categories
-          servicesData.forEach((service: Service) => {
-            const categoryId = service.category?.id;
-            const categoryName = service.category?.category_name || 'Uncategorized';
-            const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
 
-            if (!groupedById[categoryKey]) {
-              groupedById[categoryKey] = {
-                category: service.category || { id: 0, category_name: 'Uncategorized' },
-                services: []
-              };
-            }
-            groupedById[categoryKey].services.push(service);
-          });
 
-          // Convert to the format expected by the UI
-          const grouped: Record<string, Service[]> = {};
-          Object.values(groupedById).forEach(({ category, services }) => {
-            grouped[category.category_name] = services;
-          });
-
-          setGroupedServices(grouped);
+          // Process services data for grouping
+          const allServicesForGrouping = isLoadMore ? [...services, ...servicesData] : servicesData;
+          processServicesData(allServicesForGrouping, data.allCategories || []);
         }
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      showToast('Error fetching services. Please try again later.', 'error');
+      if (!isLoadMore) {
+        setServices([]);
+        setGroupedServices({});
 
-        setTotalPages(data.totalPages || 1);
-        setIsShowAll(data.isShowAll || false);
-        setAllCategories(data.allCategories || []);
-
-        // Update grouped services to include empty categories
-        if (data.allCategories && data.allCategories.length > 0) {
-          const servicesData = data?.data || [];
-
-          // Group services by category ID to handle duplicate names
-          const groupedById: Record<string, { category: any; services: Service[] }> = {};
-
-          // First, initialize all categories
-          data.allCategories.forEach((category: any) => {
-            groupedById[category.id] = {
-              category: category,
-              services: []
-            };
-          });
-
-          // Then add services to their respective categories
-          servicesData.forEach((service: Service) => {
-            const categoryId = service.category?.id?.toString() || 'uncategorized';
-            if (groupedById[categoryId]) {
-              groupedById[categoryId].services.push(service);
-            } else {
-              // Handle uncategorized services
-              if (!groupedById['uncategorized']) {
-                groupedById['uncategorized'] = {
-                  category: { id: 'uncategorized', category_name: 'Uncategorized' },
-                  services: []
-                };
-              }
-              groupedById['uncategorized'].services.push(service);
-            }
-          });
-
-          // Convert to the format expected by the UI (category name as key)
-          const grouped: Record<string, Service[]> = {};
-          Object.values(groupedById).forEach(({ category, services }) => {
-            const displayName = `${category.category_name} (ID: ${category.id})`;
-            grouped[displayName] = services;
-          });
-
-          setGroupedServices(grouped);
-        }
-      } catch (error) {
-        console.error('Error fetching services:', error);
-        showToast('Error fetching services. Please try again later.', 'error');
-        if (!isLoadMore) {
-          setServices([]);
-          setGroupedServices({});
-          setTotalPages(1);
-        }
-      } finally {
-        if (isLoadMore) {
-          setIsLoadingMore(false);
-        } else {
-          setLoading(false);
-        }
       }
-    }, [user?.id, limit]);
+    } finally {
+      if (isLoadMore) {
+        setIsLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [debouncedSearch, user?.id, page, limit, services]);
+
+  // Process services data for grouping and favorites
+  const processServicesData = React.useCallback((servicesData: Service[], categoriesData: any[]) => {
+    // Separate favorite services
+    const favorites = servicesData.filter(service => service.isFavorite);
+    setFavoriteServices(favorites);
+
+    // Group services by category
+    const groupedById: Record<string, { category: any; services: Service[] }> = {};
+
+    // Initialize all active categories
+    categoriesData
+      .filter((category: any) => category.hideCategory !== 'yes')
+      .forEach((category: any) => {
+        const categoryKey = `${category.category_name}_${category.id}`;
+        groupedById[categoryKey] = {
+          category: category,
+          services: []
+        };
+      });
+
+    // Add services to their respective categories
+    servicesData.forEach((service: Service) => {
+      const categoryId = service.category?.id;
+      const categoryName = service.category?.category_name || 'Uncategorized';
+      const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
+
+      if (!groupedById[categoryKey]) {
+        groupedById[categoryKey] = {
+          category: service.category || { id: 0, category_name: 'Uncategorized', hideCategory: 'no', position: 999 },
+          services: []
+        };
+      }
+      groupedById[categoryKey].services.push(service);
+    });
+
+    // Convert to the format expected by the UI and sort by position
+    const grouped: Record<string, Service[]> = {};
+    Object.values(groupedById)
+      .sort((a, b) => (a.category.position || 999) - (b.category.position || 999))
+      .forEach(({ category, services }) => {
+        grouped[category.category_name] = services;
+      });
+
+    setGroupedServices(grouped);
+
+    // Auto-expand categories with services
+    const initialExpanded: Record<string, boolean> = {};
+    Object.keys(grouped).forEach(categoryName => {
+      initialExpanded[categoryName] = true; // Expand all categories by default
+    });
+    setExpandedCategories(initialExpanded);
+  }, []);
+
+  // Toggle category expansion
+  const toggleCategory = (categoryName: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categoryName]: !prev[categoryName]
+    }));
+  };
 
   // Initial load and search changes
   useEffect(() => {
     fetchServices(false);
-  }, [fetchServices, page, debouncedSearch]);
+  }, [debouncedSearch]);
 
   // Load more function
   const loadMoreServices = React.useCallback(() => {
@@ -416,6 +342,16 @@ const UserServiceTable: React.FC = () => {
     }
   }, [fetchServices, isLoadingMore, hasMoreData, page, totalPages]);
 
+  // Handle limit change
+  const handleLimitChange = (newLimit: string) => {
+    setLimit(newLimit);
+    setPage(1);
+    setServices([]);
+    setGroupedServices({});
+    setHasMoreData(true);
+  };
+
+  // Handle pagination
   const handlePrevious = () => {
     if (page > 1) {
       setPage(page - 1);
@@ -429,15 +365,12 @@ const UserServiceTable: React.FC = () => {
     }
   };
 
-  const handleLimitChange = (newLimit: string) => {
-    setLimit(newLimit);
-    setPage(1); // Reset to first page when changing limit
-    setServices([]); // Clear existing services
-    setGroupedServices({});
-    setHasMoreData(true);
+  const handleViewDetails = (service: Service) => {
+    setSelected(service);
+    setIsOpen(true);
   };
 
-  const toggleFavorite = async (serviceId: string) => {
+  const toggleFavorite = async (serviceId: number) => {
     if (!user?.id) {
       showToast('You need to be logged in to favorite services', 'error');
       return;
@@ -488,6 +421,18 @@ const UserServiceTable: React.FC = () => {
           return newGrouped;
         });
 
+        // Update favorite services list
+        setFavoriteServices((prevFavorites) => {
+          if (currentService.isFavorite) {
+            // Remove from favorites
+            return prevFavorites.filter(service => service.id !== serviceId);
+          } else {
+            // Add to favorites
+            const updatedService = { ...currentService, isFavorite: true };
+            return [...prevFavorites, updatedService];
+          }
+        });
+
         showToast(data.message, 'success');
       } else {
         throw new Error(data.error || 'Failed to update favorite status');
@@ -500,10 +445,7 @@ const UserServiceTable: React.FC = () => {
     }
   };
 
-  const handleViewDetails = (service: Service) => {
-    setSelected(service);
-    setIsOpen(true);
-  };
+
 
   if (loading) {
     return (
@@ -556,6 +498,21 @@ const UserServiceTable: React.FC = () => {
                 </div>
               </div>
 
+              {/* Favorites Toggle */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFavoritesFirst(!showFavoritesFirst)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 ${
+                    showFavoritesFirst
+                      ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white border-transparent'
+                      : 'bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {showFavoritesFirst ? <FaHeart className="w-4 h-4" /> : <FaRegHeart className="w-4 h-4" />}
+                  <span className="text-sm font-medium">Favorites First</span>
+                </button>
+              </div>
+
               {/* Show Per Page Dropdown */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
@@ -564,73 +521,218 @@ const UserServiceTable: React.FC = () => {
                 <select
                   value={limit}
                   onChange={(e) => handleLimitChange(e.target.value)}
-                  className="pl-4 pr-8 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm min-w-[80px]"
+                  className="pl-4 pr-8 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm min-w-[120px]"
                 >
-                  <option value="20">20 (Fast)</option>
-                  <option value="50">50 (Recommended)</option>
-                  <option value="100">100 (Slower)</option>
+                  <option value="50">50 per page</option>
+                  <option value="100">100 per page</option>
+                  <option value="200">200 per page</option>
+                  <option value="all">All Services</option>
                 </select>
               </div>
             </div>
           </div>
 
+          {/* Favorite Services Section */}
+          {showFavoritesFirst && favoriteServices.length > 0 && (
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg border-2 border-yellow-200 dark:border-yellow-700 overflow-hidden mb-6">
+              {/* Favorite Services Header */}
+              <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-medium py-4 px-6">
+                <div className="flex items-center gap-3">
+                  <FaHeart className="w-5 h-5" />
+                  <h3 className="text-lg font-semibold">
+                    Your Favorite Services ({favoriteServices.length})
+                  </h3>
+                </div>
+              </div>
+
+              {/* Favorite Services Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="border-b border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/30">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Fav</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">ID</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Service</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Type</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Rate per 1000</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Min order</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Max order</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Average time</th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Refill</th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Cancel</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {favoriteServices.slice(0, displayLimit).map((service) => (
+                      <tr
+                        key={`fav-${service.id}`}
+                        className="border-b border-yellow-100 dark:border-yellow-800 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 last:border-b-0"
+                      >
+                        <td className="py-3 px-4">
+                          <button
+                            onClick={() => toggleFavorite(service.id)}
+                            className="p-1 hover:bg-yellow-100 dark:hover:bg-yellow-800 rounded transition-colors duration-200"
+                            title="Remove from favorites"
+                          >
+                            <FaHeart className="w-4 h-4 text-red-500" />
+                          </button>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                            {service.id}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            {service.name}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-xs font-medium px-2 py-1 rounded bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 w-fit">
+                            {service?.serviceType?.name || 'Standard'}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            <PriceDisplay amount={service.rate} originalCurrency={'USD'} />
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {formatNumber(service.min_order || 0)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {formatNumber(service.max_order || 0)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {service.avg_time || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            {service.refill ? (
+                              <>
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span className="text-xs text-green-600 font-medium">ON</span>
+                              </>
+                            ) : (
+                              <>
+                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                <span className="text-xs text-red-600 font-medium">OFF</span>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            {service.cancel ? (
+                              <>
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span className="text-xs text-green-600 font-medium">ON</span>
+                              </>
+                            ) : (
+                              <>
+                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                <span className="text-xs text-red-600 font-medium">OFF</span>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <button
+                            onClick={() => handleViewDetails(service)}
+                            className="flex items-center gap-2 px-3 py-1 text-sm text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 border border-yellow-600 dark:border-yellow-400 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors duration-200"
+                          >
+                            <FaEye className="w-3 h-3" />
+                            Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Services by Category */}
           {Object.keys(groupedServices).length > 0 ? (
-            <div className="space-y-6">
-              {Object.entries(groupedServices).map(
-                ([categoryName, categoryServices]) => (
-                  <div key={categoryName} className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-                    {/* Category Header */}
-                    <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-4 px-6">
-                      <h3 className="text-lg font-semibold">
-                        {categoryName}
-                      </h3>
-                    </div>
+            <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+              {/* Table Headers - Always visible at top */}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        Fav
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        ID
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        Service
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        Type
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        Rate per 1000
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        Min order
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        Max order
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        Average time
+                      </th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        Refill
+                      </th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        Cancel
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Categories and Services */}
+                    {Object.entries(groupedServices).map(([categoryName, categoryServices]) => (
+                      <React.Fragment key={categoryName}>
+                        {/* Category Header Row */}
+                        <tr>
+                          <td colSpan={11} className="p-0">
+                            <div
+                              className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-4 px-6 cursor-pointer hover:from-[var(--primary)]/90 hover:to-[var(--secondary)]/90 transition-all duration-200"
+                              onClick={() => toggleCategory(categoryName)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold">
+                                  {categoryName} ({categoryServices.length} services)
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                  {expandedCategories[categoryName] ? (
+                                    <FaChevronUp className="w-4 h-4" />
+                                  ) : (
+                                    <FaChevronDown className="w-4 h-4" />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
 
-                    {/* Services Table for this Category */}
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
-                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              Fav
-                            </th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              ID
-                            </th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              Service
-                            </th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              Type
-                            </th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              Rate per 1000
-                            </th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              Min order
-                            </th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              Max order
-                            </th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              Average time
-                            </th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              Refill
-                            </th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              Cancel
-                            </th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                              Action
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {/* Category Services */}
-                          {categoryServices.length > 0 ? (
-                            categoryServices.map((service, index) => (
+                        {/* Services for this Category */}
+                        {expandedCategories[categoryName] && categoryServices.length > 0 && (
+                            categoryServices.map((service) => (
                               <tr
                                 key={service.id}
                                 className="border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30 last:border-b-0"
@@ -745,7 +847,8 @@ const UserServiceTable: React.FC = () => {
                                 </td>
                               </tr>
                             ))
-                          ) : (
+                          )}
+                          {expandedCategories[categoryName] && categoryServices.length === 0 && (
                             <tr>
                               <td colSpan={11} className="py-8 text-center">
                                 <div className="flex flex-col items-center justify-center text-gray-500">
@@ -755,13 +858,12 @@ const UserServiceTable: React.FC = () => {
                               </td>
                             </tr>
                           )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
           ) : (
             <div className="text-center py-8 flex flex-col items-center">
               <FaClipboardList className="text-4xl text-gray-400 dark:text-gray-500 mb-4" />
@@ -774,7 +876,7 @@ const UserServiceTable: React.FC = () => {
             </div>
           )}
 
-          {/* Load More Button - Better for performance */}
+          {/* Load More Button - Show when not showing all and has more data */}
           {!isShowAll && hasMoreData && (
             <div className="flex justify-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <button
@@ -788,13 +890,16 @@ const UserServiceTable: React.FC = () => {
                     Loading more...
                   </>
                 ) : (
-                  'Load More Services'
+                  <>
+                    <FaInfinity className="w-4 h-4" />
+                    Load More Services
+                  </>
                 )}
               </button>
             </div>
           )}
 
-          {/* Traditional Pagination - Hide when showing all */}
+          {/* Traditional Pagination - Show when not showing all */}
           {!isShowAll && totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -823,18 +928,37 @@ const UserServiceTable: React.FC = () => {
           {/* Performance indicator */}
           <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
             <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
-              {isShowAll ? (
-                <>Showing all <span className="font-medium">{services.length}</span> services</>
-              ) : (
-                <>
-                  Loaded <span className="font-medium">{services.length}</span> services
-                  {hasMoreData && (
-                    <span className="ml-2 text-blue-600 dark:text-blue-400">
-                      • More available
-                    </span>
+              <div className="flex items-center justify-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  {isShowAll ? (
+                    <>
+                      <FaInfinity className="w-4 h-4 text-blue-500" />
+                      <span>Showing all <span className="font-medium">{totalServices}</span> services</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaClipboardList className="w-4 h-4 text-blue-500" />
+                      <span>Loaded <span className="font-medium">{services.length}</span> of <span className="font-medium">{totalServices}</span> services</span>
+                    </>
                   )}
-                </>
-              )}
+                </div>
+                {favoriteServices.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <FaHeart className="w-4 h-4 text-red-500" />
+                    <span><span className="font-medium">{favoriteServices.length}</span> favorites</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <FaClipboardList className="w-4 h-4 text-green-500" />
+                  <span><span className="font-medium">{Object.keys(groupedServices).length}</span> categories</span>
+                </div>
+                {hasMoreData && !isShowAll && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                    <span className="text-orange-600 dark:text-orange-400">More available</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
