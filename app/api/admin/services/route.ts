@@ -6,9 +6,13 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50000'); // Increase limit to show all services
+    const limitParam = searchParams.get('limit') || '500';
     const search = searchParams.get('search') || '';
-    const skip = (page - 1) * limit;
+
+    // Handle "all" option for limit - allow unlimited like smmgen.com for better UX
+    const isShowAll = limitParam === 'all';
+    const limit = isShowAll ? undefined : parseInt(limitParam);
+    const skip = isShowAll ? undefined : (page - 1) * limit!;
     const whereClause = search
       ? {
           OR: [
@@ -31,8 +35,7 @@ export async function GET(request: Request) {
     const [services, total] = await Promise.all([
       db.service.findMany({
         where: whereClause,
-        skip,
-        take: limit,
+        ...(isShowAll ? {} : { skip, take: limit }),
         orderBy: {
           createdAt: 'desc',
         },
@@ -43,13 +46,15 @@ export async function GET(request: Request) {
       }),
       db.service.count({ where: whereClause }),
     ]);
-    
+
     return NextResponse.json(
       {
         data: services || [],
         total,
         page,
-        totalPages: Math.ceil(total / limit),
+        totalPages: isShowAll ? 1 : Math.ceil(total / limit),
+        isShowAll,
+        limit: limitParam,
       },
       { status: 200 }
     );

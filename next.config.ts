@@ -40,6 +40,17 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
+  // Memory optimization for large datasets
+  experimental: {
+    largePageDataBytes: 128 * 1000, // 128KB
+    workerThreads: false,
+    cpus: 1,
+  },
+  // Optimize for large data handling
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
   // Security headers
   async headers() {
     return [

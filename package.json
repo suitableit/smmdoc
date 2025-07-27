@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=6144\" next dev",
+    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=6144\" next build",
+    "start": "cross-env NODE_OPTIONS=\"--max-old-space-size=6144\" next start",
+    "restart": "node scripts/restart-dev.js",
+    "optimize": "node scripts/optimize-memory.js",
     "lint": "next lint",
     "postinstall": "prisma generate"
   },
@@ -78,6 +80,7 @@
     "@types/react-slick": "^0.23.13",
     "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.2.2",
     "postcss": "^8.5.3",
