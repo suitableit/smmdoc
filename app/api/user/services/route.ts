@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const search = searchParams.get('search') || '';
     const currency = searchParams.get('currency') || 'USD'; // Get user's preferred currency
 
-    // Handle "all" option for limit
+    // Handle "all" option for limit - allow unlimited for better UX like smmgen.com
     const isShowAll = limitParam === 'all';
     const limit = isShowAll ? undefined : parseInt(limitParam);
     const skip = isShowAll ? undefined : (page - 1) * limit!;

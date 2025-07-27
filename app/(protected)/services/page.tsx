@@ -10,7 +10,6 @@ import {
   FaClipboardList,
   FaEye,
   FaHeart,
-  FaInfinity,
   FaRegHeart,
   FaRegStar,
   FaSearch,
@@ -105,8 +104,6 @@ const UserServiceTable: React.FC = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [limit, setLimit] = useState('100'); // Load 100 services per page
-  const [isShowAll, setIsShowAll] = useState(false); // Don't show all by default
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMoreData, setHasMoreData] = useState(true);
   const [favoriteServices, setFavoriteServices] = useState<Service[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
@@ -138,17 +135,14 @@ const UserServiceTable: React.FC = () => {
   }, [search]);
 
   // Optimized fetch function with pagination for better performance
-  const fetchServices = React.useCallback(async (isLoadMore = false) => {
-    if (isLoadMore) {
-      setIsLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
+  const fetchServices = React.useCallback(async () => {
+    setLoading(true);
 
     try {
-      const currentPage = isLoadMore ? page + 1 : page;
+      const currentLimit = limit === 'all' ? '500' : limit; // Limit to 500 instead of 'all' to prevent memory issues
+
       const response = await fetch(
-        `/api/user/services?page=${currentPage}&limit=all&search=${debouncedSearch}&showAll=true`,
+        `/api/user/services?page=${page}&limit=${currentLimit}&search=${debouncedSearch}`,
         {
           method: 'GET',
           cache: 'no-store',
@@ -167,8 +161,7 @@ const UserServiceTable: React.FC = () => {
         // Update pagination info
         setTotalPages(data.totalPages || 1);
         setTotalServices(data.total || 0);
-        setHasMoreData(currentPage < (data.totalPages || 1));
-        setIsShowAll(data.isShowAll || false);
+        setHasMoreData(page < (data.totalPages || 1));
 
         if (!user?.id) {
           const servicesData =
@@ -177,19 +170,10 @@ const UserServiceTable: React.FC = () => {
               isFavorite: false,
             })) || [];
 
-          // For load more, append to existing services
-          if (isLoadMore) {
-            setServices(prev => [...prev, ...servicesData]);
-            setPage(currentPage);
-          } else {
-            setServices(servicesData);
-          }
-
-
+          setServices(servicesData);
 
           // Process services data for grouping
-          const allServicesForGrouping = isLoadMore ? [...services, ...servicesData] : servicesData;
-          processServicesData(allServicesForGrouping, data.allCategories || []);
+          processServicesData(servicesData, data.allCategories || []);
           return;
         }
 
@@ -215,19 +199,10 @@ const UserServiceTable: React.FC = () => {
               isFavorite: favoriteServiceIds.includes(service.id),
             })) || [];
 
-            // For load more, append to existing services
-            if (isLoadMore) {
-              setServices(prev => [...prev, ...servicesWithFavorites]);
-              setPage(currentPage);
-            } else {
-              setServices(servicesWithFavorites);
-            }
-
-
+            setServices(servicesWithFavorites);
 
             // Process services data for grouping
-            const allServicesForGrouping = isLoadMore ? [...services, ...servicesWithFavorites] : servicesWithFavorites;
-            processServicesData(allServicesForGrouping, data.allCategories || []);
+            processServicesData(servicesWithFavorites, data.allCategories || []);
           } else {
             throw new Error('Failed to fetch favorites');
           }
@@ -238,36 +213,20 @@ const UserServiceTable: React.FC = () => {
             isFavorite: false,
           })) || [];
 
-          // For load more, append to existing services
-          if (isLoadMore) {
-            setServices(prev => [...prev, ...servicesData]);
-            setPage(currentPage);
-          } else {
-            setServices(servicesData);
-          }
-
-
+          setServices(servicesData);
 
           // Process services data for grouping
-          const allServicesForGrouping = isLoadMore ? [...services, ...servicesData] : servicesData;
-          processServicesData(allServicesForGrouping, data.allCategories || []);
+          processServicesData(servicesData, data.allCategories || []);
         }
     } catch (error) {
       console.error('Error fetching services:', error);
       showToast('Error fetching services. Please try again later.', 'error');
-      if (!isLoadMore) {
-        setServices([]);
-        setGroupedServices({});
-
-      }
+      setServices([]);
+      setGroupedServices({});
     } finally {
-      if (isLoadMore) {
-        setIsLoadingMore(false);
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [debouncedSearch, user?.id, page, limit, services]);
+  }, [debouncedSearch, user?.id, page, limit]);
 
   // Process services data for grouping and favorites
   const processServicesData = React.useCallback((servicesData: Service[], categoriesData: any[]) => {
@@ -332,15 +291,10 @@ const UserServiceTable: React.FC = () => {
 
   // Initial load and search changes
   useEffect(() => {
-    fetchServices(false);
-  }, [debouncedSearch]);
+    fetchServices();
+  }, [debouncedSearch, page]);
 
-  // Load more function
-  const loadMoreServices = React.useCallback(() => {
-    if (!isLoadingMore && hasMoreData && page < totalPages) {
-      fetchServices(true);
-    }
-  }, [fetchServices, isLoadingMore, hasMoreData, page, totalPages]);
+
 
   // Handle limit change
   const handleLimitChange = (newLimit: string) => {
@@ -355,6 +309,8 @@ const UserServiceTable: React.FC = () => {
   const handlePrevious = () => {
     if (page > 1) {
       setPage(page - 1);
+      setServices([]); // Clear current services
+      setGroupedServices({}); // Clear grouped services
       setHasMoreData(true);
     }
   };
@@ -362,6 +318,8 @@ const UserServiceTable: React.FC = () => {
   const handleNext = () => {
     if (page < totalPages) {
       setPage(page + 1);
+      setServices([]); // Clear current services
+      setGroupedServices({}); // Clear grouped services
     }
   };
 
@@ -526,7 +484,8 @@ const UserServiceTable: React.FC = () => {
                   <option value="50">50 per page</option>
                   <option value="100">100 per page</option>
                   <option value="200">200 per page</option>
-                  <option value="all">All Services</option>
+                  <option value="500">500 per page</option>
+                  <option value="all">Show All (Like SMMGen)</option>
                 </select>
               </div>
             </div>
@@ -876,47 +835,27 @@ const UserServiceTable: React.FC = () => {
             </div>
           )}
 
-          {/* Load More Button - Show when not showing all and has more data */}
-          {!isShowAll && hasMoreData && (
-            <div className="flex justify-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-              <button
-                onClick={loadMoreServices}
-                disabled={isLoadingMore}
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
-              >
-                {isLoadingMore ? (
-                  <>
-                    <GradientSpinner size="w-4 h-4" />
-                    Loading more...
-                  </>
-                ) : (
-                  <>
-                    <FaInfinity className="w-4 h-4" />
-                    Load More Services
-                  </>
-                )}
-              </button>
-            </div>
-          )}
 
-          {/* Traditional Pagination - Show when not showing all */}
-          {!isShowAll && totalPages > 1 && (
+
+          {/* Pagination Controls - Hide when showing all */}
+          {totalPages > 1 && limit !== 'all' && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 Page <span className="font-medium">{page}</span> of{' '}
                 <span className="font-medium">{totalPages}</span>
+                {' '}({totalServices} total services)
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={handlePrevious}
-                  disabled={page === 1}
+                  disabled={page === 1 || loading}
                   className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   Previous
                 </button>
                 <button
                   onClick={handleNext}
-                  disabled={page === totalPages}
+                  disabled={page === totalPages || loading}
                   className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   Next
@@ -930,17 +869,8 @@ const UserServiceTable: React.FC = () => {
             <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
               <div className="flex items-center justify-center gap-4 flex-wrap">
                 <div className="flex items-center gap-2">
-                  {isShowAll ? (
-                    <>
-                      <FaInfinity className="w-4 h-4 text-blue-500" />
-                      <span>Showing all <span className="font-medium">{totalServices}</span> services</span>
-                    </>
-                  ) : (
-                    <>
-                      <FaClipboardList className="w-4 h-4 text-blue-500" />
-                      <span>Loaded <span className="font-medium">{services.length}</span> of <span className="font-medium">{totalServices}</span> services</span>
-                    </>
-                  )}
+                  <FaClipboardList className="w-4 h-4 text-blue-500" />
+                  <span>Showing <span className="font-medium">{services.length}</span> of <span className="font-medium">{totalServices}</span> services</span>
                 </div>
                 {favoriteServices.length > 0 && (
                   <div className="flex items-center gap-2">
@@ -952,10 +882,16 @@ const UserServiceTable: React.FC = () => {
                   <FaClipboardList className="w-4 h-4 text-green-500" />
                   <span><span className="font-medium">{Object.keys(groupedServices).length}</span> categories</span>
                 </div>
-                {hasMoreData && !isShowAll && (
+                {limit === 'all' && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-green-600 dark:text-green-400 font-medium">Showing all services (SMMGen style)</span>
+                  </div>
+                )}
+                {hasMoreData && limit !== 'all' && (
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                    <span className="text-orange-600 dark:text-orange-400">More available</span>
+                    <span className="text-orange-600 dark:text-orange-400">More pages available</span>
                   </div>
                 )}
               </div>

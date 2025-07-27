@@ -4,48 +4,47 @@ import Link from 'next/link';
 import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-  FaBox,
-  FaBriefcase,
-  FaCheckCircle,
-  FaChevronDown,
-  FaChevronRight,
-  FaChevronUp,
-  FaEdit,
-  FaEllipsisH,
-  FaExclamationTriangle,
-  FaFileImport,
-  FaGripVertical,
-  FaPlus,
-  FaSave,
-  FaSearch,
-  FaShieldAlt,
-  FaSync,
-  FaTags,
-  FaTimes,
-  FaTimesCircle,
-  FaToggleOff,
-  FaToggleOn,
-  FaTrash
+    FaBox,
+    FaBriefcase,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronRight,
+    FaChevronUp,
+    FaEdit,
+    FaEllipsisH,
+    FaExclamationTriangle,
+    FaFileImport,
+    FaGripVertical,
+    FaPlus,
+    FaSave,
+    FaSearch,
+    FaShieldAlt,
+    FaSync,
+    FaTags,
+    FaTimes,
+    FaTimesCircle,
+    FaToggleOff,
+    FaToggleOn,
+    FaTrash
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
 // Import APP_NAME constant
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useGetCategories } from '@/hooks/categories-fetch';
-import { useGetServices } from '@/hooks/service-fetch';
 import { useGetServicesId } from '@/hooks/service-fetch-id';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatID } from '@/lib/utils';
 import {
-  createCategoryDefaultValues,
-  createCategorySchema,
-  CreateCategorySchema,
+    createCategoryDefaultValues,
+    createCategorySchema,
+    CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
-  createServiceDefaultValues,
-  CreateServiceSchema
+    createServiceDefaultValues,
+    CreateServiceSchema
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
@@ -359,8 +358,8 @@ const CreateServiceForm: React.FC<{
   onClose: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
   onRefresh?: () => void;
-  refreshAllData?: () => Promise<void>;
-}> = ({ onClose, showToast, onRefresh, refreshAllData }) => {
+  refreshAllDataWithServices?: () => Promise<void>;
+}> = ({ onClose, showToast, onRefresh, refreshAllDataWithServices }) => {
   const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
   const { data: serviceTypesData, error: serviceTypesError, isLoading: serviceTypesLoading } = useSWR('/api/admin/service-types', fetcher);
   const [isPending, startTransition] = useTransition();
@@ -416,8 +415,8 @@ const CreateServiceForm: React.FC<{
           reset();
           showToast(response.data.message, 'success');
           // Live refresh all data
-          if (refreshAllData) {
-            await refreshAllData();
+          if (refreshAllDataWithServices) {
+            await refreshAllDataWithServices();
           }
           if (onRefresh) onRefresh();
           onClose(); // Close modal on success
@@ -1915,15 +1914,15 @@ function AdminServicesPage() {
 
   // Hooks
   const user = useCurrentUser();
-  const { data, error, isLoading, mutate: refreshServices } = useGetServices();
   const { data: categoriesData, mutate: refreshCategories } = useGetCategories();
 
-  // Global refresh function for live updates
+
+
+  // Global refresh function for live updates - will be updated after refreshServices is defined
   const refreshAllData = useCallback(async () => {
     try {
       // Use Promise.allSettled to ensure all requests complete even if one fails
       const results = await Promise.allSettled([
-        refreshServices(),
         refreshCategories(),
         // Refresh stats
         fetch('/api/admin/services/stats').then(res => res.json()).then(data => {
@@ -1946,7 +1945,7 @@ function AdminServicesPage() {
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
-  }, [refreshServices, refreshCategories, categoriesData?.data?.length]);
+  }, [refreshCategories, categoriesData?.data?.length]);
 
   // State declarations
   const [stats, setStats] = useState({
@@ -1960,7 +1959,10 @@ function AdminServicesPage() {
   const [servicesLoading, setServicesLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [pageSize, setPageSize] = useState('all'); // Default to show all services and categories
+  const [pageSize, setPageSize] = useState('500'); // Default to 500 services per page
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalServices, setTotalServices] = useState(0);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -2051,6 +2053,72 @@ function AdminServicesPage() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   }, []);
+
+  // Pagination functions
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePageSizeChange = (newPageSize: string) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  // Services data fetching with pagination
+  const { data, error, isLoading, mutate: refreshServices } = useSWR(
+    `/api/admin/services?page=${currentPage}&limit=${pageSize}&search=${searchTerm}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 0,
+    }
+  );
+
+  // Update pagination info when data changes
+  useEffect(() => {
+    if (data) {
+      setTotalPages(data.totalPages || 1);
+      setTotalServices(data.total || 0);
+    }
+  }, [data]);
+
+  // Update refreshAllData to include refreshServices
+  const refreshAllDataWithServices = useCallback(async () => {
+    try {
+      // Use Promise.allSettled to ensure all requests complete even if one fails
+      const results = await Promise.allSettled([
+        refreshServices(),
+        refreshCategories(),
+        // Refresh stats
+        fetch('/api/admin/services/stats').then(res => res.json()).then(data => {
+          if (data.data) {
+            setStats(prev => ({
+              ...prev,
+              ...data.data,
+              totalCategories: categoriesData?.data?.length || prev.totalCategories,
+            }));
+          }
+        })
+      ]);
+
+      // Log any failed requests for debugging
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Refresh operation ${index} failed:`, result.reason);
+        }
+      });
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
+  }, [refreshServices, refreshCategories, categoriesData?.data?.length]);
 
   // Filter and group services by category with service ordering
   const groupedServices = useMemo(() => {
@@ -3838,38 +3906,56 @@ function AdminServicesPage() {
                 {/* Pagination */}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    {servicesLoading ? (
+                    {isLoading ? (
                       <div className="flex items-center gap-2">
                         <GradientSpinner size="w-4 h-4" />
-                        <span>Loading pagination...</span>
+                        <span>Loading services...</span>
                       </div>
-                    ) : (() => {
-                      const totalServices = Object.values(groupedServices).flat().length;
-                      const from = totalServices > 0 ? 1 : 0;
-                      const to = totalServices;
-                      return `Showing ${from} to ${to} of ${totalServices} services`;
-                    })()}
+                    ) : (
+                      `Showing page ${currentPage} of ${totalPages} (${totalServices} total services)`
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 mt-4 md:mt-0">
-                    <button
-                      disabled={servicesLoading}
-                      className="btn btn-secondary disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                      {servicesLoading ? (
-                        <GradientSpinner size="w-4 h-4" />
-                      ) : (
-                        `Page 1`
-                      )}
-                    </span>
-                    <button
-                      disabled={servicesLoading}
-                      className="btn btn-secondary disabled:opacity-50"
-                    >
-                      Next
-                    </button>
+
+                  {/* Page Size Selector */}
+                  <div className="flex items-center gap-4 mt-4 md:mt-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Show:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => handlePageSizeChange(e.target.value)}
+                        className="pl-3 pr-8 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-gray-900 transition-all duration-200 appearance-none cursor-pointer text-sm"
+                      >
+                        <option value="100">100 per page</option>
+                        <option value="250">250 per page</option>
+                        <option value="500">500 per page</option>
+                        <option value="1000">1000 per page</option>
+                      </select>
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handlePreviousPage}
+                        disabled={isLoading || currentPage === 1}
+                        className="btn btn-secondary disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                        {isLoading ? (
+                          <GradientSpinner size="w-4 h-4" />
+                        ) : (
+                          `Page ${currentPage} of ${totalPages}`
+                        )}
+                      </span>
+                      <button
+                        onClick={handleNextPage}
+                        disabled={isLoading || currentPage === totalPages}
+                        className="btn btn-secondary disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
                 </div>
               </>
@@ -3919,7 +4005,7 @@ function AdminServicesPage() {
                 onClose={handleCloseCreateModal}
                 showToast={showToast}
                 onRefresh={refreshAllData}
-                refreshAllData={refreshAllData}
+                refreshAllDataWithServices={refreshAllDataWithServices}
               />
             </div>
           </div>
