@@ -1,31 +1,39 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import React, { Fragment, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import React, {
+  Fragment,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-    FaBox,
-    FaBriefcase,
-    FaCheckCircle,
-    FaChevronDown,
-    FaChevronRight,
-    FaChevronUp,
-    FaEdit,
-    FaEllipsisH,
-    FaExclamationTriangle,
-    FaFileImport,
-    FaGripVertical,
-    FaPlus,
-    FaSave,
-    FaSearch,
-    FaShieldAlt,
-    FaSync,
-    FaTags,
-    FaTimes,
-    FaTimesCircle,
-    FaToggleOff,
-    FaToggleOn,
-    FaTrash
+  FaBox,
+  FaBriefcase,
+  FaCheckCircle,
+  FaChevronDown,
+  FaChevronRight,
+  FaChevronUp,
+  FaEdit,
+  FaEllipsisH,
+  FaExclamationTriangle,
+  FaFileImport,
+  FaGripVertical,
+  FaPlus,
+  FaSave,
+  FaSearch,
+  FaShieldAlt,
+  FaSync,
+  FaTags,
+  FaTimes,
+  FaTimesCircle,
+  FaToggleOff,
+  FaToggleOn,
+  FaTrash,
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
@@ -38,36 +46,40 @@ import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import { formatID } from '@/lib/utils';
 import {
-    createCategoryDefaultValues,
-    createCategorySchema,
-    CreateCategorySchema,
+  createCategoryDefaultValues,
+  createCategorySchema,
+  CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 import {
-    createServiceDefaultValues,
-    CreateServiceSchema
+  createServiceDefaultValues,
+  CreateServiceSchema,
 } from '@/lib/validators/admin/services/services.validator';
 import { mutate } from 'swr';
 
 // Fetcher function for useSWR
-const fetcher = (url: string) => axiosInstance.get(url).then(res => res.data);
+const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
 
 // Custom Form Components
 const FormField = ({ children }: { children: React.ReactNode }) => (
   <div className="space-y-2">{children}</div>
 );
 
-const FormItem = ({ className = "", children }: { className?: string; children: React.ReactNode }) => (
-  <div className={`space-y-2 ${className}`}>{children}</div>
-);
+const FormItem = ({
+  className = '',
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) => <div className={`space-y-2 ${className}`}>{children}</div>;
 
-const FormLabel = ({ 
-  className = "", 
-  style, 
-  children 
-}: { 
-  className?: string; 
-  style?: React.CSSProperties; 
-  children: React.ReactNode 
+const FormLabel = ({
+  className = '',
+  style,
+  children,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
 }) => (
   <label className={`block text-sm font-medium ${className}`} style={style}>
     {children}
@@ -78,15 +90,262 @@ const FormControl = ({ children }: { children: React.ReactNode }) => (
   <div>{children}</div>
 );
 
-const FormMessage = ({ 
-  className = "", 
-  children 
-}: { 
-  className?: string; 
-  children?: React.ReactNode 
-}) => (
-  children ? <div className={`text-xs text-red-500 mt-1 ${className}`}>{children}</div> : null
+const FormMessage = ({
+  className = '',
+  children,
+}: {
+  className?: string;
+  children?: React.ReactNode;
+}) =>
+  children ? (
+    <div className={`text-xs text-red-500 mt-1 ${className}`}>{children}</div>
+  ) : null;
+
+// Optimized memoized components for better performance
+const MemoizedServiceRow = memo(
+  ({
+    service,
+    isSelected,
+    onToggleSelect,
+    onEdit,
+    onToggleStatus,
+    onToggleRefill,
+    onToggleCancel,
+    onToggleSecret,
+    isUpdating,
+  }: {
+    service: any;
+    isSelected: boolean;
+    onToggleSelect: (serviceId: number) => void;
+    onEdit: (serviceId: number) => void;
+    onToggleStatus: (serviceId: number) => void;
+    onToggleRefill: (serviceId: number) => void;
+    onToggleCancel: (serviceId: number) => void;
+    onToggleSecret: (serviceId: number) => void;
+    isUpdating: boolean;
+  }) => {
+    return (
+      <tr className="border-b hover:bg-gray-50 transition-colors duration-150">
+        <td className="p-3">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelect(service.id)}
+            className="rounded border-gray-300 w-4 h-4"
+          />
+        </td>
+        <td
+          className="p-3 font-mono text-sm"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {formatID(service.id)}
+        </td>
+        <td className="p-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <div
+                className="font-medium text-sm"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                {service.name}
+              </div>
+              {service.description && (
+                <div
+                  className="text-xs mt-1"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {service.description.length > 50
+                    ? `${service.description.substring(0, 50)}...`
+                    : service.description}
+                </div>
+              )}
+            </div>
+            {service.is_secret && (
+              <FaShieldAlt
+                className="h-4 w-4 text-yellow-500"
+                title="Secret Service"
+              />
+            )}
+          </div>
+        </td>
+        <td className="p-3">
+          <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+            {service.type || 'Default'}
+          </span>
+        </td>
+        <td className="p-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+          {service.provider || 'N/A'}
+        </td>
+        <td className="p-3">
+          <PriceDisplay
+            amount={service.price_per_k}
+            currency="USD"
+            className="text-sm font-medium"
+          />
+        </td>
+        <td className="p-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+          {service.min_order?.toLocaleString()} /{' '}
+          {service.max_order?.toLocaleString()}
+        </td>
+        <td className="p-3">
+          <button
+            onClick={() => onToggleRefill(service.id)}
+            disabled={isUpdating}
+            className={`p-1 rounded transition-colors duration-200 ${
+              service.refill_enabled
+                ? 'text-green-600 hover:bg-green-50'
+                : 'text-gray-400 hover:bg-gray-50'
+            }`}
+            title={
+              service.refill_enabled ? 'Refill Enabled' : 'Refill Disabled'
+            }
+          >
+            {service.refill_enabled ? (
+              <FaToggleOn className="h-5 w-5" />
+            ) : (
+              <FaToggleOff className="h-5 w-5" />
+            )}
+          </button>
+        </td>
+        <td className="p-3">
+          <button
+            onClick={() => onToggleCancel(service.id)}
+            disabled={isUpdating}
+            className={`p-1 rounded transition-colors duration-200 ${
+              service.cancel_enabled
+                ? 'text-green-600 hover:bg-green-50'
+                : 'text-gray-400 hover:bg-gray-50'
+            }`}
+            title={
+              service.cancel_enabled ? 'Cancel Enabled' : 'Cancel Disabled'
+            }
+          >
+            {service.cancel_enabled ? (
+              <FaToggleOn className="h-5 w-5" />
+            ) : (
+              <FaToggleOff className="h-5 w-5" />
+            )}
+          </button>
+        </td>
+        <td className="p-3">
+          <button
+            onClick={() => onToggleStatus(service.id)}
+            disabled={isUpdating}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+              service.status === 'active'
+                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                : 'bg-red-100 text-red-700 hover:bg-red-200'
+            }`}
+          >
+            {service.status === 'active' ? 'Active' : 'Inactive'}
+          </button>
+        </td>
+        <td className="p-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onEdit(service.id)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
+              title="Edit Service"
+            >
+              <FaEdit className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => onToggleSecret(service.id)}
+              disabled={isUpdating}
+              className={`p-2 rounded transition-colors duration-200 ${
+                service.is_secret
+                  ? 'text-yellow-600 hover:bg-yellow-50'
+                  : 'text-gray-400 hover:bg-gray-50'
+              }`}
+              title={service.is_secret ? 'Remove from Secret' : 'Make Secret'}
+            >
+              <FaShieldAlt className="h-4 w-4" />
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  }
 );
+
+MemoizedServiceRow.displayName = 'MemoizedServiceRow';
+
+const MemoizedCategoryHeader = memo(
+  ({
+    categoryName,
+    services,
+    isCollapsed,
+    onToggleCollapse,
+    onSelectCategory,
+    isAllSelected,
+    onEditCategory,
+    onDeleteCategory,
+  }: {
+    categoryName: string;
+    services: any[];
+    isCollapsed: boolean;
+    onToggleCollapse: () => void;
+    onSelectCategory: () => void;
+    isAllSelected: boolean;
+    onEditCategory: () => void;
+    onDeleteCategory: () => void;
+  }) => {
+    return (
+      <tr className="bg-gray-50 border-b-2 border-gray-200">
+        <td colSpan={11} className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onToggleCollapse}
+                className="p-1 hover:bg-gray-200 rounded transition-colors duration-200"
+                title={isCollapsed ? 'Expand category' : 'Collapse category'}
+              >
+                {isCollapsed ? (
+                  <FaChevronRight className="h-4 w-4 text-gray-600" />
+                ) : (
+                  <FaChevronDown className="h-4 w-4 text-gray-600" />
+                )}
+              </button>
+              <input
+                type="checkbox"
+                checked={isAllSelected}
+                onChange={onSelectCategory}
+                className="rounded border-gray-300 w-4 h-4"
+              />
+              <h3
+                className="text-lg font-semibold"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                {categoryName}
+              </h3>
+              <span className="text-sm px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                {services.length} services
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onEditCategory}
+                className="p-2 text-blue-600 hover:bg-blue-100 rounded transition-colors duration-200"
+                title="Edit Category"
+              >
+                <FaEdit className="h-4 w-4" />
+              </button>
+              <button
+                onClick={onDeleteCategory}
+                className="p-2 text-red-600 hover:bg-red-100 rounded transition-colors duration-200"
+                title="Delete Category"
+              >
+                <FaTrash className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+);
+
+MemoizedCategoryHeader.displayName = 'MemoizedCategoryHeader';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -107,11 +366,13 @@ const Toast = ({
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
 }) => (
-  <div className={`toast toast-${type} animate-in slide-in-from-top-2 fade-in duration-300`}>
+  <div
+    className={`toast toast-${type} animate-in slide-in-from-top-2 fade-in duration-300`}
+  >
     {type === 'success' && <FaCheckCircle className="toast-icon" />}
     <span className="font-medium">{message}</span>
-    <button 
-      onClick={onClose} 
+    <button
+      onClick={onClose}
       className="toast-close hover:bg-gray-100 rounded transition-colors duration-200"
       title="Close notification"
     >
@@ -121,8 +382,12 @@ const Toast = ({
 );
 
 // Delete Confirmation Modal Component
-const DeleteConfirmationModal = ({ onClose, onConfirm, selectedCount }: { 
-  onClose: () => void; 
+const DeleteConfirmationModal = ({
+  onClose,
+  onConfirm,
+  selectedCount,
+}: {
+  onClose: () => void;
   onConfirm: () => void;
   selectedCount: number;
 }) => {
@@ -130,7 +395,10 @@ const DeleteConfirmationModal = ({ onClose, onConfirm, selectedCount }: {
     <div className="w-full max-w-md">
       {/* Modal Header */}
       <div className="flex items-center justify-between p-6">
-        <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+        <h3
+          className="text-lg font-semibold"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Confirm Deletion
         </h3>
         <button
@@ -152,17 +420,15 @@ const DeleteConfirmationModal = ({ onClose, onConfirm, selectedCount }: {
                 Delete {selectedCount} Service{selectedCount !== 1 ? 's' : ''}?
               </p>
               <p className="text-sm text-red-600 mt-1">
-                This action cannot be undone. All selected services will be permanently removed.
+                This action cannot be undone. All selected services will be
+                permanently removed.
               </p>
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="flex gap-2 justify-end">
-            <button
-              onClick={onClose}
-              className="btn btn-secondary px-6 py-2"
-            >
+            <button onClick={onClose} className="btn btn-secondary px-6 py-2">
               Cancel
             </button>
             <button
@@ -180,8 +446,16 @@ const DeleteConfirmationModal = ({ onClose, onConfirm, selectedCount }: {
 };
 
 // Delete Category Confirmation Modal Component
-const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isUpdating, servicesCount, categoriesData }: { 
-  onClose: () => void; 
+const DeleteCategoryModal = ({
+  onClose,
+  onConfirm,
+  categoryName,
+  categoryId,
+  isUpdating,
+  servicesCount,
+  categoriesData,
+}: {
+  onClose: () => void;
   onConfirm: (action: 'delete' | 'move', targetCategoryId?: string) => void;
   categoryName: string;
   categoryId: number;
@@ -193,7 +467,8 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
   const [targetCategoryId, setTargetCategoryId] = useState<string>('');
 
   // Filter out the current category from available options
-  const availableCategories = categoriesData?.data?.filter((cat: any) => cat.id !== categoryId) || [];
+  const availableCategories =
+    categoriesData?.data?.filter((cat: any) => cat.id !== categoryId) || [];
 
   const handleConfirm = () => {
     if (deleteAction === 'move' && !targetCategoryId) {
@@ -206,7 +481,10 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
     <div className="w-full max-w-lg">
       {/* Modal Header */}
       <div className="flex items-center justify-between p-6">
-        <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+        <h3
+          className="text-lg font-semibold"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Delete "{categoryName}" Category
         </h3>
         <button
@@ -225,7 +503,8 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
             <FaExclamationTriangle className="h-6 w-6 text-red-500 flex-shrink-0" />
             <div>
               <p className="font-medium text-red-800">
-                This category contains {servicesCount} service{servicesCount !== 1 ? 's' : ''}
+                This category contains {servicesCount} service
+                {servicesCount !== 1 ? 's' : ''}
               </p>
               <p className="text-sm text-red-600 mt-1">
                 Choose how to handle the services before deleting the category.
@@ -235,8 +514,10 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
 
           {/* Action Options */}
           <div className="space-y-3">
-            <p className="font-medium text-gray-800">What would you like to do with the services?</p>
-            
+            <p className="font-medium text-gray-800">
+              What would you like to do with the services?
+            </p>
+
             {/* Option 1: Delete with services */}
             <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
               <input
@@ -248,9 +529,12 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
                 className="mt-0.5"
               />
               <div>
-                <div className="font-medium text-gray-800">Delete category with all services</div>
+                <div className="font-medium text-gray-800">
+                  Delete category with all services
+                </div>
                 <div className="text-sm text-gray-600">
-                  Permanently remove the category and all {servicesCount} service{servicesCount !== 1 ? 's' : ''}
+                  Permanently remove the category and all {servicesCount}{' '}
+                  service{servicesCount !== 1 ? 's' : ''}
                 </div>
               </div>
             </label>
@@ -270,13 +554,16 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
                 <div className="font-medium text-gray-800">
                   Move services to another category
                   {availableCategories.length === 0 && (
-                    <span className="text-red-500 text-sm ml-2">(No other categories available)</span>
+                    <span className="text-red-500 text-sm ml-2">
+                      (No other categories available)
+                    </span>
                   )}
                 </div>
                 <div className="text-sm text-gray-600">
-                  Transfer all services to a different category before deleting this one
+                  Transfer all services to a different category before deleting
+                  this one
                 </div>
-                
+
                 {/* Category Selection Dropdown */}
                 {deleteAction === 'move' && availableCategories.length > 0 && (
                   <div className="mt-3">
@@ -287,7 +574,6 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
                       value={targetCategoryId}
                       onChange={(e) => setTargetCategoryId(e.target.value)}
                       className="w-full pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-gray-900 transition-all duration-200 appearance-none cursor-pointer"
-  
                     >
                       <option value="">Choose a category...</option>
                       {availableCategories.map((category: any) => (
@@ -306,7 +592,10 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
           {deleteAction === 'delete' && (
             <div className="p-3 bg-red-50 rounded-lg border border-red-200">
               <p className="text-sm text-red-800">
-                <strong>Warning:</strong> This will permanently delete both the category and all {servicesCount} service{servicesCount !== 1 ? 's' : ''} inside it. This action cannot be undone.
+                <strong>Warning:</strong> This will permanently delete both the
+                category and all {servicesCount} service
+                {servicesCount !== 1 ? 's' : ''} inside it. This action cannot
+                be undone.
               </p>
             </div>
           )}
@@ -315,7 +604,13 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
           {deleteAction === 'move' && targetCategoryId && (
             <div className="p-3 bg-green-50 rounded-lg border border-green-200">
               <p className="text-sm text-green-800">
-                <strong>Ready:</strong> All services will be moved to "{availableCategories.find((cat: any) => cat.id === targetCategoryId)?.category_name}" before deleting this category.
+                <strong>Ready:</strong> All services will be moved to "
+                {
+                  availableCategories.find(
+                    (cat: any) => cat.id === targetCategoryId
+                  )?.category_name
+                }
+                " before deleting this category.
               </p>
             </div>
           )}
@@ -331,18 +626,24 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
             </button>
             <button
               onClick={handleConfirm}
-              disabled={isUpdating || (deleteAction === 'move' && !targetCategoryId)}
+              disabled={
+                isUpdating || (deleteAction === 'move' && !targetCategoryId)
+              }
               className="btn bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isUpdating ? (
                 <>
                   <GradientSpinner size="w-4 h-4" />
-                  {deleteAction === 'delete' ? 'Deleting...' : 'Moving & Deleting...'}
+                  {deleteAction === 'delete'
+                    ? 'Deleting...'
+                    : 'Moving & Deleting...'}
                 </>
               ) : (
                 <>
                   <FaTrash className="h-4 w-4" />
-                  {deleteAction === 'delete' ? 'Delete All' : 'Move & Delete Category'}
+                  {deleteAction === 'delete'
+                    ? 'Delete All'
+                    : 'Move & Delete Category'}
                 </>
               )}
             </button>
@@ -356,12 +657,23 @@ const DeleteCategoryModal = ({ onClose, onConfirm, categoryName, categoryId, isU
 // Create Service Form Component (integrated)
 const CreateServiceForm: React.FC<{
   onClose: () => void;
-  showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
+  showToast: (
+    message: string,
+    type?: 'success' | 'error' | 'info' | 'pending'
+  ) => void;
   onRefresh?: () => void;
   refreshAllDataWithServices?: () => Promise<void>;
 }> = ({ onClose, showToast, onRefresh, refreshAllDataWithServices }) => {
-  const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
-  const { data: serviceTypesData, error: serviceTypesError, isLoading: serviceTypesLoading } = useSWR('/api/admin/service-types', fetcher);
+  const {
+    data: categoriesData,
+    error: categoriesError,
+    isLoading: categoriesLoading,
+  } = useGetCategories();
+  const {
+    data: serviceTypesData,
+    error: serviceTypesError,
+    isLoading: serviceTypesLoading,
+  } = useSWR('/api/admin/service-types', fetcher);
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -369,7 +681,7 @@ const CreateServiceForm: React.FC<{
     handleSubmit,
     reset,
     watch,
-    formState: { errors }
+    formState: { errors },
   } = useForm<CreateServiceSchema>({
     mode: 'onChange',
     // No resolver to allow empty fields
@@ -378,7 +690,7 @@ const CreateServiceForm: React.FC<{
       mode: 'manual', // Set default mode to manual
     },
   });
-  
+
   // Watch refill field to control readonly state of refill days and display
   const refillValue = watch('refill');
 
@@ -409,7 +721,10 @@ const CreateServiceForm: React.FC<{
     startTransition(async () => {
       try {
         console.log('Sending request to API...');
-        const response = await axiosInstance.post('/api/admin/services', filteredValues);
+        const response = await axiosInstance.post(
+          '/api/admin/services',
+          filteredValues
+        );
         console.log('API response:', response.data);
         if (response.data.success) {
           reset();
@@ -451,7 +766,9 @@ const CreateServiceForm: React.FC<{
           <p className="text-red-600 font-medium">Error loading categories</p>
           <p className="text-gray-500 text-sm mt-1">{categoriesError}</p>
           <div className="flex justify-center mt-4">
-            <button onClick={onClose} className="btn btn-secondary">Close</button>
+            <button onClick={onClose} className="btn btn-secondary">
+              Close
+            </button>
           </div>
         </div>
       </div>
@@ -464,9 +781,13 @@ const CreateServiceForm: React.FC<{
         <div className="text-center py-12">
           <FaExclamationTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 font-medium">No categories available</p>
-          <p className="text-gray-500 text-sm mt-1">Please add categories first</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Please add categories first
+          </p>
           <div className="flex justify-center mt-4">
-            <button onClick={onClose} className="btn btn-secondary">Close</button>
+            <button onClick={onClose} className="btn btn-secondary">
+              Close
+            </button>
           </div>
         </div>
       </div>
@@ -477,7 +798,10 @@ const CreateServiceForm: React.FC<{
     <div className="w-full max-w-6xl">
       {/* Modal Header */}
       <div className="flex items-center justify-between p-6">
-        <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+        <h3
+          className="text-lg font-semibold"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Create New Service
         </h3>
         <button
@@ -630,7 +954,6 @@ const CreateServiceForm: React.FC<{
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('min_order')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.min_order?.message}</FormMessage>
@@ -652,7 +975,6 @@ const CreateServiceForm: React.FC<{
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('max_order')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.max_order?.message}</FormMessage>
@@ -677,7 +999,6 @@ const CreateServiceForm: React.FC<{
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('perqty')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.perqty?.message}</FormMessage>
@@ -698,7 +1019,6 @@ const CreateServiceForm: React.FC<{
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     {...register('avg_time')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.avg_time?.message}</FormMessage>
@@ -717,7 +1037,7 @@ const CreateServiceForm: React.FC<{
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('refill', {
-                    setValueAs: (value) => value === 'true'
+                    setValueAs: (value) => value === 'true',
                   })}
                   disabled={isPending}
                   required
@@ -746,7 +1066,6 @@ const CreateServiceForm: React.FC<{
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('refillDays')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.refillDays?.message}</FormMessage>
@@ -771,7 +1090,6 @@ const CreateServiceForm: React.FC<{
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('refillDisplay')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.refillDisplay?.message}</FormMessage>
@@ -790,7 +1108,7 @@ const CreateServiceForm: React.FC<{
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('cancel', {
-                    setValueAs: (value) => value === 'true'
+                    setValueAs: (value) => value === 'true',
                   })}
                   disabled={isPending}
                   required
@@ -998,9 +1316,16 @@ const CreateServiceForm: React.FC<{
 };
 
 // Create Category Form Component (integrated)
-const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
+const CreateCategoryForm = ({
+  onClose,
+  showToast,
+  onRefresh,
+}: {
   onClose: () => void;
-  showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
+  showToast: (
+    message: string,
+    type?: 'success' | 'error' | 'info' | 'pending'
+  ) => void;
   onRefresh?: () => void;
 }) => {
   const [isPending, startTransition] = useTransition();
@@ -1008,7 +1333,7 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
     register,
     handleSubmit,
     reset,
-    formState: { errors }
+    formState: { errors },
   } = useForm<CreateCategorySchema>({
     resolver: zodResolver(createCategorySchema),
     mode: 'all',
@@ -1022,23 +1347,36 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
   const onSubmit: SubmitHandler<CreateCategorySchema> = async (values) => {
     startTransition(() => {
       // handle form submission
-      axiosInstance.post('/api/admin/categories', values).then((res) => {
-        if (res.data.success) {
-          reset();
-          showToast(res.data.message || 'Category created successfully', 'success');
-          // Refresh all category-related data for live updates
-          mutate('/api/admin/categories');
-          mutate('/api/admin/categories/get-categories');
-          mutate('/api/admin/services'); // Refresh services to show updated category names
-          // Live refresh parent data
-          if (onRefresh) onRefresh();
-          onClose();
-        } else {
-          showToast(res.data.error || 'Failed to create category', 'error');
-        }
-      }).catch((error) => {
-        showToast(`Error: ${error.response?.data?.error || error.message || 'Something went wrong'}`, 'error');
-      });
+      axiosInstance
+        .post('/api/admin/categories', values)
+        .then((res) => {
+          if (res.data.success) {
+            reset();
+            showToast(
+              res.data.message || 'Category created successfully',
+              'success'
+            );
+            // Refresh all category-related data for live updates
+            mutate('/api/admin/categories');
+            mutate('/api/admin/categories/get-categories');
+            mutate('/api/admin/services'); // Refresh services to show updated category names
+            // Live refresh parent data
+            if (onRefresh) onRefresh();
+            onClose();
+          } else {
+            showToast(res.data.error || 'Failed to create category', 'error');
+          }
+        })
+        .catch((error) => {
+          showToast(
+            `Error: ${
+              error.response?.data?.error ||
+              error.message ||
+              'Something went wrong'
+            }`,
+            'error'
+          );
+        });
     });
   };
 
@@ -1046,18 +1384,14 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
     <div className="w-full max-w-md">
       {/* Modal Header */}
       <div className="flex items-center justify-between p-6">
-        <h3 className="text-lg font-semibold">
-          Create New Category
-        </h3>
+        <h3 className="text-lg font-semibold">Create New Category</h3>
       </div>
 
       <div className="px-6 pb-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Category Name */}
           <FormItem>
-            <FormLabel className="form-label">
-              Category Name
-            </FormLabel>
+            <FormLabel className="form-label">Category Name</FormLabel>
             <FormControl>
               <input
                 type="text"
@@ -1073,9 +1407,7 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
 
           {/* Hide Category */}
           <FormItem>
-            <FormLabel className="form-label">
-              Hide Category
-            </FormLabel>
+            <FormLabel className="form-label">Hide Category</FormLabel>
             <FormControl>
               <select
                 className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
@@ -1083,7 +1415,9 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
                 disabled={isPending}
               >
                 <option value="no">No (Category will be visible/active)</option>
-                <option value="yes">Yes (Category will be hidden/deactivated)</option>
+                <option value="yes">
+                  Yes (Category will be hidden/deactivated)
+                </option>
               </select>
             </FormControl>
             <FormMessage>{errors.hideCategory?.message}</FormMessage>
@@ -1091,9 +1425,7 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
 
           {/* Position */}
           <FormItem>
-            <FormLabel className="form-label">
-              Position
-            </FormLabel>
+            <FormLabel className="form-label">Position</FormLabel>
             <FormControl>
               <select
                 className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
@@ -1106,7 +1438,7 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
             </FormControl>
             <FormMessage>{errors.position?.message}</FormMessage>
           </FormItem>
-          
+
           {/* Submit Buttons */}
           <div className="flex gap-2 justify-end">
             <button
@@ -1139,21 +1471,30 @@ const CreateCategoryForm = ({ onClose, showToast, onRefresh }: {
 };
 
 // Edit Category Form Component (integrated)
-const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refreshAllData }: {
+const EditCategoryForm = ({
+  categoryId,
+  categoryName,
+  onClose,
+  showToast,
+  refreshAllData,
+}: {
   categoryId: string;
   categoryName: string;
   onClose: () => void;
-  showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
+  showToast: (
+    message: string,
+    type?: 'success' | 'error' | 'info' | 'pending'
+  ) => void;
   refreshAllData?: () => Promise<void>;
 }) => {
   const { data: categoriesData } = useGetCategories();
   const [isPending, startTransition] = useTransition();
-  
+
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors }
+    formState: { errors },
   } = useForm<CreateCategorySchema>({
     resolver: zodResolver(createCategorySchema),
     mode: 'all',
@@ -1167,7 +1508,9 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refres
   // Pre-populate form with existing category data
   useEffect(() => {
     if (categoriesData?.data && categoryId) {
-      const category = categoriesData.data.find((cat: any) => cat.id === parseInt(categoryId));
+      const category = categoriesData.data.find(
+        (cat: any) => cat.id === parseInt(categoryId)
+      );
       if (category) {
         reset({
           category_name: category.category_name || '',
@@ -1182,9 +1525,15 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refres
     startTransition(async () => {
       try {
         // handle form submission for updating
-        const res = await axiosInstance.put(`/api/admin/categories/${categoryId}`, values);
+        const res = await axiosInstance.put(
+          `/api/admin/categories/${categoryId}`,
+          values
+        );
         if (res.data.success) {
-          showToast(res.data.message || 'Category updated successfully', 'success');
+          showToast(
+            res.data.message || 'Category updated successfully',
+            'success'
+          );
 
           // Refresh all category-related data for live updates
           mutate('/api/admin/categories');
@@ -1201,7 +1550,14 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refres
           showToast(res.data.error || 'Failed to update category', 'error');
         }
       } catch (error: any) {
-        showToast(`Error: ${error.response?.data?.error || error.message || 'Something went wrong'}`, 'error');
+        showToast(
+          `Error: ${
+            error.response?.data?.error ||
+            error.message ||
+            'Something went wrong'
+          }`,
+          'error'
+        );
       }
     });
   };
@@ -1210,9 +1566,7 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refres
     <div className="w-full max-w-md">
       {/* Modal Header */}
       <div className="flex items-center justify-between p-6">
-        <h3 className="text-lg font-semibold">
-          Edit Category
-        </h3>
+        <h3 className="text-lg font-semibold">Edit Category</h3>
         <button
           onClick={onClose}
           className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -1226,9 +1580,7 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refres
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Category Name */}
           <FormItem>
-            <FormLabel className="form-label">
-              Category Name
-            </FormLabel>
+            <FormLabel className="form-label">Category Name</FormLabel>
             <FormControl>
               <input
                 type="text"
@@ -1244,9 +1596,7 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refres
 
           {/* Hide Category */}
           <FormItem>
-            <FormLabel className="form-label">
-              Hide Category
-            </FormLabel>
+            <FormLabel className="form-label">Hide Category</FormLabel>
             <FormControl>
               <select
                 className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
@@ -1254,7 +1604,9 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refres
                 disabled={isPending}
               >
                 <option value="no">No (Category will be visible/active)</option>
-                <option value="yes">Yes (Category will be hidden/deactivated)</option>
+                <option value="yes">
+                  Yes (Category will be hidden/deactivated)
+                </option>
               </select>
             </FormControl>
             <FormMessage>{errors.hideCategory?.message}</FormMessage>
@@ -1262,9 +1614,7 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refres
 
           {/* Position */}
           <FormItem>
-            <FormLabel className="form-label">
-              Position
-            </FormLabel>
+            <FormLabel className="form-label">Position</FormLabel>
             <FormControl>
               <select
                 className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
@@ -1277,7 +1627,7 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refres
             </FormControl>
             <FormMessage>{errors.position?.message}</FormMessage>
           </FormItem>
-          
+
           {/* Submit Buttons */}
           <div className="flex gap-2 justify-end">
             <button
@@ -1313,15 +1663,35 @@ const EditCategoryForm = ({ categoryId, categoryName, onClose, showToast, refres
 };
 
 // Edit Service Form Component (integrated)
-const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
+const EditServiceForm = ({
+  serviceId,
+  onClose,
+  showToast,
+  refreshAllData,
+}: {
   serviceId: number;
   onClose: () => void;
-  showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
+  showToast: (
+    message: string,
+    type?: 'success' | 'error' | 'info' | 'pending'
+  ) => void;
   refreshAllData?: () => Promise<void>;
 }) => {
-  const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
-  const { data: serviceTypesData, error: serviceTypesError, isLoading: serviceTypesLoading } = useSWR('/api/admin/service-types', fetcher);
-  const { data: serviceData, error: serviceError, isLoading: serviceLoading } = useGetServicesId(serviceId);
+  const {
+    data: categoriesData,
+    error: categoriesError,
+    isLoading: categoriesLoading,
+  } = useGetCategories();
+  const {
+    data: serviceTypesData,
+    error: serviceTypesError,
+    isLoading: serviceTypesLoading,
+  } = useSWR('/api/admin/service-types', fetcher);
+  const {
+    data: serviceData,
+    error: serviceError,
+    isLoading: serviceLoading,
+  } = useGetServicesId(serviceId);
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -1329,7 +1699,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
     handleSubmit,
     reset,
     watch,
-    formState: { errors }
+    formState: { errors },
   } = useForm<CreateServiceSchema>({
     mode: 'onChange',
     // No resolver for edit form to allow empty fields
@@ -1338,7 +1708,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
       mode: 'manual',
     },
   });
-  
+
   // Watch refill field to control readonly state of refill days and display
   const refillValue = watch('refill');
 
@@ -1395,10 +1765,16 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
     startTransition(async () => {
       try {
         console.log('Sending edit request to API...');
-        const response = await axiosInstance.put(`/api/admin/services/update-services?id=${serviceId}`, filteredValues);
+        const response = await axiosInstance.put(
+          `/api/admin/services/update-services?id=${serviceId}`,
+          filteredValues
+        );
         console.log('Edit API response:', response.data);
         if (response.data.success) {
-          showToast(response.data.message || 'Service updated successfully', 'success');
+          showToast(
+            response.data.message || 'Service updated successfully',
+            'success'
+          );
           // Live refresh all data
           if (refreshAllData) {
             await refreshAllData();
@@ -1433,9 +1809,13 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
         <div className="text-center py-12">
           <FaExclamationTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
           <p className="text-red-600 font-medium">Error loading service data</p>
-          <p className="text-gray-500 text-sm mt-1">{categoriesError || serviceError}</p>
+          <p className="text-gray-500 text-sm mt-1">
+            {categoriesError || serviceError}
+          </p>
           <div className="flex justify-center mt-4">
-            <button onClick={onClose} className="btn btn-secondary">Close</button>
+            <button onClick={onClose} className="btn btn-secondary">
+              Close
+            </button>
           </div>
         </div>
       </div>
@@ -1448,9 +1828,13 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
         <div className="text-center py-12">
           <FaExclamationTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 font-medium">No service data available</p>
-          <p className="text-gray-500 text-sm mt-1">Service not found or data unavailable</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Service not found or data unavailable
+          </p>
           <div className="flex justify-center mt-4">
-            <button onClick={onClose} className="btn btn-secondary">Close</button>
+            <button onClick={onClose} className="btn btn-secondary">
+              Close
+            </button>
           </div>
         </div>
       </div>
@@ -1461,7 +1845,10 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
     <div className="w-full max-w-6xl">
       {/* Modal Header */}
       <div className="flex items-center justify-between p-6">
-        <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+        <h3
+          className="text-lg font-semibold"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Edit Service
         </h3>
         <button
@@ -1611,7 +1998,6 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('min_order')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.min_order?.message}</FormMessage>
@@ -1647,7 +2033,8 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Per Quantity (Default: 1000) <span className="text-red-500">*</span>
+                  Per Quantity (Default: 1000){' '}
+                  <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
                   <input
@@ -1657,7 +2044,6 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('perqty')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.perqty?.message}</FormMessage>
@@ -1678,7 +2064,6 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     {...register('avg_time')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.avg_time?.message}</FormMessage>
@@ -1697,7 +2082,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('refill', {
-                    setValueAs: (value) => value === 'true'
+                    setValueAs: (value) => value === 'true',
                   })}
                   disabled={isPending}
                   required
@@ -1726,7 +2111,6 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('refillDays')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.refillDays?.message}</FormMessage>
@@ -1751,7 +2135,6 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     {...register('refillDisplay')}
                     disabled={isPending}
-
                   />
                 </FormControl>
                 <FormMessage>{errors.refillDisplay?.message}</FormMessage>
@@ -1770,7 +2153,7 @@ const EditServiceForm = ({ serviceId, onClose, showToast, refreshAllData }: {
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('cancel', {
-                    setValueAs: (value) => value === 'true'
+                    setValueAs: (value) => value === 'true',
                   })}
                   disabled={isPending}
                   required
@@ -1914,9 +2297,8 @@ function AdminServicesPage() {
 
   // Hooks
   const user = useCurrentUser();
-  const { data: categoriesData, mutate: refreshCategories } = useGetCategories();
-
-
+  const { data: categoriesData, mutate: refreshCategories } =
+    useGetCategories();
 
   // Global refresh function for live updates - will be updated after refreshServices is defined
   const refreshAllData = useCallback(async () => {
@@ -1925,15 +2307,18 @@ function AdminServicesPage() {
       const results = await Promise.allSettled([
         refreshCategories(),
         // Refresh stats
-        fetch('/api/admin/services/stats').then(res => res.json()).then(data => {
-          if (data.data) {
-            setStats(prev => ({
-              ...prev,
-              ...data.data,
-              totalCategories: categoriesData?.data?.length || prev.totalCategories,
-            }));
-          }
-        })
+        fetch('/api/admin/services/stats')
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.data) {
+              setStats((prev) => ({
+                ...prev,
+                ...data.data,
+                totalCategories:
+                  categoriesData?.data?.length || prev.totalCategories,
+              }));
+            }
+          }),
       ]);
 
       // Log any failed requests for debugging
@@ -1954,7 +2339,7 @@ function AdminServicesPage() {
     activeServices: 0,
     inactiveServices: 0,
   });
-  
+
   const [statsLoading, setStatsLoading] = useState(true);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -1977,27 +2362,41 @@ function AdminServicesPage() {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [allCategoriesCollapsed, setAllCategoriesCollapsed] = useState(false);
-  const [activeCategoryToggles, setActiveCategoryToggles] = useState<{[key: string]: boolean}>({});
-  
+  const [activeCategoryToggles, setActiveCategoryToggles] = useState<{
+    [key: string]: boolean;
+  }>({});
+
   // Drag and drop state for categories
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
-  const [dropTargetCategory, setDropTargetCategory] = useState<string | null>(null);
-  const [dropPosition, setDropPosition] = useState<'before' | 'after' | null>(null);
+  const [dropTargetCategory, setDropTargetCategory] = useState<string | null>(
+    null
+  );
+  const [dropPosition, setDropPosition] = useState<'before' | 'after' | null>(
+    null
+  );
 
   // Drag and drop state for services
   const [draggedService, setDraggedService] = useState<string | null>(null);
-  const [serviceOrder, setServiceOrder] = useState<{[categoryName: string]: string[]}>({});
-  const [dropTargetService, setDropTargetService] = useState<string | null>(null);
-  const [dropPositionService, setDropPositionService] = useState<'before' | 'after' | null>(null);
+  const [serviceOrder, setServiceOrder] = useState<{
+    [categoryName: string]: string[];
+  }>({});
+  const [dropTargetService, setDropTargetService] = useState<string | null>(
+    null
+  );
+  const [dropPositionService, setDropPositionService] = useState<
+    'before' | 'after' | null
+  >(null);
 
   // Create Service Modal state
   const [createServiceModal, setCreateServiceModal] = useState(false);
-  const [createServiceModalClosing, setCreateServiceModalClosing] = useState(false);
+  const [createServiceModalClosing, setCreateServiceModalClosing] =
+    useState(false);
 
   // Create Category Modal state
   const [createCategoryModal, setCreateCategoryModal] = useState(false);
-  const [createCategoryModalClosing, setCreateCategoryModalClosing] = useState(false);
+  const [createCategoryModalClosing, setCreateCategoryModalClosing] =
+    useState(false);
 
   // Edit Category Modal state
   const [editCategoryModal, setEditCategoryModal] = useState<{
@@ -2025,7 +2424,8 @@ function AdminServicesPage() {
 
   // Delete confirmation modal state
   const [deleteConfirmationModal, setDeleteConfirmationModal] = useState(false);
-  const [deleteConfirmationModalClosing, setDeleteConfirmationModalClosing] = useState(false);
+  const [deleteConfirmationModalClosing, setDeleteConfirmationModalClosing] =
+    useState(false);
 
   // Delete category modal state
   const [deleteCategoryModal, setDeleteCategoryModal] = useState<{
@@ -2046,13 +2446,16 @@ function AdminServicesPage() {
   const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
 
   // Show toast notification - defined early
-  const showToast = useCallback((
-    message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'success'
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  }, []);
+  const showToast = useCallback(
+    (
+      message: string,
+      type: 'success' | 'error' | 'info' | 'pending' = 'success'
+    ) => {
+      setToast({ message, type });
+      setTimeout(() => setToast(null), 4000);
+    },
+    []
+  );
 
   // Pagination functions
   const handlePreviousPage = () => {
@@ -2072,13 +2475,24 @@ function AdminServicesPage() {
     setCurrentPage(1); // Reset to first page when changing page size
   };
 
-  // Services data fetching with pagination
-  const { data, error, isLoading, mutate: refreshServices } = useSWR(
-    `/api/admin/services?page=${currentPage}&limit=${pageSize}&search=${searchTerm}`,
+  // Services data fetching with pagination and optimized caching
+  const {
+    data,
+    error,
+    isLoading,
+    mutate: refreshServices,
+  } = useSWR(
+    `/api/admin/services?page=${currentPage}&limit=${
+      pageSize === 'all' ? '999999' : pageSize
+    }&search=${searchTerm}`,
     fetcher,
     {
       revalidateOnFocus: false,
       refreshInterval: 0,
+      dedupingInterval: 60000, // Cache for 1 minute
+      keepPreviousData: true, // Keep previous data while loading new data
+      errorRetryCount: 3,
+      errorRetryInterval: 1000,
     }
   );
 
@@ -2098,15 +2512,18 @@ function AdminServicesPage() {
         refreshServices(),
         refreshCategories(),
         // Refresh stats
-        fetch('/api/admin/services/stats').then(res => res.json()).then(data => {
-          if (data.data) {
-            setStats(prev => ({
-              ...prev,
-              ...data.data,
-              totalCategories: categoriesData?.data?.length || prev.totalCategories,
-            }));
-          }
-        })
+        fetch('/api/admin/services/stats')
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.data) {
+              setStats((prev) => ({
+                ...prev,
+                ...data.data,
+                totalCategories:
+                  categoriesData?.data?.length || prev.totalCategories,
+              }));
+            }
+          }),
       ]);
 
       // Log any failed requests for debugging
@@ -2120,18 +2537,24 @@ function AdminServicesPage() {
     }
   }, [refreshServices, refreshCategories, categoriesData?.data?.length]);
 
-  // Filter and group services by category with service ordering
-  const groupedServices = useMemo(() => {
-    if (!data?.data) return {} as Record<string, any[]>;
+  // Memoized filter function for better performance
+  const filteredServices = useMemo(() => {
+    if (!data?.data) return [];
 
-    const filtered = data.data.filter((service: any) => {
+    const searchLower = searchTerm.toLowerCase();
+
+    return data.data.filter((service: any) => {
+      // Pre-compute search fields to avoid repeated toLowerCase calls
+      const serviceName = service.name?.toLowerCase() || '';
+      const categoryName = service.category?.category_name?.toLowerCase() || '';
+      const provider = service.provider?.toLowerCase() || '';
+      const serviceId = service.id?.toString() || '';
+
       const matchesSearch =
-        service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.category?.category_name
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        service.provider?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.id?.toString().includes(searchTerm);
+        serviceName.includes(searchLower) ||
+        categoryName.includes(searchLower) ||
+        provider.includes(searchLower) ||
+        serviceId.includes(searchLower);
 
       if (statusFilter === 'all') return matchesSearch;
       if (statusFilter === 'active')
@@ -2141,77 +2564,83 @@ function AdminServicesPage() {
 
       return matchesSearch;
     });
+  }, [data?.data, searchTerm, statusFilter]);
 
-    // Initialize grouped object with all categories using ID-based keys
-    const groupedById: Record<string, { category: any; services: any[] }> = {};
+  // Optimized grouping with better performance for large datasets
+  const groupedServices = useMemo(() => {
+    if (!filteredServices.length && !data?.allCategories)
+      return {} as Record<string, any[]>;
 
-    // Add all categories from API response (allCategories), even if empty (including duplicates)
+    // Use Map for better performance with large datasets
+    const groupedById = new Map<string, { category: any; services: any[] }>();
+
+    // Initialize with all categories
     if (data?.allCategories) {
       data.allCategories.forEach((category: any) => {
-        // Use unique key with ID to handle duplicate names
         const categoryKey = `${category.category_name}_${category.id}`;
-        groupedById[categoryKey] = {
+        groupedById.set(categoryKey, {
           category: category,
-          services: []
-        };
+          services: [],
+        });
       });
     }
 
-    // Group filtered services by category ID
-    filtered.forEach((service: any) => {
+    // Group filtered services by category
+    filteredServices.forEach((service: any) => {
       const categoryId = service.category?.id;
       const categoryName = service.category?.category_name || 'Uncategorized';
-      const categoryKey = categoryId ? `${categoryName}_${categoryId}` : 'Uncategorized_0';
+      const categoryKey = categoryId
+        ? `${categoryName}_${categoryId}`
+        : 'Uncategorized_0';
 
-      if (!groupedById[categoryKey]) {
-        groupedById[categoryKey] = {
-          category: service.category || { id: 0, category_name: 'Uncategorized' },
-          services: []
-        };
+      if (!groupedById.has(categoryKey)) {
+        groupedById.set(categoryKey, {
+          category: service.category || {
+            id: 0,
+            category_name: 'Uncategorized',
+          },
+          services: [],
+        });
       }
-      groupedById[categoryKey].services.push(service);
+      groupedById.get(categoryKey)!.services.push(service);
     });
 
-    // Convert to the format expected by the UI and sort by ID first, then position
-    const grouped: Record<string, any[]> = {};
-    Object.values(groupedById)
-      .sort((a, b) => {
-        // Sort by ID first (1, 2, 3...)
-        const idDiff = (a.category.id || 999) - (b.category.id || 999);
-        if (idDiff !== 0) return idDiff;
-        // Then by position if IDs are same
-        return (a.category.position || 999) - (b.category.position || 999);
-      })
-      .forEach(({ category, services }) => {
-        // Use category name with ID to handle duplicates
-        const displayName = `${category.category_name} (ID: ${category.id})`;
-        grouped[displayName] = services;
-      });
+    // Convert to array and sort for better performance
+    const sortedGroups = Array.from(groupedById.values()).sort((a, b) => {
+      const idDiff = (a.category.id || 999) - (b.category.id || 999);
+      if (idDiff !== 0) return idDiff;
+      return (a.category.position || 999) - (b.category.position || 999);
+    });
 
-    // Apply custom service order within each category
-    Object.keys(grouped).forEach(category => {
-      const categoryServices = grouped[category];
-      const customOrder = serviceOrder[category];
-      
+    // Build final grouped object
+    const grouped: Record<string, any[]> = {};
+
+    sortedGroups.forEach(({ category, services }) => {
+      const displayName = `${category.category_name} (ID: ${category.id})`;
+
+      // Apply custom service order or default sorting
+      const customOrder = serviceOrder[displayName];
+
       if (customOrder && customOrder.length > 0) {
+        // Use Map for O(1) lookup instead of find()
+        const serviceMap = new Map(services.map((s) => [s.id, s]));
         const orderedServices: any[] = [];
-        
-        customOrder.forEach(serviceId => {
-          const service = categoryServices.find(s => s.id === serviceId);
-          if (service) {
-            orderedServices.push(service);
-          }
+
+        customOrder.forEach((serviceId) => {
+          const service = serviceMap.get(serviceId);
+          if (service) orderedServices.push(service);
         });
-        
-        categoryServices.forEach(service => {
+
+        services.forEach((service) => {
           if (!customOrder.includes(service.id)) {
             orderedServices.push(service);
           }
         });
-        
-        grouped[category] = orderedServices;
+
+        grouped[displayName] = orderedServices;
       } else {
-        grouped[category].sort((a: any, b: any) => {
+        // Optimized sorting
+        grouped[displayName] = services.sort((a: any, b: any) => {
           let aValue = a[sortBy];
           let bValue = b[sortBy];
 
@@ -2220,11 +2649,13 @@ function AdminServicesPage() {
             bValue = parseFloat(bValue) || 0;
           }
 
-          if (sortOrder === 'asc') {
-            return aValue > bValue ? 1 : -1;
-          } else {
-            return aValue < bValue ? 1 : -1;
-          }
+          return sortOrder === 'asc'
+            ? aValue > bValue
+              ? 1
+              : -1
+            : aValue < bValue
+            ? 1
+            : -1;
         });
       }
     });
@@ -2232,28 +2663,32 @@ function AdminServicesPage() {
     // Apply custom category order if available
     if (categoryOrder.length > 0) {
       const orderedGrouped: Record<string, any[]> = {};
-      
-      // First add categories in custom order
-      categoryOrder.forEach(categoryName => {
+
+      categoryOrder.forEach((categoryName) => {
         if (grouped[categoryName]) {
           orderedGrouped[categoryName] = grouped[categoryName];
         }
       });
-      
-      // Then add any remaining categories that aren't in the custom order
-      Object.keys(grouped).forEach(categoryName => {
+
+      Object.keys(grouped).forEach((categoryName) => {
         if (!categoryOrder.includes(categoryName)) {
           orderedGrouped[categoryName] = grouped[categoryName];
         }
       });
-      
+
       return orderedGrouped;
     }
 
     return grouped;
-  }, [data?.data, categoriesData?.data, searchTerm, statusFilter, sortBy, sortOrder, categoryOrder, serviceOrder]);
+  }, [
+    filteredServices,
+    data?.allCategories,
+    sortBy,
+    sortOrder,
+    categoryOrder,
+    serviceOrder,
+  ]);
 
-  // Utility functions that use groupedServices - defined after groupedServices
   const getStatusIcon = (status: string) => {
     if (status === 'inactive') {
       return <FaTimesCircle className="h-3 w-3 text-red-500" />;
@@ -2262,16 +2697,16 @@ function AdminServicesPage() {
   };
 
   const toggleCategory = (categoryName: string) => {
-    setCollapsedCategories(prev => 
-      prev.includes(categoryName) 
-        ? prev.filter(cat => cat !== categoryName)
+    setCollapsedCategories((prev) =>
+      prev.includes(categoryName)
+        ? prev.filter((cat) => cat !== categoryName)
         : [...prev, categoryName]
     );
   };
 
   const toggleAllCategories = () => {
     const allCategoryNames = Object.keys(groupedServices);
-    
+
     if (allCategoriesCollapsed) {
       // Expand all - clear collapsed categories
       setCollapsedCategories([]);
@@ -2293,13 +2728,17 @@ function AdminServicesPage() {
   };
 
   const handleSelectCategory = (categoryServices: any[]) => {
-    const categoryIds = categoryServices.map(service => service.id);
-    const allSelected = categoryIds.every(id => selectedServices.includes(id));
-    
+    const categoryIds = categoryServices.map((service) => service.id);
+    const allSelected = categoryIds.every((id) =>
+      selectedServices.includes(id)
+    );
+
     if (allSelected) {
-      setSelectedServices(prev => prev.filter(id => !categoryIds.includes(id)));
+      setSelectedServices((prev) =>
+        prev.filter((id) => !categoryIds.includes(id))
+      );
     } else {
-      setSelectedServices(prev => [...new Set([...prev, ...categoryIds])]);
+      setSelectedServices((prev) => [...new Set([...prev, ...categoryIds])]);
     }
   };
 
@@ -2329,10 +2768,8 @@ function AdminServicesPage() {
     setCreateCategoryModalClosing(false);
   };
 
-
-
   const handleCloseEditModal = () => {
-    setEditServiceModal(prev => ({ ...prev, closing: true }));
+    setEditServiceModal((prev) => ({ ...prev, closing: true }));
     setTimeout(() => {
       setEditServiceModal({ open: false, serviceId: 0, closing: false });
     }, 300); // Match animation duration
@@ -2355,9 +2792,14 @@ function AdminServicesPage() {
   };
 
   const handleCloseEditCategoryModal = () => {
-    setEditCategoryModal(prev => ({ ...prev, closing: true }));
+    setEditCategoryModal((prev) => ({ ...prev, closing: true }));
     setTimeout(() => {
-      setEditCategoryModal({ open: false, categoryId: '', categoryName: '', closing: false });
+      setEditCategoryModal({
+        open: false,
+        categoryId: '',
+        categoryName: '',
+        closing: false,
+      });
     }, 300); // Match animation duration
   };
 
@@ -2392,7 +2834,7 @@ function AdminServicesPage() {
   const handleDragOver = (e: React.DragEvent, targetCategoryName: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    
+
     if (!draggedCategory || draggedCategory === targetCategoryName) {
       return;
     }
@@ -2401,7 +2843,7 @@ function AdminServicesPage() {
     const rect = e.currentTarget.getBoundingClientRect();
     const midpoint = rect.top + rect.height / 2;
     const position = e.clientY < midpoint ? 'before' : 'after';
-    
+
     setDropTargetCategory(targetCategoryName);
     setDropPosition(position);
   };
@@ -2411,7 +2853,7 @@ function AdminServicesPage() {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX;
     const y = e.clientY;
-    
+
     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       setDropTargetCategory(null);
       setDropPosition(null);
@@ -2421,8 +2863,12 @@ function AdminServicesPage() {
   const handleDrop = (e: React.DragEvent, targetCategoryName: string) => {
     e.preventDefault();
     console.log('Category dropped:', draggedCategory, 'on', targetCategoryName);
-    
-    if (!draggedCategory || draggedCategory === targetCategoryName || !dropPosition) {
+
+    if (
+      !draggedCategory ||
+      draggedCategory === targetCategoryName ||
+      !dropPosition
+    ) {
       setDraggedCategory(null);
       setDropTargetCategory(null);
       setDropPosition(null);
@@ -2431,31 +2877,31 @@ function AdminServicesPage() {
 
     const currentCategories = Object.keys(groupedServices);
     const newOrder = [...currentCategories];
-    
+
     const draggedIndex = newOrder.indexOf(draggedCategory);
     const targetIndex = newOrder.indexOf(targetCategoryName);
-    
+
     // Remove dragged category from its current position
     newOrder.splice(draggedIndex, 1);
-    
+
     // Calculate final position based on drop position
     let finalIndex = targetIndex;
     if (draggedIndex < targetIndex) {
       finalIndex = targetIndex - 1; // Adjust for removal
     }
-    
+
     if (dropPosition === 'after') {
       finalIndex += 1;
     }
-    
+
     // Insert dragged category at final position
     newOrder.splice(finalIndex, 0, draggedCategory);
-    
+
     setCategoryOrder(newOrder);
     setDraggedCategory(null);
     setDropTargetCategory(null);
     setDropPosition(null);
-    
+
     showToast(`Moved "${draggedCategory}" category`, 'success');
   };
 
@@ -2480,10 +2926,13 @@ function AdminServicesPage() {
     target.classList.add('dragging');
   };
 
-  const handleServiceDragOver = (e: React.DragEvent, targetServiceId: string) => {
+  const handleServiceDragOver = (
+    e: React.DragEvent,
+    targetServiceId: string
+  ) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    
+
     if (!draggedService || draggedService === targetServiceId) {
       return;
     }
@@ -2491,7 +2940,7 @@ function AdminServicesPage() {
     const rect = e.currentTarget.getBoundingClientRect();
     const midpoint = rect.top + rect.height / 2;
     const position = e.clientY < midpoint ? 'before' : 'after';
-    
+
     setDropTargetService(targetServiceId);
     setDropPositionService(position);
   };
@@ -2500,18 +2949,26 @@ function AdminServicesPage() {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX;
     const y = e.clientY;
-    
+
     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       setDropTargetService(null);
       setDropPositionService(null);
     }
   };
 
-  const handleServiceDrop = (e: React.DragEvent, targetServiceId: string, categoryName: string) => {
+  const handleServiceDrop = (
+    e: React.DragEvent,
+    targetServiceId: string,
+    categoryName: string
+  ) => {
     e.preventDefault();
     console.log('Service dropped:', draggedService, 'on', targetServiceId);
-    
-    if (!draggedService || draggedService === targetServiceId || !dropPositionService) {
+
+    if (
+      !draggedService ||
+      draggedService === targetServiceId ||
+      !dropPositionService
+    ) {
       setDraggedService(null);
       setDropTargetService(null);
       setDropPositionService(null);
@@ -2522,34 +2979,39 @@ function AdminServicesPage() {
     const currentServiceIds = categoryServices.map((s: any) => s.id);
     const currentOrder = serviceOrder[categoryName] || currentServiceIds;
     const newOrder = [...currentOrder];
-    
+
     const draggedIndex = newOrder.indexOf(draggedService);
     const targetIndex = newOrder.indexOf(targetServiceId);
-    
+
     newOrder.splice(draggedIndex, 1);
-    
+
     let finalIndex = targetIndex;
     if (draggedIndex < targetIndex) {
       finalIndex = targetIndex - 1;
     }
-    
+
     if (dropPositionService === 'after') {
       finalIndex += 1;
     }
-    
+
     newOrder.splice(finalIndex, 0, draggedService);
-    
-    setServiceOrder(prev => ({
+
+    setServiceOrder((prev) => ({
       ...prev,
-      [categoryName]: newOrder
+      [categoryName]: newOrder,
     }));
-    
+
     setDraggedService(null);
     setDropTargetService(null);
     setDropPositionService(null);
-    
-    const draggedServiceObj = categoryServices.find((s: any) => s.id === draggedService);
-    showToast(`Moved "${draggedServiceObj?.name || 'Service'}" in ${categoryName}`, 'success');
+
+    const draggedServiceObj = categoryServices.find(
+      (s: any) => s.id === draggedService
+    );
+    showToast(
+      `Moved "${draggedServiceObj?.name || 'Service'}" in ${categoryName}`,
+      'success'
+    );
   };
 
   const handleServiceDragEnd = (e: React.DragEvent) => {
@@ -2636,7 +3098,10 @@ function AdminServicesPage() {
       : displayCategoryName;
   };
 
-  const toggleCategoryAndServices = async (categoryName: string, services: any[]) => {
+  const toggleCategoryAndServices = async (
+    categoryName: string,
+    services: any[]
+  ) => {
     try {
       setIsUpdating(true);
       const newToggleState = !activeCategoryToggles[categoryName];
@@ -2649,21 +3114,28 @@ function AdminServicesPage() {
       }
 
       const categoryId = parseInt(categoryIdMatch[1]);
-      const categoryData = categoriesData?.data?.find((cat: any) => cat.id === categoryId);
+      const categoryData = categoriesData?.data?.find(
+        (cat: any) => cat.id === categoryId
+      );
       if (!categoryData) {
         showToast('Category not found', 'error');
         return;
       }
 
-      showToast(`${newToggleState ? 'Activating' : 'Deactivating'} ${services.length} services in ${categoryName}...`, 'pending');
+      showToast(
+        `${newToggleState ? 'Activating' : 'Deactivating'} ${
+          services.length
+        } services in ${categoryName}...`,
+        'pending'
+      );
 
-      setActiveCategoryToggles(prev => ({
+      setActiveCategoryToggles((prev) => ({
         ...prev,
-        [categoryName]: newToggleState
+        [categoryName]: newToggleState,
       }));
 
       // Main feature: Toggle all services in category
-      const promises = services.map(service =>
+      const promises = services.map((service) =>
         axiosInstance.post('/api/admin/services/toggle-status', {
           id: service.id,
           status: service.status,
@@ -2677,24 +3149,36 @@ function AdminServicesPage() {
       await axiosInstance.put(`/api/admin/categories/${categoryData.id}`, {
         category_name: categoryData.category_name,
         position: categoryData.position,
-        hideCategory: hideCategory
+        hideCategory: hideCategory,
       });
 
-      showToast(`Successfully ${newToggleState ? 'activated' : 'deactivated'} ${categoryName} category`, 'success');
+      showToast(
+        `Successfully ${
+          newToggleState ? 'activated' : 'deactivated'
+        } ${categoryName} category`,
+        'success'
+      );
       await refreshAllData();
     } catch (error: any) {
-      setActiveCategoryToggles(prev => ({
+      setActiveCategoryToggles((prev) => ({
         ...prev,
-        [categoryName]: !activeCategoryToggles[categoryName]
+        [categoryName]: !activeCategoryToggles[categoryName],
       }));
-      showToast(`Error updating ${categoryName}: ${error.message || 'Something went wrong'}`, 'error');
+      showToast(
+        `Error updating ${categoryName}: ${
+          error.message || 'Something went wrong'
+        }`,
+        'error'
+      );
     } finally {
       setIsUpdating(false);
     }
   };
 
   const deleteService = async (id: string) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this service?');
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete this service?'
+    );
     if (!confirmDelete) return;
 
     try {
@@ -2702,7 +3186,9 @@ function AdminServicesPage() {
 
       // Optimistic update: Remove service from UI immediately
       const currentData = data?.data || [];
-      const updatedServices = currentData.filter((service: any) => service.id.toString() !== id.toString());
+      const updatedServices = currentData.filter(
+        (service: any) => service.id.toString() !== id.toString()
+      );
 
       // Update the cache optimistically
       refreshServices(
@@ -2710,11 +3196,16 @@ function AdminServicesPage() {
         { revalidate: false }
       );
 
-      const response = await axiosInstance.delete(`/api/admin/services/delete-services?id=${id}`);
+      const response = await axiosInstance.delete(
+        `/api/admin/services/delete-services?id=${id}`
+      );
       console.log('Delete response:', response.data);
 
       if (response.data.success) {
-        showToast(response.data.message || 'Service deleted successfully', 'success');
+        showToast(
+          response.data.message || 'Service deleted successfully',
+          'success'
+        );
         // Revalidate to ensure data consistency
         await refreshAllData();
       } else {
@@ -2726,7 +3217,10 @@ function AdminServicesPage() {
       console.error('Delete service error:', error);
       // Revert optimistic update on error
       await refreshAllData();
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete service';
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to delete service';
       showToast(errorMessage, 'error');
     }
   };
@@ -2736,14 +3230,19 @@ function AdminServicesPage() {
 
     try {
       setIsUpdating(true);
-      showToast(`Deleting ${selectedServices.length} service${selectedServices.length !== 1 ? 's' : ''}...`, 'pending');
+      showToast(
+        `Deleting ${selectedServices.length} service${
+          selectedServices.length !== 1 ? 's' : ''
+        }...`,
+        'pending'
+      );
 
       console.log('Deleting services:', selectedServices);
 
       // Optimistic update: Remove selected services from UI immediately
       const currentData = data?.data || [];
-      const updatedServices = currentData.filter((service: any) =>
-        !selectedServices.includes(service.id.toString())
+      const updatedServices = currentData.filter(
+        (service: any) => !selectedServices.includes(service.id.toString())
       );
 
       // Update the cache optimistically
@@ -2756,22 +3255,34 @@ function AdminServicesPage() {
       setSelectedServices([]);
 
       // Delete services in parallel
-      const deletePromises = selectedServices.map(serviceId =>
-        axiosInstance.delete(`/api/admin/services/delete-services?id=${serviceId}`)
+      const deletePromises = selectedServices.map((serviceId) =>
+        axiosInstance.delete(
+          `/api/admin/services/delete-services?id=${serviceId}`
+        )
       );
 
       const results = await Promise.all(deletePromises);
       console.log('Delete results:', results);
 
       // Check if all deletions were successful
-      const failedDeletions = results.filter(result => !result.data.success);
+      const failedDeletions = results.filter((result) => !result.data.success);
 
       if (failedDeletions.length > 0) {
-        showToast(`Failed to delete ${failedDeletions.length} service${failedDeletions.length !== 1 ? 's' : ''}`, 'error');
+        showToast(
+          `Failed to delete ${failedDeletions.length} service${
+            failedDeletions.length !== 1 ? 's' : ''
+          }`,
+          'error'
+        );
         // Revalidate to restore failed deletions
         await refreshAllData();
       } else {
-        showToast(`Successfully deleted ${selectedServices.length} service${selectedServices.length !== 1 ? 's' : ''}`, 'success');
+        showToast(
+          `Successfully deleted ${selectedServices.length} service${
+            selectedServices.length !== 1 ? 's' : ''
+          }`,
+          'success'
+        );
         // Revalidate to ensure data consistency
         await refreshAllData();
       }
@@ -2781,7 +3292,8 @@ function AdminServicesPage() {
       console.error('Bulk delete error:', error);
       // Revert optimistic update on error
       await refreshAllData();
-      const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Something went wrong';
       showToast(`Error deleting services: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
@@ -2818,36 +3330,61 @@ function AdminServicesPage() {
       switch (selectedBulkOperation) {
         case 'enable':
           showToast(`Enabling ${count} ${serviceText}...`, 'pending');
-          await Promise.all(selectedServices.map(serviceId => 
-            axiosInstance.post('/api/admin/services/toggle-status', { id: serviceId, status: 'inactive' })
-          ));
+          await Promise.all(
+            selectedServices.map((serviceId) =>
+              axiosInstance.post('/api/admin/services/toggle-status', {
+                id: serviceId,
+                status: 'inactive',
+              })
+            )
+          );
           showToast(`Successfully enabled ${count} ${serviceText}`, 'success');
           break;
 
         case 'disable':
           showToast(`Disabling ${count} ${serviceText}...`, 'pending');
-          await Promise.all(selectedServices.map(serviceId => 
-            axiosInstance.post('/api/admin/services/toggle-status', { id: serviceId, status: 'active' })
-          ));
+          await Promise.all(
+            selectedServices.map((serviceId) =>
+              axiosInstance.post('/api/admin/services/toggle-status', {
+                id: serviceId,
+                status: 'active',
+              })
+            )
+          );
           showToast(`Successfully disabled ${count} ${serviceText}`, 'success');
           break;
 
         case 'make-secret':
           showToast(`Making ${count} ${serviceText} secret...`, 'pending');
           // TODO: Implement secret functionality
-          showToast(`Successfully made ${count} ${serviceText} secret`, 'success');
+          showToast(
+            `Successfully made ${count} ${serviceText} secret`,
+            'success'
+          );
           break;
 
         case 'remove-secret':
-          showToast(`Removing secret from ${count} ${serviceText}...`, 'pending');
+          showToast(
+            `Removing secret from ${count} ${serviceText}...`,
+            'pending'
+          );
           // TODO: Implement remove secret functionality
-          showToast(`Successfully removed secret from ${count} ${serviceText}`, 'success');
+          showToast(
+            `Successfully removed secret from ${count} ${serviceText}`,
+            'success'
+          );
           break;
 
         case 'delete-pricing':
-          showToast(`Deleting custom pricing for ${count} ${serviceText}...`, 'pending');
+          showToast(
+            `Deleting custom pricing for ${count} ${serviceText}...`,
+            'pending'
+          );
           // TODO: Implement delete custom pricing functionality
-          showToast(`Successfully deleted custom pricing for ${count} ${serviceText}`, 'success');
+          showToast(
+            `Successfully deleted custom pricing for ${count} ${serviceText}`,
+            'success'
+          );
           break;
 
         case 'delete':
@@ -2855,35 +3392,79 @@ function AdminServicesPage() {
           return; // Exit early, don't clear selection or refresh data yet
 
         case 'refill-enable':
-          showToast(`Enabling refill for ${count} ${serviceText}...`, 'pending');
-          await Promise.all(selectedServices.map(serviceId => 
-            axiosInstance.post('/api/admin/services/toggle-refill', { id: serviceId, refill: true })
-          ));
-          showToast(`Successfully enabled refill for ${count} ${serviceText}`, 'success');
+          showToast(
+            `Enabling refill for ${count} ${serviceText}...`,
+            'pending'
+          );
+          await Promise.all(
+            selectedServices.map((serviceId) =>
+              axiosInstance.post('/api/admin/services/toggle-refill', {
+                id: serviceId,
+                refill: true,
+              })
+            )
+          );
+          showToast(
+            `Successfully enabled refill for ${count} ${serviceText}`,
+            'success'
+          );
           break;
 
         case 'refill-disable':
-          showToast(`Disabling refill for ${count} ${serviceText}...`, 'pending');
-          await Promise.all(selectedServices.map(serviceId => 
-            axiosInstance.post('/api/admin/services/toggle-refill', { id: serviceId, refill: false })
-          ));
-          showToast(`Successfully disabled refill for ${count} ${serviceText}`, 'success');
+          showToast(
+            `Disabling refill for ${count} ${serviceText}...`,
+            'pending'
+          );
+          await Promise.all(
+            selectedServices.map((serviceId) =>
+              axiosInstance.post('/api/admin/services/toggle-refill', {
+                id: serviceId,
+                refill: false,
+              })
+            )
+          );
+          showToast(
+            `Successfully disabled refill for ${count} ${serviceText}`,
+            'success'
+          );
           break;
 
         case 'cancel-enable':
-          showToast(`Enabling cancel for ${count} ${serviceText}...`, 'pending');
-          await Promise.all(selectedServices.map(serviceId => 
-            axiosInstance.post('/api/admin/services/toggle-cancel', { id: serviceId, cancel: true })
-          ));
-          showToast(`Successfully enabled cancel for ${count} ${serviceText}`, 'success');
+          showToast(
+            `Enabling cancel for ${count} ${serviceText}...`,
+            'pending'
+          );
+          await Promise.all(
+            selectedServices.map((serviceId) =>
+              axiosInstance.post('/api/admin/services/toggle-cancel', {
+                id: serviceId,
+                cancel: true,
+              })
+            )
+          );
+          showToast(
+            `Successfully enabled cancel for ${count} ${serviceText}`,
+            'success'
+          );
           break;
 
         case 'cancel-disable':
-          showToast(`Disabling cancel for ${count} ${serviceText}...`, 'pending');
-          await Promise.all(selectedServices.map(serviceId => 
-            axiosInstance.post('/api/admin/services/toggle-cancel', { id: serviceId, cancel: false })
-          ));
-          showToast(`Successfully disabled cancel for ${count} ${serviceText}`, 'success');
+          showToast(
+            `Disabling cancel for ${count} ${serviceText}...`,
+            'pending'
+          );
+          await Promise.all(
+            selectedServices.map((serviceId) =>
+              axiosInstance.post('/api/admin/services/toggle-cancel', {
+                id: serviceId,
+                cancel: false,
+              })
+            )
+          );
+          showToast(
+            `Successfully disabled cancel for ${count} ${serviceText}`,
+            'success'
+          );
           break;
 
         default:
@@ -2898,13 +3479,22 @@ function AdminServicesPage() {
         await refreshAllData();
       }
     } catch (error: any) {
-      showToast(`Error performing batch operation: ${error.message || 'Something went wrong'}`, 'error');
+      showToast(
+        `Error performing batch operation: ${
+          error.message || 'Something went wrong'
+        }`,
+        'error'
+      );
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const handleOpenDeleteCategoryModal = (categoryName: string, categoryId: string, servicesCount: number) => {
+  const handleOpenDeleteCategoryModal = (
+    categoryName: string,
+    categoryId: string,
+    servicesCount: number
+  ) => {
     setDeleteCategoryModal({
       open: true,
       categoryName,
@@ -2915,9 +3505,15 @@ function AdminServicesPage() {
   };
 
   const handleCloseDeleteCategoryModal = () => {
-    setDeleteCategoryModal(prev => ({ ...prev, closing: true }));
+    setDeleteCategoryModal((prev) => ({ ...prev, closing: true }));
     setTimeout(() => {
-      setDeleteCategoryModal({ open: false, categoryName: '', categoryId: '', servicesCount: 0, closing: false });
+      setDeleteCategoryModal({
+        open: false,
+        categoryName: '',
+        categoryId: '',
+        servicesCount: 0,
+        closing: false,
+      });
     }, 300); // Match animation duration
   };
 
@@ -2930,26 +3526,46 @@ function AdminServicesPage() {
     });
   };
 
-  const deleteCategory = async (action: 'delete' | 'move', targetCategoryId?: string) => {
+  const deleteCategory = async (
+    action: 'delete' | 'move',
+    targetCategoryId?: string
+  ) => {
     const { categoryName, categoryId, servicesCount } = deleteCategoryModal;
 
     try {
       setIsUpdating(true);
-      console.log('Deleting category:', { action, categoryId, categoryName, servicesCount, targetCategoryId });
+      console.log('Deleting category:', {
+        action,
+        categoryId,
+        categoryName,
+        servicesCount,
+        targetCategoryId,
+      });
 
       if (action === 'move' && targetCategoryId) {
         // First move all services to the target category
-        showToast(`Moving ${servicesCount} service${servicesCount !== 1 ? 's' : ''} to new category...`, 'pending');
+        showToast(
+          `Moving ${servicesCount} service${
+            servicesCount !== 1 ? 's' : ''
+          } to new category...`,
+          'pending'
+        );
 
-        const moveResponse = await axiosInstance.put(`/api/admin/services/move-category`, {
-          fromCategoryId: categoryId,
-          toCategoryId: targetCategoryId
-        });
+        const moveResponse = await axiosInstance.put(
+          `/api/admin/services/move-category`,
+          {
+            fromCategoryId: categoryId,
+            toCategoryId: targetCategoryId,
+          }
+        );
 
         console.log('Move response:', moveResponse.data);
 
         if (!moveResponse.data.success) {
-          showToast(moveResponse.data.error || 'Failed to move services', 'error');
+          showToast(
+            moveResponse.data.error || 'Failed to move services',
+            'error'
+          );
           return;
         }
       }
@@ -2957,7 +3573,9 @@ function AdminServicesPage() {
       // Then delete the category
       showToast(`Deleting "${categoryName}" category...`, 'pending');
 
-      const response = await axiosInstance.delete(`/api/admin/categories/${categoryId}`);
+      const response = await axiosInstance.delete(
+        `/api/admin/categories/${categoryId}`
+      );
       console.log('Delete category response:', response.data);
 
       if (response.data.success) {
@@ -2966,12 +3584,17 @@ function AdminServicesPage() {
         const currentServices = data?.data || [];
 
         // Remove category from categories list
-        const updatedCategories = currentCategories.filter((cat: any) => cat.id.toString() !== categoryId.toString());
+        const updatedCategories = currentCategories.filter(
+          (cat: any) => cat.id.toString() !== categoryId.toString()
+        );
 
         // Remove services from this category if action is 'delete'
         let updatedServices = currentServices;
         if (action === 'delete') {
-          updatedServices = currentServices.filter((service: any) => service.categoryId.toString() !== categoryId.toString());
+          updatedServices = currentServices.filter(
+            (service: any) =>
+              service.categoryId.toString() !== categoryId.toString()
+          );
         }
 
         // Update both caches optimistically
@@ -2989,9 +3612,18 @@ function AdminServicesPage() {
 
         // Show success message
         if (action === 'move') {
-          showToast(`Successfully moved ${servicesCount} service${servicesCount !== 1 ? 's' : ''} and deleted "${categoryName}" category`, 'success');
+          showToast(
+            `Successfully moved ${servicesCount} service${
+              servicesCount !== 1 ? 's' : ''
+            } and deleted "${categoryName}" category`,
+            'success'
+          );
         } else {
-          showToast(response.data.message || `Successfully deleted "${categoryName}" category and all services`, 'success');
+          showToast(
+            response.data.message ||
+              `Successfully deleted "${categoryName}" category and all services`,
+            'success'
+          );
         }
 
         // Close modal immediately
@@ -3006,7 +3638,8 @@ function AdminServicesPage() {
       console.error('Delete category error:', error);
       // Revert optimistic updates on error
       await refreshAllData();
-      const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Something went wrong';
       showToast(`Error: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
@@ -3035,10 +3668,10 @@ function AdminServicesPage() {
             activeServices: 0,
             inactiveServices: 0,
           };
-          
+
           // Calculate total categories from categoriesData
           const totalCategories = categoriesData?.data?.length || 0;
-          
+
           setStats({
             ...baseStats,
             totalCategories,
@@ -3071,36 +3704,48 @@ function AdminServicesPage() {
 
   useEffect(() => {
     if (data?.data && Object.keys(groupedServices).length > 0) {
-      const initialToggles: {[key: string]: boolean} = {};
+      const initialToggles: { [key: string]: boolean } = {};
       const allCategoryNames = Object.keys(groupedServices);
-      
-      Object.keys(groupedServices).forEach(categoryName => {
+
+      Object.keys(groupedServices).forEach((categoryName) => {
         // Extract category ID from the display name (e.g., "asdsdf (ID: 25)" -> "25")
         const categoryIdMatch = categoryName.match(/\(ID:\s*(\d+)\)/);
         if (categoryIdMatch) {
           const categoryId = parseInt(categoryIdMatch[1]);
-          const categoryData = categoriesData?.data?.find((cat: any) => cat.id === categoryId);
+          const categoryData = categoriesData?.data?.find(
+            (cat: any) => cat.id === categoryId
+          );
           // If hideCategory is "no" then category is active (toggle ON), if "yes" then inactive (toggle OFF)
           initialToggles[categoryName] = categoryData?.hideCategory === 'no';
         } else {
           // Fallback for categories without ID format
           const actualCategoryName = getActualCategoryName(categoryName);
-          const categoryData = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
+          const categoryData = categoriesData?.data?.find(
+            (cat: any) => cat.category_name === actualCategoryName
+          );
           initialToggles[categoryName] = categoryData?.hideCategory === 'no';
         }
       });
       setActiveCategoryToggles(initialToggles);
-      
+
       // Initialize category order if not set
       if (categoryOrder.length === 0) {
         setCategoryOrder(Object.keys(groupedServices));
       }
 
       // Update allCategoriesCollapsed state based on current collapsed categories
-      const allCollapsed = allCategoryNames.length > 0 && allCategoryNames.every(cat => collapsedCategories.includes(cat));
+      const allCollapsed =
+        allCategoryNames.length > 0 &&
+        allCategoryNames.every((cat) => collapsedCategories.includes(cat));
       setAllCategoriesCollapsed(allCollapsed);
     }
-  }, [data?.data, groupedServices, categoryOrder.length, collapsedCategories, categoriesData?.data]);
+  }, [
+    data?.data,
+    groupedServices,
+    categoryOrder.length,
+    collapsedCategories,
+    categoriesData?.data,
+  ]);
 
   // Handle keyboard events for modal close and body scroll lock
   useEffect(() => {
@@ -3123,7 +3768,14 @@ function AdminServicesPage() {
     };
 
     // Lock body scroll when any modal is open
-    if (editServiceModal.open || createServiceModal || createCategoryModal || editCategoryModal.open || deleteConfirmationModal || deleteCategoryModal.open) {
+    if (
+      editServiceModal.open ||
+      createServiceModal ||
+      createCategoryModal ||
+      editCategoryModal.open ||
+      deleteConfirmationModal ||
+      deleteCategoryModal.open
+    ) {
       document.body.style.overflow = 'hidden';
       document.addEventListener('keydown', handleKeyDown);
     } else {
@@ -3136,7 +3788,14 @@ function AdminServicesPage() {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [editServiceModal.open, createServiceModal, createCategoryModal, editCategoryModal.open, deleteConfirmationModal, deleteCategoryModal.open]);
+  }, [
+    editServiceModal.open,
+    createServiceModal,
+    createCategoryModal,
+    editCategoryModal.open,
+    deleteConfirmationModal,
+    deleteCategoryModal.open,
+  ]);
 
   const serviceStats = [
     {
@@ -3182,8 +3841,8 @@ function AdminServicesPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {serviceStats.map((stat, index) => (
-            <div 
-              key={stat.title} 
+            <div
+              key={stat.title}
               className="card card-padding animate-in fade-in duration-500"
               style={{ animationDelay: `${index * 100}ms` }}
             >
@@ -3222,15 +3881,18 @@ function AdminServicesPage() {
                 <option value="50">50</option>
                 <option value="100">100</option>
                 <option value="all">All</option>
-                <option value="all">All</option>
               </select>
-              
+
               <button
                 onClick={handleRefresh}
                 disabled={servicesLoading || statsLoading}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
-                <FaSync className={servicesLoading || statsLoading ? 'animate-spin' : ''} />
+                <FaSync
+                  className={
+                    servicesLoading || statsLoading ? 'animate-spin' : ''
+                  }
+                />
                 Refresh
               </button>
 
@@ -3259,7 +3921,7 @@ function AdminServicesPage() {
                 Import Services
               </Link>
             </div>
-            
+
             {/* Right: Search Controls Only */}
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -3269,13 +3931,15 @@ function AdminServicesPage() {
                 />
                 <input
                   type="text"
-                  placeholder={`Search ${statusFilter === 'all' ? 'all' : statusFilter} services...`}
+                  placeholder={`Search ${
+                    statusFilter === 'all' ? 'all' : statusFilter
+                  } services...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-              
+
               <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="id">Service ID</option>
                 <option value="name">Service Name</option>
@@ -3357,7 +4021,9 @@ function AdminServicesPage() {
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">Loading services...</div>
+                  <div className="text-base font-medium">
+                    Loading services...
+                  </div>
                 </div>
               </div>
             ) : isLoading ? (
@@ -3365,22 +4031,38 @@ function AdminServicesPage() {
                 <div className="flex items-center justify-center py-20">
                   <div className="text-center flex flex-col items-center">
                     <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">Loading services...</div>
+                    <div className="text-base font-medium">
+                      Loading services...
+                    </div>
                   </div>
                 </div>
               </div>
             ) : error ? (
               <div className="text-center py-12">
-                <FaExclamationTriangle className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
-                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                <FaExclamationTriangle
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   Error Loading Services
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{error}</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {error}
+                </p>
               </div>
             ) : !data || Object.keys(groupedServices).length === 0 ? (
               <div className="text-center py-12">
-                <FaBox className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
-                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                <FaBox
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   No information was found for you.
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
@@ -3393,12 +4075,15 @@ function AdminServicesPage() {
               <>
                 {selectedServices.length > 0 && (
                   <div className="flex items-center gap-2 mb-4">
-                    <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <span
+                      className="text-sm"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
                       {selectedServices.length} selected
                     </span>
-                    
+
                     {/* Modified Batch Operations Dropdown */}
-                    <select 
+                    <select
                       value={selectedBulkOperation}
                       onChange={(e) => {
                         handleBatchOperationSelect(e.target.value);
@@ -3409,13 +4094,27 @@ function AdminServicesPage() {
                       <option value="">Batch Operations</option>
                       <option value="enable">Enable Selected Services</option>
                       <option value="disable">Disable Selected Services</option>
-                      <option value="make-secret">Make Selected Services Secret</option>
-                      <option value="remove-secret">Remove Selected from Service Secret</option>
-                      <option value="delete-pricing">Delete Selected Services Custom Pricing</option>
-                      <option value="refill-enable">Refill Enable Selected Services</option>
-                      <option value="refill-disable">Refill Disable Selected Services</option>
-                      <option value="cancel-enable">Cancel Enable Selected Services</option>
-                      <option value="cancel-disable">Cancel Disable Selected Services</option>
+                      <option value="make-secret">
+                        Make Selected Services Secret
+                      </option>
+                      <option value="remove-secret">
+                        Remove Selected from Service Secret
+                      </option>
+                      <option value="delete-pricing">
+                        Delete Selected Services Custom Pricing
+                      </option>
+                      <option value="refill-enable">
+                        Refill Enable Selected Services
+                      </option>
+                      <option value="refill-disable">
+                        Refill Disable Selected Services
+                      </option>
+                      <option value="cancel-enable">
+                        Cancel Enable Selected Services
+                      </option>
+                      <option value="cancel-disable">
+                        Cancel Disable Selected Services
+                      </option>
                       <option value="delete">Delete Selected Services</option>
                     </select>
 
@@ -3432,9 +4131,7 @@ function AdminServicesPage() {
                             Saving...
                           </>
                         ) : (
-                          <>
-                            Save Changes
-                          </>
+                          <>Save Changes</>
                         )}
                       </button>
                     )}
@@ -3446,29 +4143,84 @@ function AdminServicesPage() {
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
                           <input
                             type="checkbox"
                             onChange={handleSelectAll}
                             className="rounded border-gray-300 w-4 h-4"
                           />
                         </th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Service</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Type</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Provider</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Price</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Min/Max</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Refill</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Cancel</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
-                        <th className="text-left p-3 font-semibold relative" style={{ color: 'var(--text-primary)' }}>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          ID
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Service
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Type
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Provider
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Price
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Min/Max
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Refill
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Cancel
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold relative"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
                           Actions
                           {/* Collapse/Expand All Toggle */}
                           <button
                             onClick={toggleAllCategories}
                             className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded transition-colors"
-                            title={allCategoriesCollapsed ? "Expand all categories" : "Collapse all categories"}
+                            title={
+                              allCategoriesCollapsed
+                                ? 'Expand all categories'
+                                : 'Collapse all categories'
+                            }
                           >
                             {allCategoriesCollapsed ? (
                               <FaChevronDown className="h-3 w-3 text-gray-500 hover:text-gray-700" />
@@ -3483,467 +4235,672 @@ function AdminServicesPage() {
                       {(Object.entries(groupedServices) as [string, any[]][])
                         .sort(([categoryNameA], [categoryNameB]) => {
                           // Extract actual category names and find category data
-                          const actualCategoryNameA = getActualCategoryName(categoryNameA);
-                          const actualCategoryNameB = getActualCategoryName(categoryNameB);
+                          const actualCategoryNameA =
+                            getActualCategoryName(categoryNameA);
+                          const actualCategoryNameB =
+                            getActualCategoryName(categoryNameB);
 
                           // Sort categories by position: top categories first, then bottom
-                          const categoryA = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryNameA);
-                          const categoryB = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryNameB);
+                          const categoryA = categoriesData?.data?.find(
+                            (cat: any) =>
+                              cat.category_name === actualCategoryNameA
+                          );
+                          const categoryB = categoriesData?.data?.find(
+                            (cat: any) =>
+                              cat.category_name === actualCategoryNameB
+                          );
 
                           const positionA = categoryA?.position || 'bottom';
                           const positionB = categoryB?.position || 'bottom';
 
-                          if (positionA === 'top' && positionB === 'bottom') return -1;
-                          if (positionA === 'bottom' && positionB === 'top') return 1;
+                          if (positionA === 'top' && positionB === 'bottom')
+                            return -1;
+                          if (positionA === 'bottom' && positionB === 'top')
+                            return 1;
                           return categoryNameA.localeCompare(categoryNameB);
                         })
                         .map(([categoryName, services], categoryIndex) => (
-                        <Fragment key={categoryName}>
-                          {/* Drop zone before category */}
-                          {draggedCategory && draggedCategory !== categoryName && (
-                            <tr 
-                              className={`transition-all duration-200 ${
-                                dropTargetCategory === categoryName && dropPosition === 'before'
-                                  ? 'h-8 bg-blue-100 border-2 border-dashed border-blue-400'
-                                  : 'h-1'
+                          <Fragment key={categoryName}>
+                            {/* Drop zone before category */}
+                            {draggedCategory &&
+                              draggedCategory !== categoryName && (
+                                <tr
+                                  className={`transition-all duration-200 ${
+                                    dropTargetCategory === categoryName &&
+                                    dropPosition === 'before'
+                                      ? 'h-8 bg-blue-100 border-2 border-dashed border-blue-400'
+                                      : 'h-1'
+                                  }`}
+                                  onDragOver={(e) =>
+                                    handleDragOver(e, categoryName)
+                                  }
+                                  onDragLeave={handleDragLeave}
+                                  onDrop={(e) => handleDrop(e, categoryName)}
+                                >
+                                  <td colSpan={11}>
+                                    {dropTargetCategory === categoryName &&
+                                      dropPosition === 'before' && (
+                                        <div className="flex items-center justify-center h-6 text-blue-600 text-sm font-medium">
+                                          Drop here
+                                        </div>
+                                      )}
+                                  </td>
+                                </tr>
+                              )}
+
+                            {/* Category Header Row */}
+                            <tr
+                              className={`bg-gray-50 border-t-2 border-gray-200 ${
+                                draggedCategory === categoryName
+                                  ? 'opacity-50'
+                                  : ''
                               }`}
-                              onDragOver={(e) => handleDragOver(e, categoryName)}
+                              onDragOver={(e) =>
+                                handleDragOver(e, categoryName)
+                              }
                               onDragLeave={handleDragLeave}
                               onDrop={(e) => handleDrop(e, categoryName)}
                             >
-                              <td colSpan={11}>
-                                {dropTargetCategory === categoryName && dropPosition === 'before' && (
-                                  <div className="flex items-center justify-center h-6 text-blue-600 text-sm font-medium">
-                                    Drop here
+                              <td colSpan={11} className="p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <FaGripVertical
+                                      className="h-4 w-4 text-gray-400 cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
+                                      title="Drag to reorder category"
+                                      draggable={true}
+                                      onDragStart={(e) =>
+                                        handleDragStart(e, categoryName)
+                                      }
+                                      onDragEnd={handleDragEnd}
+                                      style={{
+                                        userSelect: 'none',
+                                        WebkitUserSelect: 'none',
+                                      }}
+                                    />
+                                    <button
+                                      onClick={() =>
+                                        toggleCategory(categoryName)
+                                      }
+                                      className="flex items-center gap-2 hover:bg-gray-100 rounded p-1 transition-colors"
+                                    >
+                                      {collapsedCategories.includes(
+                                        categoryName
+                                      ) ? (
+                                        <FaChevronRight className="h-3 w-3" />
+                                      ) : (
+                                        <FaChevronDown className="h-3 w-3" />
+                                      )}
+                                    </button>
+
+                                    {/* Category Toggle Button */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleCategoryAndServices(
+                                          categoryName,
+                                          services
+                                        );
+                                      }}
+                                      disabled={isUpdating}
+                                      className={`p-1 rounded transition-colors ${
+                                        activeCategoryToggles[categoryName]
+                                          ? 'text-green-600 hover:bg-green-50'
+                                          : 'text-red-600 hover:bg-red-50'
+                                      } ${
+                                        isUpdating
+                                          ? 'opacity-50 cursor-not-allowed'
+                                          : ''
+                                      }`}
+                                      title={`${
+                                        activeCategoryToggles[categoryName]
+                                          ? 'Deactivate'
+                                          : 'Activate'
+                                      } ${categoryName} category`}
+                                    >
+                                      {isUpdating ? (
+                                        <GradientSpinner size="w-4 h-4" />
+                                      ) : activeCategoryToggles[
+                                          categoryName
+                                        ] ? (
+                                        <FaToggleOn className="h-4 w-4" />
+                                      ) : (
+                                        <FaToggleOff className="h-4 w-4" />
+                                      )}
+                                    </button>
+
+                                    <span className="font-semibold text-md text-gray-800">
+                                      {categoryName}
+                                    </span>
+                                    <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                                      {services.length} service
+                                      {services.length !== 1 ? 's' : ''}
+                                    </span>
+
+                                    {/* Category Edit Icon */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const actualCategoryName =
+                                          getActualCategoryName(categoryName);
+                                        const category =
+                                          categoriesData?.data?.find(
+                                            (cat: any) =>
+                                              cat.category_name ===
+                                              actualCategoryName
+                                          );
+                                        if (category) {
+                                          editCategory(
+                                            actualCategoryName,
+                                            category.id.toString()
+                                          );
+                                        }
+                                      }}
+                                      disabled={isUpdating}
+                                      className="p-1 hover:bg-blue-50 hover:text-blue-600 text-gray-400 rounded transition-colors disabled:opacity-50"
+                                      title={`Edit ${categoryName} category`}
+                                    >
+                                      <FaEdit className="h-3 w-3" />
+                                    </button>
+
+                                    {/* Category Delete Icon */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const actualCategoryName =
+                                          getActualCategoryName(categoryName);
+                                        const category =
+                                          categoriesData?.data?.find(
+                                            (cat: any) =>
+                                              cat.category_name ===
+                                              actualCategoryName
+                                          );
+                                        if (category) {
+                                          handleOpenDeleteCategoryModal(
+                                            actualCategoryName,
+                                            category.id,
+                                            services.length
+                                          );
+                                        }
+                                      }}
+                                      disabled={isUpdating}
+                                      className="p-1 hover:bg-red-50 hover:text-red-600 text-red-600 rounded transition-colors disabled:opacity-50"
+                                      title={`Delete ${categoryName} category`}
+                                    >
+                                      <FaTrash className="h-3 w-3" />
+                                    </button>
                                   </div>
-                                )}
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={services.every((service) =>
+                                        selectedServices.includes(service.id)
+                                      )}
+                                      onChange={() =>
+                                        handleSelectCategory(services)
+                                      }
+                                      className="rounded border-gray-300 w-4 h-4"
+                                      title="Select all services in this category"
+                                    />
+                                    <span className="text-xs text-gray-500">
+                                      Select All
+                                    </span>
+                                  </div>
+                                </div>
                               </td>
                             </tr>
-                          )}
 
-                          {/* Category Header Row */}
-                          <tr 
-                            className={`bg-gray-50 border-t-2 border-gray-200 ${
-                              draggedCategory === categoryName ? 'opacity-50' : ''
-                            }`}
-                            onDragOver={(e) => handleDragOver(e, categoryName)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => handleDrop(e, categoryName)}
-                          >
-                            <td colSpan={11} className="p-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <FaGripVertical 
-                                    className="h-4 w-4 text-gray-400 cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
-                                    title="Drag to reorder category"
-                                    draggable={true}
-                                    onDragStart={(e) => handleDragStart(e, categoryName)}
-                                    onDragEnd={handleDragEnd}
-                                    style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-                                  />
-                                  <button
-                                    onClick={() => toggleCategory(categoryName)}
-                                    className="flex items-center gap-2 hover:bg-gray-100 rounded p-1 transition-colors"
-                                  >
-                                    {collapsedCategories.includes(categoryName) ? (
-                                      <FaChevronRight className="h-3 w-3" />
-                                    ) : (
-                                      <FaChevronDown className="h-3 w-3" />
-                                    )}
-                                  </button>
-
-                                  {/* Category Toggle Button */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toggleCategoryAndServices(categoryName, services);
-                                    }}
-                                    disabled={isUpdating}
-                                    className={`p-1 rounded transition-colors ${
-                                      activeCategoryToggles[categoryName]
-                                        ? 'text-green-600 hover:bg-green-50'
-                                        : 'text-red-600 hover:bg-red-50'
-                                    } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    title={`${activeCategoryToggles[categoryName] ? 'Deactivate' : 'Activate'} ${categoryName} category`}
-                                  >
-                                    {isUpdating ? (
-                                      <GradientSpinner size="w-4 h-4" />
-                                    ) : activeCategoryToggles[categoryName] ? (
-                                      <FaToggleOn className="h-4 w-4" />
-                                    ) : (
-                                      <FaToggleOff className="h-4 w-4" />
-                                    )}
-                                  </button>
-
-                                  <span className="font-semibold text-md text-gray-800">
-                                    {categoryName}
-                                  </span>
-                                  <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
-                                    {services.length} service{services.length !== 1 ? 's' : ''}
-                                  </span>
-                                  
-                                  {/* Category Edit Icon */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const actualCategoryName = getActualCategoryName(categoryName);
-                                      const category = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
-                                      if (category) {
-                                        editCategory(actualCategoryName, category.id.toString());
-                                      }
-                                    }}
-                                    disabled={isUpdating}
-                                    className="p-1 hover:bg-blue-50 hover:text-blue-600 text-gray-400 rounded transition-colors disabled:opacity-50"
-                                    title={`Edit ${categoryName} category`}
-                                  >
-                                    <FaEdit className="h-3 w-3" />
-                                  </button>
-                                  
-                                  {/* Category Delete Icon */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const actualCategoryName = getActualCategoryName(categoryName);
-                                      const category = categoriesData?.data?.find((cat: any) => cat.category_name === actualCategoryName);
-                                      if (category) {
-                                        handleOpenDeleteCategoryModal(actualCategoryName, category.id, services.length);
-                                      }
-                                    }}
-                                    disabled={isUpdating}
-                                    className="p-1 hover:bg-red-50 hover:text-red-600 text-red-600 rounded transition-colors disabled:opacity-50"
-                                    title={`Delete ${categoryName} category`}
-                                  >
-                                    <FaTrash className="h-3 w-3" />
-                                  </button>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={services.every(service => selectedServices.includes(service.id))}
-                                    onChange={() => handleSelectCategory(services)}
-                                    className="rounded border-gray-300 w-4 h-4"
-                                    title="Select all services in this category"
-                                  />
-                                  <span className="text-xs text-gray-500">Select All</span>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-
-                          {/* Services Rows */}
-                          {!collapsedCategories.includes(categoryName) && (
-                            services.length > 0 ? (
-                              services.map((service: any, i: number) => (
-                                <Fragment key={service.id}>
-                                  {/* Drop zone before service */}
-                                  {draggedService && draggedService !== service.id && (
-                                    <tr 
-                                      className={`transition-all duration-200 ${
-                                        dropTargetService === service.id && dropPositionService === 'before'
-                                          ? 'h-2 bg-blue-100'
-                                          : 'h-0'
-                                      }`}
-                                      onDragOver={(e) => handleServiceDragOver(e, service.id)}
-                                      onDragLeave={handleServiceDragLeave}
-                                      onDrop={(e) => handleServiceDrop(e, service.id, categoryName)}
-                                    >
-                                      <td colSpan={11}>
-                                        {dropTargetService === service.id && dropPositionService === 'before' && (
-                                          <div className="h-1 bg-blue-400 rounded"></div>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  )}
-                                  
-                                  <tr 
-                                    className={`border-t hover:bg-gray-50 transition-all duration-200 animate-in fade-in slide-in-from-left-1 ${
-                                      draggedService === service.id ? 'opacity-50' : ''
-                                    }`}
-                                    style={{ animationDelay: `${i * 50}ms` }}
-                                    onDragOver={(e) => handleServiceDragOver(e, service.id)}
-                                    onDragLeave={handleServiceDragLeave}
-                                    onDrop={(e) => handleServiceDrop(e, service.id, categoryName)}
-                                  >
-                                    <td className="p-3 pl-8">
-                                      <div className="flex items-center gap-2">
-                                        <FaGripVertical 
-                                          className="h-3 w-3 text-gray-400 cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
-                                          title="Drag to reorder service"
-                                          draggable={true}
-                                          onDragStart={(e) => handleServiceDragStart(e, service.id)}
-                                          onDragEnd={handleServiceDragEnd}
-                                          style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-                                        />
-                                        <input
-                                          type="checkbox"
-                                          checked={selectedServices.includes(service.id)}
-                                          onChange={() => handleSelectService(service.id)}
-                                          className="rounded border-gray-300 w-4 h-4"
-                                        />
-                                      </div>
-                                    </td>
-                                    <td className="p-3">
-                                      <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                        {service.id ? formatID(service.id) : 'null'}
-                                      </div>
-                                    </td>
-                                    <td className="p-3">
-                                      <div>
-                                        <div className="font-medium text-sm truncate max-w-44" style={{ color: 'var(--text-primary)' }}>
-                                          {service?.name || 'null'}
-                                        </div>
-                                        <div className="text-xs truncate max-w-44" style={{ color: 'var(--text-muted)' }}>
-                                          {service.category?.category_name || 'null'}
-                                        </div>
-                                      </div>
-                                    </td>
-                                    <td className="p-3">
-                                      <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-800 w-fit">
-                                        {service?.serviceType?.name || 'Standard'}
-                                      </div>
-                                    </td>
-                                    <td className="p-3">
-                                      <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                                        {(() => {
-                                          try {
-                                            const updateData = service?.updateText ? JSON.parse(service.updateText) : null;
-                                            return updateData?.provider || 'Manual';
-                                          } catch {
-                                            return 'Manual';
+                            {/* Services Rows */}
+                            {!collapsedCategories.includes(categoryName) &&
+                              (services.length > 0 ? (
+                                services.map((service: any, i: number) => (
+                                  <Fragment key={service.id}>
+                                    {/* Drop zone before service */}
+                                    {draggedService &&
+                                      draggedService !== service.id && (
+                                        <tr
+                                          className={`transition-all duration-200 ${
+                                            dropTargetService === service.id &&
+                                            dropPositionService === 'before'
+                                              ? 'h-2 bg-blue-100'
+                                              : 'h-0'
+                                          }`}
+                                          onDragOver={(e) =>
+                                            handleServiceDragOver(e, service.id)
                                           }
-                                        })()}
-                                      </div>
-                                    </td>
-                                    <td className="p-3">
-                                      <div className="text-left">
-                                        <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-                                          <PriceDisplay
-                                            amount={service?.rate}
-                                            originalCurrency="USD"
+                                          onDragLeave={handleServiceDragLeave}
+                                          onDrop={(e) =>
+                                            handleServiceDrop(
+                                              e,
+                                              service.id,
+                                              categoryName
+                                            )
+                                          }
+                                        >
+                                          <td colSpan={11}>
+                                            {dropTargetService === service.id &&
+                                              dropPositionService ===
+                                                'before' && (
+                                                <div className="h-1 bg-blue-400 rounded"></div>
+                                              )}
+                                          </td>
+                                        </tr>
+                                      )}
+
+                                    <tr
+                                      className={`border-t hover:bg-gray-50 transition-all duration-200 animate-in fade-in slide-in-from-left-1 ${
+                                        draggedService === service.id
+                                          ? 'opacity-50'
+                                          : ''
+                                      }`}
+                                      style={{ animationDelay: `${i * 50}ms` }}
+                                      onDragOver={(e) =>
+                                        handleServiceDragOver(e, service.id)
+                                      }
+                                      onDragLeave={handleServiceDragLeave}
+                                      onDrop={(e) =>
+                                        handleServiceDrop(
+                                          e,
+                                          service.id,
+                                          categoryName
+                                        )
+                                      }
+                                    >
+                                      <td className="p-3 pl-8">
+                                        <div className="flex items-center gap-2">
+                                          <FaGripVertical
+                                            className="h-3 w-3 text-gray-400 cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
+                                            title="Drag to reorder service"
+                                            draggable={true}
+                                            onDragStart={(e) =>
+                                              handleServiceDragStart(
+                                                e,
+                                                service.id
+                                              )
+                                            }
+                                            onDragEnd={handleServiceDragEnd}
+                                            style={{
+                                              userSelect: 'none',
+                                              WebkitUserSelect: 'none',
+                                            }}
+                                          />
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedServices.includes(
+                                              service.id
+                                            )}
+                                            onChange={() =>
+                                              handleSelectService(service.id)
+                                            }
+                                            className="rounded border-gray-300 w-4 h-4"
                                           />
                                         </div>
-                                        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                          Cost: <PriceDisplay
-                                            amount={service?.provider_price || service?.self_price || service?.cost_price || service?.rate}
-                                            originalCurrency="USD"
-                                          />
+                                      </td>
+                                      <td className="p-3">
+                                        <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                                          {service.id
+                                            ? formatID(service.id)
+                                            : 'null'}
                                         </div>
-                                      </div>
-                                    </td>
-                                    <td className="p-3">
-                                      <div>
-                                        <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                                          {(service?.min_order || 0).toString()} - {(service?.max_order || 0).toString()}
+                                      </td>
+                                      <td className="p-3">
+                                        <div>
+                                          <div
+                                            className="font-medium text-sm truncate max-w-44"
+                                            style={{
+                                              color: 'var(--text-primary)',
+                                            }}
+                                          >
+                                            {service?.name || 'null'}
+                                          </div>
+                                          <div
+                                            className="text-xs truncate max-w-44"
+                                            style={{
+                                              color: 'var(--text-muted)',
+                                            }}
+                                          >
+                                            {service.category?.category_name ||
+                                              'null'}
+                                          </div>
                                         </div>
-                                        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                          Min / Max
+                                      </td>
+                                      <td className="p-3">
+                                        <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-800 w-fit">
+                                          {service?.serviceType?.name ||
+                                            'Standard'}
                                         </div>
-                                      </div>
-                                    </td>
-                                    <td className="p-3">
-                                      <div className="space-y-2">
+                                      </td>
+                                      <td className="p-3">
+                                        <div
+                                          className="text-sm font-medium"
+                                          style={{
+                                            color: 'var(--text-primary)',
+                                          }}
+                                        >
+                                          {(() => {
+                                            try {
+                                              const updateData =
+                                                service?.updateText
+                                                  ? JSON.parse(
+                                                      service.updateText
+                                                    )
+                                                  : null;
+                                              return (
+                                                updateData?.provider || 'Manual'
+                                              );
+                                            } catch {
+                                              return 'Manual';
+                                            }
+                                          })()}
+                                        </div>
+                                      </td>
+                                      <td className="p-3">
+                                        <div className="text-left">
+                                          <div
+                                            className="font-semibold text-sm"
+                                            style={{
+                                              color: 'var(--text-primary)',
+                                            }}
+                                          >
+                                            <PriceDisplay
+                                              amount={service?.rate}
+                                              originalCurrency="USD"
+                                            />
+                                          </div>
+                                          <div
+                                            className="text-xs"
+                                            style={{
+                                              color: 'var(--text-muted)',
+                                            }}
+                                          >
+                                            Cost:{' '}
+                                            <PriceDisplay
+                                              amount={
+                                                service?.provider_price ||
+                                                service?.self_price ||
+                                                service?.cost_price ||
+                                                service?.rate
+                                              }
+                                              originalCurrency="USD"
+                                            />
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="p-3">
+                                        <div>
+                                          <div
+                                            className="text-sm font-medium"
+                                            style={{
+                                              color: 'var(--text-primary)',
+                                            }}
+                                          >
+                                            {(
+                                              service?.min_order || 0
+                                            ).toString()}{' '}
+                                            -{' '}
+                                            {(
+                                              service?.max_order || 0
+                                            ).toString()}
+                                          </div>
+                                          <div
+                                            className="text-xs"
+                                            style={{
+                                              color: 'var(--text-muted)',
+                                            }}
+                                          >
+                                            Min / Max
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="p-3">
+                                        <div className="space-y-2">
+                                          <button
+                                            onClick={() =>
+                                              toggleRefill(service)
+                                            }
+                                            className={`p-1 rounded transition-colors ${
+                                              service.refill
+                                                ? 'text-green-600 hover:bg-green-50'
+                                                : 'text-red-600 hover:bg-red-50'
+                                            }`}
+                                            title={
+                                              service.refill
+                                                ? 'Disable Refill'
+                                                : 'Enable Refill'
+                                            }
+                                          >
+                                            {service.refill ? (
+                                              <FaToggleOn className="h-5 w-5" />
+                                            ) : (
+                                              <FaToggleOff className="h-5 w-5" />
+                                            )}
+                                          </button>
+
+                                          {/* Show Refill Details when refill is enabled */}
+                                          {service.refill && (
+                                            <div className="text-xs text-gray-600 space-y-1">
+                                              {service.refillDays && (
+                                                <div>
+                                                  Days: {service.refillDays}
+                                                </div>
+                                              )}
+                                              {service.refillDisplay && (
+                                                <div>
+                                                  Hours: {service.refillDisplay}
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </td>
+                                      <td className="p-3">
                                         <button
-                                          onClick={() => toggleRefill(service)}
+                                          onClick={() => toggleCancel(service)}
                                           className={`p-1 rounded transition-colors ${
-                                            service.refill
+                                            service.cancel
                                               ? 'text-green-600 hover:bg-green-50'
                                               : 'text-red-600 hover:bg-red-50'
                                           }`}
-                                          title={service.refill ? 'Disable Refill' : 'Enable Refill'}
+                                          title={
+                                            service.cancel
+                                              ? 'Disable Cancel'
+                                              : 'Enable Cancel'
+                                          }
                                         >
-                                          {service.refill ? (
+                                          {service.cancel ? (
                                             <FaToggleOn className="h-5 w-5" />
                                           ) : (
                                             <FaToggleOff className="h-5 w-5" />
                                           )}
                                         </button>
-
-                                        {/* Show Refill Details when refill is enabled */}
-                                        {service.refill && (
-                                          <div className="text-xs text-gray-600 space-y-1">
-                                            {service.refillDays && (
-                                              <div>Days: {service.refillDays}</div>
-                                            )}
-                                            {service.refillDisplay && (
-                                              <div>Hours: {service.refillDisplay}</div>
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </td>
-                                    <td className="p-3">
-                                      <button
-                                        onClick={() => toggleCancel(service)}
-                                        className={`p-1 rounded transition-colors ${
-                                          service.cancel
-                                            ? 'text-green-600 hover:bg-green-50'
-                                            : 'text-red-600 hover:bg-red-50'
-                                        }`}
-                                        title={service.cancel ? 'Disable Cancel' : 'Enable Cancel'}
-                                      >
-                                        {service.cancel ? (
-                                          <FaToggleOn className="h-5 w-5" />
-                                        ) : (
-                                          <FaToggleOff className="h-5 w-5" />
-                                        )}
-                                      </button>
-                                    </td>
-                                    <td className="p-3">
-                                      <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
-                                        {getStatusIcon(service.status)}
-                                        <span className="text-xs font-medium capitalize">
-                                          {service.status || 'null'}
-                                        </span>
-                                      </div>
-                                    </td>
-                                    <td className="p-3">
-                                      <div className="flex items-center gap-1">
-                                        <button 
-                                          onClick={() => handleEditService(service.id)}
-                                          className="btn btn-secondary p-2"
-                                          title="Edit Service"
-                                        >
-                                          <FaEdit className="h-3 w-3" />
-                                        </button>
-                                        
-                                        {/* 3 Dot Menu */}
-                                        <div className="relative">
-                                          <button 
-                                            className="btn btn-secondary p-2" 
-                                            title="More Actions"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
-                                              dropdown.classList.toggle('hidden');
-                                            }}
+                                      </td>
+                                      <td className="p-3">
+                                        <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
+                                          {getStatusIcon(service.status)}
+                                          <span className="text-xs font-medium capitalize">
+                                            {service.status || 'null'}
+                                          </span>
+                                        </div>
+                                      </td>
+                                      <td className="p-3">
+                                        <div className="flex items-center gap-1">
+                                          <button
+                                            onClick={() =>
+                                              handleEditService(service.id)
+                                            }
+                                            className="btn btn-secondary p-2"
+                                            title="Edit Service"
                                           >
-                                            <FaEllipsisH className="h-3 w-3" />
+                                            <FaEdit className="h-3 w-3" />
                                           </button>
-                                          
-                                          {/* Dropdown Menu */}
-                                          <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                                            <div className="py-1">
-                                              <button
-                                                onClick={() => {
-                                                  toggleServiceStatus(service);
-                                                  const dropdown = document.querySelector('.absolute.right-0') as HTMLElement;
-                                                  dropdown?.classList.add('hidden');
-                                                }}
-                                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                              >
-                                                <FaSync className="h-3 w-3" />
-                                                {service.status === 'active' ? 'Deactivate' : 'Activate'} Service
-                                              </button>
-                                              <button
-                                                onClick={() => {
-                                                  deleteService(service?.id);
-                                                  const dropdown = document.querySelector('.absolute.right-0') as HTMLElement;
-                                                  dropdown?.classList.add('hidden');
-                                                }}
-                                                className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-100 flex items-center gap-2"
-                                              >
-                                                <FaTrash className="h-3 w-3" />
-                                                Delete Service
-                                              </button>
+
+                                          {/* 3 Dot Menu */}
+                                          <div className="relative">
+                                            <button
+                                              className="btn btn-secondary p-2"
+                                              title="More Actions"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const dropdown = e.currentTarget
+                                                  .nextElementSibling as HTMLElement;
+                                                dropdown.classList.toggle(
+                                                  'hidden'
+                                                );
+                                              }}
+                                            >
+                                              <FaEllipsisH className="h-3 w-3" />
+                                            </button>
+
+                                            {/* Dropdown Menu */}
+                                            <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                                              <div className="py-1">
+                                                <button
+                                                  onClick={() => {
+                                                    toggleServiceStatus(
+                                                      service
+                                                    );
+                                                    const dropdown =
+                                                      document.querySelector(
+                                                        '.absolute.right-0'
+                                                      ) as HTMLElement;
+                                                    dropdown?.classList.add(
+                                                      'hidden'
+                                                    );
+                                                  }}
+                                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                                >
+                                                  <FaSync className="h-3 w-3" />
+                                                  {service.status === 'active'
+                                                    ? 'Deactivate'
+                                                    : 'Activate'}{' '}
+                                                  Service
+                                                </button>
+                                                <button
+                                                  onClick={() => {
+                                                    deleteService(service?.id);
+                                                    const dropdown =
+                                                      document.querySelector(
+                                                        '.absolute.right-0'
+                                                      ) as HTMLElement;
+                                                    dropdown?.classList.add(
+                                                      'hidden'
+                                                    );
+                                                  }}
+                                                  className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-100 flex items-center gap-2"
+                                                >
+                                                  <FaTrash className="h-3 w-3" />
+                                                  Delete Service
+                                                </button>
+                                              </div>
                                             </div>
                                           </div>
                                         </div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                  
-                                  {/* Drop zone after service */}
-                                  {draggedService && draggedService !== service.id && (
-                                    <tr 
-                                      className={`transition-all duration-200 ${
-                                        dropTargetService === service.id && dropPositionService === 'after'
-                                          ? 'h-2 bg-blue-100'
-                                          : 'h-0'
-                                      }`}
-                                      onDragOver={(e) => handleServiceDragOver(e, service.id)}
-                                      onDragLeave={handleServiceDragLeave}
-                                      onDrop={(e) => handleServiceDrop(e, service.id, categoryName)}
-                                    >
-                                      <td colSpan={11}>
-                                        {dropTargetService === service.id && dropPositionService === 'after' && (
-                                          <div className="h-1 bg-blue-400 rounded"></div>
-                                        )}
                                       </td>
                                     </tr>
-                                  )}
-                                </Fragment>
-                              ))
-                            ) : (
-                              <tr className="border-t">
-                                <td colSpan={11} className="p-8 text-center">
-                                  <div className="flex flex-col items-center justify-center text-gray-500">
-                                    <FaBriefcase className="h-8 w-8 mb-2 text-gray-400" />
-                                    <p className="text-sm font-medium">No services in this category</p>
-                                    <p className="text-xs">Add services to populate this category</p>
-                                  </div>
-                                </td>
-                              </tr>
-                            )
-                          )}
 
-                          {/* Drop zone after category */}
-                          {draggedCategory && draggedCategory !== categoryName && (
-                            <tr 
-                              className={`transition-all duration-200 ${
-                                dropTargetCategory === categoryName && dropPosition === 'after'
-                                  ? 'h-8 bg-blue-100 border-2 border-dashed border-blue-400'
-                                  : 'h-1'
-                              }`}
-                              onDragOver={(e) => handleDragOver(e, categoryName)}
-                              onDragLeave={handleDragLeave}
-                              onDrop={(e) => handleDrop(e, categoryName)}
-                            >
-                              <td colSpan={11}>
-                                {dropTargetCategory === categoryName && dropPosition === 'after' && (
-                                  <div className="flex items-center justify-center h-6 text-blue-600 text-sm font-medium">
-                                    Drop here
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
-                      ))}
+                                    {/* Drop zone after service */}
+                                    {draggedService &&
+                                      draggedService !== service.id && (
+                                        <tr
+                                          className={`transition-all duration-200 ${
+                                            dropTargetService === service.id &&
+                                            dropPositionService === 'after'
+                                              ? 'h-2 bg-blue-100'
+                                              : 'h-0'
+                                          }`}
+                                          onDragOver={(e) =>
+                                            handleServiceDragOver(e, service.id)
+                                          }
+                                          onDragLeave={handleServiceDragLeave}
+                                          onDrop={(e) =>
+                                            handleServiceDrop(
+                                              e,
+                                              service.id,
+                                              categoryName
+                                            )
+                                          }
+                                        >
+                                          <td colSpan={11}>
+                                            {dropTargetService === service.id &&
+                                              dropPositionService ===
+                                                'after' && (
+                                                <div className="h-1 bg-blue-400 rounded"></div>
+                                              )}
+                                          </td>
+                                        </tr>
+                                      )}
+                                  </Fragment>
+                                ))
+                              ) : (
+                                <tr className="border-t">
+                                  <td colSpan={11} className="p-8 text-center">
+                                    <div className="flex flex-col items-center justify-center text-gray-500">
+                                      <FaBriefcase className="h-8 w-8 mb-2 text-gray-400" />
+                                      <p className="text-sm font-medium">
+                                        No services in this category
+                                      </p>
+                                      <p className="text-xs">
+                                        Add services to populate this category
+                                      </p>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+
+                            {/* Drop zone after category */}
+                            {draggedCategory &&
+                              draggedCategory !== categoryName && (
+                                <tr
+                                  className={`transition-all duration-200 ${
+                                    dropTargetCategory === categoryName &&
+                                    dropPosition === 'after'
+                                      ? 'h-8 bg-blue-100 border-2 border-dashed border-blue-400'
+                                      : 'h-1'
+                                  }`}
+                                  onDragOver={(e) =>
+                                    handleDragOver(e, categoryName)
+                                  }
+                                  onDragLeave={handleDragLeave}
+                                  onDrop={(e) => handleDrop(e, categoryName)}
+                                >
+                                  <td colSpan={11}>
+                                    {dropTargetCategory === categoryName &&
+                                      dropPosition === 'after' && (
+                                        <div className="flex items-center justify-center h-6 text-blue-600 text-sm font-medium">
+                                          Drop here
+                                        </div>
+                                      )}
+                                  </td>
+                                </tr>
+                              )}
+                          </Fragment>
+                        ))}
                     </tbody>
                   </table>
                 </div>
 
                 {/* Pagination */}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  <div
+                    className="text-sm"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
                     {isLoading ? (
                       <div className="flex items-center gap-2">
                         <GradientSpinner size="w-4 h-4" />
                         <span>Loading services...</span>
                       </div>
+                    ) : pageSize === 'all' ? (
+                      `Showing all ${data?.totalCategories || 0} categories`
                     ) : (
-                      `Showing page ${currentPage} of ${totalPages} (${data?.totalCategories || 0} total categories)`
+                      `Showing page ${currentPage} of ${totalPages} (${
+                        data?.totalCategories || 0
+                      } total categories)`
                     )}
                   </div>
 
-                  {/* Page Size Selector */}
-                  <div className="flex items-center gap-4 mt-4 md:mt-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Show:</span>
-                      <select
-                        value={pageSize}
-                        onChange={(e) => handlePageSizeChange(e.target.value)}
-                        className="pl-3 pr-8 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-gray-900 transition-all duration-200 appearance-none cursor-pointer text-sm"
-                      >
-                        <option value="10">10 categories per page</option>
-                        <option value="20">20 categories per page</option>
-                        <option value="50">50 categories per page</option>
-                        <option value="100">100 categories per page</option>
-                      </select>
-                    </div>
-
-                    {/* Pagination Controls */}
-                    <div className="flex items-center gap-2">
+                  {/* Pagination Controls - Hide when showing all */}
+                  {pageSize !== 'all' && (
+                    <div className="flex items-center gap-2 mt-4 md:mt-0">
                       <button
                         onClick={handlePreviousPage}
                         disabled={isLoading || currentPage === 1}
@@ -3951,7 +4908,10 @@ function AdminServicesPage() {
                       >
                         Previous
                       </button>
-                      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      <span
+                        className="text-sm"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
                         {isLoading ? (
                           <GradientSpinner size="w-4 h-4" />
                         ) : (
@@ -3966,7 +4926,7 @@ function AdminServicesPage() {
                         Next
                       </button>
                     </div>
-                  </div>
+                  )}
                 </div>
               </>
             )}
@@ -3975,15 +4935,19 @@ function AdminServicesPage() {
 
         {/* Edit Service Modal */}
         {editServiceModal.open && (
-          <div 
+          <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
-              editServiceModal.closing ? 'modal-backdrop-exit' : 'modal-backdrop-enter'
+              editServiceModal.closing
+                ? 'modal-backdrop-exit'
+                : 'modal-backdrop-enter'
             }`}
             onClick={handleCloseEditModal}
           >
-            <div 
+            <div
               className={`bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4 ${
-                editServiceModal.closing ? 'modal-content-exit' : 'modal-content-enter'
+                editServiceModal.closing
+                  ? 'modal-content-exit'
+                  : 'modal-content-enter'
               }`}
               onClick={(e) => e.stopPropagation()}
             >
@@ -3999,15 +4963,19 @@ function AdminServicesPage() {
 
         {/* Create Service Modal */}
         {createServiceModal && (
-          <div 
+          <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
-              createServiceModalClosing ? 'modal-backdrop-exit' : 'modal-backdrop-enter'
+              createServiceModalClosing
+                ? 'modal-backdrop-exit'
+                : 'modal-backdrop-enter'
             }`}
             onClick={handleCloseCreateModal}
           >
-            <div 
+            <div
               className={`bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4 ${
-                createServiceModalClosing ? 'modal-content-exit' : 'modal-content-enter'
+                createServiceModalClosing
+                  ? 'modal-content-exit'
+                  : 'modal-content-enter'
               }`}
               onClick={(e) => e.stopPropagation()}
             >
@@ -4023,15 +4991,19 @@ function AdminServicesPage() {
 
         {/* Create Category Modal */}
         {createCategoryModal && (
-          <div 
+          <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
-              createCategoryModalClosing ? 'modal-backdrop-exit' : 'modal-backdrop-enter'
+              createCategoryModalClosing
+                ? 'modal-backdrop-exit'
+                : 'modal-backdrop-enter'
             }`}
             onClick={handleCloseCategoryModal}
           >
-            <div 
+            <div
               className={`bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
-                createCategoryModalClosing ? 'modal-content-exit' : 'modal-content-enter'
+                createCategoryModalClosing
+                  ? 'modal-content-exit'
+                  : 'modal-content-enter'
               }`}
               onClick={(e) => e.stopPropagation()}
             >
@@ -4046,15 +5018,19 @@ function AdminServicesPage() {
 
         {/* Edit Category Modal */}
         {editCategoryModal.open && (
-          <div 
+          <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
-              editCategoryModal.closing ? 'modal-backdrop-exit' : 'modal-backdrop-enter'
+              editCategoryModal.closing
+                ? 'modal-backdrop-exit'
+                : 'modal-backdrop-enter'
             }`}
             onClick={handleCloseEditCategoryModal}
           >
-            <div 
+            <div
               className={`bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
-                editCategoryModal.closing ? 'modal-content-exit' : 'modal-content-enter'
+                editCategoryModal.closing
+                  ? 'modal-content-exit'
+                  : 'modal-content-enter'
               }`}
               onClick={(e) => e.stopPropagation()}
             >
@@ -4071,15 +5047,19 @@ function AdminServicesPage() {
 
         {/* Delete Confirmation Modal */}
         {deleteConfirmationModal && (
-          <div 
+          <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
-              deleteConfirmationModalClosing ? 'modal-backdrop-exit' : 'modal-backdrop-enter'
+              deleteConfirmationModalClosing
+                ? 'modal-backdrop-exit'
+                : 'modal-backdrop-enter'
             }`}
             onClick={handleCloseDeleteConfirmation}
           >
-            <div 
+            <div
               className={`bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
-                deleteConfirmationModalClosing ? 'modal-content-exit' : 'modal-content-enter'
+                deleteConfirmationModalClosing
+                  ? 'modal-content-exit'
+                  : 'modal-content-enter'
               }`}
               onClick={(e) => e.stopPropagation()}
             >
@@ -4094,15 +5074,19 @@ function AdminServicesPage() {
 
         {/* Delete Category Modal */}
         {deleteCategoryModal.open && (
-          <div 
+          <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
-              deleteCategoryModal.closing ? 'modal-backdrop-exit' : 'modal-backdrop-enter'
+              deleteCategoryModal.closing
+                ? 'modal-backdrop-exit'
+                : 'modal-backdrop-enter'
             }`}
             onClick={handleCloseDeleteCategoryModal}
           >
-            <div 
+            <div
               className={`bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
-                deleteCategoryModal.closing ? 'modal-content-exit' : 'modal-content-enter'
+                deleteCategoryModal.closing
+                  ? 'modal-content-exit'
+                  : 'modal-content-enter'
               }`}
               onClick={(e) => e.stopPropagation()}
             >
