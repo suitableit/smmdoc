@@ -6,24 +6,28 @@ import { NextRequest, NextResponse } from 'next/server';
 // Provider configurations with multiple API URL options
 const PROVIDER_CONFIGS = {
   smmgen: {
-    apiUrl: "https://api.smmgen.com/v2",
-    alternativeUrls: ["https://smmgen.com/api/v2", "https://smmgen.com/api"],
-    endpoints: { services: "/services", balance: "/balance" }
+    apiUrl: "https://smmgen.com/api/v2",
+    alternativeUrls: ["https://api.smmgen.com/v2", "https://smmgen.com/api"],
+    endpoints: { services: "", balance: "" },
+    method: "POST"
   },
   growfollows: {
-    apiUrl: "https://api.growfollows.com/v2",
-    alternativeUrls: ["https://growfollows.com/api/v2", "https://growfollows.com/api"],
-    endpoints: { services: "/services", balance: "/balance" }
+    apiUrl: "https://growfollows.com/api/v2",
+    alternativeUrls: ["https://api.growfollows.com/v2", "https://growfollows.com/api"],
+    endpoints: { services: "", balance: "" },
+    method: "POST"
   },
   attpanel: {
     apiUrl: "https://attpanel.com/api/v2",
     alternativeUrls: ["https://api.attpanel.com/v3", "https://attpanel.com/api"],
-    endpoints: { services: "/services", balance: "/balance" }
+    endpoints: { services: "", balance: "" },
+    method: "POST"
   },
   smmcoder: {
     apiUrl: "https://smmcoder.com/api/v2",
     alternativeUrls: ["https://smmcoder.com/api"],
-    endpoints: { services: "/services", balance: "/balance" }
+    endpoints: { services: "", balance: "" },
+    method: "POST"
   }
 };
 
@@ -57,6 +61,33 @@ export async function POST(req: NextRequest) {
         }
 
         console.log('✅ Provider found:', provider.name);
+
+        // Simple validation - check if provider has API URL and key
+        if (!provider.api_url || provider.api_url.trim() === '') {
+          console.log('❌ Provider validation failed: API URL missing');
+          return NextResponse.json(
+            { error: 'Provider validation failed: API URL is missing', success: false, data: null },
+            { status: 400 }
+          );
+        }
+
+        if (!provider.api_key || provider.api_key.trim() === '') {
+          console.log('❌ Provider validation failed: API key missing');
+          return NextResponse.json(
+            { error: 'Provider validation failed: API key is missing', success: false, data: null },
+            { status: 400 }
+          );
+        }
+
+        if (provider.status !== 'active') {
+          console.log('❌ Provider validation failed: Provider not active');
+          return NextResponse.json(
+            { error: 'Provider validation failed: Provider is not active', success: false, data: null },
+            { status: 400 }
+          );
+        }
+
+        console.log('✅ Provider validation passed');
 
         const providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
         if (!providerConfig) {
@@ -106,18 +137,23 @@ export async function POST(req: NextRequest) {
             }
           }
         } else {
-          // For other providers, use GET method
+          // For other providers, use POST method
           const urls = [providerConfig.apiUrl, ...providerConfig.alternativeUrls];
 
           for (const baseUrl of urls) {
             try {
-              const apiUrl = `${baseUrl}${providerConfig.endpoints.services}?key=${provider.api_key}&action=services`;
               console.log(`🔄 Trying API: ${baseUrl}`);
 
-              const response = await fetch(apiUrl, {
+              const response = await fetch(baseUrl, {
+                method: 'POST',
                 headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
+                },
+                body: new URLSearchParams({
+                  key: provider.api_key,
+                  action: 'services'
+                })
               });
 
               if (response.ok) {
@@ -492,6 +528,230 @@ export async function GET(req: NextRequest) {
             console.log(`❌ SMMCoder failed with ${baseUrl}:`, urlError instanceof Error ? urlError.message : urlError);
           }
         }
+      } else if (provider.name.toLowerCase() === 'growfollows') {
+        // GrowFollows specific logic - they use standard POST with FormData
+        console.log(`🧪 GrowFollows trying API: ${providerConfig.apiUrl}`);
+        console.log(`🔑 Using API Key: ${provider.api_key.substring(0, 8)}...`);
+
+        try {
+          // Try FormData first
+          console.log('🔄 Trying FormData approach...');
+          const formData = new FormData();
+          formData.append('key', provider.api_key);
+          formData.append('action', 'services');
+
+          let response = await fetch(providerConfig.apiUrl, {
+            method: 'POST',
+            body: formData,
+          });
+
+          console.log(`GrowFollows FormData Response status:`, response.status);
+
+          // If FormData fails, try URLSearchParams
+          if (!response.ok) {
+            console.log('🔄 Trying URLSearchParams approach...');
+            const params = new URLSearchParams();
+            params.append('key', provider.api_key);
+            params.append('action', 'services');
+
+            response = await fetch(providerConfig.apiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: params,
+            });
+
+            console.log(`GrowFollows URLSearchParams Response status:`, response.status);
+          }
+
+          // If still fails, try JSON approach
+          if (!response.ok) {
+            console.log('🔄 Trying JSON approach...');
+            response = await fetch(providerConfig.apiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                key: provider.api_key,
+                action: 'services'
+              }),
+            });
+
+            console.log(`GrowFollows JSON Response status:`, response.status);
+          }
+
+          console.log(`GrowFollows Response headers:`, Object.fromEntries(response.headers.entries()));
+
+          if (response.ok) {
+            const responseText = await response.text();
+            console.log(`GrowFollows Raw response:`, responseText.substring(0, 500));
+
+            try {
+              const data = JSON.parse(responseText);
+              if (Array.isArray(data) && data.length > 0) {
+                console.log(`✅ GrowFollows success, found ${data.length} services`);
+                providerServices = data;
+                workingUrl = providerConfig.apiUrl;
+              } else if (data.error) {
+                console.log(`❌ GrowFollows API error:`, data.error);
+                throw new Error(`GrowFollows API error: ${data.error}`);
+              } else {
+                console.log(`❌ GrowFollows unexpected response format:`, data);
+                throw new Error('GrowFollows returned unexpected response format');
+              }
+            } catch (parseError) {
+              console.log(`❌ GrowFollows JSON parse error:`, parseError);
+              throw new Error(`GrowFollows response parsing failed: ${parseError instanceof Error ? parseError.message : parseError}`);
+            }
+          } else {
+            const errorText = await response.text();
+            console.log(`❌ GrowFollows HTTP error ${response.status}:`, errorText);
+            throw new Error(`GrowFollows API returned ${response.status}: ${errorText}. Please check API key and URL.`);
+          }
+        } catch (error) {
+          console.log(`❌ GrowFollows request failed:`, error instanceof Error ? error.message : error);
+          throw error;
+        }
+      } else if (provider.name.toLowerCase() === 'smmgen') {
+        // SMMGen specific logic - they use standard POST with FormData
+        console.log(`🧪 SMMGen trying API: ${providerConfig.apiUrl}`);
+        console.log(`🔑 Using API Key: ${provider.api_key.substring(0, 8)}...`);
+
+        try {
+          // Try FormData first
+          console.log('🔄 Trying FormData approach...');
+          const formData = new FormData();
+          formData.append('key', provider.api_key);
+          formData.append('action', 'services');
+
+          let response = await fetch(providerConfig.apiUrl, {
+            method: 'POST',
+            body: formData,
+          });
+
+          console.log(`SMMGen FormData Response status:`, response.status);
+
+          // If FormData fails, try URLSearchParams
+          if (!response.ok) {
+            console.log('🔄 Trying URLSearchParams approach...');
+            const params = new URLSearchParams();
+            params.append('key', provider.api_key);
+            params.append('action', 'services');
+
+            response = await fetch(providerConfig.apiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: params,
+            });
+
+            console.log(`SMMGen URLSearchParams Response status:`, response.status);
+          }
+
+          console.log(`SMMGen Response headers:`, Object.fromEntries(response.headers.entries()));
+
+          if (response.ok) {
+            const responseText = await response.text();
+            console.log(`SMMGen Raw response:`, responseText.substring(0, 500));
+
+            try {
+              const data = JSON.parse(responseText);
+              if (Array.isArray(data) && data.length > 0) {
+                console.log(`✅ SMMGen success, found ${data.length} services`);
+                providerServices = data;
+                workingUrl = providerConfig.apiUrl;
+              } else if (data.error) {
+                console.log(`❌ SMMGen API error:`, data.error);
+                throw new Error(`SMMGen API error: ${data.error}`);
+              } else {
+                console.log(`❌ SMMGen unexpected response format:`, data);
+                throw new Error('SMMGen returned unexpected response format');
+              }
+            } catch (parseError) {
+              console.log(`❌ SMMGen JSON parse error:`, parseError);
+              throw new Error(`SMMGen response parsing failed: ${parseError instanceof Error ? parseError.message : parseError}`);
+            }
+          } else {
+            const errorText = await response.text();
+            console.log(`❌ SMMGen HTTP error ${response.status}:`, errorText);
+            throw new Error(`SMMGen API returned ${response.status}: ${errorText}. Please check API key and URL.`);
+          }
+        } catch (error) {
+          console.log(`❌ SMMGen request failed:`, error instanceof Error ? error.message : error);
+          throw error;
+        }
+      } else if (provider.name.toLowerCase() === 'attpanel') {
+        // ATTPanel specific logic - they use standard POST with FormData
+        console.log(`🧪 ATTPanel trying API: ${providerConfig.apiUrl}`);
+        console.log(`🔑 Using API Key: ${provider.api_key.substring(0, 8)}...`);
+
+        try {
+          // Try FormData first
+          console.log('🔄 Trying FormData approach...');
+          const formData = new FormData();
+          formData.append('key', provider.api_key);
+          formData.append('action', 'services');
+
+          let response = await fetch(providerConfig.apiUrl, {
+            method: 'POST',
+            body: formData,
+          });
+
+          console.log(`ATTPanel FormData Response status:`, response.status);
+
+          // If FormData fails, try URLSearchParams
+          if (!response.ok) {
+            console.log('🔄 Trying URLSearchParams approach...');
+            const params = new URLSearchParams();
+            params.append('key', provider.api_key);
+            params.append('action', 'services');
+
+            response = await fetch(providerConfig.apiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: params,
+            });
+
+            console.log(`ATTPanel URLSearchParams Response status:`, response.status);
+          }
+
+          console.log(`ATTPanel Response headers:`, Object.fromEntries(response.headers.entries()));
+
+          if (response.ok) {
+            const responseText = await response.text();
+            console.log(`ATTPanel Raw response:`, responseText.substring(0, 500));
+
+            try {
+              const data = JSON.parse(responseText);
+              if (Array.isArray(data) && data.length > 0) {
+                console.log(`✅ ATTPanel success, found ${data.length} services`);
+                providerServices = data;
+                workingUrl = providerConfig.apiUrl;
+              } else if (data.error) {
+                console.log(`❌ ATTPanel API error:`, data.error);
+                throw new Error(`ATTPanel API error: ${data.error}`);
+              } else {
+                console.log(`❌ ATTPanel unexpected response format:`, data);
+                throw new Error('ATTPanel returned unexpected response format');
+              }
+            } catch (parseError) {
+              console.log(`❌ ATTPanel JSON parse error:`, parseError);
+              throw new Error(`ATTPanel response parsing failed: ${parseError instanceof Error ? parseError.message : parseError}`);
+            }
+          } else {
+            const errorText = await response.text();
+            console.log(`❌ ATTPanel HTTP error ${response.status}:`, errorText);
+            throw new Error(`ATTPanel API returned ${response.status}: ${errorText}. Please check API key and URL.`);
+          }
+        } catch (error) {
+          console.log(`❌ ATTPanel request failed:`, error instanceof Error ? error.message : error);
+          throw error;
+        }
       } else {
         // For other providers, try both POST and GET methods with multiple URLs
         const baseUrls = [providerConfig.apiUrl, ...(providerConfig.alternativeUrls || [])];
@@ -526,32 +786,35 @@ export async function GET(req: NextRequest) {
             console.log(`POST failed with ${baseUrl}:`, postError instanceof Error ? postError.message : postError);
           }
 
-          // If POST failed, try GET method
+          // If POST with FormData failed, try POST with URLSearchParams
           try {
-            console.log('Trying GET method for:', baseUrl);
-            const getUrl = `${baseUrl}${providerConfig.endpoints.services}?key=${provider.api_key}&action=services`;
+            console.log('Trying POST with URLSearchParams for:', baseUrl);
 
-            const getResponse = await fetch(getUrl, {
-              method: 'GET',
+            const postResponse2 = await fetch(baseUrl, {
+              method: 'POST',
               headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              }
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              },
+              body: new URLSearchParams({
+                key: provider.api_key,
+                action: 'services'
+              })
             });
 
-            console.log(`GET Response status for ${getUrl}:`, getResponse.status);
+            console.log(`POST URLSearchParams Response status for ${baseUrl}:`, postResponse2.status);
 
-            if (getResponse.ok) {
-              const data = await getResponse.json();
+            if (postResponse2.ok) {
+              const data = await postResponse2.json();
               if (Array.isArray(data) && data.length > 0) {
                 providerServices = data;
-                workingUrl = getUrl;
-                console.log(`SUCCESS with GET ${getUrl}! Found ${data.length} services`);
+                workingUrl = baseUrl;
+                console.log(`SUCCESS with POST URLSearchParams ${baseUrl}! Found ${data.length} services`);
                 break;
               }
             }
-          } catch (getError) {
-            console.log(`GET failed with ${baseUrl}:`, getError instanceof Error ? getError.message : getError);
+          } catch (postError2) {
+            console.log(`POST URLSearchParams failed with ${baseUrl}:`, postError2 instanceof Error ? postError2.message : postError2);
           }
         }
       }

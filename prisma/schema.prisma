@@ -87,6 +87,19 @@ model ServiceType {
   services    Service[]
 }
 
+model ApiProvider {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  api_key     String
+  api_url     String
+  status      String   @default("active")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("api_providers")
+}
+
 model Currency {
   id      Int     @id @default(autoincrement())
   code    String  @unique

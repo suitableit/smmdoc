@@ -33,18 +33,48 @@ export async function GET(request: Request) {
       categoryId: {
         in: categoryIds,
       },
-      ...(search
+      ...(search && search.trim()
         ? {
             OR: [
+              // Search by service name
               {
                 name: {
-                  contains: search,
+                  contains: search.trim(),
                   mode: 'insensitive',
                 },
               },
+              // Search by service description
               {
                 description: {
-                  contains: search,
+                  contains: search.trim(),
+                  mode: 'insensitive',
+                },
+              },
+              // Search by service ID (if search term is a number)
+              ...(isNaN(Number(search.trim())) ? [] : [{
+                id: {
+                  equals: Number(search.trim()),
+                },
+              }]),
+              // Search by category ID (if search term is a number)
+              ...(isNaN(Number(search.trim())) ? [] : [{
+                categoryId: {
+                  equals: Number(search.trim()),
+                },
+              }]),
+              // Search by category name
+              {
+                category: {
+                  category_name: {
+                    contains: search.trim(),
+                    mode: 'insensitive',
+                  },
+                },
+              },
+              // Search by provider
+              {
+                provider: {
+                  contains: search.trim(),
                   mode: 'insensitive',
                 },
               },

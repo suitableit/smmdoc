@@ -115,6 +115,8 @@ interface Provider {
   createdAt: Date;
   lastSync: Date;
   description?: string;
+  username?: string;
+  password?: string;
 }
 
 const APIProvidersPage = () => {
@@ -145,6 +147,7 @@ const APIProvidersPage = () => {
   const [formData, setFormData] = useState({
     selectedProvider: '',
     apiKey: '',
+    apiUrl: '',
     syncEnabled: true,
     username: '',
     password: '',
@@ -263,6 +266,7 @@ const APIProvidersPage = () => {
         body: JSON.stringify({
           selectedProvider: formData.selectedProvider,
           apiKey: formData.apiKey,
+          apiUrl: formData.apiUrl,
           username: formData.username,
           password: formData.password
         })
@@ -277,6 +281,7 @@ const APIProvidersPage = () => {
         setFormData({
           selectedProvider: '',
           apiKey: '',
+          apiUrl: '',
           syncEnabled: true,
           username: '',
           password: ''
@@ -298,11 +303,11 @@ const APIProvidersPage = () => {
     setEditingProvider(provider);
     setEditFormData({
       name: provider.name,
-      apiUrl: provider.apiUrl,
-      apiKey: provider.apiKey,
+      apiUrl: provider.apiUrl || '',
+      apiKey: provider.apiKey || '',
       syncEnabled: true, // Default or derive from provider data
-      username: '', // These would typically come from provider data
-      password: '',
+      username: provider.username || '', // Load from provider data
+      password: '', // Don't pre-fill password for security
     });
     setShowEditForm(true);
   };
@@ -310,41 +315,65 @@ const APIProvidersPage = () => {
   const handleEditProvider = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProvider) return;
-    
+
     // Validate that if username is provided, password is also provided
     if (editFormData.username.trim() !== '' && editFormData.password.trim() === '') {
       showToast('Password is required when username is provided', 'error');
       return;
     }
-    
+
     setIsLoading(true);
-    
-    setTimeout(() => {
-      setProviders(prev => prev.map(provider => 
-        provider.id === editingProvider.id 
-          ? {
-              ...provider,
-              name: editFormData.name,
-              apiUrl: editFormData.apiUrl,
-              apiKey: editFormData.apiKey,
-              lastSync: new Date(),
-            }
-          : provider
-      ));
-      
-      setEditFormData({
-        name: '',
-        apiUrl: '',
-        apiKey: '',
-        syncEnabled: true,
-        username: '',
-        password: '',
+
+    try {
+      const response = await fetch('/api/admin/providers', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editingProvider.id,
+          apiKey: editFormData.apiKey,
+          apiUrl: editFormData.apiUrl,
+          username: editFormData.username || null,
+          password: editFormData.password || null
+        })
       });
-      setShowEditForm(false);
-      setEditingProvider(null);
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update local state
+        setProviders(prev => prev.map(provider =>
+          provider.id === editingProvider.id
+            ? {
+                ...provider,
+                apiUrl: editFormData.apiUrl,
+                apiKey: editFormData.apiKey,
+                lastSync: new Date(),
+              }
+            : provider
+        ));
+
+        setEditFormData({
+          name: '',
+          apiUrl: '',
+          apiKey: '',
+          syncEnabled: true,
+          username: '',
+          password: '',
+        });
+        setShowEditForm(false);
+        setEditingProvider(null);
+        showToast('Provider updated successfully!', 'success');
+      } else {
+        showToast(result.error || 'Failed to update provider', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating provider:', error);
+      showToast('Failed to update provider', 'error');
+    } finally {
       setIsLoading(false);
-      showToast('Provider updated successfully!', 'success');
-    }, 1000);
+    }
   };
 
   const handleToggleStatus = async (providerId: number) => {
@@ -561,12 +590,13 @@ const APIProvidersPage = () => {
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setShowAddForm(false);
-                setFormData({ 
-                  selectedProvider: '', 
-                  apiKey: '', 
-                  syncEnabled: true, 
-                  username: '', 
-                  password: '' 
+                setFormData({
+                  selectedProvider: '',
+                  apiKey: '',
+                  apiUrl: '',
+                  syncEnabled: true,
+                  username: '',
+                  password: ''
                 });
               }
             }}
@@ -588,6 +618,7 @@ const APIProvidersPage = () => {
                         selectedProvider: e.target.value,
                         // Clear other fields when changing provider
                         apiKey: '',
+                        apiUrl: '',
                         username: '',
                         password: '',
                         syncEnabled: true
@@ -617,6 +648,19 @@ const APIProvidersPage = () => {
                         onChange={(e: any) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
                         className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Enter your API key"
+                        disabled={!formData.selectedProvider}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">API URL</label>
+                      <input
+                        type="url"
+                        value={formData.apiUrl}
+                        onChange={(e) => setFormData(prev => ({ ...prev, apiUrl: e.target.value }))}
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        placeholder="Enter API URL (e.g., https://provider.com/api/v2)"
                         disabled={!formData.selectedProvider}
                         required
                       />
@@ -689,12 +733,13 @@ const APIProvidersPage = () => {
                       type="button"
                       onClick={() => {
                         setShowAddForm(false);
-                        setFormData({ 
-                          selectedProvider: '', 
-                          apiKey: '', 
-                          syncEnabled: true, 
-                          username: '', 
-                          password: '' 
+                        setFormData({
+                          selectedProvider: '',
+                          apiKey: '',
+                          apiUrl: '',
+                          syncEnabled: true,
+                          username: '',
+                          password: ''
                         });
                       }}
                       className="btn btn-secondary"
@@ -764,9 +809,9 @@ const APIProvidersPage = () => {
                         type="url"
                         value={editFormData.apiUrl}
                         onChange={(e) => setEditFormData(prev => ({ ...prev, apiUrl: e.target.value }))}
-                        className="form-field w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 cursor-not-allowed"
-                        placeholder="https://api.example.com/v1"
-                        readOnly
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                        placeholder="Enter API URL (e.g., https://provider.com/api/v2)"
+                        required
                       />
                     </div>
 
@@ -938,6 +983,14 @@ const APIProvidersPage = () => {
                       <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(provider.status)}`}>
                         {getStatusIcon(provider.status)}
                         {provider.status.charAt(0).toUpperCase() + provider.status.slice(1)}
+                      </span>
+                      {/* API Configuration Status */}
+                      <span className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${
+                        provider.apiUrl && provider.apiUrl.trim() !== ''
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                      }`}>
+                        {provider.apiUrl && provider.apiUrl.trim() !== '' ? '🔗 API OK' : '⚠️ No API URL'}
                       </span>
                     </div>
                   </div>

@@ -41,16 +41,19 @@ export async function POST(req: NextRequest) {
     let providersToSync = [];
 
     if (providerId) {
-      // Sync specific provider
-      const provider = await db.apiProvider.findUnique({
-        where: { id: providerId, status: 'active' }
-      });
-      if (provider) providersToSync.push(provider);
+      // Sync specific provider with validation
+      const validation = await validateProvider(providerId);
+      if (validation.isValid && validation.provider) {
+        providersToSync.push(validation.provider);
+      } else {
+        return NextResponse.json(
+          { error: `Provider validation failed: ${validation.error}`, success: false, data: null },
+          { status: 400 }
+        );
+      }
     } else {
-      // Sync all active providers
-      providersToSync = await db.apiProvider.findMany({
-        where: { status: 'active' }
-      });
+      // Sync all valid providers (active with API URL and key)
+      providersToSync = await getValidProviders();
     }
 
     if (providersToSync.length === 0) {
