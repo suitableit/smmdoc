@@ -135,6 +135,18 @@ const ProfilePage = () => {
     email: '',
   });
   const [hasProfileChanges, setHasProfileChanges] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  // Form validation states
+  const [validationErrors, setValidationErrors] = useState<{
+    fullName?: string;
+    email?: string;
+    currentPass?: string;
+    newPass?: string;
+    confirmNewPass?: string;
+  }>({});
+  const [isFormValid, setIsFormValid] = useState(true);
 
   const languages = [
     { value: 'en', label: 'English' },
@@ -181,23 +193,23 @@ const ProfilePage = () => {
 
           // Set component state from userData
           setTwoFactor(userData.isTwoFactorEnabled || false);
-          setSelectedLanguage(userData.language || 'en');
-          setSelectedTimezone(userData.timezone || '21600');
+          setSelectedLanguage((userData as any).language || 'en');
+          setSelectedTimezone((userData as any).timezone || '21600');
 
           // Initialize profile data
           setProfileData({
-            fullName: userData.fullName || userData.name || '',
+            fullName: userData.name || '',
             email: userData.email || '',
           });
 
           // Set API key if exists
-          if (userData.apiKey) {
+          if ((userData as any).apiKey) {
             setApiKey({
-              key: userData.apiKey,
-              createdAt: userData.apiKeyCreatedAt || new Date(),
-              updatedAt: userData.apiKeyUpdatedAt || new Date(),
-              id: userData.apiKeyId || '1',
-              userId: userData.id,
+              key: (userData as any).apiKey,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              id: 1,
+              userid: userData.id,
             });
           }
         } else {
@@ -355,7 +367,7 @@ const ProfilePage = () => {
           createdAt: new Date(result.createdAt),
           updatedAt: new Date(result.updatedAt),
           id: result.id,
-          userId: result.userId,
+          userid: result.userId,
         };
 
         setApiKey(newApiKey);
@@ -453,7 +465,7 @@ const ProfilePage = () => {
     if (isEditingProfile) {
       // Cancel editing - reset to original values
       setProfileData({
-        fullName: user?.fullName || user?.name || '',
+        fullName: user?.name || '',
         email: user?.email || '',
       });
       setIsEditingProfile(false);
@@ -471,8 +483,11 @@ const ProfilePage = () => {
       [field]: value,
     }));
 
+    // Validate field in real-time
+    validateProfileField(field, value);
+
     // Check if there are changes
-    const originalFullName = user?.fullName || user?.name || '';
+    const originalFullName = user?.name || '';
     const originalEmail = user?.email || '';
 
     const newData = {
@@ -554,6 +569,142 @@ const ProfilePage = () => {
       console.error('Resend verification error:', error);
       showToast('Error sending verification email', 'error');
     }
+  };
+
+  // Handle profile picture upload
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Invalid file type. Only JPEG, PNG, and GIF are allowed.', 'error');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      showToast('File size too large. Maximum size is 5MB.', 'error');
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setAvatarPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    setIsUploadingAvatar(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await fetch('/api/user/upload-avatar', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Update Redux store
+        dispatch(
+          setUserDetails({
+            ...userDetails,
+            image: result.data.image,
+          })
+        );
+
+        setAvatarPreview(null);
+        showToast('Profile picture updated successfully!', 'success');
+      } else {
+        showToast(result.error || 'Failed to upload profile picture', 'error');
+        setAvatarPreview(null);
+      }
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      showToast('Error uploading profile picture', 'error');
+      setAvatarPreview(null);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  // Validation functions
+  const validateEmail = (email: string): string | null => {
+    if (!email) return 'Email is required';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return 'Please enter a valid email address';
+    return null;
+  };
+
+  const validateFullName = (name: string): string | null => {
+    if (!name.trim()) return 'Full name is required';
+    if (name.trim().length < 2) return 'Full name must be at least 2 characters';
+    return null;
+  };
+
+  const validatePassword = (password: string): string | null => {
+    if (!password) return 'Password is required';
+    if (password.length < 6) return 'Password must be at least 6 characters';
+    return null;
+  };
+
+  const validateConfirmPassword = (password: string, confirmPassword: string): string | null => {
+    if (!confirmPassword) return 'Please confirm your password';
+    if (password !== confirmPassword) return 'Passwords do not match';
+    return null;
+  };
+
+  // Real-time validation for profile data
+  const validateProfileField = (field: string, value: string) => {
+    let error: string | null = null;
+
+    if (field === 'fullName') {
+      error = validateFullName(value);
+    } else if (field === 'email') {
+      error = validateEmail(value);
+    }
+
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
+
+    return error === null;
+  };
+
+  // Real-time validation for password form
+  const validatePasswordField = (field: string, value: string) => {
+    let error: string | null = null;
+
+    if (field === 'currentPass') {
+      error = value ? null : 'Current password is required';
+    } else if (field === 'newPass') {
+      error = validatePassword(value);
+    } else if (field === 'confirmNewPass') {
+      error = validateConfirmPassword(formData.newPass, value);
+    }
+
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
+
+    // Check overall form validity
+    const isValid = !error &&
+      !!formData.currentPass &&
+      !!formData.newPass &&
+      !!formData.confirmNewPass &&
+      formData.newPass === formData.confirmNewPass;
+
+    setIsFormValid(isValid);
+
+    return error === null;
   };
 
   if (isPageLoading || isUserDataLoading) {
@@ -705,8 +856,15 @@ const ProfilePage = () => {
                       handleProfileDataChange('fullName', e.target.value)
                     }
                     readOnly={!isEditingProfile}
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
+                      validationErrors.fullName
+                        ? 'border-red-500 dark:border-red-400'
+                        : 'border-gray-300 dark:border-gray-600'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
                   />
+                  {validationErrors.fullName && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.fullName}</p>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -720,8 +878,15 @@ const ProfilePage = () => {
                       handleProfileDataChange('email', e.target.value)
                     }
                     readOnly={!isEditingProfile}
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
+                      validationErrors.email
+                        ? 'border-red-500 dark:border-red-400'
+                        : 'border-gray-300 dark:border-gray-600'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
                   />
+                  {validationErrors.email && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.email}</p>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
@@ -742,7 +907,7 @@ const ProfilePage = () => {
                     </button>
                   )}
 
-                  {!user?.emailVerified && (
+                  {!(user as any)?.emailVerified && (
                     <button
                       onClick={handleResendVerificationEmail}
                       className="btn btn-secondary"
@@ -765,7 +930,13 @@ const ProfilePage = () => {
 
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
-                  {user?.image ? (
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Profile Preview"
+                      className="profile-picture opacity-75"
+                    />
+                  ) : user?.image ? (
                     <img
                       src={user.image}
                       alt="Profile"
@@ -776,11 +947,25 @@ const ProfilePage = () => {
                       {user?.username?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
                   )}
-                  <button className="profile-picture-edit">
+                  <label htmlFor="avatar-upload" className="profile-picture-edit cursor-pointer">
                     <FaCamera className="w-4 h-4" />
-                  </button>
+                  </label>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
                 </div>
-                <button className="btn btn-primary">Upload Photo</button>
+                <label htmlFor="avatar-upload" className="btn btn-primary cursor-pointer">
+                  {isUploadingAvatar ? <ButtonLoader /> : 'Upload Photo'}
+                </label>
+                {avatarPreview && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Uploading new profile picture...
+                  </p>
+                )}
               </div>
             </div>
 
@@ -798,45 +983,72 @@ const ProfilePage = () => {
                   <label className="form-label">Current Password</label>
                   <PasswordInput
                     value={formData.currentPass}
-                    onChange={(e: any) =>
+                    onChange={(e: any) => {
+                      const value = e.target.value;
                       setFormData((prev) => ({
                         ...prev,
-                        currentPass: e.target.value,
-                      }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                        currentPass: value,
+                      }));
+                      validatePasswordField('currentPass', value);
+                    }}
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
+                      validationErrors.currentPass
+                        ? 'border-red-500 dark:border-red-400'
+                        : 'border-gray-300 dark:border-gray-600'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
                     placeholder="Enter current password"
                   />
+                  {validationErrors.currentPass && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.currentPass}</p>
+                  )}
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">New Password</label>
                   <PasswordInput
                     value={formData.newPass}
-                    onChange={(e: any) =>
+                    onChange={(e: any) => {
+                      const value = e.target.value;
                       setFormData((prev) => ({
                         ...prev,
-                        newPass: e.target.value,
-                      }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                        newPass: value,
+                      }));
+                      validatePasswordField('newPass', value);
+                    }}
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
+                      validationErrors.newPass
+                        ? 'border-red-500 dark:border-red-400'
+                        : 'border-gray-300 dark:border-gray-600'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
                     placeholder="Enter new password"
                   />
+                  {validationErrors.newPass && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.newPass}</p>
+                  )}
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Confirm New Password</label>
                   <PasswordInput
                     value={formData.confirmNewPass}
-                    onChange={(e: any) =>
+                    onChange={(e: any) => {
+                      const value = e.target.value;
                       setFormData((prev) => ({
                         ...prev,
-                        confirmNewPass: e.target.value,
-                      }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                        confirmNewPass: value,
+                      }));
+                      validatePasswordField('confirmNewPass', value);
+                    }}
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
+                      validationErrors.confirmNewPass
+                        ? 'border-red-500 dark:border-red-400'
+                        : 'border-gray-300 dark:border-gray-600'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
                     placeholder="Confirm new password"
                   />
+                  {validationErrors.confirmNewPass && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.confirmNewPass}</p>
+                  )}
                 </div>
 
                 <button

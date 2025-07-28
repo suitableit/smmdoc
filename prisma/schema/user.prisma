@@ -19,6 +19,8 @@ model User {
   status                  String                 @default("active")
   apiKey                  String?                @unique(map: "User_apiKey_key")
   isTwoFactorEnabled      Boolean                @default(false)
+  language                String                 @default("en")
+  timezone                String                 @default("21600")
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
   lastLoginAt             DateTime?

@@ -24,6 +24,7 @@ export async function getUserDetails() {
         select: {
           id: true,
           name: true,
+          username: true,
           email: true,
           role: true,
           image: true,
@@ -34,6 +35,9 @@ export async function getUserDetails() {
           balance: true,          // Get actual balance field from database
           total_deposit: true,    // Get actual total_deposit field
           total_spent: true,      // Get actual total_spent field
+          apiKey: true,           // Include API key
+          language: true,         // Include language preference
+          timezone: true,         // Include timezone preference
           createdAt: true,
           updatedAt: true,
           addFunds: true,         // Include user's transactions
@@ -65,6 +69,7 @@ export async function getUserDetails() {
           select: {
             id: true,
             name: true,
+            username: true,
             email: true,
             role: true,
             image: true,
@@ -75,6 +80,9 @@ export async function getUserDetails() {
             balance: true,
             total_deposit: true,
             total_spent: true,
+            apiKey: true,
+            language: true,
+            timezone: true,
             createdAt: true,
             updatedAt: true,
           },
