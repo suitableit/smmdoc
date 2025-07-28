@@ -59,6 +59,7 @@ export async function GET() {
         select: {
           id: true,
           name: true,
+          api_url: true,
           status: true,
           createdAt: true,
           updatedAt: true
@@ -77,6 +78,7 @@ export async function GET() {
         configured: !!configured,
         status: configured?.status || 'inactive',
         id: configured?.id || null,
+        apiUrl: configured?.api_url || provider.apiUrl || '',
         createdAt: configured?.createdAt || null,
         updatedAt: configured?.updatedAt || null
       };
@@ -123,7 +125,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { selectedProvider, apiKey, username, password } = await req.json();
+    const { selectedProvider, apiKey, apiUrl, username, password } = await req.json();
 
     if (!selectedProvider || !apiKey) {
       return NextResponse.json(
@@ -173,6 +175,7 @@ export async function POST(req: NextRequest) {
         data: {
           name: selectedProvider,
           api_key: apiKey,
+          api_url: apiUrl || '',
           login_user: username || null,
           login_pass: password || null,
           status: 'inactive'
@@ -234,12 +237,12 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const { id, status } = await req.json();
+    const { id, status, apiKey, apiUrl, username, password } = await req.json();
 
-    if (!id || !status) {
+    if (!id) {
       return NextResponse.json(
         {
-          error: 'Provider ID and status are required',
+          error: 'Provider ID is required',
           success: false,
           data: null
         },
@@ -247,10 +250,76 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Update provider status
+    // Prepare update data
+    const updateData: any = {};
+    if (status !== undefined) updateData.status = status;
+    if (apiKey !== undefined) updateData.api_key = apiKey;
+    if (apiUrl !== undefined) updateData.api_url = apiUrl;
+    if (username !== undefined) updateData.login_user = username || null;
+    if (password !== undefined) updateData.login_pass = password || null;
+
+    // If activating provider, validate required fields first
+    if (status === 'active') {
+      const provider = await db.apiProvider.findUnique({
+        where: { id: parseInt(id) }
+      });
+
+      if (!provider) {
+        return NextResponse.json(
+          {
+            error: 'Provider not found',
+            success: false,
+            data: null
+          },
+          { status: 404 }
+        );
+      }
+
+      // Check if API URL and key will be available after update
+      const finalApiUrl = updateData.api_url !== undefined ? updateData.api_url : provider.api_url;
+      const finalApiKey = updateData.api_key !== undefined ? updateData.api_key : provider.api_key;
+
+      if (!finalApiUrl || finalApiUrl.trim() === '') {
+        return NextResponse.json(
+          {
+            error: 'Cannot activate provider: API URL is required',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
+
+      if (!finalApiKey || finalApiKey.trim() === '') {
+        return NextResponse.json(
+          {
+            error: 'Cannot activate provider: API Key is required',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
+
+      // Validate URL format
+      try {
+        new URL(finalApiUrl);
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: 'Cannot activate provider: Invalid API URL format',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Update provider
     const updatedProvider = await db.apiProvider.update({
       where: { id: parseInt(id) },
-      data: { status: status }
+      data: updateData
     });
 
     return NextResponse.json({
