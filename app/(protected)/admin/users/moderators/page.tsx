@@ -160,7 +160,7 @@ const useDebounce = (value: string, delay: number) => {
 const useClickOutside = (ref: React.RefObject<HTMLElement | null>, handler: () => void) => {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
-      if (!ref.current || ref.current.contains(event.target as Node)) {
+      if (!ref.current || !event.target || ref.current.contains(event.target as Node)) {
         return;
       }
       handler();
@@ -759,7 +759,7 @@ const ModeratorsPage = () => {
                   placeholder={`Search ${
                     statusFilter === 'all' ? 'all' : statusFilter
                   } moderators...`}
-                  value={searchTerm}
+                  value={searchTerm || ''}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />

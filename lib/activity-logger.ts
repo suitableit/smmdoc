@@ -1,4 +1,43 @@
 import { db } from '@/lib/db';
+import { NextRequest } from 'next/server';
+
+// Utility function to extract IP address from request
+export function getClientIP(request?: NextRequest): string {
+  if (!request) return 'unknown';
+  
+  // Check for IP set by middleware first
+  const middlewareIP = request.headers.get('x-client-ip');
+  if (middlewareIP) {
+    return middlewareIP;
+  }
+  
+  // Check various headers for IP address
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  const cfConnectingIP = request.headers.get('cf-connecting-ip');
+  
+  if (forwarded) {
+    // x-forwarded-for can contain multiple IPs, take the first one
+    return forwarded.split(',')[0].trim();
+  }
+  
+  if (realIP) {
+    return realIP;
+  }
+  
+  if (cfConnectingIP) {
+    return cfConnectingIP;
+  }
+  
+  // Fallback to connection remote address (may not work in all environments)
+  return 'unknown';
+}
+
+// Utility function to extract user agent
+export function getUserAgent(request?: NextRequest): string {
+  if (!request) return 'unknown';
+  return request.headers.get('user-agent') || 'unknown';
+}
 
 interface ActivityLogData {
   userId?: number;
@@ -114,12 +153,156 @@ export const ActivityLogger = {
       ipAddress,
     }),
 
-  userStatusChanged: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, oldStatus: string, newStatus: string) =>
+  userStatusChanged: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, oldStatus: string, newStatus: string, ipAddress?: string) =>
     logActivity({
       userId: adminId,
       username: adminUsername,
       action: 'user_status_changed',
       details: `Admin ${adminUsername} changed user ${targetUsername} status from ${oldStatus} to ${newStatus}`,
+      ipAddress,
       metadata: { targetUserId, targetUsername, oldStatus, newStatus },
+    }),
+
+  apiKeyGenerated: (userId: number, username: string, ipAddress?: string) =>
+    logActivity({
+      userId,
+      username,
+      action: 'api_key_generated',
+      details: `User ${username} generated a new API key`,
+      ipAddress,
+    }),
+
+  balanceAdded: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, amount: number, currency: string, ipAddress?: string) =>
+    logActivity({
+      userId: adminId,
+      username: adminUsername,
+      action: 'balance_added',
+      details: `Admin ${adminUsername} added ${amount} ${currency} to user ${targetUsername}`,
+      ipAddress,
+      metadata: { targetUserId, targetUsername, amount, currency },
+    }),
+
+  balanceDeducted: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, amount: number, currency: string, ipAddress?: string) =>
+    logActivity({
+      userId: adminId,
+      username: adminUsername,
+      action: 'balance_deducted',
+      details: `Admin ${adminUsername} deducted ${amount} ${currency} from user ${targetUsername}`,
+      ipAddress,
+      metadata: { targetUserId, targetUsername, amount, currency },
+    }),
+
+  userRoleChanged: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, oldRole: string, newRole: string, ipAddress?: string) =>
+    logActivity({
+      userId: adminId,
+      username: adminUsername,
+      action: 'user_role_changed',
+      details: `Admin ${adminUsername} changed user ${targetUsername} role from ${oldRole} to ${newRole}`,
+      ipAddress,
+      metadata: { targetUserId, targetUsername, oldRole, newRole },
+    }),
+
+  userDiscountChanged: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, oldDiscount: number, newDiscount: number, ipAddress?: string) =>
+    logActivity({
+      userId: adminId,
+      username: adminUsername,
+      action: 'user_discount_changed',
+      details: `Admin ${adminUsername} changed user ${targetUsername} discount from ${oldDiscount}% to ${newDiscount}%`,
+      ipAddress,
+      metadata: { targetUserId, targetUsername, oldDiscount, newDiscount },
+    }),
+
+  userDeleted: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, ipAddress?: string) =>
+    logActivity({
+      userId: adminId,
+      username: adminUsername,
+      action: 'user_deleted',
+      details: `Admin ${adminUsername} deleted user ${targetUsername}`,
+      ipAddress,
+      metadata: { targetUserId, targetUsername },
+    }),
+
+  userCreated: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, ipAddress?: string) =>
+    logActivity({
+      userId: adminId,
+      username: adminUsername,
+      action: 'user_created',
+      details: `Admin ${adminUsername} created new user ${targetUsername}`,
+      ipAddress,
+      metadata: { targetUserId, targetUsername },
+    }),
+
+  userEdited: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, fields: string, ipAddress?: string) =>
+    logActivity({
+      userId: adminId,
+      username: adminUsername,
+      action: 'user_edited',
+      details: `Admin ${adminUsername} edited user ${targetUsername} fields: ${fields}`,
+      ipAddress,
+      metadata: { targetUserId, targetUsername, editedFields: fields },
+    }),
+
+  orderStatusChanged: (adminId: number, adminUsername: string, orderId: number, userId: number, username: string, oldStatus: string, newStatus: string, ipAddress?: string) =>
+    logActivity({
+      userId: adminId,
+      username: adminUsername,
+      action: 'order_status_changed',
+      details: `Admin ${adminUsername} changed order #${orderId} status from ${oldStatus} to ${newStatus} for user ${username}`,
+      ipAddress,
+      metadata: { orderId, targetUserId: userId, targetUsername: username, oldStatus, newStatus },
+    }),
+
+  twoFactorEnabled: (userId: number, username: string, ipAddress?: string) =>
+    logActivity({
+      userId,
+      username,
+      action: '2fa_enabled',
+      details: `User ${username} enabled two-factor authentication`,
+      ipAddress,
+    }),
+
+  twoFactorDisabled: (userId: number, username: string, ipAddress?: string) =>
+    logActivity({
+      userId,
+      username,
+      action: '2fa_disabled',
+      details: `User ${username} disabled two-factor authentication`,
+      ipAddress,
+    }),
+
+  emailVerified: (userId: number, username: string, ipAddress?: string) =>
+    logActivity({
+      userId,
+      username,
+      action: 'email_verified',
+      details: `User ${username} verified their email address`,
+      ipAddress,
+    }),
+
+  passwordReset: (userId: number, username: string, ipAddress?: string) =>
+    logActivity({
+      userId,
+      username,
+      action: 'password_reset',
+      details: `User ${username} reset their password`,
+      ipAddress,
+    }),
+
+  failedLogin: (username: string, ipAddress?: string) =>
+    logActivity({
+      username,
+      action: 'failed_login',
+      details: `Failed login attempt for user ${username}`,
+      ipAddress,
+    }),
+
+  suspiciousActivity: (userId: number, username: string, activityType: string, ipAddress?: string) =>
+    logActivity({
+      userId,
+      username,
+      action: 'suspicious_activity',
+      details: `Suspicious activity detected for user ${username}: ${activityType}`,
+      ipAddress,
+      metadata: { activityType },
     }),
 };

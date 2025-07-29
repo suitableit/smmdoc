@@ -1,4 +1,5 @@
 import { auth } from '@/auth';
+import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { requireAdmin } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
@@ -301,6 +302,23 @@ export async function DELETE(
         },
         { status: 403 }
       );
+    }
+
+    // Log the activity before deletion
+    try {
+      const adminUsername = session.user.username || session.user.email?.split('@')[0] || `admin${session.user.id}`;
+      const targetUsername = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
+      const clientIP = getClientIP(req);
+      
+      await ActivityLogger.userDeleted(
+        session.user.id,
+        adminUsername,
+        existingUser.id,
+        targetUsername,
+        clientIP
+      );
+    } catch (logError) {
+      console.error('Failed to log user deletion activity:', logError);
     }
 
     // Soft delete approach - mark user as deleted first, then cleanup

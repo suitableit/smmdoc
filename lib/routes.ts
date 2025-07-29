@@ -20,5 +20,5 @@ export const publicRoutes = [
   '/api/user/services/favorite-status',
   '/api/user/services/servicefav',
 ];
-export const apiAuthPrefixes = ['/api/auth', '/api/currency'];
+export const apiAuthPrefixes = ['/api/auth', '/api/currency', '/api/user'];
 export const DEFAULT_SIGN_IN_REDIRECT = '/dashboard';

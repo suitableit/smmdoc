@@ -665,7 +665,7 @@ function NewOrder() {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
+        event.target && !searchRef.current.contains(event.target as Node)
       ) {
         setShowDropdown(false);
       }
