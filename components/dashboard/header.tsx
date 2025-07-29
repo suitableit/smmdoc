@@ -12,30 +12,30 @@ import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
-    FaBell,
-    FaChevronDown,
-    FaCog,
-    FaDesktop,
-    FaEllipsisV,
-    FaFileContract,
-    FaHeadset,
-    FaMoneyBillWave,
-    FaMoon,
-    FaPlus,
-    FaSearch,
-    FaShoppingCart,
-    FaSignOutAlt,
-    FaSun,
-    FaTicketAlt,
-    FaUserCog,
-    FaUsers,
-    FaWallet,
+  FaBell,
+  FaChevronDown,
+  FaCog,
+  FaDesktop,
+  FaEllipsisV,
+  FaFileContract,
+  FaHeadset,
+  FaMoneyBillWave,
+  FaMoon,
+  FaPlus,
+  FaSearch,
+  FaShoppingCart,
+  FaSignOutAlt,
+  FaSun,
+  FaTicketAlt,
+  FaUserCog,
+  FaUsers,
+  FaWallet,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger
 } from '../ui/dropdown-menu';
 import MobileSidebar from './mobile-siderbar';
 
@@ -54,16 +54,24 @@ const Avatar = ({
   </div>
 );
 
-const AvatarImage = ({ src, alt }: { src: string; alt: string }) => (
-  <img
-    src={src}
-    alt={alt}
-    className="w-full h-full object-cover"
-    onError={(e) => {
-      e.currentTarget.style.display = 'none';
-    }}
-  />
-);
+const AvatarImage = ({ src, alt }: { src: string; alt: string }) => {
+  const [hasError, setHasError] = useState(false);
+  
+  if (!src || hasError) {
+    return null;
+  }
+  
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="w-full h-full object-cover"
+      onError={() => {
+        setHasError(true);
+      }}
+    />
+  );
+};
 
 const AvatarFallback = ({ children }: { children: React.ReactNode }) => (
   <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-semibold text-sm">
@@ -321,12 +329,13 @@ const MobileMenuToggle = ({
 
 // Enhanced Menu Component with updated styling
 const Menu = ({ user }: { user: any }) => {
+  const currentUser = useCurrentUser();
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { currency, rate, currentCurrencyData, availableCurrencies } = useCurrency();
   const userData = useSelector((state: any) => state.userDetails);
-  const dispatch = useDispatch();
 
   const closeMenu = () => setIsOpen(false);
   const enableAuth = true;
@@ -336,6 +345,24 @@ const Menu = ({ user }: { user: any }) => {
     user?.role?.toLowerCase() === 'admin' ||
     user?.userType?.toLowerCase() === 'admin' ||
     user?.isAdmin === true;
+
+  // Load user data into Redux store if not already loaded
+  useEffect(() => {
+    const loadUserData = async () => {
+      if ((currentUser?.id || user?.id) && !userData?.id) {
+        try {
+          const userDetailsData = await getUserDetails();
+          if (userDetailsData) {
+            dispatch(setUserDetails(userDetailsData));
+          }
+        } catch (error) {
+          console.error('Failed to load user details in header:', error);
+        }
+      }
+    };
+    
+    loadUserData();
+  }, [currentUser?.id, user?.id, userData?.id, dispatch]);
 
   // Get balance from API for real-time data
   const { data: userStatsResponse } = useGetUserStatsQuery();
@@ -562,10 +589,13 @@ const Menu = ({ user }: { user: any }) => {
 };
 
 const Header = () => {
-  const user = useCurrentUser();
+  const currentUser = useCurrentUser();
   const dispatch = useDispatch();
   const { currency, setCurrency, rate, isLoading, availableCurrencies, currentCurrencyData } = useCurrency();
   const userData = useSelector((state: any) => state.userDetails);
+  
+  // Use Redux store data primarily, fallback to currentUser
+  const user = userData?.id ? userData : currentUser;
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -645,11 +675,18 @@ const Header = () => {
       }, 100);
     };
 
+    // Listen for avatar updates
+    const handleAvatarUpdate = () => {
+      fetchUser();
+    };
+
     window.addEventListener('currencyUpdated', handleCurrencyUpdate);
+    window.addEventListener('avatarUpdated', handleAvatarUpdate);
 
     return () => {
       clearInterval(intervalId);
       window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
+      window.removeEventListener('avatarUpdated', handleAvatarUpdate);
     };
   }, []);
 

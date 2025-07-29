@@ -1,15 +1,15 @@
 'use client';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
 } from '@/components/ui/sheet';
 import { MenuIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import SideBarNav from './sideBarNav';
 
 interface UserData {

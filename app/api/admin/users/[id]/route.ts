@@ -1,8 +1,8 @@
 import { auth } from '@/auth';
+import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { requireAdmin } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 
 // GET /api/admin/users/[id] - Get specific user details
 export async function GET(

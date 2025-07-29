@@ -7,7 +7,7 @@ import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import { getTwoFactorConfirmationByUserId } from './data/two-factor-confirmation';
 import { getUserByEmail, getUserById, getUserByUsername } from './data/user';
-import { ActivityLogger, getClientIP } from './lib/activity-logger';
+import { ActivityLogger } from './lib/activity-logger';
 import { db } from './lib/db';
 import { signInSchema } from './lib/validators/auth.validator';
 

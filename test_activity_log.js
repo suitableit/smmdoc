@@ -12,9 +12,9 @@ async function createTestLog() {
         userAgent: 'Test User Agent'
       }
     });
-    
+
     console.log('Test activity log created:', result);
-    
+
     // Now fetch recent logs to verify
     const recentLogs = await prisma.activityLog.findMany({
       orderBy: { createdAt: 'desc' },
@@ -28,10 +28,10 @@ async function createTestLog() {
         createdAt: true
       }
     });
-    
+
     console.log('Recent activity logs:');
     console.table(recentLogs);
-    
+
   } catch (error) {
     console.error('Error:', error);
   } finally {

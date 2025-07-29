@@ -1,13 +1,13 @@
 import authConfig from '@/auth.config';
 import NextAuth from 'next-auth';
 import { NextResponse } from 'next/server';
+import { getClientIP } from './lib/activity-logger';
 import {
     apiAuthPrefixes,
     authRoutes,
     DEFAULT_SIGN_IN_REDIRECT,
     publicRoutes,
 } from './lib/routes';
-import { getClientIP } from './lib/activity-logger';
 export const { auth } = NextAuth(authConfig);
 
 export default auth(async (req) => {

@@ -8,17 +8,17 @@ import { APP_NAME } from '@/lib/constants';
 import { setUserDetails } from '@/lib/slice/userDetails';
 import React, { useEffect, useState } from 'react';
 import {
-    FaCamera,
-    FaCheck,
-    FaClock,
-    FaCopy,
-    FaEye,
-    FaEyeSlash,
-    FaGlobe,
-    FaKey,
-    FaShieldAlt,
-    FaTimes,
-    FaUser,
+  FaCamera,
+  FaCheck,
+  FaClock,
+  FaCopy,
+  FaEye,
+  FaEyeSlash,
+  FaGlobe,
+  FaKey,
+  FaShieldAlt,
+  FaTimes,
+  FaUser,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -133,6 +133,7 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
+    username: '',
   });
   const [hasProfileChanges, setHasProfileChanges] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -142,6 +143,7 @@ const ProfilePage = () => {
   const [validationErrors, setValidationErrors] = useState<{
     fullName?: string;
     email?: string;
+    username?: string;
     currentPass?: string;
     newPass?: string;
     confirmNewPass?: string;
@@ -200,6 +202,7 @@ const ProfilePage = () => {
           setProfileData({
             fullName: userData.name || '',
             email: userData.email || '',
+            username: userData.username || '',
           });
 
           // Set API key if exists
@@ -478,6 +481,7 @@ const ProfilePage = () => {
     if (isEditingProfile) {
       // Cancel editing - reset to original values
       setProfileData({
+        username: user?.username || '',
         fullName: user?.name || '',
         email: user?.email || '',
       });
@@ -502,6 +506,7 @@ const ProfilePage = () => {
     // Check if there are changes
     const originalFullName = user?.name || '';
     const originalEmail = user?.email || '';
+    const originalUsername = user?.username || '';
 
     const newData = {
       ...profileData,
@@ -509,7 +514,9 @@ const ProfilePage = () => {
     };
 
     const hasChanges =
-      newData.fullName !== originalFullName || newData.email !== originalEmail;
+      newData.fullName !== originalFullName || 
+      newData.email !== originalEmail ||
+      newData.username !== originalUsername;
     setHasProfileChanges(hasChanges);
   };
 
@@ -528,6 +535,7 @@ const ProfilePage = () => {
         body: JSON.stringify({
           fullName: profileData.fullName,
           email: profileData.email,
+          username: profileData.username,
         }),
       });
 
@@ -540,6 +548,7 @@ const ProfilePage = () => {
             ...userDetails,
             fullName: profileData.fullName,
             email: profileData.email,
+            username: profileData.username,
             emailVerified: result.emailVerified || userDetails.emailVerified,
           })
         );
@@ -674,10 +683,19 @@ const ProfilePage = () => {
         setAvatarPreview(null);
         showToast('Profile picture updated successfully!', 'success');
         
-        // Reload page to refresh session with new image
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        // Refresh user data to get updated image
+        setTimeout(async () => {
+          try {
+            const updatedUserData = await getUserDetails();
+            if (updatedUserData) {
+              dispatch(setUserDetails(updatedUserData));
+              // Dispatch custom event to notify header component
+              window.dispatchEvent(new CustomEvent('avatarUpdated'));
+            }
+          } catch (error) {
+            console.log('Failed to refresh user data, but image uploaded successfully');
+          }
+        }, 500);
       } else {
         console.log('❌ Upload failed:', result.error);
         showToast(result.error || 'Failed to upload profile picture', 'error');
@@ -707,6 +725,14 @@ const ProfilePage = () => {
     return null;
   };
 
+  const validateUsername = (username: string): string | null => {
+    if (!username.trim()) return 'Username is required';
+    if (username.trim().length < 3) return 'Username must be at least 3 characters';
+    if (username.trim().length > 20) return 'Username must be less than 20 characters';
+    if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) return 'Username can only contain letters, numbers, and underscores';
+    return null;
+  };
+
   const validatePassword = (password: string): string | null => {
     if (!password) return 'Password is required';
     if (password.length < 6) return 'Password must be at least 6 characters';
@@ -727,6 +753,8 @@ const ProfilePage = () => {
       error = validateFullName(value);
     } else if (field === 'email') {
       error = validateEmail(value);
+    } else if (field === 'username') {
+      error = validateUsername(value);
     }
 
     setValidationErrors(prev => ({
@@ -899,10 +927,23 @@ const ProfilePage = () => {
                   <label className="form-label">Username</label>
                   <input
                     type="text"
-                    value={user?.username || ''}
-                    readOnly
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    value={
+                      isEditingProfile ? profileData.username : user?.username || ''
+                    }
+                    onChange={(e) =>
+                      handleProfileDataChange('username', e.target.value)
+                    }
+                    readOnly={!isEditingProfile}
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
+                      validationErrors.username
+                        ? 'border-red-500 dark:border-red-400'
+                        : 'border-gray-300 dark:border-gray-600'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
+                    placeholder="Enter username"
                   />
+                  {validationErrors.username && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.username}</p>
+                  )}
                 </div>
 
                 <div className="form-group">

@@ -1,9 +1,9 @@
 import { auth } from '@/auth';
+import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
 import { emailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
-import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 
 // Server-side currency conversion function
 function serverConvertCurrency(
