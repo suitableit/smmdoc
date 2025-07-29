@@ -977,7 +977,7 @@ const UsersListPage = () => {
                   placeholder={`Search ${
                     statusFilter === 'all' ? 'all' : statusFilter
                   } users...`}
-                  value={searchTerm}
+                  value={searchTerm || ''}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
@@ -1975,8 +1975,21 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
     amount: '',
     action: 'add',
     notes: '',
+    username: '',
   });
   const [balanceSubmitting, setBalanceSubmitting] = useState(false);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setBalanceForm({
+        amount: '',
+        action: 'add',
+        notes: '',
+        username: currentUser?.username || '',
+      });
+    }
+  }, [isOpen, currentUser]);
 
   // Function to convert user balance to admin's currency for display
   const getDisplayBalance = () => {
@@ -2080,7 +2093,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
           <div>
             <label className="form-label mb-2">Action <span className="text-red-500">*</span></label>
             <select
-              value={balanceForm.action}
+              value={balanceForm.action || 'add'}
               onChange={(e) =>
                 setBalanceForm((prev) => ({
                   ...prev,
@@ -2103,7 +2116,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
               <input
                 type="number"
                 placeholder="0.00"
-                value={balanceForm.amount}
+                value={balanceForm.amount || ''}
                 onChange={(e) =>
                   setBalanceForm((prev) => ({
                     ...prev,
@@ -2122,7 +2135,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
             <input
               type="text"
               placeholder="Add notes (optional)"
-              value={balanceForm.notes}
+              value={balanceForm.notes || ''}
               onChange={(e) =>
                 setBalanceForm((prev) => ({
                   ...prev,
@@ -2203,7 +2216,7 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
         <div className="mb-4">
           <label className="form-label mb-2">Select New Status</label>
           <select
-            value={newStatus}
+            value={newStatus || ''}
             onChange={(e) => onStatusChange(e.target.value)}
             className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
             disabled={isLoading}
@@ -2256,7 +2269,7 @@ const EditDiscountModal: React.FC<EditDiscountModalProps> = ({
             min="0"
             max="100"
             step="1"
-            value={newDiscount}
+            value={newDiscount || ''}
             onChange={(e) => onDiscountChange(e.target.value)}
             className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             placeholder="Enter discount percentage (0-100)"
@@ -2305,7 +2318,7 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
         <div className="mb-4">
           <label className="form-label mb-2">Select New Role</label>
           <select
-            value={newRole}
+            value={newRole || ''}
             onChange={(e) => onRoleChange(e.target.value)}
             className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
             disabled={isLoading}
@@ -2364,7 +2377,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             <label className="form-label mb-2">Username</label>
             <input
               type="text"
-              value={formData.username}
+              value={formData.username || ''}
               onChange={(e) => onFormDataChange('username', e.target.value)}
               className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               placeholder="Enter username"
@@ -2377,7 +2390,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             <label className="form-label mb-2">Full Name</label>
             <input
               type="text"
-              value={formData.name}
+              value={formData.name || ''}
               onChange={(e) => onFormDataChange('name', e.target.value)}
               className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               placeholder="Enter full name"
@@ -2390,7 +2403,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             <label className="form-label mb-2">User Email</label>
             <input
               type="email"
-              value={formData.email}
+              value={formData.email || ''}
               onChange={(e) => onFormDataChange('email', e.target.value)}
               className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               placeholder="Enter email address"
@@ -2404,7 +2417,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             <input
               type="number"
               step="0.01"
-              value={formData.balance}
+              value={formData.balance || ''}
               onChange={(e) => onFormDataChange('balance', e.target.value)}
               className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="Enter balance amount"
@@ -2455,7 +2468,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             <div className="relative">
               <input
                 type="text"
-                value={formData.password}
+                value={formData.password || ''}
                 onChange={(e) => onFormDataChange('password', e.target.value)}
                 className="form-field w-full px-4 py-3 pr-12 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 placeholder="Leave blank to keep current password"

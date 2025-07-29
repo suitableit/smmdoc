@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 
 // PUT /api/admin/users/[id]/status - Update user status
 export async function PUT(
@@ -52,7 +53,7 @@ export async function PUT(
     // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true, username: true, role: true, status: true }
+      select: { id: true, username: true, email: true, role: true, status: true }
     });
 
     if (!existingUser) {
@@ -102,6 +103,25 @@ export async function PUT(
 
       return user;
     });
+
+    // Log the activity
+    try {
+      const adminUsername = session.user.username || session.user.email?.split('@')[0] || `admin${session.user.id}`;
+      const targetUsername = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
+      const clientIP = getClientIP(req);
+      
+      await ActivityLogger.userStatusChanged(
+        session.user.id,
+        adminUsername,
+        existingUser.id,
+        targetUsername,
+        existingUser.status,
+        status,
+        clientIP
+      );
+    } catch (logError) {
+      console.error('Failed to log status change activity:', logError);
+    }
 
     return NextResponse.json({
       success: true,

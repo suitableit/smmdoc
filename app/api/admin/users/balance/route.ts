@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { emailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
+import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 
 // Server-side currency conversion function
 function serverConvertCurrency(
@@ -53,6 +54,7 @@ function serverConvertCurrency(
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
+    const clientIP = getClientIP(request);
 
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
@@ -265,6 +267,36 @@ export async function POST(request: NextRequest) {
       console.error('Error sending notification emails:', emailError);
       // Don't fail the transaction if email fails
     }
+
+    // Log the activity
+     try {
+       const adminUsername = session.user.username || session.user.email?.split('@')[0] || `admin${session.user.id}`;
+       const targetUsername = user.username || user.email?.split('@')[0] || `user${user.id}`;
+       
+       if (action === 'add') {
+         await ActivityLogger.balanceAdded(
+           session.user.id,
+           adminUsername,
+           user.id,
+           targetUsername,
+           amountToAdd,
+           'BDT',
+           clientIP
+         );
+       } else {
+         await ActivityLogger.balanceDeducted(
+           session.user.id,
+           adminUsername,
+           user.id,
+           targetUsername,
+           amountToAdd,
+           'BDT',
+           clientIP
+         );
+       }
+     } catch (logError) {
+       console.error('Failed to log balance activity:', logError);
+     }
 
     return NextResponse.json({
       success: true,
