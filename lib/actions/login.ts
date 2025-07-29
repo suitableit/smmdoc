@@ -1,6 +1,6 @@
 'use server';
-import * as z from 'zod';
 import { headers } from 'next/headers';
+import * as z from 'zod';
 
 import { auth, signIn } from '@/auth';
 import { getTwoFactorConfirmationByUserId } from '@/data/two-factor-confirmation';

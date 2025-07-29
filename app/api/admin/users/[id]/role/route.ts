@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
+import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 
 // PUT /api/admin/users/[id]/role - Update user role
 export async function PUT(
