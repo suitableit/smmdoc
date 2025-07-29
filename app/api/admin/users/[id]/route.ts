@@ -304,6 +304,23 @@ export async function DELETE(
       );
     }
 
+    // Log the activity before deletion
+    try {
+      const adminUsername = session.user.username || session.user.email?.split('@')[0] || `admin${session.user.id}`;
+      const targetUsername = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
+      const clientIP = getClientIP(req);
+      
+      await ActivityLogger.userDeleted(
+        session.user.id,
+        adminUsername,
+        existingUser.id,
+        targetUsername,
+        clientIP
+      );
+    } catch (logError) {
+      console.error('Failed to log user deletion activity:', logError);
+    }
+
     // Soft delete approach - mark user as deleted first, then cleanup
     try {
       // First, mark user as deleted to prevent login

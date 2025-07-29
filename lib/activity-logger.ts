@@ -5,6 +5,12 @@ import { NextRequest } from 'next/server';
 export function getClientIP(request?: NextRequest): string {
   if (!request) return 'unknown';
   
+  // Check for IP set by middleware first
+  const middlewareIP = request.headers.get('x-client-ip');
+  if (middlewareIP) {
+    return middlewareIP;
+  }
+  
   // Check various headers for IP address
   const forwarded = request.headers.get('x-forwarded-for');
   const realIP = request.headers.get('x-real-ip');
@@ -147,12 +153,13 @@ export const ActivityLogger = {
       ipAddress,
     }),
 
-  userStatusChanged: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, oldStatus: string, newStatus: string) =>
+  userStatusChanged: (adminId: number, adminUsername: string, targetUserId: number, targetUsername: string, oldStatus: string, newStatus: string, ipAddress?: string) =>
     logActivity({
       userId: adminId,
       username: adminUsername,
       action: 'user_status_changed',
       details: `Admin ${adminUsername} changed user ${targetUsername} status from ${oldStatus} to ${newStatus}`,
+      ipAddress,
       metadata: { targetUserId, targetUsername, oldStatus, newStatus },
     }),
 

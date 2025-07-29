@@ -163,7 +163,7 @@ const useClickOutside = (
 ) => {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
-      if (!ref.current || ref.current.contains(event.target as Node)) {
+      if (!ref.current || !event.target || ref.current.contains(event.target as Node)) {
         return;
       }
       handler();

@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 
 // PUT /api/admin/orders/:id/status - Update order status
 export async function PUT(
@@ -228,6 +229,24 @@ export async function PUT(
       balanceAdjusted: balanceUpdate !== null,
       timestamp: new Date().toISOString()
     });
+    
+    // Log activity for order status change
+    try {
+      const adminUsername = session.user.username || session.user.email?.split('@')[0] || `admin${session.user.id}`;
+      const clientIP = getClientIP(req);
+      
+      await ActivityLogger.orderStatusChanged(
+        session.user.id,
+        adminUsername,
+        orderId,
+        currentOrder.status,
+        status,
+        reason || 'No reason provided',
+        clientIP
+      );
+    } catch (logError) {
+      console.error('Failed to log order status change activity:', logError);
+    }
     
     return NextResponse.json({
       success: true,

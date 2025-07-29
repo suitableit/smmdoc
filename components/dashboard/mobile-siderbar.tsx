@@ -3,6 +3,7 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { MenuIcon } from 'lucide-react';
@@ -68,6 +69,7 @@ export default function MobileSidebar() {
       >
         {/* Mobile Sidebar Header with Logo */}
         <SheetHeader className="p-4 flex items-center border-b border-slate-700/50">
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <div className="flex items-center w-full">
             <div className="logo-container w-full flex items-center">
               <Link href="/" onClick={() => setOpen(false)}>

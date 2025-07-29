@@ -673,6 +673,11 @@ const ProfilePage = () => {
 
         setAvatarPreview(null);
         showToast('Profile picture updated successfully!', 'success');
+        
+        // Reload page to refresh session with new image
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         console.log('❌ Upload failed:', result.error);
         showToast(result.error || 'Failed to upload profile picture', 'error');
