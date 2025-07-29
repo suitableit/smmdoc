@@ -233,6 +233,19 @@ const ProfilePage = () => {
     }
   }, [currentUser?.id, dispatch]);
 
+  // Sync API key from Redux store
+  useEffect(() => {
+    if (userDetails?.apiKey && !apiKey) {
+      setApiKey({
+        key: userDetails.apiKey,
+        createdAt: new Date(userDetails.apiKeyCreatedAt || new Date()),
+        updatedAt: new Date(userDetails.apiKeyUpdatedAt || new Date()),
+        id: userDetails.apiKeyId || 1,
+        userid: userDetails.id,
+      });
+    }
+  }, [userDetails, apiKey]);
+
   // Show toast notification
   const showToast = (
     message: string,
@@ -363,11 +376,11 @@ const ProfilePage = () => {
 
       if (response.ok) {
         const newApiKey = {
-          key: result.apiKey,
-          createdAt: new Date(result.createdAt),
-          updatedAt: new Date(result.updatedAt),
-          id: result.id,
-          userid: result.userId,
+          key: result.data.apiKey,
+          createdAt: new Date(result.data.createdAt),
+          updatedAt: new Date(result.data.updatedAt),
+          id: result.data.id,
+          userid: result.data.userId,
         };
 
         setApiKey(newApiKey);
@@ -377,10 +390,10 @@ const ProfilePage = () => {
         dispatch(
           setUserDetails({
             ...userDetails,
-            apiKey: result.apiKey,
-            apiKeyCreatedAt: result.createdAt,
-            apiKeyUpdatedAt: result.updatedAt,
-            apiKeyId: result.id,
+            apiKey: result.data.apiKey,
+            apiKeyCreatedAt: result.data.createdAt,
+            apiKeyUpdatedAt: result.data.updatedAt,
+            apiKeyId: result.data.id,
           })
         );
 
@@ -1024,7 +1037,7 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label className="form-label">Current Password</label>
                   <PasswordInput
-                    value={formData.currentPass}
+                    value={formData.currentPass || ''}
                     onChange={(e: any) => {
                       const value = e.target.value;
                       setFormData((prev) => ({
@@ -1048,7 +1061,7 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label className="form-label">New Password</label>
                   <PasswordInput
-                    value={formData.newPass}
+                    value={formData.newPass || ''}
                     onChange={(e: any) => {
                       const value = e.target.value;
                       setFormData((prev) => ({
@@ -1072,7 +1085,7 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label className="form-label">Confirm New Password</label>
                   <PasswordInput
-                    value={formData.confirmNewPass}
+                    value={formData.confirmNewPass || ''}
                     onChange={(e: any) => {
                       const value = e.target.value;
                       setFormData((prev) => ({
@@ -1158,7 +1171,7 @@ const ProfilePage = () => {
                         readOnly
                         value={
                           apiKey && showApiKey
-                            ? apiKey.key
+                            ? (apiKey.key || '')
                             : apiKey
                             ? '••••••••••••••••••••••••••••••••'
                             : 'No API key generated'
@@ -1236,7 +1249,7 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label className="form-label">Select Timezone</label>
                   <select
-                    value={selectedTimezone}
+                    value={selectedTimezone || ''}
                     onChange={(e) => setSelectedTimezone(e.target.value)}
                     className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   >
@@ -1269,7 +1282,7 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label className="form-label">Select Language</label>
                   <select
-                    value={selectedLanguage}
+                    value={selectedLanguage || ''}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
                     className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   >

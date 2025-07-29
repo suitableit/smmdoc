@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 
 // PUT /api/admin/users/[id]/role - Update user role
 export async function PUT(
@@ -90,6 +91,25 @@ export async function PUT(
         updatedAt: true,
       }
     });
+
+    // Log the activity
+    try {
+      const adminUsername = session.user.username || session.user.email?.split('@')[0] || `admin${session.user.id}`;
+      const targetUsername = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
+      const clientIP = getClientIP(req);
+      
+      await ActivityLogger.userRoleChanged(
+        session.user.id,
+        adminUsername,
+        existingUser.id,
+        targetUsername,
+        existingUser.role,
+        role,
+        clientIP
+      );
+    } catch (logError) {
+      console.error('Failed to log role change activity:', logError);
+    }
 
     return NextResponse.json({
       success: true,
