@@ -1,8 +1,8 @@
 import { auth } from '@/auth';
+import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
-import { ActivityLogger } from '@/lib/activity-logger';
 import crypto from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,9 +39,11 @@ export async function POST(req: NextRequest) {
     // Log activity for API key generation
     try {
       const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
+      const ipAddress = getClientIP(req);
       await ActivityLogger.apiKeyGenerated(
         session.user.id,
-        username
+        username,
+        ipAddress
       );
     } catch (error) {
       console.error('Failed to log API key generation activity:', error);

@@ -39,7 +39,7 @@ export default {
     }),
   ],
   callbacks: {
-    async signIn({ user, account }: any) {
+    async signIn({ user, account, request }: any) {
       // Allow OAuth without email verification
       if (account?.provider !== 'credentials') return true;
       const existingUser = await getUserById(user.id);
@@ -77,10 +77,13 @@ export default {
 
       // Log activity for user login
       try {
+        const username = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
+        // Note: IP address will be logged separately in login action
+        
         if (existingUser.role === 'admin') {
-          await ActivityLogger.adminLogin(existingUser.id, existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`);
+          await ActivityLogger.adminLogin(existingUser.id, username, 'unknown');
         } else {
-          await ActivityLogger.login(existingUser.id, existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`);
+          await ActivityLogger.login(existingUser.id, username, 'unknown');
         }
       } catch (error) {
         console.error('Failed to log activity:', error);
@@ -108,6 +111,7 @@ export default {
         session.user.username = token.username;
         session.user.email = token.email;
         session.user.balance = token.balance;
+        session.user.image = token.image;
       }
       return session;
     },
@@ -127,6 +131,7 @@ export default {
         token.username = existingUser.username;
         token.email = existingUser.email;
         token.balance = existingUser.balance;
+        token.image = existingUser.image;
       } else {
         // For old string IDs, try to get user by email as fallback
         if (token.email) {
@@ -140,6 +145,7 @@ export default {
             token.username = existingUser.username;
             token.email = existingUser.email;
             token.balance = existingUser.balance;
+            token.image = existingUser.image;
           }
         }
       }

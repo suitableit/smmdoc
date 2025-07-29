@@ -133,6 +133,7 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
+    username: '',
   });
   const [hasProfileChanges, setHasProfileChanges] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -142,6 +143,7 @@ const ProfilePage = () => {
   const [validationErrors, setValidationErrors] = useState<{
     fullName?: string;
     email?: string;
+    username?: string;
     currentPass?: string;
     newPass?: string;
     confirmNewPass?: string;
@@ -200,6 +202,7 @@ const ProfilePage = () => {
           setProfileData({
             fullName: userData.name || '',
             email: userData.email || '',
+            username: userData.username || '',
           });
 
           // Set API key if exists
@@ -232,6 +235,19 @@ const ProfilePage = () => {
       setIsUserDataLoading(false);
     }
   }, [currentUser?.id, dispatch]);
+
+  // Sync API key from Redux store
+  useEffect(() => {
+    if (userDetails?.apiKey && !apiKey) {
+      setApiKey({
+        key: userDetails.apiKey,
+        createdAt: new Date(userDetails.apiKeyCreatedAt || new Date()),
+        updatedAt: new Date(userDetails.apiKeyUpdatedAt || new Date()),
+        id: userDetails.apiKeyId || 1,
+        userid: userDetails.id,
+      });
+    }
+  }, [userDetails, apiKey]);
 
   // Show toast notification
   const showToast = (
@@ -363,11 +379,11 @@ const ProfilePage = () => {
 
       if (response.ok) {
         const newApiKey = {
-          key: result.apiKey,
-          createdAt: new Date(result.createdAt),
-          updatedAt: new Date(result.updatedAt),
-          id: result.id,
-          userid: result.userId,
+          key: result.data.apiKey,
+          createdAt: new Date(result.data.createdAt),
+          updatedAt: new Date(result.data.updatedAt),
+          id: result.data.id,
+          userid: result.data.userId,
         };
 
         setApiKey(newApiKey);
@@ -377,10 +393,10 @@ const ProfilePage = () => {
         dispatch(
           setUserDetails({
             ...userDetails,
-            apiKey: result.apiKey,
-            apiKeyCreatedAt: result.createdAt,
-            apiKeyUpdatedAt: result.updatedAt,
-            apiKeyId: result.id,
+            apiKey: result.data.apiKey,
+            apiKeyCreatedAt: result.data.createdAt,
+            apiKeyUpdatedAt: result.data.updatedAt,
+            apiKeyId: result.data.id,
           })
         );
 
@@ -465,6 +481,7 @@ const ProfilePage = () => {
     if (isEditingProfile) {
       // Cancel editing - reset to original values
       setProfileData({
+        username: user?.username || '',
         fullName: user?.name || '',
         email: user?.email || '',
       });
@@ -489,6 +506,7 @@ const ProfilePage = () => {
     // Check if there are changes
     const originalFullName = user?.name || '';
     const originalEmail = user?.email || '';
+    const originalUsername = user?.username || '';
 
     const newData = {
       ...profileData,
@@ -496,7 +514,9 @@ const ProfilePage = () => {
     };
 
     const hasChanges =
-      newData.fullName !== originalFullName || newData.email !== originalEmail;
+      newData.fullName !== originalFullName || 
+      newData.email !== originalEmail ||
+      newData.username !== originalUsername;
     setHasProfileChanges(hasChanges);
   };
 
@@ -515,6 +535,7 @@ const ProfilePage = () => {
         body: JSON.stringify({
           fullName: profileData.fullName,
           email: profileData.email,
+          username: profileData.username,
         }),
       });
 
@@ -527,6 +548,7 @@ const ProfilePage = () => {
             ...userDetails,
             fullName: profileData.fullName,
             email: profileData.email,
+            username: profileData.username,
             emailVerified: result.emailVerified || userDetails.emailVerified,
           })
         );
@@ -573,12 +595,23 @@ const ProfilePage = () => {
 
   // Handle profile picture upload
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🔄 Avatar upload started');
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('❌ No file selected');
+      return;
+    }
+
+    console.log('📁 File selected:', {
+      name: file.name,
+      type: file.type,
+      size: file.size
+    });
 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
+      console.log('❌ Invalid file type:', file.type);
       showToast('Invalid file type. Only JPEG, PNG, and GIF are allowed.', 'error');
       return;
     }
@@ -586,51 +619,95 @@ const ProfilePage = () => {
     // Validate file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
+      console.log('❌ File too large:', file.size);
       showToast('File size too large. Maximum size is 5MB.', 'error');
       return;
     }
 
+    console.log('✅ File validation passed');
+
     // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
+      console.log('📷 Preview created');
       setAvatarPreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
 
     setIsUploadingAvatar(true);
+    console.log('🔄 Starting upload...');
 
     try {
       const formData = new FormData();
       formData.append('avatar', file);
 
+      console.log('📤 Sending request to /api/user/upload-avatar');
       const response = await fetch('/api/user/upload-avatar', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('📥 Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       const result = await response.json();
+      console.log('📋 Response data:', result);
 
       if (response.ok) {
+        console.log('✅ Upload successful');
         // Update Redux store
-        dispatch(
-          setUserDetails({
-            ...userDetails,
-            image: result.data.image,
-          })
-        );
+        const updatedUserDetails = {
+          ...userDetails,
+          image: result.data.image,
+        };
+        dispatch(setUserDetails(updatedUserDetails));
+
+        // Update session
+        try {
+          await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              image: result.data.image,
+            }),
+          });
+        } catch (sessionError) {
+          console.log('Session update failed, but image uploaded successfully');
+        }
 
         setAvatarPreview(null);
         showToast('Profile picture updated successfully!', 'success');
+        
+        // Refresh user data to get updated image
+        setTimeout(async () => {
+          try {
+            const updatedUserData = await getUserDetails();
+            if (updatedUserData) {
+              dispatch(setUserDetails(updatedUserData));
+              // Dispatch custom event to notify header component
+              window.dispatchEvent(new CustomEvent('avatarUpdated'));
+            }
+          } catch (error) {
+            console.log('Failed to refresh user data, but image uploaded successfully');
+          }
+        }, 500);
       } else {
+        console.log('❌ Upload failed:', result.error);
         showToast(result.error || 'Failed to upload profile picture', 'error');
         setAvatarPreview(null);
       }
     } catch (error) {
-      console.error('Avatar upload error:', error);
+      console.error('❌ Avatar upload error:', error);
       showToast('Error uploading profile picture', 'error');
       setAvatarPreview(null);
     } finally {
       setIsUploadingAvatar(false);
+      console.log('🏁 Upload process finished');
     }
   };
 
@@ -645,6 +722,14 @@ const ProfilePage = () => {
   const validateFullName = (name: string): string | null => {
     if (!name.trim()) return 'Full name is required';
     if (name.trim().length < 2) return 'Full name must be at least 2 characters';
+    return null;
+  };
+
+  const validateUsername = (username: string): string | null => {
+    if (!username.trim()) return 'Username is required';
+    if (username.trim().length < 3) return 'Username must be at least 3 characters';
+    if (username.trim().length > 20) return 'Username must be less than 20 characters';
+    if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) return 'Username can only contain letters, numbers, and underscores';
     return null;
   };
 
@@ -668,6 +753,8 @@ const ProfilePage = () => {
       error = validateFullName(value);
     } else if (field === 'email') {
       error = validateEmail(value);
+    } else if (field === 'username') {
+      error = validateUsername(value);
     }
 
     setValidationErrors(prev => ({
@@ -807,7 +894,8 @@ const ProfilePage = () => {
     );
   }
 
-  const user = currentUser;
+  // Use userDetails from Redux store for real-time updates
+  const user = userDetails || currentUser;
 
   return (
     <div className="page-container">
@@ -839,10 +927,23 @@ const ProfilePage = () => {
                   <label className="form-label">Username</label>
                   <input
                     type="text"
-                    value={user?.username || ''}
-                    readOnly
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    value={
+                      isEditingProfile ? profileData.username : user?.username || ''
+                    }
+                    onChange={(e) =>
+                      handleProfileDataChange('username', e.target.value)
+                    }
+                    readOnly={!isEditingProfile}
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
+                      validationErrors.username
+                        ? 'border-red-500 dark:border-red-400'
+                        : 'border-gray-300 dark:border-gray-600'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
+                    placeholder="Enter username"
                   />
+                  {validationErrors.username && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.username}</p>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -982,7 +1083,7 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label className="form-label">Current Password</label>
                   <PasswordInput
-                    value={formData.currentPass}
+                    value={formData.currentPass || ''}
                     onChange={(e: any) => {
                       const value = e.target.value;
                       setFormData((prev) => ({
@@ -1006,7 +1107,7 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label className="form-label">New Password</label>
                   <PasswordInput
-                    value={formData.newPass}
+                    value={formData.newPass || ''}
                     onChange={(e: any) => {
                       const value = e.target.value;
                       setFormData((prev) => ({
@@ -1030,7 +1131,7 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label className="form-label">Confirm New Password</label>
                   <PasswordInput
-                    value={formData.confirmNewPass}
+                    value={formData.confirmNewPass || ''}
                     onChange={(e: any) => {
                       const value = e.target.value;
                       setFormData((prev) => ({
@@ -1116,7 +1217,7 @@ const ProfilePage = () => {
                         readOnly
                         value={
                           apiKey && showApiKey
-                            ? apiKey.key
+                            ? (apiKey.key || '')
                             : apiKey
                             ? '••••••••••••••••••••••••••••••••'
                             : 'No API key generated'
@@ -1194,7 +1295,7 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label className="form-label">Select Timezone</label>
                   <select
-                    value={selectedTimezone}
+                    value={selectedTimezone || ''}
                     onChange={(e) => setSelectedTimezone(e.target.value)}
                     className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   >
@@ -1227,7 +1328,7 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label className="form-label">Select Language</label>
                   <select
-                    value={selectedLanguage}
+                    value={selectedLanguage || ''}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
                     className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   >

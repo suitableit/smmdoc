@@ -1,4 +1,5 @@
 'use server';
+import { headers } from 'next/headers';
 import * as z from 'zod';
 
 import { auth, signIn } from '@/auth';
@@ -130,12 +131,20 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
       role: session?.user?.role
     }, null, 2));
 
-    // Log successful login activity
+    // Log successful login activity with IP address
     try {
+      const headersList = headers();
+      const clientIP = headersList.get('x-client-ip') || 
+                      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                      headersList.get('x-real-ip') || 
+                      'unknown';
+      
+      const username = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
+      
       if (isAdmin) {
-        await ActivityLogger.adminLogin(existingUser.id, existingUser.username || existingUser.email || 'Unknown');
+        await ActivityLogger.adminLogin(existingUser.id, username, clientIP);
       } else {
-        await ActivityLogger.login(existingUser.id, existingUser.username || existingUser.email || 'Unknown');
+        await ActivityLogger.login(existingUser.id, username, clientIP);
       }
     } catch (logError) {
       console.error('Failed to log login activity:', logError);
@@ -252,6 +261,21 @@ export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
       email: session?.user?.email,
       role: session?.user?.role
     }, null, 2));
+    
+    // Log admin login activity with IP address
+    try {
+      const headersList = headers();
+      const clientIP = headersList.get('x-client-ip') || 
+                      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                      headersList.get('x-real-ip') || 
+                      'unknown';
+      
+      const username = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
+      await ActivityLogger.adminLogin(existingUser.id, username, clientIP);
+    } catch (logError) {
+      console.error('Failed to log admin login activity:', logError);
+      // Don't fail the login if activity logging fails
+    }
     
     return { 
       success: true, 

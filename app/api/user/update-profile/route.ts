@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { fullName, email } = body;
+    const { fullName, email, username } = body;
 
     // Check if user exists
     const existingUser = await db.user.findUnique({
@@ -37,11 +37,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check if username is being updated and if it's unique
+    if (username !== undefined && username !== existingUser.username) {
+      const usernameExists = await db.user.findFirst({
+        where: {
+          username: username,
+          id: { not: session.user.id }
+        }
+      });
+
+      if (usernameExists) {
+        return NextResponse.json(
+          {
+            error: 'Username already exists. Please choose a different username.',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Prepare update data
     const updateData: any = {};
     
     if (fullName !== undefined) updateData.name = fullName;
     if (email !== undefined) updateData.email = email;
+    if (username !== undefined) updateData.username = username;
 
     // Update user profile
     const updatedUser = await db.user.update({

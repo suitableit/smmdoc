@@ -11,6 +11,7 @@ const initialState = {
   balance: 0,
   total_deposit: 0,
   total_spent: 0,
+  image: '',
 };
 
 const userDetailsSlice = createSlice({
@@ -28,6 +29,7 @@ const userDetailsSlice = createSlice({
       state.balance = action.payload.balance || 0;
       state.total_deposit = action.payload.total_deposit || 0;
       state.total_spent = action.payload.total_spent || 0;
+      state.image = action.payload.image || '';
     },
   },
 });

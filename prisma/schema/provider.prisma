@@ -5,7 +5,7 @@ model ApiProvider {
   api_url    String   @default("")
   login_user String?
   login_pass String?
-  status     String   @default("inactive")
+  status     String   @default("active")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

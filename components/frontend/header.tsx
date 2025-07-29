@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { FaDesktop, FaMoon, FaSun, FaTachometerAlt, FaUser, FaHome, FaWallet, FaChevronDown, FaSignOutAlt, FaUserCog, FaMoneyBillWave, FaFileContract } from 'react-icons/fa';
+import { FaChevronDown, FaDesktop, FaHome, FaMoon, FaSignOutAlt, FaSun, FaTachometerAlt, FaUserCog, FaWallet } from 'react-icons/fa';
 
 // Custom hook to safely use NextAuth session
 const useSafeSession = () => {
@@ -112,16 +112,24 @@ const Header: React.FC<HeaderProps> = ({
     </div>
   );
 
-  const AvatarImage = ({ src, alt }: { src: string; alt: string }) => (
-    <img
-      src={src}
-      alt={alt}
-      className="w-full h-full object-cover"
-      onError={(e) => {
-        e.currentTarget.style.display = 'none';
-      }}
-    />
-  );
+  const AvatarImage = ({ src, alt }: { src: string; alt: string }) => {
+    const [hasError, setHasError] = useState(false);
+    
+    if (!src || hasError) {
+      return null;
+    }
+    
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className="w-full h-full object-cover"
+        onError={() => {
+          setHasError(true);
+        }}
+      />
+    );
+  };
 
   const AvatarFallback = ({ children }: { children: React.ReactNode }) => (
     <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-semibold text-lg">

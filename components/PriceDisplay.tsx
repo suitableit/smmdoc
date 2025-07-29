@@ -1,6 +1,5 @@
 // components/PriceDisplay.tsx
 'use client';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { formatPrice } from '@/lib/utils';
 
@@ -18,7 +17,7 @@ export function PriceDisplay({
   const { currency, availableCurrencies, isLoading } = useCurrency();
 
   if (isLoading || !availableCurrencies.length) {
-    return <Skeleton className={`h-6 w-20 ${className}`} />;
+    return <span className={`inline-block h-6 w-20 bg-accent animate-pulse rounded-md ${className}`} />;
   }
 
   // Get currency data from available currencies

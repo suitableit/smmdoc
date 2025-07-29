@@ -1,0 +1,1 @@
+SELECT id, username, action, details, ipAddress, createdAt FROM activitylog ORDER BY createdAt DESC LIMIT 10;

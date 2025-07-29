@@ -1,5 +1,7 @@
 import authConfig from '@/auth.config';
 import NextAuth from 'next-auth';
+import { NextResponse } from 'next/server';
+import { getClientIP } from './lib/activity-logger';
 import {
     apiAuthPrefixes,
     authRoutes,
@@ -17,6 +19,11 @@ export default auth(async (req) => {
   );
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+  
+  // Capture client IP and add to headers for activity logging
+  const clientIP = getClientIP(req);
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-client-ip', clientIP);
 
   // Only log for debugging when needed
   // console.log('Path:', nextUrl.pathname);
@@ -30,7 +37,11 @@ export default auth(async (req) => {
 
   // If accessing API auth routes
   if (isApiAuthRoute) {
-    return;
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   // If accessing auth routes while logged in
@@ -39,17 +50,21 @@ export default auth(async (req) => {
       // Redirect admin to admin dashboard, users to user dashboard
       if (userRole?.role === 'admin') {
         console.log('Admin user detected, redirecting to admin dashboard');
-        return Response.redirect(new URL('/admin', nextUrl));
+        return NextResponse.redirect(new URL('/admin', nextUrl));
       }
       console.log('Regular user detected, redirecting to user dashboard');
-      return Response.redirect(new URL(callbackUrl, nextUrl));
+      return NextResponse.redirect(new URL(callbackUrl, nextUrl));
     }
-    return;
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   // Admin-only routes protection
   if (nextUrl.pathname.startsWith('/admin') && userRole?.role !== 'admin') {
-    return Response.redirect(new URL('/dashboard', nextUrl));
+    return NextResponse.redirect(new URL('/dashboard', nextUrl));
   }
   
   // User-only routes protection
@@ -57,7 +72,7 @@ export default auth(async (req) => {
     nextUrl.pathname.startsWith('/dashboard') &&
     userRole?.role === 'admin'
   ) {
-    return Response.redirect(new URL('/admin', nextUrl));
+    return NextResponse.redirect(new URL('/admin', nextUrl));
   }
 
   // Redirect unauthenticated users to sign-in page
@@ -66,10 +81,14 @@ export default auth(async (req) => {
     if (nextUrl.pathname !== '/') {
       redirectUrl += `?callbackUrl=${encodeURIComponent(nextUrl.pathname)}`;
     }
-    return Response.redirect(new URL(redirectUrl, nextUrl));
+    return NextResponse.redirect(new URL(redirectUrl, nextUrl));
   }
   
-  return;
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 });
 
 export const config = {

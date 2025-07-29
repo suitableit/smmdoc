@@ -36,15 +36,15 @@ export default async function RootLayout({
   const session = await auth();
   const serverCurrency = await getUserCurrency();
   return (
-    <SessionProvider session={session}>
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
-        </head>
-        <body
-          className={`${nunito.variable} font-nunito antialiased text-black`}
-          suppressHydrationWarning
-        >
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
+      </head>
+      <body
+        className={`${nunito.variable} font-nunito antialiased text-black`}
+        suppressHydrationWarning
+      >
+        <SessionProvider session={session}>
           <StoreProvider>
             <ThemeProvider
               attribute="class"
@@ -61,8 +61,8 @@ export default async function RootLayout({
               </CurrencyProvider>
             </ThemeProvider>
           </StoreProvider>
-        </body>
-      </html>
-    </SessionProvider>
+        </SessionProvider>
+      </body>
+    </html>
   );
 }

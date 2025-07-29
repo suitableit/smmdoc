@@ -2,22 +2,21 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  FaArrowRight,
-  FaCalendarAlt,
-  FaChartLine,
-  FaClock,
-  FaComment,
-  FaEye,
-  FaSearch,
-  FaShare,
-  FaTag,
-  FaUser,
-  FaFacebookF,
-  FaTwitter,
-  FaLinkedinIn,
-  FaEnvelope,
+    FaArrowRight,
+    FaCalendarAlt,
+    FaChartLine,
+    FaClock,
+    FaEnvelope,
+    FaEye,
+    FaFacebookF,
+    FaLinkedinIn,
+    FaSearch,
+    FaShare,
+    FaTag,
+    FaTwitter,
+    FaUser
 } from 'react-icons/fa';
 
 // Types
@@ -240,7 +239,7 @@ const SocialShare: React.FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (dropdownRef.current && event.target && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
