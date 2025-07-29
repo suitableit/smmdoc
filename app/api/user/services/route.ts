@@ -48,107 +48,132 @@ export async function GET(request: Request) {
     // Get currency data for conversion
     const { currencies } = await fetchCurrencyData();
 
-    // Base where clause - only return active services
-    const whereClause = {
-      status: 'active', // Only return active services
-      ...(search
-        ? {
-            OR: [
-              {
-                name: {
-                  contains: search,
-                  mode: 'insensitive',
-                },
-              },
-              {
-                description: {
-                  contains: search,
-                  mode: 'insensitive',
-                },
-              },
-            ],
-          }
-        : {})
-    };
+    let services;
+    let paginatedCategories;
+    let totalCategories;
 
-    // First get paginated categories
-    const [paginatedCategories, totalCategories] = await Promise.all([
-      db.category.findMany({
+    if (search) {
+      // Search across all services when search term is provided
+      const searchQuery = {
         where: {
-          hideCategory: 'no', // Only show categories that are not hidden
+          status: 'active',
+          category: {
+            hideCategory: 'no', // Only include services from visible categories
+          },
+          OR: [
+            {
+              name: {
+                contains: search,
+              },
+            },
+            // Search by service ID (exact match)
+            ...(isNaN(Number(search)) 
+              ? [] 
+              : [{
+                  id: {
+                    equals: Number(search)
+                  }
+                }]
+            ),
+          ].filter(Boolean),
         },
-        skip: categorySkip,
-        take: categoryLimit,
-        orderBy: [
-          { id: 'asc' }, // Order by ID first (1, 2, 3...)
-          { position: 'asc' },
-          { createdAt: 'asc' },
-        ],
-      }),
-      db.category.count({
-        where: {
-          hideCategory: 'no',
+        orderBy: {
+          createdAt: 'desc',
         },
-      }),
-    ]);
-
-    // Get all services for the paginated categories
-    const categoryIds = paginatedCategories.map(cat => cat.id);
-
-    const services = await db.service.findMany({
-      where: {
-        status: 'active',
-        categoryId: {
-          in: categoryIds,
-        },
-        ...(search
-          ? {
-              OR: [
-                {
-                  name: {
-                    contains: search,
-                    mode: 'insensitive',
-                  },
-                },
-                {
-                  description: {
-                    contains: search,
-                    mode: 'insensitive',
-                  },
-                },
-              ],
+        select: {
+          id: true,
+          name: true,
+          rate: true,
+          rateUSD: true,
+          min_order: true,
+          max_order: true,
+          avg_time: true,
+          description: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          category: {
+            select: {
+              id: true,
+              category_name: true,
             }
-          : {})
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: {
-        id: true,
-        name: true,
-        rate: true,
-        rateUSD: true,
-        min_order: true,
-        max_order: true,
-        avg_time: true,
-        description: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        category: {
-          select: {
-            id: true,
-            category_name: true,
-          }
+          },
+          serviceType: {
+            select: {
+              id: true,
+              name: true,
+            }
+          },
         },
-        serviceType: {
-          select: {
-            id: true,
-            name: true,
-          }
+      };
+      
+      services = await db.service.findMany(searchQuery);
+      
+      // For search results, we don't need category pagination
+      paginatedCategories = [];
+      totalCategories = 0;
+    } else {
+      // Normal pagination: First get paginated categories
+      [paginatedCategories, totalCategories] = await Promise.all([
+        db.category.findMany({
+          where: {
+            hideCategory: 'no', // Only show categories that are not hidden
+          },
+          skip: categorySkip,
+          take: categoryLimit,
+          orderBy: [
+            { id: 'asc' }, // Order by ID first (1, 2, 3...)
+            { position: 'asc' },
+            { createdAt: 'asc' },
+          ],
+        }),
+        db.category.count({
+          where: {
+            hideCategory: 'no',
+          },
+        }),
+      ]);
+
+      // Get all services for the paginated categories
+      const categoryIds = paginatedCategories.map(cat => cat.id);
+
+      services = await db.service.findMany({
+        where: {
+          status: 'active',
+          categoryId: {
+            in: categoryIds,
+          },
         },
-      },
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+        select: {
+          id: true,
+          name: true,
+          rate: true,
+          rateUSD: true,
+          min_order: true,
+          max_order: true,
+          avg_time: true,
+          description: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          category: {
+            select: {
+              id: true,
+              category_name: true,
+            }
+          },
+          serviceType: {
+            select: {
+              id: true,
+              name: true,
+            }
+          },
+        },
+      });
+    }
 
 
 
@@ -169,13 +194,14 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         data: servicesWithConvertedPrices || [],
-        total: services.length, // Total services in current page
-        page,
-        totalPages: Math.ceil(totalCategories / categoryLimit),
-        totalCategories,
+        total: services.length, // Total services in current page/search
+        page: search ? 1 : page, // For search, always show as page 1
+        totalPages: search ? 1 : Math.ceil(totalCategories / categoryLimit), // For search, only 1 page
+        totalCategories: search ? 0 : totalCategories, // For search, categories don't matter
         currency: currency, // Include currency info in response
         limit: limitParam,
-        allCategories: paginatedCategories || [], // Include paginated categories
+        allCategories: paginatedCategories || [], // Include paginated categories (empty for search)
+        isSearch: !!search, // Flag to indicate if this is a search result
       },
       { status: 200 }
     );
