@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Upload</title>
+</head>
+<body>
+    <h1>Test Avatar Upload</h1>
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="uploadFile()">Upload</button>
+    <div id="result"></div>
+
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('result').innerHTML = 'Please select a file';
+                return;
+            }
+
+            console.log('File selected:', file);
+
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            try {
+                const response = await fetch('/api/user/upload-avatar', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+                console.log('Response:', result);
+                
+                document.getElementById('result').innerHTML = 
+                    `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -8,17 +8,17 @@ import { APP_NAME } from '@/lib/constants';
 import { setUserDetails } from '@/lib/slice/userDetails';
 import React, { useEffect, useState } from 'react';
 import {
-  FaCamera,
-  FaCheck,
-  FaClock,
-  FaCopy,
-  FaEye,
-  FaEyeSlash,
-  FaGlobe,
-  FaKey,
-  FaShieldAlt,
-  FaTimes,
-  FaUser,
+    FaCamera,
+    FaCheck,
+    FaClock,
+    FaCopy,
+    FaEye,
+    FaEyeSlash,
+    FaGlobe,
+    FaKey,
+    FaShieldAlt,
+    FaTimes,
+    FaUser,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -573,12 +573,23 @@ const ProfilePage = () => {
 
   // Handle profile picture upload
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🔄 Avatar upload started');
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('❌ No file selected');
+      return;
+    }
+
+    console.log('📁 File selected:', {
+      name: file.name,
+      type: file.type,
+      size: file.size
+    });
 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
+      console.log('❌ Invalid file type:', file.type);
       showToast('Invalid file type. Only JPEG, PNG, and GIF are allowed.', 'error');
       return;
     }
@@ -586,51 +597,81 @@ const ProfilePage = () => {
     // Validate file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
+      console.log('❌ File too large:', file.size);
       showToast('File size too large. Maximum size is 5MB.', 'error');
       return;
     }
 
+    console.log('✅ File validation passed');
+
     // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
+      console.log('📷 Preview created');
       setAvatarPreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
 
     setIsUploadingAvatar(true);
+    console.log('🔄 Starting upload...');
 
     try {
       const formData = new FormData();
       formData.append('avatar', file);
 
+      console.log('📤 Sending request to /api/user/upload-avatar');
       const response = await fetch('/api/user/upload-avatar', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('📥 Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       const result = await response.json();
+      console.log('📋 Response data:', result);
 
       if (response.ok) {
+        console.log('✅ Upload successful');
         // Update Redux store
-        dispatch(
-          setUserDetails({
-            ...userDetails,
-            image: result.data.image,
-          })
-        );
+        const updatedUserDetails = {
+          ...userDetails,
+          image: result.data.image,
+        };
+        dispatch(setUserDetails(updatedUserDetails));
+
+        // Update session
+        try {
+          await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              image: result.data.image,
+            }),
+          });
+        } catch (sessionError) {
+          console.log('Session update failed, but image uploaded successfully');
+        }
 
         setAvatarPreview(null);
         showToast('Profile picture updated successfully!', 'success');
       } else {
+        console.log('❌ Upload failed:', result.error);
         showToast(result.error || 'Failed to upload profile picture', 'error');
         setAvatarPreview(null);
       }
     } catch (error) {
-      console.error('Avatar upload error:', error);
+      console.error('❌ Avatar upload error:', error);
       showToast('Error uploading profile picture', 'error');
       setAvatarPreview(null);
     } finally {
       setIsUploadingAvatar(false);
+      console.log('🏁 Upload process finished');
     }
   };
 
@@ -807,7 +848,8 @@ const ProfilePage = () => {
     );
   }
 
-  const user = currentUser;
+  // Use userDetails from Redux store for real-time updates
+  const user = userDetails || currentUser;
 
   return (
     <div className="page-container">

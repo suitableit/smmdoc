@@ -493,13 +493,13 @@ const Menu = ({ user }: { user: any }) => {
                     {loading ? (
                       <div className="h-4 sm:h-6 w-16 sm:w-24 bg-white/20 rounded animate-pulse"></div>
                     ) : (
-                      <p className="text-lg sm:text-2xl font-bold">
+                      <div className="text-lg sm:text-2xl font-bold">
                         <PriceDisplay
                           amount={balance}
                           originalCurrency="BDT"
                           className="text-white"
                         />
-                      </p>
+                      </div>
                     )}
                   </div>
                 </div>
