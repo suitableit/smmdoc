@@ -746,10 +746,27 @@ export async function GET(req: NextRequest) {
           } else {
             const errorText = await response.text();
             console.log(`❌ ATTPanel HTTP error ${response.status}:`, errorText);
+            
+            // Check if it's an API key error
+            try {
+              const errorData = JSON.parse(errorText);
+              if (errorData.error && errorData.error.toLowerCase().includes('invalid api key')) {
+                throw new Error(`ATTPanel API Key is invalid. Please update your API key:\n\n1. Go to https://attpanel.com\n2. Login to your account\n3. Go to Account/API section\n4. Copy your valid API key\n5. Run: node fix-attpanel.js YOUR_NEW_API_KEY\n\nCurrent key: ${provider.api_key.substring(0, 8)}...`);
+              }
+            } catch (parseError) {
+              // If not JSON, continue with original error
+            }
+            
             throw new Error(`ATTPanel API returned ${response.status}: ${errorText}. Please check API key and URL.`);
           }
         } catch (error) {
           console.log(`❌ ATTPanel request failed:`, error instanceof Error ? error.message : error);
+          
+          // Enhanced error message for API key issues
+          if (error instanceof Error && error.message.includes('Invalid API Key')) {
+            throw new Error(`ATTPanel API Key is invalid. Please update your API key:\n\n1. Go to https://attpanel.com\n2. Login to your account\n3. Go to Account/API section\n4. Copy your valid API key\n5. Run: node fix-attpanel.js YOUR_NEW_API_KEY\n\nCurrent key: ${provider.api_key.substring(0, 8)}...`);
+          }
+          
           throw error;
         }
       } else {
