@@ -1,4 +1,3 @@
-import { getPasswordResetTokenByEmail } from "@/data/password-reset-token";
 import { getTwoFactorTokenByEmail } from "@/data/two-factor-token";
 import { getVerificationTokenByEmail } from "@/data/verification-token";
 import crypto from "crypto";
@@ -27,16 +26,34 @@ export const generateTwoFactorToken = async (email: string) => {
 };
 
 export const generatePasswordResetToken = async (email: string) => {
+  // Check user settings for reset link limit
+  const userSettings = await db.userSettings.findFirst();
+  const resetLinkMax = userSettings?.resetLinkMax || 3;
+
+  // Check how many reset tokens were created today for this email
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const todayResetCount = await db.passwordResetToken.count({
+    where: {
+      email,
+      createdAt: {
+        gte: today,
+        lt: tomorrow,
+      },
+    },
+  });
+
+  if (todayResetCount >= resetLinkMax) {
+    throw new Error(`You have reached the maximum number of password reset attempts (${resetLinkMax}) for today. Please try again tomorrow.`);
+  }
+
   const token = uuidv4();
   const expires = new Date(new Date().getTime() + 1000 * 60 * 60 * 24); // 24 hours
-  const existingToken = await getPasswordResetTokenByEmail(email);
-  if (existingToken) {
-    await db.passwordResetToken.delete({
-      where: {
-        id: existingToken.id,
-      },
-    });
-  }
+
+  // Don't delete existing token, just create a new one (for limit tracking)
   const passwordResetToken = await db.passwordResetToken.create({
     data: {
       token,

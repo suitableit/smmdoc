@@ -1,0 +1,19 @@
+'use client';
+import ButtonLoader from '@/components/button-loader';
+import { FormError } from '@/components/form-error';
+import { FormSuccess } from '@/components/form-success';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { register } from '@/lib/actions/register';
+import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
+import {
+    createSignUpSchema,
+    signUpDefaultValues,
+    signUpSchema,
+    SignUpSchema
+} from '@/lib/validators/auth.validator';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signIn } from 'next-auth/react';
+import Link from 'next/link';
+import { useCallback, useEffect, useState, useTransition } from 'react';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { FaCheck, FaEnvelope, FaEye, FaEyeSlash, FaLock, FaSpinner, FaTimes, FaUser } from 'react-icons/fa';

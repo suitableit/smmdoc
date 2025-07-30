@@ -45,6 +45,7 @@ interface TransferFundProps {
 
 export default function TransferFund({ className = '' }: TransferFundProps) {
   const { currency: globalCurrency, rate: globalRate } = useCurrency();
+  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
   const [username, setUsername] = useState('');
   const [amountUSD, setAmountUSD] = useState('');
   const [amountBDT, setAmountBDT] = useState('');
@@ -211,12 +212,12 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
         // Simulate API call
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Calculate fee (3%)
-        const fee = transferAmount * 0.03;
-        const totalAmount = transferAmount + fee;
+        // Calculate fee based on admin settings (use same calculation as display)
+        const calculatedFee = (transferAmount * feePercentage) / 100;
+        const calculatedTotal = transferAmount + calculatedFee;
 
         showToast(
-          `Successfully transferred ${transferAmount} ${activeCurrency} to ${username} (Fee: ${fee.toFixed(
+          `Successfully transferred ${transferAmount} ${activeCurrency} to ${username} (Fee: ${calculatedFee.toFixed(
             2
           )} ${activeCurrency})`,
           'success'
@@ -235,7 +236,10 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
     activeCurrency === 'USD'
       ? parseFloat(amountUSD) || 0
       : parseFloat(amountBDT) || 0;
-  const fee = currentAmount * 0.03;
+
+  // Get fee percentage from admin settings
+  const feePercentage = userSettings?.transferFundsPercentage || 3;
+  const fee = (currentAmount * feePercentage) / 100;
   const totalAmount = currentAmount + fee;
 
   if (isLoading) {
@@ -446,7 +450,7 @@ export default function TransferFund({ className = '' }: TransferFundProps) {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-700">
-                        Processing Fee (3%):
+                        Processing Fee ({feePercentage}%):
                       </span>
                       <span className="text-lg font-semibold text-red-600">
                         {activeCurrency === 'USD' ? '$' : '৳'}

@@ -1,0 +1,114 @@
+// General Settings Model
+model GeneralSettings {
+  id         Int      @id @default(autoincrement())
+  siteTitle  String   @default("SMM Panel")
+  tagline    String   @default("Best SMM Services Provider")
+  siteIcon   String   @default("")
+  siteLogo   String   @default("")
+  adminEmail String   @default("admin@example.com")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("general_settings")
+}
+
+// Meta (SEO) Settings Model
+model MetaSettings {
+  id              Int      @id @default(autoincrement())
+  googleTitle     String   @default("SMM Panel - Best Social Media Marketing Services")
+  siteTitle       String   @default("SMM Panel")
+  siteDescription String   @default("Get the best social media marketing services with fast delivery and affordable prices. Boost your social media presence today!") @db.Text
+  keywords        String   @default("smm panel, social media marketing, instagram followers, youtube views, facebook likes") @db.Text
+  thumbnail       String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("meta_settings")
+}
+
+// User Settings Model
+model UserSettings {
+  id                      Int      @id @default(autoincrement())
+  resetPasswordEnabled    Boolean  @default(true)
+  signUpPageEnabled       Boolean  @default(true)
+  nameFieldEnabled        Boolean  @default(true)
+  emailConfirmationEnabled Boolean @default(true)
+  resetLinkMax            Int      @default(3)
+  transferFundsPercentage Int      @default(3)
+  userFreeBalanceEnabled  Boolean  @default(false)
+  freeAmount              Float    @default(0)
+  paymentBonusEnabled     Boolean  @default(false)
+  bonusPercentage         Float    @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+// Ticket Settings Model
+model TicketSettings {
+  id                 Int             @id @default(autoincrement())
+  ticketSystemEnabled Boolean        @default(true)
+  maxPendingTickets  String          @default("3")
+  subjects           TicketSubject[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@map("ticket_settings")
+}
+
+// Ticket Subject Model
+model TicketSubject {
+  id               Int            @id @default(autoincrement())
+  name             String
+  ticketSettingsId Int
+  ticketSettings   TicketSettings @relation(fields: [ticketSettingsId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("ticket_subjects")
+}
+
+// Contact Settings Model
+model ContactSettings {
+  id                   Int               @id @default(autoincrement())
+  contactSystemEnabled Boolean           @default(true)
+  maxPendingContacts   String            @default("3")
+  categories           ContactCategory[]
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  @@map("contact_settings")
+}
+
+// Contact Category Model
+model ContactCategory {
+  id                Int             @id @default(autoincrement())
+  name              String
+  contactSettingsId Int
+  contactSettings   ContactSettings @relation(fields: [contactSettingsId], references: [id], onDelete: Cascade)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("contact_categories")
+}
+
+// Module Settings Model
+model ModuleSettings {
+  id                       Int      @id @default(autoincrement())
+  // Affiliate Settings
+  affiliateSystemEnabled   Boolean  @default(false)
+  commissionRate           Float    @default(5)
+  minimumPayout            Float    @default(10)
+  // Child Panel Settings
+  childPanelSellingEnabled Boolean  @default(false)
+  childPanelPrice          Float    @default(10)
+  // Other Module Settings
+  serviceUpdateLogsEnabled Boolean  @default(true)
+  massOrderEnabled         Boolean  @default(false)
+  servicesListPublic       Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@map("module_settings")
+}

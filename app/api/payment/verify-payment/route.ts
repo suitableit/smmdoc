@@ -96,17 +96,27 @@ export async function GET(req: NextRequest) {
             // Use original amount if available, otherwise calculate from USD amount
             const originalAmount = payment.original_amount || payment.amount;
 
-            // Update user balance with original currency amount
+            // Check user settings for payment bonus
+            const userSettings = await prisma.userSettings.findFirst();
+            let bonusAmount = 0;
+
+            if (userSettings?.paymentBonusEnabled && userSettings?.bonusPercentage > 0) {
+              bonusAmount = (originalAmount * userSettings.bonusPercentage) / 100;
+            }
+
+            const totalAmountToAdd = originalAmount + bonusAmount;
+
+            // Update user balance with original currency amount plus bonus
             const user = await prisma.user.update({
               where: { id: payment.userId },
               data: {
-                balance: { increment: originalAmount }, // Add original amount in user's currency
+                balance: { increment: totalAmountToAdd }, // Add original amount + bonus in user's currency
                 balanceUSD: { increment: payment.amount }, // USD balance for internal calculations
-                total_deposit: { increment: originalAmount } // Track total deposit in user's currency
+                total_deposit: { increment: originalAmount } // Track only actual deposit, not bonus
               }
             });
             
-            console.log(`User ${payment.userId} balance updated. New balance: ${user.balance}`);
+            console.log(`User ${payment.userId} balance updated. New balance: ${user.balance}. Original amount: ${originalAmount}, Bonus: ${bonusAmount}, Total added: ${totalAmountToAdd}`);
           });
           
           console.log("Transaction completed successfully");

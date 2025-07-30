@@ -6,11 +6,9 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FaCheck,
-  FaCog,
-  FaEnvelope,
   FaGlobe,
   FaHeadset,
   FaImage,
@@ -21,7 +19,7 @@ import {
   FaTimes,
   FaTrash,
   FaUpload,
-  FaUsers,
+  FaUsers
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -289,19 +287,60 @@ const GeneralSettingsPage = () => {
       try {
         setIsPageLoading(true);
 
-        const response = await fetch('/api/admin/general-settings');
-        if (response.ok) {
-          const data = await response.json();
-          
+        // Load all settings in parallel
+        const [
+          generalResponse,
+          metaResponse,
+          userResponse,
+          ticketResponse,
+          contactResponse,
+          moduleResponse
+        ] = await Promise.all([
+          fetch('/api/admin/general-settings'),
+          fetch('/api/admin/meta-settings'),
+          fetch('/api/admin/user-settings'),
+          fetch('/api/admin/ticket-settings'),
+          fetch('/api/admin/contact-settings'),
+          fetch('/api/admin/module-settings')
+        ]);
+
+        // Process general settings
+        if (generalResponse.ok) {
+          const data = await generalResponse.json();
           if (data.generalSettings) setGeneralSettings(data.generalSettings);
-          if (data.metaSettings) setMetaSettings(data.metaSettings);
-          if (data.userSettings) setUserSettings(data.userSettings);
-          if (data.ticketSettings) setTicketSettings(data.ticketSettings);
-          if (data.contactSettings) setContactSettings(data.contactSettings);
-          if (data.moduleSettings) setModuleSettings(data.moduleSettings);
-        } else {
-          showToast('Failed to load settings', 'error');
         }
+
+        // Process meta settings
+        if (metaResponse.ok) {
+          const data = await metaResponse.json();
+          if (data.metaSettings) setMetaSettings(data.metaSettings);
+        }
+
+        // Process user settings
+        if (userResponse.ok) {
+          const data = await userResponse.json();
+          if (data.userSettings) setUserSettings(data.userSettings);
+        }
+
+        // Process ticket settings
+        if (ticketResponse.ok) {
+          const data = await ticketResponse.json();
+          if (data.ticketSettings) setTicketSettings(data.ticketSettings);
+        }
+
+        // Process contact settings
+        if (contactResponse.ok) {
+          const data = await contactResponse.json();
+          if (data.contactSettings) setContactSettings(data.contactSettings);
+        }
+
+        // Process module settings
+        if (moduleResponse.ok) {
+          const data = await moduleResponse.json();
+          if (data.moduleSettings) setModuleSettings(data.moduleSettings);
+        }
+
+        showToast('Settings loaded successfully', 'success');
       } catch (error) {
         console.error('Error loading settings:', error);
         showToast('Error loading settings', 'error');
@@ -456,17 +495,39 @@ const GeneralSettingsPage = () => {
   };
 
   // File upload handlers
-  const handleFileUpload = (field: 'siteIcon' | 'siteLogo' | 'thumbnail', file: File) => {
-    // In a real implementation, you would upload the file to your server
-    // For now, we'll just create a URL for preview
-    const url = URL.createObjectURL(file);
-    
-    if (field === 'thumbnail') {
-      setMetaSettings(prev => ({ ...prev, [field]: url }));
-      showToast('Thumbnail uploaded successfully!', 'success');
-    } else {
-      setGeneralSettings(prev => ({ ...prev, [field]: url }));
-      showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded successfully!`, 'success');
+  const handleFileUpload = async (field: 'siteIcon' | 'siteLogo' | 'thumbnail', file: File) => {
+    try {
+      setIsLoading(true);
+      showToast('Uploading file...', 'pending');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const fileUrl = data.fileUrl;
+
+        if (field === 'thumbnail') {
+          setMetaSettings(prev => ({ ...prev, [field]: fileUrl }));
+          showToast('Thumbnail uploaded successfully!', 'success');
+        } else {
+          setGeneralSettings(prev => ({ ...prev, [field]: fileUrl }));
+          showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded successfully!`, 'success');
+        }
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.error || 'Failed to upload file', 'error');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      showToast('Error uploading file', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
