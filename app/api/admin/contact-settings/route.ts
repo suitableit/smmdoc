@@ -2,148 +2,129 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Default contact settings
-const defaultContactSettings = {
-  contactSystemEnabled: true,
-  maxPendingContacts: '3',
-  categories: [
-    { id: 1, name: 'General Inquiry' },
-    { id: 2, name: 'Business Partnership' },
-    { id: 3, name: 'Media & Press' },
-  ],
-};
-
-// GET - Load contact settings
 export async function GET() {
   try {
     const session = await auth();
-
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get contact settings from database (create if not exists)
-    let settings = await db.contactSettings.findFirst({
-      include: {
-        categories: true
-      }
+    // Get contact settings
+    const settings = await db.contactSettings.findFirst({
+      orderBy: { id: 'desc' }
     });
 
-    if (!settings) {
-      settings = await db.contactSettings.create({
-        data: {
-          contactSystemEnabled: defaultContactSettings.contactSystemEnabled,
-          maxPendingContacts: defaultContactSettings.maxPendingContacts,
-          categories: {
-            create: defaultContactSettings.categories
-          }
-        },
-        include: {
-          categories: true
-        }
-      });
-    }
+    // Get contact categories
+    const categories = await db.contactCategory.findMany({
+      orderBy: { name: 'asc' }
+    });
+
+    const formattedSettings = {
+      contactSystemEnabled: settings?.contactSystemEnabled ?? true,
+      maxPendingContacts: settings?.maxPendingContacts ?? '3',
+      categories: categories.map((cat) => ({
+        id: cat.id,
+        name: cat.name
+      }))
+    };
 
     return NextResponse.json({
       success: true,
-      contactSettings: {
-        contactSystemEnabled: settings.contactSystemEnabled,
-        maxPendingContacts: settings.maxPendingContacts,
-        categories: settings.categories.map(category => ({
-          id: category.id,
-          name: category.name
-        })),
-      }
+      contactSettings: formattedSettings
     });
-
   } catch (error) {
     console.error('Error loading contact settings:', error);
-    return NextResponse.json(
-      { error: 'Failed to load contact settings' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to load contact settings' }, { status: 500 });
   }
 }
 
-// POST - Save contact settings
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { contactSettings } = await request.json();
-
     if (!contactSettings) {
-      return NextResponse.json(
-        { error: 'Contact settings data is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Contact settings data is required' }, { status: 400 });
     }
 
-    // Validate categories
     if (!contactSettings.categories || !Array.isArray(contactSettings.categories)) {
-      return NextResponse.json(
-        { error: 'Categories must be an array' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Categories must be an array' }, { status: 400 });
     }
 
     if (contactSettings.categories.length === 0) {
-      return NextResponse.json(
-        { error: 'At least one category is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'At least one category is required' }, { status: 400 });
     }
 
-    // Validate each category
     for (const category of contactSettings.categories) {
       if (!category.name || !category.name.trim()) {
-        return NextResponse.json(
-          { error: 'All categories must have a name' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'All categories must have a name' }, { status: 400 });
       }
     }
 
-    // Update contact settings
-    await db.contactSettings.upsert({
-      where: { id: 1 },
-      update: {
-        contactSystemEnabled: contactSettings.contactSystemEnabled ?? true,
-        maxPendingContacts: contactSettings.maxPendingContacts ?? '3',
-      },
-      create: {
-        id: 1,
-        contactSystemEnabled: contactSettings.contactSystemEnabled ?? true,
-        maxPendingContacts: contactSettings.maxPendingContacts ?? '3',
+    // Upsert contact settings
+    const existingSettings = await db.contactSettings.findFirst();
+
+    if (existingSettings) {
+      await db.contactSettings.update({
+        where: { id: existingSettings.id },
+        data: {
+          contactSystemEnabled: contactSettings.contactSystemEnabled ?? true,
+          maxPendingContacts: contactSettings.maxPendingContacts ?? '3'
+        }
+      });
+    } else {
+      await db.contactSettings.create({
+        data: {
+          contactSystemEnabled: contactSettings.contactSystemEnabled ?? true,
+          maxPendingContacts: contactSettings.maxPendingContacts ?? '3'
+        }
+      });
+    }
+
+    // Handle categories
+    const existingCategories = await db.contactCategory.findMany();
+    const existingCategoryMap = new Map(
+      existingCategories.map((cat) => [cat.id, cat.name])
+    );
+
+    // Update or create categories
+    for (const category of contactSettings.categories) {
+      if (category.id && existingCategoryMap.has(category.id)) {
+        if (existingCategoryMap.get(category.id) !== category.name) {
+          await db.contactCategory.update({
+            where: { id: category.id },
+            data: { name: category.name.trim() }
+          });
+        }
+      } else if (!category.id) {
+        await db.contactCategory.create({
+          data: { name: category.name.trim() }
+        });
       }
-    });
+    }
 
-    // Delete existing categories and create new ones
-    await db.contactCategory.deleteMany({
-      where: { contactSettingsId: 1 }
-    });
+    // Delete removed categories
+    const newCategoryIds = contactSettings.categories
+      .filter((cat: any) => cat.id)
+      .map((cat: any) => cat.id);
 
-    await db.contactCategory.createMany({
-      data: contactSettings.categories.map((category: any) => ({
-        name: category.name.trim(),
-        contactSettingsId: 1
-      }))
-    });
+    for (const [existingId] of existingCategoryMap) {
+      if (!newCategoryIds.includes(existingId)) {
+        await db.contactCategory.delete({
+          where: { id: Number(existingId) }
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Contact settings saved successfully'
     });
-
   } catch (error) {
     console.error('Error saving contact settings:', error);
-    return NextResponse.json(
-      { error: 'Failed to save contact settings' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to save contact settings' }, { status: 500 });
   }
 }

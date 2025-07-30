@@ -73,6 +73,8 @@ const ContactMessagesPage = () => {
     document.title = `Contact Messages — ${APP_NAME}`;
   }, []);
 
+
+
   // Dummy data for contact messages
   const dummyContactMessages: ContactMessage[] = [
     {
@@ -214,6 +216,14 @@ const ContactMessagesPage = () => {
   // Bulk operations state
   const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
 
+  // Message counts state
+  const [messageCounts, setMessageCounts] = useState({
+    all: 0,
+    unread: 0,
+    read: 0,
+    replied: 0
+  });
+
   // Utility functions
   const formatMessageID = (id: string) => {
     return `${id.padStart(4, '0')}`;
@@ -280,6 +290,55 @@ const ContactMessagesPage = () => {
     const endIndex = startIndex + pagination.limit;
     return filteredMessages.slice(startIndex, endIndex);
   };
+
+  // Load contact messages from API
+  const loadContactMessages = async () => {
+    setMessagesLoading(true);
+    try {
+      const params = new URLSearchParams({
+        status: statusFilter === 'all' ? 'All' : statusFilter,
+        search: searchTerm,
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString()
+      });
+
+      const response = await fetch(`/api/admin/contact-messages?${params}`);
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setContactMessages(data.data.messages);
+
+        // Update pagination with real data
+        setPagination(prev => ({
+          ...prev,
+          total: data.data.counts.total,
+          totalPages: Math.ceil(data.data.counts.total / prev.limit),
+          hasNext: prev.page < Math.ceil(data.data.counts.total / prev.limit),
+          hasPrev: prev.page > 1
+        }));
+
+        // Update message counts for status tabs
+        setMessageCounts({
+          all: data.data.counts.total,
+          unread: data.data.counts.unread,
+          read: data.data.counts.read,
+          replied: data.data.counts.replied
+        });
+      } else {
+        showToast(data.error || 'Failed to load contact messages', 'error');
+      }
+    } catch (error) {
+      console.error('Error loading contact messages:', error);
+      showToast('Failed to load contact messages', 'error');
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
+
+  // Load contact messages from API
+  useEffect(() => {
+    loadContactMessages();
+  }, [statusFilter, searchTerm, pagination.page]);
 
   // Show toast notification
   const showToast = (
@@ -480,7 +539,7 @@ const ContactMessagesPage = () => {
                         : 'bg-purple-100 text-purple-700'
                     }`}
                   >
-                    {filteredMessages.length}
+                    {messageCounts.all}
                   </span>
                 </button>
                 <button
@@ -499,7 +558,7 @@ const ContactMessagesPage = () => {
                         : 'bg-orange-100 text-orange-700'
                     }`}
                   >
-                    {contactMessages.filter(m => m.status === 'Unread').length}
+                    {messageCounts.unread}
                   </span>
                 </button>
                 <button
@@ -518,7 +577,7 @@ const ContactMessagesPage = () => {
                         : 'bg-blue-100 text-blue-700'
                     }`}
                   >
-                    {contactMessages.filter(m => m.status === 'Read').length}
+                    {messageCounts.read}
                   </span>
                 </button>
                 <button
@@ -537,7 +596,7 @@ const ContactMessagesPage = () => {
                         : 'bg-green-100 text-green-700'
                     }`}
                   >
-                    {contactMessages.filter(m => m.status === 'Replied').length}
+                    {messageCounts.replied}
                   </span>
                 </button>
               </div>
