@@ -32,6 +32,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if mass order is enabled in module settings
+    const moduleSettings = await db.moduleSettings.findFirst();
+    const massOrderEnabled = moduleSettings?.massOrderEnabled ?? false;
+
+    if (!massOrderEnabled) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Mass Order functionality is currently disabled',
+          data: null,
+        },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { orders, validateOnly = false, batchId } = body;
 
