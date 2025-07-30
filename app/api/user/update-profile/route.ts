@@ -58,6 +58,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Check if email is being updated and if it's unique
+    if (email !== undefined && email !== existingUser.email) {
+      const emailExists = await db.user.findFirst({
+        where: {
+          email: email,
+          id: { not: session.user.id }
+        }
+      });
+
+      if (emailExists) {
+        return NextResponse.json(
+          {
+            error: 'Email already exists. Please choose a different email address.',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Prepare update data
     const updateData: any = {};
     
