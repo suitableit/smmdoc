@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
+import { useUserSettings } from '@/hooks/use-user-settings';
 
 export default function SignInForm() {
   const router = useRouter();

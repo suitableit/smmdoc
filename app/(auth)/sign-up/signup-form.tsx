@@ -2,14 +2,14 @@
 import ButtonLoader from '@/components/button-loader';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
-import { useUserSettings } from '@/hooks/useUserSettings';
+import { useUserSettings } from '@/hooks/use-user-settings';
 import { register } from '@/lib/actions/register';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
-  createSignUpSchema,
-  signUpDefaultValues,
-  signUpSchema,
-  SignUpSchema
+    createSignUpSchema,
+    signUpDefaultValues,
+    signUpSchema,
+    SignUpSchema
 } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
