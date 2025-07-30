@@ -1,8 +1,43 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
+// Helper function to get client IP
+function getClientIP(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  const remoteAddr = request.headers.get('x-remote-addr');
+
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  if (realIP) {
+    return realIP;
+  }
+  if (remoteAddr) {
+    return remoteAddr;
+  }
+  return 'unknown';
+}
+
 export async function PUT(request: Request) {
   try {
+    const session = await auth();
+
+    if (!session || !session.user || session.user.role !== 'admin') {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized access. Admin privileges required.',
+          data: null,
+          success: false,
+        },
+        { status: 401 }
+      );
+    }
+
+    // Check if service update logs are enabled
+    const moduleSettings = await db.moduleSettings.findFirst();
+    const serviceUpdateLogsEnabled = moduleSettings?.serviceUpdateLogsEnabled ?? true;
+
     const url = new URL(request.url);
     const id = url.searchParams.get('id');
     const body = await request.json();
@@ -35,6 +70,23 @@ export async function PUT(request: Request) {
     if (!id) {
       return NextResponse.json({
         error: 'Service ID is required',
+        data: null,
+        success: false,
+      });
+    }
+
+    // Get current service data for logging
+    const currentService = await db.service.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        category: { select: { name: true } },
+        serviceType: { select: { name: true } }
+      }
+    });
+
+    if (!currentService) {
+      return NextResponse.json({
+        error: 'Service not found',
         data: null,
         success: false,
       });
@@ -124,12 +176,61 @@ export async function PUT(request: Request) {
     }
 
     // Update the service in the database with proper type conversion
-    await db.service.update({
+    const updatedService = await db.service.update({
       where: {
         id: parseInt(id),
       },
       data: updateData,
     });
+
+    // Log service update if enabled
+    if (serviceUpdateLogsEnabled) {
+      try {
+        const clientIP = getClientIP(request);
+        const userAgent = request.headers.get('user-agent') || 'unknown';
+
+        // Prepare changes data
+        const changes: any = {};
+        const oldValues: any = {};
+        const newValues: any = {};
+
+        // Track what changed
+        Object.keys(updateData).forEach(key => {
+          const oldValue = (currentService as any)[key];
+          const newValue = (updateData as any)[key];
+
+          if (oldValue !== newValue) {
+            changes[key] = {
+              from: oldValue,
+              to: newValue
+            };
+            oldValues[key] = oldValue;
+            newValues[key] = newValue;
+          }
+        });
+
+        await db.serviceUpdateLog.create({
+          data: {
+            serviceId: parseInt(id),
+            serviceName: currentService.name,
+            adminId: parseInt(session.user.id),
+            adminEmail: session.user.email || 'unknown',
+            action: 'updated',
+            changes,
+            oldValues,
+            newValues,
+            ipAddress: clientIP,
+            userAgent
+          }
+        });
+
+        console.log(`Service update logged: Admin ${session.user.email} updated service ${currentService.name} (ID: ${id})`);
+      } catch (logError) {
+        console.error('Failed to log service update:', logError);
+        // Don't fail the main operation if logging fails
+      }
+    }
+
     return NextResponse.json({
       error: null,
       message: 'Service updated successfully',

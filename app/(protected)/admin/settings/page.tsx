@@ -4,13 +4,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 
+
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FaCheck,
-  FaCog,
-  FaEnvelope,
   FaGlobe,
   FaHeadset,
   FaImage,
@@ -21,7 +20,7 @@ import {
   FaTimes,
   FaTrash,
   FaUpload,
-  FaUsers,
+  FaUsers
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -55,14 +54,19 @@ const Toast = ({
   </div>
 );
 
-// Switch Component
-const Switch = ({ checked, onCheckedChange, onClick, title }: any) => (
+// Custom Switch Component with original UI
+const Switch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (checked: boolean) => void }) => (
   <button
-    onClick={onClick}
-    title={title}
-    className={`switch ${checked ? 'switch-checked' : 'switch-unchecked'}`}
+    onClick={() => onCheckedChange(!checked)}
+    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+      checked ? 'bg-indigo-600' : 'bg-gray-200'
+    }`}
   >
-    <span className="switch-thumb" />
+    <span
+      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+        checked ? 'translate-x-6' : 'translate-x-1'
+      }`}
+    />
   </button>
 );
 
@@ -289,19 +293,60 @@ const GeneralSettingsPage = () => {
       try {
         setIsPageLoading(true);
 
-        const response = await fetch('/api/admin/general-settings');
-        if (response.ok) {
-          const data = await response.json();
-          
+        // Load all settings in parallel
+        const [
+          generalResponse,
+          metaResponse,
+          userResponse,
+          ticketResponse,
+          contactResponse,
+          moduleResponse
+        ] = await Promise.all([
+          fetch('/api/admin/general-settings'),
+          fetch('/api/admin/meta-settings'),
+          fetch('/api/admin/user-settings'),
+          fetch('/api/admin/ticket-settings'),
+          fetch('/api/admin/contact-settings'),
+          fetch('/api/admin/module-settings')
+        ]);
+
+        // Process general settings
+        if (generalResponse.ok) {
+          const data = await generalResponse.json();
           if (data.generalSettings) setGeneralSettings(data.generalSettings);
-          if (data.metaSettings) setMetaSettings(data.metaSettings);
-          if (data.userSettings) setUserSettings(data.userSettings);
-          if (data.ticketSettings) setTicketSettings(data.ticketSettings);
-          if (data.contactSettings) setContactSettings(data.contactSettings);
-          if (data.moduleSettings) setModuleSettings(data.moduleSettings);
-        } else {
-          showToast('Failed to load settings', 'error');
         }
+
+        // Process meta settings
+        if (metaResponse.ok) {
+          const data = await metaResponse.json();
+          if (data.metaSettings) setMetaSettings(data.metaSettings);
+        }
+
+        // Process user settings
+        if (userResponse.ok) {
+          const data = await userResponse.json();
+          if (data.userSettings) setUserSettings(data.userSettings);
+        }
+
+        // Process ticket settings
+        if (ticketResponse.ok) {
+          const data = await ticketResponse.json();
+          if (data.ticketSettings) setTicketSettings(data.ticketSettings);
+        }
+
+        // Process contact settings
+        if (contactResponse.ok) {
+          const data = await contactResponse.json();
+          if (data.contactSettings) setContactSettings(data.contactSettings);
+        }
+
+        // Process module settings
+        if (moduleResponse.ok) {
+          const data = await moduleResponse.json();
+          if (data.moduleSettings) setModuleSettings(data.moduleSettings);
+        }
+
+        showToast('Settings loaded successfully', 'success');
       } catch (error) {
         console.error('Error loading settings:', error);
         showToast('Error loading settings', 'error');
@@ -456,17 +501,39 @@ const GeneralSettingsPage = () => {
   };
 
   // File upload handlers
-  const handleFileUpload = (field: 'siteIcon' | 'siteLogo' | 'thumbnail', file: File) => {
-    // In a real implementation, you would upload the file to your server
-    // For now, we'll just create a URL for preview
-    const url = URL.createObjectURL(file);
-    
-    if (field === 'thumbnail') {
-      setMetaSettings(prev => ({ ...prev, [field]: url }));
-      showToast('Thumbnail uploaded successfully!', 'success');
-    } else {
-      setGeneralSettings(prev => ({ ...prev, [field]: url }));
-      showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded successfully!`, 'success');
+  const handleFileUpload = async (field: 'siteIcon' | 'siteLogo' | 'thumbnail', file: File) => {
+    try {
+      setIsLoading(true);
+      showToast('Uploading file...', 'pending');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const fileUrl = data.fileUrl;
+
+        if (field === 'thumbnail') {
+          setMetaSettings(prev => ({ ...prev, [field]: fileUrl }));
+          showToast('Thumbnail uploaded successfully!', 'success');
+        } else {
+          setGeneralSettings(prev => ({ ...prev, [field]: fileUrl }));
+          showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded successfully!`, 'success');
+        }
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.error || 'Failed to upload file', 'error');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      showToast('Error uploading file', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -816,13 +883,12 @@ const GeneralSettingsPage = () => {
                   </div>
                   <Switch
                     checked={userSettings.resetPasswordEnabled}
-                    onClick={() =>
+                    onCheckedChange={(checked) =>
                       setUserSettings(prev => ({
                         ...prev,
-                        resetPasswordEnabled: !prev.resetPasswordEnabled
+                        resetPasswordEnabled: checked
                       }))
                     }
-                    title="Toggle password reset"
                   />
                 </div>
 
@@ -835,13 +901,12 @@ const GeneralSettingsPage = () => {
                   </div>
                   <Switch
                     checked={userSettings.signUpPageEnabled}
-                    onClick={() =>
+                    onCheckedChange={(checked) =>
                       setUserSettings(prev => ({
                         ...prev,
-                        signUpPageEnabled: !prev.signUpPageEnabled
+                        signUpPageEnabled: checked
                       }))
                     }
-                    title="Toggle user registration"
                   />
                 </div>
 
@@ -854,13 +919,12 @@ const GeneralSettingsPage = () => {
                   </div>
                   <Switch
                     checked={userSettings.nameFieldEnabled}
-                    onClick={() =>
+                    onCheckedChange={(checked) =>
                       setUserSettings(prev => ({
                         ...prev,
-                        nameFieldEnabled: !prev.nameFieldEnabled
+                        nameFieldEnabled: checked
                       }))
                     }
-                    title="Toggle name field requirement"
                   />
                 </div>
 
@@ -873,13 +937,12 @@ const GeneralSettingsPage = () => {
                   </div>
                   <Switch
                     checked={userSettings.emailConfirmationEnabled}
-                    onClick={() =>
+                    onCheckedChange={(checked) =>
                       setUserSettings(prev => ({
                         ...prev,
-                        emailConfirmationEnabled: !prev.emailConfirmationEnabled
+                        emailConfirmationEnabled: checked
                       }))
                     }
-                    title="Toggle email confirmation"
                   />
                 </div>
 
@@ -927,13 +990,12 @@ const GeneralSettingsPage = () => {
                   </div>
                   <Switch
                     checked={userSettings.userFreeBalanceEnabled}
-                    onClick={() =>
+                    onCheckedChange={(checked) =>
                       setUserSettings(prev => ({
                         ...prev,
-                        userFreeBalanceEnabled: !prev.userFreeBalanceEnabled
+                        userFreeBalanceEnabled: checked
                       }))
                     }
-                    title="Toggle user free balance"
                   />
                 </div>
 
@@ -963,13 +1025,12 @@ const GeneralSettingsPage = () => {
                   </div>
                   <Switch
                     checked={userSettings.paymentBonusEnabled}
-                    onClick={() =>
+                    onCheckedChange={(checked) =>
                       setUserSettings(prev => ({
                         ...prev,
-                        paymentBonusEnabled: !prev.paymentBonusEnabled
+                        paymentBonusEnabled: checked
                       }))
                     }
-                    title="Toggle payment bonus"
                   />
                 </div>
 
@@ -1023,13 +1084,12 @@ const GeneralSettingsPage = () => {
                   </div>
                   <Switch
                     checked={ticketSettings.ticketSystemEnabled}
-                    onClick={() =>
+                    onCheckedChange={(checked) =>
                       setTicketSettings(prev => ({
                         ...prev,
-                        ticketSystemEnabled: !prev.ticketSystemEnabled
+                        ticketSystemEnabled: checked
                       }))
                     }
-                    title="Toggle ticket system"
                   />
                 </div>
 
@@ -1114,13 +1174,12 @@ const GeneralSettingsPage = () => {
                   </div>
                   <Switch
                     checked={contactSettings.contactSystemEnabled}
-                    onClick={() =>
+                    onCheckedChange={(checked) =>
                       setContactSettings(prev => ({
                         ...prev,
-                        contactSystemEnabled: !prev.contactSystemEnabled
+                        contactSystemEnabled: checked
                       }))
                     }
-                    title="Toggle contact system"
                   />
                 </div>
 
@@ -1211,13 +1270,12 @@ const GeneralSettingsPage = () => {
                     </div>
                     <Switch
                       checked={moduleSettings.affiliateSystemEnabled}
-                      onClick={() =>
+                      onCheckedChange={(checked) =>
                         setModuleSettings(prev => ({
                           ...prev,
-                          affiliateSystemEnabled: !prev.affiliateSystemEnabled
+                          affiliateSystemEnabled: checked
                         }))
                       }
-                      title="Toggle affiliate system"
                     />
                   </div>
 
@@ -1272,13 +1330,12 @@ const GeneralSettingsPage = () => {
                     </div>
                     <Switch
                       checked={moduleSettings.childPanelSellingEnabled}
-                      onClick={() =>
+                      onCheckedChange={(checked) =>
                         setModuleSettings(prev => ({
                           ...prev,
-                          childPanelSellingEnabled: !prev.childPanelSellingEnabled
+                          childPanelSellingEnabled: checked
                         }))
                       }
-                      title="Toggle child panel selling"
                     />
                   </div>
 
@@ -1315,13 +1372,12 @@ const GeneralSettingsPage = () => {
                     </div>
                     <Switch
                       checked={moduleSettings.serviceUpdateLogsEnabled}
-                      onClick={() =>
+                      onCheckedChange={(checked) =>
                         setModuleSettings(prev => ({
                           ...prev,
-                          serviceUpdateLogsEnabled: !prev.serviceUpdateLogsEnabled
+                          serviceUpdateLogsEnabled: checked
                         }))
                       }
-                      title="Toggle service update logs"
                     />
                   </div>
 
@@ -1334,13 +1390,12 @@ const GeneralSettingsPage = () => {
                     </div>
                     <Switch
                       checked={moduleSettings.massOrderEnabled}
-                      onClick={() =>
+                      onCheckedChange={(checked) =>
                         setModuleSettings(prev => ({
                           ...prev,
-                          massOrderEnabled: !prev.massOrderEnabled
+                          massOrderEnabled: checked
                         }))
                       }
-                      title="Toggle mass order"
                     />
                   </div>
 

@@ -35,6 +35,21 @@ function convertFromUSD(usdAmount: number, targetCurrency: string, currencies: a
 
 export async function GET(request: Request) {
   try {
+    // Check module settings for services list access control
+    const moduleSettings = await db.moduleSettings.findFirst();
+    const servicesListPublic = moduleSettings?.servicesListPublic ?? true;
+
+    // If services list is private, require authentication
+    if (!servicesListPublic) {
+      const session = await auth();
+      if (!session?.user) {
+        return NextResponse.json(
+          { error: 'Authentication required to access services list' },
+          { status: 401 }
+        );
+      }
+    }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limitParam = searchParams.get('limit') || '50';

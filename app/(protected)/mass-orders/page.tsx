@@ -5,19 +5,19 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
 import { APP_NAME } from '@/lib/constants';
 import {
-  dashboardApi,
-  useGetUserStatsQuery,
+    dashboardApi,
+    useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaExternalLinkAlt,
-  FaInfoCircle,
-  FaLayerGroup,
-  FaShoppingCart,
-  FaSpinner,
-  FaTimes,
+    FaCheckCircle,
+    FaExternalLinkAlt,
+    FaInfoCircle,
+    FaLayerGroup,
+    FaShoppingCart,
+    FaSpinner,
+    FaTimes,
 } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 
@@ -183,11 +183,41 @@ export default function MassOrder() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+  const [massOrderEnabled, setMassOrderEnabled] = useState<boolean | null>(null);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Mass Orders — ${APP_NAME}`;
   }, []);
+
+  // Check if mass order is enabled
+  useEffect(() => {
+    const checkMassOrderSettings = async () => {
+      try {
+        const response = await axiosInstance.get('/api/admin/module-settings');
+        if (response.data.success) {
+          const enabled = response.data.moduleSettings.massOrderEnabled;
+          setMassOrderEnabled(enabled);
+
+          if (!enabled) {
+            showToast('Mass Order functionality is currently disabled by admin', 'error');
+            setTimeout(() => {
+              router.push('/dashboard');
+            }, 3000);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking mass order settings:', error);
+        setMassOrderEnabled(false);
+        showToast('Unable to verify mass order settings', 'error');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 3000);
+      }
+    };
+
+    checkMassOrderSettings();
+  }, [router]);
 
   // Simulate form initialization loading
   useEffect(() => {

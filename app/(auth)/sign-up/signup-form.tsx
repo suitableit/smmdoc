@@ -2,17 +2,19 @@
 import ButtonLoader from '@/components/button-loader';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
+import { useUserSettings } from '@/hooks/use-user-settings';
 import { register } from '@/lib/actions/register';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
-  signUpDefaultValues,
-  signUpSchema,
-  SignUpSchema,
+    createSignUpSchema,
+    signUpDefaultValues,
+    signUpSchema,
+    SignUpSchema
 } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { FaCheck, FaEnvelope, FaEye, FaEyeSlash, FaLock, FaSpinner, FaTimes, FaUser } from 'react-icons/fa';
 
@@ -21,6 +23,17 @@ export default function SignUpForm() {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Get user settings to check if name field is enabled
+  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
+
+  // Create dynamic schema based on name field setting
+  const dynamicSchema = useMemo(() => {
+    if (settingsLoading || !userSettings) {
+      return signUpSchema; // Use default schema while loading
+    }
+    return createSignUpSchema(userSettings.nameFieldEnabled);
+  }, [userSettings, settingsLoading]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -50,7 +63,7 @@ export default function SignUpForm() {
 
   const form = useForm<SignUpSchema>({
     mode: 'all',
-    resolver: zodResolver(signUpSchema),
+    resolver: zodResolver(signUpSchema), // Use default schema for now
     defaultValues: signUpDefaultValues,
   });
 
@@ -222,6 +235,12 @@ export default function SignUpForm() {
     setError('');
     setSuccess('');
 
+    // Handle optional name field based on admin settings
+    const submitData = { ...values };
+    if (!userSettings?.nameFieldEnabled && submitData.name === '') {
+      delete submitData.name; // Remove empty name field if not required
+    }
+
     // Check if username is available before submitting
     if (usernameStatus.available === false) {
       setError('Please choose a different username');
@@ -276,7 +295,7 @@ export default function SignUpForm() {
     }
 
     startTransition(() => {
-      register(values)
+      register(submitData)
         .then((data) => {
           if (data?.error) {
             setError(data.error);
@@ -372,32 +391,35 @@ export default function SignUpForm() {
           )}
         </div>
 
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200"
-          >
-            Name
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaUser className="w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200" />
+        {/* Name field - conditionally shown based on admin settings */}
+        {(!settingsLoading && userSettings?.nameFieldEnabled !== false) && (
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-lg text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-200"
+            >
+              Name
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaUser className="w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200" />
+              </div>
+              <input
+                type="text"
+                id="name"
+                placeholder="eg: John Doe"
+                disabled={isPending}
+                {...form.register('name')}
+                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+              />
             </div>
-            <input
-              type="text"
-              id="name"
-              placeholder="eg: John Doe"
-              disabled={isPending}
-              {...form.register('name')}
-              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-            />
+            {form.formState.errors.name && (
+              <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
+                {form.formState.errors.name.message}
+              </p>
+            )}
           </div>
-          {form.formState.errors.name && (
-            <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
-              {form.formState.errors.name.message}
-            </p>
-          )}
-        </div>
+        )}
 
         <div>
           <label
