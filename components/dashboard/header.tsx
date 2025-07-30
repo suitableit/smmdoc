@@ -12,30 +12,30 @@ import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
-  FaBell,
-  FaChevronDown,
-  FaCog,
-  FaDesktop,
-  FaEllipsisV,
-  FaFileContract,
-  FaHeadset,
-  FaMoneyBillWave,
-  FaMoon,
-  FaPlus,
-  FaSearch,
-  FaShoppingCart,
-  FaSignOutAlt,
-  FaSun,
-  FaTicketAlt,
-  FaUserCog,
-  FaUsers,
-  FaWallet,
+    FaBell,
+    FaChevronDown,
+    FaCog,
+    FaDesktop,
+    FaEllipsisV,
+    FaFileContract,
+    FaHeadset,
+    FaMoneyBillWave,
+    FaMoon,
+    FaPlus,
+    FaSearch,
+    FaShoppingCart,
+    FaSignOutAlt,
+    FaSun,
+    FaTicketAlt,
+    FaUserCog,
+    FaUsers,
+    FaWallet,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger
 } from '../ui/dropdown-menu';
 import MobileSidebar from './mobile-siderbar';
 
@@ -441,7 +441,7 @@ const Menu = ({ user }: { user: any }) => {
           />
           {!(user?.photo || user?.image) && (
             <AvatarFallback>
-              {username?.charAt(0)?.toUpperCase()}
+              {(user?.username || user?.name || user?.email)?.charAt(0)?.toUpperCase()}
             </AvatarFallback>
           )}
         </Avatar>
@@ -475,7 +475,7 @@ const Menu = ({ user }: { user: any }) => {
                   />
                   {!(user?.photo || user?.image) && (
                     <AvatarFallback>
-                      {username?.charAt(0)?.toUpperCase()}
+                      {(user?.username || user?.name || user?.email)?.charAt(0)?.toUpperCase()}
                     </AvatarFallback>
                   )}
                 </Avatar>
