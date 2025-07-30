@@ -63,6 +63,37 @@ const signUpSchema = z
     path: ['confirmPassword'],
   });
 
+// Dynamic sign up schema based on settings
+const createSignUpSchema = (nameFieldEnabled: boolean = true) => {
+  const baseSchema = {
+    username: z.string().nonempty('Username is required'),
+    email: z
+      .string()
+      .nonempty('Email is required')
+      .email('Invalid email address'),
+    password: z
+      .string()
+      .nonempty('Password is required')
+      .min(5, 'Password must be at least 5 characters'),
+    confirmPassword: z
+      .string()
+      .nonempty('Confirm password is required')
+      .min(5, 'Confirm password must be at least 5 characters'),
+  };
+
+  // Add name field based on settings
+  const schemaWithName = nameFieldEnabled
+    ? { ...baseSchema, name: z.string().nonempty('Name is required') }
+    : { ...baseSchema, name: z.string().optional() };
+
+  return z
+    .object(schemaWithName)
+    .refine((data) => data.password === data.confirmPassword, {
+      message: 'Passwords do not match',
+      path: ['confirmPassword'],
+    });
+};
+
 type SignUpSchema = z.infer<typeof signUpSchema>;
 
 const signUpDefaultValues: SignUpSchema = {
@@ -73,7 +104,7 @@ const signUpDefaultValues: SignUpSchema = {
   confirmPassword: '',
 };
 
-export { signUpDefaultValues, signUpSchema, type SignUpSchema };
+export { createSignUpSchema, signUpDefaultValues, signUpSchema, type SignUpSchema };
 
 const resetSchema = z.object({
   email: z

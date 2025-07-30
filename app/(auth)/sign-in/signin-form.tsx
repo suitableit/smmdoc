@@ -15,14 +15,27 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
+import { useUserSettings } from '@/hooks/use-user-settings';
 
 export default function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  let urlError =
-    searchParams?.get('error') === 'OAuthAccountNotLinked'
-      ? 'Email already in use with different provider!'
-      : '';
+
+  // Get user settings to check if password reset is enabled
+  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
+
+  // Handle different URL messages
+  let urlError = '';
+  const errorParam = searchParams?.get('error');
+  const messageParam = searchParams?.get('message');
+
+  if (errorParam === 'OAuthAccountNotLinked') {
+    urlError = 'Email already in use with different provider!';
+  } else if (messageParam === 'registration-disabled') {
+    urlError = 'User registration is currently disabled by administrator.';
+  } else if (messageParam === 'password-reset-disabled') {
+    urlError = 'Password reset is currently disabled by administrator. Please contact support.';
+  }
   const [showTwoFactor, setShowTwoFactor] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>('');
@@ -213,12 +226,15 @@ export default function SignInForm() {
                   Remember me
                 </label>
               </div>
-              <Link
-                href="/reset-password"
-                className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline transition-colors duration-200"
-              >
-                Forget Password?
-              </Link>
+              {/* Show forgot password link only if password reset is enabled */}
+              {(!settingsLoading && userSettings?.resetPasswordEnabled !== false) && (
+                <Link
+                  href="/reset-password"
+                  className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline transition-colors duration-200"
+                >
+                  Forget Password?
+                </Link>
+              )}
             </div>
           </>
         )}

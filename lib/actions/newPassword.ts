@@ -11,6 +11,14 @@ export const newPasswordValues = async (
   values: z.infer<typeof newPasswordSchema>,
   token?: string | null
 ) => {
+  // Check if password reset is enabled
+  const userSettings = await db.userSettings.findFirst();
+  const resetPasswordEnabled = userSettings?.resetPasswordEnabled ?? true;
+
+  if (!resetPasswordEnabled) {
+    return { success: false, error: "Password reset is currently disabled. Please contact support." };
+  }
+
   if (!token) {
     return { success: false, error: "Missing token" };
   }
