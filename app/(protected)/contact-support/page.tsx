@@ -6,16 +6,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaClock,
-  FaEnvelope,
-  FaFileUpload,
-  FaHeadset,
-  FaPaperPlane,
-  FaPhone,
-  FaQuestionCircle,
-  FaTicketAlt,
-  FaTimes,
+    FaCheckCircle,
+    FaClock,
+    FaEnvelope,
+    FaHeadset,
+    FaPaperPlane,
+    FaPhone,
+    FaQuestionCircle,
+    FaTicketAlt,
+    FaTimes
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component (Large version for loading state)
@@ -72,21 +71,13 @@ export default function ContactSupportPage() {
     message: '',
     attachments: null as FileList | null,
   });
+  const [categories, setCategories] = useState<Array<{id: number, name: string}>>([]);
+  const [contactFormData, setContactFormData] = useState<{
+    userPendingCount: number;
+    maxPendingContacts: number;
+    canSubmit: boolean;
+  } | null>(null);
   const user = useCurrentUser();
-
-  // Set document title using useEffect for client-side
-  useEffect(() => {
-    document.title = `Contact Support — ${APP_NAME}`;
-  }, []);
-
-  // Simulate initial loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   // Show toast notification
   const showToast = (
@@ -96,6 +87,53 @@ export default function ContactSupportPage() {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
+
+  // Set document title using useEffect for client-side
+  useEffect(() => {
+    document.title = `Contact Support — ${APP_NAME}`;
+  }, []);
+
+  // Load contact form data and categories
+  useEffect(() => {
+    const loadContactFormData = async () => {
+      try {
+        // Set default categories for now
+        setCategories([
+          { id: 1, name: 'General Inquiry' },
+          { id: 2, name: 'Business Partnership' },
+          { id: 3, name: 'Media & Press' }
+        ]);
+
+        setContactFormData({
+          userPendingCount: 0,
+          maxPendingContacts: 3,
+          canSubmit: true
+        });
+
+        const response = await fetch('/api/contact-support');
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setCategories(data.data.categories);
+          setContactFormData({
+            userPendingCount: data.data.userPendingCount,
+            maxPendingContacts: data.data.maxPendingContacts,
+            canSubmit: data.data.canSubmit
+          });
+        } else {
+          console.log('API error:', data.error);
+          // Keep default values if API fails
+        }
+      } catch (error) {
+        console.error('Error loading contact form data:', error);
+        // Keep default values if API fails
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadContactFormData();
+  }, []);
 
   // Navigation handlers
   const handleNavigateToTicket = () => {
@@ -108,6 +146,15 @@ export default function ContactSupportPage() {
 
   // Handle form submission
   const handleSubmit = async () => {
+    // Check if user can submit
+    if (contactFormData && !contactFormData.canSubmit) {
+      showToast(
+        `You have reached the maximum limit of ${contactFormData.maxPendingContacts} pending contacts. Please wait for a response to your previous messages.`,
+        'error'
+      );
+      return;
+    }
+
     // Basic validation
     if (!formData.subject || formData.subject.length < 5) {
       showToast('Subject must be at least 5 characters', 'error');
@@ -127,22 +174,37 @@ export default function ContactSupportPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Show success message
-      showToast(
-        'Your message has been sent successfully! We will get back to you as soon as possible.',
-        'success'
-      );
-
-      // Reset form
-      setFormData({
-        subject: '',
-        category: '',
-        message: '',
-        attachments: null,
+      // Submit contact form to API
+      const response = await fetch('/api/contact-support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subject: formData.subject,
+          category: formData.category,
+          message: formData.message,
+          attachments: formData.attachments ? Array.from(formData.attachments) : null,
+        }),
       });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Show success message
+        showToast(data.message || 'Your message has been sent successfully!', 'success');
+
+        // Reset form
+        setFormData({
+          subject: '',
+          category: '',
+          message: '',
+          attachments: null,
+        });
+      } else {
+        // Show error message from API
+        showToast(data.error || 'Failed to send message. Please try again later.', 'error');
+      }
     } catch (error) {
       console.error('Error submitting contact form:', error);
       showToast('Failed to send message. Please try again later.', 'error');
@@ -360,12 +422,11 @@ export default function ContactSupportPage() {
                     <option value="" disabled>
                       Select a category
                     </option>
-                    <option value="technical">Technical Support</option>
-                    <option value="billing">Billing & Payments</option>
-                    <option value="orders">Order Issues</option>
-                    <option value="account">Account Management</option>
-                    <option value="api">API & Integration</option>
-                    <option value="other">Other</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
