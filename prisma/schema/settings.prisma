@@ -112,3 +112,144 @@ model ModuleSettings {
 
   @@map("module_settings")
 }
+
+// Service Update Logs Model
+model ServiceUpdateLog {
+  id            Int      @id @default(autoincrement())
+  serviceId     Int
+  serviceName   String
+  adminId       Int
+  adminEmail    String
+  action        String   // 'created', 'updated', 'deleted', 'status_changed'
+  changes       Json?    // Store the changes made
+  oldValues     Json?    // Store old values for comparison
+  newValues     Json?    // Store new values
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  @@map("service_update_logs")
+}
+
+// Affiliate System Models
+model Affiliate {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  referralCode    String   @unique
+  commissionRate  Float    @default(5) // Percentage
+  totalEarnings   Float    @default(0)
+  availableEarnings Float  @default(0)
+  totalReferrals  Int      @default(0)
+  totalVisits     Int      @default(0)
+  status          String   @default("active") // active, inactive, suspended
+  paymentMethod   String?
+  paymentDetails  Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  referrals       AffiliateReferral[]
+  commissions     AffiliateCommission[]
+  payouts         AffiliatePayout[]
+
+  @@map("affiliates")
+}
+
+model AffiliateReferral {
+  id          Int      @id @default(autoincrement())
+  affiliateId Int
+  referredUserId Int   @unique
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@map("affiliate_referrals")
+}
+
+model AffiliateCommission {
+  id          Int      @id @default(autoincrement())
+  affiliateId Int
+  referredUserId Int
+  orderId     Int?
+  amount      Float
+  commissionRate Float
+  commissionAmount Float
+  status      String   @default("pending") // pending, approved, paid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@map("affiliate_commissions")
+}
+
+model AffiliatePayout {
+  id          Int      @id @default(autoincrement())
+  affiliateId Int
+  amount      Float
+  method      String
+  details     Json?
+  status      String   @default("pending") // pending, processing, completed, failed
+  requestedAt DateTime @default(now())
+  processedAt DateTime?
+  notes       String?
+  adminId     Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@map("affiliate_payouts")
+}
+
+// Child Panel System Models
+model ChildPanel {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  domain          String   @unique
+  subdomain       String?
+  panelName       String
+  apiKey          String   @unique
+  status          String   @default("pending") // pending, active, inactive, suspended, expired
+  plan            String   @default("basic") // basic, standard, premium
+  theme           String   @default("default")
+  customBranding  Boolean  @default(false)
+  totalOrders     Int      @default(0)
+  totalRevenue    Float    @default(0)
+  apiCallsToday   Int      @default(0)
+  apiCallsTotal   Int      @default(0)
+  lastActivity    DateTime?
+  expiryDate      DateTime?
+  settings        Json?    // Store panel configuration
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  subscriptions   ChildPanelSubscription[]
+
+  @@map("child_panels")
+}
+
+model ChildPanelSubscription {
+  id            Int      @id @default(autoincrement())
+  childPanelId  Int
+  amount        Float
+  currency      String   @default("USD")
+  status        String   @default("pending") // pending, active, expired, cancelled
+  startDate     DateTime @default(now())
+  endDate       DateTime
+  paymentMethod String?
+  transactionId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  childPanel    ChildPanel @relation(fields: [childPanelId], references: [id], onDelete: Cascade)
+
+  @@map("child_panel_subscriptions")
+}
