@@ -138,6 +138,8 @@ const ProfilePage = () => {
   const [hasProfileChanges, setHasProfileChanges] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [pendingEmailChange, setPendingEmailChange] = useState<string | null>(null);
+  const [isEmailVerificationPending, setIsEmailVerificationPending] = useState(false);
 
   // Form validation states
   const [validationErrors, setValidationErrors] = useState<{
@@ -524,9 +526,28 @@ const ProfilePage = () => {
   const handleSaveProfileChanges = async () => {
     if (!hasProfileChanges) return;
 
+    // Validate all fields before submitting
+    const emailError = validateEmail(profileData.email);
+    const fullNameError = validateFullName(profileData.fullName);
+    const usernameError = validateUsername(profileData.username);
+
+    if (emailError || fullNameError || usernameError) {
+      setValidationErrors({
+        email: emailError,
+        fullName: fullNameError,
+        username: usernameError,
+      });
+      showToast('Please fix validation errors before saving', 'error');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      // Check if email is being changed
+      const originalEmail = user?.email || '';
+      const isEmailChanged = profileData.email !== originalEmail;
+
       const response = await fetch('/api/user/update-profile', {
         method: 'POST',
         headers: {
@@ -542,26 +563,38 @@ const ProfilePage = () => {
       const result = await response.json();
 
       if (response.ok) {
+        // If email was changed, set up verification flow
+        if (isEmailChanged) {
+          setPendingEmailChange(profileData.email);
+          setIsEmailVerificationPending(true);
+          showToast('Profile updated! Please verify your new email address.', 'info');
+        } else {
+          showToast('Profile updated successfully!', 'success');
+        }
+
         // Update Redux store
         dispatch(
           setUserDetails({
             ...userDetails,
-            fullName: profileData.fullName,
-            email: profileData.email,
+            name: profileData.fullName,
             username: profileData.username,
-            emailVerified: result.emailVerified || userDetails.emailVerified,
+            // Only update email if it wasn't changed (to avoid confusion)
+            email: isEmailChanged ? userDetails.email : profileData.email,
+            emailVerified: isEmailChanged ? false : (result.data?.emailVerified || userDetails.emailVerified),
           })
         );
 
         setIsEditingProfile(false);
         setHasProfileChanges(false);
-        showToast('Profile updated successfully!', 'success');
       } else {
-        showToast(result.message || 'Failed to update profile', 'error');
+        // Show specific error message from API
+        const errorMessage = result.error || result.message || 'Failed to update profile';
+        showToast(errorMessage, 'error');
+        console.error('Profile update failed:', result);
       }
     } catch (error) {
       console.error('Profile update error:', error);
-      showToast('Error updating profile', 'error');
+      showToast('Network error: Unable to update profile. Please try again.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -575,12 +608,16 @@ const ProfilePage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          email: pendingEmailChange || user?.email, // Send to pending email if exists
+        }),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        showToast('Verification email sent successfully!', 'success');
+        const emailTarget = pendingEmailChange || user?.email;
+        showToast(`Verification email sent to ${emailTarget}!`, 'success');
       } else {
         showToast(
           result.message || 'Failed to send verification email',
@@ -800,7 +837,6 @@ const ProfilePage = () => {
         <div className="page-content">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-6">
-              \{' '}
               <div className="card card-padding">
                 <div className="flex items-center justify-center min-h-[200px]">
                   <div className="text-center flex flex-col items-center">
@@ -950,18 +986,16 @@ const ProfilePage = () => {
                   <label className="form-label">Full Name</label>
                   <input
                     type="text"
-                    value={
-                      isEditingProfile ? profileData.fullName : user?.name || ''
-                    }
+                    value={profileData.fullName}
                     onChange={(e) =>
                       handleProfileDataChange('fullName', e.target.value)
                     }
-                    readOnly={!isEditingProfile}
                     className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
                       validationErrors.fullName
                         ? 'border-red-500 dark:border-red-400'
                         : 'border-gray-300 dark:border-gray-600'
                     } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
+                    placeholder="Enter full name"
                   />
                   {validationErrors.fullName && (
                     <p className="text-red-500 text-sm mt-1">{validationErrors.fullName}</p>
@@ -970,28 +1004,50 @@ const ProfilePage = () => {
 
                 <div className="form-group">
                   <label className="form-label">Email</label>
-                  <input
-                    type="email"
-                    value={
-                      isEditingProfile ? profileData.email : user?.email || ''
-                    }
-                    onChange={(e) =>
-                      handleProfileDataChange('email', e.target.value)
-                    }
-                    readOnly={!isEditingProfile}
-                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
-                      validationErrors.email
-                        ? 'border-red-500 dark:border-red-400'
-                        : 'border-gray-300 dark:border-gray-600'
-                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
-                  />
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={profileData.email}
+                      onChange={(e) =>
+                        handleProfileDataChange('email', e.target.value)
+                      }
+                      className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
+                        validationErrors.email
+                          ? 'border-red-500 dark:border-red-400'
+                          : 'border-gray-300 dark:border-gray-600'
+                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
+                      placeholder="Enter email address"
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {(user as any)?.emailVerified && !pendingEmailChange ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                          Not Verified
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   {validationErrors.email && (
                     <p className="text-red-500 text-sm mt-1">{validationErrors.email}</p>
                   )}
+                  {pendingEmailChange && (
+                    <p className="text-blue-600 dark:text-blue-400 text-sm mt-1">
+                      Pending verification for: {pendingEmailChange}
+                    </p>
+                  )}
                 </div>
 
-                <div className="flex gap-2">
-                  {isEditingProfile && hasProfileChanges ? (
+                <div className="flex gap-2 flex-wrap">
+                  {hasProfileChanges ? (
                     <button
                       onClick={handleSaveProfileChanges}
                       disabled={isLoading}
@@ -1001,19 +1057,19 @@ const ProfilePage = () => {
                     </button>
                   ) : (
                     <button
-                      onClick={handleUpdateProfile}
-                      className="btn btn-primary"
+                      disabled
+                      className="btn btn-primary opacity-50 cursor-not-allowed"
                     >
-                      {isEditingProfile ? 'Cancel' : 'Update Profile'}
+                      No Changes to Save
                     </button>
                   )}
 
-                  {!(user as any)?.emailVerified && (
+                  {(!(user as any)?.emailVerified || pendingEmailChange) && (
                     <button
                       onClick={handleResendVerificationEmail}
                       className="btn btn-secondary"
                     >
-                      Resend Verification Email
+                      Send Verification Email
                     </button>
                   )}
                 </div>
