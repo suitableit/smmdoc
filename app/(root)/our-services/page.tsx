@@ -1,14 +1,19 @@
-import ContactUs from '@/components/frontend/our-services/page';
+import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
+
+const Hero = dynamic(() => import('@/components/frontend/our-services/hero'));
+const Services = dynamic(() => import('@/components/frontend/our-services/services'));
 
 export const metadata: Metadata = {
   title: 'Our Services',
-  description:
-    'Get in touch with SMMDOC for unparalleled social media marketing support. Reach out to us effortlessly for exceptional service, assistance, and customized SMM solutions. Available 24/7.',
-  keywords:
-    'Contact SMMDOC, SMM Panel Support, Social Media Marketing Help, Customer Service Bangladesh, SMM Panel Contact, Digital Marketing Support, Get Help SMMDOC, Contact SMM Provider',
+  description: 'Explore our comprehensive social media marketing services.',
 };
 
-export default function ContactPage() {
-  return <ContactUs />;
+export default function OurServicesPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
+      <Hero />
+      <Services />
+    </div>
+  );
 }

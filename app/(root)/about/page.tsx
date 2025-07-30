@@ -1,5 +1,13 @@
-import About from '@/components/frontend/about/page';
 import { Metadata } from 'next';
+import dynamic from 'next/dynamic';
+
+const Hero = dynamic(() => import('@/components/frontend/about/hero'));
+const Mission = dynamic(() => import('@/components/frontend/about/mission'));
+const Vision = dynamic(() => import('@/components/frontend/about/vision'));
+const Team = dynamic(() => import('@/components/frontend/about/team'));
+const Services = dynamic(() => import('@/components/frontend/about/services'));
+const CTA = dynamic(() => import('@/components/frontend/about/cta'));
+const WhyDifferent = dynamic(() => import('@/components/frontend/about/why-different'));
 
 export const metadata: Metadata = {
   title: 'About Us',
@@ -10,5 +18,15 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
-  return <About />;
+  return (
+    <main>
+      <Hero />
+      <Mission />
+      <Vision />
+      <Team />
+      <Services />
+      <CTA />
+      <WhyDifferent />
+    </main>
+  );
 }
