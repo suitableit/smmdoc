@@ -133,10 +133,10 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
 
     // Log successful login activity with IP address
     try {
-      const headersList = headers();
-      const clientIP = headersList.get('x-client-ip') || 
-                      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-                      headersList.get('x-real-ip') || 
+      const headersList = await headers();
+      const clientIP = headersList.get('x-client-ip') ||
+                      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+                      headersList.get('x-real-ip') ||
                       'unknown';
       
       const username = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
@@ -264,10 +264,10 @@ export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
     
     // Log admin login activity with IP address
     try {
-      const headersList = headers();
-      const clientIP = headersList.get('x-client-ip') || 
-                      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-                      headersList.get('x-real-ip') || 
+      const headersList = await headers();
+      const clientIP = headersList.get('x-client-ip') ||
+                      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+                      headersList.get('x-real-ip') ||
                       'unknown';
       
       const username = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
