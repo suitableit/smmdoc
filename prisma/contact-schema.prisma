@@ -1,0 +1,58 @@
+// Contact System Schema
+// This file contains all contact-related database models
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/contact-client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Contact System Models
+model ContactSettings {
+  id                    Int               @id @default(autoincrement())
+  contactSystemEnabled  Boolean           @default(true)
+  maxPendingContacts    String            @default("3")
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  categories           ContactCategory[]
+
+  @@map("contact_settings")
+}
+
+model ContactCategory {
+  id                Int              @id @default(autoincrement())
+  name              String
+  contactSettingsId Int?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  contactSettings   ContactSettings? @relation(fields: [contactSettingsId], references: [id])
+  messages          ContactMessage[]
+
+  @@map("contact_categories")
+}
+
+model ContactMessage {
+  id          Int             @id @default(autoincrement())
+  userId      Int
+  subject     String
+  message     String          @db.Text
+  status      String          @default("Unread") // Unread, Read, Replied
+  categoryId  Int
+  attachments String?         @db.Text // JSON string for file paths
+  adminReply  String?         @db.Text
+  repliedAt   DateTime?
+  repliedBy   Int?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  category      ContactCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("contact_messages")
+}
