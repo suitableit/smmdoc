@@ -281,7 +281,7 @@ const Header: React.FC<HeaderProps> = ({
         >
           <Avatar className="h-12 w-12">
             <AvatarImage src={user?.photo || user?.image} alt={user?.name || 'User'} />
-            <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>
+            {!(user?.photo || user?.image) && <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>}
           </Avatar>
         </button>
 
@@ -293,7 +293,7 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="flex items-center space-x-2 sm:space-x-4 mb-3 sm:mb-4">
                   <Avatar className="h-10 w-10 sm:h-14 sm:w-14 ring-2 sm:ring-3 ring-[var(--primary)]/20">
                     <AvatarImage src={user?.photo || user?.image} alt={user?.name || 'User'} />
-                    <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                    {!(user?.photo || user?.image) && <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>}
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm sm:text-xl font-bold truncate text-gray-900 dark:text-white">{username}</h3>
@@ -458,7 +458,7 @@ const Header: React.FC<HeaderProps> = ({
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={session.user?.photo || session.user?.image} alt={session.user?.name || 'User'} />
-                      <AvatarFallback>{(session.user?.username || session.user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}</AvatarFallback>
+                      {!(session.user?.photo || session.user?.image) && <AvatarFallback>{(session.user?.username || session.user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}</AvatarFallback>}
                     </Avatar>
                     <div>
                       <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{session.user?.username || session.user?.name}</h3>

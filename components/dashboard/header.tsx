@@ -439,9 +439,11 @@ const Menu = ({ user }: { user: any }) => {
             src={user?.photo || user?.image}
             alt={user?.name || 'User'}
           />
-          <AvatarFallback>
-            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-          </AvatarFallback>
+          {!(user?.photo || user?.image) && (
+            <AvatarFallback>
+              {username?.charAt(0)?.toUpperCase()}
+            </AvatarFallback>
+          )}
         </Avatar>
       </button>
 
@@ -471,9 +473,11 @@ const Menu = ({ user }: { user: any }) => {
                     src={user?.photo || user?.image}
                     alt={user?.name || 'User'}
                   />
-                  <AvatarFallback>
-                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
+                  {!(user?.photo || user?.image) && (
+                    <AvatarFallback>
+                      {username?.charAt(0)?.toUpperCase()}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <h3
