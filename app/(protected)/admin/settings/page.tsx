@@ -9,18 +9,18 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 import {
-  FaCheck,
-  FaGlobe,
-  FaHeadset,
-  FaImage,
-  FaPlus,
-  FaPuzzlePiece,
-  FaSearch,
-  FaTicketAlt,
-  FaTimes,
-  FaTrash,
-  FaUpload,
-  FaUsers
+    FaCheck,
+    FaGlobe,
+    FaHeadset,
+    FaImage,
+    FaPlus,
+    FaPuzzlePiece,
+    FaSearch,
+    FaTicketAlt,
+    FaTimes,
+    FaTrash,
+    FaUpload,
+    FaUsers
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -186,7 +186,7 @@ interface TicketSettings {
 interface ContactSettings {
   contactSystemEnabled: boolean;
   maxPendingContacts: string;
-  categories: { id: number; name: string }[];
+  categories: { id: number | null; name: string }[];
 }
 
 interface ModuleSettings {
@@ -568,10 +568,10 @@ const GeneralSettingsPage = () => {
 
   const addCategory = () => {
     if (newCategory.trim()) {
-      const newId = Math.max(...contactSettings.categories.map(c => c.id), 0) + 1;
+      // Use null for new categories - backend will assign proper ID
       setContactSettings(prev => ({
         ...prev,
-        categories: [...prev.categories, { id: newId, name: newCategory.trim() }]
+        categories: [...prev.categories, { id: null, name: newCategory.trim() }]
       }));
       setNewCategory('');
       showToast('Category added successfully!', 'success');
