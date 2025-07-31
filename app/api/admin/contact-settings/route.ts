@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { db } from '@/lib/db';
+import { contactDB } from '@/lib/contact-db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
@@ -10,14 +10,10 @@ export async function GET() {
     }
 
     // Get contact settings
-    const settings = await db.contactSettings.findFirst({
-      orderBy: { id: 'desc' }
-    });
+    const settings = await contactDB.getContactSettings();
 
     // Get contact categories
-    const categories = await db.contactCategory.findMany({
-      orderBy: { name: 'asc' }
-    });
+    const categories = await contactDB.getContactCategories();
 
     const formattedSettings = {
       contactSystemEnabled: settings?.contactSystemEnabled ?? true,
@@ -65,44 +61,34 @@ export async function POST(request: NextRequest) {
     }
 
     // Upsert contact settings
-    const existingSettings = await db.contactSettings.findFirst();
+    await contactDB.upsertContactSettings({
+      contactSystemEnabled: contactSettings.contactSystemEnabled ?? true,
+      maxPendingContacts: contactSettings.maxPendingContacts ?? '3'
+    });
 
-    if (existingSettings) {
-      await db.contactSettings.update({
-        where: { id: existingSettings.id },
-        data: {
-          contactSystemEnabled: contactSettings.contactSystemEnabled ?? true,
-          maxPendingContacts: contactSettings.maxPendingContacts ?? '3'
-        }
-      });
-    } else {
-      await db.contactSettings.create({
-        data: {
-          contactSystemEnabled: contactSettings.contactSystemEnabled ?? true,
-          maxPendingContacts: contactSettings.maxPendingContacts ?? '3'
-        }
-      });
-    }
+    // Handle categories using contactDB
+    console.log('📋 Processing categories:', contactSettings.categories);
 
-    // Handle categories
-    const existingCategories = await db.contactCategory.findMany();
+    const existingCategories = await contactDB.getContactCategories();
     const existingCategoryMap = new Map(
       existingCategories.map((cat) => [cat.id, cat.name])
     );
 
+    console.log('📂 Existing categories:', existingCategories);
+
     // Update or create categories
     for (const category of contactSettings.categories) {
+      console.log('🔄 Processing category:', category);
+
       if (category.id && existingCategoryMap.has(category.id)) {
         if (existingCategoryMap.get(category.id) !== category.name) {
-          await db.contactCategory.update({
-            where: { id: category.id },
-            data: { name: category.name.trim() }
-          });
+          console.log('✏️ Updating category:', category.id, category.name);
+          await contactDB.updateContactCategory(category.id, category.name.trim());
         }
       } else if (!category.id) {
-        await db.contactCategory.create({
-          data: { name: category.name.trim() }
-        });
+        console.log('➕ Creating new category:', category.name);
+        const created = await contactDB.createContactCategory(category.name.trim());
+        console.log('✅ Category creation result:', created);
       }
     }
 
@@ -113,9 +99,7 @@ export async function POST(request: NextRequest) {
 
     for (const [existingId] of existingCategoryMap) {
       if (!newCategoryIds.includes(existingId)) {
-        await db.contactCategory.delete({
-          where: { id: Number(existingId) }
-        });
+        await contactDB.deleteContactCategory(Number(existingId));
       }
     }
 
