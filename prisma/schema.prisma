@@ -80,8 +80,9 @@ model User {
   updatedAt             DateTime               @updatedAt
   cancelRequests        CancelRequest[]
   activityLogs          ActivityLog[]
-  contactMessages       ContactMessage[]
-  contactReplies        ContactMessage[]       @relation("ContactMessageReplies")
+
+
+  @@map("users")
 }
 
 model ServiceType {
@@ -401,46 +402,4 @@ model ApiKey {
 }
 
 // Contact System Models
-model ContactSettings {
-  id                    Int      @id @default(autoincrement())
-  contactSystemEnabled  Boolean  @default(true)
-  maxPendingContacts    String   @default("3")
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
 
-  @@map("contact_settings")
-}
-
-model ContactCategory {
-  id        Int              @id @default(autoincrement())
-  name      String
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  messages  ContactMessage[]
-
-  @@map("contact_categories")
-}
-
-model ContactMessage {
-  id          Int             @id @default(autoincrement())
-  userId      Int
-  subject     String
-  message     String          @db.Text
-  status      String          @default("Unread") // Unread, Read, Replied
-  categoryId  Int
-  attachments String?         @db.Text // JSON string for file paths
-  adminReply  String?         @db.Text
-  repliedAt   DateTime?
-  repliedBy   Int?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category      ContactCategory @relation(fields: [categoryId], references: [id])
-  repliedByUser User?           @relation("ContactMessageReplies", fields: [repliedBy], references: [id])
-
-  @@index([userId])
-  @@index([categoryId])
-  @@index([status])
-  @@map("contact_messages")
-}

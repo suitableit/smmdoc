@@ -36,13 +36,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add db import at the top of the file
-    const { db } = await import('@/lib/db');
+    // Import contact db
+    const { contactDB } = await import('@/lib/contact-db');
 
     // Check if contact system is enabled
-    const contactSettings = await db.contactSettings.findFirst({
-      orderBy: { id: 'desc' }
-    });
+    const contactSettings = await contactDB.getContactSettings();
     if (!contactSettings?.contactSystemEnabled) {
       return NextResponse.json(
         { error: 'Contact system is currently disabled' },
@@ -51,11 +49,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check user's pending contact limit
-    const userPendingCount = await db.contactMessage.count({
-      where: {
-        userId: session.user.id,
-        status: { in: ['Unread', 'Read'] }
-      }
+    const userPendingCount = await contactDB.countContactMessages({
+      userId: session.user.id,
+      status: ['Unread', 'Read']
     });
     const maxPendingContacts = parseInt(contactSettings.maxPendingContacts || '3');
 
@@ -69,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate category exists
-    const categories = await db.contactCategory.findMany();
+    const categories = await contactDB.getContactCategories();
     const categoryExists = categories.some((cat) => cat.id === parseInt(category));
 
     if (!categoryExists) {
@@ -83,25 +79,22 @@ export async function POST(request: NextRequest) {
     let attachmentsJson = null;
     if (attachments && Array.isArray(attachments) && attachments.length > 0) {
       // Validate file attachments
-      const validAttachments = attachments.filter(file => 
+      const validAttachments = attachments.filter(file =>
         file && file.name && file.size && file.size <= 10 * 1024 * 1024 // 10MB limit
       );
-      
+
       if (validAttachments.length > 0) {
         attachmentsJson = JSON.stringify(validAttachments);
       }
     }
 
     // Create contact message
-    await db.contactMessage.create({
-      data: {
-        userId: session.user.id,
-        subject: subject.trim(),
-        message: message.trim(),
-        categoryId: parseInt(category),
-        attachments: attachmentsJson,
-        status: 'Unread'
-      }
+    await contactDB.createContactMessage({
+      userId: session.user.id,
+      subject: subject.trim(),
+      message: message.trim(),
+      categoryId: parseInt(category),
+      attachments: attachmentsJson
     });
 
     return NextResponse.json({
@@ -129,13 +122,11 @@ export async function GET() {
 
     console.log('Contact Support GET - Session user:', session.user);
 
-    // Add db import
-    const { db } = await import('@/lib/db');
+    // Import contact db
+    const { contactDB } = await import('@/lib/contact-db');
 
     // Get contact settings
-    const contactSettings = await db.contactSettings.findFirst({
-      orderBy: { id: 'desc' }
-    });
+    const contactSettings = await contactDB.getContactSettings();
 
     // Check if contact system is enabled
     if (!contactSettings?.contactSystemEnabled) {
@@ -146,16 +137,12 @@ export async function GET() {
     }
 
     // Get contact categories
-    const categories = await db.contactCategory.findMany({
-      orderBy: { name: 'asc' }
-    });
+    const categories = await contactDB.getContactCategories();
 
     // Get user's pending contact count
-    const userPendingCount = await db.contactMessage.count({
-      where: {
-        userId: session.user.id,
-        status: { in: ['Unread', 'Read'] }
-      }
+    const userPendingCount = await contactDB.countContactMessages({
+      userId: session.user.id,
+      status: ['Unread', 'Read']
     });
     const maxPendingContacts = parseInt(contactSettings.maxPendingContacts || '3');
 
