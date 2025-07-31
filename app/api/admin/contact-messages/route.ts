@@ -19,15 +19,18 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Get contact messages with filters
+    console.log('🔍 Fetching contact messages with filters:', { status, search, limit, offset });
     const messages = await contactDB.getContactMessages({
       status: status !== 'All' ? status : undefined,
       search: search || undefined,
       limit,
       offset
     });
+    console.log('📋 Found messages:', messages.length);
 
     // Get message counts for status tabs
     const counts = await contactDB.getContactMessageCounts();
+    console.log('📊 Message counts:', counts);
 
     // Format messages for the UI
     const formattedMessages = (messages as any[]).map((msg: any) => ({

@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 
-// Contact database client using main database
+// Contact database client using main database with contact models
 class ContactDB {
   private prisma = db;
 
@@ -98,7 +98,7 @@ class ContactDB {
     }
   }
 
-  // Contact Messages Methods
+  // Contact Messages Methods (using raw SQL)
   async createContactMessage(data: {
     userId: number;
     subject: string;
@@ -107,20 +107,44 @@ class ContactDB {
     attachments?: string;
   }) {
     try {
-      await this.prisma.contactMessage.create({
-        data: {
-          userId: data.userId,
-          subject: data.subject,
-          message: data.message,
-          categoryId: data.categoryId,
-          attachments: data.attachments || null,
-          status: 'Unread'
-        }
-      });
+      await this.prisma.$executeRaw`
+        INSERT INTO contact_messages (userId, subject, message, categoryId, attachments, status, createdAt, updatedAt)
+        VALUES (${data.userId}, ${data.subject}, ${data.message}, ${data.categoryId}, ${data.attachments || null}, 'Unread', NOW(), NOW())
+      `;
       return true;
     } catch (error) {
       console.error('Error creating contact message:', error);
       return false;
+    }
+  }
+
+  async countContactMessages(filters: {
+    userId?: number;
+    status?: string[];
+  }) {
+    try {
+      let whereClause = 'WHERE 1=1';
+      const params: any[] = [];
+
+      if (filters.userId) {
+        whereClause += ` AND userId = ?`;
+        params.push(filters.userId);
+      }
+
+      if (filters.status && filters.status.length > 0) {
+        const placeholders = filters.status.map(() => '?').join(',');
+        whereClause += ` AND status IN (${placeholders})`;
+        params.push(...filters.status);
+      }
+
+      const result = await this.prisma.$queryRawUnsafe(`
+        SELECT COUNT(*) as count FROM contact_messages ${whereClause}
+      `, ...params);
+
+      return (result as any)[0]?.count || 0;
+    } catch (error) {
+      console.error('Error counting contact messages:', error);
+      return 0;
     }
   }
 
