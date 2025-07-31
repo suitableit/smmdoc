@@ -11,6 +11,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User model reference for relations
+model User {
+  id                    Int                    @id @default(autoincrement())
+  username              String?                @unique
+  name                  String?
+  email                 String?                @unique
+  contactMessages       ContactMessage[]
+  repliedContactMessages ContactMessage[]      @relation("RepliedByUser")
+
+  @@map("users")
+}
+
 // Contact System Models
 model ContactSettings {
   id                    Int               @id @default(autoincrement())
@@ -49,7 +61,9 @@ model ContactMessage {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
+  user          User            @relation(fields: [userId], references: [id])
   category      ContactCategory @relation(fields: [categoryId], references: [id])
+  repliedByUser User?           @relation("RepliedByUser", fields: [repliedBy], references: [id])
 
   @@index([userId])
   @@index([categoryId])

@@ -1,0 +1,33 @@
+// Contact Message Schema
+// This file contains contact message model
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/contact-message-client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Contact Message Model
+model ContactMessage {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  subject     String
+  message     String   @db.Text
+  status      String   @default("Unread") // Unread, Read, Replied
+  categoryId  Int
+  attachments String?  @db.Text // JSON string for file paths
+  adminReply  String?  @db.Text
+  repliedAt   DateTime?
+  repliedBy   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("contact_messages")
+}

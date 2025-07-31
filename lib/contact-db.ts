@@ -98,7 +98,7 @@ class ContactDB {
     }
   }
 
-  // Contact Messages Methods (using raw SQL)
+  // Contact Messages Methods
   async createContactMessage(data: {
     userId: number;
     subject: string;
@@ -107,10 +107,16 @@ class ContactDB {
     attachments?: string;
   }) {
     try {
-      await this.prisma.$executeRaw`
-        INSERT INTO contact_messages (userId, subject, message, categoryId, attachments, status, createdAt, updatedAt)
-        VALUES (${data.userId}, ${data.subject}, ${data.message}, ${data.categoryId}, ${data.attachments || null}, 'Unread', NOW(), NOW())
-      `;
+      await this.prisma.contactMessage.create({
+        data: {
+          userId: data.userId,
+          subject: data.subject,
+          message: data.message,
+          categoryId: data.categoryId,
+          attachments: data.attachments || null,
+          status: 'Unread'
+        }
+      });
       return true;
     } catch (error) {
       console.error('Error creating contact message:', error);
@@ -120,28 +126,25 @@ class ContactDB {
 
   async countContactMessages(filters: {
     userId?: number;
-    status?: string[];
+    status?: string | string[];
   }) {
     try {
-      let whereClause = 'WHERE 1=1';
-      const params: any[] = [];
+      const where: any = {};
 
       if (filters.userId) {
-        whereClause += ` AND userId = ?`;
-        params.push(filters.userId);
+        where.userId = filters.userId;
       }
 
-      if (filters.status && filters.status.length > 0) {
-        const placeholders = filters.status.map(() => '?').join(',');
-        whereClause += ` AND status IN (${placeholders})`;
-        params.push(...filters.status);
+      if (filters.status) {
+        if (Array.isArray(filters.status)) {
+          where.status = { in: filters.status };
+        } else {
+          where.status = filters.status;
+        }
       }
 
-      const result = await this.prisma.$queryRawUnsafe(`
-        SELECT COUNT(*) as count FROM contact_messages ${whereClause}
-      `, ...params);
-
-      return (result as any)[0]?.count || 0;
+      const count = await this.prisma.contactMessage.count({ where });
+      return count;
     } catch (error) {
       console.error('Error counting contact messages:', error);
       return 0;
@@ -209,17 +212,21 @@ class ContactDB {
         include: {
           user: {
             select: {
+              id: true,
               username: true,
-              email: true
+              email: true,
+              name: true
             }
           },
           category: {
             select: {
+              id: true,
               name: true
             }
           },
           repliedByUser: {
             select: {
+              id: true,
               username: true
             }
           }
@@ -251,8 +258,8 @@ class ContactDB {
         where: { id },
         data: {
           adminReply,
-          repliedBy,
           repliedAt: new Date(),
+          repliedBy,
           status: 'Replied'
         }
       });
@@ -275,41 +282,7 @@ class ContactDB {
     }
   }
 
-  async getContactMessageCounts() {
-    try {
-      const total = await this.prisma.contactMessage.count();
-      const unread = await this.prisma.contactMessage.count({
-        where: { status: 'Unread' }
-      });
-      const read = await this.prisma.contactMessage.count({
-        where: { status: 'Read' }
-      });
-      const replied = await this.prisma.contactMessage.count({
-        where: { status: 'Replied' }
-      });
-
-      return { total, unread, read, replied };
-    } catch (error) {
-      console.error('Error getting contact message counts:', error);
-      return { total: 0, unread: 0, read: 0, replied: 0 };
-    }
-  }
-
-  async getUserPendingContactCount(userId: number) {
-    try {
-      const count = await this.prisma.contactMessage.count({
-        where: {
-          userId,
-          status: { in: ['Unread', 'Read'] }
-        }
-      });
-      return count;
-    } catch (error) {
-      console.error('Error getting user pending contact count:', error);
-      return 0;
-    }
-  }
-
+  // Cleanup method
   async disconnect() {
     await this.prisma.$disconnect();
   }
