@@ -80,8 +80,8 @@ model User {
   updatedAt             DateTime               @updatedAt
   cancelRequests        CancelRequest[]
   activityLogs          ActivityLog[]
-  // contactMessages       ContactMessage[]
-  // repliedContactMessages ContactMessage[]      @relation("RepliedByUser")
+  contactMessages       ContactMessage[]
+  repliedContactMessages ContactMessage[]      @relation("RepliedByUser")
 
 
   @@map("users")
@@ -422,12 +422,12 @@ model ContactCategory {
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   contactSettings   ContactSettings? @relation(fields: [contactSettingsId], references: [id], onDelete: SetNull)
-  // messages          ContactMessage[]
+  messages          ContactMessage[]
 
   @@map("contact_categories")
 }
 
-model ContactMsg {
+model ContactMessage {
   id          Int      @id @default(autoincrement())
   userId      Int
   subject     String
@@ -440,6 +440,10 @@ model ContactMsg {
   repliedBy   Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  user          User            @relation(fields: [userId], references: [id])
+  category      ContactCategory @relation(fields: [categoryId], references: [id])
+  repliedByUser User?           @relation("RepliedByUser", fields: [repliedBy], references: [id])
 
   @@index([userId])
   @@index([categoryId])

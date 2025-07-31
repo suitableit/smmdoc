@@ -1,8 +1,7 @@
 model AddFund {
   id               Int                       @id @default(autoincrement())
   invoice_id       String                    @unique(map: "AddFund_invoice_id_key")
-  amount           Float                     // Amount in USD (base currency)
-  original_amount  Float?                    // Original amount in user's currency
+  amount           Float
   email            String
   name             String?
   status           String?                   @default("Processing")
@@ -22,6 +21,7 @@ model AddFund {
   transaction_type AddFund_transaction_type? @default(deposit)
   reference_id     String?                   @db.VarChar(255)
   currency         String?                   @default("BDT") @db.VarChar(3)
+  original_amount  Float?
   user             User                      @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "addfund_userId_fkey")

@@ -1,8 +1,12 @@
-import { db } from '@/lib/db';
+import { db } from './db';
 
-// Contact database client using main database with contact models
+// Contact database client using main Prisma client
 class ContactDB {
   private prisma = db;
+
+  constructor() {
+    // Using main Prisma client for all contact operations
+  }
 
   // Contact Settings Methods
   async getContactSettings() {
@@ -63,8 +67,24 @@ class ContactDB {
 
   async createContactCategory(name: string) {
     try {
+      // Get or create contact settings first
+      let settings = await this.prisma.contactSettings.findFirst();
+      if (!settings) {
+        settings = await this.prisma.contactSettings.create({
+          data: {
+            contactSystemEnabled: true,
+            maxPendingContacts: '3'
+          }
+        });
+      }
+
       await this.prisma.contactCategory.create({
-        data: { name }
+        data: {
+          name,
+          contactSettings: {
+            connect: { id: settings.id }
+          }
+        }
       });
       return true;
     } catch (error) {
@@ -77,7 +97,7 @@ class ContactDB {
     try {
       await this.prisma.contactCategory.update({
         where: { id },
-        data: { name }
+        data: { name: name.trim() }
       });
       return true;
     } catch (error) {
@@ -98,6 +118,8 @@ class ContactDB {
     }
   }
 
+
+
   // Contact Messages Methods
   async createContactMessage(data: {
     userId: number;
@@ -107,7 +129,7 @@ class ContactDB {
     attachments?: string;
   }) {
     try {
-      await this.prisma.contactMessage.create({
+      await this.prisma.contact_messages.create({
         data: {
           userId: data.userId,
           subject: data.subject,
@@ -143,7 +165,7 @@ class ContactDB {
         }
       }
 
-      const count = await this.prisma.contactMessage.count({ where });
+      const count = await this.prisma.contact_messages.count({ where });
       return count;
     } catch (error) {
       console.error('Error counting contact messages:', error);
@@ -166,33 +188,13 @@ class ContactDB {
 
       if (filters?.search) {
         where.OR = [
-          { user: { username: { contains: filters.search } } },
-          { user: { email: { contains: filters.search } } },
           { subject: { contains: filters.search } },
-          { category: { name: { contains: filters.search } } }
+          { message: { contains: filters.search } }
         ];
       }
 
-      const messages = await this.prisma.contactMessage.findMany({
+      const messages = await this.prisma.contact_messages.findMany({
         where,
-        include: {
-          user: {
-            select: {
-              username: true,
-              email: true
-            }
-          },
-          category: {
-            select: {
-              name: true
-            }
-          },
-          repliedByUser: {
-            select: {
-              username: true
-            }
-          }
-        },
         orderBy: { createdAt: 'desc' },
         take: filters?.limit,
         skip: filters?.offset
@@ -207,30 +209,8 @@ class ContactDB {
 
   async getContactMessageById(id: number) {
     try {
-      const message = await this.prisma.contactMessage.findUnique({
-        where: { id },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              email: true,
-              name: true
-            }
-          },
-          category: {
-            select: {
-              id: true,
-              name: true
-            }
-          },
-          repliedByUser: {
-            select: {
-              id: true,
-              username: true
-            }
-          }
-        }
+      const message = await this.prisma.contact_messages.findUnique({
+        where: { id }
       });
       return message;
     } catch (error) {
@@ -241,7 +221,7 @@ class ContactDB {
 
   async updateContactMessageStatus(id: number, status: string) {
     try {
-      await this.prisma.contactMessage.update({
+      await this.prisma.contact_messages.update({
         where: { id },
         data: { status }
       });
@@ -254,7 +234,7 @@ class ContactDB {
 
   async replyToContactMessage(id: number, adminReply: string, repliedBy: number) {
     try {
-      await this.prisma.contactMessage.update({
+      await this.prisma.contact_messages.update({
         where: { id },
         data: {
           adminReply,
@@ -272,7 +252,7 @@ class ContactDB {
 
   async deleteContactMessage(id: number) {
     try {
-      await this.prisma.contactMessage.delete({
+      await this.prisma.contact_messages.delete({
         where: { id }
       });
       return true;
