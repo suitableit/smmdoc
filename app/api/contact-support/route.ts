@@ -48,20 +48,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check user's pending contact limit
-    const userPendingCount = await contactDB.countContactMessages({
-      userId: session.user.id,
-      status: ['Unread', 'Read']
-    });
-    const maxPendingContacts = parseInt(contactSettings.maxPendingContacts || '3');
+    // Check user's pending contact limit (skip if unlimited)
+    const maxPendingContactsStr = contactSettings.maxPendingContacts || '3';
 
-    if (userPendingCount >= maxPendingContacts) {
-      return NextResponse.json(
-        {
-          error: `You have reached the maximum limit of ${maxPendingContacts} pending contacts. Please wait for a response to your previous messages.`
-        },
-        { status: 429 }
-      );
+    if (maxPendingContactsStr.toLowerCase() !== 'unlimited') {
+      const userPendingCount = await contactDB.countContactMessages({
+        userId: session.user.id,
+        status: ['Unread', 'Read']
+      });
+      const maxPendingContacts = parseInt(maxPendingContactsStr);
+
+      if (userPendingCount >= maxPendingContacts) {
+        return NextResponse.json(
+          {
+            error: `You have reached the maximum limit of ${maxPendingContacts} pending contacts. Please wait for a response to your previous messages.`
+          },
+          { status: 429 }
+        );
+      }
     }
 
     // Validate category exists
@@ -140,11 +144,20 @@ export async function GET() {
     const categories = await contactDB.getContactCategories();
 
     // Get user's pending contact count
-    const userPendingCount = await contactDB.countContactMessages({
-      userId: session.user.id,
-      status: ['Unread', 'Read']
-    });
-    const maxPendingContacts = parseInt(contactSettings.maxPendingContacts || '3');
+    const maxPendingContactsStr = contactSettings.maxPendingContacts || '3';
+    let userPendingCount = 0;
+    let canSubmit = true;
+
+    if (maxPendingContactsStr.toLowerCase() === 'unlimited') {
+      canSubmit = true;
+    } else {
+      userPendingCount = await contactDB.countContactMessages({
+        userId: session.user.id,
+        status: ['Unread', 'Read']
+      });
+      const maxPendingContacts = parseInt(maxPendingContactsStr);
+      canSubmit = userPendingCount < maxPendingContacts;
+    }
 
     return NextResponse.json({
       success: true,
@@ -154,8 +167,8 @@ export async function GET() {
           name: cat.name
         })),
         userPendingCount,
-        maxPendingContacts,
-        canSubmit: userPendingCount < maxPendingContacts
+        maxPendingContacts: maxPendingContactsStr,
+        canSubmit
       }
     });
 

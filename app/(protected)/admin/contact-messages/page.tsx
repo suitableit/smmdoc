@@ -2,16 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    FaBox,
-    FaCheckCircle,
-    FaEdit,
-    FaEnvelope,
-    FaEye,
-    FaReply,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTrash
+  FaBox,
+  FaCheckCircle,
+  FaEdit,
+  FaEnvelope,
+  FaEye,
+  FaReply,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTrash
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -73,9 +73,17 @@ const ContactMessagesPage = () => {
     document.title = `Contact Messages — ${APP_NAME}`;
   }, []);
 
+  // State for real data
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+  const [messageCounts, setMessageCounts] = useState({
+    total: 0,
+    unread: 0,
+    read: 0,
+    replied: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-
-  // Dummy data for contact messages
+  // Dummy data for contact messages (fallback)
   const dummyContactMessages: ContactMessage[] = [
     {
       id: '001',
@@ -190,11 +198,10 @@ const ContactMessagesPage = () => {
   ];
 
   // State management
-  const [contactMessages, setContactMessages] = useState<ContactMessage[]>(dummyContactMessages);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
-    total: dummyContactMessages.length,
+    total: 0,
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
@@ -216,13 +223,7 @@ const ContactMessagesPage = () => {
   // Bulk operations state
   const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
 
-  // Message counts state
-  const [messageCounts, setMessageCounts] = useState({
-    all: 0,
-    unread: 0,
-    read: 0,
-    replied: 0
-  });
+
 
   // Utility functions
   const formatMessageID = (id: string) => {
@@ -255,40 +256,13 @@ const ContactMessagesPage = () => {
     }
   };
 
-  // Filter messages based on search term and status
-  const filteredMessages = contactMessages.filter((message) => {
-    const matchesSearch =
-      message.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      message.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      message.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      message.id.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || message.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
 
-  // Update pagination when filtered data changes
-  useEffect(() => {
-    const total = filteredMessages.length;
-    const totalPages = Math.ceil(total / pagination.limit);
-    setPagination((prev) => ({
-      ...prev,
-      total,
-      totalPages,
-      hasNext: prev.page < totalPages,
-      hasPrev: prev.page > 1,
-    }));
-    // Clear selections when filter changes
-    setSelectedMessages([]);
-    setSelectedBulkOperation('');
-  }, [filteredMessages.length, pagination.limit, statusFilter]);
 
-  // Get paginated data
+
+
+  // Get paginated data (now handled by API)
   const getPaginatedData = () => {
-    const startIndex = (pagination.page - 1) * pagination.limit;
-    const endIndex = startIndex + pagination.limit;
-    return filteredMessages.slice(startIndex, endIndex);
+    return contactMessages; // API already handles filtering and pagination
   };
 
   // Load contact messages from API
@@ -319,7 +293,7 @@ const ContactMessagesPage = () => {
 
         // Update message counts for status tabs
         setMessageCounts({
-          all: data.data.counts.total,
+          total: data.data.counts.total,
           unread: data.data.counts.unread,
           read: data.data.counts.read,
           replied: data.data.counts.replied
@@ -539,7 +513,7 @@ const ContactMessagesPage = () => {
                         : 'bg-purple-100 text-purple-700'
                     }`}
                   >
-                    {messageCounts.all}
+                    {messageCounts.total}
                   </span>
                 </button>
                 <button
@@ -735,7 +709,27 @@ const ContactMessagesPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {getPaginatedData().map((message) => (
+                      {loading ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center">
+                            <div className="flex items-center justify-center space-x-2">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                              <span style={{ color: 'var(--text-primary)' }}>Loading contact messages...</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : getPaginatedData().length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center">
+                            <div className="text-gray-500">
+                              <FaEnvelope className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                              <p className="text-lg font-medium mb-2">No contact messages found</p>
+                              <p className="text-sm">Try adjusting your search or filter criteria.</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        getPaginatedData().map((message) => (
                         <tr
                           key={message.id}
                           className="border-t hover:bg-gray-50 transition-colors duration-200"
@@ -829,7 +823,8 @@ const ContactMessagesPage = () => {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>

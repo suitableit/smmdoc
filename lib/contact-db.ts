@@ -195,12 +195,39 @@ class ContactDB {
 
       const messages = await this.prisma.contact_messages.findMany({
         where,
+        include: {
+          user: {
+            select: {
+              username: true,
+              email: true
+            }
+          },
+          category: {
+            select: {
+              name: true
+            }
+          },
+          repliedByUser: {
+            select: {
+              username: true
+            }
+          }
+        },
         orderBy: { createdAt: 'desc' },
         take: filters?.limit,
         skip: filters?.offset
-      });
+      }) as any[];
 
-      return messages;
+      // Format the response to match expected structure
+      const formattedMessages = messages.map((msg: any) => ({
+        ...msg,
+        username: msg.user?.username || 'Unknown User',
+        email: msg.user?.email || 'No Email',
+        categoryName: msg.category?.name || 'Unknown Category',
+        repliedByUsername: msg.repliedByUser?.username || null
+      }));
+
+      return formattedMessages;
     } catch (error) {
       console.error('Error getting contact messages:', error);
       return [];
@@ -210,12 +237,60 @@ class ContactDB {
   async getContactMessageById(id: number) {
     try {
       const message = await this.prisma.contact_messages.findUnique({
-        where: { id }
-      });
-      return message;
+        where: { id },
+        include: {
+          user: {
+            select: {
+              username: true,
+              email: true
+            }
+          },
+          category: {
+            select: {
+              name: true
+            }
+          },
+          repliedByUser: {
+            select: {
+              username: true
+            }
+          }
+        }
+      }) as any;
+
+      if (!message) return null;
+
+      // Format the response to match expected structure
+      return {
+        ...message,
+        username: message.user?.username || 'Unknown User',
+        email: message.user?.email || 'No Email',
+        categoryName: message.category?.name || 'Unknown Category',
+        repliedByUsername: message.repliedByUser?.username || null
+      };
     } catch (error) {
       console.error('Error getting contact message by id:', error);
       return null;
+    }
+  }
+
+  async getContactMessageCounts() {
+    try {
+      const total = await this.prisma.contact_messages.count();
+      const unread = await this.prisma.contact_messages.count({
+        where: { status: 'Unread' }
+      });
+      const read = await this.prisma.contact_messages.count({
+        where: { status: 'Read' }
+      });
+      const replied = await this.prisma.contact_messages.count({
+        where: { status: 'Replied' }
+      });
+
+      return { total, unread, read, replied };
+    } catch (error) {
+      console.error('Error getting contact message counts:', error);
+      return { total: 0, unread: 0, read: 0, replied: 0 };
     }
   }
 
