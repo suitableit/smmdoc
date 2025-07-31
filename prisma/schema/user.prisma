@@ -10,8 +10,6 @@ model User {
   currency                String                 @default("USD")
   dollarRate              Float                  @default(121.45)
   balance                 Float                  @default(0)
-  balanceUSD              Float                  @default(0) // Store balance in USD for conversion
-  preferredCurrency       String                 @default("USD") // User's display preference
   total_deposit           Float                  @default(0) @db.Float
   total_spent             Float                  @default(0) @db.Float
   servicesDiscount        Float                  @default(0)
@@ -19,11 +17,13 @@ model User {
   status                  String                 @default("active")
   apiKey                  String?                @unique(map: "User_apiKey_key")
   isTwoFactorEnabled      Boolean                @default(false)
-  language                String                 @default("en")
-  timezone                String                 @default("21600")
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
   lastLoginAt             DateTime?
+  balanceUSD              Float                  @default(0)
+  preferredCurrency       String                 @default("USD")
+  language                String                 @default("en")
+  timezone                String                 @default("21600")
   accounts                Account?
   activityLogs            ActivityLog[]
   addFunds                AddFund[]

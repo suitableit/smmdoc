@@ -80,6 +80,8 @@ model User {
   updatedAt             DateTime               @updatedAt
   cancelRequests        CancelRequest[]
   activityLogs          ActivityLog[]
+  // contactMessages       ContactMessage[]
+  // repliedContactMessages ContactMessage[]      @relation("RepliedByUser")
 
 
   @@map("users")
@@ -402,4 +404,46 @@ model ApiKey {
 }
 
 // Contact System Models
+model ContactSettings {
+  id                    Int               @id @default(autoincrement())
+  contactSystemEnabled  Boolean           @default(true)
+  maxPendingContacts    String            @default("3")
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  categories           ContactCategory[]
+
+  @@map("contact_settings")
+}
+
+model ContactCategory {
+  id                Int              @id @default(autoincrement())
+  name              String
+  contactSettingsId Int?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  contactSettings   ContactSettings? @relation(fields: [contactSettingsId], references: [id], onDelete: SetNull)
+  // messages          ContactMessage[]
+
+  @@map("contact_categories")
+}
+
+model ContactMsg {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  subject     String
+  message     String   @db.Text
+  status      String   @default("Unread") // Unread, Read, Replied
+  categoryId  Int
+  attachments String?  @db.Text // JSON string for file paths
+  adminReply  String?  @db.Text
+  repliedAt   DateTime?
+  repliedBy   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("contact_messages")
+}
 
