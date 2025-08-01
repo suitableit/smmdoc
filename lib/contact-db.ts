@@ -180,51 +180,72 @@ class ContactDB {
     offset?: number;
   }) {
     try {
-      const where: any = {};
+      // Build WHERE clause for raw SQL
+      let whereClause = 'WHERE 1=1';
+      const params: any[] = [];
 
       if (filters?.status && filters.status !== 'All') {
-        where.status = filters.status;
+        whereClause += ' AND cm.status = ?';
+        params.push(filters.status);
       }
 
       if (filters?.search) {
-        where.OR = [
-          { subject: { contains: filters.search } },
-          { message: { contains: filters.search } }
-        ];
+        whereClause += ' AND (cm.subject LIKE ? OR cm.message LIKE ? OR u.username LIKE ? OR u.email LIKE ?)';
+        const searchTerm = `%${filters.search}%`;
+        params.push(searchTerm, searchTerm, searchTerm, searchTerm);
       }
 
-      const messages = await this.prisma.contact_messages.findMany({
-        where,
-        include: {
-          user: {
-            select: {
-              username: true,
-              email: true
-            }
-          },
-          category: {
-            select: {
-              name: true
-            }
-          },
-          repliedByUser: {
-            select: {
-              username: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' },
-        take: filters?.limit,
-        skip: filters?.offset
-      }) as any[];
+      // Add LIMIT and OFFSET
+      let limitClause = '';
+      if (filters?.limit) {
+        limitClause = ` LIMIT ${filters.limit}`;
+        if (filters?.offset) {
+          limitClause += ` OFFSET ${filters.offset}`;
+        }
+      }
+
+      const query = `
+        SELECT
+          cm.*,
+          u.username,
+          u.email,
+          cc.name as categoryName,
+          ru.username as repliedByUsername
+        FROM contact_messages cm
+        LEFT JOIN user u ON cm.userId = u.id
+        LEFT JOIN contact_categories cc ON cm.categoryId = cc.id
+        LEFT JOIN user ru ON cm.repliedBy = ru.id
+        ${whereClause}
+        ORDER BY cm.createdAt DESC
+        ${limitClause}
+      `;
+
+      const messages = await this.prisma.$queryRawUnsafe(query, ...params) as any[];
 
       // Format the response to match expected structure
       const formattedMessages = messages.map((msg: any) => ({
-        ...msg,
-        username: msg.user?.username || 'Unknown User',
-        email: msg.user?.email || 'No Email',
-        categoryName: msg.category?.name || 'Unknown Category',
-        repliedByUsername: msg.repliedByUser?.username || null
+        id: msg.id,
+        userId: msg.userId,
+        subject: msg.subject,
+        message: msg.message,
+        status: msg.status,
+        categoryId: msg.categoryId,
+        attachments: msg.attachments,
+        adminReply: msg.adminReply,
+        repliedAt: msg.repliedAt,
+        repliedBy: msg.repliedBy,
+        createdAt: msg.createdAt,
+        updatedAt: msg.updatedAt,
+        user: {
+          username: msg.username || 'Unknown User',
+          email: msg.email || 'No Email'
+        },
+        category: {
+          name: msg.categoryName || 'Unknown Category'
+        },
+        repliedByUser: msg.repliedByUsername ? {
+          username: msg.repliedByUsername
+        } : null
       }));
 
       return formattedMessages;
@@ -236,37 +257,49 @@ class ContactDB {
 
   async getContactMessageById(id: number) {
     try {
-      const message = await this.prisma.contact_messages.findUnique({
-        where: { id },
-        include: {
-          user: {
-            select: {
-              username: true,
-              email: true
-            }
-          },
-          category: {
-            select: {
-              name: true
-            }
-          },
-          repliedByUser: {
-            select: {
-              username: true
-            }
-          }
-        }
-      }) as any;
+      const query = `
+        SELECT
+          cm.*,
+          u.username,
+          u.email,
+          cc.name as categoryName,
+          ru.username as repliedByUsername
+        FROM contact_messages cm
+        LEFT JOIN user u ON cm.userId = u.id
+        LEFT JOIN contact_categories cc ON cm.categoryId = cc.id
+        LEFT JOIN user ru ON cm.repliedBy = ru.id
+        WHERE cm.id = ?
+      `;
+
+      const messages = await this.prisma.$queryRawUnsafe(query, id) as any[];
+      const message = messages[0];
 
       if (!message) return null;
 
       // Format the response to match expected structure
       return {
-        ...message,
-        username: message.user?.username || 'Unknown User',
-        email: message.user?.email || 'No Email',
-        categoryName: message.category?.name || 'Unknown Category',
-        repliedByUsername: message.repliedByUser?.username || null
+        id: message.id,
+        userId: message.userId,
+        subject: message.subject,
+        message: message.message,
+        status: message.status,
+        categoryId: message.categoryId,
+        attachments: message.attachments,
+        adminReply: message.adminReply,
+        repliedAt: message.repliedAt,
+        repliedBy: message.repliedBy,
+        createdAt: message.createdAt,
+        updatedAt: message.updatedAt,
+        user: {
+          username: message.username || 'Unknown User',
+          email: message.email || 'No Email'
+        },
+        category: {
+          name: message.categoryName || 'Unknown Category'
+        },
+        repliedByUser: message.repliedByUsername ? {
+          username: message.repliedByUsername
+        } : null
       };
     } catch (error) {
       console.error('Error getting contact message by id:', error);

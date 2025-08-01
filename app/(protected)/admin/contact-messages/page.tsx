@@ -2,16 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  FaBox,
-  FaCheckCircle,
-  FaEdit,
-  FaEnvelope,
-  FaEye,
-  FaReply,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTrash
+    FaBox,
+    FaCheckCircle,
+    FaEdit,
+    FaEnvelope,
+    FaEye,
+    FaReply,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTrash
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -325,23 +325,24 @@ const ContactMessagesPage = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setContactMessages(data.data.messages);
+        setContactMessages(data.messages || []);
 
         // Update pagination with real data
+        const totalCount = data.messageCounts?.total || 0;
         setPagination(prev => ({
           ...prev,
-          total: data.data.counts.total,
-          totalPages: Math.ceil(data.data.counts.total / prev.limit),
-          hasNext: prev.page < Math.ceil(data.data.counts.total / prev.limit),
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / prev.limit),
+          hasNext: prev.page < Math.ceil(totalCount / prev.limit),
           hasPrev: prev.page > 1
         }));
 
         // Update message counts for status tabs
         setMessageCounts({
-          total: data.data.counts.total,
-          unread: data.data.counts.unread,
-          read: data.data.counts.read,
-          replied: data.data.counts.replied
+          total: data.messageCounts?.total || 0,
+          unread: data.messageCounts?.unread || 0,
+          read: data.messageCounts?.read || 0,
+          replied: data.messageCounts?.replied || 0
         });
       } else {
         showToast(data.error || 'Failed to load contact messages', 'error');
@@ -831,7 +832,7 @@ const ContactMessagesPage = () => {
                               className="font-medium text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {message.username || 'No Username'}
+                              {message.user?.username || message.username || 'No Username'}
                             </div>
                           </td>
                           <td className="p-3">
