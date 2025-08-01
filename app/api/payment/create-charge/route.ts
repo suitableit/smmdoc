@@ -2,7 +2,11 @@
 
 import { auth } from '@/auth';
 import { ActivityLogger } from '@/lib/activity-logger';
-import { convertCurrency, convertToUSD, fetchCurrencyData } from '@/lib/currency-utils';
+import {
+  convertCurrency,
+  convertToUSD,
+  fetchCurrencyData,
+} from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -72,7 +76,14 @@ export async function POST(req: NextRequest) {
     const currency = body.currency || 'BDT'; // Default to BDT if not specified
 
     // Log the amount for debugging
-    console.log('Parsed amount:', amount, 'Currency:', currency, 'Type:', typeof amount);
+    console.log(
+      'Parsed amount:',
+      amount,
+      'Currency:',
+      currency,
+      'Type:',
+      typeof amount
+    );
 
     if (isNaN(amount) || amount <= 0) {
       console.error('Invalid amount:', amount);
@@ -86,13 +97,16 @@ export async function POST(req: NextRequest) {
     const amountUSD = convertToUSD(amount, currency, currencies);
 
     // For payment gateway, we need BDT amount (UddoktaPay works with BDT)
-    const amountBDT = currency === 'BDT' ? amount : convertCurrency(amount, currency, 'BDT', currencies);
+    const amountBDT =
+      currency === 'BDT'
+        ? amount
+        : convertCurrency(amount, currency, 'BDT', currencies);
 
     console.log('Currency conversion:', {
       original: amount,
       currency: currency,
       amountUSD: amountUSD,
-      amountBDT: amountBDT
+      amountBDT: amountBDT,
     });
 
     // Create a payment record in the database
@@ -120,7 +134,10 @@ export async function POST(req: NextRequest) {
 
       // Log activity for payment creation
       try {
-        const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
+        const username =
+          session.user.username ||
+          session.user.email?.split('@')[0] ||
+          `user${session.user.id}`;
         await ActivityLogger.fundAdded(
           session.user.id,
           username,
@@ -148,9 +165,11 @@ export async function POST(req: NextRequest) {
           order_id: order_id,
           original_currency: currency,
           original_amount: amount,
-          usd_amount: amountUSD
+          usd_amount: amountUSD,
         },
-        redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(amountBDT)}`,
+        redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(
+          amountBDT
+        )}`,
         cancel_url: `${appUrl}/transactions?status=cancelled`,
         webhook_url: `${appUrl}/api/payment/webhook`,
       };
@@ -159,7 +178,7 @@ export async function POST(req: NextRequest) {
         'Payment data being sent:',
         JSON.stringify(paymentData, null, 2)
       );
-      
+
       if (!apiKey) {
         return NextResponse.json(
           { error: 'Payment gateway API key not configured' },
@@ -169,28 +188,27 @@ export async function POST(req: NextRequest) {
 
       try {
         // Make API request to UddoktaPay Live
-        const response = await fetch(
-          'https://pay.smmdoc.com/api/checkout-v2',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-              'RT-UDDOKTAPAY-API-KEY': apiKey,
-            },
-            body: JSON.stringify({
-              full_name: paymentData.full_name,
-              email: paymentData.email,
-              amount: paymentData.amount,
-              phone: paymentData.phone,
-              metadata: paymentData.metadata,
-              redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(amountBDT)}`,
-              return_type: 'GET',
-              cancel_url: `${appUrl}/transactions?status=cancelled`,
-              webhook_url: `${appUrl}/api/payment/webhook`
-            }),
-          }
-        );
+        const response = await fetch('https://pay.smmdoc.com/api/checkout-v2', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'RT-UDDOKTAPAY-API-KEY': apiKey,
+          },
+          body: JSON.stringify({
+            full_name: paymentData.full_name,
+            email: paymentData.email,
+            amount: paymentData.amount,
+            phone: paymentData.phone,
+            metadata: paymentData.metadata,
+            redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(
+              amountBDT
+            )}`,
+            return_type: 'GET',
+            cancel_url: `${appUrl}/transactions?status=cancelled`,
+            webhook_url: `${appUrl}/api/payment/webhook`,
+          }),
+        });
 
         // Get response as text first for better debugging
         const responseText = await response.text();
