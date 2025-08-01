@@ -337,6 +337,8 @@ class ContactDB {
     }
   }
 
+
+
   // Cleanup method
   async disconnect() {
     await this.prisma.$disconnect();
