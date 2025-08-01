@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { contactDB } from '@/lib/contact-db';
+import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET - Get contact messages for admin
@@ -20,16 +20,40 @@ export async function GET(request: NextRequest) {
 
     // Get contact messages with filters
     console.log('🔍 Fetching contact messages with filters:', { status, search, limit, offset });
-    const messages = await contactDB.getContactMessages({
-      status: status !== 'All' ? status : undefined,
-      search: search || undefined,
-      limit,
-      offset
-    });
-    console.log('📋 Found messages:', messages.length);
+
+    // Build where clause
+    const where: any = {};
+    if (status !== 'All') {
+      where.status = status;
+    }
+    if (search) {
+      where.OR = [
+        { subject: { contains: search } },
+        { message: { contains: search } },
+        { user: { username: { contains: search } } },
+        { user: { email: { contains: search } } }
+      ];
+    }
+
+    // Simple query without joins first
+    const messages = await db.$queryRaw`
+      SELECT * FROM contact_messages
+      ORDER BY createdAt DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+    console.log('📋 Found messages:', (messages as any[]).length);
 
     // Get message counts for status tabs
-    const counts = await contactDB.getContactMessageCounts();
+    const totalResult = await db.$queryRaw`SELECT COUNT(*) as count FROM contact_messages` as any[];
+    const unreadResult = await db.$queryRaw`SELECT COUNT(*) as count FROM contact_messages WHERE status = 'Unread'` as any[];
+    const readResult = await db.$queryRaw`SELECT COUNT(*) as count FROM contact_messages WHERE status = 'Read'` as any[];
+    const repliedResult = await db.$queryRaw`SELECT COUNT(*) as count FROM contact_messages WHERE status = 'Replied'` as any[];
+
+    const total = Number(totalResult[0]?.count || 0);
+    const unread = Number(unreadResult[0]?.count || 0);
+    const read = Number(readResult[0]?.count || 0);
+    const replied = Number(repliedResult[0]?.count || 0);
+    const counts = { total, unread, read, replied };
     console.log('📊 Message counts:', counts);
 
     // Format messages for the UI
