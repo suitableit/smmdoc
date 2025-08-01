@@ -132,6 +132,10 @@ export async function POST(req: NextRequest) {
         console.error('Failed to log payment creation activity:', error);
       }
 
+      // Get API key and app URL from environment variables
+      const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
       // Create payment data object according to UddoktaPay documentation
       // UddoktaPay requires BDT amount
       const paymentData = {
@@ -146,25 +150,27 @@ export async function POST(req: NextRequest) {
           original_amount: amount,
           usd_amount: amountUSD
         },
-        redirect_url: `http://localhost:3000/payment/uddoktapay-verify?invoice_id=${invoice_id}&amount=${Math.round(amountBDT)}`,
-        cancel_url: `http://localhost:3000/transactions?status=cancelled`,
-        webhook_url: `http://localhost:3000/api/payment/webhook`,
+        redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(amountBDT)}`,
+        cancel_url: `${appUrl}/transactions?status=cancelled`,
+        webhook_url: `${appUrl}/api/payment/webhook`,
       };
 
       console.log(
         'Payment data being sent:',
         JSON.stringify(paymentData, null, 2)
       );
-
-      // Get API key from environment variables
-      const apiKey =
-        process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY ||
-        '982d381360a69d419689740d9f2e26ce36fb7a50'; // Fallback for testing
+      
+      if (!apiKey) {
+        return NextResponse.json(
+          { error: 'Payment gateway API key not configured' },
+          { status: 500, headers: corsHeaders }
+        );
+      }
 
       try {
-        // Make API request to UddoktaPay
+        // Make API request to UddoktaPay Live
         const response = await fetch(
-          'https://sandbox.uddoktapay.com/api/checkout-v2',
+          'https://pay.smmdoc.com/api/checkout-v2',
           {
             method: 'POST',
             headers: {
@@ -172,7 +178,17 @@ export async function POST(req: NextRequest) {
               Accept: 'application/json',
               'RT-UDDOKTAPAY-API-KEY': apiKey,
             },
-            body: JSON.stringify(paymentData),
+            body: JSON.stringify({
+              full_name: paymentData.full_name,
+              email: paymentData.email,
+              amount: paymentData.amount,
+              phone: paymentData.phone,
+              metadata: paymentData.metadata,
+              redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(amountBDT)}`,
+              return_type: 'GET',
+              cancel_url: `${appUrl}/transactions?status=cancelled`,
+              webhook_url: `${appUrl}/api/payment/webhook`
+            }),
           }
         );
 

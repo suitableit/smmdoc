@@ -44,48 +44,51 @@ export async function POST(req: NextRequest) {
       });
     }
     
-    // Simulate payment gateway verification
-    // In a real implementation, you would call the UddoktaPay API here
-    const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY || '982d381360a69d419689740d9f2e26ce36fb7a50';
+    // Live payment gateway verification
+    const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
+    
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Payment gateway API key not configured" },
+        { status: 500 }
+      );
+    }
     
     try {
-      // Mock verification - in real implementation, call UddoktaPay verification API
-      // const verificationResponse = await fetch(`https://sandbox.uddoktapay.com/api/verify-payment/${invoice_id}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'RT-UDDOKTAPAY-API-KEY': apiKey,
-      //   },
-      //   body: JSON.stringify({ transaction_id, phone })
-      // });
+      // Call UddoktaPay live verification API
+      const verificationResponse = await fetch(`https://pay.smmdoc.com/api/verify-payment/${invoice_id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'RT-UDDOKTAPAY-API-KEY': apiKey,
+        },
+        body: JSON.stringify({ transaction_id, phone })
+      });
       
-      // UddoktaPay Sandbox simulation based on response type
+      // Handle live API response
       let isSuccessful = false;
       let verificationStatus = "PENDING";
 
-      // Check if we have a response type from UddoktaPay sandbox
-      // This would come from the actual API call in production
-      // For now, we'll simulate based on transaction_id patterns
-
-      if (transaction_id) {
-        // Simulate UddoktaPay sandbox responses:
-        // - "Completed" response = Payment successful
-        // - "Pending" response = Payment pending manual review
-        // - Other responses = Payment failed/cancelled
-
-        const lowerTransactionId = transaction_id.toLowerCase();
-
-        if (lowerTransactionId.includes("completed") || lowerTransactionId.includes("success")) {
+      if (verificationResponse.ok) {
+        const verificationData = await verificationResponse.json();
+        console.log("UddoktaPay verification response:", verificationData);
+        
+        // Handle UddoktaPay live API response
+        if (verificationData.status === "COMPLETED" || verificationData.status === "SUCCESS") {
           isSuccessful = true;
           verificationStatus = "COMPLETED";
-        } else if (lowerTransactionId.includes("pending")) {
+        } else if (verificationData.status === "PENDING") {
           verificationStatus = "PENDING";
-        } else if (lowerTransactionId.includes("fail") || lowerTransactionId.includes("cancel")) {
+        } else if (verificationData.status === "CANCELLED" || verificationData.status === "FAILED") {
           verificationStatus = "CANCELLED";
         } else {
-          // Default behavior for unrecognized transaction IDs
+          // Default to pending for unknown statuses
           verificationStatus = "PENDING";
         }
+      } else {
+        console.error("UddoktaPay verification API error:", await verificationResponse.text());
+        // If API call fails, default to pending for manual review
+        verificationStatus = "PENDING";
       }
       
       console.log("Verification result:", { isSuccessful, verificationStatus });

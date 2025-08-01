@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     // Validate that this is a legitimate webhook request
     // In production, you should verify the signature or API key
     const apiKey = req.headers.get('rt-uddoktapay-api-key');
-    const expectedApiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY || '982d381360a69d419689740d9f2e26ce36fb7a50';
+    const expectedApiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
     
     if (apiKey !== expectedApiKey) {
       console.error("Invalid API key in webhook request");
@@ -135,4 +135,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

@@ -53,8 +53,15 @@ export async function GET(req: NextRequest) {
     // If the status is Processing, check with UddoktaPay API for the current status
     try {
       // Get API key from environment variables
-      const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY || '982d381360a69d419689740d9f2e26ce36fb7a50';
-      const baseUrl = process.env.NEXT_PUBLIC_UDDOKTAPAY_BASE_URL || 'https://sandbox.uddoktapay.com/api/verify-payment';
+      const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
+      const baseUrl = process.env.NEXT_PUBLIC_UDDOKTAPAY_BASE_URL || 'https://pay.smmdoc.com/api/verify-payment';
+      
+      if (!apiKey) {
+        return NextResponse.json(
+          { error: "Payment gateway API key not configured", status: "FAILED" },
+          { status: 500 }
+        );
+      }
       
       console.log(`Making API request to UddoktaPay: ${baseUrl} with invoice_id: ${invoice_id}`);
       

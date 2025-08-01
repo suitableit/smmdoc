@@ -59,17 +59,19 @@ export async function POST(req: NextRequest) {
       
       console.log("Payment record created:", payment);
       
+      // Get app URL from environment variables
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      
       // Get the success and cancel URLs from the request or use defaults
-      const success_url = body.success_url || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/transactions/success`;
-      const cancel_url = body.cancel_url || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/transactions?status=cancelled`;
+      const success_url = body.success_url || `${appUrl}/transactions/success`;
+      const cancel_url = body.cancel_url || `${appUrl}/transactions?status=cancelled`;
       
-      // Create a UddoktaPay sandbox URL for testing
-      // In a real implementation, you would call the UddoktaPay API here
-      const uddoktaPaySandboxUrl = 'https://sandbox.uddoktapay.com/api/checkout-v2';
+      // Create UddoktaPay live API URL
+      const uddoktaPayLiveUrl = 'https://pay.smmdoc.com/api/checkout-v2';
       
-      // For real integration, this would be the URL to the actual UddoktaPay checkout page
+      // For live integration, this would be the URL to the actual UddoktaPay checkout page
       // with the necessary query parameters
-      const payment_url = `${uddoktaPaySandboxUrl}?invoice_id=${invoice_id}&amount=${body.amount}&full_name=${encodeURIComponent(session.user.name || "User")}&email=${encodeURIComponent(session.user.email || "user@example.com")}&metadata=${encodeURIComponent(JSON.stringify({order_id}))}&redirect_url=${encodeURIComponent(success_url)}`;
+      const payment_url = `${uddoktaPayLiveUrl}?invoice_id=${invoice_id}&amount=${body.amount}&full_name=${encodeURIComponent(session.user.name || "User")}&email=${encodeURIComponent(session.user.email || "user@example.com")}&metadata=${encodeURIComponent(JSON.stringify({order_id}))}&redirect_url=${encodeURIComponent(success_url)}`;
       
       console.log("Payment URLs:", { success_url, cancel_url, payment_url });
       
@@ -95,4 +97,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}
