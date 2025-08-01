@@ -7,89 +7,108 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { invoice_id, transaction_id, phone } = body;
-    
-    console.log("Verify transaction request:", { invoice_id, transaction_id, phone });
-    
+
+    console.log('Verify transaction request:', {
+      invoice_id,
+      transaction_id,
+      phone,
+    });
+
     if (!invoice_id) {
       return NextResponse.json(
-        { error: "Invoice ID is required" },
+        { error: 'Invoice ID is required' },
         { status: 400 }
       );
     }
-    
+
     // Find the payment record in the database
     const payment = await db.addFund.findUnique({
       where: { invoice_id },
-      include: { user: true }
+      include: { user: true },
     });
-    
+
     if (!payment) {
       return NextResponse.json(
-        { error: "Payment record not found" },
+        { error: 'Payment record not found' },
         { status: 404 }
       );
     }
-    
+
     // If payment is already successful, return success
-    if (payment.status === "Success") {
+    if (payment.status === 'Success') {
       return NextResponse.json({
-        status: "COMPLETED",
-        message: "Payment already verified and completed",
+        status: 'COMPLETED',
+        message: 'Payment already verified and completed',
         payment: {
           invoice_id: payment.invoice_id,
           amount: payment.amount,
           status: payment.status,
-          transaction_id: payment.transaction_id
-        }
+          transaction_id: payment.transaction_id,
+        },
       });
     }
-    
-    // Simulate payment gateway verification
-    // In a real implementation, you would call the UddoktaPay API here
-    const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY || '982d381360a69d419689740d9f2e26ce36fb7a50';
-    
+
+    // Live payment gateway verification
+    const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'Payment gateway API key not configured' },
+        { status: 500 }
+      );
+    }
+
     try {
-      // Mock verification - in real implementation, call UddoktaPay verification API
-      // const verificationResponse = await fetch(`https://sandbox.uddoktapay.com/api/verify-payment/${invoice_id}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'RT-UDDOKTAPAY-API-KEY': apiKey,
-      //   },
-      //   body: JSON.stringify({ transaction_id, phone })
-      // });
-      
-      // UddoktaPay Sandbox simulation based on response type
-      let isSuccessful = false;
-      let verificationStatus = "PENDING";
-
-      // Check if we have a response type from UddoktaPay sandbox
-      // This would come from the actual API call in production
-      // For now, we'll simulate based on transaction_id patterns
-
-      if (transaction_id) {
-        // Simulate UddoktaPay sandbox responses:
-        // - "Completed" response = Payment successful
-        // - "Pending" response = Payment pending manual review
-        // - Other responses = Payment failed/cancelled
-
-        const lowerTransactionId = transaction_id.toLowerCase();
-
-        if (lowerTransactionId.includes("completed") || lowerTransactionId.includes("success")) {
-          isSuccessful = true;
-          verificationStatus = "COMPLETED";
-        } else if (lowerTransactionId.includes("pending")) {
-          verificationStatus = "PENDING";
-        } else if (lowerTransactionId.includes("fail") || lowerTransactionId.includes("cancel")) {
-          verificationStatus = "CANCELLED";
-        } else {
-          // Default behavior for unrecognized transaction IDs
-          verificationStatus = "PENDING";
+      // Call UddoktaPay live verification API
+      const verificationResponse = await fetch(
+        `https://pay.smmdoc.com/api/verify-payment/${invoice_id}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'RT-UDDOKTAPAY-API-KEY': apiKey,
+          },
+          body: JSON.stringify({ transaction_id, phone }),
         }
+      );
+
+      // Handle live API response
+      let isSuccessful = false;
+      let verificationStatus = 'PENDING';
+
+      if (verificationResponse.ok) {
+        const verificationData = await verificationResponse.json();
+        console.log('UddoktaPay verification response:', verificationData);
+
+        // Handle UddoktaPay live API response
+        if (
+          verificationData.status === 'COMPLETED' ||
+          verificationData.status === 'SUCCESS'
+        ) {
+          isSuccessful = true;
+          verificationStatus = 'COMPLETED';
+        } else if (verificationData.status === 'PENDING') {
+          verificationStatus = 'PENDING';
+        } else if (
+          verificationData.status === 'CANCELLED' ||
+          verificationData.status === 'FAILED'
+        ) {
+          verificationStatus = 'CANCELLED';
+        } else {
+          // Default to pending for unknown statuses
+          verificationStatus = 'PENDING';
+        }
+      } else {
+        console.error(
+          'UddoktaPay verification API error:',
+          await verificationResponse.text()
+        );
+        // If API call fails, default to pending for manual review
+        verificationStatus = 'PENDING';
       }
-      
-      console.log("Verification result:", { isSuccessful, verificationStatus });
-      
+
+      console.log('Verification result:', { isSuccessful, verificationStatus });
+
       // If the payment was successful, update the user's balance in a transaction
       if (isSuccessful && payment.user) {
         try {
@@ -99,13 +118,13 @@ export async function POST(req: NextRequest) {
             await prisma.addFund.update({
               where: { invoice_id },
               data: {
-                status: "Success",
-                admin_status: "approved",
+                status: 'Success',
+                admin_status: 'approved',
                 transaction_id: transaction_id,
                 sender_number: phone,
-              }
+              },
             });
-            
+
             // Use original amount if available, otherwise calculate from USD amount
             const originalAmount = payment.original_amount || payment.amount;
 
@@ -113,8 +132,12 @@ export async function POST(req: NextRequest) {
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
 
-            if (userSettings?.paymentBonusEnabled && userSettings?.bonusPercentage > 0) {
-              bonusAmount = (originalAmount * userSettings.bonusPercentage) / 100;
+            if (
+              userSettings?.paymentBonusEnabled &&
+              userSettings?.bonusPercentage > 0
+            ) {
+              bonusAmount =
+                (originalAmount * userSettings.bonusPercentage) / 100;
             }
 
             const totalAmountToAdd = originalAmount + bonusAmount;
@@ -125,11 +148,13 @@ export async function POST(req: NextRequest) {
               data: {
                 balance: { increment: totalAmountToAdd }, // Add original amount + bonus in user's currency
                 balanceUSD: { increment: payment.amount }, // USD balance for internal calculations
-                total_deposit: { increment: originalAmount } // Track only actual deposit, not bonus
-              }
+                total_deposit: { increment: originalAmount }, // Track only actual deposit, not bonus
+              },
             });
-            
-            console.log(`User ${payment.userId} balance updated. New balance: ${user.balance}. Original amount: ${originalAmount}, Bonus: ${bonusAmount}, Total added: ${totalAmountToAdd}`);
+
+            console.log(
+              `User ${payment.userId} balance updated. New balance: ${user.balance}. Original amount: ${originalAmount}, Bonus: ${bonusAmount}, Total added: ${totalAmountToAdd}`
+            );
           });
 
           // Send success email to user
@@ -141,13 +166,13 @@ export async function POST(req: NextRequest) {
               amount: payment.amount,
               currency: 'BDT',
               date: new Date().toLocaleDateString(),
-              userId: payment.userId
+              userId: payment.userId,
             });
 
             await sendMail({
               sendTo: payment.user.email,
               subject: emailData.subject,
-              html: emailData.html
+              html: emailData.html,
             });
           }
 
@@ -160,41 +185,44 @@ export async function POST(req: NextRequest) {
             amount: payment.amount,
             currency: 'BDT',
             date: new Date().toLocaleDateString(),
-            userId: payment.userId
+            userId: payment.userId,
           });
 
           await sendMail({
             sendTo: adminEmail,
             subject: adminEmailData.subject,
-            html: adminEmailData.html
+            html: adminEmailData.html,
           });
-          
+
           return NextResponse.json({
-            status: "COMPLETED",
-            message: "Payment verified and completed successfully",
+            status: 'COMPLETED',
+            message: 'Payment verified and completed successfully',
             payment: {
               invoice_id: payment.invoice_id,
               amount: payment.amount,
-              status: "Success",
-              transaction_id: transaction_id
-            }
+              status: 'Success',
+              transaction_id: transaction_id,
+            },
           });
         } catch (transactionError) {
-          console.error("Error updating payment and user balance:", transactionError);
+          console.error(
+            'Error updating payment and user balance:',
+            transactionError
+          );
           return NextResponse.json(
-            { error: "Failed to update payment status" },
+            { error: 'Failed to update payment status' },
             { status: 500 }
           );
         }
-      } else if (verificationStatus === "PENDING") {
+      } else if (verificationStatus === 'PENDING') {
         // Update payment with transaction ID but keep status as Processing and admin_status as pending
         await db.addFund.update({
           where: { invoice_id },
           data: {
             transaction_id: transaction_id,
             sender_number: phone,
-            admin_status: "pending",
-          }
+            admin_status: 'pending',
+          },
         });
 
         // Send admin notification for pending transaction
@@ -207,59 +235,59 @@ export async function POST(req: NextRequest) {
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: payment.userId,
-          phone: phone
+          phone: phone,
         });
 
         await sendMail({
           sendTo: adminEmail,
           subject: adminEmailData.subject,
-          html: adminEmailData.html
+          html: adminEmailData.html,
         });
-        
+
         return NextResponse.json({
-          status: "PENDING",
-          message: "Payment is being processed. Please wait for verification.",
+          status: 'PENDING',
+          message: 'Payment is being processed. Please wait for verification.',
           payment: {
             invoice_id: payment.invoice_id,
             amount: payment.amount,
-            status: "Processing",
-            transaction_id: transaction_id
-          }
+            status: 'Processing',
+            transaction_id: transaction_id,
+          },
         });
       } else {
         // Payment failed or cancelled
         await db.addFund.update({
           where: { invoice_id },
           data: {
-            status: "Cancelled",
-            admin_status: "cancelled",
+            status: 'Cancelled',
+            admin_status: 'cancelled',
             transaction_id: transaction_id,
             sender_number: phone,
-          }
+          },
         });
-        
+
         return NextResponse.json({
-          status: "CANCELLED",
-          message: "Payment verification failed or was cancelled",
+          status: 'CANCELLED',
+          message: 'Payment verification failed or was cancelled',
           payment: {
             invoice_id: payment.invoice_id,
             amount: payment.amount,
-            status: "Cancelled",
-            transaction_id: transaction_id
-          }
+            status: 'Cancelled',
+            transaction_id: transaction_id,
+          },
         });
       }
     } catch (verificationError) {
-      console.error("Payment verification error:", verificationError);
+      console.error('Payment verification error:', verificationError);
       return NextResponse.json(
-        { error: "Payment verification failed" },
+        { error: 'Payment verification failed' },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error("Error verifying payment:", error);
+    console.error('Error verifying payment:', error);
     return NextResponse.json(
-      { error: "Payment verification failed", details: String(error) },
+      { error: 'Payment verification failed', details: String(error) },
       { status: 500 }
     );
   }
