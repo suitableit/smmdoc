@@ -2,16 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  FaBox,
-  FaCheckCircle,
-  FaEdit,
-  FaEnvelope,
-  FaEye,
-  FaReply,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTrash
+    FaBox,
+    FaCheckCircle,
+    FaEdit,
+    FaEnvelope,
+    FaEye,
+    FaReply,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTrash
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -49,8 +49,8 @@ const Toast = ({
 interface ContactMessage {
   id: string;
   userId: string;
-  username: string;
-  email: string;
+  username?: string;
+  email?: string;
   category: string;
   subject: string;
   message: string;
@@ -81,7 +81,7 @@ const ContactMessagesPage = () => {
     read: 0,
     replied: 0
   });
-  const [loading, setLoading] = useState(true);
+
 
   // Dummy data for contact messages (fallback)
   const dummyContactMessages: ContactMessage[] = [
@@ -223,11 +223,56 @@ const ContactMessagesPage = () => {
   // Bulk operations state
   const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
 
+  // Fetch contact messages from API
+  const fetchContactMessages = async () => {
+    setMessagesLoading(true);
+    try {
+      const params = new URLSearchParams({
+        status: statusFilter === 'all' ? 'All' : statusFilter,
+        search: searchTerm,
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+      });
+
+      const response = await fetch(`/api/admin/contact-messages?${params}`);
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setContactMessages(data.messages || []);
+        setMessageCounts(data.messageCounts || { total: 0, unread: 0, read: 0, replied: 0 });
+        setPagination(prev => ({
+          ...prev,
+          total: data.pagination?.total || 0,
+          totalPages: data.pagination?.totalPages || 1,
+          hasNext: data.pagination?.hasNext || false,
+          hasPrev: data.pagination?.hasPrev || false,
+        }));
+      } else {
+        console.error('Failed to fetch contact messages:', data.error);
+        // Use dummy data as fallback
+        setContactMessages(dummyContactMessages);
+        setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
+      }
+    } catch (error) {
+      console.error('Error fetching contact messages:', error);
+      // Use dummy data as fallback
+      setContactMessages(dummyContactMessages);
+      setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
+
+  // Load data on component mount and when filters change
+  useEffect(() => {
+    fetchContactMessages();
+  }, [statusFilter, searchTerm, pagination.page, pagination.limit]);
+
 
 
   // Utility functions
-  const formatMessageID = (id: string) => {
-    return `${id.padStart(4, '0')}`;
+  const formatMessageID = (id: number | string) => {
+    return `${String(id).padStart(4, '0')}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -280,23 +325,24 @@ const ContactMessagesPage = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setContactMessages(data.data.messages);
+        setContactMessages(data.messages || []);
 
         // Update pagination with real data
+        const totalCount = data.messageCounts?.total || 0;
         setPagination(prev => ({
           ...prev,
-          total: data.data.counts.total,
-          totalPages: Math.ceil(data.data.counts.total / prev.limit),
-          hasNext: prev.page < Math.ceil(data.data.counts.total / prev.limit),
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / prev.limit),
+          hasNext: prev.page < Math.ceil(totalCount / prev.limit),
           hasPrev: prev.page > 1
         }));
 
         // Update message counts for status tabs
         setMessageCounts({
-          total: data.data.counts.total,
-          unread: data.data.counts.unread,
-          read: data.data.counts.read,
-          replied: data.data.counts.replied
+          total: data.messageCounts?.total || 0,
+          unread: data.messageCounts?.unread || 0,
+          read: data.messageCounts?.read || 0,
+          replied: data.messageCounts?.replied || 0
         });
       } else {
         showToast(data.error || 'Failed to load contact messages', 'error');
@@ -351,17 +397,27 @@ const ContactMessagesPage = () => {
   // Handle view/edit message
   const handleViewEditMessage = (messageId: string) => {
     // Open message details in new tab
-    window.open(`/contact-messages/${messageId}`, '_blank');
+    window.open(`/admin/contact-messages/${messageId}`, '_blank');
   };
 
   // Handle message deletion
   const handleDeleteMessage = async (messageId: string) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
+        method: 'DELETE',
+      });
 
-      setContactMessages((prev) => prev.filter((message) => message.id !== messageId));
-      showToast('Message deleted successfully', 'success');
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setContactMessages((prev) => prev.filter((message) => message.id !== messageId));
+        showToast('Message deleted successfully', 'success');
+        // Refresh data to update counts
+        fetchContactMessages();
+      } else {
+        showToast(data.error || 'Error deleting message', 'error');
+      }
+
       setDeleteDialogOpen(false);
       setMessageToDelete(null);
     } catch (error) {
@@ -371,15 +427,39 @@ const ContactMessagesPage = () => {
   };
 
   // Handle mark as read
-  const handleMarkAsRead = (messageId: string) => {
-    setContactMessages((prev) =>
-      prev.map((message) =>
-        message.id === messageId
-          ? { ...message, status: 'Read' }
-          : message
-      )
-    );
-    showToast('Message marked as read', 'success');
+  const handleMarkAsRead = async (messageId: string) => {
+    try {
+      const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'updateStatus',
+          status: 'Read',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setContactMessages((prev) =>
+          prev.map((message) =>
+            message.id === messageId
+              ? { ...message, status: 'Read' }
+              : message
+          )
+        );
+        showToast('Message marked as read', 'success');
+        // Refresh data to update counts
+        fetchContactMessages();
+      } else {
+        showToast(data.error || 'Error updating message status', 'error');
+      }
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      showToast('Error updating message status', 'error');
+    }
   };
 
   // Handle bulk operations
@@ -709,7 +789,7 @@ const ContactMessagesPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {loading ? (
+                      {messagesLoading ? (
                         <tr>
                           <td colSpan={7} className="p-8 text-center">
                             <div className="flex items-center justify-center space-x-2">
@@ -752,7 +832,7 @@ const ContactMessagesPage = () => {
                               className="font-medium text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {message.username}
+                              {message.user?.username || message.username || 'No Username'}
                             </div>
                           </td>
                           <td className="p-3">
@@ -760,7 +840,7 @@ const ContactMessagesPage = () => {
                               className="text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {message.email}
+                              {message.email || 'No Email'}
                             </div>
                           </td>
                           <td className="p-3">

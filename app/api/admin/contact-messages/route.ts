@@ -18,52 +18,65 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
 
-    // Get contact messages with filters
+    // Get contact messages with filters using contactDB
     console.log('🔍 Fetching contact messages with filters:', { status, search, limit, offset });
+
+    // Use contactDB to get messages with proper joins
     const messages = await contactDB.getContactMessages({
       status: status !== 'All' ? status : undefined,
       search: search || undefined,
       limit,
       offset
     });
+
     console.log('📋 Found messages:', messages.length);
 
     // Get message counts for status tabs
-    const counts = await contactDB.getContactMessageCounts();
+    const totalCount = await contactDB.countContactMessages({});
+    const unreadCount = await contactDB.countContactMessages({ status: ['Unread'] });
+    const readCount = await contactDB.countContactMessages({ status: ['Read'] });
+    const repliedCount = await contactDB.countContactMessages({ status: ['Replied'] });
+
+    const counts = {
+      total: totalCount,
+      unread: unreadCount,
+      read: readCount,
+      replied: repliedCount
+    };
     console.log('📊 Message counts:', counts);
 
     // Format messages for the UI
-    const formattedMessages = (messages as any[]).map((msg: any) => ({
-      id: msg.id,
-      user: msg.username || 'Unknown User',
-      email: msg.email || 'No Email',
-      category: msg.categoryName || 'Unknown Category',
+    const formattedMessages = messages.map((msg: any) => ({
+      id: msg.id.toString(),
+      username: msg.user?.username || 'No Username',
+      user: {
+        username: msg.user?.username || 'No Username',
+        email: msg.user?.email || 'No Email'
+      },
+      email: msg.user?.email || 'No Email',
+      category: msg.category?.name || 'Unknown Category',
       subject: msg.subject,
       message: msg.message,
       status: msg.status,
       attachments: msg.attachments ? JSON.parse(msg.attachments) : null,
       adminReply: msg.adminReply,
       repliedAt: msg.repliedAt,
-      repliedBy: msg.repliedByUsername,
+      repliedBy: msg.repliedByUser?.username || null,
       createdAt: msg.createdAt,
       updatedAt: msg.updatedAt
     }));
 
     return NextResponse.json({
       success: true,
-      data: {
-        messages: formattedMessages,
-        counts: {
-          total: Number(counts.total) || 0,
-          unread: Number(counts.unread) || 0,
-          read: Number(counts.read) || 0,
-          replied: Number(counts.replied) || 0
-        },
-        pagination: {
-          page,
-          limit,
-          total: formattedMessages.length
-        }
+      messages: formattedMessages,
+      messageCounts: counts,
+      pagination: {
+        page,
+        limit,
+        total: counts.total,
+        totalPages: Math.ceil(counts.total / limit),
+        hasNext: page < Math.ceil(counts.total / limit),
+        hasPrev: page > 1
       }
     });
 
