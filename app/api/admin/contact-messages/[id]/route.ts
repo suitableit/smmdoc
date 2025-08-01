@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET - Get specific contact message
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -14,7 +14,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const messageId = parseInt(params.id);
+    const resolvedParams = await params;
+    const messageId = parseInt(resolvedParams.id);
     if (isNaN(messageId)) {
       return NextResponse.json(
         { error: 'Invalid message ID' },
@@ -35,18 +36,20 @@ export async function GET(
     // Format message for the UI
     const formattedMessage = {
       id: message.id,
-      user: message.username || 'Unknown User',
-      email: message.email || 'No Email',
-      category: message.categoryName || 'Unknown Category',
+      userId: message.userId,
       subject: message.subject,
       message: message.message,
       status: message.status,
-      attachments: message.attachments ? JSON.parse(message.attachments) : null,
+      categoryId: message.categoryId,
+      attachments: message.attachments,
       adminReply: message.adminReply,
       repliedAt: message.repliedAt,
-      repliedBy: message.repliedByUsername,
+      repliedBy: message.repliedBy,
       createdAt: message.createdAt,
-      updatedAt: message.updatedAt
+      updatedAt: message.updatedAt,
+      user: message.user,
+      category: message.category,
+      repliedByUser: message.repliedByUser
     };
 
     // Mark as read if it's unread
@@ -57,7 +60,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: formattedMessage
+      message: formattedMessage
     });
 
   } catch (error) {
@@ -72,7 +75,7 @@ export async function GET(
 // PUT - Update contact message (reply, status change)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -81,7 +84,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const messageId = parseInt(params.id);
+    const resolvedParams = await params;
+    const messageId = parseInt(resolvedParams.id);
     if (isNaN(messageId)) {
       return NextResponse.json(
         { error: 'Invalid message ID' },
@@ -156,7 +160,7 @@ export async function PUT(
 // DELETE - Delete contact message
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -165,7 +169,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const messageId = parseInt(params.id);
+    const resolvedParams = await params;
+    const messageId = parseInt(resolvedParams.id);
     if (isNaN(messageId)) {
       return NextResponse.json(
         { error: 'Invalid message ID' },
