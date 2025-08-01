@@ -2,47 +2,26 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  FaArrowLeft,
-  FaBox,
-  FaCheckCircle,
-  FaEdit,
-  FaEllipsisH,
-  FaPlus,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTrash,
-  FaEye,
-  FaEyeSlash,
-  FaPause,
-  FaCheck,
-  FaExclamationTriangle,
-  FaClock,
-  FaReply,
-  FaEnvelope,
-  FaUser,
-  FaCalendarAlt,
-  FaBuilding,
-  FaPaperclip,
-  FaStickyNote,
-  FaChevronDown,
-  FaChevronUp,
-  FaUserCog,
-  FaPhoneAlt,
-  FaMapMarkerAlt,
-  FaGlobe,
-  FaComments,
-  FaFileAlt,
-  FaImage,
-  FaVideo,
-  FaFilePdf,
-  FaFileWord,
-  FaFileExcel,
-  FaFileArchive,
-  FaSave,
-  FaSpinner,
-  FaTag,
-  FaPaperPlane,
+    FaArrowLeft,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronUp,
+    FaComments,
+    FaEnvelope,
+    FaEye,
+    FaFileAlt,
+    FaFileArchive,
+    FaFileExcel,
+    FaFilePdf,
+    FaFileWord,
+    FaImage,
+    FaPaperPlane,
+    FaPlus,
+    FaReply,
+    FaStickyNote,
+    FaTimes,
+    FaUser,
+    FaVideo
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -135,10 +114,13 @@ interface ContactMessageDetails {
 }
 
 const ContactDetailsPage = () => {
+  // Get message ID from URL
+  const messageId = typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : '1';
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Contact Message #0001 — ${APP_NAME}`;
-  }, []);
+    document.title = `Contact Message #${messageId} — ${APP_NAME}`;
+  }, [messageId]);
 
   // Dummy data for contact message details
   const dummyContactDetails: ContactMessageDetails = {
@@ -306,6 +288,59 @@ Support Manager`,
     return <FaFileAlt className="h-4 w-4" />;
   };
 
+  // Fetch contact details from API
+  const fetchContactDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/contact-messages/${messageId}`);
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Transform API data to match the expected format
+        const transformedData: ContactMessageDetails = {
+          id: data.message.id.toString(),
+          userId: data.message.userId.toString(),
+          username: data.message.user?.username || 'Unknown User',
+          userEmail: data.message.user?.email || 'No Email',
+          category: data.message.category?.name || 'Unknown Category',
+          subject: data.message.subject,
+          createdAt: data.message.createdAt,
+          lastUpdated: data.message.updatedAt,
+          status: data.message.status,
+          messages: [], // Will be populated with conversation history
+          notes: [], // Default empty notes
+          timeSpent: 0, // Default value
+          userInfo: {
+            fullName: data.message.user?.username || 'Unknown User',
+            email: data.message.user?.email || 'No Email',
+            phone: '',
+            company: '',
+            address: '',
+            registeredAt: '2024-01-01T00:00:00Z',
+            totalMessages: 1,
+            openMessages: 0
+          }
+        };
+
+        setContactDetails(transformedData);
+      } else {
+        showToast(data.error || 'Failed to load contact details', 'error');
+      }
+    } catch (error) {
+      console.error('Error fetching contact details:', error);
+      showToast('Error loading contact details', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load contact details on component mount
+  useEffect(() => {
+    if (messageId) {
+      fetchContactDetails();
+    }
+  }, [messageId]);
+
   // Show toast notification
   const showToast = (
     message: string,
@@ -347,36 +382,38 @@ Support Manager`,
     setIsReplying(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newMessage: ContactMessage = {
-        id: `msg_${Date.now()}`,
-        type: 'staff',
-        author: 'admin_user',
-        authorRole: 'Admin',
-        content: replyContent,
-        createdAt: new Date().toISOString(),
-        attachments: selectedFiles.length > 0 ? selectedFiles.map((file, index) => ({
-          id: `att_${Date.now()}_${index}`,
-          filename: file.name,
-          filesize: `${Math.round(file.size / 1024)} KB`,
-          mimetype: file.type,
-          uploadedAt: new Date().toISOString(),
-          uploadedBy: 'admin_user'
-        })) : undefined
-      };
-      
-      setContactDetails(prev => ({
-        ...prev,
-        messages: [...prev.messages, newMessage],
-        status: 'Replied',
-        lastUpdated: new Date().toISOString()
-      }));
-      
-      setReplyContent('');
-      setSelectedFiles([]);
-      showToast('Reply sent successfully', 'success');
+      const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'reply',
+          adminReply: replyContent.trim()
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Update the contact details with the reply
+        setContactDetails(prev => ({
+          ...prev,
+          adminReply: replyContent.trim(),
+          status: 'Replied',
+          lastUpdated: new Date().toISOString(),
+          repliedAt: new Date().toISOString()
+        }));
+
+        setReplyContent('');
+        setSelectedFiles([]);
+        showToast(data.message || 'Reply sent successfully', 'success');
+
+        // Refresh the data to get updated information
+        fetchContactDetails();
+      } else {
+        showToast(data.error || 'Error sending reply', 'error');
+      }
     } catch (error) {
       showToast('Error sending reply', 'error');
     } finally {
@@ -742,24 +779,24 @@ Support Manager`,
                 <div className="space-y-4">
                   <div>
                     <div className="form-label">Username</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails.username}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails.username || 'No Username'}</div>
                   </div>
                   <div>
                     <div className="form-label">Full Name</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails.userInfo.fullName}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails.userInfo?.fullName || 'No Name'}</div>
                   </div>
                   <div>
                     <div className="form-label">Email</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails.userInfo.email}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails.userInfo?.email || contactDetails.userEmail}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-2 border-t">
                     <div>
                       <div className="form-label">Total Messages</div>
-                      <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{contactDetails.userInfo.totalMessages}</div>
+                      <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{contactDetails.userInfo?.totalMessages || 0}</div>
                     </div>
                     <div>
                       <div className="form-label">Open Messages</div>
-                      <div className="text-lg font-semibold text-orange-600">{contactDetails.userInfo.openMessages}</div>
+                      <div className="text-lg font-semibold text-orange-600">{contactDetails.userInfo?.openMessages || 0}</div>
                     </div>
                   </div>
                 </div>
