@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   FaBox,
   FaCheckCircle,
@@ -21,6 +22,23 @@ import {
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { APP_NAME } from '@/lib/constants';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+
+// Dynamic imports for modal components
+const ChangeAllStatusModal = dynamic(() => import('@/components/admin/orders/modals/change-all-status'), {
+  ssr: false,
+});
+
+const StartCountModal = dynamic(() => import('@/components/admin/orders/modals/start-count'), {
+  ssr: false,
+});
+
+const MarkPartialModal = dynamic(() => import('@/components/admin/orders/modals/mark-partial'), {
+  ssr: false,
+});
+
+const UpdateOrderStatusModal = dynamic(() => import('@/components/admin/orders/modals/update-order-status'), {
+  ssr: false,
+});
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -1831,207 +1849,46 @@ const AdminOrdersPage = () => {
                 </div>
 
                 {/* Bulk Status Change Dialog */}
-                {bulkStatusDialog.open && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
-                        Change All Orders Status
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        This will change the status of {selectedOrders.length}{' '}
-                        selected order{selectedOrders.length !== 1 ? 's' : ''}.
-                      </p>
-                      <div className="mb-4">
-                        <label className="form-label mb-2">
-                          Select New Status
-                        </label>
-                        <select
-                          value={bulkStatus}
-                          onChange={(e) => setBulkStatus(e.target.value)}
-                          className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                        >
-                          <option value="">Select status...</option>
-                          <option value="pending">Pending</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="cancelled">Cancel & Refund</option>
-                        </select>
-                      </div>
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => {
-                            setBulkStatusDialog({ open: false });
-                            setBulkStatus('');
-                          }}
-                          className="btn btn-secondary"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => handleBulkStatusUpdate(bulkStatus)}
-                          disabled={!bulkStatus}
-                          className="btn btn-primary"
-                        >
-                          Update All
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <ChangeAllStatusModal
+                  isOpen={bulkStatusDialog.open}
+                  onClose={() => setBulkStatusDialog({ open: false })}
+                  selectedOrdersCount={selectedOrders.length}
+                  bulkStatus={bulkStatus}
+                  setBulkStatus={setBulkStatus}
+                  onUpdate={handleBulkStatusUpdate}
+                />
 
                 {/* Mark Partial Dialog */}
-                {markPartialDialog.open && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
-                        Mark as Partial
-                      </h3>
-                      <div className="mb-4">
-                        <label className="form-label mb-2">
-                          Not going amount
-                        </label>
-                        <input
-                          type="number"
-                          value={notGoingAmount}
-                          onChange={(e) => setNotGoingAmount(e.target.value)}
-                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          placeholder="Enter not going amount"
-                        />
-                      </div>
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => {
-                            setMarkPartialDialog({ open: false, orderId: '' });
-                            setNotGoingAmount('');
-                          }}
-                          className="btn btn-secondary"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleMarkPartial(
-                              markPartialDialog.orderId,
-                              notGoingAmount
-                            )
-                          }
-                          className="btn btn-primary"
-                        >
-                          Update
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <MarkPartialModal
+                  isOpen={markPartialDialog.open}
+                  onClose={() => setMarkPartialDialog({ open: false, orderId: '' })}
+                  orderId={markPartialDialog.orderId}
+                  notGoingAmount={notGoingAmount}
+                  setNotGoingAmount={setNotGoingAmount}
+                  onUpdate={handleMarkPartial}
+                />
 
                 {/* Edit Start Count Dialog */}
-                {editStartCountDialog.open && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
-                        Edit Start Count
-                      </h3>
-                      <div className="mb-4">
-                        <label className="form-label mb-2">
-                          New Start Count
-                        </label>
-                        <input
-                          type="number"
-                          value={newStartCount}
-                          onChange={(e) => setNewStartCount(e.target.value)}
-                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          placeholder="Enter new start count"
-                        />
-                      </div>
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => {
-                            setEditStartCountDialog({
-                              open: false,
-                              orderId: '',
-                              currentCount: 0,
-                            });
-                            setNewStartCount('');
-                          }}
-                          className="btn btn-secondary"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleEditStartCount(
-                              editStartCountDialog.orderId,
-                              parseInt(newStartCount) || 0
-                            )
-                          }
-                          className="btn btn-primary"
-                        >
-                          Update
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <StartCountModal
+                  isOpen={editStartCountDialog.open}
+                  onClose={() => setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 })}
+                  orderId={editStartCountDialog.orderId}
+                  currentCount={editStartCountDialog.currentCount}
+                  newStartCount={newStartCount}
+                  setNewStartCount={setNewStartCount}
+                  onUpdate={handleEditStartCount}
+                />
 
                 {/* Update Status Dialog */}
-                {updateStatusDialog.open && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
-                        Update Order Status
-                      </h3>
-                      <div className="mb-4">
-                        <label className="form-label mb-2">
-                          Select New Status
-                        </label>
-                        <select
-                          value={newStatus}
-                          onChange={(e) => setNewStatus(e.target.value)}
-                          className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="processing">Processing</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="completed">Completed</option>
-                          <option value="partial">Partial</option>
-                          <option value="cancelled">Cancelled</option>
-                          <option value="refunded">Refunded</option>
-                        </select>
-                      </div>
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          onClick={() => {
-                            setUpdateStatusDialog({
-                              open: false,
-                              orderId: '',
-                              currentStatus: '',
-                            });
-                            setNewStatus('');
-                          }}
-                          className="btn btn-secondary"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleStatusUpdate(
-                              updateStatusDialog.orderId,
-                              newStatus
-                            );
-                            setUpdateStatusDialog({
-                              open: false,
-                              orderId: '',
-                              currentStatus: '',
-                            });
-                            setNewStatus('');
-                          }}
-                          className="btn btn-primary"
-                        >
-                          Update
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <UpdateOrderStatusModal
+                  isOpen={updateStatusDialog.open}
+                  onClose={() => setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' })}
+                  orderId={updateStatusDialog.orderId}
+                  currentStatus={updateStatusDialog.currentStatus}
+                  newStatus={newStatus}
+                  setNewStatus={setNewStatus}
+                  onUpdate={handleStatusUpdate}
+                />
               </React.Fragment>
             )}
           </div>
