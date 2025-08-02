@@ -59,7 +59,7 @@ export async function logActivity(data: ActivityLogData) {
         details: data.details,
         ipAddress: data.ipAddress || 'unknown',
         userAgent: data.userAgent || 'unknown',
-        metadata: data.metadata,
+        metadata: data.metadata ? JSON.stringify(data.metadata) : null,
       },
     });
   } catch (error) {
