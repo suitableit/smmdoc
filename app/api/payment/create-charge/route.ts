@@ -3,9 +3,9 @@
 import { auth } from '@/auth';
 import { ActivityLogger } from '@/lib/activity-logger';
 import {
-  convertCurrency,
-  convertToUSD,
-  fetchCurrencyData,
+    convertCurrency,
+    convertToUSD,
+    fetchCurrencyData,
 } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
@@ -187,7 +187,10 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        // Make API request to UddoktaPay Live
+        // Make API request to UddoktaPay Live with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
         const response = await fetch('https://pay.smmdoc.com/api/checkout-v2', {
           method: 'POST',
           headers: {
@@ -195,6 +198,7 @@ export async function POST(req: NextRequest) {
             Accept: 'application/json',
             'RT-UDDOKTAPAY-API-KEY': apiKey,
           },
+          signal: controller.signal,
           body: JSON.stringify({
             full_name: paymentData.full_name,
             email: paymentData.email,
@@ -209,6 +213,9 @@ export async function POST(req: NextRequest) {
             webhook_url: `${appUrl}/api/payment/webhook`,
           }),
         });
+
+        // Clear timeout
+        clearTimeout(timeoutId);
 
         // Get response as text first for better debugging
         const responseText = await response.text();
@@ -245,6 +252,18 @@ export async function POST(req: NextRequest) {
         }
       } catch (fetchError) {
         console.error('Fetch error:', fetchError);
+
+        // Clear timeout if it exists
+        if (timeoutId) clearTimeout(timeoutId);
+
+        // Check if it's a timeout error
+        if (fetchError.name === 'AbortError') {
+          return NextResponse.json(
+            { error: 'Payment gateway timeout. Please try again.' },
+            { status: 408, headers: corsHeaders }
+          );
+        }
+
         return NextResponse.json(
           { error: 'Network error when connecting to payment gateway' },
           { status: 500, headers: corsHeaders }

@@ -42,11 +42,12 @@ export async function fetchCurrencyData(): Promise<{
 
   try {
     // Fetch enabled currencies
-    const currenciesResponse = await fetch('/api/currencies/enabled');
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const currenciesResponse = await fetch(`${baseUrl}/api/currencies/enabled`);
     const currenciesData = await currenciesResponse.json();
 
     // Fetch currency settings
-    const settingsResponse = await fetch('/api/admin/currency-settings');
+    const settingsResponse = await fetch(`${baseUrl}/api/admin/currency-settings`);
     const settingsData = await settingsResponse.json();
 
     const currencies = currenciesData.success ? currenciesData.currencies : [];
