@@ -289,11 +289,11 @@ function NewOrder() {
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
   const { data: userStatsResponse, refetch: refetchUserStats } =
-    useGetUserStatsQuery();
+    useGetUserStatsQuery(undefined);
   const serviceIdFromUrl =
-    searchParams.get('sId') || searchParams.get('serviceId');
-  const categoryIdFromUrl = searchParams.get('categoryId');
-  const platformFromUrl = searchParams.get('platform');
+    searchParams?.get('sId') || searchParams?.get('serviceId');
+  const categoryIdFromUrl = searchParams?.get('categoryId');
+  const platformFromUrl = searchParams?.get('platform');
   const [servicesData, setServicesData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -472,7 +472,7 @@ function NewOrder() {
 
       if (platformFromUrl && platformFromUrl !== 'Everything') {
         regularCategories = regularCategories
-          .filter((cat) =>
+          .filter((cat: any) =>
             platformFromUrl === 'Others'
               ? ![
                   'Instagram',
@@ -494,7 +494,7 @@ function NewOrder() {
                   .toLowerCase()
                   .includes(platformFromUrl.toLowerCase())
           )
-          .sort((a, b) => {
+          .sort((a: any, b: any) => {
             const aMatch = a.category_name
               .toLowerCase()
               .includes(platformFromUrl.toLowerCase())
@@ -614,7 +614,7 @@ function NewOrder() {
       let fetchedServices = res?.data?.data || [];
 
       if (platformFromUrl && platformFromUrl !== 'Everything') {
-        fetchedServices = fetchedServices.filter((service) => {
+        fetchedServices = fetchedServices.filter((service: any) => {
           const serviceCategory = combinedCategories.find(
             (cat) => cat.id === service.categoryId
           );
@@ -721,8 +721,8 @@ function NewOrder() {
 
     const userBalanceAmount =
       userStatsResponse?.data?.balance ||
-      userData?.balance ||
-      user?.balance ||
+      (userData as any)?.balance ||
+      (user as any)?.balance ||
       0;
     const finalTotalPrice = parseFloat(totalPrice.toFixed(4));
 

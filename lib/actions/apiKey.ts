@@ -27,7 +27,7 @@ export const generateApiKeys = async () => {
   } else {
     await db.apiKey.create({
       data: {
-        userId: session?.user.id as string,
+        userId: parseInt(session?.user.id || '0'),
         key: apiKey,
       },
     });

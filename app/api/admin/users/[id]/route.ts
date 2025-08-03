@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/admin/users/[id] - Get specific user details
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string  }> }
 ) {
   try {
     // Require admin authentication
@@ -15,7 +15,7 @@ export async function GET(
 
     console.log(`Admin user details API accessed by: ${session.user.email}`);
 
-    const { id } = params;
+    const { id  } = await params;
     const userId = parseInt(id);
 
     if (isNaN(userId)) {
@@ -64,7 +64,7 @@ export async function GET(
     }
 
     // Get user's order count
-    const orderCount = await db.order.count({
+    const orderCount = await db.newOrder.count({
       where: { userId: user.id }
     });
 

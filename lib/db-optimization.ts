@@ -160,7 +160,7 @@ export const optimizePrismaConnection = (prisma: any) => {
   return prisma.$extends({
     query: {
       $allModels: {
-        async $allOperations({ model, operation, args, query }) {
+        async $allOperations({ model, operation, args, query }: any) {
           const start = Date.now();
           const result = await query(args);
           const end = Date.now();

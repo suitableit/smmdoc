@@ -105,7 +105,7 @@ export async function POST(request: Request) {
 
     // Calculate total cost for all orders
     let totalCost = 0;
-    const processedOrders = [];
+    const processedOrders: any[] = [];
 
     for (const orderData of orders) {
       const {

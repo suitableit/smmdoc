@@ -363,7 +363,7 @@ export default function MassOrder() {
       }
 
       // Generate a unique batch ID for this Mass Orders
-      const batchId = `MO-${Date.now()}-${user?.id?.slice(-4)}`;
+      const batchId = `MO-${Date.now()}-${(user?.id || Math.random()).toString().slice(-4)}`;
 
       // Submit to Mass Orders API
       const response = await axiosInstance.post('/api/user/mass-orderss', {

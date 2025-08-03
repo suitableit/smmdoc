@@ -1,3 +1,4 @@
+import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
@@ -79,7 +80,7 @@ export async function PUT(request: Request) {
     const currentService = await db.service.findUnique({
       where: { id: parseInt(id) },
       include: {
-        category: { select: { name: true } },
+        category: { select: { category_name: true } },
         serviceType: { select: { name: true } }
       }
     });

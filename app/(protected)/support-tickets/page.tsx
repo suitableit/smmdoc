@@ -9,13 +9,13 @@ import { ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaClock,
-  FaCreditCard,
-  FaInfoCircle,
-  FaPaperclip,
-  FaTicketAlt,
-  FaTimes,
+    FaCheckCircle,
+    FaClock,
+    FaCreditCard,
+    FaInfoCircle,
+    FaPaperclip,
+    FaTicketAlt,
+    FaTimes,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -91,7 +91,7 @@ const TicketPage: React.FC = () => {
   // Sample Ticket data
   const [Ticket] = useState<Ticket[]>([
     {
-      id: '227663',
+      id: 227663,
       subject: 'Welcome',
       status: 'New',
       lastUpdate: '2025-05-02 02:47:56',

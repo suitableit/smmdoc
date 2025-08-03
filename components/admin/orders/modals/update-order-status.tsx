@@ -3,7 +3,7 @@ import React from 'react';
 interface UpdateOrderStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orderId: string;
+  orderId: string | number;
   currentStatus: string;
   newStatus: string;
   setNewStatus: (status: string) => void;
@@ -22,7 +22,7 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
   if (!isOpen) return null;
 
   const handleUpdate = () => {
-    onUpdate(orderId, newStatus);
+    onUpdate(orderId.toString(), newStatus);
     onClose();
     setNewStatus('');
   };

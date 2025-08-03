@@ -59,7 +59,7 @@ export async function GET() {
             role: session.user.role || 'user',
             image: session.user.image || null,
             currency: session.user.currency || 'USD',
-            balance: session.user.balance || 0,
+            balance: (session.user as any).balance || 0,
             total_deposit: 0,
             total_spent: 0,
             createdAt: new Date(),

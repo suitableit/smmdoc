@@ -50,7 +50,7 @@ export async function PUT(
 
     // Find the refill request
     const refillRequest = await db.refillRequest.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       include: {
         order: {
           select: {
@@ -94,7 +94,7 @@ export async function PUT(
 
     // Update refill request status
     const updatedRequest = await db.refillRequest.update({
-      where: { id },
+      where: { id: Number(id) },
       data: {
         status: action === 'approve' ? 'approved' : 'declined',
         adminNotes: adminNotes || null,
@@ -126,7 +126,7 @@ export async function PUT(
 
       // Update refill request to completed
       await db.refillRequest.update({
-        where: { id },
+        where: { id: Number(id) },
         data: {
           status: 'completed'
         }

@@ -3,20 +3,20 @@
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  FaCheck,
-  FaCheckCircle,
-  FaChevronDown,
-  FaChevronLeft,
-  FaChevronRight,
-  FaChevronUp,
-  FaEdit,
-  FaExclamationTriangle,
-  FaHandshake,
-  FaList,
-  FaSave,
-  FaSearch,
-  FaSync,
-  FaTimes,
+    FaCheck,
+    FaCheckCircle,
+    FaChevronDown,
+    FaChevronLeft,
+    FaChevronRight,
+    FaChevronUp,
+    FaEdit,
+    FaExclamationTriangle,
+    FaHandshake,
+    FaList,
+    FaSave,
+    FaSearch,
+    FaSync,
+    FaTimes,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -236,49 +236,49 @@ const ImportServicesPage = () => {
   // Dummy data for API categories
   const dummyApiCategories: ApiCategory[] = [
     {
-      id: 'cat_001',
+      id: 1,
       name: 'Instagram Services',
       servicesCount: 45,
       selected: false,
     },
     {
-      id: 'cat_002',
+      id: 2,
       name: 'Facebook Services',
       servicesCount: 32,
       selected: false,
     },
     {
-      id: 'cat_003',
+      id: 3,
       name: 'YouTube Services',
       servicesCount: 28,
       selected: false,
     },
     {
-      id: 'cat_004',
+      id: 4,
       name: 'TikTok Services',
       servicesCount: 35,
       selected: false,
     },
     {
-      id: 'cat_005',
+      id: 5,
       name: 'Twitter Services',
       servicesCount: 22,
       selected: false,
     },
     {
-      id: 'cat_006',
+      id: 6,
       name: 'LinkedIn Services',
       servicesCount: 18,
       selected: false,
     },
     {
-      id: 'cat_007',
+      id: 7,
       name: 'Pinterest Services',
       servicesCount: 15,
       selected: false,
     },
     {
-      id: 'cat_008',
+      id: 8,
       name: 'Snapchat Services',
       servicesCount: 12,
       selected: false,
@@ -885,7 +885,7 @@ const ImportServicesPage = () => {
                         disabled={provider.status === 'inactive'}
                         style={{
                           color: provider.status === 'inactive' ? '#9CA3AF' : 'inherit',
-                          fontStyle: provider.status === 'inactive'
+                          fontStyle: provider.status === 'inactive' ? 'italic' : 'normal'
                         }}
                       >
                         {provider.name} {provider.status === 'inactive' ? '(inactive)' : ''}

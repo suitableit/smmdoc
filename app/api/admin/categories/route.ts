@@ -21,11 +21,11 @@ export async function POST(request: NextRequest) {
       // If position is 'top', update all existing 'top' categories to 'bottom'
       await db.category.updateMany({
         where: {
-          position: 'top',
-          userId: user?.id ?? '',
+          position: 'top' as any,
+          userId: user?.id ?? 0,
         },
         data: {
-          position: 'bottom',
+          position: 'bottom' as any,
         },
       });
     }

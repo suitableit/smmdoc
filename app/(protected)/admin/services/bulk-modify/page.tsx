@@ -2,15 +2,15 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    FaBox,
-    FaCheckCircle,
-    FaEdit,
-    FaExclamationTriangle,
-    FaSave,
-    FaSearch,
-    FaSync,
-    FaTag,
-    FaTimes
+  FaBox,
+  FaCheckCircle,
+  FaEdit,
+  FaExclamationTriangle,
+  FaSave,
+  FaSearch,
+  FaSync,
+  FaTag,
+  FaTimes
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -99,12 +99,12 @@ const BulkModifyPage = () => {
   // State management
   const [categories, setCategories] = useState<Category[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string | number>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [editedServices, setEditedServices] = useState<{[key: string]: Partial<Service>}>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [tempSelectedCategory, setTempSelectedCategory] = useState<string>('');
+  const [tempSelectedCategory, setTempSelectedCategory] = useState<string | number>('');
   const [isUpdating, setIsUpdating] = useState(false);
   
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -125,8 +125,8 @@ const BulkModifyPage = () => {
   const [localServicesLoading, setLocalServicesLoading] = useState(false);
 
   // Utility functions
-  const formatID = (id: string) => {
-    return id.toUpperCase();
+  const formatID = (id: string | number) => {
+    return id.toString().toUpperCase();
   };
 
   // Show toast notification
@@ -168,7 +168,7 @@ const BulkModifyPage = () => {
   // Filter services based on search term
   const filteredServices = services.filter(service =>
     service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    service.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
     service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     service.provider?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     service.category?.category_name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -197,7 +197,7 @@ const BulkModifyPage = () => {
 
 
   // Handle field changes
-  const handleFieldChange = (serviceId: string, field: keyof Service, value: string | number) => {
+  const handleFieldChange = (serviceId: string | number, field: keyof Service, value: string | number) => {
     setEditedServices(prev => ({
       ...prev,
       [serviceId]: {
@@ -249,7 +249,7 @@ const BulkModifyPage = () => {
       
       // Prepare update requests for all edited services
       const updatePromises = Object.entries(editedServices).map(async ([serviceId, changes]) => {
-        const originalService = services.find(s => s.id === serviceId);
+        const originalService = services.find(s => s.id === parseInt(serviceId));
         if (!originalService) return;
 
         // Merge original service data with changes

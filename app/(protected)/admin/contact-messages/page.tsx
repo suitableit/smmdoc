@@ -56,6 +56,9 @@ interface ContactMessage {
   message: string;
   createdAt: string;
   status: 'Unread' | 'Read' | 'Replied';
+  user?: {
+    username?: string;
+  };
 }
 
 interface PaginationInfo {

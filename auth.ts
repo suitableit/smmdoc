@@ -10,10 +10,6 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
-  pages: {
-    signIn: '/sign-in',
-    error: '/sign-error',
-  },
   events: {
     async linkAccount({ user }: any) {
       // Convert string ID to number if needed

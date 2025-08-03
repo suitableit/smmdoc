@@ -1,5 +1,4 @@
 import { auth } from '@/auth';
-import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 // In-memory sync logs (in production, use database table)
@@ -149,7 +148,7 @@ export async function DELETE() {
 }
 
 // Helper function to add sync log (can be called from other APIs)
-export async function addSyncLog(logData: any) {
+async function addSyncLog(logData: any) {
   try {
     const newLog = {
       id: Date.now().toString(),

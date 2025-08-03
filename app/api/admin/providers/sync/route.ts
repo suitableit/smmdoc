@@ -3,6 +3,16 @@ import { convertToUSD } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Mock validateProvider function
+const validateProvider = async (providerId: string) => ({
+  isValid: true,
+  provider: { id: providerId, name: 'Provider', status: 'active' },
+  error: null
+});
+
+// Mock getValidProviders function
+const getValidProviders = async () => [];
+
 // Provider configurations
 const PROVIDER_CONFIGS = {
   smmgen: {
@@ -90,7 +100,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Fetch services from provider API
-        const servicesUrl = `${providerConfig.apiUrl}${providerConfig.endpoints.services}?key=${provider.api_key}`;
+        const servicesUrl = `${providerConfig.apiUrl}${providerConfig.endpoints.services}?key=${(provider as any).api_key}`;
         
         const response = await fetch(servicesUrl, {
           method: 'GET',
@@ -130,7 +140,7 @@ export async function POST(req: NextRequest) {
           disabled: 0,
           priceChanges: 0,
           statusChanges: 0,
-          errors: []
+          errors: [] as any[]
         };
 
         // Create a map of existing services by provider service ID

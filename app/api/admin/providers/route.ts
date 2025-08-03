@@ -1,18 +1,33 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { ATTPANEL_CONFIG } from './attpanel/route';
-import { GROWFOLLOWS_CONFIG } from './growfollows/route';
-import { SMMCODER_CONFIG } from './smmcoder/route';
-import { SMMGEN_CONFIG } from './smmgen/route';
-
 // Available Providers Configuration
 // Remove any provider from here = it won't show in UI
-export const AVAILABLE_PROVIDERS = [
-  SMMGEN_CONFIG,
-  GROWFOLLOWS_CONFIG,
-  ATTPANEL_CONFIG,
-  SMMCODER_CONFIG
+const AVAILABLE_PROVIDERS = [
+  {
+    name: "SMMGEN",
+    value: "smmgen",
+    label: "SMMGEN",
+    description: "Premium SMM services provider"
+  },
+  {
+    name: "Growfollows",
+    value: "growfollows",
+    label: "Growfollows",
+    description: "High-quality social media growth services"
+  },
+  {
+    name: "ATTPANEL",
+    value: "attpanel",
+    label: "ATTPANEL",
+    description: "Reliable SMM panel with competitive prices"
+  },
+  {
+    name: "SMMCODER",
+    value: "smmcoder",
+    label: "SMMCODER",
+    description: "Professional SMM panel services"
+  }
 ];
 
 // GET - Get all available providers
@@ -78,7 +93,7 @@ export async function GET() {
         configured: !!configured,
         status: configured?.status || 'inactive',
         id: configured?.id || null,
-        apiUrl: configured?.api_url || provider.apiUrl || '',
+        apiUrl: (configured as any)?.api_url || (provider as any).apiUrl || '',
         createdAt: configured?.createdAt || null,
         updatedAt: configured?.updatedAt || null
       };
@@ -199,7 +214,6 @@ export async function POST(req: NextRequest) {
       data: {
         provider: {
           id: newProvider.id,
-          name: newProvider.name,
           status: newProvider.status,
           ...providerConfig
         }

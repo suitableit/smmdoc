@@ -39,7 +39,7 @@ interface Category {
 // Sample data for sidebar
 const recentPosts: BlogPost[] = [
   {
-    id: '1',
+    id: 1,
     title: 'Lorem Ipsum Dolor Sit Amet Consectetur',
     excerpt: 'Sed do eiusmod tempor incididunt ut labore et dolore magna...',
     date: '2024-05-28',
@@ -48,7 +48,7 @@ const recentPosts: BlogPost[] = [
     slug: 'lorem-ipsum-dolor-sit',
   },
   {
-    id: '2',
+    id: 2,
     title: 'Ut Enim Ad Minim Veniam Quis Nostrud',
     excerpt: 'Exercitation ullamco laboris nisi ut aliquip ex ea commodo...',
     date: '2024-05-25',
@@ -57,7 +57,7 @@ const recentPosts: BlogPost[] = [
     slug: 'ut-enim-ad-minim',
   },
   {
-    id: '3',
+    id: 3,
     title: 'Duis Aute Irure Dolor In Reprehenderit',
     excerpt: 'Voluptate velit esse cillum dolore eu fugiat nulla pariatur...',
     date: '2024-05-22',

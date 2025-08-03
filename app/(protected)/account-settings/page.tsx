@@ -8,17 +8,17 @@ import { APP_NAME } from '@/lib/constants';
 import { setUserDetails } from '@/lib/slice/userDetails';
 import React, { useEffect, useState } from 'react';
 import {
-  FaCamera,
-  FaCheck,
-  FaClock,
-  FaCopy,
-  FaEye,
-  FaEyeSlash,
-  FaGlobe,
-  FaKey,
-  FaShieldAlt,
-  FaTimes,
-  FaUser,
+    FaCamera,
+    FaCheck,
+    FaClock,
+    FaCopy,
+    FaEye,
+    FaEyeSlash,
+    FaGlobe,
+    FaKey,
+    FaShieldAlt,
+    FaTimes,
+    FaUser,
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -533,9 +533,9 @@ const ProfilePage = () => {
 
     if (emailError || fullNameError || usernameError) {
       setValidationErrors({
-        email: emailError,
-        fullName: fullNameError,
-        username: usernameError,
+        email: emailError || undefined,
+        fullName: fullNameError || undefined,
+        username: usernameError || undefined,
       });
       showToast('Please fix validation errors before saving', 'error');
       return;

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // POST /api/admin/orders/[id]/refund - Process order refund
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -22,7 +22,7 @@ export async function POST(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const { refundType, refundAmount } = await req.json();
 
     // Validate refund type
@@ -39,7 +39,7 @@ export async function POST(
 
     // Check if order exists
     const existingOrder = await db.newOrder.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       include: {
         user: {
           select: {
@@ -106,7 +106,7 @@ export async function POST(
 
       // Update order status
       const updatedOrder = await tx.newOrder.update({
-        where: { id },
+        where: { id: Number(id) },
         data: { 
           status: refundType === 'full' ? 'refunded' : 'partial',
           updatedAt: new Date()
@@ -137,7 +137,7 @@ export async function POST(
           amount: finalRefundAmount,
           spent_amount: 0,
           fee: 0,
-          email: existingOrder.user.email,
+          email: existingOrder.user.email || '',
           name: existingOrder.user.name || 'User',
           status: 'Success',
           admin_status: 'Approved',

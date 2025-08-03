@@ -20,6 +20,12 @@ const useCurrency = () => ({
   rate: 110,
 });
 
+// Mock user settings hook
+const useUserSettings = () => ({
+  settings: { currency: 'BDT', transferFundsPercentage: 3 },
+  loading: false,
+});
+
 // Toast Component
 const Toast = ({
   message,
@@ -39,11 +45,8 @@ const Toast = ({
   </div>
 );
 
-interface TransferFundProps {
-  className?: string;
-}
-
-export default function TransferFund({ className = '' }: TransferFundProps) {
+export default function TransferFund() {
+  const className = '';
   const { currency: globalCurrency, rate: globalRate } = useCurrency();
   const { settings: userSettings, loading: settingsLoading } = useUserSettings();
   const [username, setUsername] = useState('');

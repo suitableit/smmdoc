@@ -227,7 +227,7 @@ const AdminsListPage = () => {
     currentStatus: string;
   }>({
     open: false,
-    adminId: '',
+    adminId: 0,
     currentStatus: '',
   });
   const [newStatus, setNewStatus] = useState('');
@@ -237,7 +237,7 @@ const AdminsListPage = () => {
     currentRole: string;
   }>({
     open: false,
-    adminId: '',
+    adminId: 0,
     currentRole: '',
   });
   const [newRole, setNewRole] = useState('');
@@ -396,8 +396,8 @@ const AdminsListPage = () => {
   }, []);
 
   const handleEditAdmin = useCallback(
-    (adminId: string) => {
-      const admin = admins.find((a) => a.id === adminId);
+    (adminId: string | number) => {
+      const admin = admins.find((a) => a.id.toString() === adminId.toString());
       if (admin) {
         setEditDialog({ open: true, admin });
         setEditFormData({
@@ -481,7 +481,7 @@ const AdminsListPage = () => {
 
   // Handle admin status update
   const handleStatusUpdate = useCallback(
-    async (adminId: string, newStatus: string) => {
+    async (adminId: string | number, newStatus: string) => {
       return handleApiAction(
         `/api/admin/users/${adminId}/status`,
         'PATCH',
@@ -494,7 +494,7 @@ const AdminsListPage = () => {
 
   // Handle change role
   const handleChangeRole = useCallback(
-    async (adminId: string, role: string) => {
+    async (adminId: string | number, role: string) => {
       const success = await handleApiAction(
         `/api/admin/users/${adminId}/role`,
         'PATCH',
@@ -503,25 +503,26 @@ const AdminsListPage = () => {
       );
 
       if (success) {
-        setChangeRoleDialog({ open: false, adminId: '', currentRole: '' });
+        setChangeRoleDialog({ open: false, adminId: 0, currentRole: '' });
         setNewRole('');
       }
+      return success;
     },
     [handleApiAction]
   );
 
   // Modal handlers
   const openUpdateStatusDialog = useCallback(
-    (adminId: string, currentStatus: string) => {
-      setUpdateStatusDialog({ open: true, adminId, currentStatus });
+    (adminId: string | number, currentStatus: string) => {
+      setUpdateStatusDialog({ open: true, adminId: typeof adminId === 'string' ? parseInt(adminId) : adminId, currentStatus });
       setNewStatus(currentStatus);
     },
     []
   );
 
   const openChangeRoleDialog = useCallback(
-    (adminId: string, currentRole: string) => {
-      setChangeRoleDialog({ open: true, adminId, currentRole });
+    (adminId: string | number, currentRole: string) => {
+      setChangeRoleDialog({ open: true, adminId: typeof adminId === 'string' ? parseInt(adminId) : adminId, currentRole });
       setNewRole(currentRole);
     },
     []
@@ -920,7 +921,7 @@ const AdminsListPage = () => {
                                 setAdminToDelete(adminId);
                                 setDeleteDialogOpen(true);
                               }}
-                              isLoading={actionLoading === admin.id}
+                              isLoading={actionLoading === admin.id.toString()}
                             />
                           </td>
                         </tr>
@@ -961,7 +962,7 @@ const AdminsListPage = () => {
           onClose={() => {
             setUpdateStatusDialog({
               open: false,
-              adminId: '',
+              adminId: 0,
               currentStatus: '',
             });
             setNewStatus('');
@@ -972,7 +973,7 @@ const AdminsListPage = () => {
                 if (success) {
                   setUpdateStatusDialog({
                     open: false,
-                    adminId: '',
+                    adminId: 0,
                     currentStatus: '',
                   });
                   setNewStatus('');
@@ -993,7 +994,7 @@ const AdminsListPage = () => {
           newRole={newRole}
           onRoleChange={setNewRole}
           onClose={() => {
-            setChangeRoleDialog({ open: false, adminId: '', currentRole: '' });
+            setChangeRoleDialog({ open: false, adminId: 0, currentRole: '' });
             setNewRole('');
           }}
           onConfirm={() => {
@@ -1002,7 +1003,7 @@ const AdminsListPage = () => {
                 if (success) {
                   setChangeRoleDialog({
                     open: false,
-                    adminId: '',
+                    adminId: 0,
                     currentRole: '',
                   });
                   setNewRole('');
@@ -1057,7 +1058,7 @@ const AdminActions: React.FC<AdminActionsProps> = ({
   return (
     <div className="flex items-center gap-1">
       <button
-        onClick={() => onEdit(admin.id)}
+        onClick={() => onEdit(admin.id.toString())}
         className="btn btn-secondary p-2"
         title="Edit Admin"
         disabled={isLoading}
@@ -1080,7 +1081,7 @@ const AdminActions: React.FC<AdminActionsProps> = ({
             <div className="py-1">
               <button
                 onClick={() => {
-                  onChangeRole(admin.id, admin.role);
+                  onChangeRole(admin.id.toString(), admin.role);
                   setIsOpen(false);
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -1091,7 +1092,7 @@ const AdminActions: React.FC<AdminActionsProps> = ({
               <hr className="my-1" />
               <button
                 onClick={() => {
-                  onDelete(admin.id);
+                  onDelete(admin.id.toString());
                   setIsOpen(false);
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"

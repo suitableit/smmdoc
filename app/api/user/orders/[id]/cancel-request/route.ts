@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // POST /api/user/orders/:id/cancel-request - Customer cancel request
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string   }> }
 ) {
   try {
     const session = await auth();
@@ -22,7 +22,7 @@ export async function POST(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
     const body = await req.json();
     const { reason } = body;
 

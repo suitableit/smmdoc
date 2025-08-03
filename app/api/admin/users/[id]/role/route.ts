@@ -142,7 +142,7 @@ export async function PATCH(
 // GET /api/admin/users/[id]/role - Get user role
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -158,10 +158,10 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
 
     const user = await db.user.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       select: {
         id: true,
         username: true,

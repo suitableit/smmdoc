@@ -3,7 +3,7 @@ import React from 'react';
 interface StartCountModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orderId: string;
+  orderId: string | number;
   currentCount: number;
   newStartCount: string;
   setNewStartCount: (count: string) => void;
@@ -22,7 +22,7 @@ const StartCountModal: React.FC<StartCountModalProps> = ({
   if (!isOpen) return null;
 
   const handleUpdate = () => {
-    onUpdate(orderId, parseInt(newStartCount) || 0);
+    onUpdate(orderId.toString(), parseInt(newStartCount) || 0);
   };
 
   const handleClose = () => {

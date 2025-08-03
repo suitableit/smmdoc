@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     }
 
     // Validate all orders and calculate total cost
-    const validatedOrders = [];
+    const validatedOrders: any[] = [];
     let totalCost = 0;
     const validationErrors = [];
 
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
           remains: quantity,
           startCount: 0,
           isMassOrder: true, // Mark as Mass Orders
-          batchId: batchId || `MO-${Date.now()}-${session.user.id.slice(-4)}`, // Mass Orders batch ID
+          batchId: batchId || `MO-${Date.now()}-${(session.user.id as any).toString().slice(-4)}`, // Mass Orders batch ID
           service: {
             name: service.name,
             rate: service.rate,

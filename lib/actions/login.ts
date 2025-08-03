@@ -79,7 +79,7 @@ export const login = async (values: z.infer<typeof signInSchema>) => {
         where: { id: twoFactorToken.id },
       });
       const existingConfirmationToken = await getTwoFactorConfirmationByUserId(
-        existingUser.id
+        existingUser.id.toString()
       );
       if (existingConfirmationToken) {
         await db.twoFactorConfirmation.delete({

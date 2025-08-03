@@ -21,7 +21,7 @@ export const changePassword = async (values: PasswordForm) => {
     };
   }
   const session = await auth();
-  const user = await getUserById(session?.user.id as string);
+  const user = await getUserById(session?.user.id || '0');
   if (!user) {
     return { success: false, error: 'User not found!' };
   }

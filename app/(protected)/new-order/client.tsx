@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 
 // Dynamic import of client component
-const NewOrderComponent = dynamic(() => import('@/app/(protected)/new-order/newOrder'), {
+const NewOrderComponent = dynamic(() => import('./page'), {
   ssr: false,
   loading: () => <div className="h-60 flex items-center justify-center">Loading...</div>
 });

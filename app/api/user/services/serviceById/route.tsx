@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     // Only return active services
     const result = await db.service.findFirst({
       where: { 
-        id: id,
+        id: Number(id),
         status: 'active' // Only return if service is active
       },
     });

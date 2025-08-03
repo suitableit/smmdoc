@@ -64,6 +64,8 @@ export async function POST(req: NextRequest) {
         admin_status: 'pending',
         method: 'uddoktapay',
         sender_number: phone,
+        email: testUser.email || '',
+        spent_amount: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       }

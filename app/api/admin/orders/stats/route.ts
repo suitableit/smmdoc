@@ -259,7 +259,7 @@ export async function GET(req: NextRequest) {
             gte: previousPeriodStart,
             lt: startDate
           },
-          ...(userId && { userId })
+          ...(userId && { userId: Number(userId) })
         },
         _count: {
           id: true

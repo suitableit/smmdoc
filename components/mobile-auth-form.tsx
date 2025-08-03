@@ -183,12 +183,17 @@ const MobileAuthForm = ({
       // Add event listeners
       const form = document.getElementById('mobile-auth-form');
       if (form) {
-        form.addEventListener('submit', handleSubmit);
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          handleSubmit(e as any);
+        });
         
         // Add input change listeners
         const inputs = form.querySelectorAll('input');
         inputs.forEach(input => {
-          input.addEventListener('input', handleInputChange);
+          input.addEventListener('input', (e) => {
+            handleInputChange(e as any);
+          });
         });
       }
       

@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
       // Total users with specified role
       db.user.count({
         where: {
-          role: roleFilter,
+          role: roleFilter as any,
           ...dateFilter
         }
       }),
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
       // Total balance across users with specified role
       db.user.aggregate({
         where: {
-          role: roleFilter
+          role: roleFilter as any
         },
         _sum: {
           balance: true
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
       // Total spent by users with specified role
       db.user.aggregate({
         where: {
-          role: roleFilter
+          role: roleFilter as any
         },
         _sum: {
           total_spent: true
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
       // Total deposits by users with specified role
       db.user.aggregate({
         where: {
-          role: roleFilter
+          role: roleFilter as any
         },
         _sum: {
           total_deposit: true
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
     // For now, we'll consider all users as 'active' since there's no status field
     const activeUsersCount = await db.user.count({
       where: {
-        role: roleFilter,
+        role: roleFilter as any,
         ...dateFilter
       }
     });
@@ -118,7 +118,7 @@ export async function GET(req: NextRequest) {
     const dailyRegistrations = await db.user.groupBy({
       by: ['createdAt'],
       where: {
-        role: roleFilter,
+        role: roleFilter as any,
         createdAt: {
           gte: thirtyDaysAgo
         }
@@ -151,7 +151,7 @@ export async function GET(req: NextRequest) {
     const currencyBreakdown = await db.user.groupBy({
       by: ['currency'],
       where: {
-        role: roleFilter
+        role: roleFilter as any
       },
       _count: {
         id: true
@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
     // Get top users by balance
     const topUsersByBalance = await db.user.findMany({
       where: {
-        role: roleFilter
+        role: roleFilter as any
       },
       select: {
         id: true,
@@ -183,7 +183,7 @@ export async function GET(req: NextRequest) {
     // Get top users by spending
     const topUsersBySpending = await db.user.findMany({
       where: {
-        role: roleFilter
+        role: roleFilter as any
       },
       select: {
         id: true,
@@ -215,9 +215,9 @@ export async function GET(req: NextRequest) {
     const responseData = {
       overview: {
         totalUsers,
-        totalBalance: totalBalance._sum.balance || 0,
-        totalSpent: totalSpent._sum.balance || 0, // Using balance as proxy since total_spent doesn't exist
-        totalDeposits: totalDeposits._sum.balance || 0 // Using balance as proxy since total_deposit doesn't exist
+        totalBalance: (totalBalance._sum as any).balance || 0,
+        totalSpent: (totalSpent._sum as any).balance || 0, // Using balance as proxy since total_spent doesn't exist
+        totalDeposits: (totalDeposits._sum as any).balance || 0 // Using balance as proxy since total_deposit doesn't exist
       },
       statusBreakdown: formattedStatusBreakdown,
       currencyBreakdown: formattedCurrencyBreakdown,

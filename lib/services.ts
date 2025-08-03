@@ -95,7 +95,7 @@ export async function getServicesByCategory(categoryId: string) {
     
     // ডেমো ডেটা (আপনার বাস্তব API রেডি হলে উপরের কোড আনকমেন্ট করুন)
     const services = await getServices();
-    return services.filter(service => service.category.id === categoryId);
+    return services.filter(service => service.category.name === categoryId);
   } catch (error) {
     console.error(`Error fetching services for category ${categoryId}:`, error);
     return [];

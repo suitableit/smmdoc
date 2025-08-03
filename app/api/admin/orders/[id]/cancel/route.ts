@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // POST /api/admin/orders/:id/cancel - Cancel an order
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -21,8 +21,8 @@ export async function POST(
         { status: 401 }
       );
     }
-    
-    const { id } = params;
+
+    const { id } = await params;
     const body = await req.json();
     const { reason, refundType = 'full', customRefundAmount } = body;
     
@@ -39,7 +39,7 @@ export async function POST(
     
     // Get the order to be cancelled
     const order = await db.newOrder.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       include: {
         user: {
           select: {
@@ -145,7 +145,7 @@ export async function POST(
     const result = await db.$transaction(async (prisma) => {
       // Update order status to cancelled
       const cancelledOrder = await prisma.newOrder.update({
-        where: { id },
+        where: { id: Number(id) },
         data: {
           status: 'cancelled',
           updatedAt: new Date()
@@ -256,7 +256,7 @@ export async function POST(
 // GET /api/admin/orders/:id/cancel - Get cancellation eligibility and refund estimate
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -272,8 +272,8 @@ export async function GET(
         { status: 401 }
       );
     }
-    
-    const { id } = params;
+
+    const { id } = await params;
     
     if (!id) {
       return NextResponse.json(
@@ -288,7 +288,7 @@ export async function GET(
     
     // Get order details
     const order = await db.newOrder.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       include: {
         user: {
           select: {
@@ -323,7 +323,7 @@ export async function GET(
     const isCancellable = cancellableStatuses.includes(order.status);
     
     // Calculate refund estimates
-    const orderPrice = order.user.currency === 'USD' ? order.usdPrice : order.bdtPrice;
+    const orderPrice = (order as any).user?.currency === 'USD' ? order.usdPrice : order.bdtPrice;
     const deliveredQuantity = order.qty - order.remains;
     const deliveredPercentage = order.qty > 0 ? deliveredQuantity / order.qty : 0;
     const partialRefundAmount = orderPrice * (order.remains / order.qty);
@@ -339,7 +339,7 @@ export async function GET(
         remainingQuantity: order.remains,
         deliveredPercentage: Math.round(deliveredPercentage * 100),
         orderPrice,
-        currency: order.user.currency
+        currency: (order as any).user?.currency || 'USD'
       },
       refundOptions: {
         full: {

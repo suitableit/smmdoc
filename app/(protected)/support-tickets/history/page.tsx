@@ -75,7 +75,7 @@ const Toast = ({
 
 const dummyTickets: Ticket[] = [
   {
-    id: '1',
+    id: 1,
     subject: 'Order #123 - Issue',
     status: 'open',
     createdAt: '2024-03-20T10:30:00',
@@ -84,7 +84,7 @@ const dummyTickets: Ticket[] = [
     type: 'human',
   },
   {
-    id: '2',
+    id: 2,
     subject: 'Payment Issue',
     status: 'closed',
     createdAt: '2024-03-19T09:15:00',
@@ -93,7 +93,7 @@ const dummyTickets: Ticket[] = [
     type: 'ai',
   },
   {
-    id: '3',
+    id: 3,
     subject: 'Account Access Problem',
     status: 'customer_reply',
     createdAt: '2024-03-18T14:20:00',
@@ -102,7 +102,7 @@ const dummyTickets: Ticket[] = [
     type: 'human',
   },
   {
-    id: '4',
+    id: 4,
     subject: 'Refund Request',
     status: 'closed',
     createdAt: '2024-03-17T11:45:00',
@@ -111,7 +111,7 @@ const dummyTickets: Ticket[] = [
     type: 'ai',
   },
   {
-    id: '5',
+    id: 5,
     subject: 'Technical Support',
     status: 'on_hold',
     createdAt: '2024-03-16T16:00:00',
@@ -120,7 +120,7 @@ const dummyTickets: Ticket[] = [
     type: 'human',
   },
   {
-    id: '6',
+    id: 6,
     subject: 'Billing Inquiry',
     status: 'closed',
     createdAt: '2024-03-15T13:20:00',
@@ -178,7 +178,7 @@ export default function TicketsHistory() {
         const results = dummyTickets.filter(
           (ticket) =>
             ticket.subject.toLowerCase().includes(searchInput.toLowerCase()) ||
-            ticket.id.includes(searchInput) ||
+            ticket.id.toString().includes(searchInput) ||
             ticket.status.toLowerCase().includes(searchInput.toLowerCase())
         );
         setSearchResults(results);
@@ -224,7 +224,7 @@ export default function TicketsHistory() {
       tickets = tickets.filter(
         (ticket) =>
           ticket.subject.toLowerCase().includes(search.toLowerCase()) ||
-          ticket.id.includes(search)
+          ticket.id.toString().includes(search)
       );
     }
 
@@ -690,7 +690,7 @@ export default function TicketsHistory() {
                           }`}
                         >
                           <button
-                            onClick={() => handleViewTicket(ticket.id)}
+                            onClick={() => handleViewTicket(ticket.id.toString())}
                             className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
                             title="View Ticket"
                           >

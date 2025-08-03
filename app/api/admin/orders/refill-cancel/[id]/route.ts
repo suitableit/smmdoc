@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
 
 // PUT /api/admin/orders/refill-cancel/:id - Process a refill or cancel task
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string  }> }
 ) {
   try {
     const session = await auth();
@@ -22,7 +22,7 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
     const body = await req.json();
     const { action, reason } = body;
 
@@ -67,7 +67,7 @@ export async function PUT(
 
     // Get the order
     const order = await db.newOrder.findUnique({
-      where: { id: orderId },
+      where: { id: Number(orderId) },
       include: {
         user: {
           select: {
@@ -188,7 +188,7 @@ export async function PUT(
         result = await db.$transaction(async (prisma) => {
           // Update order status to cancelled
           const cancelledOrder = await prisma.newOrder.update({
-            where: { id: orderId },
+            where: { id: Number(orderId) },
             data: {
               status: 'cancelled',
               updatedAt: new Date()

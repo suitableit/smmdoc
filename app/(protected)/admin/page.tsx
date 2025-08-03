@@ -7,22 +7,22 @@ import moment from 'moment';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  FaAward,
-  FaBullseye,
-  FaCalendar,
-  FaChartLine,
-  FaCheckCircle,
-  FaClock,
-  FaCog,
-  FaCommentDots,
-  FaDollarSign,
-  FaEye,
-  FaRedo,
-  FaShoppingCart,
-  FaTimes,
-  FaTimesCircle,
-  FaUserPlus,
-  FaUsers,
+    FaAward,
+    FaBullseye,
+    FaCalendar,
+    FaChartLine,
+    FaCheckCircle,
+    FaClock,
+    FaCog,
+    FaCommentDots,
+    FaDollarSign,
+    FaEye,
+    FaRedo,
+    FaShoppingCart,
+    FaTimes,
+    FaTimesCircle,
+    FaUserPlus,
+    FaUsers,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -308,7 +308,7 @@ export default function AdminDashboardPage() {
     );
   }, []);
 
-  const handleApprove = async (transactionId: string) => {
+  const handleApprove = async (transactionId: string | number) => {
     try {
       const response = await axiosInstance.patch(
         `/api/transactions/${transactionId}`,
@@ -332,7 +332,7 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleCancel = async (transactionId: string) => {
+  const handleCancel = async (transactionId: string | number) => {
     if (
       !confirm(
         'Are you sure you want to cancel this transaction? This action cannot be undone.'

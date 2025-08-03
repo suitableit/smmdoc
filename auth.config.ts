@@ -18,7 +18,7 @@ export default {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
     Credentials({
-      async authorize(credentials) {
+      async authorize(credentials): Promise<any> {
         const validedFields = signInSchema.safeParse(credentials);
         if (validedFields.success) {
           const { email, password } = validedFields.data;
@@ -63,7 +63,7 @@ export default {
       // Todo: Add 2FA check here
       if (existingUser.isTwoFactorEnabled) {
         const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
-          existingUser.id
+          existingUser.id.toString()
         );
         if (!twoFactorConfirmation) return false;
         // delete two factor confirmation for next sign in

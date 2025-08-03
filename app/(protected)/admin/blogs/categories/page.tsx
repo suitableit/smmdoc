@@ -71,97 +71,97 @@ const PostCategoriesPage = () => {
   // Dummy data for post categories with post counts (including some with 0 counts)
   const dummyPostCategories: PostCategory[] = [
     {
-      id: 'pc_000',
+      id: 1,
       name: 'Uncategorized',
       postCount: 5,
       createdAt: '2024-01-01T00:00:00Z',
     },
     {
-      id: 'pc_001',
+      id: 2,
       name: 'Technology',
       postCount: 42,
       createdAt: '2024-01-15T10:30:00Z',
     },
     {
-      id: 'pc_002',
+      id: 3,
       name: 'Business',
       postCount: 35,
       createdAt: '2024-01-14T14:45:00Z',
     },
     {
-      id: 'pc_003',
+      id: 4,
       name: 'Lifestyle',
       postCount: 28,
       createdAt: '2024-01-13T09:15:00Z',
     },
     {
-      id: 'pc_004',
+      id: 5,
       name: 'Health & Wellness',
       postCount: 19,
       createdAt: '2024-01-12T16:20:00Z',
     },
     {
-      id: 'pc_005',
+      id: 6,
       name: 'Travel',
       postCount: 15,
       createdAt: '2024-01-11T11:35:00Z',
     },
     {
-      id: 'pc_006',
+      id: 7,
       name: 'Food & Recipes',
       postCount: 31,
       createdAt: '2024-01-10T13:50:00Z',
     },
     {
-      id: 'pc_007',
+      id: 8,
       name: 'Fashion',
       postCount: 0,
       createdAt: '2024-01-09T08:25:00Z',
     },
     {
-      id: 'pc_008',
+      id: 9,
       name: 'Education',
       postCount: 23,
       createdAt: '2024-01-08T15:40:00Z',
     },
     {
-      id: 'pc_009',
+      id: 10,
       name: 'Sports',
       postCount: 17,
       createdAt: '2024-01-07T12:10:00Z',
     },
     {
-      id: 'pc_010',
+      id: 11,
       name: 'Entertainment',
       postCount: 25,
       createdAt: '2024-01-06T17:30:00Z',
     },
     {
-      id: 'pc_011',
+      id: 12,
       name: 'Finance',
       postCount: 0,
       createdAt: '2024-01-05T14:15:00Z',
     },
     {
-      id: 'pc_012',
+      id: 13,
       name: 'Art & Design',
       postCount: 12,
       createdAt: '2024-01-04T16:45:00Z',
     },
     {
-      id: 'pc_013',
+      id: 14,
       name: 'Science',
       postCount: 0,
       createdAt: '2024-01-03T11:20:00Z',
     },
     {
-      id: 'pc_014',
+      id: 15,
       name: 'Politics',
       postCount: 8,
       createdAt: '2024-01-02T09:30:00Z',
     },
     {
-      id: 'pc_015',
+      id: 1,
       name: 'Photography',
       postCount: 0,
       createdAt: '2024-01-01T13:10:00Z',
@@ -182,7 +182,7 @@ const PostCategoriesPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [postCategoryToDelete, setPostCategoryToDelete] = useState<string | null>(
+  const [postCategoryToDelete, setPostCategoryToDelete] = useState<number | null>(
     null
   );
   const [toast, setToast] = useState<{
@@ -204,15 +204,15 @@ const PostCategoriesPage = () => {
   const [newPostCategoryName, setNewPostCategoryName] = useState('');
 
   // Utility functions
-  const formatID = (id: string) => {
-    return id.toUpperCase();
+  const formatID = (id: number) => {
+    return `PC_${String(id).padStart(3, '0')}`;
   };
 
   // Filter post categories based on search term
   const filteredPostCategories = postCategories.filter(
     (postCategory) =>
       postCategory.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      postCategory.id.toLowerCase().includes(searchTerm.toLowerCase())
+      postCategory.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Update pagination when filtered data changes
@@ -254,9 +254,9 @@ const PostCategoriesPage = () => {
   };
 
   // Handle post category deletion
-  const handleDeletePostCategory = async (postCategoryId: string) => {
+  const handleDeletePostCategory = async (postCategoryId: number) => {
     // Prevent deletion of default "Uncategorized" category
-    if (postCategoryId === 'pc_000') {
+    if (postCategoryId === 1) {
       showToast('Cannot delete the default "Uncategorized" category', 'error');
       setDeleteDialogOpen(false);
       setPostCategoryToDelete(null);
@@ -312,7 +312,7 @@ const PostCategoriesPage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       const newPostCategory: PostCategory = {
-        id: `pc_${String(postCategories.length + 1).padStart(3, '0')}`,
+        id: postCategories.length + 1,
         name: newPostCategoryName.trim(),
         postCount: 0, // New post categories start with 0 posts
         createdAt: new Date().toISOString(),
@@ -499,7 +499,7 @@ const PostCategoriesPage = () => {
                               >
                                 {postCategory.name}
                               </div>
-                              {postCategory.id === 'pc_000' && (
+                              {postCategory.id === 1 && (
                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
                                   Default
                                 </span>
@@ -568,7 +568,7 @@ const PostCategoriesPage = () => {
                                     <FaEdit className="h-3 w-3" />
                                     Edit Post Category
                                   </button>
-                                  {postCategory.id !== 'pc_000' && (
+                                  {postCategory.id !== 1 && (
                                     <button
                                       onClick={() => {
                                         setPostCategoryToDelete(postCategory.id);

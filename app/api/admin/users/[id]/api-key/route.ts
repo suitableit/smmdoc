@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Generate a secure API key
 function generateApiKey(): string {
@@ -11,7 +11,7 @@ function generateApiKey(): string {
 // POST /api/admin/users/[id]/api-key - Generate new API key for user
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -27,11 +27,11 @@ export async function POST(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
 
     // Check if user exists
     const existingUser = await db.user.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       select: { id: true, username: true, apiKey: true }
     });
 
@@ -51,7 +51,7 @@ export async function POST(
 
     // Update user with new API key
     const updatedUser = await db.user.update({
-      where: { id },
+      where: { id: Number(id) },
       data: { apiKey: newApiKey },
       select: {
         id: true,
@@ -85,7 +85,7 @@ export async function POST(
 // DELETE /api/admin/users/[id]/api-key - Remove API key for user
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -101,11 +101,11 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
 
     // Check if user exists
     const existingUser = await db.user.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       select: { id: true, username: true, apiKey: true }
     });
 
@@ -122,7 +122,7 @@ export async function DELETE(
 
     // Remove API key
     const updatedUser = await db.user.update({
-      where: { id },
+      where: { id: Number(id) },
       data: { apiKey: null },
       select: {
         id: true,
@@ -156,7 +156,7 @@ export async function DELETE(
 // GET /api/admin/users/[id]/api-key - Get user API key status
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string   }> }
 ) {
   try {
     const session = await auth();
@@ -172,10 +172,10 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
 
     const user = await db.user.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       select: {
         id: true,
         username: true,

@@ -22,7 +22,7 @@ export const ServiceIconsExample: React.FC = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <ServiceTile
-        id="instagram"
+        id={1}
         title="ইন্সটাগ্রাম ফলোয়ার"
         description="আপনার অ্যাকাউন্টে রিয়েল ফলোয়ার পান"
         price="১০০০৳"
@@ -33,7 +33,7 @@ export const ServiceIconsExample: React.FC = () => {
       />
       
       <ServiceTile
-        id="facebook"
+        id={2}
         title="ফেসবুক লাইক"
         description="আপনার পোস্টে রিয়েল লাইক পান"
         price="৫০০৳"
@@ -41,9 +41,9 @@ export const ServiceIconsExample: React.FC = () => {
         bgColor="blue"
         href="/services/facebook"
       />
-      
+
       <ServiceTile
-        id="twitter"
+        id={3}
         title="টুইটার ফলোয়ার"
         description="আপনার টুইটার অ্যাকাউন্টে ফলোয়ার বাড়ান"
         price="৮০০৳"
@@ -51,9 +51,9 @@ export const ServiceIconsExample: React.FC = () => {
         bgColor="indigo"
         href="/services/twitter"
       />
-      
+
       <ServiceTile
-        id="youtube"
+        id={4}
         title="ইউটিউব সাবস্ক্রাইবার"
         description="আপনার চ্যানেলে সাবস্ক্রাইবার বাড়ান"
         price="১২০০৳"
@@ -62,9 +62,9 @@ export const ServiceIconsExample: React.FC = () => {
         badge="বেস্ট সেলার"
         href="/services/youtube"
       />
-      
+
       <ServiceTile
-        id="tiktok"
+        id={5}
         title="টিকটক ফলোয়ার"
         description="আপনার টিকটক অ্যাকাউন্টে ফলোয়ার বাড়ান"
         price="৬০০৳"
@@ -72,9 +72,9 @@ export const ServiceIconsExample: React.FC = () => {
         bgColor="green"
         href="/services/tiktok"
       />
-      
+
       <ServiceTile
-        id="snapchat"
+        id={6}
         title="স্ন্যাপচ্যাট ফলোয়ার"
         description="আপনার স্ন্যাপচ্যাট অ্যাকাউন্টে ফলোয়ার বাড়ান"
         price="৭০০৳"
@@ -82,9 +82,9 @@ export const ServiceIconsExample: React.FC = () => {
         bgColor="orange"
         href="/services/snapchat"
       />
-      
+
       <ServiceTile
-        id="telegram"
+        id={7}
         title="টেলিগ্রাম চ্যানেল মেম্বার"
         description="আপনার টেলিগ্রাম চ্যানেলে মেম্বার বাড়ান"
         price="৫৫০৳"
@@ -92,9 +92,9 @@ export const ServiceIconsExample: React.FC = () => {
         bgColor="blue"
         href="/services/telegram"
       />
-      
+
       <ServiceTile
-        id="pinterest"
+        id={8}
         title="পিন্টারেস্ট ফলোয়ার"
         description="আপনার পিন্টারেস্ট অ্যাকাউন্টে ফলোয়ার বাড়ান"
         price="৯০০৳"
@@ -102,9 +102,9 @@ export const ServiceIconsExample: React.FC = () => {
         bgColor="red"
         href="/services/pinterest"
       />
-      
+
       <ServiceTile
-        id="linkedin"
+        id={9}
         title="লিংকডইন কানেকশন"
         description="আপনার লিংকডইন প্রোফাইলে কানেকশন বাড়ান"
         price="১১০০৳"
@@ -112,9 +112,9 @@ export const ServiceIconsExample: React.FC = () => {
         bgColor="indigo"
         href="/services/linkedin"
       />
-      
+
       <ServiceTile
-        id="website"
+        id={10}
         title="ওয়েবসাইট ট্রাফিক"
         description="আপনার ওয়েবসাইটে ভিজিটর বাড়ান"
         price="১৫০০৳"
@@ -125,7 +125,7 @@ export const ServiceIconsExample: React.FC = () => {
       />
 
       <ServiceTile
-        id="whatsapp"
+        id={11}
         title="হোয়াটসঅ্যাপ গ্রুপ মেম্বার"
         description="আপনার হোয়াটসঅ্যাপ গ্রুপে মেম্বার বাড়ান"
         price="৬৫০৳"
@@ -133,9 +133,9 @@ export const ServiceIconsExample: React.FC = () => {
         bgColor="green"
         href="/services/whatsapp"
       />
-      
+
       <ServiceTile
-        id="discord"
+        id={12}
         title="ডিসকর্ড সার্ভার মেম্বার"
         description="আপনার ডিসকর্ড সার্ভারে মেম্বার বাড়ান"
         price="৮৫০৳"
@@ -144,9 +144,9 @@ export const ServiceIconsExample: React.FC = () => {
         badge="নতুন"
         href="/services/discord"
       />
-      
+
       <ServiceTile
-        id="spotify"
+        id={13}
         title="স্পটিফাই ফলোয়ার"
         description="আপনার স্পটিফাই প্লেলিস্টে ফলোয়ার বাড়ান"
         price="৭৫০৳"
@@ -154,9 +154,9 @@ export const ServiceIconsExample: React.FC = () => {
         bgColor="green"
         href="/services/spotify"
       />
-      
+
       <ServiceTile
-        id="threads"
+        id={14}
         title="থ্রেডস ফলোয়ার"
         description="আপনার থ্রেডস অ্যাকাউন্টে ফলোয়ার বাড়ান"
         price="৯৫০৳"
@@ -164,9 +164,9 @@ export const ServiceIconsExample: React.FC = () => {
         bgColor="purple"
         href="/services/threads"
       />
-      
+
       <ServiceTile
-        id="reddit"
+        id={15}
         title="রেডিট কার্মা বুস্ট"
         description="আপনার রেডিট অ্যাকাউন্টে কার্মা বাড়ান"
         price="১০৫০৳"

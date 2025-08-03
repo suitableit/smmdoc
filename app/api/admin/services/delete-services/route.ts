@@ -33,7 +33,7 @@ export async function DELETE(request: NextRequest) {
 
     // Check if service exists before deleting
     const existingService = await db.service.findUnique({
-      where: { id: id },
+      where: { id: Number(id) },
       select: { id: true, name: true }
     });
 
@@ -51,7 +51,7 @@ export async function DELETE(request: NextRequest) {
     // Delete the service
     await db.service.delete({
       where: {
-        id: id,
+        id: Number(id),
       },
     });
 

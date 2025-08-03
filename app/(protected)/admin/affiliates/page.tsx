@@ -1312,7 +1312,8 @@ const AffiliateReferralsPage = () => {
                                           openPayoutDialog(
                                             affiliate.id,
                                             affiliate.requestedCommission,
-                                            affiliate.totalCommission
+                                            affiliate.totalCommission,
+                                            affiliate.paymentMethod || 'bank_transfer'
                                           );
                                         }}
                                       >

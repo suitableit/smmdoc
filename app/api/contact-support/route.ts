@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       subject: subject.trim(),
       message: message.trim(),
       categoryId: parseInt(category),
-      attachments: attachmentsJson
+      attachments: attachmentsJson || undefined
     });
 
     return NextResponse.json({

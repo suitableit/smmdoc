@@ -5,25 +5,25 @@ import { APP_NAME } from '@/lib/constants';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
-  FaBan,
-  FaBook,
-  FaCheckCircle,
-  FaCode,
-  FaCopy,
-  FaDollarSign,
-  FaExclamationTriangle,
-  FaEye,
-  FaEyeSlash,
-  FaInfoCircle,
-  FaKey,
-  FaLifeRing,
-  FaList,
-  FaPlus,
-  FaQuestionCircle,
-  FaRedo,
-  FaSpinner,
-  FaSync,
-  FaTimes,
+    FaBan,
+    FaBook,
+    FaCheckCircle,
+    FaCode,
+    FaCopy,
+    FaDollarSign,
+    FaExclamationTriangle,
+    FaEye,
+    FaEyeSlash,
+    FaInfoCircle,
+    FaKey,
+    FaLifeRing,
+    FaList,
+    FaPlus,
+    FaQuestionCircle,
+    FaRedo,
+    FaSpinner,
+    FaSync,
+    FaTimes,
 } from 'react-icons/fa';
 
 // Toast Component
@@ -77,7 +77,7 @@ export default function ApiIntegrationPage() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [isGeneratingKey, setIsGeneratingKey] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedServiceType, setSelectedServiceType] = useState<string>('0');
+  const [selectedServiceType, setSelectedServiceType] = useState<number>(0);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -161,7 +161,7 @@ export default function ApiIntegrationPage() {
   // Service types with all possible parameters
   const serviceTypes: ServiceType[] = [
     {
-      id: '0',
+      id: 0,
       name: 'Default',
       parameters: [
         { name: 'key', description: 'Your API key', required: true },
@@ -174,7 +174,7 @@ export default function ApiIntegrationPage() {
       ],
     },
     {
-      id: '10',
+      id: 10,
       name: 'Package',
       parameters: [
         { name: 'key', description: 'Your API key', required: true },
@@ -184,7 +184,7 @@ export default function ApiIntegrationPage() {
       ],
     },
     {
-      id: '1',
+      id: 1,
       name: 'SEO',
       parameters: [
         { name: 'key', description: 'Your API key', required: true },
@@ -200,7 +200,7 @@ export default function ApiIntegrationPage() {
       ],
     },
     {
-      id: '2',
+      id: 2,
       name: 'Custom Comments',
       parameters: [
         { name: 'key', description: 'Your API key', required: true },
@@ -215,7 +215,7 @@ export default function ApiIntegrationPage() {
       ],
     },
     {
-      id: '100',
+      id: 100,
       name: 'Subscriptions',
       parameters: [
         { name: 'key', description: 'Your API key', required: true },
@@ -513,7 +513,7 @@ axios.post(url, payload)
                 <div className="relative">
                   <select
                     value={selectedServiceType}
-                    onChange={(e) => setSelectedServiceType(e.target.value)}
+                    onChange={(e) => setSelectedServiceType(Number(e.target.value))}
                     className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointe"
                   >
                     {serviceTypes.map((type) => (

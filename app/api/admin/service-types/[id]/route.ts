@@ -23,7 +23,7 @@ export async function GET(
 
     const { id } = await params;
     const serviceType = await db.serviceType.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       include: {
         services: {
           select: {
@@ -76,7 +76,7 @@ export async function GET(
 // PUT /api/admin/service-types/[id] - Update service type
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string  }> }
 ) {
   try {
     const session = await auth();
@@ -108,7 +108,7 @@ export async function PUT(
 
     // Check if service type exists
     const existingType = await db.serviceType.findUnique({
-      where: { id: params.id }
+      where: { id: Number((await params).id) }
     });
 
     if (!existingType) {
@@ -126,7 +126,7 @@ export async function PUT(
     const duplicateType = await db.serviceType.findFirst({
       where: { 
         name: name.trim(),
-        id: { not: params.id }
+        id: { not: Number((await params).id) }
       }
     });
 
@@ -142,7 +142,7 @@ export async function PUT(
     }
 
     const updatedServiceType = await db.serviceType.update({
-      where: { id: params.id },
+      where: { id: Number((await params).id) },
       data: {
         name: name.trim(),
         description: description?.trim() || null,
@@ -173,7 +173,7 @@ export async function PUT(
 // DELETE /api/admin/service-types/[id] - Delete service type
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string  }> }
 ) {
   try {
     const session = await auth();
@@ -191,7 +191,7 @@ export async function DELETE(
 
     // Check if service type exists and get service count
     const serviceType = await db.serviceType.findUnique({
-      where: { id: params.id },
+      where: { id: Number((await params).id) },
       include: {
         _count: {
           select: {
@@ -225,7 +225,7 @@ export async function DELETE(
     }
 
     await db.serviceType.delete({
-      where: { id: params.id }
+      where: { id: Number((await params).id) }
     });
 
     return NextResponse.json({

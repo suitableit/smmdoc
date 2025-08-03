@@ -1,11 +1,11 @@
 import { auth } from '@/auth';
-import { db } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
 import { ActivityLogger } from '@/lib/activity-logger';
-import { sendVerificationEmail } from '@/lib/mail';
+import { db } from '@/lib/db';
+import { sendVerificationEmail } from '@/lib/nodemailer';
 import { generateVerificationToken } from '@/lib/tokens';
+import { NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     const session = await auth();
 
@@ -99,10 +99,10 @@ export async function POST(req: NextRequest) {
     // Log activity for verification email resend
     try {
       const username = user.username || user.email?.split('@')[0] || `user${user.id}`;
-      await ActivityLogger.verificationEmailSent(
+      await ActivityLogger.profileUpdated(
         session.user.id,
         username,
-        user.email
+        'verification_email_resent'
       );
     } catch (error) {
       console.error('Failed to log verification email activity:', error);
