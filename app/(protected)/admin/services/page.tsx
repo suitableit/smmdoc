@@ -179,7 +179,7 @@ const MemoizedServiceRow = memo(
         <td className="p-3">
           <PriceDisplay
             amount={service.price_per_k}
-            currency="USD"
+            originalCurrency="USD"
             className="text-sm font-medium"
           />
         </td>
@@ -1935,7 +1935,7 @@ const EditServiceForm = ({
                   ))}
                 </select>
               </FormControl>
-              <FormMessage>{errors.serviceType?.message}</FormMessage>
+              <FormMessage>{errors.serviceTypeId?.message}</FormMessage>
             </FormItem>
 
             {/* Mode - 100% width - REQUIRED with default manual */}
@@ -2431,7 +2431,7 @@ function AdminServicesPage() {
   const [deleteCategoryModal, setDeleteCategoryModal] = useState<{
     open: boolean;
     categoryName: string;
-    categoryId: string;
+    categoryId: string | number;
     servicesCount: number;
     closing: boolean;
   }>({
@@ -2443,7 +2443,8 @@ function AdminServicesPage() {
   });
 
   // NEW: Add state for selected bulk operation
-  const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
+  type BulkOperation = 'enable' | 'disable' | 'make-secret' | 'remove-secret' | 'delete-pricing' | 'refill-enable' | 'refill-disable' | 'cancel-enable' | 'cancel-disable' | 'delete' | '';
+  const [selectedBulkOperation, setSelectedBulkOperation] = useState<BulkOperation>('');
 
   // Show toast notification - defined early
   const showToast = useCallback(
@@ -3301,7 +3302,7 @@ function AdminServicesPage() {
   };
 
   // NEW: Modified Batch Operations Handler - only sets the operation, doesn't execute
-  const handleBatchOperationSelect = (operation: string) => {
+  const handleBatchOperationSelect = (operation: BulkOperation) => {
     if (selectedServices.length === 0) {
       showToast('No services selected', 'error');
       return;
@@ -3473,7 +3474,7 @@ function AdminServicesPage() {
       }
 
       // Clear selection and refresh data for all operations except delete
-      if (selectedBulkOperation !== 'delete') {
+      if (selectedBulkOperation && !['delete', ''].includes(selectedBulkOperation)) {
         setSelectedServices([]);
         setSelectedBulkOperation(''); // Clear the selected operation
         await refreshAllData();
@@ -4086,7 +4087,7 @@ function AdminServicesPage() {
                     <select
                       value={selectedBulkOperation}
                       onChange={(e) => {
-                        handleBatchOperationSelect(e.target.value);
+                        handleBatchOperationSelect(e.target.value as BulkOperation);
                       }}
                       disabled={isUpdating}
                       className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm disabled:opacity-50"
@@ -4304,8 +4305,8 @@ function AdminServicesPage() {
                               <td colSpan={11} className="p-3">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
-                                    <FaGripVertical
-                                      className="h-4 w-4 text-gray-400 cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
+                                    <div
+                                      className="cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
                                       title="Drag to reorder category"
                                       draggable={true}
                                       onDragStart={(e) =>
@@ -4316,7 +4317,9 @@ function AdminServicesPage() {
                                         userSelect: 'none',
                                         WebkitUserSelect: 'none',
                                       }}
-                                    />
+                                    >
+                                      <FaGripVertical className="h-4 w-4 text-gray-400" />
+                                    </div>
                                     <button
                                       onClick={() =>
                                         toggleCategory(categoryName)
@@ -4507,8 +4510,8 @@ function AdminServicesPage() {
                                     >
                                       <td className="p-3 pl-8">
                                         <div className="flex items-center gap-2">
-                                          <FaGripVertical
-                                            className="h-3 w-3 text-gray-400 cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
+                                          <div
+                                            className="cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
                                             title="Drag to reorder service"
                                             draggable={true}
                                             onDragStart={(e) =>
@@ -4522,7 +4525,9 @@ function AdminServicesPage() {
                                               userSelect: 'none',
                                               WebkitUserSelect: 'none',
                                             }}
-                                          />
+                                          >
+                                            <FaGripVertical className="h-3 w-3 text-gray-400" />
+                                          </div>
                                           <input
                                             type="checkbox"
                                             checked={selectedServices.includes(
@@ -5094,7 +5099,7 @@ function AdminServicesPage() {
                 onClose={handleCloseDeleteCategoryModal}
                 onConfirm={deleteCategory}
                 categoryName={deleteCategoryModal.categoryName}
-                categoryId={deleteCategoryModal.categoryId}
+                categoryId={typeof deleteCategoryModal.categoryId === 'string' ? parseInt(deleteCategoryModal.categoryId) : deleteCategoryModal.categoryId}
                 isUpdating={isUpdating}
                 servicesCount={deleteCategoryModal.servicesCount}
                 categoriesData={categoriesData}

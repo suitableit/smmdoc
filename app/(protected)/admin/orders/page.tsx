@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import React, { useEffect, useState } from 'react';
 import {
   FaBox,
   FaCheckCircle,
@@ -181,7 +181,7 @@ const AdminOrdersPage = () => {
   // New state for action modals
   const [editStartCountDialog, setEditStartCountDialog] = useState<{
     open: boolean;
-    orderId: number;
+    orderId: string | number;
     currentCount: number;
   }>({
     open: false,
@@ -191,7 +191,7 @@ const AdminOrdersPage = () => {
   const [newStartCount, setNewStartCount] = useState('');
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
-    orderId: number;
+    orderId: string | number;
     currentStatus: string;
   }>({
     open: false,
@@ -201,7 +201,7 @@ const AdminOrdersPage = () => {
   const [newStatus, setNewStatus] = useState('');
   const [markPartialDialog, setMarkPartialDialog] = useState<{
     open: boolean;
-    orderId: number;
+    orderId: string | number;
   }>({
     open: false,
     orderId: '',
@@ -651,20 +651,20 @@ const AdminOrdersPage = () => {
   };
 
   // Open mark partial dialog
-  const openMarkPartialDialog = (orderId: string) => {
+  const openMarkPartialDialog = (orderId: string | number) => {
     setMarkPartialDialog({ open: true, orderId });
     setNotGoingAmount('');
   };
 
   // Open edit start count dialog
-  const openEditStartCountDialog = (orderId: string, currentCount: number) => {
+  const openEditStartCountDialog = (orderId: string | number, currentCount: number) => {
     setEditStartCountDialog({ open: true, orderId, currentCount });
     setNewStartCount(currentCount.toString());
   };
 
   // Open update status dialog
-  const openUpdateStatusDialog = (orderId: number, currentStatus: string) => {
-    setUpdateStatusDialog({ open: true, orderId: orderId.toString(), currentStatus });
+  const openUpdateStatusDialog = (orderId: string | number, currentStatus: string) => {
+    setUpdateStatusDialog({ open: true, orderId, currentStatus });
     setNewStatus(currentStatus);
   };
 

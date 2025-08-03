@@ -3,9 +3,9 @@
 import { auth } from '@/auth';
 import { ActivityLogger } from '@/lib/activity-logger';
 import {
-    convertCurrency,
-    convertToUSD,
-    fetchCurrencyData,
+  convertCurrency,
+  convertToUSD,
+  fetchCurrencyData,
 } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     const { currencies } = await fetchCurrencyData();
 
     // Parse the amount value and currency
-    let amount = parseFloat(body.amount);
+    const amount = parseFloat(body.amount);
     const currency = body.currency || 'BDT'; // Default to BDT if not specified
 
     // Log the amount for debugging
@@ -254,10 +254,11 @@ export async function POST(req: NextRequest) {
         console.error('Fetch error:', fetchError);
 
         // Clear timeout if it exists
+        let timeoutId: NodeJS.Timeout | null = null;
         if (timeoutId) clearTimeout(timeoutId);
 
         // Check if it's a timeout error
-        if (fetchError.name === 'AbortError') {
+        if ((fetchError as any)?.name === 'AbortError') {
           return NextResponse.json(
             { error: 'Payment gateway timeout. Please try again.' },
             { status: 408, headers: corsHeaders }

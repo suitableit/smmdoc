@@ -6,10 +6,10 @@ import { useUserSettings } from '@/hooks/use-user-settings';
 import { register } from '@/lib/actions/register';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
-    createSignUpSchema,
-    signUpDefaultValues,
-    signUpSchema,
-    SignUpSchema
+  createSignUpSchema,
+  signUpDefaultValues,
+  signUpSchema,
+  SignUpSchema
 } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
@@ -236,7 +236,7 @@ export default function SignUpForm() {
     setSuccess('');
 
     // Handle optional name field based on admin settings
-    const submitData = { ...values };
+    const submitData = { ...values } as any;
     if (!userSettings?.nameFieldEnabled && submitData.name === '') {
       delete submitData.name; // Remove empty name field if not required
     }
@@ -384,9 +384,9 @@ export default function SignUpForm() {
             </p>
           )}
 
-          {form.formState.errors.username && (
+          {form.formState.errors.username?.message && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
-              {form.formState.errors.username.message}
+              {form.formState.errors.username.message as string}
             </p>
           )}
         </div>
@@ -413,9 +413,9 @@ export default function SignUpForm() {
                 className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               />
             </div>
-            {form.formState.errors.name && (
+            {form.formState.errors.name?.message && (
               <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
-                {form.formState.errors.name.message}
+                {form.formState.errors.name.message as string}
               </p>
             )}
           </div>
@@ -474,9 +474,9 @@ export default function SignUpForm() {
             </p>
           )}
 
-          {form.formState.errors.email && (
+          {form.formState.errors.email?.message && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
-              {form.formState.errors.email.message}
+              {form.formState.errors.email.message as string}
             </p>
           )}
         </div>
@@ -511,9 +511,9 @@ export default function SignUpForm() {
               )}
             </div>
           </div>
-          {form.formState.errors.password && (
+          {form.formState.errors.password?.message && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
-              {form.formState.errors.password.message}
+              {form.formState.errors.password.message as string}
             </p>
           )}
         </div>
@@ -548,9 +548,9 @@ export default function SignUpForm() {
               )}
             </div>
           </div>
-          {form.formState.errors.confirmPassword && (
+          {form.formState.errors.confirmPassword?.message && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
-              {form.formState.errors.confirmPassword.message}
+              {form.formState.errors.confirmPassword.message as string}
             </p>
           )}
         </div>

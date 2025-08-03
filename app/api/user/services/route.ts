@@ -1,3 +1,4 @@
+import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
@@ -64,7 +65,7 @@ export async function GET(request: Request) {
     const { currencies } = await fetchCurrencyData();
 
     let services;
-    let paginatedCategories;
+    let paginatedCategories: any;
     let totalCategories;
 
     if (search) {
@@ -93,7 +94,7 @@ export async function GET(request: Request) {
           ].filter(Boolean),
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: 'desc' as any,
         },
         select: {
           id: true,
@@ -137,9 +138,9 @@ export async function GET(request: Request) {
           skip: categorySkip,
           take: categoryLimit,
           orderBy: [
-            { id: 'asc' }, // Order by ID first (1, 2, 3...)
-            { position: 'asc' },
-            { createdAt: 'asc' },
+            { id: 'asc' as any }, // Order by ID first (1, 2, 3...)
+            { position: 'asc' as any },
+            { createdAt: 'asc' as any },
           ],
         }),
         db.category.count({
@@ -150,7 +151,7 @@ export async function GET(request: Request) {
       ]);
 
       // Get all services for the paginated categories
-      const categoryIds = paginatedCategories.map(cat => cat.id);
+      const categoryIds = paginatedCategories.map((cat: any) => cat.id);
 
       services = await db.service.findMany({
         where: {
@@ -160,7 +161,7 @@ export async function GET(request: Request) {
           },
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: 'desc' as any,
         },
         select: {
           id: true,

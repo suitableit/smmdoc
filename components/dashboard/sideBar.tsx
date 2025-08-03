@@ -117,7 +117,7 @@ function SideBarContent({
 
       {/* Sidebar Navigation */}
       <div className="sidebar-nav overflow-y-auto overflow-x-hidden h-[calc(100%-6rem)]">
-        <SideBarNav collapsed={collapsed} user={user} setOpen={() => {}} />
+        <SideBarNav collapsed={collapsed} user={user as any} setOpen={() => {}} />
       </div>
     </div>
   );

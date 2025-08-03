@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
 
 // GET /api/admin/orders/refill-cancel - Get all refill and cancel tasks
 export async function GET(req: NextRequest) {
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     for (const order of orders) {
       // Create refill tasks for completed/partial orders
-      if (['completed', 'partial'].includes(order.status) && order.service.status === 'active') {
+      if (['completed', 'partial'].includes(order.status) && (order.service as any)?.status === 'active') {
         tasks.push({
           id: `refill_${order.id}`,
           originalOrderId: order.id,
@@ -119,11 +119,11 @@ export async function GET(req: NextRequest) {
     const stats = {
       totalCancellations: cancelTasks.length,
       pendingCancellations: cancelTasks.filter(t => t.status === 'pending').length,
-      completedCancellations: cancelTasks.filter(t => t.status === 'completed').length,
+      completedCancellations: cancelTasks.filter(t => (t as any).status === 'completed').length,
       refundProcessed: cancelTasks.filter(t => ['completed', 'refunded'].includes(t.status)).length,
       totalRefillRequests: refillTasks.length,
       pendingRefills: refillTasks.filter(t => t.status === 'pending').length,
-      completedRefills: refillTasks.filter(t => t.status === 'completed').length,
+      completedRefills: refillTasks.filter(t => (t as any).status === 'completed').length,
       totalRefundAmount: cancelTasks
         .filter(t => ['completed', 'refunded'].includes(t.status))
         .reduce((sum, t) => sum + (t.customRefundAmount || t.originalOrder.price), 0),

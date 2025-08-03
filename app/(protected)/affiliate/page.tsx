@@ -518,6 +518,7 @@ function AffiliateEarningsSection() {
   const [withdrawalForm, setWithdrawalForm] = useState({
     amount: '',
     selectedPaymentMethod: '',
+    paymentDetails: '',
   });
   const [withdrawalProcessing, setWithdrawalProcessing] = useState(false);
 
@@ -745,9 +746,8 @@ function AffiliateEarningsSection() {
       setWithdrawalModalOpen(false);
       setWithdrawalForm({
         amount: '',
-        paymentMethod: 'paypal',
+        selectedPaymentMethod: '',
         paymentDetails: '',
-        notes: '',
       });
     } catch (error) {
       console.error('Error submitting withdrawal request:', error);

@@ -1,9 +1,8 @@
-  page.tsx import React from 'react';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { GridLayout } from '@/components/ui/GridLayout';
-import { ServiceTile } from '@/components/ui/ServiceTile';
-import { InfoCard } from '@/components/ui/InfoCard';
 import { PageContainer } from '@/components/layout/PageContainer';
+import { GridLayout } from '@/components/ui/GridLayout';
+import { InfoCard } from '@/components/ui/InfoCard';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { ServiceTile } from '@/components/ui/ServiceTile';
 
 // Mock data for this example
 const popularServices = [
@@ -41,7 +40,7 @@ export default function ExploreServicesPage() {
               value={stat.value}
               description={stat.description}
               icon={stat.icon}
-              iconColor={stat.iconColor}
+              iconColor={stat.iconColor as any}
             />
           ))}
         </GridLayout>
@@ -57,7 +56,7 @@ export default function ExploreServicesPage() {
               title={category.title}
               value={category.value}
               icon={category.icon}
-              iconColor={category.iconColor}
+              iconColor={category.iconColor as any}
               className="cursor-pointer hover:translate-y-[-5px] transition-transform"
             />
           ))}
@@ -79,13 +78,13 @@ export default function ExploreServicesPage() {
           {popularServices.map((service) => (
             <ServiceTile
               key={service.id}
-              id={service.id}
+              id={parseInt(service.id)}
               title={service.title}
               description={service.description}
               price={service.price}
               badge={service.badge}
               icon={<i className="ri-shopping-cart-2-line"></i>}
-              bgColor={['purple', 'blue', 'green', 'red', 'orange', 'indigo'][Math.floor(Math.random() * 6)]}
+              bgColor={['purple', 'blue', 'green', 'red', 'orange', 'indigo'][Math.floor(Math.random() * 6)] as any}
               href={`/new-order?service=${service.id}`}
             />
           ))}

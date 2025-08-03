@@ -8,12 +8,12 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { Fragment, useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaEye,
-  FaHeart,
-  FaSearch,
-  FaStar,
-  FaTimes,
+    FaCheckCircle,
+    FaEye,
+    FaHeart,
+    FaSearch,
+    FaStar,
+    FaTimes,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -223,7 +223,7 @@ export default function FavoriteServices() {
       if (response.ok) {
         // Remove the service from the list
         setServices((prevServices) =>
-          prevServices.filter((service) => service.id !== serviceId)
+          prevServices.filter((service) => service.id !== Number(serviceId))
         );
 
         // Remove from grouped services as well
@@ -231,7 +231,7 @@ export default function FavoriteServices() {
           const newGrouped = { ...prevGrouped };
           Object.keys(newGrouped).forEach((categoryName) => {
             newGrouped[categoryName] = newGrouped[categoryName].filter(
-              (service) => service.id !== serviceId
+              (service) => service.id !== Number(serviceId)
             );
             // Remove empty categories
             if (newGrouped[categoryName].length === 0) {
@@ -389,7 +389,7 @@ export default function FavoriteServices() {
                                 }`}
                               >
                                 <button
-                                  onClick={() => toggleFavorite(service.id)}
+                                  onClick={() => toggleFavorite(service.id.toString())}
                                   className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors duration-200"
                                   title="Remove from favorites"
                                 >

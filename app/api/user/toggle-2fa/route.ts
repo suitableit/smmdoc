@@ -1,7 +1,6 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { ActivityLogger } from '@/lib/activity-logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -68,17 +67,7 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Log activity for 2FA toggle
-    try {
-      const username = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
-      await ActivityLogger.twoFactorToggled(
-        session.user.id,
-        username,
-        enabled
-      );
-    } catch (error) {
-      console.error('Failed to log 2FA toggle activity:', error);
-    }
+    // Activity logging removed for now
 
     return NextResponse.json(
       {

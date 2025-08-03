@@ -4,21 +4,21 @@ import ButtonLoader from '@/components/button-loader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import axiosInstance from '@/lib/axiosInstance';
@@ -75,7 +75,7 @@ export default function AddUserFund() {
   };
 
   const selectUser = (user: { id: number; name: string; email: string; username: string }) => {
-    form.setValue('userId', user.id);
+    form.setValue('userId', user.id.toString());
     setSearchResults([]);
     setSearchQuery(user.username || user.name);
   };

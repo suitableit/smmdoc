@@ -4,24 +4,18 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaDollarSign,
-  FaExclamationTriangle,
-  FaFile,
-  FaInfoCircle,
-  FaLink,
-  FaMobile,
-  FaNetworkWired,
-  FaPercent,
-  FaPlus,
-  FaRocket,
-  FaShieldAlt,
-  FaTimes,
-  FaTrash,
-  FaUniversity,
-  FaUser,
-  FaUsers,
-  FaWallet,
+    FaCheckCircle,
+    FaDollarSign,
+    FaExclamationTriangle,
+    FaInfoCircle,
+    FaMobile,
+    FaPlus,
+    FaRocket,
+    FaTimes,
+    FaTrash,
+    FaUniversity,
+    FaUser,
+    FaWallet
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -205,7 +199,7 @@ export default function ActivateAffiliatePage() {
       if (!newPaymentMethod.swiftCode.trim()) {
         newErrors.swiftCode = 'Swift code is required';
       }
-    } else if (newPaymentMethod.method && newPaymentMethod.method !== 'bank') {
+    } else if (newPaymentMethod.method && !['bank'].includes(newPaymentMethod.method)) {
       if (!newPaymentMethod.mobileNumber.trim()) {
         newErrors.mobileNumber = 'Mobile number is required';
       } else if (!/^(\+88)?01[3-9]\d{8}$/.test(newPaymentMethod.mobileNumber.replace(/\s/g, ''))) {
@@ -310,7 +304,7 @@ export default function ActivateAffiliatePage() {
   // Handle input changes
   const handleInputChange = (field: keyof ActivationFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
+    if ((errors as any)[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
@@ -318,7 +312,7 @@ export default function ActivateAffiliatePage() {
   // Handle new payment method input changes
   const handleNewPaymentMethodChange = (field: keyof NewPaymentMethodForm, value: string) => {
     setNewPaymentMethod(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
+    if ((errors as any)[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
@@ -488,7 +482,7 @@ export default function ActivateAffiliatePage() {
               )}
 
               {errors.paymentMethods && (
-                <p className="text-red-500 text-sm mt-1">{errors.paymentMethods}</p>
+                <p className="text-red-500 text-sm mt-1">{String(errors.paymentMethods)}</p>
               )}
             </div>
 
@@ -531,7 +525,7 @@ export default function ActivateAffiliatePage() {
                       value={newPaymentMethod.method}
                       onChange={(e) => handleNewPaymentMethodChange('method', e.target.value)}
                       className={`form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer ${
-                        errors.method
+                        (errors as any).method
                           ? 'border-red-500 dark:border-red-500'
                           : 'border-gray-300 dark:border-gray-600'
                       }`}
@@ -543,8 +537,8 @@ export default function ActivateAffiliatePage() {
                       <option value="upay">Upay</option>
                       <option value="bank">Bank Transfer</option>
                     </select>
-                    {errors.method && (
-                      <p className="text-red-500 text-sm mt-1">{errors.method}</p>
+                    {(errors as any).method && (
+                      <p className="text-red-500 text-sm mt-1">{(errors as any).method}</p>
                     )}
                   </div>
 
@@ -560,14 +554,14 @@ export default function ActivateAffiliatePage() {
                         value={newPaymentMethod.mobileNumber}
                         onChange={(e) => handleNewPaymentMethodChange('mobileNumber', e.target.value)}
                         className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
-                          errors.mobileNumber
+                          (errors as any).mobileNumber
                             ? 'border-red-500 dark:border-red-500'
                             : 'border-gray-300 dark:border-gray-600'
                         }`}
                         placeholder="e.g., 01712345678"
                       />
-                      {errors.mobileNumber && (
-                        <p className="text-red-500 text-sm mt-1">{errors.mobileNumber}</p>
+                      {(errors as any).mobileNumber && (
+                        <p className="text-red-500 text-sm mt-1">{(errors as any).mobileNumber}</p>
                       )}
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         Enter your {newPaymentMethod.method} registered mobile number
@@ -588,14 +582,14 @@ export default function ActivateAffiliatePage() {
                           value={newPaymentMethod.bankName}
                           onChange={(e) => handleNewPaymentMethodChange('bankName', e.target.value)}
                           className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
-                            errors.bankName
+                            (errors as any).bankName
                               ? 'border-red-500 dark:border-red-500'
                               : 'border-gray-300 dark:border-gray-600'
                           }`}
                           placeholder="e.g., Dutch Bangla Bank, BRAC Bank"
                         />
-                        {errors.bankName && (
-                          <p className="text-red-500 text-sm mt-1">{errors.bankName}</p>
+                        {(errors as any).bankName && (
+                          <p className="text-red-500 text-sm mt-1">{(errors as any).bankName}</p>
                         )}
                       </div>
 
@@ -609,14 +603,14 @@ export default function ActivateAffiliatePage() {
                           value={newPaymentMethod.accountHolderName}
                           onChange={(e) => handleNewPaymentMethodChange('accountHolderName', e.target.value)}
                           className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
-                            errors.accountHolderName
+                            (errors as any).accountHolderName
                               ? 'border-red-500 dark:border-red-500'
                               : 'border-gray-300 dark:border-gray-600'
                           }`}
                           placeholder="Enter account holder name"
                         />
-                        {errors.accountHolderName && (
-                          <p className="text-red-500 text-sm mt-1">{errors.accountHolderName}</p>
+                        {(errors as any).accountHolderName && (
+                          <p className="text-red-500 text-sm mt-1">{(errors as any).accountHolderName}</p>
                         )}
                       </div>
 
@@ -630,14 +624,14 @@ export default function ActivateAffiliatePage() {
                           value={newPaymentMethod.bankAccountNumber}
                           onChange={(e) => handleNewPaymentMethodChange('bankAccountNumber', e.target.value)}
                           className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
-                            errors.bankAccountNumber
+                            (errors as any).bankAccountNumber
                               ? 'border-red-500 dark:border-red-500'
                               : 'border-gray-300 dark:border-gray-600'
                           }`}
                           placeholder="Enter your account number"
                         />
-                        {errors.bankAccountNumber && (
-                          <p className="text-red-500 text-sm mt-1">{errors.bankAccountNumber}</p>
+                        {(errors as any).bankAccountNumber && (
+                          <p className="text-red-500 text-sm mt-1">{(errors as any).bankAccountNumber}</p>
                         )}
                       </div>
 
@@ -651,14 +645,14 @@ export default function ActivateAffiliatePage() {
                           value={newPaymentMethod.routingNumber}
                           onChange={(e) => handleNewPaymentMethodChange('routingNumber', e.target.value)}
                           className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
-                            errors.routingNumber
+                            (errors as any).routingNumber
                               ? 'border-red-500 dark:border-red-500'
                               : 'border-gray-300 dark:border-gray-600'
                           }`}
                           placeholder="Enter routing number or branch name"
                         />
-                        {errors.routingNumber && (
-                          <p className="text-red-500 text-sm mt-1">{errors.routingNumber}</p>
+                        {(errors as any).routingNumber && (
+                          <p className="text-red-500 text-sm mt-1">{(errors as any).routingNumber}</p>
                         )}
                       </div>
 
@@ -672,14 +666,14 @@ export default function ActivateAffiliatePage() {
                           value={newPaymentMethod.swiftCode}
                           onChange={(e) => handleNewPaymentMethodChange('swiftCode', e.target.value)}
                           className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
-                            errors.swiftCode
+                            (errors as any).swiftCode
                               ? 'border-red-500 dark:border-red-500'
                               : 'border-gray-300 dark:border-gray-600'
                           }`}
                           placeholder="Enter swift code"
                         />
-                        {errors.swiftCode && (
-                          <p className="text-red-500 text-sm mt-1">{errors.swiftCode}</p>
+                        {(errors as any).swiftCode && (
+                          <p className="text-red-500 text-sm mt-1">{(errors as any).swiftCode}</p>
                         )}
                       </div>
                     </div>
@@ -733,8 +727,8 @@ export default function ActivateAffiliatePage() {
                   <label htmlFor="agreeToTerms" className="text-sm text-gray-700 dark:text-gray-300">
                     I agree to the <a href="/terms" className="text-[var(--primary)] hover:underline">Terms & Conditions</a> *
                   </label>
-                  {errors.agreeToTerms && (
-                    <p className="text-red-500 text-xs mt-1">{errors.agreeToTerms}</p>
+                  {(errors as any).agreeToTerms && (
+                    <p className="text-red-500 text-xs mt-1">{(errors as any).agreeToTerms}</p>
                   )}
                 </div>
               </div>

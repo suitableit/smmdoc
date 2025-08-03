@@ -1,23 +1,19 @@
 'use client';
 import { useEffect } from 'react';
 import {
-  FaCog,
-  FaExclamationTriangle,
-  FaHeadset,
-  FaHome,
-  FaRedo,
+    FaCog,
+    FaExclamationTriangle,
+    FaHeadset,
+    FaHome,
+    FaRedo,
 } from 'react-icons/fa';
 
-import { handleError } from '@/lib/utils';
 
-interface ErrorProps {
-  error: Error;
-}
-
-export default function GlobalError({ error }: ErrorProps) {
+export default function GlobalError() {
   useEffect(() => {
-    handleError(error);
-  }, [error]);
+    // Log error for debugging
+    console.error('404 Error page loaded');
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -49,13 +45,7 @@ export default function GlobalError({ error }: ErrorProps) {
             application. This might be a temporary issue. You can try refreshing
             the page or return to the homepage to continue using our services.
           </p>
-          {error.message && (
-            <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-sm text-red-700 dark:text-red-300 font-mono">
-                {error.message}
-              </p>
-            </div>
-          )}
+
         </div>
 
         <div className="flex justify-center">

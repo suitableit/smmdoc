@@ -33,7 +33,7 @@ export async function PUT(request: Request) {
     // Update the category in the database
     await db.category.update({
       where: {
-        id: id,
+        id: Number(id),
       },
       data: updateData,
     });
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
     }
     const result = await db.category.findUnique({
       where: {
-        id: id,
+        id: Number(id),
       },
     });
     return NextResponse.json(

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/admin/orders/:id - Get a specific order
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string  }> }
 ) {
   try {
     const session = await auth();
@@ -22,7 +22,7 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
 
     if (!id) {
       return NextResponse.json(
@@ -117,7 +117,7 @@ export async function GET(
 // PUT /api/admin/orders/:id - Update order details
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string  }> }
 ) {
   try {
     const session = await auth();
@@ -134,7 +134,7 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
     const body = await req.json();
 
     if (!id) {
@@ -327,7 +327,7 @@ export async function PUT(
 // DELETE /api/admin/orders/:id - Delete an order
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string  }> }
 ) {
   try {
     const session = await auth();
@@ -344,7 +344,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
 
     if (!id) {
       return NextResponse.json(

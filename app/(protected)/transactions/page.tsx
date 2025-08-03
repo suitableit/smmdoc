@@ -144,8 +144,8 @@ export default function TransactionsPage() {
   // Mock data for demonstration
   const mockTransactions = [
     {
-      id: 'tx-1',
-      invoice_id: 'INV-123456789',
+      id: 1,
+      invoice_id: 123456789,
       amount: 500,
       status: 'Success' as const,
       method: 'uddoktapay',
@@ -157,8 +157,8 @@ export default function TransactionsPage() {
       phone: '01712345678',
     },
     {
-      id: 'tx-2',
-      invoice_id: 'INV-987654321',
+      id: 2,
+      invoice_id: 987654321,
       amount: 1000,
       status: 'Success' as const,
       method: 'uddoktapay',
@@ -170,8 +170,8 @@ export default function TransactionsPage() {
       phone: '01823456789',
     },
     {
-      id: 'tx-3',
-      invoice_id: 'INV-456789123',
+      id: 3,
+      invoice_id: 456789123,
       amount: 750,
       status: 'Processing' as const,
       method: 'uddoktapay',
@@ -183,8 +183,8 @@ export default function TransactionsPage() {
       phone: '01934567890',
     },
     {
-      id: 'tx-4',
-      invoice_id: 'INV-111222333',
+      id: 4,
+      invoice_id: 111222333,
       amount: 300,
       status: 'Failed' as const,
       method: 'uddoktapay',
@@ -196,8 +196,8 @@ export default function TransactionsPage() {
       phone: '01645678901',
     },
     {
-      id: 'tx-5',
-      invoice_id: 'INV-444555666',
+      id: 5,
+      invoice_id: 444555666,
       amount: 1200,
       status: 'Cancelled' as const,
       method: 'uddoktapay',
@@ -260,7 +260,7 @@ export default function TransactionsPage() {
         if (invoiceId && amount && transactionId) {
           const existingTransaction = transactionsToShow.find(
             (tx: Transaction) =>
-              tx.invoice_id === invoiceId || tx.transaction_id === transactionId
+              tx.invoice_id === Number(invoiceId) || tx.transaction_id === transactionId
           );
 
           if (!existingTransaction) {
@@ -317,8 +317,8 @@ export default function TransactionsPage() {
 
         if (invoiceId && amount && transactionId) {
           const newTransaction = {
-            id: `fallback-${Date.now()}`,
-            invoice_id: invoiceId,
+            id: Date.now(),
+            invoice_id: Number(invoiceId),
             amount: parseFloat(amount),
             status:
               status === 'success'
@@ -353,7 +353,7 @@ export default function TransactionsPage() {
   // Filter transactions
   const filteredTransactions = transactions.filter((tx) => {
     const matchesSearch =
-      tx.invoice_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.invoice_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
       tx.transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tx.payment_method?.toLowerCase().includes(searchTerm.toLowerCase());
 

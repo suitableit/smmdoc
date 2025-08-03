@@ -34,7 +34,7 @@ const Hero: React.FC = () => {
   const router = useRouter();
   
   const [urlError, setUrlError] = useState(
-    searchParams.get('error') === 'OAuthAccountNotLinked'
+    searchParams?.get('error') === 'OAuthAccountNotLinked'
       ? 'Email already in use with different provider!'
       : ''
   );
@@ -377,7 +377,7 @@ const Hero: React.FC = () => {
                         </div>
                         {form.formState.errors.email && (
                           <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
-                            {form.formState.errors.email.message}
+                            {String(form.formState.errors.email.message) || 'Invalid email'}
                           </p>
                         )}
                       </div>

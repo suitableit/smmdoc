@@ -71,7 +71,7 @@ const SyncLogsPage = () => {
   // Dummy data for sync logs
   const dummySyncLogs: SyncLog[] = [
     {
-      id: 'log_001',
+      id: 1,
       slNo: 1,
       apiProvider: 'SMM Panel Pro',
       serviceName: 'Instagram Followers',
@@ -80,7 +80,7 @@ const SyncLogsPage = () => {
       when: '2024-01-15T10:30:00Z',
     },
     {
-      id: 'log_002',
+      id: 2,
       slNo: 2,
       apiProvider: 'Social Boost API',
       serviceName: 'YouTube Views',
@@ -89,7 +89,7 @@ const SyncLogsPage = () => {
       when: '2024-01-15T09:45:00Z',
     },
     {
-      id: 'log_003',
+      id: 3,
       slNo: 3,
       apiProvider: 'Growth Engine',
       serviceName: 'TikTok Likes',
@@ -98,7 +98,7 @@ const SyncLogsPage = () => {
       when: '2024-01-15T08:15:00Z',
     },
     {
-      id: 'log_004',
+      id: 4,
       slNo: 4,
       apiProvider: 'Viral Marketing',
       serviceName: 'Facebook Page Likes',
@@ -107,7 +107,7 @@ const SyncLogsPage = () => {
       when: '2024-01-14T16:20:00Z',
     },
     {
-      id: 'log_005',
+      id: 5,
       slNo: 5,
       apiProvider: 'SMM Panel Pro',
       serviceName: 'Twitter Retweets',
@@ -116,7 +116,7 @@ const SyncLogsPage = () => {
       when: '2024-01-14T14:10:00Z',
     },
     {
-      id: 'log_006',
+      id: 6,
       slNo: 6,
       apiProvider: 'Boost Central',
       serviceName: 'LinkedIn Connections',
@@ -125,7 +125,7 @@ const SyncLogsPage = () => {
       when: '2024-01-14T12:30:00Z',
     },
     {
-      id: 'log_007',
+      id: 7,
       slNo: 7,
       apiProvider: 'Social Boost API',
       serviceName: 'Instagram Story Views',
@@ -134,7 +134,7 @@ const SyncLogsPage = () => {
       when: '2024-01-14T11:45:00Z',
     },
     {
-      id: 'log_008',
+      id: 8,
       slNo: 8,
       apiProvider: 'Growth Engine',
       serviceName: 'Pinterest Saves',
@@ -143,7 +143,7 @@ const SyncLogsPage = () => {
       when: '2024-01-13T15:25:00Z',
     },
     {
-      id: 'log_009',
+      id: 9,
       slNo: 9,
       apiProvider: 'Viral Marketing',
       serviceName: 'Telegram Members',
@@ -152,7 +152,7 @@ const SyncLogsPage = () => {
       when: '2024-01-13T13:15:00Z',
     },
     {
-      id: 'log_010',
+      id: 10,
       slNo: 10,
       apiProvider: 'SMM Panel Pro',
       serviceName: 'Discord Members',
@@ -175,10 +175,10 @@ const SyncLogsPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchBy, setSearchBy] = useState('all');
-  const [selectedLogs, setSelectedLogs] = useState<string[]>([]);
+  const [selectedLogs, setSelectedLogs] = useState<(string | number)[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-  const [logToDelete, setLogToDelete] = useState<string | null>(null);
+  const [logToDelete, setLogToDelete] = useState<string | number | null>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -240,7 +240,7 @@ const SyncLogsPage = () => {
           log.apiProvider.toLowerCase().includes(searchLower) ||
           log.serviceName.toLowerCase().includes(searchLower) ||
           log.changes.toLowerCase().includes(searchLower) ||
-          log.id.toLowerCase().includes(searchLower)
+          log.id.toString().toLowerCase().includes(searchLower)
         );
     }
   });
@@ -283,7 +283,7 @@ const SyncLogsPage = () => {
     }
   };
 
-  const handleSelectLog = (logId: string) => {
+  const handleSelectLog = (logId: string | number) => {
     setSelectedLogs((prev) =>
       prev.includes(logId)
         ? prev.filter((id) => id !== logId)
@@ -301,12 +301,12 @@ const SyncLogsPage = () => {
   };
 
   // Handle log deletion
-  const handleDeleteLog = async (logId: string) => {
+  const handleDeleteLog = async (logId: string | number) => {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      setSyncLogs((prev) => prev.filter((log) => log.id !== logId));
+      setSyncLogs((prev) => prev.filter((log) => log.id.toString() !== logId.toString()));
       showToast('Sync log deleted successfully', 'success');
       setDeleteDialogOpen(false);
       setLogToDelete(null);
@@ -323,7 +323,7 @@ const SyncLogsPage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setSyncLogs((prev) =>
-        prev.filter((log) => !selectedLogs.includes(log.id))
+        prev.filter((log) => !selectedLogs.includes(log.id.toString()))
       );
       showToast(
         `${selectedLogs.length} sync logs deleted successfully`,
@@ -539,7 +539,7 @@ const SyncLogsPage = () => {
                           <td className="p-3">
                             <input
                               type="checkbox"
-                              checked={selectedLogs.includes(log.id)}
+                              checked={selectedLogs.includes(log.id.toString())}
                               onChange={() => handleSelectLog(log.id)}
                               className="rounded border-gray-300 w-4 h-4"
                             />

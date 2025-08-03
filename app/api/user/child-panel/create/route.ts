@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { NextResponse } from 'next/server';
 
 // POST /api/user/child-panel/create - Create child panel
 export async function POST(request: Request) {
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
           plan,
           status: 'pending',
           expiryDate,
-          settings: {
+          settings: JSON.stringify({
             theme: 'default',
             customBranding: false,
             maxUsers: plan === 'basic' ? 100 : plan === 'standard' ? 500 : 1000,
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
               massOrders: plan === 'premium',
               drip_feed: plan !== 'basic'
             }
-          }
+          })
         }
       });
 

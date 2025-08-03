@@ -1,12 +1,13 @@
 'use client';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
+import { useUserSettings } from '@/hooks/use-user-settings';
 import { login } from '@/lib/actions/login';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
-    signInDefaultValues,
-    SignInSchema,
-    signInSchema,
+  signInDefaultValues,
+  SignInSchema,
+  signInSchema,
 } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
@@ -15,7 +16,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
-import { useUserSettings } from '@/hooks/use-user-settings';
 
 export default function SignInForm() {
   const router = useRouter();
@@ -138,9 +138,9 @@ export default function SignInForm() {
                 className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
               />
             </div>
-            {form.formState.errors.code && (
+            {form.formState.errors.code?.message && (
               <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
-                {form.formState.errors.code.message}
+                {form.formState.errors.code.message as string}
               </p>
             )}
           </div>
@@ -166,9 +166,9 @@ export default function SignInForm() {
                   className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-              {form.formState.errors.email && (
+              {form.formState.errors.email?.message && (
                 <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
-                  {form.formState.errors.email.message}
+                  {form.formState.errors.email.message as string}
                 </p>
               )}
             </div>
@@ -203,9 +203,9 @@ export default function SignInForm() {
                   )}
                 </div>
               </div>
-              {form.formState.errors.password && (
+              {form.formState.errors.password?.message && (
                 <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
-                  {form.formState.errors.password.message}
+                  {form.formState.errors.password.message as string}
                 </p>
               )}
             </div>

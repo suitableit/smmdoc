@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-    FaBan,
-    FaCheckCircle,
-    FaClock,
-    FaExternalLinkAlt,
-    FaEye,
-    FaSearch,
-    FaSync,
-    FaTimes,
-    FaTimesCircle,
+  FaBan,
+  FaCheckCircle,
+  FaClock,
+  FaExternalLinkAlt,
+  FaEye,
+  FaSearch,
+  FaSync,
+  FaTimes,
+  FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -252,7 +252,7 @@ const CancelRequestsPage = () => {
   // New state for action modals
   const [approveDialog, setApproveDialog] = useState<{
     open: boolean;
-    requestId: string;
+    requestId: string | number;
     refundAmount: number;
   }>({
     open: false,
@@ -390,7 +390,7 @@ const CancelRequestsPage = () => {
 
   // Handle request approval
   const handleApproveRequest = async (
-    requestId: number,
+    requestId: string | number,
     refundAmount: number,
     notes: string
   ) => {

@@ -2,7 +2,7 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 
 // SMMCoder Provider Configuration
-export const SMMCODER_CONFIG = {
+const SMMCODER_CONFIG = {
   name: "SMMCoder",
   value: "smmcoder",
   label: "SMMCoder",

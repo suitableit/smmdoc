@@ -2,8 +2,8 @@
 'use client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { Fragment } from 'react';
 import { formatPrice } from '@/lib/utils';
+import { Fragment } from 'react';
 
 interface PriceDisplayProps {
   amount: number;
@@ -23,11 +23,11 @@ export function PriceDisplayAnother({
   }
 
   let displayAmount = originalCurrency === 'USD' ? amount : amount * rate;
-  let displayCurrency = originalCurrency;
+  let displayCurrency: 'USD' | 'BDT' = originalCurrency;
 
   if (currency !== originalCurrency) {
     displayAmount = originalCurrency === 'USD' ? amount * rate : amount / rate;
-    displayCurrency = currency;
+    displayCurrency = currency as 'USD' | 'BDT';
   }
 
   return (

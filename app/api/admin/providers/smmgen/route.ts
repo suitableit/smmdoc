@@ -2,7 +2,7 @@ import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
 
 // SMMGen Provider Configuration
-export const SMMGEN_CONFIG = {
+const SMMGEN_CONFIG = {
   name: "SMMGen",
   value: "smmgen",
   label: "SMMGen",

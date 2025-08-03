@@ -660,6 +660,7 @@ const ModeratorsPage = () => {
       setChangeRoleDialog({ open: false, moderatorId: 0, currentRole: '' });
       setNewRole('');
     }
+    return success;
   }, [handleApiAction]);
 
   // Handle edit moderator save
@@ -974,7 +975,7 @@ const ModeratorsPage = () => {
                                 setModeratorToDelete(moderatorId);
                                 setDeleteDialogOpen(true);
                               }}
-                              isLoading={actionLoading === moderator.id}
+                              isLoading={actionLoading === moderator.id.toString()}
                             />
                           </td>
                         </tr>

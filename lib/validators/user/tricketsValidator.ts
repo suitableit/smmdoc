@@ -29,12 +29,12 @@ const ticketchema = z.object({
     ),
 });
 
-type ticketchema = z.infer<typeof ticketchema>;
+type TicketSchema = z.infer<typeof ticketchema>;
 
-const DefaultValues: ticketchema = {
+const DefaultValues: TicketSchema = {
   subject: '',
   message: '',
   file: undefined,
 };
 
-export { DefaultValues, ticketchema, type ticketchema };
+export { DefaultValues, ticketchema, type TicketSchema };

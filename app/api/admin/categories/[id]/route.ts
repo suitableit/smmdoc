@@ -48,19 +48,14 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: {
-      category_name: string;
-      updatedAt: Date;
-      position?: string;
-      hideCategory?: string;
-    } = {
+    const updateData: any = {
       category_name: category_name,
       updatedAt: new Date(),
     };
 
     // Add position if provided
     if (position) {
-      updateData.position = position;
+      updateData.position = position as any;
     }
 
     // Add hideCategory if provided

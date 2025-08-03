@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
               amount: payment.amount,
               currency: 'BDT',
               date: new Date().toLocaleDateString(),
-              userId: payment.userId
+              userId: payment.userId.toString()
             });
             
             await sendMail({
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
             amount: payment.amount,
             currency: 'BDT',
             date: new Date().toLocaleDateString(),
-            userId: payment.userId
+            userId: payment.userId.toString()
           });
           
           await sendMail({
@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
 
             // Log SMS attempt
             await logSMS({
-              userId: payment.userId,
+              userId: payment.userId.toString(),
               phone: phone,
               message: smsMessage,
               status: smsResult.success ? 'sent' : 'failed',
@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
           amount: payment.amount,
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
-          userId: payment.userId,
+          userId: payment.userId.toString(),
           phone: phone
         });
         

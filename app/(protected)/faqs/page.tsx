@@ -4,13 +4,13 @@ import { APP_NAME } from '@/lib/constants';
 import { ChevronDown } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import {
-  FaCode,
-  FaCreditCard,
-  FaHeadset,
-  FaQuestionCircle,
-  FaSearch,
-  FaShoppingCart,
-  FaUserTie,
+    FaCode,
+    FaCreditCard,
+    FaHeadset,
+    FaQuestionCircle,
+    FaSearch,
+    FaShoppingCart,
+    FaUserTie,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
@@ -31,7 +31,7 @@ interface FAQItem {
 
 const FAQPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [openItems, setOpenItems] = useState<string[]>([]);
+  const [openItems, setOpenItems] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Set document title using useEffect for client-side
@@ -51,84 +51,84 @@ const FAQPage = () => {
   // Mock FAQ data
   const faqItems: FAQItem[] = [
     {
-      id: 'faq-1',
+      id: 1,
       question: 'What is SMM Panel?',
       answer:
         'SMM (Social Media Marketing) Panel is a platform that allows you to purchase social media marketing services like followers, likes, views, and more for various social media platforms at wholesale prices.',
       category: 'general',
     },
     {
-      id: 'faq-2',
+      id: 2,
       question: 'How do I place an order?',
       answer:
         'To place an order, simply navigate to the "New Order" section, select the service you want, enter the required details (like the link to your social media profile or post), enter the quantity, and complete the payment.',
       category: 'orders',
     },
     {
-      id: 'faq-3',
+      id: 3,
       question: 'How long does it take to deliver an order?',
       answer:
         'Delivery time varies depending on the service. Some services start delivering within minutes, while others may take a few hours to start. The estimated delivery time is mentioned in the service description.',
       category: 'orders',
     },
     {
-      id: 'faq-4',
+      id: 4,
       question: 'What payment methods do you accept?',
       answer:
         'We accept various payment methods including credit/debit cards, PayPal, cryptocurrency, and local payment options like bKash, Nagad, and bank transfers.',
       category: 'payment',
     },
     {
-      id: 'faq-5',
+      id: 5,
       question: 'Is it safe to use SMM services?',
       answer:
         "Yes, our services are safe to use. We use high-quality methods that comply with social media platforms' terms of service. However, we recommend using these services moderately and naturally.",
       category: 'general',
     },
     {
-      id: 'faq-6',
+      id: 6,
       question: 'What happens if my order is not delivered?',
       answer:
         'If your order is not delivered within the expected timeframe, you can open a Support Tickets, and our team will investigate the issue. If the service cannot be delivered, you will receive a refund.',
       category: 'orders',
     },
     {
-      id: 'faq-7',
+      id: 7,
       question: "Can I get a refund if I'm not satisfied?",
       answer:
         'Refund policies vary by service. Generally, if a service is not delivered as described, you can request a refund through our support system. Please check our terms of service for detailed refund policies.',
       category: 'payment',
     },
     {
-      id: 'faq-8',
+      id: 8,
       question: 'How do I add funds to my account?',
       answer:
         'To add funds, go to the "Add Funds" section, select your preferred payment method, enter the amount you wish to add, and follow the payment instructions.',
       category: 'payment',
     },
     {
-      id: 'faq-9',
+      id: 9,
       question: 'Do you offer an API for resellers?',
       answer:
         'Yes, we provide an API for resellers. You can access the API documentation in the "API Integration" section of your dashboard. Our API allows you to automate orders and check service status.',
       category: 'api',
     },
     {
-      id: 'faq-10',
+      id: 10,
       question: 'What is a child panel?',
       answer:
         "A child panel is a reseller panel that you can purchase from us. It's a complete SMM panel with your own domain, where you can set your own prices and sell services to your customers.",
       category: 'reseller',
     },
     {
-      id: 'faq-11',
+      id: 11,
       question: 'How can I contact support?',
       answer:
         'You can contact our support team by opening a ticket in the "Support Tickets" section of your dashboard. Our support team is available 24/7 to assist you.',
       category: 'support',
     },
     {
-      id: 'faq-12',
+      id: 12,
       question: 'Can I cancel my order after placing it?',
       answer:
         "Once an order is placed, it cannot be canceled as our system starts processing it immediately. However, if the order hasn't started yet, you can contact support for assistance.",
@@ -172,7 +172,7 @@ const FAQPage = () => {
       support: { name: 'Support', icon: <FaHeadset className="w-5 h-5" /> },
     };
 
-  const toggleItem = (itemId: string) => {
+  const toggleItem = (itemId: number) => {
     setOpenItems((prev) =>
       prev.includes(itemId)
         ? prev.filter((id) => id !== itemId)

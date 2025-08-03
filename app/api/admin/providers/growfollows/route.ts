@@ -2,7 +2,7 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 
 // Growfollows Provider Configuration
-export const GROWFOLLOWS_CONFIG = {
+const GROWFOLLOWS_CONFIG = {
   name: "Growfollows",
   value: "growfollows",
   label: "Growfollows",

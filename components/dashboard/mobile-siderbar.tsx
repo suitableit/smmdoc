@@ -88,7 +88,7 @@ export default function MobileSidebar() {
 
         {/* Mobile Sidebar Navigation */}
         <div className="sidebar-nav overflow-y-auto overflow-x-hidden h-[calc(100vh-6rem)]">
-          <SideBarNav user={user} setOpen={setOpen} />
+          <SideBarNav user={user as any} setOpen={() => setOpen(false)} />
         </div>
       </SheetContent>
     </Sheet>

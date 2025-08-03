@@ -1,15 +1,17 @@
 'use client';
 
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import { Clock } from 'lucide-react';
+import moment from 'moment';
 import Link from 'next/link';
 import { FaDollarSign, FaShoppingCart, FaWallet } from 'react-icons/fa';
 
 export default function UserDashboard() {
-  const { data: response, error, isLoading } = useGetUserStatsQuery();
+  const { data: response, error, isLoading } = useGetUserStatsQuery(undefined);
   const { currency, rate } = useCurrency();
 
   // Format currency values consistently

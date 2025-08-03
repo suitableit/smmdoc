@@ -1,5 +1,6 @@
 'use client';
 
+import { GradientSpinner } from '@/components/ui/GradientSpinner';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState } from 'react';
@@ -63,7 +64,7 @@ const BlogPage: React.FC = () => {
 
   const allBlogPosts: BlogPost[] = [
     {
-      id: '1',
+      id: 1,
       title: 'Lorem Ipsum Digital Marketing Strategies',
       excerpt:
         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.',
@@ -71,7 +72,7 @@ const BlogPage: React.FC = () => {
       slug: 'lorem-ipsum-digital-marketing-strategies',
     },
     {
-      id: '2',
+      id: 2,
       title: 'Consectetur Adipiscing Social Media Trends',
       excerpt:
         'Consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco.',
@@ -79,7 +80,7 @@ const BlogPage: React.FC = () => {
       slug: 'consectetur-adipiscing-social-media-trends',
     },
     {
-      id: '3',
+      id: 3,
       title: 'Sed Do Eiusmod Content Creation Guide',
       excerpt:
         'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.',
@@ -87,7 +88,7 @@ const BlogPage: React.FC = () => {
       slug: 'sed-do-eiusmod-content-creation-guide',
     },
     {
-      id: '4',
+      id: 4,
       title: 'Tempor Incididunt Platform Comparison',
       excerpt:
         'Tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
@@ -95,7 +96,7 @@ const BlogPage: React.FC = () => {
       slug: 'tempor-incididunt-platform-comparison',
     },
     {
-      id: '5',
+      id: 5,
       title: 'Ut Labore et Dolore Magna Branding Tips',
       excerpt:
         'Ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure.',
@@ -103,7 +104,7 @@ const BlogPage: React.FC = () => {
       slug: 'ut-labore-et-dolore-magna-branding-tips',
     },
     {
-      id: '6',
+      id: 6,
       title: 'Magna Aliqua Audience Engagement Methods',
       excerpt:
         'Magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.',
@@ -111,7 +112,7 @@ const BlogPage: React.FC = () => {
       slug: 'magna-aliqua-audience-engagement-methods',
     },
     {
-      id: '7',
+      id: 7,
       title: 'Ut Enim Ad Minim Growth Strategies',
       excerpt:
         'Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate.',
@@ -119,7 +120,7 @@ const BlogPage: React.FC = () => {
       slug: 'ut-enim-ad-minim-growth-strategies',
     },
     {
-      id: '8',
+      id: 8,
       title: 'Quis Nostrud Promotion Techniques',
       excerpt:
         'Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore.',
@@ -127,7 +128,7 @@ const BlogPage: React.FC = () => {
       slug: 'quis-nostrud-promotion-techniques',
     },
     {
-      id: '9',
+      id: 9,
       title: 'Exercitation Ullamco Viral Content Tips',
       excerpt:
         'Exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore eu fugiat.',
@@ -135,7 +136,7 @@ const BlogPage: React.FC = () => {
       slug: 'exercitation-ullamco-viral-content-tips',
     },
     {
-      id: '10',
+      id: 10,
       title: 'Laboris Nisi B2B Marketing Solutions',
       excerpt:
         'Laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
@@ -143,7 +144,7 @@ const BlogPage: React.FC = () => {
       slug: 'laboris-nisi-b2b-marketing-solutions',
     },
     {
-      id: '11',
+      id: 11,
       title: 'Ut Aliquip Future Marketing Trends',
       excerpt:
         'Ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint.',
@@ -151,7 +152,7 @@ const BlogPage: React.FC = () => {
       slug: 'ut-aliquip-future-marketing-trends',
     },
     {
-      id: '12',
+      id: 12,
       title: 'Ex Ea Commodo Community Building',
       excerpt:
         'Ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat.',

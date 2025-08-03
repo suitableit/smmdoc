@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  FaBox,
-  FaCheckCircle,
-  FaEdit,
-  FaEllipsisH,
-  FaPlus,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTrash,
+    FaBox,
+    FaCheckCircle,
+    FaEdit,
+    FaEllipsisH,
+    FaPlus,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTrash,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -71,121 +71,121 @@ const PostTagsPage = () => {
   // Dummy data for post tags with post counts (including some with 0 counts)
   const dummyPostTags: PostTag[] = [
     {
-      id: 'pt_001',
+      id: 1,
       name: 'JavaScript',
       postCount: 25,
       createdAt: '2024-01-15T10:30:00Z',
     },
     {
-      id: 'pt_002',
+      id: 2,
       name: 'React',
       postCount: 18,
       createdAt: '2024-01-14T14:45:00Z',
     },
     {
-      id: 'pt_003',
+      id: 3,
       name: 'Tutorial',
       postCount: 32,
       createdAt: '2024-01-13T09:15:00Z',
     },
     {
-      id: 'pt_004',
+      id: 4,
       name: 'Beginner',
       postCount: 15,
       createdAt: '2024-01-12T16:20:00Z',
     },
     {
-      id: 'pt_005',
+      id: 5,
       name: 'Web Development',
       postCount: 22,
       createdAt: '2024-01-11T11:35:00Z',
     },
     {
-      id: 'pt_006',
+      id: 6,
       name: 'CSS',
       postCount: 14,
       createdAt: '2024-01-10T13:50:00Z',
     },
     {
-      id: 'pt_007',
+      id: 7,
       name: 'Node.js',
       postCount: 0,
       createdAt: '2024-01-09T08:25:00Z',
     },
     {
-      id: 'pt_008',
+      id: 8,
       name: 'Frontend',
       postCount: 19,
       createdAt: '2024-01-08T15:40:00Z',
     },
     {
-      id: 'pt_009',
+      id: 9,
       name: 'Backend',
       postCount: 11,
       createdAt: '2024-01-07T12:10:00Z',
     },
     {
-      id: 'pt_010',
+      id: 10,
       name: 'API',
       postCount: 8,
       createdAt: '2024-01-06T17:30:00Z',
     },
     {
-      id: 'pt_011',
+      id: 11,
       name: 'TypeScript',
       postCount: 0,
       createdAt: '2024-01-05T14:15:00Z',
     },
     {
-      id: 'pt_012',
+      id: 12,
       name: 'Database',
       postCount: 6,
       createdAt: '2024-01-04T16:45:00Z',
     },
     {
-      id: 'pt_013',
+      id: 13,
       name: 'DevOps',
       postCount: 0,
       createdAt: '2024-01-03T11:20:00Z',
     },
     {
-      id: 'pt_014',
+      id: 14,
       name: 'Mobile',
       postCount: 4,
       createdAt: '2024-01-02T09:30:00Z',
     },
     {
-      id: 'pt_015',
+      id: 15,
       name: 'Performance',
       postCount: 0,
       createdAt: '2024-01-01T13:10:00Z',
     },
     {
-      id: 'pt_016',
+      id: 16,
       name: 'Security',
       postCount: 7,
       createdAt: '2023-12-31T10:45:00Z',
     },
     {
-      id: 'pt_017',
+      id: 17,
       name: 'Testing',
       postCount: 9,
       createdAt: '2023-12-30T16:20:00Z',
     },
     {
-      id: 'pt_018',
+      id: 18,
       name: 'AWS',
       postCount: 0,
       createdAt: '2023-12-29T14:15:00Z',
     },
     {
-      id: 'pt_019',
+      id: 19,
       name: 'Docker',
       postCount: 3,
       createdAt: '2023-12-28T11:30:00Z',
     },
     {
-      id: 'pt_020',
+      id: 20,
       name: 'Git',
       postCount: 12,
       createdAt: '2023-12-27T09:45:00Z',
@@ -206,7 +206,7 @@ const PostTagsPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [postTagToDelete, setPostTagToDelete] = useState<string | null>(
+  const [postTagToDelete, setPostTagToDelete] = useState<number | null>(
     null
   );
   const [toast, setToast] = useState<{
@@ -228,15 +228,15 @@ const PostTagsPage = () => {
   const [newPostTagName, setNewPostTagName] = useState('');
 
   // Utility functions
-  const formatID = (id: string) => {
-    return id.toUpperCase();
+  const formatID = (id: number) => {
+    return `PT_${String(id).padStart(3, '0')}`;
   };
 
   // Filter post tags based on search term
   const filteredPostTags = postTags.filter(
     (postTag) =>
       postTag.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      postTag.id.toLowerCase().includes(searchTerm.toLowerCase())
+      postTag.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Update pagination when filtered data changes
@@ -278,7 +278,7 @@ const PostTagsPage = () => {
   };
 
   // Handle post tag deletion
-  const handleDeletePostTag = async (postTagId: string) => {
+  const handleDeletePostTag = async (postTagId: number) => {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -328,7 +328,7 @@ const PostTagsPage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       const newPostTag: PostTag = {
-        id: `pt_${String(postTags.length + 1).padStart(3, '0')}`,
+        id: postTags.length + 1,
         name: newPostTagName.trim(),
         postCount: 0, // New post tags start with 0 posts
         createdAt: new Date().toISOString(),

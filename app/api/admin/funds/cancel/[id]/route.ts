@@ -82,11 +82,11 @@ export async function POST(
         const emailData = emailTemplates.paymentCancelled({
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
-          transactionId: transaction.transaction_id || transaction.invoice_id,
+          transactionId: Number(transaction.transaction_id || transaction.invoice_id),
           amount: transaction.amount,
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
-          userId: transaction.userId
+          userId: transaction.userId.toString()
         });
         
         await sendMail({

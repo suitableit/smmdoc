@@ -2,22 +2,22 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FaBan,
-  FaCheckCircle,
-  FaCoins,
-  FaDollarSign,
-  FaEdit,
-  FaEllipsisH,
-  FaExclamationCircle,
-  FaGift,
-  FaSearch,
-  FaSignInAlt,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
-  FaTrash,
-  FaUserCheck,
-  FaUsers,
+    FaBan,
+    FaCheckCircle,
+    FaCoins,
+    FaDollarSign,
+    FaEdit,
+    FaEllipsisH,
+    FaExclamationCircle,
+    FaGift,
+    FaSearch,
+    FaSignInAlt,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
+    FaTrash,
+    FaUserCheck,
+    FaUsers,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -272,7 +272,7 @@ const UsersListPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<(string | number)[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
   const [toast, setToast] = useState<{
@@ -678,6 +678,7 @@ const UsersListPage = () => {
         setChangeRoleDialog({ open: false, userId: 0, currentRole: '' });
         setNewRole('');
       }
+      return success;
     },
     [handleApiAction]
   );
@@ -1345,7 +1346,7 @@ const UsersListPage = () => {
                                 setUserToDelete(userId);
                                 setDeleteDialogOpen(true);
                               }}
-                              isLoading={actionLoading === user.id}
+                              isLoading={actionLoading === user.id.toString()}
                             />
                           </td>
                         </tr>
@@ -1375,7 +1376,7 @@ const UsersListPage = () => {
                           setDeleteDialogOpen(true);
                         }}
                         formatCurrency={formatCurrency}
-                        isLoading={actionLoading === user.id}
+                        isLoading={actionLoading === user.id.toString()}
                       />
                     ))}
                   </div>
@@ -1694,7 +1695,7 @@ const UserCard: React.FC<UserCardProps> = ({
       <UserActions
         user={user}
         onView={onView}
-        onEditUser={(userId: string) => {
+        onEditUser={(userId: number) => {
           const foundUser = [user].find((u) => u.id === userId);
           if (foundUser) {
             onView(userId);
@@ -1803,7 +1804,7 @@ const UserCard: React.FC<UserCardProps> = ({
             className="font-semibold text-sm"
             style={{ color: 'var(--text-primary)' }}
           >
-            {formatCurrency(user.spent || 0, user.currency || 'USD')}
+            {formatCurrency((user as any).spent || 0, user.currency || 'USD')}
           </div>
         </div>
       </div>

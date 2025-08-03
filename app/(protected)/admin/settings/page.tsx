@@ -1209,7 +1209,7 @@ const GeneralSettingsPage = () => {
                     {contactSettings.categories.map((category) => (
                       <DynamicListItem
                         key={category.id}
-                        item={category}
+                        item={{ id: category.id || 0, name: category.name }}
                         onEdit={editCategory}
                         onDelete={deleteCategory}
                       />
@@ -1408,13 +1408,12 @@ const GeneralSettingsPage = () => {
                     </div>
                     <Switch
                       checked={moduleSettings.servicesListPublic}
-                      onClick={() =>
+                      onCheckedChange={(checked) =>
                         setModuleSettings(prev => ({
                           ...prev,
-                          servicesListPublic: !prev.servicesListPublic
+                          servicesListPublic: checked
                         }))
                       }
-                      title={`Services list is ${moduleSettings.servicesListPublic ? 'public' : 'private'}`}
                     />
                   </div>
                 </div>

@@ -68,7 +68,7 @@ export async function PUT(
 
     // Update user special pricing
     const updatedUser = await db.user.update({
-      where: { id },
+      where: { id: Number(id) },
       data: { specialPricing },
       select: {
         id: true,
@@ -102,7 +102,7 @@ export async function PUT(
 // DELETE /api/admin/users/[id]/special-pricing - Reset special pricing (set to false)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -118,11 +118,11 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
 
     // Check if user exists
     const existingUser = await db.user.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       select: { id: true, username: true, specialPricing: true }
     });
 
@@ -139,7 +139,7 @@ export async function DELETE(
 
     // Reset special pricing to false
     const updatedUser = await db.user.update({
-      where: { id },
+      where: { id: Number(id) },
       data: { specialPricing: false },
       select: {
         id: true,
@@ -173,7 +173,7 @@ export async function DELETE(
 // GET /api/admin/users/[id]/special-pricing - Get user special pricing status
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string   }> }
 ) {
   try {
     const session = await auth();
@@ -189,10 +189,10 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id  } = await params;
 
     const user = await db.user.findUnique({
-      where: { id },
+      where: { id: Number(id) },
       select: {
         id: true,
         username: true,

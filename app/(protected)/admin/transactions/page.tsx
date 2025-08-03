@@ -2,18 +2,18 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaClock,
-  FaCreditCard,
-  FaDollarSign,
-  FaEllipsisH,
-  FaExclamationCircle,
-  FaEye,
-  FaPlus,
-  FaSearch,
-  FaSync,
-  FaTimes,
-  FaTimesCircle,
+    FaCheckCircle,
+    FaClock,
+    FaCreditCard,
+    FaDollarSign,
+    FaEllipsisH,
+    FaExclamationCircle,
+    FaEye,
+    FaPlus,
+    FaSearch,
+    FaSync,
+    FaTimes,
+    FaTimesCircle,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant and useCurrency hook
@@ -21,9 +21,9 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { APP_NAME } from '@/lib/constants';
 import { convertCurrency } from '@/lib/currency-utils';
-const formatID = (id) => id;
-const formatNumber = (num) => num.toLocaleString();
-const formatPrice = (price, decimals = 2) => price.toFixed(decimals);
+const formatID = (id: any) => id;
+const formatNumber = (num: number) => num.toLocaleString();
+const formatPrice = (price: number, decimals = 2) => price.toFixed(decimals);
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -131,9 +131,9 @@ const AdminAllTransactionsPage = () => {
   // Dummy data for testing - Updated to show empty Transaction IDs for pending withdrawals
   const dummyTransactions: Transaction[] = [
     {
-      id: 'txn_001',
+      id: 1,
       user: {
-        id: 'user_001',
+        id: 1,
         email: 'john.doe@example.com',
         name: 'John Doe',
         username: 'johndoe',
@@ -151,9 +151,9 @@ const AdminAllTransactionsPage = () => {
       updatedAt: '2024-01-15T10:30:00Z',
     },
     {
-      id: 'txn_002',
+      id: 2,
       user: {
-        id: 'user_002',
+        id: 2,
         email: 'jane.smith@example.com',
         name: 'Jane Smith',
         username: 'janesmith',
@@ -171,9 +171,9 @@ const AdminAllTransactionsPage = () => {
       processedAt: '2024-01-14T16:00:00Z',
     },
     {
-      id: 'txn_003',
+      id: 3,
       user: {
-        id: 'user_003',
+        id: 3,
         email: 'alex.johnson@example.com',
         name: 'Alex Johnson',
         username: 'alexj',
@@ -190,9 +190,9 @@ const AdminAllTransactionsPage = () => {
       updatedAt: '2024-01-13T09:35:00Z',
     },
     {
-      id: 'txn_004',
+      id: 4,
       user: {
-        id: 'user_004',
+        id: 4,
         email: 'sarah.wilson@example.com',
         name: 'Sarah Wilson',
         username: 'sarahw',
@@ -209,9 +209,9 @@ const AdminAllTransactionsPage = () => {
       updatedAt: '2024-01-12T14:10:00Z',
     },
     {
-      id: 'txn_005',
+      id: 5,
       user: {
-        id: 'user_005',
+        id: 5,
         email: 'mike.brown@example.com',
         name: 'Mike Brown',
         username: 'mikeb',
@@ -228,9 +228,9 @@ const AdminAllTransactionsPage = () => {
       updatedAt: '2024-01-11T11:40:00Z',
     },
     {
-      id: 'txn_006',
+      id: 6,
       user: {
-        id: 'user_006',
+        id: 6,
         email: 'robert.taylor@example.com',
         name: 'Robert Taylor',
         username: 'robertt',
@@ -247,9 +247,9 @@ const AdminAllTransactionsPage = () => {
       updatedAt: '2024-01-09T16:20:00Z',
     },
     {
-      id: 'txn_008',
+      id: 7,
       user: {
-        id: 'user_008',
+        id: 7,
         email: 'lisa.garcia@example.com',
         name: 'Lisa Garcia',
         username: 'lisag',
@@ -266,9 +266,9 @@ const AdminAllTransactionsPage = () => {
       updatedAt: '2024-01-08T08:45:00Z',
     },
     {
-      id: 'txn_009',
+      id: 8,
       user: {
-        id: 'user_009',
+        id: 8,
         email: 'chris.martinez@example.com',
         name: 'Chris Martinez',
         username: 'chrism',
@@ -285,9 +285,9 @@ const AdminAllTransactionsPage = () => {
       updatedAt: '2024-01-07T12:20:00Z',
     },
     {
-      id: 'txn_010',
+      id: 9,
       user: {
-        id: 'user_010',
+        id: 9,
         email: 'anna.robinson@example.com',
         name: 'Anna Robinson',
         username: 'annar',

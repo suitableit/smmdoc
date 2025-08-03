@@ -16,14 +16,7 @@ const signInSchema = z.object({
 
       // Otherwise validate as username
       return usernameRegex.test(value) && value.length >= 3;
-    }, {
-      message: (val) => {
-        if (val.input.includes('@')) {
-          return 'Please enter a valid email address';
-        }
-        return 'Username must be at least 3 characters and contain only letters, numbers, dots, underscores, and hyphens';
-      }
-    }),
+    }, 'Please enter a valid email address or username'),
   password: z
     .string()
     .min(1, 'Password is required')

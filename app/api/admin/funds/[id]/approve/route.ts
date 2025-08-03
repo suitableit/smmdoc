@@ -102,7 +102,7 @@ export async function POST(
           amount: transaction.amount,
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
-          userId: transaction.userId
+          userId: transaction.userId.toString()
         });
 
         await sendMail({

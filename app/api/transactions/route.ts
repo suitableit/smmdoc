@@ -315,7 +315,7 @@ export async function PATCH(request: NextRequest) {
 
     // Find the transaction
     const transaction = await db.addFund.findUnique({
-      where: { id: transactionId },
+      where: { id: Number(transactionId) },
       include: { user: true }
     });
 
@@ -366,7 +366,7 @@ export async function PATCH(request: NextRequest) {
 
     // Update the transaction
     const updatedTransaction = await db.addFund.update({
-      where: { id: transactionId },
+      where: { id: Number(transactionId) },
       data: updateData,
       include: {
         user: {

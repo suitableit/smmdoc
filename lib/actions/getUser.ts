@@ -30,7 +30,6 @@ export async function getUserDetails() {
           image: true,
           emailVerified: true,
           currency: true,
-          dollarRate: true,
           isTwoFactorEnabled: true,
           balance: true,          // Get actual balance field from database
           total_deposit: true,    // Get actual total_deposit field
@@ -75,7 +74,6 @@ export async function getUserDetails() {
             image: true,
             emailVerified: true,
             currency: true,
-            dollarRate: true,
             isTwoFactorEnabled: true,
             balance: true,
             total_deposit: true,
@@ -119,9 +117,7 @@ export async function getUserDetails() {
           image: session.user.image || null,
           emailVerified: null,
           currency: session.user.currency || 'USD',
-          dollarRate: session.user.dollarRate || 121.52,
           isTwoFactorEnabled: session.user.isTwoFactorEnabled || false,
-          balance: session.user.balance || 0,
           total_deposit: 0,
           total_spent: 0,
           username: session.user.username || null,

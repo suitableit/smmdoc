@@ -2,22 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaEdit,
-  FaEye,
-  FaImage,
-  FaSave,
-  FaSync,
-  FaTags,
-  FaTimes,
-  FaUpload,
-  FaCalendarAlt,
-  FaClock,
-  FaGlobe,
-  FaLock,
-  FaFileAlt,
-  FaHistory,
   FaArrowLeft,
+  FaCheckCircle,
+  FaEye,
+  FaGlobe,
+  FaHistory,
+  FaSave,
+  FaTimes,
+  FaUpload
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -53,12 +45,12 @@ const Toast = ({
 
 // Define interfaces
 interface PostCategory {
-  id: string;
+  id: number;
   name: string;
 }
 
 interface PostTag {
-  id: string;
+  id: number;
   name: string;
 }
 
@@ -89,27 +81,27 @@ const EditBlogPostPage = () => {
 
   // Dummy data for categories
   const dummyCategories: PostCategory[] = [
-    { id: 'pc_000', name: 'Uncategorized' },
-    { id: 'pc_001', name: 'Technology' },
-    { id: 'pc_002', name: 'Business' },
-    { id: 'pc_003', name: 'Lifestyle' },
-    { id: 'pc_004', name: 'Health & Wellness' },
-    { id: 'pc_005', name: 'Travel' },
-    { id: 'pc_006', name: 'Food & Recipes' },
+    { id: 0, name: 'Uncategorized' },
+    { id: 1, name: 'Technology' },
+    { id: 2, name: 'Business' },
+    { id: 3, name: 'Lifestyle' },
+    { id: 4, name: 'Health & Wellness' },
+    { id: 5, name: 'Travel' },
+    { id: 6, name: 'Food & Recipes' },
   ];
 
   // Dummy data for available tags
   const dummyTags: PostTag[] = [
-    { id: 'pt_001', name: 'JavaScript' },
-    { id: 'pt_002', name: 'React' },
-    { id: 'pt_003', name: 'Tutorial' },
-    { id: 'pt_004', name: 'Beginner' },
-    { id: 'pt_005', name: 'Web Development' },
-    { id: 'pt_006', name: 'CSS' },
-    { id: 'pt_007', name: 'Node.js' },
-    { id: 'pt_008', name: 'Frontend' },
-    { id: 'pt_009', name: 'Backend' },
-    { id: 'pt_010', name: 'API' },
+    { id: 1, name: 'JavaScript' },
+    { id: 2, name: 'React' },
+    { id: 3, name: 'Tutorial' },
+    { id: 4, name: 'Beginner' },
+    { id: 5, name: 'Web Development' },
+    { id: 6, name: 'CSS' },
+    { id: 7, name: 'Node.js' },
+    { id: 8, name: 'Frontend' },
+    { id: 9, name: 'Backend' },
+    { id: 10, name: 'API' },
   ];
 
   // Dummy existing post data (in real app, this would come from API/URL params)
@@ -300,7 +292,7 @@ This is a sample blog post content that demonstrates how the edit functionality 
   };
 
   // Handle form submission
-  const handleSubmit = async (status: 'draft' | 'published') => {
+  const handleSubmit = async (status: 'draft' | 'published' | 'scheduled') => {
     try {
       setIsLoading(true);
       

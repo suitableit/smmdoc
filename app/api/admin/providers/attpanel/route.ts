@@ -2,7 +2,7 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 
 // ATTPANEL Provider Configuration
-export const ATTPANEL_CONFIG = {
+const ATTPANEL_CONFIG = {
   name: "ATTPANEL",
   value: "attpanel",
   label: "ATTPANEL",

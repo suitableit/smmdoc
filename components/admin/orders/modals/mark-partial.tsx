@@ -3,7 +3,7 @@ import React from 'react';
 interface MarkPartialModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orderId: string;
+  orderId: string | number;
   notGoingAmount: string;
   setNotGoingAmount: (amount: string) => void;
   onUpdate: (orderId: string, amount: string) => void;
@@ -20,7 +20,7 @@ const MarkPartialModal: React.FC<MarkPartialModalProps> = ({
   if (!isOpen) return null;
 
   const handleUpdate = () => {
-    onUpdate(orderId, notGoingAmount);
+    onUpdate(orderId.toString(), notGoingAmount);
   };
 
   const handleClose = () => {

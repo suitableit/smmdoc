@@ -59,7 +59,7 @@ const DashboardPage = () => {
   const user = useCurrentUser();
   const { currency, rate: currencyRate, currentCurrencyData } = useCurrency();
   const router = useRouter();
-  const { data: userStatsResponse, error, isLoading } = useGetUserStatsQuery();
+  const { data: userStatsResponse, error, isLoading } = useGetUserStatsQuery(undefined);
   const userStats = userStatsResponse?.data;
 
   const [toast, setToast] = useState<{

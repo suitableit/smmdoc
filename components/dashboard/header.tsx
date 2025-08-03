@@ -365,7 +365,7 @@ const Menu = ({ user }: { user: any }) => {
   }, [currentUser?.id, user?.id, userData?.id, dispatch]);
 
   // Get balance from API for real-time data
-  const { data: userStatsResponse } = useGetUserStatsQuery();
+  const { data: userStatsResponse } = useGetUserStatsQuery(undefined);
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
   const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
 
@@ -608,7 +608,7 @@ const Header = () => {
     user?.userType?.toLowerCase() === 'admin' ||
     user?.isAdmin === true;
 
-  const { data: userStatsResponse } = useGetUserStatsQuery();
+  const { data: userStatsResponse } = useGetUserStatsQuery(undefined);
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
   const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
 
