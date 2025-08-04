@@ -1,26 +1,70 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface MarkPartialModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderId: string | number;
-  notGoingAmount: string;
-  setNotGoingAmount: (amount: string) => void;
-  onUpdate: (orderId: string, amount: string) => void;
+  onSuccess?: () => void; // Callback for successful update
+  showToast?: (message: string, type: 'success' | 'error') => void; // Toast function
 }
 
 const MarkPartialModal: React.FC<MarkPartialModalProps> = ({
   isOpen,
   onClose,
   orderId,
-  notGoingAmount,
-  setNotGoingAmount,
-  onUpdate,
+  onSuccess,
+  showToast,
 }) => {
+  const [notGoingAmount, setNotGoingAmount] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setNotGoingAmount('');
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
+  // Handle mark as partial API call
+  const handleMarkPartial = async (orderId: string, notGoingAmount: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/admin/orders/${orderId}/partial`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'partial',
+          notGoingAmount: notGoingAmount,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast?.('Order marked as partial', 'success');
+        onSuccess?.(); // Refresh orders data
+        handleClose();
+      } else {
+        showToast?.(result.error || 'Failed to mark order as partial', 'error');
+      }
+    } catch (error) {
+      console.error('Error marking order as partial:', error);
+      showToast?.('Error marking order as partial', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleUpdate = () => {
-    onUpdate(orderId.toString(), notGoingAmount);
+    if (!notGoingAmount.trim()) {
+      showToast?.('Please enter a valid amount', 'error');
+      return;
+    }
+    handleMarkPartial(orderId.toString(), notGoingAmount);
   };
 
   const handleClose = () => {
@@ -49,15 +93,17 @@ const MarkPartialModal: React.FC<MarkPartialModalProps> = ({
         <div className="flex gap-2 justify-end">
           <button
             onClick={handleClose}
+            disabled={isLoading}
             className="btn btn-secondary"
           >
             Cancel
           </button>
           <button
             onClick={handleUpdate}
+            disabled={isLoading}
             className="btn btn-primary"
           >
-            Update
+            {isLoading ? 'Updating...' : 'Update'}
           </button>
         </div>
       </div>

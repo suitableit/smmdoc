@@ -1,13 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface UpdateOrderStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderId: string | number;
   currentStatus: string;
-  newStatus: string;
-  setNewStatus: (status: string) => void;
-  onUpdate: (orderId: string, status: string) => void;
+  onSuccess?: () => void; // Callback for successful update
+  showToast?: (message: string, type: 'success' | 'error') => void; // Toast function
 }
 
 const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
@@ -15,16 +14,62 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
   onClose,
   orderId,
   currentStatus,
-  newStatus,
-  setNewStatus,
-  onUpdate,
+  onSuccess,
+  showToast,
 }) => {
+  const [newStatus, setNewStatus] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Set initial status when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setNewStatus(currentStatus);
+    }
+  }, [isOpen, currentStatus]);
+
   if (!isOpen) return null;
 
+  // Handle order status update API call
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    try {
+      setIsLoading(true);
+      console.log('Updating order status:', { orderId, newStatus, orderIdType: typeof orderId });
+      const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      const result = await response.json();
+      console.log('Response data:', result);
+
+      if (result.success) {
+        showToast?.(`Order status updated to ${newStatus}`, 'success');
+        onSuccess?.(); // Refresh orders data
+        handleClose();
+      } else {
+        console.error('Update failed:', result);
+        showToast?.(result.error || 'Failed to update order status', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      showToast?.('Error updating order status', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleUpdate = () => {
-    onUpdate(orderId.toString(), newStatus);
-    onClose();
-    setNewStatus('');
+    if (!newStatus.trim()) {
+      showToast?.('Please select a valid status', 'error');
+      return;
+    }
+    handleStatusUpdate(orderId.toString(), newStatus);
   };
 
   const handleClose = () => {
@@ -59,15 +104,17 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
         <div className="flex gap-2 justify-end">
           <button
             onClick={handleClose}
+            disabled={isLoading}
             className="btn btn-secondary"
           >
             Cancel
           </button>
           <button
             onClick={handleUpdate}
+            disabled={isLoading}
             className="btn btn-primary"
           >
-            Update
+            {isLoading ? 'Updating...' : 'Update'}
           </button>
         </div>
       </div>

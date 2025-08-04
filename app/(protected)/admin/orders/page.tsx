@@ -188,7 +188,6 @@ const AdminOrdersPage = () => {
     orderId: '',
     currentCount: 0,
   });
-  const [newStartCount, setNewStartCount] = useState('');
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
     orderId: string | number;
@@ -198,7 +197,6 @@ const AdminOrdersPage = () => {
     orderId: '',
     currentStatus: '',
   });
-  const [newStatus, setNewStatus] = useState('');
   const [markPartialDialog, setMarkPartialDialog] = useState<{
     open: boolean;
     orderId: string | number;
@@ -206,7 +204,6 @@ const AdminOrdersPage = () => {
     open: false,
     orderId: '',
   });
-  const [notGoingAmount, setNotGoingAmount] = useState('');
 
   // New state for bulk status change
   const [bulkStatusDialog, setBulkStatusDialog] = useState<{
@@ -522,38 +519,7 @@ const AdminOrdersPage = () => {
     }
   };
 
-  // Handle order status update
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
-    try {
-      console.log('Updating order status:', { orderId, newStatus, orderIdType: typeof orderId });
-      const response = await fetch(`/api/admin/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
-      const result = await response.json();
-      console.log('Response data:', result);
-
-      if (result.success) {
-        showToast(`Order status updated to ${newStatus}`, 'success');
-        fetchOrders();
-        fetchStats();
-        fetchAllOrdersForCounts();
-      } else {
-        console.error('Update failed:', result);
-        showToast(result.error || 'Failed to update order status', 'error');
-      }
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      showToast('Error updating order status', 'error');
-    }
-  };
 
   // Handle bulk status update
   const handleBulkStatusUpdate = async (newStatus: string) => {
@@ -591,81 +557,23 @@ const AdminOrdersPage = () => {
     }
   };
 
-  // Handle edit start count
-  const handleEditStartCount = async (orderId: string, startCount: number) => {
-    try {
-      const response = await fetch(`/api/admin/orders/${orderId}/start-count`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ startCount: startCount }),
-      });
 
-      const result = await response.json();
 
-      if (result.success) {
-        showToast('Start count updated successfully', 'success');
-        fetchOrders();
-        setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 });
-        setNewStartCount('');
-      } else {
-        showToast(result.error || 'Failed to update start count', 'error');
-      }
-    } catch (error) {
-      console.error('Error updating start count:', error);
-      showToast('Error updating start count', 'error');
-    }
-  };
 
-  // Handle mark as partial
-  const handleMarkPartial = async (orderId: string, notGoingAmount: string) => {
-    try {
-      const response = await fetch(`/api/admin/orders/${orderId}/partial`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'partial',
-          notGoingAmount: notGoingAmount,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        showToast('Order marked as partial', 'success');
-        fetchOrders();
-        fetchStats();
-        fetchAllOrdersForCounts();
-        setMarkPartialDialog({ open: false, orderId: '' });
-        setNotGoingAmount('');
-      } else {
-        showToast(result.error || 'Failed to mark order as partial', 'error');
-      }
-    } catch (error) {
-      console.error('Error marking order as partial:', error);
-      showToast('Error marking order as partial', 'error');
-    }
-  };
 
   // Open mark partial dialog
   const openMarkPartialDialog = (orderId: string | number) => {
     setMarkPartialDialog({ open: true, orderId });
-    setNotGoingAmount('');
   };
 
   // Open edit start count dialog
   const openEditStartCountDialog = (orderId: string | number, currentCount: number) => {
     setEditStartCountDialog({ open: true, orderId, currentCount });
-    setNewStartCount(currentCount.toString());
   };
 
   // Open update status dialog
   const openUpdateStatusDialog = (orderId: string | number, currentStatus: string) => {
     setUpdateStatusDialog({ open: true, orderId, currentStatus });
-    setNewStatus(currentStatus);
   };
 
   // Open bulk status dialog
@@ -1029,8 +937,8 @@ const AdminOrdersPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View - Hidden on mobile */}
-                <div className="hidden lg:block overflow-x-auto">
+                {/* Table View - Visible on all screen sizes */}
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -1449,8 +1357,8 @@ const AdminOrdersPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View - Visible on tablet and mobile */}
-                <div className="lg:hidden">
+                {/* Mobile Card View - Hidden (using table view instead) */}
+                <div className="hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {orders.map((order) => (
                       <div
@@ -1863,9 +1771,12 @@ const AdminOrdersPage = () => {
                   isOpen={markPartialDialog.open}
                   onClose={() => setMarkPartialDialog({ open: false, orderId: '' })}
                   orderId={markPartialDialog.orderId}
-                  notGoingAmount={notGoingAmount}
-                  setNotGoingAmount={setNotGoingAmount}
-                  onUpdate={handleMarkPartial}
+                  onSuccess={() => {
+                    fetchOrders();
+                    fetchStats();
+                    fetchAllOrdersForCounts();
+                  }}
+                  showToast={showToast}
                 />
 
                 {/* Edit Start Count Dialog */}
@@ -1874,9 +1785,12 @@ const AdminOrdersPage = () => {
                   onClose={() => setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 })}
                   orderId={editStartCountDialog.orderId}
                   currentCount={editStartCountDialog.currentCount}
-                  newStartCount={newStartCount}
-                  setNewStartCount={setNewStartCount}
-                  onUpdate={handleEditStartCount}
+                  onSuccess={() => {
+                    fetchOrders();
+                    fetchStats();
+                    fetchAllOrdersForCounts();
+                  }}
+                  showToast={showToast}
                 />
 
                 {/* Update Status Dialog */}
@@ -1885,9 +1799,12 @@ const AdminOrdersPage = () => {
                   onClose={() => setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' })}
                   orderId={updateStatusDialog.orderId}
                   currentStatus={updateStatusDialog.currentStatus}
-                  newStatus={newStatus}
-                  setNewStatus={setNewStatus}
-                  onUpdate={handleStatusUpdate}
+                  onSuccess={() => {
+                    fetchOrders();
+                    fetchStats();
+                    fetchAllOrdersForCounts();
+                  }}
+                  showToast={showToast}
                 />
               </React.Fragment>
             )}
