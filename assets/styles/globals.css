@@ -262,7 +262,13 @@ html {
 }
 
 .card-padding {
-  padding: 1.5rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .card-padding {
+    padding: 1.5rem;
+  }
 }
 
 .card-content {
