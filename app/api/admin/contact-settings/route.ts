@@ -9,6 +9,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    console.log('🔍 GET Request - Starting database query...');
+    
     // Get contact settings
     const settings = await contactDB.getContactSettings();
 
@@ -17,12 +19,15 @@ export async function GET() {
 
     const formattedSettings = {
       contactSystemEnabled: settings?.contactSystemEnabled ?? true,
-      maxPendingContacts: settings?.maxPendingContacts ?? '3',
+      maxPendingContacts: settings?.maxPendingContacts ?? 'unlimited',
       categories: categories.map((cat) => ({
         id: cat.id,
         name: cat.name
       }))
     };
+    
+    console.log('🔍 GET Request - Raw settings from DB:', settings);
+    console.log('🔍 GET Request - Formatted settings:', JSON.stringify(formattedSettings, null, 2));
 
     return NextResponse.json({
       success: true,
@@ -42,6 +47,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { contactSettings } = await request.json();
+    console.log('🔍 POST Request - Received contactSettings:', JSON.stringify(contactSettings, null, 2));
+    
     if (!contactSettings) {
       return NextResponse.json({ error: 'Contact settings data is required' }, { status: 400 });
     }
@@ -61,10 +68,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Upsert contact settings
-    await contactDB.upsertContactSettings({
+    const settingsData = {
       contactSystemEnabled: contactSettings.contactSystemEnabled ?? true,
-      maxPendingContacts: contactSettings.maxPendingContacts ?? '3'
-    });
+      maxPendingContacts: contactSettings.maxPendingContacts
+    };
+    console.log('🔍 About to upsert with data:', JSON.stringify(settingsData, null, 2));
+    
+    await contactDB.upsertContactSettings(settingsData);
 
     // Handle categories using contactDB
     console.log('📋 Processing categories:', contactSettings.categories);

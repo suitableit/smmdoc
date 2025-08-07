@@ -41,14 +41,42 @@ export async function fetchCurrencyData(): Promise<{
   }
 
   try {
-    // Fetch enabled currencies
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const currenciesResponse = await fetch(`${baseUrl}/api/currencies/enabled`);
+    // Fetch enabled currencies using relative URL
+    const currenciesResponse = await fetch('/api/currencies/enabled', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!currenciesResponse.ok) {
+      throw new Error(`Failed to fetch currencies: ${currenciesResponse.status}`);
+    }
+    
     const currenciesData = await currenciesResponse.json();
 
-    // Fetch currency settings
-    const settingsResponse = await fetch(`${baseUrl}/api/admin/currency-settings`);
-    const settingsData = await settingsResponse.json();
+    // Fetch currency settings using relative URL (admin only)
+    let settingsData = { success: false, currencySettings: null };
+
+    try {
+      const settingsResponse = await fetch('/api/admin/currency-settings', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (settingsResponse.ok) {
+        settingsData = await settingsResponse.json();
+      } else if (settingsResponse.status === 401) {
+        // User is not admin, use fallback settings
+        console.log('Currency settings: Using fallback for non-admin user');
+      } else {
+        throw new Error(`Failed to fetch currency settings: ${settingsResponse.status}`);
+      }
+    } catch (error) {
+      console.log('Currency settings: Using fallback due to error:', error);
+    }
 
     const currencies = currenciesData.success ? currenciesData.currencies : [];
     const settings = settingsData.success ? settingsData.currencySettings : {
@@ -71,9 +99,21 @@ export async function fetchCurrencyData(): Promise<{
   } catch (error) {
     console.error('Error fetching currency data:', error);
     
-    // Return fallback data
+    // Log detailed error information for debugging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+    }
+    
+    // Return comprehensive fallback data
     const fallbackCurrencies: Currency[] = [
       { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', rate: 1.0000, enabled: true },
+      { id: 2, code: 'EUR', name: 'Euro', symbol: '€', rate: 0.85, enabled: true },
+      { id: 3, code: 'GBP', name: 'British Pound', symbol: '£', rate: 0.73, enabled: true },
+      { id: 4, code: 'JPY', name: 'Japanese Yen', symbol: '¥', rate: 110.0, enabled: true },
       { id: 5, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 110.0000, enabled: true },
       { id: 6, code: 'USDT', name: 'Tether USD', symbol: '₮', rate: 1.0000, enabled: true },
     ];
@@ -85,6 +125,13 @@ export async function fetchCurrencyData(): Promise<{
       currencyPosition: 'left',
       thousandsSeparator: ',',
       decimalSeparator: '.',
+    };
+
+    // Cache fallback data to prevent repeated API calls
+    currencyCache = {
+      currencies: fallbackCurrencies,
+      settings: fallbackSettings,
+      lastFetch: Date.now(),
     };
 
     return {

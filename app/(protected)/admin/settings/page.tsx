@@ -261,7 +261,7 @@ const GeneralSettingsPage = () => {
 
   const [contactSettings, setContactSettings] = useState<ContactSettings>({
     contactSystemEnabled: true,
-    maxPendingContacts: '3',
+    maxPendingContacts: 'unlimited',
     categories: [
       { id: 1, name: 'General Inquiry' },
       { id: 2, name: 'Business Partnership' },
@@ -337,7 +337,15 @@ const GeneralSettingsPage = () => {
         // Process contact settings
         if (contactResponse.ok) {
           const data = await contactResponse.json();
-          if (data.contactSettings) setContactSettings(data.contactSettings);
+          console.log('🔍 Frontend - Contact settings response:', data);
+          if (data.success && data.contactSettings) {
+            console.log('🔍 Frontend - Setting contact settings:', data.contactSettings);
+            setContactSettings(data.contactSettings);
+          } else {
+            console.error('🔍 Frontend - Invalid contact settings response:', data);
+          }
+        } else {
+          console.error('🔍 Frontend - Contact settings API failed:', contactResponse.status);
         }
 
         // Process module settings
@@ -459,14 +467,20 @@ const GeneralSettingsPage = () => {
   const saveContactSettings = async () => {
     setIsLoading(true);
     try {
+      console.log('🔍 Frontend - Saving contact settings:', contactSettings);
       const response = await fetch('/api/admin/contact-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contactSettings }),
       });
 
-      if (response.ok) {
+      const responseData = await response.json();
+      console.log('🔍 Frontend - Save response:', responseData);
+
+      if (response.ok && responseData.success) {
         showToast('Contact settings saved successfully!', 'success');
+        // Reload settings to ensure UI is in sync
+        window.location.reload();
       } else {
         showToast('Failed to save contact settings', 'error');
       }

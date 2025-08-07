@@ -1,0 +1,40 @@
+node_modules
+build
+dist
+.git
+.trae
+.log
+
+# Scripts and test files
+scripts/
+test-*.js
+test-*.html
+check-*.js
+
+# Documentation files
+*.md
+*.txt
+
+# Database and backup files
+*.sql
+*.prisma
+prisma/schema_backup/
+prisma/contact-*.prisma
+
+# Log files
+*.log
+build-errors.log
+
+# Temporary and cache files
+temp-*
+.cache
+
+# Development files
+pages/
+
+# Large image files (keep only essential ones)
+public/uploads/
+public/users/
+
+# Environment examples
+.env.example
