@@ -1,13 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface StartCountModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderId: string | number;
   currentCount: number;
-  newStartCount: string;
-  setNewStartCount: (count: string) => void;
-  onUpdate: (orderId: string, count: number) => void;
+  onSuccess?: () => void; // Callback for successful update
+  showToast?: (message: string, type: 'success' | 'error') => void; // Toast function
 }
 
 const StartCountModal: React.FC<StartCountModalProps> = ({
@@ -15,14 +14,56 @@ const StartCountModal: React.FC<StartCountModalProps> = ({
   onClose,
   orderId,
   currentCount,
-  newStartCount,
-  setNewStartCount,
-  onUpdate,
+  onSuccess,
+  showToast,
 }) => {
+  const [newStartCount, setNewStartCount] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Set initial value when modal opens - MUST be before early return
+  useEffect(() => {
+    if (isOpen) {
+      setNewStartCount(currentCount.toString());
+    }
+  }, [isOpen, currentCount]);
+
   if (!isOpen) return null;
 
+  // Handle edit start count API call
+  const handleEditStartCount = async (orderId: string, startCount: number) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/admin/orders/${orderId}/start-count`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ startCount: startCount }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast?.('Start count updated successfully', 'success');
+        onSuccess?.(); // Refresh orders data
+        handleClose();
+      } else {
+        showToast?.(result.error || 'Failed to update start count', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating start count:', error);
+      showToast?.('Error updating start count', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleUpdate = () => {
-    onUpdate(orderId.toString(), parseInt(newStartCount) || 0);
+    if (!newStartCount.trim()) {
+      showToast?.('Please enter a valid start count', 'error');
+      return;
+    }
+    handleEditStartCount(orderId.toString(), parseInt(newStartCount) || 0);
   };
 
   const handleClose = () => {
@@ -51,15 +92,17 @@ const StartCountModal: React.FC<StartCountModalProps> = ({
         <div className="flex gap-2 justify-end">
           <button
             onClick={handleClose}
+            disabled={isLoading}
             className="btn btn-secondary"
           >
             Cancel
           </button>
           <button
             onClick={handleUpdate}
+            disabled={isLoading}
             className="btn btn-primary"
           >
-            Update
+            {isLoading ? 'Updating...' : 'Update'}
           </button>
         </div>
       </div>
