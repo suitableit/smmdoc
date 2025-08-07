@@ -278,42 +278,86 @@ const CancelRequestsPage = () => {
   });
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
 
-  // Initialize with dummy data
-  useEffect(() => {
-    const dummyData = generateDummyData();
-    setCancelRequests(dummyData);
-    
-    // Calculate stats from dummy data
-    const pending = dummyData.filter(r => r.status === 'pending').length;
-    const approved = dummyData.filter(r => r.status === 'approved').length;
-    const declined = dummyData.filter(r => r.status === 'declined').length;
-    const totalRefund = dummyData
-      .filter(r => r.status === 'approved')
-      .reduce((sum, r) => sum + (r.refundAmount || 0), 0);
+  // Fetch cancel requests from API
+  const fetchCancelRequests = async (page = 1, status = 'all', search = '') => {
+    setRequestsLoading(true);
+    setStatsLoading(true);
 
-    setStats({
-      totalRequests: dummyData.length,
-      pendingRequests: pending,
-      approvedRequests: approved,
-      declinedRequests: declined,
-      totalRefundAmount: totalRefund,
-      todayRequests: Math.floor(dummyData.length * 0.3),
-      statusBreakdown: {
-        pending,
-        approved,
-        declined
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '20',
+        ...(status !== 'all' && { status }),
+        ...(search && { search })
+      });
+
+      const response = await fetch(`/api/admin/cancel-requests?${params}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setCancelRequests(result.data || []);
+        setPagination(result.pagination || {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false
+        });
+
+        // Calculate stats from fetched data
+        const data = result.data || [];
+        const pending = data.filter(r => r.status === 'pending').length;
+        const approved = data.filter(r => r.status === 'approved').length;
+        const declined = data.filter(r => r.status === 'declined').length;
+        const totalRefund = data
+          .filter(r => r.status === 'approved')
+          .reduce((sum, r) => sum + (r.refundAmount || 0), 0);
+
+        setStats({
+          totalRequests: result.pagination?.total || data.length,
+          pendingRequests: pending,
+          approvedRequests: approved,
+          declinedRequests: declined,
+          totalRefundAmount: totalRefund,
+          todayRequests: Math.floor(data.length * 0.3),
+          statusBreakdown: {
+            pending,
+            approved,
+            declined
+          }
+        });
+      } else {
+        console.error('Failed to fetch cancel requests:', result.error);
+        showToast('Failed to load cancel requests', 'error');
       }
-    });
+    } catch (error) {
+      console.error('Error fetching cancel requests:', error);
+      showToast('Error loading cancel requests', 'error');
+    } finally {
+      setRequestsLoading(false);
+      setStatsLoading(false);
+    }
+  };
 
-    setPagination({
-      page: 1,
-      limit: 20,
-      total: dummyData.length,
-      totalPages: Math.ceil(dummyData.length / 20),
-      hasNext: dummyData.length > 20,
-      hasPrev: false
-    });
+  // Initialize with real data
+  useEffect(() => {
+    fetchCancelRequests();
   }, []);
+
+  // Fetch data when search term or status filter changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchCancelRequests(1, statusFilter, searchTerm);
+    }, 500); // Debounce search
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, statusFilter]);
+
+  // Handle pagination
+  const handlePageChange = (newPage: number) => {
+    fetchCancelRequests(newPage, statusFilter, searchTerm);
+  };
 
   // Show toast notification
   const showToast = (
@@ -372,19 +416,12 @@ const CancelRequestsPage = () => {
   };
 
   const handleRefresh = async () => {
-    setRequestsLoading(true);
-    setStatsLoading(true);
-
     try {
-      const newData = generateDummyData();
-      setCancelRequests(newData);
+      await fetchCancelRequests(pagination.page, statusFilter, searchTerm);
       showToast('Cancel requests refreshed successfully!', 'success');
     } catch (error) {
       console.error('Error refreshing data:', error);
       showToast('Error refreshing data. Please try again.', 'error');
-    } finally {
-      setStatsLoading(false);
-      setRequestsLoading(false);
     }
   };
 
@@ -1144,12 +1181,7 @@ const CancelRequestsPage = () => {
                   </div>
                   <div className="flex items-center gap-2 mt-4 md:mt-0">
                     <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          page: Math.max(1, prev.page - 1),
-                        }))
-                      }
+                      onClick={() => handlePageChange(Math.max(1, pagination.page - 1))}
                       disabled={!pagination.hasPrev || requestsLoading}
                       className="btn btn-secondary"
                     >
@@ -1168,12 +1200,7 @@ const CancelRequestsPage = () => {
                       )}
                     </span>
                     <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          page: Math.min(prev.totalPages, prev.page + 1),
-                        }))
-                      }
+                      onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.page + 1))}
                       disabled={!pagination.hasNext || requestsLoading}
                       className="btn btn-secondary"
                     >

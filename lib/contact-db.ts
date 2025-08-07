@@ -11,9 +11,12 @@ class ContactDB {
   // Contact Settings Methods
   async getContactSettings() {
     try {
+      console.log('🔍 ContactDB - Getting contact settings from database...');
+      // Always get the latest record by ID
       const settings = await this.prisma.contactSettings.findFirst({
-        orderBy: { id: 'desc' }
+        orderBy: { updatedAt: 'desc' }
       });
+      console.log('🔍 ContactDB - Raw settings from database:', settings);
       return settings;
     } catch (error) {
       console.error('Error getting contact settings:', error);
@@ -73,7 +76,7 @@ class ContactDB {
         settings = await this.prisma.contactSettings.create({
           data: {
             contactSystemEnabled: true,
-            maxPendingContacts: '3'
+            maxPendingContacts: 'unlimited'
           }
         });
       }

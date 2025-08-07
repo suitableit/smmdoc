@@ -85,8 +85,7 @@ const ContactMessagesPage = () => {
     replied: 0
   });
 
-
-  // Dummy data for contact messages (fallback)
+// Dummy data for contact messages (fallback)
   const dummyContactMessages: ContactMessage[] = [
     {
       id: '001',
@@ -223,6 +222,10 @@ const ContactMessagesPage = () => {
   // Loading states
   const [messagesLoading, setMessagesLoading] = useState(false);
 
+  // Fallback mode state
+  const [fallbackMode, setFallbackMode] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
+
   // Bulk operations state
   const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
 
@@ -243,6 +246,16 @@ const ContactMessagesPage = () => {
       if (response.ok && data.success) {
         setContactMessages(data.messages || []);
         setMessageCounts(data.messageCounts || { total: 0, unread: 0, read: 0, replied: 0 });
+        
+        // Check if we're in fallback mode
+        if (data.fallbackMode) {
+          setFallbackMode(true);
+          setWarningMessage(data.warning || 'Database connection unavailable. Showing sample data.');
+        } else {
+          setFallbackMode(false);
+          setWarningMessage('');
+        }
+        
         setPagination(prev => ({
           ...prev,
           total: data.pagination?.total || 0,
@@ -255,12 +268,16 @@ const ContactMessagesPage = () => {
         // Use dummy data as fallback
         setContactMessages(dummyContactMessages);
         setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
+        setFallbackMode(true);
+        setWarningMessage('Database connection failed. Showing sample data.');
       }
     } catch (error) {
       console.error('Error fetching contact messages:', error);
       // Use dummy data as fallback
       setContactMessages(dummyContactMessages);
       setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
+      setFallbackMode(true);
+      setWarningMessage('Database connection failed. Showing sample data.');
     } finally {
       setMessagesLoading(false);
     }
@@ -330,6 +347,15 @@ const ContactMessagesPage = () => {
       if (response.ok && data.success) {
         setContactMessages(data.messages || []);
 
+        // Check if we're in fallback mode
+        if (data.fallbackMode) {
+          setFallbackMode(true);
+          setWarningMessage(data.warning || 'Database connection unavailable. Showing sample data.');
+        } else {
+          setFallbackMode(false);
+          setWarningMessage('');
+        }
+
         // Update pagination with real data
         const totalCount = data.messageCounts?.total || 0;
         setPagination(prev => ({
@@ -352,7 +378,12 @@ const ContactMessagesPage = () => {
       }
     } catch (error) {
       console.error('Error loading contact messages:', error);
-      showToast('Failed to load contact messages', 'error');
+      // Use dummy data as fallback
+      setContactMessages(dummyContactMessages);
+      setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
+      setFallbackMode(true);
+      setWarningMessage('Database connection failed. Showing sample data.');
+      showToast('Database connection failed. Showing sample data.', 'error');
     } finally {
       setMessagesLoading(false);
     }
@@ -573,6 +604,28 @@ const ContactMessagesPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Warning Banner for Fallback Mode */}
+        {fallbackMode && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-yellow-800 mb-1">
+                Database Connection Issue
+              </h3>
+              <p className="text-sm text-yellow-700">
+                {warningMessage}
+              </p>
+              <p className="text-xs text-yellow-600 mt-1">
+                The system will automatically reconnect when the database becomes available.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Contact Messages Table */}
         <div className="card">

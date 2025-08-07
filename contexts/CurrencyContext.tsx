@@ -61,8 +61,35 @@ export function CurrencyProvider({
       const { currencies, settings } = await fetchCurrencyData();
       setAvailableCurrencies(currencies);
       setCurrencySettings(settings);
+      
+      // Log successful data load for debugging
+      console.log('Currency data loaded successfully:', {
+        currenciesCount: currencies.length,
+        defaultCurrency: settings.defaultCurrency
+      });
     } catch (error) {
       console.error('Error loading currency data:', error);
+      
+      // Set fallback data directly if fetch completely fails
+      const fallbackCurrencies: Currency[] = [
+        { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', rate: 1.0000, enabled: true },
+        { id: 5, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 110.0000, enabled: true },
+        { id: 6, code: 'USDT', name: 'Tether USD', symbol: '₮', rate: 1.0000, enabled: true },
+      ];
+      
+      const fallbackSettings: CurrencySettings = {
+        id: 1,
+        defaultCurrency: 'USD',
+        displayDecimals: 2,
+        currencyPosition: 'left',
+        thousandsSeparator: ',',
+        decimalSeparator: '.',
+      };
+      
+      setAvailableCurrencies(fallbackCurrencies);
+      setCurrencySettings(fallbackSettings);
+      
+      console.log('Using fallback currency data due to fetch error');
     } finally {
       setIsLoading(false);
     }
@@ -161,26 +188,39 @@ export function CurrencyProvider({
       const isAvailable = availableCurrencies.some(c => c.code === newCurrency);
       if (!isAvailable) {
         console.error('Currency not available:', newCurrency);
+        console.log('Available currencies:', availableCurrencies.map(c => c.code));
         return;
       }
 
-      // Update server preference if user is authenticated
-      const response = await fetch('/api/currency', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ currency: newCurrency }),
-      });
+      // Update local state immediately for better UX
+      setCurrencyState(newCurrency);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('currency', newCurrency);
+      }
 
-      if (response.ok) {
-        setCurrencyState(newCurrency);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('currency', newCurrency);
+      // Update server preference if user is authenticated (non-blocking)
+      try {
+        const response = await fetch('/api/currency', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ currency: newCurrency }),
+        });
+
+        if (!response.ok) {
+          console.warn('Failed to update currency preference on server:', response.status);
         }
+      } catch (serverError) {
+        console.warn('Server currency update failed, but local preference saved:', serverError);
       }
     } catch (error) {
       console.error('Failed to update currency:', error);
+      // Revert to previous currency if update fails
+      const savedCurrency = typeof window !== 'undefined' ? localStorage.getItem('currency') : null;
+      if (savedCurrency && savedCurrency !== newCurrency) {
+        setCurrencyState(savedCurrency);
+      }
     }
   };
 
