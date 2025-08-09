@@ -56,6 +56,7 @@ export default function ProtectedLayout({
         <SideBar
           collapsed={sidebarCollapsed}
           setCollapsed={setSidebarCollapsed}
+          session={session}
         />
       </div>
 

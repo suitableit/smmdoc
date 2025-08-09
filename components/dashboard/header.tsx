@@ -1011,17 +1011,7 @@ const Header = () => {
                 ))}
               </div>
             </DropdownMenuContent>
-          </DropdownMenu> 
-          {currentCurrencyData && !isLoading && (
-            <div className="hidden lg:flex items-center h-10">
-              <span
-                className="text-sm font-medium"
-                style={{ color: 'var(--header-text)' }}
-              >
-                1USD = {currentCurrencyData.code === 'USD' ? '1.00USD' : `${currentCurrencyData.rate.toFixed(2)}${currentCurrencyData.code}`}
-              </span>
-            </div>
-          )}
+          </DropdownMenu>
         </div>
 
         {/* Balance Button - Hidden for admin users and on mobile */}
