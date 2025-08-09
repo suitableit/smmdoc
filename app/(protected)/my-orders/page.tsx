@@ -23,6 +23,25 @@ import {
     FaTimes
 } from 'react-icons/fa';
 
+// Type definitions
+interface CancelRequest {
+  id: number;
+  status: string;
+  createdAt: string;
+}
+
+interface OrderWithCancelRequests {
+  id: number;
+  status: string;
+  cancelRequests?: CancelRequest[];
+  service?: {
+    cancel?: boolean;
+    refill?: boolean;
+    name?: string;
+  };
+  [key: string]: any;
+}
+
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
@@ -198,13 +217,9 @@ export default function OrdersList() {
   const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [status, setStatus] = useState(() => {
-    const urlStatus = searchParams.get('status');
-    if (!urlStatus) return 'all';
-    // Convert URL-friendly format back to status key
-    return urlStatus.replace('-', '_');
-  });
+  const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -228,6 +243,10 @@ export default function OrdersList() {
     orderId: null,
     reason: ''
   });
+  
+  // Track orders with pending cancel requests (for local state after submission)
+  const [localPendingCancelRequests, setLocalPendingCancelRequests] = useState<Set<number>>(new Set());
+  
   const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
 
   // Get real user orders from API
@@ -249,6 +268,13 @@ export default function OrdersList() {
     document.title = `My Orders — ${APP_NAME}`;
   }, []);
 
+  // Initialize status from URL parameters on mount
+  useEffect(() => {
+    const urlStatus = searchParams.get('status');
+    const newStatus = urlStatus ? urlStatus.replace('-', '_') : 'all';
+    setStatus(newStatus);
+  }, []);
+
   // Sync status state with URL parameters
   useEffect(() => {
     const urlStatus = searchParams.get('status');
@@ -256,7 +282,42 @@ export default function OrdersList() {
     if (newStatus !== status) {
       setStatus(newStatus);
     }
-  }, [searchParams]);
+  }, [searchParams, status]);
+
+  // Clear local pending cancel requests when data shows declined requests
+  useEffect(() => {
+    if (data?.data) {
+      const ordersWithDeclinedRequests = data.data.filter((order: any) => 
+        order.cancelRequests && 
+        order.cancelRequests.length > 0 && 
+        order.cancelRequests[0].status === 'declined'
+      );
+      
+      if (ordersWithDeclinedRequests.length > 0) {
+        setLocalPendingCancelRequests(prev => {
+          const newSet = new Set(prev);
+          ordersWithDeclinedRequests.forEach((order: any) => {
+            newSet.delete(order.id);
+          });
+          return newSet;
+        });
+      }
+    }
+  }, [data]);
+
+  // Handle search loading state
+  useEffect(() => {
+    if (search.trim()) {
+      setIsSearchLoading(true);
+      const timer = setTimeout(() => {
+        setIsSearchLoading(false);
+      }, 500); // Simulate search delay
+      
+      return () => clearTimeout(timer);
+    } else {
+      setIsSearchLoading(false);
+    }
+  }, [search]);
 
   // Show toast notification
   const showToast = (
@@ -272,8 +333,10 @@ export default function OrdersList() {
     setStatus(statusKey);
     setPage(1);
     
-    // Update URL parameters
-    const params = new URLSearchParams(searchParams.toString());
+    // Update URL parameters - create new URLSearchParams to avoid mutation
+    const currentParams = searchParams.toString();
+    const params = new URLSearchParams(currentParams);
+    
     if (statusKey === 'all') {
       params.delete('status');
     } else {
@@ -356,6 +419,9 @@ export default function OrdersList() {
       const result = await response.json();
 
       if (result.success) {
+        // Add order to local pending cancel requests
+        setLocalPendingCancelRequests(prev => new Set(prev).add(cancelModal.orderId!));
+        
         setToastMessage({
           message: result.data.message || 'Cancel request submitted successfully',
           type: 'success'
@@ -512,35 +578,7 @@ export default function OrdersList() {
     }
   };
 
-  if (error) {
-    return (
-      <div className="page-container">
-        <div className="page-content">
-          <div className="card card-padding">
-            <div className="text-red-500 text-center flex flex-col items-center py-8">
-              <FaExclamationTriangle className="text-4xl mb-4" />
-              <div className="text-lg font-medium">Error loading orders!</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="page-container">
-        <div className="page-content">
-          <div className="card card-padding">
-            <div className="text-center py-8 flex flex-col items-center">
-              <GradientSpinner size="w-14 h-14" className="mb-4" />
-              <div className="text-lg font-medium">Loading orders...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Always show the UI structure, handle loading and error states within the table
 
   return (
     <div className="page-container">
@@ -576,7 +614,7 @@ export default function OrdersList() {
       <div className="page-content">
         {/* Orders Content Card - Everything in one box */}
         <div className="card card-padding">
-          {/* Search Bar - Default Style without Button */}
+          {/* Search Bar with Spinner */}
           <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -584,15 +622,20 @@ export default function OrdersList() {
               </div>
               <input
                 type="search"
-                placeholder="Search orders..."
+                placeholder="Search by Order ID, Service name, or Category..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                className="form-field w-full pl-10 pr-10 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 autoComplete="off"
               />
+              {isSearchLoading && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none z-10">
+                  <GradientSpinner size="w-4 h-4" className="flex-shrink-0" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -660,7 +703,26 @@ export default function OrdersList() {
                 </tr>
               </thead>
               <tbody>
-                {orders.length > 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={10} className="py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <GradientSpinner size="w-12 h-12" className="mb-4" />
+                        <div className="text-lg font-medium">Loading orders...</div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={10} className="py-8 text-center text-red-500">
+                      <div className="flex flex-col items-center">
+                        <FaExclamationTriangle className="text-4xl mb-4" />
+                        <div className="text-lg font-medium">Error loading orders!</div>
+                        <div className="text-sm mt-2">Please try refreshing the page</div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : orders.length > 0 ? (
                   orders.map((order: any, index: number) => {
                     const isLastRow = index === orders.length - 1;
                     return (
@@ -781,19 +843,35 @@ export default function OrdersList() {
                                 Refill
                               </button>
                             )}
-                            {order.status === 'pending' && order.service?.cancel && (
-                              <button
-                                onClick={() => setCancelModal({
-                                  isOpen: true,
-                                  orderId: order.id,
-                                  reason: ''
-                                })}
-                                className="text-red-600 hover:text-red-800 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50"
-                                title="Cancel Order"
-                              >
-                                Cancel
-                              </button>
-                            )}
+                            {order.status === 'pending' && order.service?.cancel && (() => {
+                              // Check if there's a pending cancel request from database or local state
+                              // Only consider 'pending' status cancel requests, not 'declined' ones
+                              const hasPendingCancelRequest = 
+                                (order.cancelRequests && order.cancelRequests.some(req => req.status === 'pending')) ||
+                                localPendingCancelRequests.has(order.id);
+                              
+                              return hasPendingCancelRequest ? (
+                                <button
+                                  disabled
+                                  className="text-gray-400 text-xs px-2 py-1 border border-gray-300 rounded bg-gray-50 opacity-60 cursor-not-allowed"
+                                  title="Cancel request submitted"
+                                >
+                                  Cancel Requested
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setCancelModal({
+                                    isOpen: true,
+                                    orderId: order.id,
+                                    reason: ''
+                                  })}
+                                  className="text-red-600 hover:text-red-800 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50"
+                                  title="Cancel Order"
+                                >
+                                  Cancel
+                                </button>
+                              );
+                            })()}
                           </div>
                         </td>
                       </tr>
@@ -805,7 +883,7 @@ export default function OrdersList() {
                       <div className="flex flex-col items-center">
                         <FaClipboardList className="text-4xl text-gray-400 mb-4" />
                         <div className="text-lg font-medium">
-                          No orders found
+                          No results found!
                         </div>
                         <div className="text-sm">
                           Try adjusting your search or filter criteria

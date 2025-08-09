@@ -432,6 +432,25 @@ const CancelRequestsPage = () => {
     notes: string
   ) => {
     try {
+      // Make API call to approve the cancel request
+      const response = await fetch(`/api/admin/cancel-requests/${requestId}/approve`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refundAmount,
+          adminNotes: notes
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to approve cancel request');
+      }
+
+      // Update local state with the response data
       setCancelRequests(prev => 
         prev.map(req => 
           req.id === requestId 
@@ -446,6 +465,13 @@ const CancelRequestsPage = () => {
             : req
         )
       );
+
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        pendingRequests: prev.pendingRequests - 1,
+        approvedRequests: prev.approvedRequests + 1
+      }));
 
       showToast('Cancel request approved successfully', 'success');
       setApproveDialog({ open: false, requestId: 0, refundAmount: 0 });
@@ -465,6 +491,24 @@ const CancelRequestsPage = () => {
   // Handle request decline
   const handleDeclineRequest = async (requestId: number, reason: string) => {
     try {
+      // Make API call to decline the cancel request
+      const response = await fetch(`/api/admin/cancel-requests/${requestId}/decline`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          adminNotes: reason
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to decline cancel request');
+      }
+
+      // Update local state with the response data
       setCancelRequests(prev => 
         prev.map(req => 
           req.id === requestId 
@@ -478,6 +522,13 @@ const CancelRequestsPage = () => {
             : req
         )
       );
+
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        pendingRequests: prev.pendingRequests - 1,
+        declinedRequests: prev.declinedRequests + 1
+      }));
 
       showToast('Cancel request declined successfully', 'success');
       setDeclineDialog({ open: false, requestId: 0 });
