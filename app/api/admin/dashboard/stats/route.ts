@@ -1,29 +1,10 @@
-import { auth } from '@/auth';
+import { requireAdmin } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const session = await auth();
-    
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized', data: null },
-        { status: 401 }
-      );
-    }
-    
-    // Check if user is admin
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-    });
-    
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized', data: null },
-        { status: 403 }
-      );
-    }
+    const session = await requireAdmin();
     
     // Get total orders
     const totalOrders = await db.newOrder.count();
@@ -201,4 +182,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-} 
+}

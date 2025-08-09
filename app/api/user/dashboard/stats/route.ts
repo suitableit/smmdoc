@@ -1,17 +1,10 @@
-import { getCurrentUser } from '@/lib/auth-helpers';
+import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const session = await getCurrentUser();
-
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized', data: null },
-        { status: 401 }
-      );
-    }
+    const session = await requireAuth();
 
     // Get user with all necessary fields
     const user = await db.user.findUnique({
