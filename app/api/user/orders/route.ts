@@ -47,19 +47,29 @@ export async function GET(request: Request) {
 
     // Add search filter if provided
     if (search) {
+      // Convert search to lowercase for case-insensitive matching
+      const searchLower = search.toLowerCase();
       whereClause.OR = [
-        { link: { contains: search, mode: 'insensitive' } },
+        { 
+          id: {
+            equals: isNaN(parseInt(search)) ? undefined : parseInt(search)
+          }
+        },
+        { link: { contains: search } },
         {
           service: {
-            name: { contains: search, mode: 'insensitive' }
+            name: { contains: search }
           }
         },
         {
           category: {
-            category_name: { contains: search, mode: 'insensitive' }
+            category_name: { contains: search }
           }
         }
-      ];
+      ].filter(condition => {
+        // Remove undefined conditions
+        return Object.values(condition)[0] !== undefined;
+      });
     }
 
     // Get total count for pagination
@@ -89,6 +99,17 @@ export async function GET(request: Request) {
             id: true,
             category_name: true
           }
+        },
+        cancelRequests: {
+          select: {
+            id: true,
+            status: true,
+            createdAt: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 1
         }
       },
       orderBy: {
