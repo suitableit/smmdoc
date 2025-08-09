@@ -22,6 +22,13 @@ export const smsTemplates = {
   
   paymentCancelled: (userName: string, amount: number, transactionId: string) => 
     `Dear ${userName}, your payment of ৳${amount} has been cancelled. Transaction ID: ${transactionId}. Please contact support if needed. - SMM Panel`,
+  
+  // Contact message SMS templates
+  newContactMessageAdminSMS: (userName: string, subject: string) => 
+    `New contact message from ${userName}: ${subject.substring(0, 50)}... Check admin panel.`,
+  
+  adminReplyToUserSMS: (subject: string) => 
+    `Response received for your message "${subject.substring(0, 40)}...". Check your email or login to view.`
 };
 
 // Mock SMS service - Replace with actual SMS provider

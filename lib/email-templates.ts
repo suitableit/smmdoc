@@ -203,6 +203,280 @@ export const emailTemplates = {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pending Payment Review</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Payment Review Required</h1>
+            <div style="background-color: rgba(255,255,255,0.2); width: 80px; height: 80px; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center;">
+              <div style="color: #ffffff; font-size: 40px;">⏱️</div>
+            </div>
+          </div>
+          
+          <!-- Content -->
+          <div style="padding: 40px 30px;">
+            <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Hello Admin,</h2>
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+              A new payment requires manual review. Please check the details below and take appropriate action.
+            </p>
+            
+            <!-- Transaction Details -->
+            <div style="background-color: #fef3c7; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #f59e0b;">
+              <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px;">Transaction Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">User:</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.userName
+                  } (${data.userEmail})</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Transaction ID:</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.transactionId
+                  }</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Amount:</td>
+                  <td style="padding: 8px 0; color: #f59e0b; font-weight: bold; font-size: 18px;">${
+                    data.amount
+                  } ${data.currency || 'BDT'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Date:</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${
+                    data.date
+                  }</td>
+                </tr>
+              </table>
+            </div>
+            
+            <!-- Action Required -->
+            <div style="background-color: #fef2f2; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #ef4444;">
+              <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Action Required:</h3>
+              <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+                <li style="margin-bottom: 8px;">Review the payment transaction details</li>
+                <li style="margin-bottom: 8px;">Verify the transaction ID and amount</li>
+                <li style="margin-bottom: 8px;">Approve or reject the payment</li>
+                <li style="margin-bottom: 8px;">Notify the user of the decision</li>
+              </ul>
+            </div>
+            
+            <!-- Admin Panel Link -->
+            <div style="text-align: center; margin: 40px 0;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/transactions" 
+                 style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
+                Review Payment
+              </a>
+            </div>
+            
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+              Please handle this payment review promptly to ensure good user experience.
+            </p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+              This is an automated notification from SMMDOC Admin Panel.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+};
+
+// Contact message email templates
+export const contactEmailTemplates = {
+  // Admin notification when user submits a new contact message
+  newContactMessageAdmin: ({
+    userName,
+    userEmail,
+    subject,
+    message,
+    category,
+    messageId
+  }: {
+    userName: string;
+    userEmail: string;
+    subject: string;
+    message: string;
+    category: string;
+    messageId: number;
+  }) => ({
+    subject: `New Contact Message - ${subject}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>New Contact Message</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">New Contact Message</h1>
+            <div style="background-color: rgba(255,255,255,0.2); width: 80px; height: 80px; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center;">
+              <div style="color: #ffffff; font-size: 40px;">📧</div>
+            </div>
+          </div>
+          
+          <!-- Content -->
+          <div style="padding: 40px 30px;">
+            <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Hello Admin,</h2>
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+              A new contact message has been submitted through the website. Please review the details below.
+            </p>
+            
+            <!-- Message Details -->
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 25px; margin: 30px 0;">
+              <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">Message Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">From:</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${userName} (${userEmail})</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Category:</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${category}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Subject:</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold;">${subject}</td>
+                </tr>
+              </table>
+            </div>
+            
+            <!-- Message Content -->
+            <div style="background-color: #fff; border: 1px solid #dee2e6; border-radius: 12px; padding: 25px; margin: 30px 0;">
+              <h4 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Message:</h4>
+              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; white-space: pre-line; margin: 0;">${message}</p>
+            </div>
+            
+            <!-- Admin Panel Link -->
+            <div style="text-align: center; margin: 40px 0;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/contact-messages/${messageId}" 
+                 style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                View Message in Admin Panel
+              </a>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0;">
+              This message was sent through the contact form on SMMDOC.
+            </p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+              This is an automated notification from SMMDOC Contact System.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+
+  // User notification when admin replies to their message
+  adminReplyToUser: ({
+    userName,
+    subject,
+    adminReply,
+    adminName,
+    messageId
+  }: {
+    userName: string;
+    subject: string;
+    adminReply: string;
+    adminName: string;
+    messageId: number;
+  }) => ({
+    subject: `Reply to your message: ${subject}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Response to Your Message</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Response Received</h1>
+            <div style="background-color: rgba(255,255,255,0.2); width: 80px; height: 80px; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center;">
+              <div style="color: #ffffff; font-size: 40px;">✓</div>
+            </div>
+          </div>
+          
+          <!-- Content -->
+          <div style="padding: 40px 30px;">
+            <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Hello ${userName},</h2>
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+              We have reviewed your message and provided a response below. Thank you for reaching out to us.
+            </p>
+            
+            <!-- Original Message -->
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin: 25px 0;">
+              <h4 style="color: #6b7280; margin: 0 0 10px 0; font-size: 16px;">Your Original Message:</h4>
+              <p style="color: #1f2937; font-weight: bold; margin: 0;">${subject}</p>
+            </div>
+            
+            <!-- Admin Response -->
+            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 25px; margin: 25px 0; border-left: 4px solid #22c55e;">
+              <h4 style="color: #166534; margin: 0 0 15px 0; font-size: 18px;">Response from ${adminName}:</h4>
+              <p style="color: #15803d; font-size: 16px; line-height: 1.6; white-space: pre-line; margin: 0;">${adminReply}</p>
+            </div>
+            
+            <!-- User Panel Link -->
+            <div style="text-align: center; margin: 40px 0;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/contact-support" 
+                 style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);">
+                View All Your Messages
+              </a>
+            </div>
+            
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
+              If you need further assistance, please don't hesitate to contact us again. We're here to help!
+            </p>
+            <p style="color: #6b7280; margin: 20px 0 0 0;">
+              Best regards,<br>
+              <strong>SMMDOC Support Team</strong>
+            </p>
+            
+            <hr style="border: none; height: 1px; background-color: #e5e7eb; margin: 30px 0;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+              This is an automated notification. Please do not reply to this email.
+            </p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+              This is an automated notification from SMMDOC Support System.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  })
+};
+    subject: 'Pending Payment Requires Manual Review',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Pending Transaction Review</title>
       </head>
       <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">

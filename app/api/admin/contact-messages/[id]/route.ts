@@ -127,6 +127,53 @@ export async function PUT(
           adminReply.trim(),
           session.user.id
         );
+
+        // Send notification to user
+        try {
+          const contactMessage = await contactDB.getContactMessageById(messageId);
+          if (contactMessage && contactMessage.user) {
+            const { sendMail } = await import('@/lib/nodemailer');
+            const { contactEmailTemplates } = await import('@/lib/email-templates');
+            const { sendSMS } = await import('@/lib/sms');
+            const { smsTemplates } = await import('@/lib/sms');
+            
+            const userEmail = contactMessage.user.email;
+            const userName = contactMessage.user.name || contactMessage.user.username || 'User';
+            const userPhone = contactMessage.user.phone;
+            
+            // Send email notification to user
+            if (userEmail) {
+              const emailTemplate = contactEmailTemplates.adminReplyToUser({
+                userName,
+                subject: contactMessage.subject,
+                originalMessage: contactMessage.message,
+                adminReply: adminReply.trim(),
+                adminName: session.user.name || session.user.username || 'Admin'
+              });
+              
+              await sendMail({
+                sendTo: userEmail,
+                subject: emailTemplate.subject,
+                html: emailTemplate.html
+              });
+            }
+            
+            // Send SMS notification to user (if phone number available)
+             if (userPhone) {
+               const { isValidBangladeshiPhone } = await import('@/lib/sms');
+               if (isValidBangladeshiPhone(userPhone)) {
+                 const smsMessage = smsTemplates.adminReplyToUserSMS(contactMessage.subject);
+                 await sendSMS({
+                   to: userPhone,
+                   message: smsMessage
+                 });
+               }
+             }
+          }
+        } catch (notificationError) {
+          console.error('Error sending user notification:', notificationError);
+          // Don't fail the main request if notification fails
+        }
         break;
 
       default:
