@@ -190,29 +190,33 @@ export default function MassOrder() {
     document.title = `Mass Orders — ${APP_NAME}`;
   }, []);
 
-  // Check if mass order is enabled
+  // Check if mass order is enabled by trying to access the user mass-orders API
   useEffect(() => {
     const checkMassOrderSettings = async () => {
       try {
-        const response = await axiosInstance.get('/api/admin/module-settings');
+        // Try to get mass order stats which will check if massOrderEnabled internally
+        const response = await axiosInstance.get('/api/user/mass-orders?type=stats');
         if (response.data.success) {
-          const enabled = response.data.moduleSettings.massOrderEnabled;
-          setMassOrderEnabled(enabled);
-
-          if (!enabled) {
-            showToast('Mass Order functionality is currently disabled by admin', 'error');
-            setTimeout(() => {
-              router.push('/dashboard');
-            }, 3000);
-          }
+          setMassOrderEnabled(true);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error checking mass order settings:', error);
-        setMassOrderEnabled(false);
-        showToast('Unable to verify mass order settings', 'error');
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 3000);
+        
+        // Check if it's a 403 error (mass order disabled)
+        if (error.response?.status === 403) {
+          setMassOrderEnabled(false);
+          showToast('Mass Order functionality is currently disabled by admin', 'error');
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 3000);
+        } else {
+          // For other errors, assume it's enabled but show generic error
+          setMassOrderEnabled(false);
+          showToast('Unable to verify mass order settings', 'error');
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 3000);
+        }
       }
     };
 
@@ -366,7 +370,7 @@ export default function MassOrder() {
       const batchId = `MO-${Date.now()}-${(user?.id || Math.random()).toString().slice(-4)}`;
 
       // Submit to Mass Orders API
-      const response = await axiosInstance.post('/api/user/mass-orderss', {
+      const response = await axiosInstance.post('/api/user/mass-orders', {
         orders: orderArray,
         batchId: batchId,
       });

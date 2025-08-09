@@ -1,18 +1,11 @@
-import { auth } from '@/auth';
+import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-// POST /api/user/mass-orderss - Create multiple orders at once
+// POST /api/user/mass-orders - Create multiple orders at once
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized', data: null },
-        { status: 401 }
-      );
-    }
+    const session = await requireAuth();
 
     const user = await db.user.findUnique({
       where: { id: session.user.id },
@@ -24,13 +17,6 @@ export async function POST(request: Request) {
         total_spent: true,
       },
     });
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'User not found', data: null },
-        { status: 404 }
-      );
-    }
 
     // Check if mass order is enabled in module settings
     const moduleSettings = await db.moduleSettings.findFirst();
@@ -323,15 +309,22 @@ export async function POST(request: Request) {
   }
 }
 
-// GET /api/user/mass-orderss - Get Mass Orders templates or history
+// GET /api/user/mass-orders - Get Mass Orders templates or history
 export async function GET(request: Request) {
   try {
-    const session = await auth();
+    const session = await requireAuth();
 
-    if (!session || !session.user || !session.user.id) {
+    // Check if mass order is enabled in module settings before proceeding
+    const moduleSettings = await db.moduleSettings.findFirst();
+    const massOrderEnabled = moduleSettings?.massOrderEnabled ?? false;
+    if (!massOrderEnabled) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized', data: null },
-        { status: 401 }
+        {
+          success: false,
+          message: 'Mass Order functionality is currently disabled',
+          data: null,
+        },
+        { status: 403 }
       );
     }
 
@@ -415,11 +408,23 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error('Error fetching Mass Orders data:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    // Return 401 if auth is missing/invalid
+    if (message === 'Authentication required') {
+      return NextResponse.json(
+        {
+          success: false,
+          message,
+          error: message,
+        },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       {
         success: false,
         message: 'Error fetching Mass Orders data',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: message,
       },
       { status: 500 }
     );
