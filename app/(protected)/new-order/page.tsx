@@ -30,7 +30,6 @@ import {
     FaSearch,
     FaShieldAlt,
     FaShoppingCart,
-    FaSpinner,
     FaSpotify,
     FaTachometerAlt,
     FaTelegram,
@@ -139,7 +138,7 @@ const ServiceDetailsCard = ({
         <h3 className="text-lg font-bold leading-tight">{selected.name}</h3>
         <div className="text-sm opacity-90 mt-2">
           Max {selected.max_order || 'N/A'} ~ NO REFILL ~{' '}
-          {selected.avg_time || 'N/A'} ~ INSTANT - ${(selected.rate || 0).toFixed(3)}{' '}
+          {selected.avg_time || 'N/A'} ~ INSTANT - ${selected.rate || '0.00'}{' '}
           per 1000
         </div>
       </div>
@@ -274,7 +273,7 @@ const ServiceDetailsCard = ({
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-gray-900">
-              ${(selected.rate || 0).toFixed(3)}
+              ${selected.rate || '0.00'}
             </div>
             <div className="text-xs text-gray-500">Per 1000</div>
           </div>
@@ -298,7 +297,6 @@ function NewOrder() {
   const [servicesData, setServicesData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
-  const [isSearchLoading, setIsSearchLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
@@ -610,7 +608,6 @@ function NewOrder() {
 
   async function getServices() {
     try {
-      setIsSearchLoading(true);
       const res = await axiosInstance.get(
         `/api/user/services/neworderservice?search=${search}`
       );
@@ -649,8 +646,6 @@ function NewOrder() {
       setServicesData(fetchedServices);
     } catch (error) {
       showToast('Error fetching services', 'error');
-    } finally {
-      setIsSearchLoading(false);
     }
   }
 
@@ -904,16 +899,11 @@ function NewOrder() {
                           setShowDropdown(true);
                         }}
                         onFocus={() => setShowDropdown(true)}
-                        className="form-field w-full pl-10 pr-10 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                        className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                         placeholder="Search services..."
                         autoComplete="off"
                         style={{ width: '100%', minWidth: '0' }}
                       />
-                      {isSearchLoading && (
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none z-10">
-                          <GradientSpinner size="w-4 h-4" className="flex-shrink-0" />
-                        </div>
-                      )}
 
                       {/* Search Dropdown */}
                       {showDropdown && servicesData.length > 0 && (
@@ -991,11 +981,11 @@ function NewOrder() {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label" htmlFor="service">
-                      Service
+                    <label className="form-label" htmlFor="services">
+                      Services
                     </label>
                     <select
-                      id="service"
+                      id="services"
                       className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                       value={selectedService}
                       onChange={(e) => {
@@ -1010,7 +1000,7 @@ function NewOrder() {
                       </option>
                       {services?.map((service: any) => (
                         <option key={service.id} value={String(service.id)}>
-                          {service.name} - ${(service.rate || 0).toFixed(3)}
+                          {service.name} - ${service.rate || '0.00'}
                         </option>
                       ))}
                     </select>
@@ -1068,12 +1058,12 @@ function NewOrder() {
                     </small>
                     {qty > 0 && qty < (selected?.min_order || 0) && (
                       <div className="text-red-500 text-xs mt-1">
-                        Quantity must be at least {selected?.min_order || 0}
+                        ⚠️ Quantity must be at least {selected?.min_order || 0}
                       </div>
                     )}
                     {qty > (selected?.max_order || 999999) && (
                       <div className="text-red-500 text-xs mt-1">
-                        Quantity cannot exceed {selected?.max_order || 0}
+                        ⚠️ Quantity cannot exceed {selected?.max_order || 0}
                       </div>
                     )}
                   </div>
@@ -1081,7 +1071,7 @@ function NewOrder() {
                   {/* Price */}
                   <div className="form-group">
                     <label className="form-label" htmlFor="price">
-                      Charge (per 1000 = ${price.toFixed(3)})
+                      Charge (per 1000 = ${price.toFixed(2)})
                     </label>
                     <input
                       type="text"
@@ -1091,7 +1081,7 @@ function NewOrder() {
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       value={
                         currency === 'USD'
-                          ? `$ ${totalPrice.toFixed(3)}`
+                          ? `$ ${totalPrice.toFixed(4)}`
                           : currency === 'BDT'
                           ? `৳ ${totalPrice.toFixed(2)}`
                           : `${currentCurrencyData?.symbol || '$'}${totalPrice.toFixed(2)}`
