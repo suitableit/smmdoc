@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
+import { Session } from 'next-auth';
 import * as FaIcons from 'react-icons/fa';
 
 interface NavItem {
@@ -51,30 +52,26 @@ interface UserSections {
 
 interface SideBarNavProps {
   collapsed?: boolean;
-  user?: {
-    data?: {
-      role?: string;
-    };
-  };
+  session?: Session | null;
   setOpen?: () => void;
 }
 
 export default function SideBarNav({
   collapsed = false,
-  user,
+  session,
   setOpen = () => {},
 }: SideBarNavProps) {
   const path = usePathname() || '';
-  const isAdmin = user?.data?.role === 'admin';
+  const isAdmin = session?.user?.role === 'admin';
 
   // Memoize items based on user role to prevent unnecessary recalculations
   const items = useMemo(() => {
     return isAdmin
       ? adminNavItems
       : userNavItems.filter((item: NavItem) =>
-          item.roles.includes(user?.data?.role || 'user')
+          item.roles.includes(session?.user?.role || 'user')
         );
-  }, [isAdmin, user?.data?.role]);
+  }, [isAdmin, session?.user?.role]);
 
   // Memoize sections to prevent unnecessary recalculations on each render
   const sections = useMemo<AdminSections | UserSections>(() => {
@@ -450,8 +447,8 @@ export default function SideBarNav({
     );
   };
 
-  // Return null if user data is not available yet
-  if (!user) return null;
+  // Return null if session data is not available yet
+  if (!session?.user) return null;
 
   // Helper function to safely access sections with proper typing
   const getSectionItems = (sectionKey: keyof (AdminSections | UserSections)): NavItem[] => {

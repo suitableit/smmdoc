@@ -5,6 +5,7 @@ import { APP_NAME } from '@/lib/constants';
 import { useGetUserOrdersQuery } from '@/lib/services/userOrderApi';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import moment from 'moment';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import {
     FaBan,
@@ -193,9 +194,16 @@ const RefillModal = ({
 };
 
 export default function OrdersList() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [status, setStatus] = useState('all');
+  const [status, setStatus] = useState(() => {
+    const urlStatus = searchParams.get('status');
+    if (!urlStatus) return 'all';
+    // Convert URL-friendly format back to status key
+    return urlStatus.replace('-', '_');
+  });
   const [search, setSearch] = useState('');
   const [toastMessage, setToastMessage] = useState<{
     message: string;
@@ -241,6 +249,15 @@ export default function OrdersList() {
     document.title = `My Orders — ${APP_NAME}`;
   }, []);
 
+  // Sync status state with URL parameters
+  useEffect(() => {
+    const urlStatus = searchParams.get('status');
+    const newStatus = urlStatus ? urlStatus.replace('-', '_') : 'all';
+    if (newStatus !== status) {
+      setStatus(newStatus);
+    }
+  }, [searchParams]);
+
   // Show toast notification
   const showToast = (
     message: string,
@@ -248,6 +265,25 @@ export default function OrdersList() {
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Handle status filter change with URL parameters
+  const handleStatusChange = (statusKey: string) => {
+    setStatus(statusKey);
+    setPage(1);
+    
+    // Update URL parameters
+    const params = new URLSearchParams(searchParams.toString());
+    if (statusKey === 'all') {
+      params.delete('status');
+    } else {
+      // Convert status key to URL-friendly format
+      const urlStatus = statusKey.replace('_', '-');
+      params.set('status', urlStatus);
+    }
+    
+    const newUrl = params.toString() ? `?${params.toString()}` : '/my-orders';
+    router.push(newUrl);
   };
 
   const orders = useMemo(() => {
@@ -448,7 +484,7 @@ export default function OrdersList() {
     },
     {
       key: 'cancelled',
-      label: 'Canceled',
+      label: 'Cancelled',
       icon: FaBan,
       color: 'bg-gray-600 hover:bg-gray-700',
     },
@@ -571,10 +607,7 @@ export default function OrdersList() {
                 return (
                   <button
                     key={filter.key}
-                    onClick={() => {
-                      setStatus(filter.key);
-                      setPage(1);
-                    }}
+                    onClick={() => handleStatusChange(filter.key)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                       isActive
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
