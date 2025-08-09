@@ -9,51 +9,13 @@ import {
 import { MenuIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import SideBarNav from './sideBarNav';
-
-interface UserData {
-  success: boolean;
-  data?: {
-    name?: string;
-    username?: string;
-    balance?: number;
-    role?: string;
-  };
-  error?: string;
-}
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 
 export default function MobileSidebar() {
+  const { data: session } = useSession();
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<UserData | null>(null);
-
-  useEffect(() => {
-    // Fetch user data on client side
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/user/current');
-        const userData = await response.json();
-
-        if (userData.success) {
-          setUser(userData);
-        } else {
-          console.error('Failed to fetch user data:', userData.error);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-
-    // Initial fetch
-    fetchUser();
-
-    // Refresh user data every 30 seconds
-    const intervalId = setInterval(() => {
-      fetchUser();
-    }, 30000);
-
-    return () => clearInterval(intervalId);
-  }, []);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -88,7 +50,7 @@ export default function MobileSidebar() {
 
         {/* Mobile Sidebar Navigation */}
         <div className="sidebar-nav overflow-y-auto overflow-x-hidden h-[calc(100vh-6rem)]">
-          <SideBarNav user={user as any} setOpen={() => setOpen(false)} />
+          <SideBarNav session={session} setOpen={() => setOpen(false)} />
         </div>
       </SheetContent>
     </Sheet>
