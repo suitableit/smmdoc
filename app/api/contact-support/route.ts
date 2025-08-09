@@ -93,13 +93,68 @@ export async function POST(request: NextRequest) {
     }
 
     // Create contact message
-    await contactDB.createContactMessage({
-      userId: session.user.id,
-      subject: subject.trim(),
-      message: message.trim(),
-      categoryId: parseInt(category),
-      attachments: attachmentsJson || undefined
-    });
+    const messageId = await (async () => {
+      const result = await contactDB.createContactMessage({
+        userId: session.user.id,
+        subject: subject.trim(),
+        message: message.trim(),
+        categoryId: parseInt(category),
+        attachments: attachmentsJson || undefined
+      });
+      
+      // Get the newly created message ID
+      const messages = await contactDB.getContactMessages({
+        search: subject.trim(),
+        limit: 1
+      });
+      
+      return messages.length > 0 ? messages[0].id : 0;
+    })();
+
+    // Send notification to admin
+    try {
+      const { sendMail } = await import('@/lib/nodemailer');
+      const { contactEmailTemplates } = await import('@/lib/email-templates');
+      const { sendSMS } = await import('@/lib/sms');
+      const { smsTemplates } = await import('@/lib/sms');
+      
+      // Get user details for notification
+      const userEmail = session.user.email;
+      const userName = session.user.name || session.user.username || 'User';
+      
+      // Send email notification to admin
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_FROM;
+      if (adminEmail) {
+        const emailTemplate = contactEmailTemplates.newContactMessageAdmin({
+          userName,
+          userEmail: userEmail || 'No email',
+          subject: subject.trim(),
+          message: message.trim(),
+          category: categories.find(cat => cat.id === parseInt(category))?.name || 'Unknown',
+          messageId: messageId
+        });
+        
+        await sendMail({
+          sendTo: adminEmail,
+          subject: emailTemplate.subject,
+          html: emailTemplate.html
+        });
+      }
+      
+      // Send SMS notification to admin (if configured)
+      const adminPhone = process.env.ADMIN_PHONE;
+      if (adminPhone) {
+        const smsMessage = smsTemplates.newContactMessageAdminSMS(userName, subject.trim());
+        await sendSMS({
+          to: adminPhone,
+          message: smsMessage
+        });
+      }
+      
+    } catch (notificationError) {
+      console.error('Error sending admin notification:', notificationError);
+      // Don't fail the main request if notification fails
+    }
 
     return NextResponse.json({
       success: true,
