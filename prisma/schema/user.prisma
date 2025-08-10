@@ -23,7 +23,7 @@ model User {
   balanceUSD              Float                  @default(0)
   preferredCurrency       String                 @default("USD")
   language                String                 @default("en")
-  timezone                String                 @default("21600")
+  timezone                String                 @default("Asia/Dhaka")
   accounts                Account?
   activityLogs            ActivityLog[]
   addFunds                AddFund[]
