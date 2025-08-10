@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
 import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
-import { emailTemplates } from '@/lib/email-templates';
+import { emailTemplates, transactionEmailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -227,8 +227,8 @@ export async function POST(request: NextRequest) {
         const emailData = emailTemplates.paymentSuccess({
           userName: user.name || 'Customer',
           userEmail: user.email,
-          transactionId: result.transactionRecord.id,
-          amount: amount,
+          transactionId: result.transactionRecord.id.toString(),
+          amount: amount.toString(),
           currency: transactionCurrency,
           date: new Date().toLocaleDateString(),
           userId: user.id.toString()
@@ -246,11 +246,11 @@ export async function POST(request: NextRequest) {
 
       // Send admin notification
       const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-      const adminEmailData = emailTemplates.adminAutoApproved({
+      const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: user.name || 'Unknown User',
         userEmail: user.email || '',
-        transactionId: result.transactionRecord.id,
-        amount: amount,
+        transactionId: result.transactionRecord.id.toString(),
+        amount: amount.toString(),
         currency: transactionCurrency,
         date: new Date().toLocaleDateString(),
         userId: user.id.toString()

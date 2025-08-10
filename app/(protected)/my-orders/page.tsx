@@ -270,14 +270,14 @@ export default function OrdersList() {
 
   // Initialize status from URL parameters on mount
   useEffect(() => {
-    const urlStatus = searchParams.get('status');
+    const urlStatus = searchParams?.get('status');
     const newStatus = urlStatus ? urlStatus.replace('-', '_') : 'all';
     setStatus(newStatus);
   }, []);
 
   // Sync status state with URL parameters
   useEffect(() => {
-    const urlStatus = searchParams.get('status');
+    const urlStatus = searchParams?.get('status');
     const newStatus = urlStatus ? urlStatus.replace('-', '_') : 'all';
     if (newStatus !== status) {
       setStatus(newStatus);
@@ -334,7 +334,7 @@ export default function OrdersList() {
     setPage(1);
     
     // Update URL parameters - create new URLSearchParams to avoid mutation
-    const currentParams = searchParams.toString();
+    const currentParams = searchParams?.toString() || '';
     const params = new URLSearchParams(currentParams);
     
     if (statusKey === 'all') {
@@ -847,7 +847,7 @@ export default function OrdersList() {
                               // Check if there's a pending cancel request from database or local state
                               // Only consider 'pending' status cancel requests, not 'declined' ones
                               const hasPendingCancelRequest = 
-                                (order.cancelRequests && order.cancelRequests.some(req => req.status === 'pending')) ||
+                                (order.cancelRequests && order.cancelRequests.some((req: CancelRequest) => req.status === 'pending')) ||
                                 localPendingCancelRequests.has(order.id);
                               
                               return hasPendingCancelRequest ? (

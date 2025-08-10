@@ -307,12 +307,12 @@ const CancelRequestsPage = () => {
 
         // Calculate stats from fetched data
         const data = result.data || [];
-        const pending = data.filter(r => r.status === 'pending').length;
-        const approved = data.filter(r => r.status === 'approved').length;
-        const declined = data.filter(r => r.status === 'declined').length;
+        const pending = data.filter((r: CancelRequest) => r.status === 'pending').length;
+        const approved = data.filter((r: CancelRequest) => r.status === 'approved').length;
+        const declined = data.filter((r: CancelRequest) => r.status === 'declined').length;
         const totalRefund = data
-          .filter(r => r.status === 'approved')
-          .reduce((sum, r) => sum + (r.refundAmount || 0), 0);
+          .filter((r: CancelRequest) => r.status === 'approved')
+          .reduce((sum: number, r: CancelRequest) => sum + (r.refundAmount || 0), 0);
 
         setStats({
           totalRequests: result.pagination?.total || data.length,

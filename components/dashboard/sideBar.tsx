@@ -23,7 +23,7 @@ function SideBarContent({
 }: {
   collapsed: boolean;
   setCollapsed: (value: boolean) => void;
-  session: Session | null;
+  session: Session | null | undefined;
 }) {
   return (
     <div

@@ -79,7 +79,7 @@ export async function fetchCurrencyData(): Promise<{
     }
 
     const currencies = currenciesData.success ? currenciesData.currencies : [];
-    const settings = settingsData.success ? settingsData.currencySettings : {
+    const settings = settingsData.success && settingsData.currencySettings ? settingsData.currencySettings : {
       id: 1,
       defaultCurrency: 'USD',
       displayDecimals: 2,

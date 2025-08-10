@@ -1,8 +1,8 @@
 interface TransactionEmailData {
   userName: string;
   userEmail: string;
-  transactionId: number;
-  amount: number;
+  transactionId: string;
+  amount: string;
   currency?: string;
   date: string;
   userId?: string;
@@ -470,6 +470,22 @@ export const contactEmailTemplates = {
     `,
   })
 };
+
+// Transaction Email Data Interface
+interface TransactionEmailData {
+  userName: string;
+  userEmail: string;
+  userId?: string;
+  transactionId: string;
+  amount: string;
+  currency?: string;
+  phone?: string;
+  date: string;
+}
+
+// Transaction Email Templates
+export const transactionEmailTemplates = {
+  adminPendingReview: (data: TransactionEmailData) => ({
     subject: 'Pending Payment Requires Manual Review',
     html: `
       <!DOCTYPE html>

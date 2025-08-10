@@ -99,7 +99,7 @@ export async function POST(
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
           transactionId: modifiedTransactionId?.trim() || transaction.transaction_id || 'N/A',
-          amount: transaction.amount,
+          amount: transaction.amount.toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()

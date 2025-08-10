@@ -1,13 +1,9 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-
-
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { APP_NAME } from '@/lib/constants';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import {
     FaCheck,
     FaGlobe,
@@ -698,9 +694,11 @@ const GeneralSettingsPage = () => {
                   <label className="form-label">Site Icon</label>
                   <div className="flex items-center gap-3">
                     {generalSettings.siteIcon && (
-                      <img
+                      <Image
                         src={generalSettings.siteIcon}
                         alt="Site Icon"
+                        width={32}
+                        height={32}
                         className="w-8 h-8 rounded object-cover"
                       />
                     )}
@@ -724,9 +722,11 @@ const GeneralSettingsPage = () => {
                   <label className="form-label">Site Logo</label>
                   <div className="flex items-center gap-3">
                     {generalSettings.siteLogo && (
-                      <img
+                      <Image
                         src={generalSettings.siteLogo}
                         alt="Site Logo"
+                        width={128}
+                        height={32}
                         className="h-8 max-w-32 object-contain"
                       />
                     )}
@@ -843,9 +843,11 @@ const GeneralSettingsPage = () => {
                   <label className="form-label">Thumbnail (1200x630px)</label>
                   <div className="flex items-center gap-3">
                     {metaSettings.thumbnail && (
-                      <img
+                      <Image
                         src={metaSettings.thumbnail}
                         alt="SEO Thumbnail"
+                        width={80}
+                        height={40}
                         className="w-20 h-10 rounded object-cover border"
                       />
                     )}

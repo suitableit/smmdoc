@@ -138,17 +138,17 @@ export async function PUT(
             const { smsTemplates } = await import('@/lib/sms');
             
             const userEmail = contactMessage.user.email;
-            const userName = contactMessage.user.name || contactMessage.user.username || 'User';
-            const userPhone = contactMessage.user.phone;
+            const userName = (contactMessage.user as any).name || contactMessage.user.username || 'User';
+            const userPhone = (contactMessage.user as any).phone;
             
             // Send email notification to user
             if (userEmail) {
               const emailTemplate = contactEmailTemplates.adminReplyToUser({
                 userName,
                 subject: contactMessage.subject,
-                originalMessage: contactMessage.message,
                 adminReply: adminReply.trim(),
-                adminName: session.user.name || session.user.username || 'Admin'
+                adminName: session.user.name || session.user.username || 'Admin',
+                messageId: messageId
               });
               
               await sendMail({

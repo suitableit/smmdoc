@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { emailTemplates } from '@/lib/email-templates';
+import { emailTemplates, transactionEmailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -153,8 +153,8 @@ export async function PATCH(
         const emailData = emailTemplates.paymentSuccess({
           userName: result.currentUser.name || 'Customer',
           userEmail: result.currentUser.email,
-          transactionId: Number(transaction.transaction_id) || transaction.id,
-          amount: transaction.currency === 'USD' ? transaction.amount : transaction.amount * 120, // Show original amount
+          transactionId: (transaction.transaction_id || transaction.id.toString()),
+          amount: (transaction.currency === 'USD' ? transaction.amount : transaction.amount * 120).toString(), // Show original amount
           currency: transaction.currency || 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
@@ -170,11 +170,11 @@ export async function PATCH(
 
       // Send admin notification
       const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-      const adminEmailData = emailTemplates.adminAutoApproved({
+      const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: result.currentUser.name || 'Unknown User',
         userEmail: result.currentUser.email || '',
-        transactionId: Number(transaction.transaction_id) || transaction.id,
-        amount: transaction.amount,
+        transactionId: (transaction.transaction_id || transaction.id.toString()),
+        amount: transaction.amount.toString(),
         currency: 'BDT',
         date: new Date().toLocaleDateString(),
         userId: transaction.userId.toString()
