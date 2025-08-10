@@ -304,6 +304,32 @@ Support Manager`,
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // Create messages array with customer message and admin reply if exists
+        const messages: ContactMessage[] = [];
+        
+        // Add customer's original message
+        if (data.message.message) {
+          messages.push({
+            id: `customer_${data.message.id}`,
+            type: 'customer',
+            author: data.message.user?.username || 'Unknown User',
+            content: data.message.message,
+            createdAt: data.message.createdAt,
+            attachments: data.message.attachments || []
+          });
+        }
+        
+        // Add admin reply if exists
+        if (data.message.adminReply) {
+          messages.push({
+            id: `admin_${data.message.id}`,
+            type: 'staff',
+            author: data.message.repliedByUser?.username || 'Admin',
+            content: data.message.adminReply,
+            createdAt: data.message.repliedAt || data.message.updatedAt
+          });
+        }
+
         // Transform API data to match the expected format
         const transformedData: ContactMessageDetails = {
           id: data.message.id.toString(),
@@ -315,7 +341,7 @@ Support Manager`,
           createdAt: data.message.createdAt,
           lastUpdated: data.message.updatedAt,
           status: data.message.status,
-          messages: [], // Will be populated with conversation history
+          messages: messages, // Now populated with actual conversation
           notes: [], // Default empty notes
           timeSpent: 0, // Default value
           userInfo: {
