@@ -7,6 +7,7 @@ import {
     FaChevronDown,
     FaChevronUp,
     FaComments,
+    FaEdit,
     FaEnvelope,
     FaEye,
     FaFileAlt,
@@ -18,6 +19,7 @@ import {
     FaPaperPlane,
     FaPlus,
     FaReply,
+    FaSave,
     FaStickyNote,
     FaTimes,
     FaUser,
@@ -259,6 +261,12 @@ Support Manager`,
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+  
+  // Edit state management
+  const [isEditing, setIsEditing] = useState(false);
+  const [editSubject, setEditSubject] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Utility functions
   const formatMessageID = (id: string) => {
@@ -452,6 +460,64 @@ Support Manager`,
     }
   };
 
+  // Handle edit mode
+  const handleEditClick = () => {
+    setEditSubject(contactDetails.subject);
+    setEditCategory(contactDetails.category);
+    setIsEditing(true);
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditSubject('');
+    setEditCategory('');
+  };
+
+  // Handle save edit
+  const handleSaveEdit = async () => {
+    if (!editSubject.trim() || !editCategory.trim()) {
+      showToast('Subject and category are required', 'error');
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update',
+          subject: editSubject.trim(),
+          category: editCategory.trim()
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setContactDetails(prev => ({
+          ...prev,
+          subject: editSubject.trim(),
+          category: editCategory.trim(),
+          lastUpdated: new Date().toISOString()
+        }));
+        
+        setIsEditing(false);
+        showToast('Message updated successfully', 'success');
+      } else {
+        showToast(data.error || 'Error updating message', 'error');
+      }
+    } catch (error) {
+      showToast('Error updating message', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Handle file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -527,20 +593,84 @@ Support Manager`,
                   <FaEnvelope />
                 </div>
                 <h3 className="card-title">Message Information</h3>
+                {!isEditing ? (
+                  <button
+                    onClick={handleEditClick}
+                    className="btn btn-secondary flex items-center gap-2 ml-auto"
+                  >
+                    <FaEdit className="h-4 w-4" />
+                    Edit
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 ml-auto">
+                    <button
+                      onClick={handleCancelEdit}
+                      className="btn btn-secondary flex items-center gap-2"
+                      disabled={isSaving}
+                    >
+                      <FaTimes className="h-4 w-4" />
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveEdit}
+                      className="btn btn-primary flex items-center gap-2"
+                      disabled={isSaving}
+                    >
+                      {isSaving ? (
+                        <ButtonLoader />
+                      ) : (
+                        <FaSave className="h-4 w-4" />
+                      )}
+                      {isSaving ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
                   <label className="form-label">Subject</label>
-                  <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{contactDetails.subject}</p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editSubject}
+                      onChange={(e) => setEditSubject(e.target.value)}
+                      className="form-field mt-1"
+                      placeholder="Enter subject"
+                      disabled={isSaving}
+                    />
+                  ) : (
+                    <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{contactDetails.subject}</p>
+                  )}
                 </div>
                 <div>
                   <label className="form-label">Category</label>
-                  <div className="mt-1">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                      {contactDetails.category}
-                    </span>
-                  </div>
+                  {isEditing ? (
+                    <select
+                      value={editCategory}
+                      onChange={(e) => setEditCategory(e.target.value)}
+                      className="form-field mt-1"
+                      disabled={isSaving}
+                    >
+                      <option value="">Select Category</option>
+                      <option value="Instagram Services">Instagram Services</option>
+                      <option value="Facebook Services">Facebook Services</option>
+                      <option value="Twitter Services">Twitter Services</option>
+                      <option value="YouTube Services">YouTube Services</option>
+                      <option value="TikTok Services">TikTok Services</option>
+                      <option value="General Support">General Support</option>
+                      <option value="Billing Question">Billing Question</option>
+                      <option value="Feature Request">Feature Request</option>
+                      <option value="Technical Issue">Technical Issue</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  ) : (
+                    <div className="mt-1">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                        {contactDetails.category}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="form-label">Status</label>
