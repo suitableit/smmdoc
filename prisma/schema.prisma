@@ -61,7 +61,7 @@ model User {
   balanceUSD            Float                  @default(0) // Store balance in USD for conversion
   preferredCurrency     String                 @default("USD") // User's display preference
   language              String                 @default("en")
-  timezone              String                 @default("21600")
+  timezone              String                 @default("Asia/Dhaka")
   apiKey                String?
   total_deposit         Float                  @default(0)
   total_spent           Float                  @default(0)

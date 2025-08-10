@@ -35,9 +35,9 @@ export function TransactionsList({
   const formatTransactionCurrency = (amount: number, transactionCurrency?: string) => {
     // Display amount in the currency it was originally added/deducted
     if (transactionCurrency === 'USD' || transactionCurrency === 'USDT') {
-      return `$${amount.toFixed(2)}`;
+      return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     } else {
-      return `৳${amount.toFixed(2)}`;
+      return `৳${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
   };
 
@@ -65,9 +65,6 @@ export function TransactionsList({
                 ID
               </th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">
-                Date and Time
-              </th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">
                 Transaction ID
               </th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">
@@ -78,6 +75,9 @@ export function TransactionsList({
               </th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">
                 Method
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">
+                Date and Time
               </th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">
                 Status
@@ -94,16 +94,6 @@ export function TransactionsList({
                 <td className="py-3 px-4">
                   <span className="text-sm font-medium text-gray-900">
                     {index + 1}
-                  </span>
-                </td>
-                <td className="py-3 px-4">
-                  <span className="text-sm text-gray-700">
-                    {new Intl.DateTimeFormat('en', {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                      hour12: false,
-                      timeZone: 'Asia/Dhaka',
-                    }).format(new Date(transaction.createdAt))}
                   </span>
                 </td>
                 <td className="py-3 px-4">
@@ -126,6 +116,16 @@ export function TransactionsList({
                     {transaction.payment_method ||
                       transaction.method ||
                       'UddoktaPay'}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm text-gray-700">
+                    {new Intl.DateTimeFormat('en', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                      hour12: false,
+                      timeZone: 'Asia/Dhaka',
+                    }).format(new Date(transaction.createdAt))}
                   </span>
                 </td>
                 <td className="py-3 px-4">

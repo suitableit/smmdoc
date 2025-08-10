@@ -32,7 +32,7 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
 );
 
 // Mock components and hooks for demonstration
-const ButtonLoader = () => <div className="loading-spinner"></div>;
+
 
 // Toast/Twist Message Component using CSS classes
 const Toast = ({
@@ -140,6 +140,9 @@ const ProfilePage = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [pendingEmailChange, setPendingEmailChange] = useState<string | null>(null);
   const [isEmailVerificationPending, setIsEmailVerificationPending] = useState(false);
+  const [isGeneratingApiKey, setIsGeneratingApiKey] = useState(false);
+  const [isSavingTimezone, setIsSavingTimezone] = useState(false);
+  const [isSavingLanguage, setIsSavingLanguage] = useState(false);
 
   // Form validation states
   const [validationErrors, setValidationErrors] = useState<{
@@ -161,26 +164,76 @@ const ProfilePage = () => {
     { value: 'hi', label: 'Hindi' },
   ];
 
-  const timezones = [
-    {
-      value: '21600',
-      label: '(UTC +6:00) Bangladesh Standard Time, Bhutan Time, Omsk Time',
-    },
-    { value: '0', label: '(UTC) Greenwich Mean Time, Western European Time' },
-    {
-      value: '3600',
-      label: '(UTC +1:00) Central European Time, West Africa Time',
-    },
-    {
-      value: '19800',
-      label: '(UTC +5:30) Indian Standard Time, Sri Lanka Time',
-    },
-    {
-      value: '-18000',
-      label:
-        '(UTC -5:00) Eastern Standard Time, Western Caribbean Standard Time',
-    },
-  ];
+  // Generate dynamic timezone data
+  const getTimezones = () => {
+    try {
+      // Get all supported timezones
+      const timezones = Intl.supportedValuesOf('timeZone');
+      
+      return timezones.map(timezone => {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('en', {
+          timeZone: timezone,
+          timeZoneName: 'longOffset'
+        });
+        
+        // Get the offset
+        const offsetString = formatter.formatToParts(now)
+          .find(part => part.type === 'timeZoneName')?.value || '';
+        
+        // Calculate offset in seconds for sorting
+        const offsetMinutes = -now.getTimezoneOffset();
+        const targetDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+        const localDate = new Date(now.toLocaleString('en-US'));
+        const offsetSeconds = Math.round((targetDate.getTime() - localDate.getTime()) / 1000) + (offsetMinutes * 60);
+        
+        return {
+          value: timezone, // Use timezone identifier as value instead of offset
+          label: `${offsetString} ${timezone.replace('_', ' ')}`,
+          timezone: timezone,
+          offsetSeconds: offsetSeconds // Keep for sorting
+        };
+      }).sort((a, b) => {
+        // Sort by offset, then by timezone name
+        if (a.offsetSeconds !== b.offsetSeconds) {
+          return a.offsetSeconds - b.offsetSeconds;
+        }
+        return a.timezone.localeCompare(b.timezone);
+      });
+    } catch (error) {
+      console.error('Error generating timezones:', error);
+      // Fallback to original hardcoded timezones
+      return [
+        {
+          value: 'Asia/Dhaka',
+          label: '(UTC+06:00) Asia/Dhaka',
+          timezone: 'Asia/Dhaka'
+        },
+        { 
+          value: 'UTC', 
+          label: '(UTC+00:00) UTC',
+          timezone: 'UTC'
+        },
+        {
+          value: 'Europe/Berlin',
+          label: '(UTC+01:00) Europe/Berlin',
+          timezone: 'Europe/Berlin'
+        },
+        {
+          value: 'Asia/Kolkata',
+          label: '(UTC+05:30) Asia/Kolkata',
+          timezone: 'Asia/Kolkata'
+        },
+        {
+          value: 'America/New_York',
+          label: '(UTC-05:00) America/New York',
+          timezone: 'America/New_York'
+        },
+      ];
+    }
+  };
+
+  const timezones = getTimezones();
 
   // Load user data on component mount
   useEffect(() => {
@@ -198,7 +251,11 @@ const ProfilePage = () => {
           // Set component state from userData
           setTwoFactor(userData.isTwoFactorEnabled || false);
           setSelectedLanguage((userData as any).language || 'en');
-          setSelectedTimezone((userData as any).timezone || '21600');
+          
+          // Set default timezone to Asia/Dhaka for all users
+          const userTimezone = (userData as any).timezone;
+          // Always default to Asia/Dhaka if no timezone is set
+          setSelectedTimezone(userTimezone || 'Asia/Dhaka');
 
           // Initialize profile data
           setProfileData({
@@ -369,6 +426,7 @@ const ProfilePage = () => {
 
   // Handle API key generation
   const handleApiKeyGeneration = async () => {
+    setIsGeneratingApiKey(true);
     try {
       const response = await fetch('/api/user/generate-api-key', {
         method: 'POST',
@@ -409,11 +467,14 @@ const ProfilePage = () => {
     } catch (error) {
       console.error('API key generation error:', error);
       showToast('Error generating API key', 'error');
+    } finally {
+      setIsGeneratingApiKey(false);
     }
   };
 
   // Handle timezone save
   const handleTimezoneSave = async () => {
+    setIsSavingTimezone(true);
     try {
       const response = await fetch('/api/user/update-timezone', {
         method: 'POST',
@@ -442,11 +503,14 @@ const ProfilePage = () => {
     } catch (error) {
       console.error('Timezone update error:', error);
       showToast('Error updating timezone', 'error');
+    } finally {
+      setIsSavingTimezone(false);
     }
   };
 
   // Handle language save
   const handleLanguageSave = async () => {
+    setIsSavingLanguage(true);
     try {
       const response = await fetch('/api/user/update-language', {
         method: 'POST',
@@ -475,6 +539,8 @@ const ProfilePage = () => {
     } catch (error) {
       console.error('Language update error:', error);
       showToast('Error updating language', 'error');
+    } finally {
+      setIsSavingLanguage(false);
     }
   };
 
@@ -964,7 +1030,7 @@ const ProfilePage = () => {
                   <input
                     type="text"
                     value={
-                      isEditingProfile ? profileData.username : user?.username || ''
+                      isEditingProfile ? profileData.username : (user?.username || profileData.username || '')
                     }
                     onChange={(e) =>
                       handleProfileDataChange('username', e.target.value)
@@ -1053,7 +1119,7 @@ const ProfilePage = () => {
                       disabled={isLoading}
                       className="btn btn-primary"
                     >
-                      {isLoading ? <ButtonLoader /> : 'Save Changes'}
+                      {isLoading ? 'Saving...' : 'Save Changes'}
                     </button>
                   ) : (
                     <button
@@ -1116,7 +1182,7 @@ const ProfilePage = () => {
                   />
                 </div>
                 <label htmlFor="avatar-upload" className="btn btn-primary cursor-pointer">
-                  {isUploadingAvatar ? <ButtonLoader /> : 'Upload Photo'}
+                  {isUploadingAvatar ? 'Uploading...' : 'Upload Photo'}
                 </label>
                 {avatarPreview && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -1213,7 +1279,7 @@ const ProfilePage = () => {
                   disabled={isLoading}
                   className="btn btn-primary w-full"
                 >
-                  {isLoading ? <ButtonLoader /> : 'Change Password'}
+                  {isLoading ? 'Changing Password...' : 'Change Password'}
                 </button>
               </form>
             </div>
@@ -1328,9 +1394,10 @@ const ProfilePage = () => {
 
                       <button
                         onClick={handleApiKeyGeneration}
+                        disabled={isGeneratingApiKey}
                         className="btn btn-primary"
                       >
-                        {apiKey ? 'Generate New' : 'Generate'}
+                        {isGeneratingApiKey ? 'Generating...' : (apiKey ? 'Generate New' : 'Generate')}
                       </button>
                     </div>
                   </div>
@@ -1355,8 +1422,8 @@ const ProfilePage = () => {
                     onChange={(e) => setSelectedTimezone(e.target.value)}
                     className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   >
-                    {timezones.map((tz) => (
-                      <option key={tz.value} value={tz.value}>
+                    {timezones.map((tz, index) => (
+                      <option key={`${tz.timezone}-${index}`} value={tz.value}>
                         {tz.label}
                       </option>
                     ))}
@@ -1364,9 +1431,10 @@ const ProfilePage = () => {
                 </div>
                 <button
                   onClick={handleTimezoneSave}
+                  disabled={isSavingTimezone}
                   className="btn btn-primary"
                 >
-                  Save Timezone
+                  {isSavingTimezone ? 'Saving...' : 'Save Timezone'}
                 </button>
               </div>
             </div>
@@ -1397,9 +1465,10 @@ const ProfilePage = () => {
                 </div>
                 <button
                   onClick={handleLanguageSave}
+                  disabled={isSavingLanguage}
                   className="btn btn-primary"
                 >
-                  Save Language
+                  {isSavingLanguage ? 'Saving...' : 'Save Language'}
                 </button>
               </div>
             </div>

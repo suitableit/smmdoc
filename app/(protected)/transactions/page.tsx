@@ -126,20 +126,35 @@ export default function TransactionsPage() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
     document.title = `Transactions — ${APP_NAME}`;
   }, []);
 
-  // Debounce search term
+  // Debounce search term and track search activity
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
+      setSearchLoading(false);
     }, 500);
 
+    // Set search loading when user is typing
+    if (searchTerm !== debouncedSearchTerm) {
+      setSearchLoading(true);
+    }
+
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, debouncedSearchTerm]);
+
+  // Track if user is actively searching
+  useEffect(() => {
+    const hasSearchTerm = searchTerm.trim() !== '';
+    const hasDateFilter = dateFilter.startDate !== '' || dateFilter.endDate !== '';
+    setIsSearching(hasSearchTerm || hasDateFilter);
+  }, [searchTerm, dateFilter]);
 
   // Mock data for demonstration
   const mockTransactions = [
@@ -224,14 +239,10 @@ export default function TransactionsPage() {
       try {
         setLoading(true);
 
-        // Build query parameters
+        // Build query parameters - only include tab status, not search term
         const params = new URLSearchParams({
           limit: '50',
         });
-
-        if (debouncedSearchTerm) {
-          params.append('search', debouncedSearchTerm);
-        }
 
         if (activeTab !== 'all') {
           params.append('status', activeTab);
@@ -344,7 +355,7 @@ export default function TransactionsPage() {
     };
 
     fetchTransactions();
-  }, [activeTab, debouncedSearchTerm, dateFilter]);
+  }, [activeTab]); // Removed debouncedSearchTerm and dateFilter from dependencies
 
   const handleViewDetails = (invoiceId: string) => {
     showToast(`Viewing details for ${invoiceId}`, 'info');
@@ -353,9 +364,8 @@ export default function TransactionsPage() {
   // Filter transactions
   const filteredTransactions = transactions.filter((tx) => {
     const matchesSearch =
-      tx.invoice_id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.payment_method?.toLowerCase().includes(searchTerm.toLowerCase());
+      tx.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tx.transaction_id && String(tx.transaction_id).toLowerCase().includes(searchTerm.toLowerCase()));
 
     // Date filtering
     const txDate = new Date(tx.createdAt);
@@ -417,7 +427,7 @@ export default function TransactionsPage() {
             </div>
           ) : (
             <>
-              {/* Search Bar - Default Style without Button */}
+              {/* Search Bar - Always visible */}
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -425,7 +435,7 @@ export default function TransactionsPage() {
                   </div>
                   <input
                     type="search"
-                    placeholder="Search transactions..."
+                    placeholder="Search by ID or Transaction ID..."
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
@@ -436,7 +446,7 @@ export default function TransactionsPage() {
                 </div>
               </div>
 
-              {/* Date Filter */}
+              {/* Date Filter - Always visible */}
               <div className="mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -472,7 +482,7 @@ export default function TransactionsPage() {
                 )}
               </div>
 
-              {/* Status Filter Buttons - Updated with Services Page Gradient */}
+              {/* Status Filter Buttons - Always visible */}
               <div className="mb-6">
                 <div className="flex flex-wrap gap-3">
                   <button
@@ -525,10 +535,19 @@ export default function TransactionsPage() {
                 </div>
               </div>
 
-              {/* Transactions List */}
-              <TransactionsList
-                transactions={filteredTransactions}
-              />
+
+
+              {/* Transactions List with Search Loading */}
+              {searchLoading ? (
+                <div className="text-center py-8 flex flex-col items-center">
+                  <GradientSpinner size="w-8 h-8" className="mb-3" />
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Searching transactions...</div>
+                </div>
+              ) : (
+                <TransactionsList
+                  transactions={filteredTransactions}
+                />
+              )}
             </>
           )}
         </div>
