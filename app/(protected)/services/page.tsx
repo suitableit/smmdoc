@@ -103,11 +103,12 @@ const UserServiceTable: React.FC = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-  const [limit, setLimit] = useState('50'); // Load 50 categories per page
+  const [limit, setLimit] = useState('10'); // Load 10 categories per page
   const [hasMoreData, setHasMoreData] = useState(true);
   const [favoriteServices, setFavoriteServices] = useState<Service[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
-  const [showFavoritesFirst, setShowFavoritesFirst] = useState(true);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+
   const [totalServices, setTotalServices] = useState(0);
   const [displayLimit] = useState(50); // Services to show in favorites section
 
@@ -131,18 +132,34 @@ const UserServiceTable: React.FC = () => {
       setPage(1);
     }, 500);
 
+    // Set loading state when search changes
+    if (search.trim()) {
+      setIsSearchLoading(true);
+    } else {
+      setIsSearchLoading(false);
+    }
+
     return () => clearTimeout(timer);
   }, [search]);
 
   // Optimized fetch function with pagination for better performance
   const fetchServices = React.useCallback(async () => {
-    setLoading(true);
+    // Only show full loading on initial load, not during search
+    if (!debouncedSearch && page === 1) {
+      setLoading(true);
+    }
 
     try {
       const currentLimit = limit === 'all' ? '500' : limit; // Limit to 500 instead of 'all' to prevent memory issues
 
+      const searchParams = new URLSearchParams({
+        page: page.toString(),
+        limit: currentLimit,
+        ...(debouncedSearch.trim() && { search: encodeURIComponent(debouncedSearch.trim()) })
+      });
+
       const response = await fetch(
-        `/api/user/services?page=${page}&limit=${currentLimit}&search=${debouncedSearch}`,
+        `/api/user/services?${searchParams.toString()}`,
         {
           method: 'GET',
           cache: 'no-store',
@@ -227,6 +244,7 @@ const UserServiceTable: React.FC = () => {
       setGroupedServices({});
     } finally {
       setLoading(false);
+      setIsSearchLoading(false);
     }
   }, [debouncedSearch, user?.id, page, limit]);
 
@@ -310,7 +328,7 @@ const UserServiceTable: React.FC = () => {
   // Initial load and search changes
   useEffect(() => {
     fetchServices();
-  }, [debouncedSearch, page]);
+  }, [fetchServices, debouncedSearch, page, limit]);
 
 
 
@@ -321,6 +339,10 @@ const UserServiceTable: React.FC = () => {
     setServices([]);
     setGroupedServices({});
     setHasMoreData(true);
+    // Trigger immediate fetch with new limit
+    setTimeout(() => {
+      fetchServices();
+    }, 100);
   };
 
   // Handle pagination
@@ -423,7 +445,7 @@ const UserServiceTable: React.FC = () => {
 
 
 
-  if (loading) {
+  if (loading && !debouncedSearch && page === 1) {
     return (
       <div className="page-container">
         <div className="page-content">
@@ -454,235 +476,115 @@ const UserServiceTable: React.FC = () => {
         <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
           {/* Search Bar and Controls */}
           <div className="mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Search Input */}
-              <div className="flex-1">
-                <div className="form-group mb-0">
-                  <div className="relative">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              {/* Show Per Page Dropdown - Left side */}
+              <div className="flex items-center gap-2 h-12">
+                <div className="relative">
+                  <select
+                    value={limit}
+                    onChange={(e) => handleLimitChange(e.target.value)}
+                    className="form-field pl-4 pr-8 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm min-w-[160px] h-12"
+                  >
+                    {totalServices > 0 && (
+                      <>
+                        {totalServices >= 10 && <option value="10">10 per page</option>}
+                        {totalServices >= 25 && <option value="25">25 per page</option>}
+                        {totalServices >= 50 && <option value="50">50 per page</option>}
+                        {totalServices >= 100 && <option value="100">100 per page</option>}
+                        {totalServices >= 200 && <option value="200">200 per page</option>}
+                        {totalServices >= 500 && <option value="500">500 per page</option>}
+                        <option value="all">Show All</option>
+                      </>
+                    )}
+                    {totalServices === 0 && (
+                      <option value="50">No services found</option>
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              {/* Search Input - Right side with reduced width */}
+              <div className="w-full md:w-100 h-12 items-center">
+                <div className="form-group mb-0 w-full">
+                  <div className="relative flex items-center h-12">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                       <FaSearch className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </div>
                     <input
                       type="search"
-                      placeholder="Search services..."
+                      placeholder="Search by ID, Service Name, Category..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                      className="form-field w-full pl-10 pr-10 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 h-12"
                       autoComplete="off"
                     />
+                    {isSearchLoading && (
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none z-10">
+                        <GradientSpinner size="w-4 h-4" className="flex-shrink-0" />
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-
-              {/* Favorites Toggle */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowFavoritesFirst(!showFavoritesFirst)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 ${
-                    showFavoritesFirst
-                      ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white border-transparent'
-                      : 'bg-white dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {showFavoritesFirst ? <FaHeart className="w-4 h-4" /> : <FaRegHeart className="w-4 h-4" />}
-                  <span className="text-sm font-medium">Favorites First</span>
-                </button>
-              </div>
-
-              {/* Show Per Page Dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                  Show:
-                </span>
-                <select
-                  value={limit}
-                  onChange={(e) => handleLimitChange(e.target.value)}
-                  className="pl-4 pr-8 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm min-w-[120px]"
-                >
-                  <option value="50">50 per page</option>
-                  <option value="100">100 per page</option>
-                  <option value="200">200 per page</option>
-                  <option value="500">500 per page</option>
-                  <option value="all">Show All (Like SMMGen)</option>
-                </select>
               </div>
             </div>
           </div>
 
-          {/* Favorite Services Section */}
-          {showFavoritesFirst && favoriteServices.length > 0 && (
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg border-2 border-yellow-200 dark:border-yellow-700 overflow-hidden mb-6">
-              {/* Favorite Services Header */}
-              <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-medium py-4 px-6">
-                <div className="flex items-center gap-3">
-                  <FaHeart className="w-5 h-5" />
-                  <h3 className="text-lg font-semibold">
-                    Your Favorite Services ({favoriteServices.length})
-                  </h3>
-                </div>
-              </div>
 
-              {/* Favorite Services Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead className="sticky top-0 z-10">
-                    <tr className="border-b border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/30">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Fav</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">ID</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Service</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Type</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Rate per 1000</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Min order</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Max order</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Average time</th>
-                      <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Refill</th>
-                      <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Cancel</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-yellow-50 dark:bg-yellow-900/30">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {favoriteServices.slice(0, displayLimit).map((service) => (
-                      <tr
-                        key={`fav-${service.id}`}
-                        className="border-b border-yellow-100 dark:border-yellow-800 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 last:border-b-0"
-                      >
-                        <td className="py-3 px-4">
-                          <button
-                            onClick={() => toggleFavorite(service.id)}
-                            className="p-1 hover:bg-yellow-100 dark:hover:bg-yellow-800 rounded transition-colors duration-200"
-                            title="Remove from favorites"
-                          >
-                            <FaHeart className="w-4 h-4 text-red-500" />
-                          </button>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
-                            {service.id}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="font-medium text-gray-900 dark:text-white">
-                            {service.name}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-xs font-medium px-2 py-1 rounded bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 w-fit">
-                            {service?.serviceType?.name || 'Standard'}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            <PriceDisplay amount={service.rate} originalCurrency={'USD'} />
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {formatNumber(service.min_order || 0)}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {formatNumber(service.max_order || 0)}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {service.avg_time || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            {service.refill ? (
-                              <>
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <span className="text-xs text-green-600 font-medium">ON</span>
-                              </>
-                            ) : (
-                              <>
-                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                <span className="text-xs text-red-600 font-medium">OFF</span>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            {service.cancel ? (
-                              <>
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <span className="text-xs text-green-600 font-medium">ON</span>
-                              </>
-                            ) : (
-                              <>
-                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                <span className="text-xs text-red-600 font-medium">OFF</span>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <button
-                            onClick={() => handleViewDetails(service)}
-                            className="flex items-center gap-2 px-3 py-1 text-sm text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 border border-yellow-600 dark:border-yellow-400 rounded hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors duration-200"
-                          >
-                            <FaEye className="w-3 h-3" />
-                            Details
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
 
           {/* Services by Category */}
-          {Object.keys(groupedServices).length > 0 ? (
-            <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-              {/* Table Headers - Always visible at top */}
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead className="sticky top-0 z-10">
-                    <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        Fav
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        ID
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        Service
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        Type
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        Rate per 1000
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        Min order
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        Max order
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        Average time
-                      </th>
-                      <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        Refill
-                      </th>
-                      <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        Cancel
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                        Action
-                      </th>
+          <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+            {/* Table Headers - Always visible at top */}
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead className="sticky top-0 z-10">
+                  <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      Fav
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      ID
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      Service
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      Type
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      Rate per 1000
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      Min order
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      Max order
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      Average time
+                    </th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      Refill
+                    </th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      Cancel
+                    </th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isSearchLoading ? (
+                    <tr>
+                      <td colSpan={11} className="py-12 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                          <GradientSpinner size="w-8 h-8" />
+                          <div className="text-sm text-gray-600 dark:text-gray-400">Searching services...</div>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {/* Categories and Services */}
-                    {Object.entries(groupedServices).map(([categoryName, categoryServices]) => (
+                  ) : Object.keys(groupedServices).length > 0 ? (
+                    Object.entries(groupedServices).map(([categoryName, categoryServices]) => (
                       <React.Fragment key={categoryName}>
                         {/* Category Header Row */}
                         <tr>
@@ -830,28 +732,32 @@ const UserServiceTable: React.FC = () => {
                               <td colSpan={11} className="py-8 text-center">
                                 <div className="flex flex-col items-center justify-center text-gray-500">
                                   <FaClipboardList className="text-4xl mb-2" />
-                                  <p className="text-sm font-medium">No services in this category</p>
+                                  <p className="text-sm font-medium">No services found!</p>
                                 </div>
                               </td>
                             </tr>
                           )}
                         </React.Fragment>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-          ) : (
-            <div className="text-center py-8 flex flex-col items-center">
-              <FaClipboardList className="text-4xl text-gray-400 dark:text-gray-500 mb-4" />
-              <div className="text-lg font-medium text-gray-900 dark:text-white">
-                No services found
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Try adjusting your search criteria
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={11} className="py-8 text-center">
+                          <div className="flex flex-col items-center justify-center text-gray-500">
+                            <FaClipboardList className="text-4xl mb-2" />
+                            <div className="text-lg font-medium text-gray-900 dark:text-white">
+                              No services found!
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              Try adjusting your search criteria
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
-          )}
 
 
 
@@ -903,7 +809,7 @@ const UserServiceTable: React.FC = () => {
                 {limit === 'all' && (
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-green-600 dark:text-green-400 font-medium">Showing all services (SMMGen style)</span>
+                    <span className="text-green-600 dark:text-green-400 font-medium">Showing all services</span>
                   </div>
                 )}
                 {hasMoreData && limit !== 'all' && (

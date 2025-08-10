@@ -9,7 +9,8 @@ export async function GET(request: Request) {
     const userIdParam = searchParams.get('userId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
-    const search = searchParams.get('search') || '';
+    const searchRaw = searchParams.get('search') || '';
+    const search = searchRaw ? decodeURIComponent(searchRaw).trim() : '';
     const skip = (page - 1) * limit;
 
     if (!userIdParam) {
@@ -50,22 +51,41 @@ export async function GET(request: Request) {
     }
     
     // Build search condition if needed
+    const isNumericSearch = /^\d+$/.test(search);
+    
     const searchCondition = search
       ? {
           OR: [
+            // If search is numeric, prioritize exact ID match
+            ...(isNumericSearch 
+              ? [{
+                  id: {
+                    equals: Number(search)
+                  }
+                }] 
+              : []
+            ),
+            // Search by service name
             {
               name: {
                 contains: search,
-                mode: 'insensitive',
               },
             },
+            // Search by description
             {
               description: {
                 contains: search,
-                mode: 'insensitive',
               },
             },
-          ],
+            // Search by category name
+            {
+              category: {
+                category_name: {
+                  contains: search,
+                },
+              },
+            },
+          ].filter(Boolean),
         }
       : {};
     
@@ -74,6 +94,8 @@ export async function GET(request: Request) {
       id: { in: favoriteServiceIds },
       ...searchCondition,
     };
+    
+
 
     // Get services with pagination
     const [services, total] = await Promise.all([
@@ -81,9 +103,14 @@ export async function GET(request: Request) {
         where: whereClause,
         skip,
         take: limit,
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy: [
+          // If numeric search, prioritize exact ID matches first
+          ...(isNumericSearch 
+            ? [{ id: 'asc' as any }] 
+            : []
+          ),
+          { createdAt: 'desc' as any },
+        ],
         include: {
           category: true,
         },
