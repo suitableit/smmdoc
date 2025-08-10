@@ -1,9 +1,9 @@
 'use client';
 
 import { APP_NAME } from '@/lib/constants';
-import { ArrowRightLeft, CheckCircle, Loader2, X } from 'lucide-react';
+
 import { useCallback, useEffect, useState, useTransition } from 'react';
-import { FaExchangeAlt } from 'react-icons/fa';
+import { FaExchangeAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -37,10 +37,10 @@ const Toast = ({
   onClose: () => void;
 }) => (
   <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <CheckCircle className="toast-icon" />}
+    {type === 'success' && <FaCheckCircle className="toast-icon" />}
     <span className="font-medium">{message}</span>
     <button onClick={onClose} className="toast-close">
-      <X className="toast-close-icon" />
+      <FaTimesCircle className="toast-close-icon" />
     </button>
   </div>
 );
@@ -90,7 +90,7 @@ export default function TransferFund() {
 
     if (usernameValue.length < 3) {
       setIsUserValid(false);
-      showToast('Username must be at least 3 characters', 'error');
+      setUserValidationError('');
       return;
     }
 
@@ -111,12 +111,10 @@ export default function TransferFund() {
       } else {
         setIsUserValid(false);
         setUserValidationError(result.error || 'User not found');
-        showToast(result.error || 'User not found', 'error');
       }
     } catch (error) {
       setIsUserValid(false);
       setUserValidationError('Error validating username');
-      showToast('Error validating username', 'error');
       console.error('Username validation error:', error);
     } finally {
       setIsValidatingUser(false);
@@ -297,15 +295,18 @@ export default function TransferFund() {
             <form onSubmit={handleTransfer} className="space-y-6">
               {/* Username Field */}
               <div className="form-group">
+                <label className="form-label">Username</label>
                 <div className="relative">
                   <input
                     type="text"
                     value={username}
                     onChange={handleUsernameChange}
-                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
-                      isUserValid
-                        ? 'border-green-300 focus:ring-green-500'
-                        : 'border-gray-300 focus:ring-[var(--primary)]'
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
+                      userValidationError
+                        ? 'border-red-500 dark:border-red-400'
+                        : isUserValid
+                        ? 'border-green-500 dark:border-green-400'
+                        : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="Enter friend's username"
                     disabled={isPending}
@@ -314,17 +315,49 @@ export default function TransferFund() {
                   {/* Loading spinner */}
                   {isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <Loader2 className="animate-spin text-gray-400 w-4 h-4" />
+                      <FaSpinner className="animate-spin text-gray-400 w-4 h-4" />
                     </div>
                   )}
 
                   {/* Success check */}
                   {isUserValid && !isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <CheckCircle className="text-green-500 w-4 h-4" />
+                      <FaCheckCircle className="text-green-500 w-4 h-4" />
+                    </div>
+                  )}
+
+                  {/* Error indicator */}
+                  {userValidationError && !isValidatingUser && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <FaTimesCircle className="w-4 h-4 text-red-500" />
                     </div>
                   )}
                 </div>
+                
+                {/* Username validation messages */}
+                {username.length > 0 && username.length < 3 && (
+                  <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
+                    Username must be at least 3 characters
+                  </p>
+                )}
+                
+                {userValidationError && (
+                  <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
+                    {userValidationError}
+                  </p>
+                )}
+                
+                {isUserValid && !isValidatingUser && (
+                  <p className="text-green-500 dark:text-green-400 text-sm mt-1 transition-colors duration-200">
+                    Username is valid.
+                  </p>
+                )}
+                
+                {isValidatingUser && (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 transition-colors duration-200">
+                    Validating username...
+                  </p>
+                )}
               </div>
 
               {/* Amount Section */}
@@ -395,7 +428,7 @@ export default function TransferFund() {
                         activeCurrency === 'USD' ? 'BDT' : 'USD'
                       }`}
                     >
-                      <ArrowRightLeft className="text-blue-600" />
+                      <FaExchangeAlt className="text-blue-600" />
                       <span className="text-sm font-semibold">
                         Switch to {activeCurrency === 'USD' ? 'BDT' : 'USD'}
                       </span>
@@ -498,12 +531,12 @@ export default function TransferFund() {
               >
                 {isPending ? (
                   <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="animate-spin" />
+                    <FaSpinner className="animate-spin" />
                     Processing...
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <ArrowRightLeft />
+                    <FaExchangeAlt />
                     Transfer Now
                   </div>
                 )}
