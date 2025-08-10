@@ -8,9 +8,9 @@ interface MailOptions {
 
 // Create the transporter with proper type annotations
 const transporter: Transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_SERVER_HOST || "smtp.gmail.com",
+  host: process.env.EMAIL_SERVER_HOST || "smtp-relay.brevo.com",
   port: Number(process.env.EMAIL_SERVER_PORT) || 587,
-  secure: false,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_SERVER_USER,
     pass: process.env.EMAIL_SERVER_PASSWORD,
@@ -18,24 +18,48 @@ const transporter: Transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false,
   },
+  // Connection pooling options
+  pool: true,
+  maxConnections: 1,
+  rateDelta: 20000,
+  rateLimit: 5,
 });
 
-// Send mail function with type safety
+// Send mail function with type safety and better error handling
 export const sendMail = async ({
   sendTo,
   subject,
   html,
 }: MailOptions): Promise<boolean> => {
   try {
+    // Verify transporter before sending
+    await transporter.verify();
+    
     await transporter.sendMail({
-      from: `"SMMDOC" <${process.env.EMAIL_FROM}>`,
+      from: `"SMMDOC" <${process.env.EMAIL_FROM || process.env.EMAIL_SERVER_USER}>`,
       to: sendTo,
       subject: subject,
       html: html,
     });
+    
+    console.log(`✅ Email sent successfully to: ${sendTo}`);
     return true;
   } catch (error) {
-    console.error("Error in sending mail:", error);
+    console.error("❌ Error in sending mail:", {
+      code: error.code,
+      message: error.message,
+      to: sendTo,
+      subject: subject
+    });
+    
+    // Log specific authentication errors
+    if (error.code === 'EAUTH') {
+      console.error("🔐 Authentication failed. Please check:");
+      console.error("- EMAIL_SERVER_USER is correct");
+      console.error("- EMAIL_SERVER_PASSWORD is valid (use App Password for Gmail)");
+      console.error("- SMTP settings are correct for your email provider");
+    }
+    
     return false;
   }
 };
