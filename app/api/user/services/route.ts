@@ -54,7 +54,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limitParam = searchParams.get('limit') || '50';
-    const search = searchParams.get('search') || '';
+    const searchRaw = searchParams.get('search') || '';
+    const search = searchRaw ? decodeURIComponent(searchRaw).trim() : '';
     const currency = searchParams.get('currency') || 'USD'; // Get user's preferred currency
 
     // Categories pagination - limit categories, not services
@@ -70,6 +71,9 @@ export async function GET(request: Request) {
 
     if (search) {
       // Search across all services when search term is provided
+      // Check if search is purely numeric for ID search
+      const isNumericSearch = /^\d+$/.test(search);
+      
       const searchQuery = {
         where: {
           status: 'active',
@@ -77,25 +81,39 @@ export async function GET(request: Request) {
             hideCategory: 'no', // Only include services from visible categories
           },
           OR: [
+            // If search is numeric, prioritize exact ID match
+            ...(isNumericSearch 
+              ? [{
+                  id: {
+                    equals: Number(search)
+                  }
+                }] 
+              : []
+            ),
+            // Search by service name (partial match)
             {
               name: {
                 contains: search,
               },
             },
-            // Search by service ID (exact match)
-            ...(isNaN(Number(search)) 
-              ? [] 
-              : [{
-                  id: {
-                    equals: Number(search)
-                  }
-                }]
-            ),
+            // Search by category name (partial match)
+            {
+              category: {
+                category_name: {
+                  contains: search,
+                },
+              },
+            },
           ].filter(Boolean),
         },
-        orderBy: {
-          createdAt: 'desc' as any,
-        },
+        orderBy: [
+          // If numeric search, prioritize exact ID matches first
+          ...(isNumericSearch 
+            ? [{ id: 'asc' as any }] 
+            : []
+          ),
+          { createdAt: 'desc' as any },
+        ],
         select: {
           id: true,
           name: true,
