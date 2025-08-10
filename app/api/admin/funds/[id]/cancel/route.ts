@@ -65,8 +65,8 @@ export async function POST(
         const emailData = emailTemplates.paymentCancelled({
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
-          transactionId: Number(transaction.transaction_id) || 0,
-          amount: transaction.amount,
+          transactionId: transaction.transaction_id || '0',
+          amount: transaction.amount.toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()

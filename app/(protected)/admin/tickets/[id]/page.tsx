@@ -205,9 +205,7 @@ const SupportTicketDetailsPage = () => {
 
   // State management
   const [ticketDetails, setTicketDetails] = useState<SupportTicketDetails>(dummyTicketDetails);
-  const [loading, setLoading] = useState(false);
   const [replyContent, setReplyContent] = useState('');
-  const [replyType, setReplyType] = useState<'public' | 'private'>('public');
   const [isReplying, setIsReplying] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
@@ -266,7 +264,7 @@ const SupportTicketDetailsPage = () => {
   const handleStatusChange = (newStatus: string) => {
     setTicketDetails(prev => ({
       ...prev,
-      status: newStatus as any,
+      status: newStatus as 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'Closed',
       lastUpdated: new Date().toISOString()
     }));
     
@@ -324,7 +322,7 @@ const SupportTicketDetailsPage = () => {
       setReplyContent('');
       setSelectedFiles([]);
       showToast('Reply sent successfully', 'success');
-    } catch (error) {
+    } catch {
       showToast('Error sending reply', 'error');
     } finally {
       setIsReplying(false);
@@ -355,7 +353,7 @@ const SupportTicketDetailsPage = () => {
       
       setNewNote('');
       showToast('Note added successfully', 'success');
-    } catch (error) {
+    } catch {
       showToast('Error adding note', 'error');
     } finally {
       setIsAddingNote(false);

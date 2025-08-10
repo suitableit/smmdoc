@@ -18,6 +18,17 @@ export async function POST(request: Request) {
       },
     });
 
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'User not found',
+          data: null,
+        },
+        { status: 404 }
+      );
+    }
+
     // Check if mass order is enabled in module settings
     const moduleSettings = await db.moduleSettings.findFirst();
     const massOrderEnabled = moduleSettings?.massOrderEnabled ?? false;

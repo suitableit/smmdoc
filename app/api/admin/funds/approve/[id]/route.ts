@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { emailTemplates } from '@/lib/email-templates';
+import { emailTemplates, transactionEmailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -88,8 +88,8 @@ export async function POST(
         const emailData = emailTemplates.paymentSuccess({
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
-          transactionId: Number(transaction.transaction_id || transaction.invoice_id),
-          amount: transaction.amount,
+          transactionId: (transaction.transaction_id || transaction.invoice_id || '0').toString(),
+          amount: transaction.amount.toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
@@ -104,11 +104,11 @@ export async function POST(
 
       // Send admin notification email
       const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-      const adminEmailData = emailTemplates.adminAutoApproved({
+      const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: transaction.user.name || 'Unknown User',
         userEmail: transaction.user.email || '',
-        transactionId: Number(transaction.transaction_id || transaction.invoice_id),
-        amount: transaction.amount,
+        transactionId: (transaction.transaction_id || transaction.invoice_id || '0').toString(),
+        amount: transaction.amount.toString(),
         currency: 'BDT',
         date: new Date().toLocaleDateString(),
         userId: transaction.userId.toString()

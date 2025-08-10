@@ -98,6 +98,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, any>(
     );
   }
 );
+PasswordInput.displayName = 'PasswordInput';
 
 interface Provider {
   id: number;
@@ -213,7 +214,7 @@ const APIProvidersPage = () => {
     };
 
     loadData();
-  }, []);
+  }, [fetchProviders]);
 
   // Show toast notification
   const showToast = (
@@ -1101,7 +1102,7 @@ const APIProvidersPage = () => {
                   <div className="text-gray-500 dark:text-gray-400">
                     <FaGlobe className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <h3 className="text-lg font-medium mb-2">No providers found</h3>
-                    <p className="text-sm">No providers match your search criteria "{searchQuery}"</p>
+                    <p className="text-sm">No providers match your search criteria &quot;{searchQuery}&quot;</p>
                   </div>
                 </div>
               )}

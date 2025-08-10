@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { sendMail } from '@/lib/nodemailer';
-import { emailTemplates } from '@/lib/email-templates';
+import { emailTemplates, transactionEmailTemplates } from '@/lib/email-templates';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
           userName: 'Test User',
           userEmail: testEmail,
           transactionId: transaction_id || 'TEST-TXN-123',
-          amount: parseFloat(amount) || 100,
+          amount: (parseFloat(amount) || 100).toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: 'test-user-id'
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
           userName: 'Test User',
           userEmail: testEmail,
           transactionId: transaction_id || 'TEST-TXN-123',
-          amount: parseFloat(amount) || 100,
+          amount: (parseFloat(amount) || 100).toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: 'test-user-id'
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
           userName: 'Test User',
           userEmail: testEmail,
           transactionId: transaction_id || 'TEST-TXN-123',
-          amount: parseFloat(amount) || 100,
+          amount: (parseFloat(amount) || 100).toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: 'test-user-id',
@@ -62,11 +62,11 @@ export async function POST(req: NextRequest) {
         break;
         
       case 'admin_approved':
-        emailData = emailTemplates.adminAutoApproved({
+        emailData = transactionEmailTemplates.adminAutoApproved({
           userName: 'Test User',
           userEmail: testEmail,
           transactionId: transaction_id || 'TEST-TXN-123',
-          amount: parseFloat(amount) || 100,
+          amount: (parseFloat(amount) || 100).toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: 'test-user-id'
