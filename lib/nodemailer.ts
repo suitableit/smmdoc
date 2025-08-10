@@ -45,15 +45,18 @@ export const sendMail = async ({
     console.log(`✅ Email sent successfully to: ${sendTo}`);
     return true;
   } catch (error) {
+    // Type assertion for error handling
+    const emailError = error as any;
+    
     console.error("❌ Error in sending mail:", {
-      code: error.code,
-      message: error.message,
+      code: emailError.code || 'UNKNOWN',
+      message: emailError.message || 'Unknown error occurred',
       to: sendTo,
       subject: subject
     });
     
     // Log specific authentication errors
-    if (error.code === 'EAUTH') {
+    if (emailError.code === 'EAUTH') {
       console.error("🔐 Authentication failed. Please check:");
       console.error("- EMAIL_SERVER_USER is correct");
       console.error("- EMAIL_SERVER_PASSWORD is valid (use App Password for Gmail)");
