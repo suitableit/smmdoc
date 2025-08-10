@@ -6,7 +6,7 @@ import { verificationConfirm } from '@/lib/actions/verification';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BeatLoader } from 'react-spinners';
+import { FaSpinner } from 'react-icons/fa';
 
 export default function VerifyEmail() {
   const [error, setError] = useState<string | undefined>('');
@@ -94,10 +94,7 @@ export default function VerifyEmail() {
       <div className="space-y-5 text-center">
         {!error && !success && (
           <div className="flex justify-center py-4">
-            <BeatLoader
-              color="#5F1DE8"
-              className="dark:!text-[var(--secondary)]"
-            />
+            <FaSpinner className="animate-spin text-2xl text-[var(--primary)] dark:text-[var(--secondary)]" />
           </div>
         )}
 

@@ -218,10 +218,10 @@ export default function UpdateServiceTable() {
                       ID
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 max-w-[400px]">
-                      Service
+                      Service Name
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">
-                      Date
+                      Date & Time
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 w-[300px] last:rounded-tr-lg">
                       Update
@@ -229,57 +229,146 @@ export default function UpdateServiceTable() {
                   </tr>
                 </thead>
                 <tbody>
-                  {services?.map((service, i) => {
-                    const isLastRow = i === services.length - 1;
-                    return (
-                      <tr
-                        key={i}
-                        className={`border-b border-gray-100 hover:bg-gray-50 ${
-                          isLastRow ? 'last:border-b-0' : ''
-                        }`}
-                      >
-                        <td
-                          className={`py-3 px-4 ${
-                            isLastRow ? 'first:rounded-bl-lg' : ''
-                          }`}
-                        >
-                          <span className="text-sm font-medium text-gray-900">
-                            {i + 1}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 max-w-[400px]">
-                          <div
-                            className="font-medium text-gray-900 truncate"
-                            title={service.name}
-                          >
-                            {service.name}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-sm text-gray-700">
-                            {new Intl.DateTimeFormat('en', {
-                              dateStyle: 'medium',
-                              timeStyle: 'short',
-                              hour12: false,
-                              timeZone: 'Asia/Dhaka',
-                            }).format(new Date(service.updatedAt))}
-                          </span>
-                        </td>
-                        <td
-                          className={`py-3 px-4 w-[300px] ${
-                            isLastRow ? 'last:rounded-br-lg' : ''
-                          }`}
-                        >
-                          <div
-                            className="text-sm text-gray-700 truncate"
-                            title={service.updateText}
-                          >
-                            {service.updateText}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {services?.filter(service => {
+                    try {
+                      const updateData = JSON.parse(service.updateText || '{}');
+                      // Only filter out updates that are explicitly from API providers
+                      // Keep all manual admin updates, even if they have provider-like properties
+                      const isApiProviderSync = updateData.provider && updateData.providerId && updateData.lastSynced;
+                      return !isApiProviderSync;
+                    } catch (error) {
+                      // Include services with invalid JSON (likely manual updates)
+                      return true;
+                    }
+                  }).map((service, i) => (
+                    <tr key={service.id} className="border-b border-gray-200 hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {service.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {service.name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 max-w-md">
+                        <div className="break-words">
+                          {(() => {
+                            try {
+                              const updateData = JSON.parse(service.updateText || '{}');
+                              
+                              // Check for new service creation
+                              if (updateData.action === 'created' || updateData.type === 'new_service' || updateData.action === 'create') {
+                                return 'New service';
+                              }
+                              
+                              // Check for service addition (imported)
+                              if (updateData.action === 'added' || updateData.type === 'service_added' || updateData.action === 'import') {
+                                return 'New service';
+                              }
+                              
+                              const updates = [];
+                              let hasRateChange = false;
+                              let hasStatusChange = false;
+                              
+                              // Check for rate changes with proper decimal formatting
+                              const rateChange = updateData.changes?.rate || updateData.rate;
+                              if (rateChange && rateChange.from !== undefined && rateChange.to !== undefined) {
+                                const oldRate = parseFloat(rateChange.from);
+                                const newRate = parseFloat(rateChange.to);
+                                
+                                // Format rates to remove unnecessary trailing zeros
+                                const formatRate = (rate) => {
+                                  const formatted = rate.toFixed(6);
+                                  return parseFloat(formatted).toString();
+                                };
+                                
+                                if (newRate > oldRate) {
+                                  updates.push(`Rate increased from $${formatRate(oldRate)} to $${formatRate(newRate)}`);
+                                  hasRateChange = true;
+                                } else if (newRate < oldRate) {
+                                  updates.push(`Rate decreased from $${formatRate(oldRate)} to $${formatRate(newRate)}`);
+                                  hasRateChange = true;
+                                }
+                              }
+                              
+                              // Check for status changes
+                              const statusChange = updateData.changes?.status || updateData.status;
+                              if (statusChange && statusChange.from !== undefined && statusChange.to !== undefined) {
+                                const oldStatus = statusChange.from;
+                                const newStatus = statusChange.to;
+                                if (newStatus === 'active' && oldStatus !== 'active') {
+                                  updates.push('Service enabled');
+                                  hasStatusChange = true;
+                                } else if (newStatus !== 'active' && oldStatus === 'active') {
+                                  updates.push('Service disabled');
+                                  hasStatusChange = true;
+                                }
+                              }
+                              
+                              // Check for other service information changes
+                              const infoUpdates = [];
+                              
+                              // Check for min order changes
+                              const minOrderChange = updateData.changes?.min_order || updateData.min_order;
+                              if (minOrderChange && minOrderChange.from !== undefined && minOrderChange.to !== undefined) {
+                                infoUpdates.push('min order');
+                              }
+                              
+                              // Check for max order changes
+                              const maxOrderChange = updateData.changes?.max_order || updateData.max_order;
+                              if (maxOrderChange && maxOrderChange.from !== undefined && maxOrderChange.to !== undefined) {
+                                infoUpdates.push('max order');
+                              }
+                              
+                              // Check for name changes
+                              const nameChange = updateData.changes?.name || updateData.name;
+                              if (nameChange && nameChange.from !== undefined && nameChange.to !== undefined) {
+                                infoUpdates.push('name');
+                              }
+                              
+                              // Check for description changes
+                              const descriptionChange = updateData.changes?.description || updateData.description;
+                              if (descriptionChange && descriptionChange.from !== undefined && descriptionChange.to !== undefined) {
+                                infoUpdates.push('description');
+                              }
+                              
+                              // Check for category changes
+                              const categoryChange = updateData.changes?.categoryId || updateData.changes?.category || updateData.category;
+                              if (categoryChange && categoryChange.from !== undefined && categoryChange.to !== undefined) {
+                                infoUpdates.push('category');
+                              }
+                              
+                              // If there are info updates but no rate/status changes, show "Service info updated"
+                              if (infoUpdates.length > 0 && !hasRateChange && !hasStatusChange) {
+                                updates.push('Service info updated');
+                              }
+                              
+                              return updates.length > 0 ? updates.join(', ') : 'Service updated';
+                              
+                            } catch (error) {
+                              // Handle plain text updates or invalid JSON
+                              const text = service.updateText || '';
+                              if (text.toLowerCase().includes('created') || text.toLowerCase().includes('new')) {
+                                return 'New service';
+                              }
+                              if (text.toLowerCase().includes('added') || text.toLowerCase().includes('imported')) {
+                                return 'Service added';
+                              }
+                              if (text.toLowerCase().includes('disabled')) {
+                                return 'Service disabled';
+                              }
+                              if (text.toLowerCase().includes('enabled')) {
+                                return 'Service enabled';
+                              }
+                              return 'Service updated';
+                            }
+                          })()
+                        }
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(service.updatedAt).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

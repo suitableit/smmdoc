@@ -176,6 +176,29 @@ export async function PUT(request: Request) {
       updateData.mode = mode;
     }
 
+    // Prepare changes data for updateText
+    const changes: any = {};
+    Object.keys(updateData).forEach(key => {
+      const oldValue = (currentService as any)[key];
+      const newValue = (updateData as any)[key];
+      if (oldValue !== newValue) {
+        changes[key] = {
+          from: oldValue,
+          to: newValue
+        };
+      }
+    });
+
+    // Add updateText with change information if there are changes
+    if (Object.keys(changes).length > 0) {
+      updateData.updateText = JSON.stringify({
+        action: 'updated',
+        changes,
+        updatedAt: new Date().toISOString(),
+        updatedBy: session.user.email
+      });
+    }
+
     // Update the service in the database with proper type conversion
     const updatedService = await db.service.update({
       where: {

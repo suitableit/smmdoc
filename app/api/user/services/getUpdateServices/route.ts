@@ -56,7 +56,7 @@ export async function GET(request: Request) {
         skip,
         take: limit,
         orderBy: {
-          createdAt: 'desc',
+          updatedAt: 'desc',
         },
       }),
       db.service.count({ where: whereClause }),
