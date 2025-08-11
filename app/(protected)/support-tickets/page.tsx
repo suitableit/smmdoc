@@ -53,13 +53,26 @@ interface TicketFormData {
   subcategory: string;
   orderIds: string;
   message: string;
+  subject: string;
+  priority: 'low' | 'medium' | 'high';
+  attachments: string[];
 }
 
 interface Ticket {
-  id: number;
+  id: string;
   subject: string;
-  status: 'New' | 'Answered' | 'Closed' | 'Pending';
-  lastUpdate: string;
+  status: 'open' | 'answered' | 'closed' | 'pending' | 'in_progress';
+  category: string;
+  subcategory?: string;
+  message: string;
+  orderIds?: string[];
+  priority: 'low' | 'medium' | 'high';
+  attachments?: string[];
+  createdAt: string;
+  updatedAt: string;
+  adminReply?: string;
+  repliedAt?: string;
+  repliedBy?: string;
 }
 
 const TicketPage: React.FC = () => {
@@ -78,6 +91,9 @@ const TicketPage: React.FC = () => {
     subcategory: '2',
     orderIds: '',
     message: '',
+    subject: '',
+    priority: 'medium',
+    attachments: [],
   });
   const [showMessageField, setShowMessageField] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
@@ -88,15 +104,33 @@ const TicketPage: React.FC = () => {
   } | null>(null);
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
 
-  // Sample Ticket data
-  const [Ticket] = useState<Ticket[]>([
-    {
-      id: 227663,
-      subject: 'Welcome',
-      status: 'New',
-      lastUpdate: '2025-05-02 02:47:56',
-    },
-  ]);
+  // Tickets data from API
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
+
+  // Fetch user tickets
+  const fetchTickets = async () => {
+    setTicketsLoading(true);
+    try {
+      const response = await fetch('/api/support-tickets');
+      if (response.ok) {
+        const data = await response.json();
+        setTickets(data.tickets || []);
+      } else {
+        showToast('Failed to fetch tickets', 'error');
+      }
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+      showToast('Error fetching tickets', 'error');
+    } finally {
+      setTicketsLoading(false);
+    }
+  };
+
+  // Fetch tickets on component mount
+  useEffect(() => {
+    fetchTickets();
+  }, []);
 
   const categories = [
     { value: '1', label: 'AI Support' },
@@ -165,16 +199,52 @@ const TicketPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      showToast('Ticket submitted successfully!', 'success');
-      setFormData({
-        category: '1',
-        subcategory: '2',
-        orderIds: '',
-        message: '',
+      // Generate subject based on category and subcategory
+      const categoryLabel = categories.find(c => c.value === formData.category)?.label || 'Support';
+      const subcategoryLabel = subcategories.find(s => s.value === formData.subcategory)?.label || '';
+      const subject = `${categoryLabel} - ${subcategoryLabel}`;
+
+      // Prepare order IDs array
+      const orderIds = formData.orderIds ? formData.orderIds.split(',').map(id => id.trim()).filter(id => id) : [];
+
+      const ticketData = {
+        subject,
+        message: formData.message,
+        category: formData.category,
+        subcategory: formData.subcategory,
+        orderIds,
+        priority: formData.priority,
+        attachments: formData.attachments,
+      };
+
+      const response = await fetch('/api/support-tickets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(ticketData),
       });
+
+      if (response.ok) {
+        const result = await response.json();
+        showToast('Ticket submitted successfully!', 'success');
+        setFormData({
+          category: '1',
+          subcategory: '2',
+          orderIds: '',
+          message: '',
+          subject: '',
+          priority: 'medium',
+          attachments: [],
+        });
+        // Refresh tickets list
+        fetchTickets();
+      } else {
+        const error = await response.json();
+        showToast(error.message || 'Failed to submit ticket', 'error');
+      }
     } catch (error) {
+      console.error('Error submitting ticket:', error);
       showToast('Failed to submit ticket. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
@@ -186,28 +256,34 @@ const TicketPage: React.FC = () => {
       'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
 
     switch (status) {
-      case 'New':
+      case 'open':
         return (
           <span className={`${baseClasses} bg-purple-100 text-purple-800`}>
-            {status}
+            Open
           </span>
         );
-      case 'Answered':
+      case 'answered':
         return (
           <span className={`${baseClasses} bg-green-100 text-green-800`}>
-            {status}
+            Answered
           </span>
         );
-      case 'Closed':
+      case 'in_progress':
+        return (
+          <span className={`${baseClasses} bg-blue-100 text-blue-800`}>
+            In Progress
+          </span>
+        );
+      case 'closed':
         return (
           <span className={`${baseClasses} bg-red-100 text-red-800`}>
-            {status}
+            Closed
           </span>
         );
-      case 'Pending':
+      case 'pending':
         return (
           <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>
-            {status}
+            Pending
           </span>
         );
       default:

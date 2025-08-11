@@ -1,0 +1,28 @@
+// Support Ticket System Models
+model SupportTicket {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  subject     String
+  message     String   @db.Text
+  status      String   @default("pending") // pending, in_progress, resolved, closed
+  category    String   // AI Support, Human Support
+  subcategory String?  // subcategory based on category
+  orderIds    String?  @db.Text // JSON string for order IDs
+  priority    String   @default("medium") // low, medium, high, urgent
+  attachments String?  @db.Text // JSON string for file paths
+  adminReply  String?  @db.Text
+  repliedAt   DateTime?
+  repliedBy   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user          User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repliedByUser User? @relation("RepliedByUser", fields: [repliedBy], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([priority])
+  @@index([createdAt])
+  @@map("support_tickets")
+}

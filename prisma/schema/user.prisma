@@ -38,6 +38,8 @@ model User {
   services                Service[]
   sessions                Session[]
   twoFactorConfirmation   TwoFactorConfirmation?
+  supportTickets          SupportTicket[]
+  repliedSupportTickets   SupportTicket[]        @relation("RepliedByUser")
 
   @@map("user")
 }
