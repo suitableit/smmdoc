@@ -275,7 +275,7 @@ export default function UpdateServiceTable() {
                                 const newRate = parseFloat(rateChange.to);
                                 
                                 // Format rates to remove unnecessary trailing zeros
-                                const formatRate = (rate) => {
+                                const formatRate = (rate: number) => {
                                   const formatted = rate.toFixed(6);
                                   return parseFloat(formatted).toString();
                                 };

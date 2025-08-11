@@ -76,6 +76,7 @@ export async function GET() {
           name: true,
           api_url: true,
           status: true,
+          is_custom: true,
           createdAt: true,
           updatedAt: true
         }
@@ -94,18 +95,38 @@ export async function GET() {
         status: configured?.status || 'inactive',
         id: configured?.id || null,
         apiUrl: (configured as any)?.api_url || (provider as any).apiUrl || '',
+        isCustom: false,
         createdAt: configured?.createdAt || null,
         updatedAt: configured?.updatedAt || null
       };
     });
 
+    // Add custom providers that are not in AVAILABLE_PROVIDERS
+    const customProviders = configuredProviders
+      .filter((cp: any) => cp.is_custom && !AVAILABLE_PROVIDERS.find(p => p.value === cp.name))
+      .map((cp: any) => ({
+        value: cp.name,
+        label: cp.name,
+        description: `Custom provider: ${cp.name}`,
+        configured: true,
+        status: cp.status,
+        id: cp.id,
+        apiUrl: cp.api_url || '',
+        isCustom: true,
+        createdAt: cp.createdAt,
+        updatedAt: cp.updatedAt
+      }));
+
+    const allProviders = [...providersWithStatus, ...customProviders];
+
     return NextResponse.json({
       success: true,
       data: {
-        providers: providersWithStatus,
-        total: providersWithStatus.length,
+        providers: allProviders,
+        total: allProviders.length,
         configured: configuredProviders.length,
-        available: AVAILABLE_PROVIDERS.length
+        available: AVAILABLE_PROVIDERS.length,
+        custom: customProviders.length
       },
       error: null
     });
@@ -140,7 +161,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { selectedProvider, apiKey, apiUrl, username, password } = await req.json();
+    const { selectedProvider, apiKey, apiUrl, username, password, isCustom } = await req.json();
 
     if (!selectedProvider || !apiKey) {
       return NextResponse.json(
@@ -153,17 +174,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if provider is available
-    const providerConfig = AVAILABLE_PROVIDERS.find(p => p.value === selectedProvider);
-    if (!providerConfig) {
-      return NextResponse.json(
-        {
-          error: 'Invalid provider selected',
-          success: false,
-          data: null
-        },
-        { status: 400 }
-      );
+    // For custom providers, we don't need to validate against AVAILABLE_PROVIDERS
+    let providerConfig = null;
+    if (!isCustom) {
+      // Check if provider is available in predefined list
+      providerConfig = AVAILABLE_PROVIDERS.find(p => p.value === selectedProvider);
+      if (!providerConfig) {
+        return NextResponse.json(
+          {
+            error: 'Invalid provider selected',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
+    } else {
+      // For custom providers, create a basic config
+      providerConfig = {
+        value: selectedProvider,
+        label: selectedProvider,
+        description: `Custom provider: ${selectedProvider}`
+      };
     }
 
     // Check if provider already exists and create new provider
@@ -193,7 +225,8 @@ export async function POST(req: NextRequest) {
           api_url: apiUrl || '',
           login_user: username || null,
           login_pass: password || null,
-          status: 'inactive'
+          status: 'inactive',
+          is_custom: isCustom || false
         }
       });
     } catch (error) {
@@ -215,6 +248,7 @@ export async function POST(req: NextRequest) {
         provider: {
           id: newProvider.id,
           status: newProvider.status,
+          isCustom: newProvider.is_custom,
           ...providerConfig
         }
       },

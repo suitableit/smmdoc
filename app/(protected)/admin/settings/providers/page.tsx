@@ -146,7 +146,9 @@ const APIProvidersPage = () => {
   } | null>(null);
 
   const [formData, setFormData] = useState({
+    providerType: 'predefined' as 'predefined' | 'custom',
     selectedProvider: '',
+    customProviderName: '',
     apiKey: '',
     apiUrl: '',
     syncEnabled: true,
@@ -167,6 +169,20 @@ const APIProvidersPage = () => {
   const fetchProviders = async () => {
     try {
       const response = await fetch('/api/admin/providers');
+      
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Non-JSON response received:', response.status, response.statusText);
+        if (response.status === 401) {
+          showToast('Authentication failed. Please refresh the page and try again.', 'error');
+          window.location.href = '/sign-in';
+          return;
+        }
+        showToast('Server error: Invalid response format', 'error');
+        return;
+      }
+      
       const result = await response.json();
 
       if (result.success) {
@@ -243,12 +259,20 @@ const APIProvidersPage = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const selectedProviderData = availableProviders.find(p => p.value === formData.selectedProvider);
-
-    if (!selectedProviderData) {
-      showToast('Please select a provider', 'error');
-      setIsLoading(false);
-      return;
+    // Validate provider selection
+    if (formData.providerType === 'predefined') {
+      const selectedProviderData = availableProviders.find(p => p.value === formData.selectedProvider);
+      if (!selectedProviderData) {
+        showToast('Please select a provider', 'error');
+        setIsLoading(false);
+        return;
+      }
+    } else {
+      if (!formData.customProviderName.trim()) {
+        showToast('Please enter a custom provider name', 'error');
+        setIsLoading(false);
+        return;
+      }
     }
 
     // Validate that if username is provided, password is also provided
@@ -265,13 +289,28 @@ const APIProvidersPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          selectedProvider: formData.selectedProvider,
+          selectedProvider: formData.providerType === 'predefined' ? formData.selectedProvider : formData.customProviderName,
           apiKey: formData.apiKey,
           apiUrl: formData.apiUrl,
           username: formData.username,
-          password: formData.password
+          password: formData.password,
+          isCustom: formData.providerType === 'custom'
         })
       });
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Non-JSON response received:', response.status, response.statusText);
+        if (response.status === 401) {
+          showToast('Authentication failed. Please refresh the page and try again.', 'error');
+          // Optionally redirect to login
+          window.location.href = '/sign-in';
+          return;
+        }
+        showToast('Server error: Invalid response format', 'error');
+        return;
+      }
 
       const result = await response.json();
 
@@ -280,7 +319,9 @@ const APIProvidersPage = () => {
         await fetchProviders();
 
         setFormData({
+          providerType: 'predefined',
           selectedProvider: '',
+          customProviderName: '',
           apiKey: '',
           apiUrl: '',
           syncEnabled: true,
@@ -340,6 +381,19 @@ const APIProvidersPage = () => {
         })
       });
 
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Non-JSON response received:', response.status, response.statusText);
+        if (response.status === 401) {
+          showToast('Authentication failed. Please refresh the page and try again.', 'error');
+          window.location.href = '/sign-in';
+          return;
+        }
+        showToast('Server error: Invalid response format', 'error');
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -393,6 +447,19 @@ const APIProvidersPage = () => {
         })
       });
 
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Non-JSON response received:', response.status, response.statusText);
+        if (response.status === 401) {
+          showToast('Authentication failed. Please refresh the page and try again.', 'error');
+          window.location.href = '/sign-in';
+          return;
+        }
+        showToast('Server error: Invalid response format', 'error');
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -418,6 +485,19 @@ const APIProvidersPage = () => {
         const response = await fetch(`/api/admin/providers?id=${providerId}`, {
           method: 'DELETE'
         });
+
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Non-JSON response received:', response.status, response.statusText);
+          if (response.status === 401) {
+            showToast('Authentication failed. Please refresh the page and try again.', 'error');
+            window.location.href = '/sign-in';
+            return;
+          }
+          showToast('Server error: Invalid response format', 'error');
+          return;
+        }
 
         const result = await response.json();
 
@@ -592,7 +672,9 @@ const APIProvidersPage = () => {
               if (e.target === e.currentTarget) {
                 setShowAddForm(false);
                 setFormData({
+                  providerType: 'predefined',
                   selectedProvider: '',
+                  customProviderName: '',
                   apiKey: '',
                   apiUrl: '',
                   syncEnabled: true,
@@ -610,32 +692,93 @@ const APIProvidersPage = () => {
 
                 <form onSubmit={handleAddProvider} className="space-y-6">
                   {/* Provider Selection */}
-                  <div className="form-group">
-                    <label className="form-label">Select Provider</label>
-                    <select
-                      value={formData.selectedProvider}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        selectedProvider: e.target.value,
-                        // Clear other fields when changing provider
-                        apiKey: '',
-                        apiUrl: '',
-                        username: '',
-                        password: '',
-                        syncEnabled: true
-                      }))}
-                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                      required
-                    >
-                      <option value="">Choose a provider...</option>
-                      {availableProviders
-                        .filter((provider: any) => !provider.configured)
-                        .map((provider: any) => (
-                        <option key={provider.value} value={provider.value}>
-                          {provider.label}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="space-y-4">
+                    <div className="form-group">
+                      <label className="form-label">Provider Type</label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="providerType"
+                            value="predefined"
+                            checked={formData.providerType === 'predefined'}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev,
+                              providerType: e.target.value as 'predefined' | 'custom',
+                              selectedProvider: '',
+                              customProviderName: '',
+                              apiKey: '',
+                              apiUrl: '',
+                              username: '',
+                              password: ''
+                            }))}
+                            className="w-4 h-4 text-blue-600"
+                          />
+                          <span className="text-sm font-medium">Predefined Provider</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="providerType"
+                            value="custom"
+                            checked={formData.providerType === 'custom'}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev,
+                              providerType: e.target.value as 'predefined' | 'custom',
+                              selectedProvider: '',
+                              customProviderName: '',
+                              apiKey: '',
+                              apiUrl: '',
+                              username: '',
+                              password: ''
+                            }))}
+                            className="w-4 h-4 text-blue-600"
+                          />
+                          <span className="text-sm font-medium">Custom Provider</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {formData.providerType === 'predefined' ? (
+                      <div className="form-group">
+                        <label className="form-label">Select Provider</label>
+                        <select
+                          value={formData.selectedProvider}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            selectedProvider: e.target.value,
+                            apiKey: '',
+                            apiUrl: '',
+                            username: '',
+                            password: '',
+                            syncEnabled: true
+                          }))}
+                          className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                          required
+                        >
+                          <option value="">Choose a provider...</option>
+                          {availableProviders
+                            .filter((provider: any) => !provider.configured)
+                            .map((provider: any) => (
+                            <option key={provider.value} value={provider.value}>
+                              {provider.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="form-group">
+                        <label className="form-label">Custom Provider Name</label>
+                        <input
+                          type="text"
+                          value={formData.customProviderName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, customProviderName: e.target.value }))}
+                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                          placeholder="Enter custom provider name (e.g., MyCustomSMM)"
+                          required
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* API Configuration */}
@@ -649,7 +792,7 @@ const APIProvidersPage = () => {
                         onChange={(e: any) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
                         className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Enter your API key"
-                        disabled={!formData.selectedProvider}
+                        disabled={formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName.trim()}
                         required
                       />
                     </div>
@@ -662,7 +805,7 @@ const APIProvidersPage = () => {
                         onChange={(e) => setFormData(prev => ({ ...prev, apiUrl: e.target.value }))}
                         className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Enter API URL (e.g., https://provider.com/api/v2)"
-                        disabled={!formData.selectedProvider}
+                        disabled={formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName.trim()}
                         required
                       />
                     </div>
@@ -679,9 +822,9 @@ const APIProvidersPage = () => {
                           <Switch
                             checked={formData.syncEnabled}
                             onCheckedChange={(checked: boolean) => setFormData(prev => ({ ...prev, syncEnabled: checked }))}
-                            onClick={() => formData.selectedProvider && setFormData(prev => ({ ...prev, syncEnabled: !prev.syncEnabled }))}
+                            onClick={() => (formData.providerType === 'predefined' ? formData.selectedProvider : formData.customProviderName.trim()) && setFormData(prev => ({ ...prev, syncEnabled: !prev.syncEnabled }))}
                             title={`${formData.syncEnabled ? 'Disable' : 'Enable'} Auto Sync`}
-                            disabled={!formData.selectedProvider}
+                            disabled={formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName.trim()}
                           />
                         </div>
                       </div>
@@ -701,7 +844,7 @@ const APIProvidersPage = () => {
                           onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                           className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                           placeholder="Enter username"
-                          disabled={!formData.selectedProvider}
+                          disabled={formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName.trim()}
                         />
                       </div>
 
@@ -717,7 +860,7 @@ const APIProvidersPage = () => {
                           onChange={(e: any) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                           className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                           placeholder="Enter password"
-                          disabled={!formData.selectedProvider}
+                          disabled={formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName.trim()}
                           required={formData.username.trim() !== ''}
                         />
                         {formData.username.trim() !== '' && (
@@ -735,7 +878,9 @@ const APIProvidersPage = () => {
                       onClick={() => {
                         setShowAddForm(false);
                         setFormData({
+                          providerType: 'predefined',
                           selectedProvider: '',
+                          customProviderName: '',
                           apiKey: '',
                           apiUrl: '',
                           syncEnabled: true,
@@ -749,7 +894,7 @@ const APIProvidersPage = () => {
                     </button>
                     <button
                       type="submit"
-                      disabled={isLoading || !formData.selectedProvider}
+                      disabled={isLoading || (formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName.trim())}
                       className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isLoading ? <ButtonLoader /> : 'Add Provider'}
