@@ -82,6 +82,8 @@ model User {
   activityLogs          ActivityLog[]
   contactMessages       ContactMessage[]
   repliedContactMessages ContactMessage[]      @relation("RepliedByUser")
+  supportTickets        SupportTicket[]
+  repliedSupportTickets SupportTicket[]       @relation("RepliedByUser")
 
 
   @@map("users")
