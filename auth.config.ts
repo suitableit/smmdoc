@@ -60,17 +60,17 @@ export default {
       // TODO: Re-enable email verification requirement in production
       // if (!existingUser.emailVerified) return false;
 
-      // Todo: Add 2FA check here
-      if (existingUser.isTwoFactorEnabled) {
-        const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
-          existingUser.id.toString()
-        );
-        if (!twoFactorConfirmation) return false;
-        // delete two factor confirmation for next sign in
-        await db.twoFactorConfirmation.delete({
-          where: { id: twoFactorConfirmation.id },
-        });
-      }
+      // Todo: Add 2FA check here - COMMENTED OUT FOR DIRECT LOGIN
+      // if (existingUser.isTwoFactorEnabled) {
+      //   const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
+      //     existingUser.id.toString()
+      //   );
+      //   if (!twoFactorConfirmation) return false;
+      //   // delete two factor confirmation for next sign in
+      //   await db.twoFactorConfirmation.delete({
+      //     where: { id: twoFactorConfirmation.id },
+      //   });
+      // }
 
       // Log successful login for security monitoring
       console.log(`Successful login: ${existingUser.email} (Role: ${existingUser.role})`);
