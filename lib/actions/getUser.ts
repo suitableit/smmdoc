@@ -39,7 +39,7 @@ export async function getUserDetails() {
           timezone: true,         // Include timezone preference
           createdAt: true,
           updatedAt: true,
-          addFunds: true,         // Include user's transactions
+          addFund: true,         // Include user's transactions
         },
       });
       
@@ -100,7 +100,7 @@ export async function getUserDetails() {
         // Return user with transactions and real balance fields
         return {
           ...userBasic,
-          addFunds: transactions,
+          addFund: transactions,
           balance: userBasic.balance || 0,
           total_deposit: userBasic.total_deposit || 0,
           total_spent: userBasic.total_spent || 0
@@ -123,7 +123,7 @@ export async function getUserDetails() {
           username: session.user.username || null,
           createdAt: new Date(),
           updatedAt: new Date(),
-          addFunds: []
+          addFund: []
         };
       }
     }

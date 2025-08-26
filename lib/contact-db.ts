@@ -132,7 +132,7 @@ class ContactDB {
     attachments?: string;
   }) {
     try {
-      await this.prisma.contact_messages.create({
+      await this.prisma.contactMessage.create({
         data: {
           userId: data.userId,
           subject: data.subject,
@@ -168,7 +168,7 @@ class ContactDB {
         }
       }
 
-      const count = await this.prisma.contact_messages.count({ where });
+      const count = await this.prisma.contactMessage.count({ where });
       return count;
     } catch (error) {
       console.error('Error counting contact messages:', error);
@@ -312,14 +312,14 @@ class ContactDB {
 
   async getContactMessageCounts() {
     try {
-      const total = await this.prisma.contact_messages.count();
-      const unread = await this.prisma.contact_messages.count({
+      const total = await this.prisma.contactMessage.count();
+      const unread = await this.prisma.contactMessage.count({
         where: { status: 'Unread' }
       });
-      const read = await this.prisma.contact_messages.count({
+      const read = await this.prisma.contactMessage.count({
         where: { status: 'Read' }
       });
-      const replied = await this.prisma.contact_messages.count({
+      const replied = await this.prisma.contactMessage.count({
         where: { status: 'Replied' }
       });
 
@@ -332,7 +332,7 @@ class ContactDB {
 
   async updateContactMessageStatus(id: number, status: string) {
     try {
-      await this.prisma.contact_messages.update({
+      await this.prisma.contactMessage.update({
         where: { id },
         data: { status }
       });
@@ -345,7 +345,7 @@ class ContactDB {
 
   async replyToContactMessage(id: number, adminReply: string, repliedBy: number) {
     try {
-      await this.prisma.contact_messages.update({
+      await this.prisma.contactMessage.update({
         where: { id },
         data: {
           adminReply,
@@ -363,7 +363,7 @@ class ContactDB {
 
   async deleteContactMessage(id: number) {
     try {
-      await this.prisma.contact_messages.delete({
+      await this.prisma.contactMessage.delete({
         where: { id }
       });
       return true;

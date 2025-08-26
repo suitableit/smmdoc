@@ -36,7 +36,7 @@ export async function DELETE(
     }
 
     // Check if activity log exists
-    const existingLog = await db.activityLog.findUnique({
+    const existingLog = await db.activitylog.findUnique({
       where: { id: logId }
     });
 
@@ -52,7 +52,7 @@ export async function DELETE(
     }
 
     // Delete the activity log
-    await db.activityLog.delete({
+    await db.activitylog.delete({
       where: { id: logId }
     });
 
@@ -110,7 +110,7 @@ export async function GET(
     }
 
     // Get activity log with user details
-    const activityLog = await db.activityLog.findUnique({
+    const activityLog = await db.activitylog.findUnique({
       where: { id: logId },
       include: {
         user: {

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,141 +6,6 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-
-enum Role {
-  admin
-  user
-}
-
-enum CategoryPosition {
-  top
-  bottom
-}
-
-model AddFund {
-  id             Int       @id @default(autoincrement())
-  invoice_id     String    @unique
-  amount         Float
-  spent_amount   Float
-  fee            Float?
-  email          String
-  name           String?
-  status         String?   @default("Processing") // Default status is Processing for user view
-  admin_status   String?   @default("Pending")    // Add admin_status field with default Pending
-  order_id       String?
-  method         String?
-  payment_method String?
-  sender_number  String?
-  transaction_id String?
-  date           DateTime?
-  paid_at        DateTime  @default(now())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @default(now()) @updatedAt
-  userId         Int
-  currency       String?   @default("BDT")        // Add currency field with default BDT
-  user           User      @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-}
-
-model User {
-  id                    Int                    @id @default(autoincrement())
-  username              String?                @unique
-  name                  String?
-  password              String?
-  email                 String?                @unique
-  role                  Role                   @default(user)
-  emailVerified         DateTime?
-  image                 String?
-  currency              String                 @default("USD")
-  dollarRate            Float                  @default(121.45)
-  balance               Float                  @default(0)
-  balanceUSD            Float                  @default(0) // Store balance in USD for conversion
-  preferredCurrency     String                 @default("USD") // User's display preference
-  language              String                 @default("en")
-  timezone              String                 @default("Asia/Dhaka")
-  apiKey                String?
-  total_deposit         Float                  @default(0)
-  total_spent           Float                  @default(0)
-  accounts              Account[]
-  sessions              Session[]
-  apiKeys               ApiKey[]
-  Category              Category[]
-  favouriteCat          FavrouteCat[]
-  favoriteServices      FavoriteService[]
-  services              Service[]
-  newOrders             NewOrder[]
-  addFunds              AddFund[]
-  isTwoFactorEnabled    Boolean                @default(false)
-  twoFactorConfirmation TwoFactorConfirmation?
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  cancelRequests        CancelRequest[]
-  activityLogs          ActivityLog[]
-  contactMessages       ContactMessage[]
-  repliedContactMessages ContactMessage[]      @relation("RepliedByUser")
-  supportTickets        SupportTicket[]
-  repliedSupportTickets SupportTicket[]       @relation("RepliedByUser")
-  refillRequests        RefillRequest[]
-
-
-  @@map("users")
-}
-
-model ServiceType {
-  id          Int    @id @default(autoincrement())
-  name        String    @unique
-  description String?
-  status      String    @default("active")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  services    Service[]
-}
-
-
-
-model Currency {
-  id      Int     @id @default(autoincrement())
-  code    String  @unique
-  name    String
-  symbol  String
-  rate    Decimal @db.Decimal(10, 4)
-  enabled Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model CurrencySettings {
-  id                  Int    @id @default(autoincrement())
-  defaultCurrency     String @default("USD")
-  displayDecimals     Int    @default(2)
-  currencyPosition    String @default("left")
-  thousandsSeparator  String @default(",")
-  decimalSeparator    String @default(".")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ActivityLog {
-  id        Int      @id @default(autoincrement())
-  userId    Int?
-  username  String?
-  action    String   // e.g., "login", "logout", "order_created", "profile_updated"
-  details   String   // Detailed description of the action
-  ipAddress String?
-  userAgent String?
-  metadata  Json?    // Additional data as JSON
-  createdAt DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([action])
-  @@index([createdAt])
-}
-
 
 model Category {
   id            Int              @id @default(autoincrement())
@@ -154,12 +16,12 @@ model Category {
   updatedAt     DateTime         @updatedAt
   hideCategory  String           @default("no")
   position      CategoryPosition @default(bottom)
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          user             @relation(fields: [userId], references: [id], onDelete: Cascade)
   newOrders     NewOrder[]
   services      Service[]
 
-  @@index([userId])
-  @@index([position, createdAt])
+  @@index([position, createdAt], map: "Category_position_createdAt_idx")
+  @@index([userId], map: "Category_userId_fkey")
   @@map("category")
 }
 
@@ -167,7 +29,6 @@ model Service {
   id                  Int               @id @default(autoincrement())
   name                String
   rate                Float
-  rateUSD             Float             @default(0) // Store price in USD for conversion
   min_order           Int
   max_order           Int
   avg_time            String
@@ -188,18 +49,19 @@ model Service {
   serviceSpeed        String?           @default("medium")
   personalizedService Boolean?          @default(false)
   refillDisplay       Int?              @default(24)
+  rateUSD             Float             @default(0)
   favoriteServices    FavoriteService[]
   newOrders           NewOrder[]
   category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   favrouteCat         FavrouteCat?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
-  serviceType         ServiceType?      @relation(fields: [serviceTypeId], references: [id])
-  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  refillRequests      RefillRequest[]
+  serviceType         servicetype?      @relation(fields: [serviceTypeId], references: [id])
+  user                user              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([categoryId])
-  @@index([favrouteCatId])
-  @@index([serviceTypeId])
-  @@index([userId])
+  @@index([categoryId], map: "Service_categoryId_fkey")
+  @@index([favrouteCatId], map: "Service_favrouteCatId_fkey")
+  @@index([serviceTypeId], map: "Service_serviceTypeId_idx")
+  @@index([status], map: "Service_status_idx")
+  @@index([userId], map: "Service_userId_idx")
   @@map("service")
 }
 
@@ -225,12 +87,12 @@ model NewOrder {
   cancelRequests CancelRequest[]
   category       Category        @relation(fields: [categoryId], references: [id])
   service        Service         @relation(fields: [serviceId], references: [id])
-  user           User            @relation(fields: [userId], references: [id])
+  user           user            @relation(fields: [userId], references: [id])
   refillRequests RefillRequest[]
 
-  @@index([categoryId])
-  @@index([serviceId])
-  @@index([userId])
+  @@index([categoryId], map: "NewOrder_categoryId_fkey")
+  @@index([serviceId], map: "NewOrder_serviceId_fkey")
+  @@index([userId], map: "NewOrder_userId_fkey")
   @@map("neworder")
 }
 
@@ -240,10 +102,10 @@ model FavrouteCat {
   userId    Int
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  user      User      @relation(fields: [userId], references: [id])
+  user      user      @relation(fields: [userId], references: [id])
   services  Service[]
 
-  @@index([userId])
+  @@index([userId], map: "FavrouteCat_userId_fkey")
   @@map("favroutecat")
 }
 
@@ -253,12 +115,11 @@ model FavoriteService {
   serviceId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
-  service   Service  @relation(fields: [serviceId], references: [id])
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, serviceId])
-  @@index([serviceId])
-  @@index([userId])
+  @@unique([userId, serviceId], map: "FavoriteService_userId_serviceId_key")
+  @@index([serviceId], map: "FavoriteService_serviceId_fkey")
   @@map("favoriteservice")
 }
 
@@ -275,171 +136,164 @@ model CancelRequest {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   order        NewOrder  @relation(fields: [orderId], references: [id])
-  user         User      @relation(fields: [userId], references: [id])
+  user         user      @relation(fields: [userId], references: [id])
 
-  @@index([orderId])
-  @@index([userId])
-  @@index([createdAt])
-  @@index([status])
+  @@index([createdAt], map: "CancelRequest_createdAt_idx")
+  @@index([orderId], map: "CancelRequest_orderId_fkey")
+  @@index([status], map: "CancelRequest_status_idx")
+  @@index([userId], map: "CancelRequest_userId_fkey")
   @@map("cancelrequest")
 }
 
 model RefillRequest {
-  id           Int       @id @default(autoincrement())
-  orderId      Int
-  userId       Int
-  serviceId    Int
-  status       String    @default("pending")
-  adminNotes   String?
-  processedBy  Int?
-  processedAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  order        NewOrder  @relation(fields: [orderId], references: [id])
-  service      Service   @relation(fields: [serviceId], references: [id])
-  user         User      @relation(fields: [userId], references: [id])
+  id                                   Int       @id @default(autoincrement())
+  orderId                              Int
+  userId                               Int
+  reason                               String
+  status                               String    @default("pending")
+  adminNotes                           String?
+  processedBy                          Int?
+  processedAt                          DateTime?
+  createdAt                            DateTime  @default(now())
+  updatedAt                            DateTime  @updatedAt
+  order                                NewOrder  @relation(fields: [orderId], references: [id])
+  user_refillrequest_processedByTouser user?     @relation("refillrequest_processedByTouser", fields: [processedBy], references: [id])
+  user                                 user      @relation(fields: [userId], references: [id])
 
-  @@index([orderId])
-  @@index([serviceId])
-  @@index([userId])
-  @@index([createdAt])
-  @@index([status])
+  @@index([createdAt], map: "RefillRequest_createdAt_idx")
+  @@index([orderId], map: "RefillRequest_orderId_idx")
+  @@index([processedBy], map: "RefillRequest_processedBy_fkey")
+  @@index([status], map: "RefillRequest_status_idx")
+  @@index([userId], map: "RefillRequest_userId_idx")
   @@map("refillrequest")
 }
 
 model Account {
-  id                String  @id @default(cuid())
-  userId            Int
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
+  id                       Int      @id @default(autoincrement())
+  userId                   Int      @unique(map: "Account_userId_key")
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?  @db.Text
+  access_token             String?  @db.Text
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?  @db.Text
+  session_state            String?
   refresh_token_expires_in Int?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  user                     user     @relation(fields: [userId], references: [id])
 
-  @@unique([provider, providerAccountId])
-  @@index([userId])
+  @@unique([provider, providerAccountId], map: "Account_provider_providerAccountId_key")
+  @@index([userId], map: "Account_userId_idx")
   @@map("account")
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique(map: "Session_sessionToken_key")
   userId       Int
   expires      DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         user     @relation(fields: [userId], references: [id])
 
-  @@index([userId])
+  @@index([userId], map: "Session_userId_idx")
   @@map("session")
 }
 
 model VerificationToken {
   id        Int      @id @default(autoincrement())
-  token     String   @unique
+  token     String   @unique(map: "VerificationToken_token_key")
   expires   DateTime
   email     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([email, token])
+  @@unique([email, token], map: "VerificationToken_email_token_key")
   @@map("verificationtoken")
 }
 
 model PasswordResetToken {
   id        Int      @id @default(autoincrement())
-  token     String   @unique
+  token     String   @unique(map: "PasswordResetToken_token_key")
   expires   DateTime
   email     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([email, token])
+  @@unique([email, token], map: "PasswordResetToken_email_token_key")
   @@map("passwordresettoken")
 }
 
 model TwoFactorToken {
   id        Int      @id @default(autoincrement())
-  token     String   @unique
+  token     String   @unique(map: "TwoFactorToken_token_key")
   expires   DateTime
   email     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([email, token])
+  @@unique([email, token], map: "TwoFactorToken_email_token_key")
   @@map("twofactortoken")
 }
 
 model TwoFactorConfirmation {
   id        Int      @id @default(autoincrement())
-  userId    Int      @unique
+  userId    Int      @unique(map: "TwoFactorConfirmation_userId_key")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("twofactorconfirmation")
 }
 
 model ApiKey {
-  id          Int      @id @default(autoincrement())
-  name        String
-  key         String   @unique
-  userId      Int
-  permissions Json?
-  lastUsed    DateTime?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  key       String   @unique(map: "ApiKey_key_key")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      user     @relation(fields: [userId], references: [id])
 
-  @@index([userId])
-  @@index([key])
+  @@index([userId], map: "ApiKey_userId_fkey")
   @@map("apikey")
 }
 
-// Support Ticket System Models
 model SupportTicket {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  subject     String
-  message     String   @db.Text
-  status      String   @default("pending") // pending, in_progress, resolved, closed
-  category    String   // AI Support, Human Support
-  subcategory String?  // subcategory based on category
-  orderIds    String?  @db.Text // JSON string for order IDs
-  priority    String   @default("medium") // low, medium, high, urgent
-  attachments String?  @db.Text // JSON string for file paths
-  adminReply  String?  @db.Text
-  repliedAt   DateTime?
-  repliedBy   Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user          User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  repliedByUser User? @relation("RepliedByUser", fields: [repliedBy], references: [id])
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  subject       String
+  message       String    @db.Text
+  status        String    @default("pending")
+  category      String
+  subcategory   String?
+  orderIds      String?   @db.Text
+  priority      String    @default("medium")
+  attachments   String?   @db.Text
+  adminReply    String?   @db.Text
+  repliedAt     DateTime?
+  repliedBy     Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  repliedByUser user?     @relation("RepliedByUser", fields: [repliedBy], references: [id])
+  user          user      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
   @@index([category])
   @@index([priority])
   @@index([createdAt])
+  @@index([repliedBy], map: "support_tickets_repliedBy_fkey")
   @@map("support_tickets")
 }
 
-// Contact System Models
 model ContactSettings {
-  id                    Int               @id @default(autoincrement())
-  contactSystemEnabled  Boolean           @default(true)
-  maxPendingContacts    String            @default("3")
+  id                   Int               @id @default(autoincrement())
+  contactSystemEnabled Boolean           @default(true)
+  maxPendingContacts   String            @default("3")
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
   categories           ContactCategory[]
@@ -448,38 +302,370 @@ model ContactSettings {
 }
 
 model ContactCategory {
-  id                Int              @id @default(autoincrement())
+  id                Int             @id @default(autoincrement())
   name              String
-  contactSettingsId Int?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  contactSettings   ContactSettings? @relation(fields: [contactSettingsId], references: [id], onDelete: SetNull)
-  messages          ContactMessage[]
+  contactSettingsId Int
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  contactSettings   ContactSettings @relation(fields: [contactSettingsId], references: [id], onDelete: Cascade)
 
+  @@index([contactSettingsId], map: "contact_categories_contactSettingsId_fkey")
   @@map("contact_categories")
 }
 
 model ContactMessage {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   userId      Int
   subject     String
-  message     String   @db.Text
-  status      String   @default("Unread") // Unread, Read, Replied
+  message     String    @db.Text
+  status      String    @default("Unread")
   categoryId  Int
-  attachments String?  @db.Text // JSON string for file paths
-  adminReply  String?  @db.Text
+  attachments String?   @db.Text
+  adminReply  String?   @db.Text
   repliedAt   DateTime?
   repliedBy   Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user          User            @relation(fields: [userId], references: [id])
-  category      ContactCategory @relation(fields: [categoryId], references: [id])
-  repliedByUser User?           @relation("RepliedByUser", fields: [repliedBy], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
 
   @@index([userId])
   @@index([categoryId])
   @@index([status])
   @@map("contact_messages")
+}
+
+model activitylog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  username  String?
+  action    String
+  details   String   @db.Text
+  ipAddress String?
+  userAgent String?  @db.Text
+  metadata  String?  @db.LongText
+  createdAt DateTime @default(now())
+  user      user?    @relation(fields: [userId], references: [id])
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model addFund {
+  id               Int                       @id @default(autoincrement())
+  invoice_id       String                    @unique(map: "AddFund_invoice_id_key")
+  amount           Float
+  email            String
+  name             String?
+  status           String?                   @default("Processing")
+  order_id         String?
+  method           String?
+  payment_method   String?
+  sender_number    String?
+  transaction_id   String?
+  date             DateTime?
+  paid_at          DateTime                  @default(now())
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @default(now()) @updatedAt
+  userId           Int
+  fee              Float?
+  spent_amount     Float
+  admin_status     String?                   @default("Pending")
+  transaction_type addfund_transaction_type? @default(deposit)
+  reference_id     String?                   @db.VarChar(255)
+  currency         String?                   @default("BDT") @db.VarChar(3)
+  original_amount  Float?
+  user             user                      @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "addfund_userId_fkey")
+  @@map("addfund")
+}
+
+model affiliate_commissions {
+  id               Int        @id @default(autoincrement())
+  affiliateId      Int
+  referredUserId   Int
+  orderId          Int?
+  amount           Float
+  commissionRate   Float
+  commissionAmount Float
+  status           String     @default("pending")
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime
+  affiliates       affiliates @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateId], map: "affiliate_commissions_affiliateId_fkey")
+}
+
+model affiliate_payouts {
+  id          Int        @id @default(autoincrement())
+  affiliateId Int
+  amount      Float
+  method      String
+  details     String?    @db.LongText
+  status      String     @default("pending")
+  requestedAt DateTime   @default(now())
+  processedAt DateTime?
+  notes       String?
+  adminId     Int?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime
+  affiliates  affiliates @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateId], map: "affiliate_payouts_affiliateId_fkey")
+}
+
+model affiliate_referrals {
+  id             Int        @id @default(autoincrement())
+  affiliateId    Int
+  referredUserId Int        @unique
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime   @default(now())
+  affiliates     affiliates @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@index([affiliateId], map: "affiliate_referrals_affiliateId_fkey")
+}
+
+model affiliates {
+  id                    Int                     @id @default(autoincrement())
+  userId                Int                     @unique
+  referralCode          String                  @unique
+  commissionRate        Float                   @default(5)
+  totalEarnings         Float                   @default(0)
+  availableEarnings     Float                   @default(0)
+  totalReferrals        Int                     @default(0)
+  totalVisits           Int                     @default(0)
+  status                String                  @default("active")
+  paymentMethod         String?
+  paymentDetails        String?                 @db.LongText
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  affiliate_commissions affiliate_commissions[]
+  affiliate_payouts     affiliate_payouts[]
+  affiliate_referrals   affiliate_referrals[]
+}
+
+model apiProvider {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  api_key    String
+  login_user String?
+  login_pass String?
+  status     String   @default("active")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  api_url    String   @default("")
+  is_custom  Boolean  @default(false)
+
+  @@index([name])
+  @@index([status])
+  @@map("api_providers")
+}
+
+model child_panel_subscriptions {
+  id            Int          @id @default(autoincrement())
+  childPanelId  Int
+  amount        Float
+  currency      String       @default("USD")
+  status        String       @default("pending")
+  startDate     DateTime     @default(now())
+  endDate       DateTime
+  paymentMethod String?
+  transactionId String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime
+  child_panels  child_panels @relation(fields: [childPanelId], references: [id], onDelete: Cascade)
+
+  @@index([childPanelId], map: "child_panel_subscriptions_childPanelId_fkey")
+}
+
+model child_panels {
+  id                        Int                         @id @default(autoincrement())
+  userId                    Int                         @unique
+  domain                    String                      @unique
+  subdomain                 String?
+  panelName                 String
+  apiKey                    String                      @unique
+  status                    String                      @default("pending")
+  plan                      String                      @default("basic")
+  theme                     String                      @default("default")
+  customBranding            Boolean                     @default(false)
+  totalOrders               Int                         @default(0)
+  totalRevenue              Float                       @default(0)
+  apiCallsToday             Int                         @default(0)
+  apiCallsTotal             Int                         @default(0)
+  lastActivity              DateTime?
+  expiryDate                DateTime?
+  settings                  String?                     @db.LongText
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime
+  child_panel_subscriptions child_panel_subscriptions[]
+}
+
+model currency {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique @db.VarChar(3)
+  name      String   @db.VarChar(100)
+  symbol    String   @db.VarChar(10)
+  rate      Decimal  @default(1.0000) @db.Decimal(10, 4)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  
+  @@map("currencies")
+}
+
+model currencySettings {
+  id                 Int      @id @default(autoincrement())
+  defaultCurrency    String   @default("USD")
+  displayDecimals    Int      @default(2)
+  currencyPosition   String   @default("left")
+  thousandsSeparator String   @default(",")
+  decimalSeparator   String   @default(".")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime
+  
+  @@map("currency_settings")
+}
+
+model moduleSettings {
+  id                       Int      @id @default(autoincrement())
+  affiliateSystemEnabled   Boolean  @default(false)
+  commissionRate           Float    @default(5)
+  minimumPayout            Float    @default(10)
+  childPanelSellingEnabled Boolean  @default(false)
+  childPanelPrice          Float    @default(10)
+  serviceUpdateLogsEnabled Boolean  @default(true)
+  massOrderEnabled         Boolean  @default(false)
+  servicesListPublic       Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime
+  
+  @@map("module_settings")
+}
+
+model service_update_logs {
+  id          Int      @id @default(autoincrement())
+  serviceId   Int
+  serviceName String
+  adminId     Int
+  adminEmail  String
+  action      String
+  changes     String?  @db.LongText
+  oldValues   String?  @db.LongText
+  newValues   String?  @db.LongText
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+}
+
+model servicetype {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique(map: "ServiceType_name_key")
+  description String?
+  status      String    @default("active")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  services    Service[]
+}
+
+model ticket_settings {
+  id                  Int               @id @default(autoincrement())
+  ticketSystemEnabled Boolean           @default(true)
+  maxPendingTickets   String            @default("3")
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime
+  ticket_subjects     ticket_subjects[]
+}
+
+model ticket_subjects {
+  id               Int             @id @default(autoincrement())
+  name             String
+  ticketSettingsId Int
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime
+  ticket_settings  ticket_settings @relation(fields: [ticketSettingsId], references: [id], onDelete: Cascade)
+
+  @@index([ticketSettingsId], map: "ticket_subjects_ticketSettingsId_fkey")
+}
+
+model user {
+  id                                            Int                    @id @default(autoincrement())
+  username                                      String?                @unique(map: "User_username_key")
+  name                                          String?
+  password                                      String?
+  email                                         String?                @unique(map: "User_email_key")
+  role                                          user_role              @default(user)
+  emailVerified                                 DateTime?
+  image                                         String?
+  currency                                      String                 @default("USD")
+  dollarRate                                    Float                  @default(121.45)
+  balance                                       Float                  @default(0)
+  total_deposit                                 Float                  @default(0) @db.Float
+  total_spent                                   Float                  @default(0) @db.Float
+  servicesDiscount                              Float                  @default(0)
+  specialPricing                                Boolean                @default(false)
+  status                                        String                 @default("active")
+  apiKey                                        String?                @unique(map: "User_apiKey_key")
+  isTwoFactorEnabled                            Boolean                @default(false)
+  createdAt                                     DateTime               @default(now())
+  updatedAt                                     DateTime
+  lastLoginAt                                   DateTime?
+  balanceUSD                                    Float                  @default(0)
+  preferredCurrency                             String                 @default("USD")
+  language                                      String                 @default("en")
+  timezone                                      String                 @default("Asia/Dhaka")
+  accounts                                      Account?
+  activitylog                                   activitylog[]
+  addFund                                       addFund[]
+  apiKeys                                       ApiKey[]
+  cancelRequests                                CancelRequest[]
+  Category                                      Category[]
+  favoriteServices                              FavoriteService[]
+  favouriteCat                                  FavrouteCat[]
+  newOrders                                     NewOrder[]
+  refillrequest_refillrequest_processedByTouser RefillRequest[]        @relation("refillrequest_processedByTouser")
+  refillRequests                                RefillRequest[]
+  services                                      Service[]
+  sessions                                      Session[]
+  repliedSupportTickets                         SupportTicket[]        @relation("RepliedByUser")
+  supportTickets                                SupportTicket[]
+  twoFactorConfirmation                         TwoFactorConfirmation?
+}
+
+model userSettings {
+  id                       Int      @id @default(autoincrement())
+  resetPasswordEnabled     Boolean  @default(true)
+  signUpPageEnabled        Boolean  @default(true)
+  nameFieldEnabled         Boolean  @default(true)
+  emailConfirmationEnabled Boolean  @default(true)
+  resetLinkMax             Int      @default(3)
+  transferFundsPercentage  Int      @default(3)
+  userFreeBalanceEnabled   Boolean  @default(false)
+  freeAmount               Float    @default(0)
+  paymentBonusEnabled      Boolean  @default(false)
+  bonusPercentage          Float    @default(0)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime
+
+  @@map("user_settings")
+}
+
+enum CategoryPosition {
+  top
+  bottom
+}
+
+enum user_role {
+  user
+  admin
+  moderator
+}
+
+enum addfund_transaction_type {
+  deposit
+  withdrawal
+  purchase
+  refund
 }
 

@@ -51,7 +51,7 @@ interface ActivityLogData {
 
 export async function logActivity(data: ActivityLogData) {
   try {
-    await db.activityLog.create({
+    await db.activitylog.create({
       data: {
         userId: data.userId,
         username: data.username,
