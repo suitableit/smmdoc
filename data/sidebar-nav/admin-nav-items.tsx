@@ -97,7 +97,7 @@ export const adminNavItems = [
     href: '/admin/users/moderators',
     icon: 'FaUserCheck',
     label: 'Moderators',
-    roles: ['Moderators'],
+    roles: ['admin'],
   },
   {
     title: 'User Activity Logs',
