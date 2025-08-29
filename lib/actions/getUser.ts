@@ -39,7 +39,6 @@ export async function getUserDetails() {
           timezone: true,         // Include timezone preference
           createdAt: true,
           updatedAt: true,
-          addFund: true,         // Include user's transactions
         },
       });
       

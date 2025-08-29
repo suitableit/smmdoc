@@ -10,7 +10,7 @@ import {
   FaSearch,
   FaSync,
   FaTag,
-  FaTimes
+  FaTimes 
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -123,6 +123,7 @@ const BulkModifyPage = () => {
 
   // Loading states
   const [localServicesLoading, setLocalServicesLoading] = useState(false);
+  const [paginationLoading, setPaginationLoading] = useState(false);
 
   // Utility functions
   const formatID = (id: string | number) => {
@@ -145,21 +146,23 @@ const BulkModifyPage = () => {
     }
   }, [categoriesData]);
 
-  // Load services when category is selected
+  // Load services when data is available
   useEffect(() => {
-    if (selectedCategory && servicesData?.data) {
+    if (servicesData?.data) {
       setLocalServicesLoading(true);
-      // Filter services by selected category
-      const categoryServices = servicesData.data.filter((service: Service) => 
-        service.categoryId === selectedCategory || service.category?.id === selectedCategory
-      );
-      setServices(categoryServices);
+      if (selectedCategory) {
+        // Filter services by selected category
+        const categoryServices = servicesData.data.filter((service: Service) => 
+          service.categoryId === parseInt(selectedCategory.toString()) || service.category?.id === parseInt(selectedCategory.toString())
+        );
+        setServices(categoryServices);
+        showToast(`Loaded ${categoryServices.length} services for selected category`, 'success');
+      } else {
+        // Show all services when no category is selected
+        setServices(servicesData.data);
+        showToast(`Loaded ${servicesData.data.length} services`, 'success');
+      }
       setLocalServicesLoading(false);
-      setEditedServices({});
-      setHasChanges(false);
-      showToast(`Loaded ${categoryServices.length} services`, 'success');
-    } else if (selectedCategory && !servicesData?.data) {
-      setServices([]);
       setEditedServices({});
       setHasChanges(false);
     }
@@ -229,8 +232,8 @@ const BulkModifyPage = () => {
     if (selectedCategory) {
       setLocalServicesLoading(true);
       // Trigger SWR revalidation
-      mutate('/api/admin/services/get-services');
-      mutate('/api/admin/categories');
+      mutate('/api/admin/services?page=1&limit=500&search=');
+      mutate('/api/admin/categories/get-categories');
       
       setTimeout(() => {
         setLocalServicesLoading(false);
@@ -247,39 +250,63 @@ const BulkModifyPage = () => {
       setIsUpdating(true);
       showToast('Saving changes...', 'pending');
       
-      // Prepare update requests for all edited services
-      const updatePromises = Object.entries(editedServices).map(async ([serviceId, changes]) => {
-        const originalService = services.find(s => s.id === parseInt(serviceId));
-        if (!originalService) return;
+      // Prepare bulk update data
+      const serviceIds = Object.keys(editedServices).map(id => parseInt(id));
+      const updateData: any = {};
+      
+      // Check if all services have the same changes for bulk update
+      const firstServiceChanges = Object.values(editedServices)[0];
+      const allServicesSameChanges = Object.values(editedServices).every(changes => 
+        JSON.stringify(changes) === JSON.stringify(firstServiceChanges)
+      );
+      
+      if (allServicesSameChanges && firstServiceChanges) {
+        // Use bulk update for same changes
+        if (firstServiceChanges.rate !== undefined) updateData.rate = parseFloat(firstServiceChanges.rate.toString());
+        if (firstServiceChanges.min_order !== undefined) updateData.min_order = parseInt(firstServiceChanges.min_order.toString());
+        if (firstServiceChanges.max_order !== undefined) updateData.max_order = parseInt(firstServiceChanges.max_order.toString());
+        if (firstServiceChanges.status !== undefined) updateData.status = firstServiceChanges.status;
+        
+        // Use bulk update API
+        await axiosInstance.post('/api/admin/services/bulk-update', {
+          serviceIds,
+          updateData
+        });
+      } else {
+        // Use individual updates for different changes
+        const updatePromises = Object.entries(editedServices).map(async ([serviceId, changes]) => {
+          const originalService = services.find(s => s.id === parseInt(serviceId));
+          if (!originalService) return;
 
-        // Merge original service data with changes
-        const updatedData = {
-          name: changes.name || originalService.name,
-          description: changes.description || originalService.description,
-          rate: changes.rate?.toString() || originalService.rate?.toString(),
-          min_order: changes.min_order?.toString() || originalService.min_order?.toString(),
-          max_order: changes.max_order?.toString() || originalService.max_order?.toString(),
-          categoryId: changes.categoryId || originalService.categoryId,
-          serviceType: changes.service_type || changes.serviceType || originalService.service_type || originalService.serviceType || 'other',
-          mode: 'manual', // Default mode
-          refill: originalService.refill ? 'on' : 'off',
-          refillDays: '0',
-          refillDisplay: '0',
-          cancel: originalService.cancel ? 'on' : 'off',
-          personalizedService: 'no',
-          orderLink: 'link',
-          serviceSpeed: 'normal'
-        };
+          // Merge original service data with changes
+          const updatedData = {
+            name: changes.name || originalService.name,
+            description: changes.description || originalService.description,
+            rate: changes.rate?.toString() || originalService.rate?.toString(),
+            min_order: changes.min_order?.toString() || originalService.min_order?.toString(),
+            max_order: changes.max_order?.toString() || originalService.max_order?.toString(),
+            categoryId: changes.categoryId || originalService.categoryId,
+            serviceType: changes.service_type || changes.serviceType || originalService.service_type || originalService.serviceType || 'other',
+            mode: 'manual',
+            refill: originalService.refill ? 'on' : 'off',
+            refillDays: '0',
+            refillDisplay: '0',
+            cancel: originalService.cancel ? 'on' : 'off',
+            personalizedService: 'no',
+            orderLink: 'link',
+            serviceSpeed: 'normal'
+          };
 
-        return axiosInstance.put(`/api/admin/services/update-services?id=${serviceId}`, updatedData);
-      });
+          return axiosInstance.put(`/api/admin/services/update-services?id=${serviceId}`, updatedData);
+        });
 
-      // Execute all updates
-      await Promise.all(updatePromises);
+        // Execute all updates
+        await Promise.all(updatePromises);
+      }
       
       // Refresh data
-      await mutate('/api/admin/services/get-services');
-      await mutate('/api/admin/services/stats');
+      await mutate('/api/admin/services?page=1&limit=500&search=');
+      await mutate('/api/admin/categories/get-categories');
       
       setEditedServices({});
       setHasChanges(false);
@@ -294,25 +321,12 @@ const BulkModifyPage = () => {
 
   // Get selected category name
   const getSelectedCategoryName = () => {
-    const category = categories.find(cat => cat.id === selectedCategory);
+    const category = categories.find(cat => cat.id === parseInt(selectedCategory.toString()));
     return category ? category.category_name : '';
   };
 
-  // Handle loading and error states
-  if (categoriesLoading || servicesLoading) {
-    return (
-      <div className="page-container">
-        <div className="page-content">
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center flex flex-col items-center">
-              <GradientSpinner size="w-12 h-12" className="mb-3" />
-              <div className="text-base font-medium">Loading data...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Handle error states only (loading will be handled in the content area)
+  const isInitialLoading = categoriesLoading || servicesLoading;
 
   if (categoriesError || servicesError) {
     return (
@@ -328,8 +342,8 @@ const BulkModifyPage = () => {
             </p>
             <button 
               onClick={() => {
-                mutate('/api/admin/categories');
-                mutate('/api/admin/services/get-services');
+                mutate('/api/admin/categories/get-categories');
+                mutate('/api/admin/services?page=1&limit=500&search=');
               }}
               className="btn btn-primary mt-4"
             >
@@ -362,13 +376,21 @@ const BulkModifyPage = () => {
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto mb-2 md:mb-0">
               {/* Page View Dropdown */}
               <select 
-                value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ 
-                  ...prev, 
-                  limit: e.target.value === 'all' ? 1000 : parseInt(e.target.value), 
-                  page: 1 
-                }))}
-                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                value={pagination.limit === filteredServices.length ? 'all' : pagination.limit}
+                onChange={(e) => {
+                  setPaginationLoading(true);
+                  setPagination(prev => ({ 
+                    ...prev, 
+                    limit: e.target.value === 'all' ? filteredServices.length : parseInt(e.target.value), 
+                    page: 1 
+                  }));
+                  // Simulate loading time for pagination change
+                  setTimeout(() => {
+                    setPaginationLoading(false);
+                  }, 800);
+                }}
+                disabled={paginationLoading || isInitialLoading}
+                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="25">25</option>
                 <option value="50">50</option>
@@ -378,7 +400,7 @@ const BulkModifyPage = () => {
               
               <button
                 onClick={handleRefresh}
-                disabled={localServicesLoading || !selectedCategory}
+                disabled={localServicesLoading || isInitialLoading || !selectedCategory}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
                 <FaSync className={localServicesLoading ? 'animate-spin' : ''} />
@@ -387,10 +409,11 @@ const BulkModifyPage = () => {
 
               <button
                 onClick={() => setCategoryModalOpen(true)}
+                disabled={isInitialLoading}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full md:w-auto"
               >
                 <FaTag />
-                Select Category
+                {isInitialLoading ? 'Loading...' : 'Select Category'}
               </button>
 
               {hasChanges && (
@@ -454,16 +477,16 @@ const BulkModifyPage = () => {
               </div>
             )}
 
-            {localServicesLoading ? (
+            {(localServicesLoading || isInitialLoading || paginationLoading) ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-3" />
                   <div className="text-base font-medium">
-                    Loading services...
+                    {isInitialLoading ? 'Loading data...' : paginationLoading ? 'Updating page view...' : 'Loading services...'}
                   </div>
                 </div>
               </div>
-            ) : !selectedCategory ? (
+            ) : services.length === 0 ? (
               <div className="text-center py-12">
                 <FaBox
                   className="h-16 w-16 mx-auto mb-4"
@@ -473,17 +496,20 @@ const BulkModifyPage = () => {
                   className="text-lg font-semibold mb-2"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Bulk Modify Services
+                  No Services Found
                 </h3>
                 <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-                  Choose a service category to view and modify its services.
+                  No services match your current filters. Try adjusting your search or category selection.
                 </p>
                 <button
-                  onClick={() => setCategoryModalOpen(true)}
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedCategory('');
+                  }}
                   className="btn btn-primary flex items-center gap-2 px-4 py-2.5 mx-auto"
                 >
-                  <FaTag />
-                  Select Category
+                  <FaSync />
+                  Clear Filters
                 </button>
               </div>
             ) : selectedCategory && getPaginatedData().length === 0 ? (
@@ -729,14 +755,14 @@ const BulkModifyPage = () => {
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
-                      `Showing ${formatNumber(
+                      `Showing ${
                         (pagination.page - 1) * pagination.limit + 1
-                      )} to ${formatNumber(
+                      } to ${
                         Math.min(
                           pagination.page * pagination.limit,
                           pagination.total
                         )
-                      )} of ${formatNumber(pagination.total)} services`
+                      } of ${pagination.total} services`
                     )}
                   </div>
                   <div className="flex items-center gap-2 mt-4 md:mt-0">

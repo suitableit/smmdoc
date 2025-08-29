@@ -8,9 +8,82 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limitParam = searchParams.get('limit') || '10';
     const search = searchParams.get('search') || '';
+    const limit = parseInt(limitParam);
 
-    // Categories pagination - limit categories, not services
-    const categoryLimit = parseInt(limitParam);
+    // If limit is high (>=500), return all services (for bulk modify)
+    if (limit >= 500) {
+      const whereClause = {
+        ...(search && search.trim()
+          ? {
+              OR: [
+                // Search by service name
+                {
+                  name: {
+                    contains: search.trim(),
+                    mode: 'insensitive',
+                  },
+                },
+                // Search by service description
+                {
+                  description: {
+                    contains: search.trim(),
+                    mode: 'insensitive',
+                  },
+                },
+                // Search by service ID (if search term is a number)
+                ...(isNaN(Number(search.trim())) ? [] : [{
+                  id: {
+                    equals: Number(search.trim()),
+                  },
+                }]),
+                // Search by category ID (if search term is a number)
+                ...(isNaN(Number(search.trim())) ? [] : [{
+                  categoryId: {
+                    equals: Number(search.trim()),
+                  },
+                }]),
+                // Search by category name
+                {
+                  category: {
+                    category_name: {
+                      contains: search.trim(),
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+              ],
+            }
+          : {})
+      };
+
+      const services = await db.service.findMany({
+        where: whereClause,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          category: true,
+          serviceType: true,
+        },
+      });
+
+      return NextResponse.json(
+        {
+          data: services || [],
+          total: services.length,
+          page: 1,
+          limit: services.length,
+          totalPages: 1,
+          hasNext: false,
+          hasPrev: false,
+          success: true,
+        },
+        { status: 200 }
+      );
+    }
+
+    // Categories pagination - limit categories, not services (for regular pagination)
+    const categoryLimit = limit;
     const categorySkip = (page - 1) * categoryLimit;
     // First get paginated categories
     const [paginatedCategories, totalCategories] = await Promise.all([

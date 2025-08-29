@@ -1183,7 +1183,7 @@ export async function PUT(req: NextRequest) {
         const newService = await db.service.create({
           data: {
             name: providerService.name,
-            description: `${providerService.description || providerService.name} (Imported from ${provider.name})`,
+            description: `${providerService.description || providerService.name}`,
             rate: markupRate,
             rateUSD: rateUSD,
             min_order: parseInt(providerService.min) || 100,
