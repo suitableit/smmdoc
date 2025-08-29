@@ -89,85 +89,130 @@ export async function POST(req: NextRequest) {
 
         console.log('✅ Provider validation passed');
 
+        // Check if provider is in hardcoded configs or use dynamic config for custom providers
         const providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
-        if (!providerConfig) {
-          console.log('❌ Provider config not found for:', provider.name.toLowerCase());
-          return NextResponse.json(
-            { error: 'Provider configuration not found', success: false, data: null },
-            { status: 400 }
-          );
+        let apiUrls: string[] = [];
+        
+        if (providerConfig) {
+          // Use hardcoded provider configuration
+          apiUrls = [providerConfig.apiUrl, ...providerConfig.alternativeUrls];
+          console.log('✅ Using hardcoded provider config for:', provider.name);
+        } else {
+          // Use dynamic configuration for custom providers
+          apiUrls = [provider.api_url];
+          console.log('✅ Using dynamic provider config for custom provider:', provider.name);
         }
 
         // Fetch services from provider API
         let providerServices = null;
 
-        if (provider.name.toLowerCase() === 'smmcoder') {
-          // SMMCoder API requires POST method with form data
-          const smmcoderUrls = [
-            'https://smmcoder.com/api/v2',
-            'https://smmcoder.com/api'
-          ];
+        // Try multiple request methods and formats for all providers
+        for (const baseUrl of apiUrls) {
+          if (providerServices) break; // Stop if we already got services
+          
+          console.log(`🔄 Trying API: ${baseUrl}`);
+          
+          // Method 1: POST with FormData (works for SMMCoder and some others)
+          try {
+            const formData = new FormData();
+            formData.append('key', provider.api_key);
+            formData.append('action', 'services');
 
-          for (const baseUrl of smmcoderUrls) {
-            try {
-              const formData = new FormData();
-              formData.append('key', provider.api_key);
-              formData.append('action', 'services');
-
-              console.log(`🔄 Trying SMMCoder API: ${baseUrl}`);
-              const response = await fetch(baseUrl, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                  providerServices = data;
-                  console.log(`✅ SMMCoder API success: ${baseUrl} - ${data.length} services`);
-                  break;
-                }
+            const response = await fetch(baseUrl, {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
               }
-            } catch (error) {
-              console.log(`❌ SMMCoder API failed: ${baseUrl}`, error);
-              continue;
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              if (Array.isArray(data) && data.length > 0) {
+                providerServices = data;
+                console.log(`✅ FormData POST success: ${baseUrl} - ${data.length} services`);
+                break;
+              }
             }
+          } catch (error) {
+            console.log(`❌ FormData POST failed: ${baseUrl}`, error);
           }
-        } else {
-          // For other providers, use POST method
-          const urls = [providerConfig.apiUrl, ...providerConfig.alternativeUrls];
+          
+          // Method 2: POST with URLSearchParams (standard SMM panel format)
+          try {
+            const response = await fetch(baseUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              },
+              body: new URLSearchParams({
+                key: provider.api_key,
+                action: 'services'
+              })
+            });
 
-          for (const baseUrl of urls) {
-            try {
-              console.log(`🔄 Trying API: ${baseUrl}`);
-
-              const response = await fetch(baseUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                },
-                body: new URLSearchParams({
-                  key: provider.api_key,
-                  action: 'services'
-                })
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                  providerServices = data;
-                  console.log(`✅ API success: ${baseUrl} - ${data.length} services`);
-                  break;
-                }
+            if (response.ok) {
+              const data = await response.json();
+              if (Array.isArray(data) && data.length > 0) {
+                providerServices = data;
+                console.log(`✅ URLSearchParams POST success: ${baseUrl} - ${data.length} services`);
+                break;
               }
-            } catch (error) {
-              console.log(`❌ API failed: ${baseUrl}`, error);
-              continue;
             }
+          } catch (error) {
+            console.log(`❌ URLSearchParams POST failed: ${baseUrl}`, error);
+          }
+          
+          // Method 3: POST with JSON body
+          try {
+            const response = await fetch(baseUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              },
+              body: JSON.stringify({
+                key: provider.api_key,
+                action: 'services'
+              })
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              if (Array.isArray(data) && data.length > 0) {
+                providerServices = data;
+                console.log(`✅ JSON POST success: ${baseUrl} - ${data.length} services`);
+                break;
+              }
+            }
+          } catch (error) {
+            console.log(`❌ JSON POST failed: ${baseUrl}`, error);
+          }
+          
+          // Method 4: GET with query parameters
+          try {
+            const url = new URL(baseUrl);
+            url.searchParams.append('key', provider.api_key);
+            url.searchParams.append('action', 'services');
+            
+            const response = await fetch(url.toString(), {
+              method: 'GET',
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              }
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              if (Array.isArray(data) && data.length > 0) {
+                providerServices = data;
+                console.log(`✅ GET success: ${baseUrl} - ${data.length} services`);
+                break;
+              }
+            }
+          } catch (error) {
+            console.log(`❌ GET failed: ${baseUrl}`, error);
           }
         }
 
@@ -291,13 +336,20 @@ export async function GET(req: NextRequest) {
 
       console.log('✅ Provider found:', provider.name);
 
-      const providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
+      // Check if provider is in hardcoded configs, otherwise create dynamic config
+      let providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
+      
       if (!providerConfig) {
-        console.log('❌ Provider config not found for:', provider.name.toLowerCase());
-        return NextResponse.json(
-          { error: 'Provider configuration not found', success: false, data: null },
-          { status: 400 }
-        );
+        console.log('🔧 Creating dynamic config for custom provider:', provider.name);
+        // Create dynamic config for custom provider
+        providerConfig = {
+          apiUrl: provider.api_url,
+          endpoints: {
+            services: '',
+            categories: ''
+          },
+          alternativeUrls: []
+        };
       }
 
       // Fetch services from provider API
@@ -474,12 +526,20 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      const providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
+      // Check if provider is in hardcoded configs, otherwise create dynamic config
+      let providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
+      
       if (!providerConfig) {
-        return NextResponse.json(
-          { error: 'Provider configuration not found', success: false, data: null },
-          { status: 400 }
-        );
+        console.log('🔧 Creating dynamic config for custom provider:', provider.name);
+        // Create dynamic config for custom provider
+        providerConfig = {
+          apiUrl: provider.api_url,
+          endpoints: {
+            services: '',
+            categories: ''
+          },
+          alternativeUrls: []
+        };
       }
 
       // For SMMCoder, use POST method as per their API documentation
@@ -770,69 +830,136 @@ export async function GET(req: NextRequest) {
           throw error;
         }
       } else {
-        // For other providers, try both POST and GET methods with multiple URLs
+        // For other providers (including custom providers), try multiple methods and URLs
         const baseUrls = [providerConfig.apiUrl, ...(providerConfig.alternativeUrls || [])];
-        console.log('Testing URLs for categories:', baseUrls);
+        console.log(`🔥 Testing URLs for ${provider.name} categories:`, baseUrls);
 
         for (const baseUrl of baseUrls) {
-          try {
-            console.log('Trying POST method for:', baseUrl);
+          console.log(`🔥 Trying provider ${provider.name} with URL: ${baseUrl}`);
 
-            // Try POST method first (standard for most SMM panels)
+          // Method 1: POST with FormData
+          try {
+            console.log(`📤 POST FormData request to ${baseUrl}`);
             const formData = new FormData();
             formData.append('key', provider.api_key);
             formData.append('action', 'services');
 
-            const postResponse = await fetch(baseUrl, {
+            const response = await fetch(baseUrl, {
               method: 'POST',
               body: formData,
             });
 
-            console.log(`POST Response status for ${baseUrl}:`, postResponse.status);
+            console.log(`📥 POST FormData Response status: ${response.status}`);
 
-            if (postResponse.ok) {
-              const data = await postResponse.json();
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`📊 POST FormData Response data:`, JSON.stringify(data, null, 2));
               if (Array.isArray(data) && data.length > 0) {
                 providerServices = data;
                 workingUrl = baseUrl;
-                console.log(`SUCCESS with POST ${baseUrl}! Found ${data.length} services`);
+                console.log(`✅ SUCCESS with POST FormData ${baseUrl}! Found ${data.length} services`);
                 break;
+              } else {
+                console.log(`❌ POST FormData: Invalid data format or empty array`);
               }
             }
-          } catch (postError) {
-            console.log(`POST failed with ${baseUrl}:`, postError instanceof Error ? postError.message : postError);
+          } catch (error) {
+            console.error(`❌ POST FormData failed for ${baseUrl}:`, error);
           }
 
-          // If POST with FormData failed, try POST with URLSearchParams
+          // Method 2: POST with URLSearchParams
           try {
-            console.log('Trying POST with URLSearchParams for:', baseUrl);
+            console.log(`📤 POST URLSearchParams request to ${baseUrl}`);
+            const params = new URLSearchParams();
+            params.append('key', provider.api_key);
+            params.append('action', 'services');
 
-            const postResponse2 = await fetch(baseUrl, {
+            const response = await fetch(baseUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
               },
-              body: new URLSearchParams({
-                key: provider.api_key,
-                action: 'services'
-              })
+              body: params,
             });
 
-            console.log(`POST URLSearchParams Response status for ${baseUrl}:`, postResponse2.status);
+            console.log(`📥 POST URLSearchParams Response status: ${response.status}`);
 
-            if (postResponse2.ok) {
-              const data = await postResponse2.json();
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`📊 POST URLSearchParams Response data:`, JSON.stringify(data, null, 2));
               if (Array.isArray(data) && data.length > 0) {
                 providerServices = data;
                 workingUrl = baseUrl;
-                console.log(`SUCCESS with POST URLSearchParams ${baseUrl}! Found ${data.length} services`);
+                console.log(`✅ SUCCESS with POST URLSearchParams ${baseUrl}! Found ${data.length} services`);
                 break;
+              } else {
+                console.log(`❌ POST URLSearchParams: Invalid data format or empty array`);
               }
             }
-          } catch (postError2) {
-            console.log(`POST URLSearchParams failed with ${baseUrl}:`, postError2 instanceof Error ? postError2.message : postError2);
+          } catch (error) {
+            console.error(`❌ POST URLSearchParams failed for ${baseUrl}:`, error);
           }
+
+          // Method 3: POST with JSON
+          try {
+            console.log(`📤 POST JSON request to ${baseUrl}`);
+            const response = await fetch(baseUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                key: provider.api_key,
+                action: 'services'
+              }),
+            });
+
+            console.log(`📥 POST JSON Response status: ${response.status}`);
+
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`📊 POST JSON Response data:`, JSON.stringify(data, null, 2));
+              if (Array.isArray(data) && data.length > 0) {
+                providerServices = data;
+                workingUrl = baseUrl;
+                console.log(`✅ SUCCESS with POST JSON ${baseUrl}! Found ${data.length} services`);
+                break;
+              } else {
+                console.log(`❌ POST JSON: Invalid data format or empty array`);
+              }
+            }
+          } catch (error) {
+            console.error(`❌ POST JSON failed for ${baseUrl}:`, error);
+          }
+
+          // Method 4: GET with query parameters
+          try {
+            const servicesUrl = `${baseUrl}?key=${provider.api_key}&action=services`;
+            console.log(`📤 GET request to ${servicesUrl}`);
+
+            const response = await fetch(servicesUrl);
+            console.log(`📥 GET Response status: ${response.status}`);
+
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`📊 GET Response data:`, JSON.stringify(data, null, 2));
+              if (Array.isArray(data) && data.length > 0) {
+                providerServices = data;
+                workingUrl = baseUrl;
+                console.log(`✅ SUCCESS with GET ${servicesUrl}! Found ${data.length} services`);
+                break;
+              } else {
+                console.log(`❌ GET: Invalid data format or empty array`);
+              }
+            }
+          } catch (error) {
+            console.error(`❌ GET failed for ${baseUrl}:`, error);
+          }
+        }
+
+        // If services were found, we can proceed
+        if (providerServices) {
+          // Services found, continue processing
         }
       }
 
@@ -1066,6 +1193,9 @@ export async function PUT(req: NextRequest) {
             categoryId: serviceCategory.id, // Use dynamic category instead of default
             status: 'active',
             perqty: 1000,
+            // Add provider fields
+            providerId: provider.id,
+            providerName: provider.name,
             // Store provider info for order forwarding
             updateText: JSON.stringify({
               provider: provider.name,

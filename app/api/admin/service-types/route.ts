@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const serviceTypes = await db.serviceType.findMany({
+    const serviceTypes = await db.servicetype.findMany({
       include: {
         _count: {
           select: {
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if service type already exists
-    const existingType = await db.serviceType.findUnique({
+    const existingType = await db.servicetype.findUnique({
       where: { name: name.trim() }
     });
 
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const serviceType = await db.serviceType.create({
+    const serviceType = await db.servicetype.create({
       data: {
         name: name.trim(),
         description: description?.trim() || null
