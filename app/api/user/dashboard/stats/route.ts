@@ -15,7 +15,6 @@ export async function GET() {
         total_spent: true,
         currency: true,
         dollarRate: true,
-        addFund: true,
       }
     });
     
