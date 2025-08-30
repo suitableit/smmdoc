@@ -2,6 +2,7 @@
 import ButtonLoader from '@/components/button-loader';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
+import ReCAPTCHA from '@/components/ReCAPTCHA';
 import { login } from '@/lib/actions/login';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
@@ -26,6 +27,7 @@ import {
     FaUser,
     FaUserShield,
 } from 'react-icons/fa';
+import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 
 const Hero: React.FC = () => {
   // Get session data using NextAuth
@@ -44,6 +46,10 @@ const Hero: React.FC = () => {
   const [success, setSuccess] = useState<string | undefined>('');
   const [rememberMe, setRememberMe] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // ReCAPTCHA state
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -66,8 +72,14 @@ const Hero: React.FC = () => {
     setSuccess('');
     setUrlError('');
 
+    // Check if ReCAPTCHA is enabled for sign-in form and validate token
+    if (isEnabledForForm('signIn') && !recaptchaToken) {
+      setError('Please complete the ReCAPTCHA verification.');
+      return;
+    }
+
     startTransition(() => {
-      login(values)
+      login(values, recaptchaToken)
         .then((data) => {
           if (data?.error) {
             setError(data.error);
@@ -418,6 +430,18 @@ const Hero: React.FC = () => {
                           </p>
                         )}
                       </div>
+
+                      {/* ReCAPTCHA */}
+                      {isEnabledForForm('signIn') && (
+                        <ReCAPTCHA
+                          siteKey={recaptchaSettings?.siteKey || ''}
+                          version={recaptchaSettings?.version || 'v2'}
+                          threshold={recaptchaSettings?.threshold}
+                          onVerify={(token) => setRecaptchaToken(token)}
+                          onError={() => setRecaptchaToken(null)}
+                          onExpired={() => setRecaptchaToken(null)}
+                        />
+                      )}
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">

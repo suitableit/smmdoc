@@ -118,9 +118,15 @@ interface NotificationSettings {
 interface ReCAPTCHASettings {
   enabled: boolean;
   version: 'v2' | 'v3';
-  siteKey: string;
-  secretKey: string;
-  threshold: number;
+  v2: {
+    siteKey: string;
+    secretKey: string;
+  };
+  v3: {
+    siteKey: string;
+    secretKey: string;
+    threshold: number;
+  };
   enabledForms: {
     signUp: boolean;
     signIn: boolean;
@@ -204,17 +210,23 @@ const IntegrationPage = () => {
   });
 
   const [recaptchaSettings, setRecaptchaSettings] = useState<ReCAPTCHASettings>({
-    enabled: false,
-    version: 'v3',
-    siteKey: '',
-    secretKey: '',
-    threshold: 0.5,
+    enabled: true,
+    version: 'v2',
+    v2: {
+      siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Google's test key for localhost
+      secretKey: '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe', // Google's test secret key
+    },
+    v3: {
+      siteKey: '',
+      secretKey: '',
+      threshold: 0.5,
+    },
     enabledForms: {
-      signUp: false,
-      signIn: false,
-      contact: false,
-      supportTicket: false,
-      contactSupport: false,
+      signUp: true,
+      signIn: true,
+      contact: true,
+      supportTicket: true,
+      contactSupport: true,
     },
   });
 
@@ -228,10 +240,90 @@ const IntegrationPage = () => {
         if (response.ok) {
           const data = await response.json();
           
-          if (data.liveChatSettings) setLiveChatSettings(data.liveChatSettings);
-          if (data.analyticsSettings) setAnalyticsSettings(data.analyticsSettings);
-          if (data.notificationSettings) setNotificationSettings(data.notificationSettings);
-          if (data.recaptchaSettings) setRecaptchaSettings(data.recaptchaSettings);
+          if (data.success && data.integrationSettings) {
+            const settings = data.integrationSettings;
+            
+            // Update ReCAPTCHA settings
+            setRecaptchaSettings({
+              enabled: settings.recaptchaEnabled,
+              version: settings.recaptchaVersion,
+              v2: {
+                siteKey: settings.v2?.siteKey || '',
+                secretKey: settings.v2?.secretKey || '',
+              },
+              v3: {
+                siteKey: settings.v3?.siteKey || '',
+                secretKey: settings.v3?.secretKey || '',
+                threshold: settings.v3?.threshold || 0.5,
+              },
+              enabledForms: {
+                signUp: settings.recaptchaSignUp,
+                signIn: settings.recaptchaSignIn,
+                contact: settings.recaptchaContact,
+                supportTicket: settings.recaptchaSupportTicket,
+                contactSupport: settings.recaptchaContactSupport,
+              },
+            });
+            
+            // Update Live Chat settings
+            setLiveChatSettings({
+              enabled: settings.liveChatEnabled,
+              hoverTitle: settings.liveChatHoverTitle,
+              socialMediaEnabled: settings.liveChatSocialEnabled,
+              messengerEnabled: settings.liveChatMessengerEnabled,
+              messengerUrl: settings.liveChatMessengerUrl || '',
+              whatsappEnabled: settings.liveChatWhatsappEnabled,
+              whatsappNumber: settings.liveChatWhatsappNumber || '',
+              telegramEnabled: settings.liveChatTelegramEnabled,
+              telegramUsername: settings.liveChatTelegramUsername || '',
+              tawkToEnabled: settings.liveChatTawkToEnabled,
+              tawkToWidgetCode: settings.liveChatTawkToCode || '',
+              visibility: settings.liveChatVisibility,
+            });
+            
+            // Update Analytics settings
+            setAnalyticsSettings({
+              enabled: settings.analyticsEnabled,
+              googleAnalyticsEnabled: settings.googleAnalyticsEnabled,
+              googleAnalyticsCode: settings.googleAnalyticsCode || '',
+              googleAnalyticsVisibility: settings.googleAnalyticsVisibility,
+              facebookPixelEnabled: settings.facebookPixelEnabled,
+              facebookPixelCode: settings.facebookPixelCode || '',
+              facebookPixelVisibility: settings.facebookPixelVisibility,
+              gtmEnabled: settings.gtmEnabled,
+              gtmCode: settings.gtmCode || '',
+              gtmVisibility: settings.gtmVisibility,
+            });
+            
+            // Update Notification settings
+            setNotificationSettings({
+              pushNotificationsEnabled: settings.pushNotificationsEnabled,
+              oneSignalCode: settings.oneSignalCode || '',
+              oneSignalVisibility: settings.oneSignalVisibility,
+              emailNotificationsEnabled: settings.emailNotificationsEnabled,
+              userNotifications: {
+                welcome: settings.userNotifWelcome,
+                apiKeyChanged: settings.userNotifApiKeyChanged,
+                orderStatusChanged: settings.userNotifOrderStatusChanged,
+                newService: settings.userNotifNewService,
+                serviceUpdates: settings.userNotifServiceUpdates,
+              },
+              adminNotifications: {
+                apiBalanceAlerts: settings.adminNotifApiBalanceAlerts,
+                supportTickets: settings.adminNotifSupportTickets,
+                newMessages: settings.adminNotifNewMessages,
+                newManualServiceOrders: settings.adminNotifNewManualServiceOrders,
+                failOrders: settings.adminNotifFailOrders,
+                newManualRefillRequests: settings.adminNotifNewManualRefillRequests,
+                newManualCancelRequests: settings.adminNotifNewManualCancelRequests,
+                newUsers: settings.adminNotifNewUsers,
+                userActivityLogs: settings.adminNotifUserActivityLogs,
+                pendingTransactions: settings.adminNotifPendingTransactions,
+                apiSyncLogs: settings.adminNotifApiSyncLogs,
+                newChildPanelOrders: settings.adminNotifNewChildPanelOrders,
+              },
+            });
+          }
         } else {
           showToast('Failed to load integration settings', 'error');
         }
@@ -259,25 +351,62 @@ const IntegrationPage = () => {
   const saveIntegrationSettings = async () => {
     setIsLoading(true);
     try {
+      // Validate ReCAPTCHA configuration if enabled
+      if (recaptchaSettings.enabled) {
+        if (recaptchaSettings.version === 'v2') {
+          if (!recaptchaSettings.v2.siteKey || !recaptchaSettings.v2.secretKey) {
+            showToast('Please configure ReCAPTCHA v2 Site Key and Secret Key before saving.', 'error');
+            setIsLoading(false);
+            return;
+          }
+        } else if (recaptchaSettings.version === 'v3') {
+          if (!recaptchaSettings.v3.siteKey || !recaptchaSettings.v3.secretKey) {
+            showToast('Please configure ReCAPTCHA v3 Site Key and Secret Key before saving.', 'error');
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+
+      const integrationSettings = {
+        // ReCAPTCHA Settings Only
+        recaptchaEnabled: recaptchaSettings.enabled,
+        recaptchaVersion: recaptchaSettings.version,
+        // Legacy fields (for backward compatibility)
+        recaptchaSiteKey: recaptchaSettings.version === 'v2' ? recaptchaSettings.v2.siteKey : recaptchaSettings.v3.siteKey,
+        recaptchaSecretKey: recaptchaSettings.version === 'v2' ? recaptchaSettings.v2.secretKey : recaptchaSettings.v3.secretKey,
+        // Send both v2 and v3 data structures
+        v2: {
+          siteKey: recaptchaSettings.v2.siteKey,
+          secretKey: recaptchaSettings.v2.secretKey,
+        },
+        v3: {
+          siteKey: recaptchaSettings.v3.siteKey,
+          secretKey: recaptchaSettings.v3.secretKey,
+          threshold: recaptchaSettings.v3.threshold,
+        },
+        recaptchaThreshold: recaptchaSettings.v3.threshold,
+        recaptchaSignUp: recaptchaSettings.enabledForms.signUp,
+        recaptchaSignIn: recaptchaSettings.enabledForms.signIn,
+        recaptchaContact: recaptchaSettings.enabledForms.contact,
+        recaptchaSupportTicket: recaptchaSettings.enabledForms.supportTicket,
+        recaptchaContactSupport: recaptchaSettings.enabledForms.contactSupport,
+      };
+
       const response = await fetch('/api/admin/integration-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          liveChatSettings,
-          analyticsSettings,
-          notificationSettings,
-          recaptchaSettings,
-        }),
+        body: JSON.stringify({ integrationSettings }),
       });
 
       if (response.ok) {
-        showToast('Integration settings saved successfully!', 'success');
+        showToast('ReCAPTCHA settings saved successfully!', 'success');
       } else {
-        showToast('Failed to save integration settings', 'error');
+        showToast('Failed to save ReCAPTCHA settings', 'error');
       }
     } catch (error) {
-      console.error('Error saving integration settings:', error);
-      showToast('Error saving integration settings', 'error');
+      console.error('Error saving ReCAPTCHA settings:', error);
+      showToast('Error saving ReCAPTCHA settings', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -830,30 +959,118 @@ const IntegrationPage = () => {
                     </select>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Site Key</label>
-                    <input
-                      type="text"
-                      value={recaptchaSettings.siteKey}
-                      onChange={(e) =>
-                        setRecaptchaSettings(prev => ({ ...prev, siteKey: e.target.value }))
-                      }
-                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="Enter site key"
-                    />
+                  {/* ReCAPTCHA v2 Configuration */}
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">ReCAPTCHA v2 Configuration</h4>
+                      {recaptchaSettings.version === 'v2' && (!recaptchaSettings.v2.siteKey || !recaptchaSettings.v2.secretKey) && (
+                        <div className="flex items-center text-amber-600 dark:text-amber-400">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-xs font-medium">Configuration Required</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">v2 Site Key</label>
+                      <input
+                        type="text"
+                        value={recaptchaSettings.v2.siteKey}
+                        onChange={(e) =>
+                          setRecaptchaSettings(prev => ({ 
+                            ...prev, 
+                            v2: { ...prev.v2, siteKey: e.target.value }
+                          }))
+                        }
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Enter ReCAPTCHA v2 site key"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">v2 Secret Key</label>
+                      <input
+                        type="text"
+                        value={recaptchaSettings.v2.secretKey}
+                        onChange={(e) =>
+                          setRecaptchaSettings(prev => ({ 
+                            ...prev, 
+                            v2: { ...prev.v2, secretKey: e.target.value }
+                          }))
+                        }
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Enter ReCAPTCHA v2 secret key"
+                      />
+                    </div>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Secret Key</label>
-                    <input
-                      type="password"
-                      value={recaptchaSettings.secretKey}
-                      onChange={(e) =>
-                        setRecaptchaSettings(prev => ({ ...prev, secretKey: e.target.value }))
-                      }
-                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      placeholder="Enter secret key"
-                    />
+                  {/* ReCAPTCHA v3 Configuration */}
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">ReCAPTCHA v3 Configuration</h4>
+                      {recaptchaSettings.version === 'v3' && (!recaptchaSettings.v3.siteKey || !recaptchaSettings.v3.secretKey) && (
+                        <div className="flex items-center text-amber-600 dark:text-amber-400">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-xs font-medium">Configuration Required</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">v3 Site Key</label>
+                      <input
+                        type="text"
+                        value={recaptchaSettings.v3.siteKey}
+                        onChange={(e) =>
+                          setRecaptchaSettings(prev => ({ 
+                            ...prev, 
+                            v3: { ...prev.v3, siteKey: e.target.value }
+                          }))
+                        }
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Enter ReCAPTCHA v3 site key"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">v3 Secret Key</label>
+                      <input
+                        type="text"
+                        value={recaptchaSettings.v3.secretKey}
+                        onChange={(e) =>
+                          setRecaptchaSettings(prev => ({ 
+                            ...prev, 
+                            v3: { ...prev.v3, secretKey: e.target.value }
+                          }))
+                        }
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="Enter ReCAPTCHA v3 secret key"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">v3 Score Threshold</label>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Set the minimum score (0.0 to 1.0) required to pass verification
+                      </p>
+                      <input
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={recaptchaSettings.v3.threshold}
+                        onChange={(e) =>
+                          setRecaptchaSettings(prev => ({ 
+                            ...prev, 
+                            v3: { ...prev.v3, threshold: parseFloat(e.target.value) || 0.5 }
+                          }))
+                        }
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                        placeholder="0.5"
+                      />
+                    </div>
                   </div>
 
                   <div className="form-group">
@@ -992,28 +1209,7 @@ const IntegrationPage = () => {
                     </div>
                   </div>
 
-                  {recaptchaSettings.version === 'v3' && (
-                    <div className="form-group">
-                      <label className="form-label">Score Threshold</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="1"
-                        step="0.1"
-                        value={recaptchaSettings.threshold}
-                        onChange={(e) =>
-                          setRecaptchaSettings(prev => ({ 
-                            ...prev, 
-                            threshold: parseFloat(e.target.value) || 0.5 
-                          }))
-                        }
-                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Higher values are more restrictive (0.0 - 1.0)
-                      </p>
-                    </div>
-                  )}
+
                 </>
               )}
             </div>
@@ -1650,7 +1846,7 @@ const IntegrationPage = () => {
             disabled={isLoading}
             className="btn btn-primary px-8 py-3"
           >
-            {isLoading ? <ButtonLoader /> : 'Save All Integration Settings'}
+            {isLoading ? 'Updating...' : 'Save All Integration Settings'}
           </button>
         </div>
       </div>

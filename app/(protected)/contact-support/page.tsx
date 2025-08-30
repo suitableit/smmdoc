@@ -16,6 +16,8 @@ import {
     FaTicketAlt,
     FaTimes
 } from 'react-icons/fa';
+import ReCAPTCHA from '@/components/ReCAPTCHA';
+import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 
 // Custom Gradient Spinner Component (Large version for loading state)
 const GradientSpinner = ({ size = 'w-5 h-5', className = '' }) => (
@@ -78,6 +80,10 @@ export default function ContactSupportPage() {
     canSubmit: boolean;
   } | null>(null);
   const user = useCurrentUser();
+  
+  // ReCAPTCHA state
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
   // Show toast notification
   const showToast = (
@@ -171,6 +177,12 @@ export default function ContactSupportPage() {
       return;
     }
 
+    // Check ReCAPTCHA if enabled
+    if (isEnabledForForm('contactSupport') && !recaptchaToken) {
+      showToast('Please complete the ReCAPTCHA verification.', 'error');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -185,6 +197,7 @@ export default function ContactSupportPage() {
           category: formData.category,
           message: formData.message,
           attachments: formData.attachments ? Array.from(formData.attachments) : null,
+          ...(recaptchaToken && { recaptchaToken }),
         }),
       });
 
@@ -201,6 +214,7 @@ export default function ContactSupportPage() {
           message: '',
           attachments: null,
         });
+        setRecaptchaToken(null);
       } else {
         // Show error message from API
         showToast(data.error || 'Failed to send message. Please try again later.', 'error');
@@ -471,6 +485,28 @@ export default function ContactSupportPage() {
                     each).
                   </small>
                 </div>
+
+                {/* ReCAPTCHA */}
+                {isEnabledForForm('contactSupport') && recaptchaSettings && (
+                  <ReCAPTCHA
+                    siteKey={recaptchaSettings.siteKey}
+                    version={recaptchaSettings.version}
+                    action="contactSupport"
+                    threshold={recaptchaSettings.threshold}
+                    onVerify={(token) => {
+                      setRecaptchaToken(token);
+                    }}
+                    onError={() => {
+                      setRecaptchaToken(null);
+                      // Let Google's native error messages display instead of custom ones
+                      // This allows 'Invalid domain for site key' and other specific errors to show
+                    }}
+                    onExpired={() => {
+                      setRecaptchaToken(null);
+                      // Let Google's native expired message display
+                    }}
+                  />
+                )}
 
                 {/* Submit Button */}
                 <button

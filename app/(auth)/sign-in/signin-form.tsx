@@ -1,7 +1,9 @@
 'use client';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
+import ReCAPTCHA from '@/components/ReCAPTCHA';
 import { useUserSettings } from '@/hooks/use-user-settings';
+import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 import { login } from '@/lib/actions/login';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
@@ -41,6 +43,10 @@ export default function SignInForm() {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
   const [showPassword, setShowPassword] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  
+  // Get ReCAPTCHA settings
+  const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -56,8 +62,20 @@ export default function SignInForm() {
     setError('');
     setSuccess('');
     urlError = '';
+    
+    // Check ReCAPTCHA if enabled
+    if (isEnabledForForm('signIn') && !recaptchaToken) {
+      setError('Please complete the ReCAPTCHA verification.');
+      return;
+    }
+    
     startTransition(() => {
-      login(values)
+      // Add recaptcha token to values if available
+      const submitData = recaptchaToken 
+        ? { ...values, recaptchaToken }
+        : values;
+        
+      login(submitData)
         .then((data) => {
           if (data?.error) {
             setError(data.error);
@@ -209,6 +227,26 @@ export default function SignInForm() {
                 </p>
               )}
             </div>
+
+            {/* ReCAPTCHA Component */}
+            {isEnabledForForm('signIn') && recaptchaSettings && (
+              <ReCAPTCHA
+                siteKey={recaptchaSettings.siteKey}
+                version={recaptchaSettings.version}
+                action="signin"
+                threshold={recaptchaSettings.threshold}
+                onVerify={(token) => setRecaptchaToken(token)}
+                onError={() => {
+                  setRecaptchaToken(null);
+                  // Let Google's native error messages display instead of custom ones
+                  // This allows 'Invalid domain for site key' and other specific errors to show
+                }}
+                onExpired={() => {
+                  setRecaptchaToken(null);
+                  setError('ReCAPTCHA expired. Please verify again.');
+                }}
+              />
+            )}
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">

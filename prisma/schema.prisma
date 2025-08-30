@@ -653,6 +653,89 @@ model userSettings {
   @@map("user_settings")
 }
 
+model CustomCodesSettings {
+  id          Int      @id @default(autoincrement())
+  headerCodes String?  @db.Text
+  footerCodes String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("custom_codes_settings")
+}
+
+model IntegrationSettings {
+  id                    Int      @id @default(autoincrement())
+  // ReCAPTCHA Settings
+  recaptchaEnabled      Boolean  @default(false)
+  recaptchaVersion      String   @default("v3")
+  // Legacy fields (deprecated but kept for migration)
+  recaptchaSiteKey      String?  @db.Text
+  recaptchaSecretKey    String?  @db.Text
+  // Separate v2 and v3 fields
+  recaptchaV2SiteKey    String?  @db.Text
+  recaptchaV2SecretKey  String?  @db.Text
+  recaptchaV3SiteKey    String?  @db.Text
+  recaptchaV3SecretKey  String?  @db.Text
+  recaptchaThreshold    Float    @default(0.5)
+  recaptchaSignUp       Boolean  @default(false)
+  recaptchaSignIn       Boolean  @default(false)
+  recaptchaContact      Boolean  @default(false)
+  recaptchaSupportTicket Boolean @default(false)
+  recaptchaContactSupport Boolean @default(false)
+  // Live Chat Settings
+  liveChatEnabled       Boolean  @default(false)
+  liveChatHoverTitle    String   @default("Chat with us")
+  liveChatSocialEnabled Boolean  @default(false)
+  liveChatMessengerEnabled Boolean @default(false)
+  liveChatMessengerUrl  String?  @db.Text
+  liveChatWhatsappEnabled Boolean @default(false)
+  liveChatWhatsappNumber String?
+  liveChatTelegramEnabled Boolean @default(false)
+  liveChatTelegramUsername String?
+  liveChatTawkToEnabled Boolean  @default(false)
+  liveChatTawkToCode    String?  @db.Text
+  liveChatVisibility    String   @default("all")
+  // Analytics Settings
+  analyticsEnabled      Boolean  @default(false)
+  googleAnalyticsEnabled Boolean @default(false)
+  googleAnalyticsCode   String?  @db.Text
+  googleAnalyticsVisibility String @default("all")
+  facebookPixelEnabled  Boolean  @default(false)
+  facebookPixelCode     String?  @db.Text
+  facebookPixelVisibility String @default("all")
+  gtmEnabled            Boolean  @default(false)
+  gtmCode               String?  @db.Text
+  gtmVisibility         String   @default("all")
+  // Notification Settings
+  pushNotificationsEnabled Boolean @default(false)
+  oneSignalCode         String?  @db.Text
+  oneSignalVisibility   String   @default("all")
+  emailNotificationsEnabled Boolean @default(false)
+  // User Notifications
+  userNotifWelcome      Boolean  @default(false)
+  userNotifApiKeyChanged Boolean @default(false)
+  userNotifOrderStatusChanged Boolean @default(false)
+  userNotifNewService   Boolean  @default(false)
+  userNotifServiceUpdates Boolean @default(false)
+  // Admin Notifications
+  adminNotifApiBalanceAlerts Boolean @default(false)
+  adminNotifSupportTickets Boolean @default(false)
+  adminNotifNewMessages Boolean @default(false)
+  adminNotifNewManualServiceOrders Boolean @default(false)
+  adminNotifFailOrders  Boolean  @default(false)
+  adminNotifNewManualRefillRequests Boolean @default(false)
+  adminNotifNewManualCancelRequests Boolean @default(false)
+  adminNotifNewUsers    Boolean  @default(false)
+  adminNotifUserActivityLogs Boolean @default(false)
+  adminNotifPendingTransactions Boolean @default(false)
+  adminNotifApiSyncLogs Boolean  @default(false)
+  adminNotifNewChildPanelOrders Boolean @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("integration_settings")
+}
+
 enum CategoryPosition {
   top
   bottom
