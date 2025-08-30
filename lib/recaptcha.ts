@@ -96,24 +96,27 @@ export async function getReCAPTCHASettings() {
     const { db } = await import('./db');
     const integrationSettings = await db.integrationSettings.findFirst();
     
-    if (!integrationSettings?.recaptcha) {
+    if (!integrationSettings?.recaptchaEnabled) {
       return null;
     }
 
-    const recaptchaSettings = integrationSettings.recaptcha as any;
-    
-    if (!recaptchaSettings.enabled) {
-      return null;
-    }
+    // Get the correct secret key based on version
+    const secretKey = integrationSettings.recaptchaVersion === 'v2' 
+      ? integrationSettings.recaptchaV2SecretKey 
+      : integrationSettings.recaptchaV3SecretKey;
 
     return {
-      enabled: recaptchaSettings.enabled,
-      version: recaptchaSettings.version || 'v3',
-      secretKey: recaptchaSettings.version === 'v2' 
-        ? recaptchaSettings.v2?.secretKey 
-        : recaptchaSettings.v3?.secretKey,
-      threshold: recaptchaSettings.v3?.threshold || 0.5,
-      enabledForms: recaptchaSettings.enabledForms || {},
+      enabled: integrationSettings.recaptchaEnabled,
+      version: integrationSettings.recaptchaVersion || 'v3',
+      secretKey: secretKey || integrationSettings.recaptchaSecretKey, // Fallback to legacy field
+      threshold: integrationSettings.recaptchaThreshold || 0.5,
+      enabledForms: {
+        signUp: integrationSettings.recaptchaSignUp || false,
+        signIn: integrationSettings.recaptchaSignIn || false,
+        contact: integrationSettings.recaptchaContact || false,
+        supportTicket: integrationSettings.recaptchaSupportTicket || false,
+        contactSupport: integrationSettings.recaptchaContactSupport || false,
+      },
     };
   } catch (error) {
     console.error('Error fetching reCAPTCHA settings:', error);
