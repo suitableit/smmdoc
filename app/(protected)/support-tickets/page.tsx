@@ -17,6 +17,8 @@ import {
     FaTicketAlt,
     FaTimes,
 } from 'react-icons/fa';
+import ReCAPTCHA from '@/components/ReCAPTCHA';
+import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -103,6 +105,10 @@ const TicketPage: React.FC = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
+
+  // ReCAPTCHA state
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
   // Tickets data from API
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -199,6 +205,13 @@ const TicketPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      // Check ReCAPTCHA if enabled
+      if (isEnabledForForm('supportTicket') && !recaptchaToken) {
+        showToast('Please complete the ReCAPTCHA verification', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Generate subject based on category and subcategory
       const categoryLabel = categories.find(c => c.value === formData.category)?.label || 'Support';
       const subcategoryLabel = subcategories.find(s => s.value === formData.subcategory)?.label || '';
@@ -215,6 +228,7 @@ const TicketPage: React.FC = () => {
         orderIds,
         priority: formData.priority,
         attachments: formData.attachments,
+        ...(recaptchaToken && { recaptchaToken }),
       };
 
       const response = await fetch('/api/support-tickets', {
@@ -507,6 +521,28 @@ const TicketPage: React.FC = () => {
                         Attach files
                       </button>
                     </div>
+                  )}
+
+                  {/* ReCAPTCHA Component */}
+                  {isEnabledForForm('supportTicket') && recaptchaSettings && (
+                    <ReCAPTCHA
+                      siteKey={recaptchaSettings.siteKey}
+                      version={recaptchaSettings.version}
+                      action="supportTicket"
+                      threshold={recaptchaSettings.threshold}
+                      onVerify={(token) => {
+                        setRecaptchaToken(token);
+                      }}
+                      onError={() => {
+                        setRecaptchaToken(null);
+                        // Let Google's native error messages display instead of custom ones
+                        // This allows 'Invalid domain for site key' and other specific errors to show
+                      }}
+                      onExpired={() => {
+                        setRecaptchaToken(null);
+                        // Let Google's native expired message display
+                      }}
+                    />
                   )}
 
                   <button

@@ -45,7 +45,6 @@ const Toast = ({
 // Define interface for UserActivityLog
 interface UserActivityLog {
   id: string;
-  slNo: number;
   username: string;
   details: string;
   ipAddress: string;
@@ -393,12 +392,7 @@ const UserActivityLogsPage = () => {
                             className="rounded border-gray-300 w-4 h-4"
                           />
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Sl. No
-                        </th>
+
                         <th
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
@@ -445,14 +439,7 @@ const UserActivityLogsPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
                           </td>
-                          <td className="p-3">
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {log.slNo}
-                            </div>
-                          </td>
+
                           <td className="p-3">
                             <div
                               className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded"
@@ -534,9 +521,7 @@ const UserActivityLogsPage = () => {
                               onChange={() => handleSelectLog(log.id)}
                               className="rounded border-gray-300 w-4 h-4"
                             />
-                            <div className="font-mono text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                              #{log.slNo}
-                            </div>
+
                             <div className="font-medium text-sm font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               {log.username}
                             </div>

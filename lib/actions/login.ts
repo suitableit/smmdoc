@@ -14,8 +14,28 @@ import { sendMail } from '../nodemailer';
 import { DEFAULT_SIGN_IN_REDIRECT } from '../routes';
 import { generateTwoFactorToken, generateVerificationToken } from '../tokens';
 import { signInSchema } from '../validators/auth.validator';
+import { verifyReCAPTCHA, getReCAPTCHASettings } from '../recaptcha';
 
-export const login = async (values: z.infer<typeof signInSchema>) => {
+export const login = async (values: z.infer<typeof signInSchema> & { recaptchaToken?: string }) => {
+  // Verify reCAPTCHA if enabled and token provided
+  const recaptchaSettings = await getReCAPTCHASettings();
+  if (recaptchaSettings && recaptchaSettings.enabledForms?.signIn) {
+    if (!values.recaptchaToken) {
+      return { success: false, error: "reCAPTCHA verification is required" };
+    }
+
+    const recaptchaResult = await verifyReCAPTCHA(
+      values.recaptchaToken,
+      recaptchaSettings.secretKey,
+      recaptchaSettings.version === 'v3' ? 'signin' : undefined,
+      recaptchaSettings.version === 'v3' ? recaptchaSettings.threshold : undefined
+    );
+
+    if (!recaptchaResult.success) {
+      return { success: false, error: recaptchaResult.error || "reCAPTCHA verification failed" };
+    }
+  }
+
   const validedFields = signInSchema.safeParse(values);
   if (!validedFields.success) {
     return { success: false, error: 'Invalid Fields!' };

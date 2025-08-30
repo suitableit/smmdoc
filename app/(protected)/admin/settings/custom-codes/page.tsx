@@ -23,8 +23,7 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   </div>
 );
 
-// Mock components for demonstration
-const ButtonLoader = () => <div className="loading-spinner"></div>;
+// ButtonLoader removed - using text instead
 
 // Toast Message Component
 const Toast = ({
@@ -120,6 +119,8 @@ const CustomCodesPage = () => {
 
       if (response.ok) {
         showToast('Custom codes settings saved successfully!', 'success');
+        // Dispatch custom event to refresh custom codes on the frontend
+        window.dispatchEvent(new CustomEvent('customCodesUpdated'));
       } else {
         showToast('Failed to save custom codes settings', 'error');
       }
@@ -282,7 +283,7 @@ const CustomCodesPage = () => {
             disabled={isLoading}
             className="btn btn-primary px-8 py-3"
           >
-            {isLoading ? <ButtonLoader /> : 'Save Custom Codes'}
+            {isLoading ? 'Updating...' : 'Save Custom Codes'}
           </button>
         </div>
       </div>
