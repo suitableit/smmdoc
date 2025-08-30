@@ -3,6 +3,7 @@ import ButtonLoader from '@/components/button-loader';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import ReCAPTCHA from '@/components/ReCAPTCHA';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { login } from '@/lib/actions/login';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
@@ -79,7 +80,12 @@ const Hero: React.FC = () => {
     }
 
     startTransition(() => {
-      login(values, recaptchaToken)
+      // Add recaptcha token to values if available
+      const submitData = recaptchaToken 
+        ? { ...values, recaptchaToken }
+        : values;
+        
+      login(submitData)
         .then((data) => {
           if (data?.error) {
             setError(data.error);
@@ -433,14 +439,20 @@ const Hero: React.FC = () => {
 
                       {/* ReCAPTCHA */}
                       {isEnabledForForm('signIn') && (
-                        <ReCAPTCHA
-                          siteKey={recaptchaSettings?.siteKey || ''}
-                          version={recaptchaSettings?.version || 'v2'}
-                          threshold={recaptchaSettings?.threshold}
-                          onVerify={(token) => setRecaptchaToken(token)}
-                          onError={() => setRecaptchaToken(null)}
-                          onExpired={() => setRecaptchaToken(null)}
-                        />
+                        <ErrorBoundary fallback={
+                          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
+                            ReCAPTCHA temporarily unavailable. You can still sign in.
+                          </div>
+                        }>
+                          <ReCAPTCHA
+                            siteKey={recaptchaSettings?.siteKey || ''}
+                            version={recaptchaSettings?.version || 'v2'}
+                            threshold={recaptchaSettings?.threshold}
+                            onVerify={(token) => setRecaptchaToken(token)}
+                            onError={() => setRecaptchaToken(null)}
+                            onExpired={() => setRecaptchaToken(null)}
+                          />
+                        </ErrorBoundary>
                       )}
 
                       <div className="flex items-center justify-between">

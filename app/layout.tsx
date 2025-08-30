@@ -1,6 +1,7 @@
 import '@/assets/styles/globals.css';
 import { auth } from '@/auth';
 import { CustomCodesInjector } from '@/components/CustomCodesInjector';
+import AnalyticsInjector from '@/components/analytics-injector';
 import { ThemeProvider } from '@/components/theme-provider';
 import { APP_DESCRIPTION, APP_NAME, APP_URL } from '@/lib/constants';
 import type { Metadata } from 'next';
@@ -56,6 +57,7 @@ export default async function RootLayout({
               <NextTopLoader />
               <Toaster richColors position="bottom-right" />
               <CustomCodesInjector />
+              <AnalyticsInjector />
               <CurrencyProvider serverCurrency={serverCurrency}>
                 <div className="non-sidebar-content font-nunito text-black">
                   {children}

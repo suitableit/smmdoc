@@ -22,6 +22,7 @@ export const publicRoutes = [
   '/api/user/services/servicefav',
   '/api/public/custom-codes',
   '/api/public/recaptcha-settings',
+  '/api/public/analytics-settings',
 ];
 export const apiAuthPrefixes = ['/api/auth', '/api/currency', '/api/user', '/api/admin'];
 export const DEFAULT_SIGN_IN_REDIRECT = '/dashboard';
