@@ -1,29 +1,11 @@
 import nodemailer, { Transporter } from "nodemailer";
+import { createEmailTransporter, getFromEmailAddress } from './email-config';
 
 interface MailOptions {
   sendTo: string;
   subject: string;
   html: string;
 }
-
-// Create the transporter with proper type annotations
-const transporter: Transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_SERVER_HOST || "smtp-relay.brevo.com",
-  port: Number(process.env.EMAIL_SERVER_PORT) || 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.EMAIL_SERVER_USER,
-    pass: process.env.EMAIL_SERVER_PASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-  // Connection pooling options
-  pool: true,
-  maxConnections: 1,
-  rateDelta: 20000,
-  rateLimit: 5,
-});
 
 // Send mail function with type safety and better error handling
 export const sendMail = async ({
@@ -32,11 +14,24 @@ export const sendMail = async ({
   html,
 }: MailOptions): Promise<boolean> => {
   try {
-    // Verify transporter before sending
-    await transporter.verify();
+    // Create transporter using database settings
+    const transporter = await createEmailTransporter();
+    
+    if (!transporter) {
+      console.error("❌ Email transporter not available. Please configure email settings in admin panel.");
+      return false;
+    }
+
+    // Get from email address from database
+    const fromEmail = await getFromEmailAddress();
+    
+    if (!fromEmail) {
+      console.error("❌ From email address not configured. Please configure email settings in admin panel.");
+      return false;
+    }
     
     await transporter.sendMail({
-      from: `"SMMDOC" <${process.env.EMAIL_FROM || process.env.EMAIL_SERVER_USER}>`,
+      from: `"SMMDOC" <${fromEmail}>`,
       to: sendTo,
       subject: subject,
       html: html,
@@ -58,8 +53,8 @@ export const sendMail = async ({
     // Log specific authentication errors
     if (emailError.code === 'EAUTH') {
       console.error("🔐 Authentication failed. Please check:");
-      console.error("- EMAIL_SERVER_USER is correct");
-      console.error("- EMAIL_SERVER_PASSWORD is valid (use App Password for Gmail)");
+      console.error("- SMTP username is correct in admin email settings");
+      console.error("- SMTP password is valid in admin email settings");
       console.error("- SMTP settings are correct for your email provider");
     }
     
