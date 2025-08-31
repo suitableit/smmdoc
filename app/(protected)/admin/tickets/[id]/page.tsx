@@ -762,7 +762,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       </div>
                     )}
                     
-                    <div className={`${(message.type === 'staff' || message.type === 'system') ? 'max-w-[calc(100%-3.5rem)]' : 'flex-1 min-w-0'} p-4 rounded-lg ${
+                    <div className={`flex-1 min-w-0 p-4 rounded-lg ${
                       (message.type === 'staff' || message.type === 'system') ? 'bg-blue-50 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800/50'
                     }`}>
                       <div className={`flex items-center gap-2 mb-2 ${(message.type === 'staff' || message.type === 'system') ? 'justify-end' : ''}`}>

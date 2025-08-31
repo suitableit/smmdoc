@@ -125,7 +125,15 @@ export async function GET(
         content: msg.message,
         createdAt: msg.createdAt.toISOString(),
         attachments: msg.attachments ? JSON.parse(msg.attachments) : []
-      }))
+      })),
+      notes: ticket.notes.map((note: any) => ({
+        id: note.id.toString(),
+        content: note.content,
+        author: note.user.name || 'Admin',
+        createdAt: note.createdAt.toISOString(),
+        isPrivate: note.isPrivate
+      })),
+      user: ticket.user
     };
 
     return NextResponse.json(transformedTicket);
