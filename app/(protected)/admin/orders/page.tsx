@@ -20,7 +20,8 @@ import {
 
 // Import APP_NAME constant
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 
 // Dynamic imports for modal components
@@ -135,10 +136,12 @@ interface PaginationInfo {
 }
 
 const AdminOrdersPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `All Orders — ${APP_NAME}`;
-  }, []);
+    setPageTitle('All Orders', appName);
+  }, [appName]);
 
   // Get currency data
   const { availableCurrencies } = useCurrency();

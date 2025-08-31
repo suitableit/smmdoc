@@ -1,6 +1,7 @@
 'use client';
 
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import moment from 'moment';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -131,6 +132,8 @@ const dummyTickets: Ticket[] = [
 ];
 
 export default function TicketsHistory() {
+  const { appName } = useAppNameWithFallback();
+
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [status, setStatus] = useState('all');
@@ -149,8 +152,8 @@ export default function TicketsHistory() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Tickets History — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Tickets History', appName);
+  }, [appName]);
 
   // Simulate initial loading
   useEffect(() => {

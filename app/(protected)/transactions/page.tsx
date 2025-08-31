@@ -1,7 +1,8 @@
 'use client';
 
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
 import {
     FaCheckCircle,
@@ -111,6 +112,8 @@ function StatusBadge({ status }: { status: Transaction['status'] }) {
 }
 
 export default function TransactionsPage() {
+  const { appName } = useAppNameWithFallback();
+
   const { currency, rate } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,8 +134,8 @@ export default function TransactionsPage() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Transactions — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Transactions', appName);
+  }, [appName]);
 
   // Debounce search term and track search activity
   useEffect(() => {

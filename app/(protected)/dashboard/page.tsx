@@ -2,7 +2,8 @@
 
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import moment from 'moment';
@@ -74,10 +75,12 @@ const DashboardPage = () => {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ticketsLoading, setTicketsLoading] = useState(true);
 
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Dashboard — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Dashboard', appName);
+  }, [appName]);
 
   // Simulate loading states for different sections
   useEffect(() => {

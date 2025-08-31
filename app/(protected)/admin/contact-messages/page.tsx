@@ -15,7 +15,8 @@ import {
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -71,10 +72,12 @@ interface PaginationInfo {
 }
 
 const ContactMessagesPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Contact Messages — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Contact Messages', appName);
+  }, [appName]);
 
   // State for real data
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);

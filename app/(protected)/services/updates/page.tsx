@@ -2,7 +2,8 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { revalidate } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import {
@@ -61,6 +62,8 @@ interface Service {
 }
 
 export default function UpdateServiceTable() {
+  const { appName } = useAppNameWithFallback();
+
   const user = useCurrentUser();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,8 +80,8 @@ export default function UpdateServiceTable() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Service Updates — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Service Updates', appName);
+  }, [appName]);
 
   // Show toast notification
   const showToast = (

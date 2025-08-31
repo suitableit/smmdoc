@@ -768,3 +768,16 @@ model EmailSettings {
   @@map("email_settings")
 }
 
+model GeneralSettings {
+  id         Int      @id @default(autoincrement())
+  siteTitle  String   @default("SMM Panel")
+  tagline    String   @default("Best SMM Services Provider")
+  siteIcon   String   @default("")
+  siteLogo   String   @default("")
+  adminEmail String   @default("admin@example.com")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("general_settings")
+}
+

@@ -20,7 +20,8 @@ import {
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
@@ -159,12 +160,14 @@ interface Service {
 }
 
 const ImportServicesPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   const router = useRouter();
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Import Services — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Import Services', appName);
+  }, [appName]);
 
   // Real providers data from API
   const [realProviders, setRealProviders] = useState<Provider[]>([]);

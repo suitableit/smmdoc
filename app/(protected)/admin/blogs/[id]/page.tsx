@@ -13,7 +13,8 @@ import {
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -74,10 +75,12 @@ interface PostFormData {
 }
 
 const EditBlogPostPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Edit Post — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Edit Post', appName);
+  }, [appName]);
 
   // Dummy data for categories
   const dummyCategories: PostCategory[] = [
