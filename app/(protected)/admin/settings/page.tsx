@@ -39,6 +39,77 @@ const ImageSkeleton = ({ width, height, className = '' }: { width: number; heigh
   </div>
 );
 
+// Keyword Tag Component
+const KeywordTag = ({ keyword, onRemove }: { keyword: string; onRemove: () => void }) => (
+  <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm rounded-full border border-blue-200 dark:border-blue-700">
+    {keyword}
+    <button
+      onClick={onRemove}
+      className="ml-1 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 transition-colors"
+      type="button"
+    >
+      <FaTimes className="w-3 h-3" />
+    </button>
+  </span>
+);
+
+// Keywords Input Component
+const KeywordsInput = ({ 
+  keywords, 
+  onChange 
+}: { 
+  keywords: string[]; 
+  onChange: (keywords: string[]) => void 
+}) => {
+  const [inputValue, setInputValue] = useState('');
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === ',' || e.key === 'Enter') {
+      e.preventDefault();
+      const trimmedValue = inputValue.trim();
+      if (trimmedValue && !keywords.includes(trimmedValue)) {
+        onChange([...keywords, trimmedValue]);
+        setInputValue('');
+      }
+    } else if (e.key === 'Backspace' && inputValue === '' && keywords.length > 0) {
+      // Remove last keyword when backspace is pressed on empty input
+      onChange(keywords.slice(0, -1));
+    }
+  };
+
+  const removeKeyword = (indexToRemove: number) => {
+    onChange(keywords.filter((_, index) => index !== indexToRemove));
+  };
+
+  return (
+    <div className="form-group">
+      <label className="form-label">Keywords</label>
+      <div className="min-h-[48px] w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-[var(--primary)] dark:focus-within:ring-[var(--secondary)] focus-within:border-transparent shadow-sm transition-all duration-200">
+        <div className="flex flex-wrap gap-2 mb-2">
+          {keywords.map((keyword, index) => (
+            <KeywordTag
+              key={index}
+              keyword={keyword}
+              onRemove={() => removeKeyword(index)}
+            />
+          ))}
+        </div>
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="w-full bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+          placeholder={keywords.length === 0 ? "Enter keywords and press comma or enter" : "Add more keywords..."}
+        />
+      </div>
+      <p className="text-xs text-gray-500 mt-1">
+        Press comma (,) or Enter to add keywords. Keywords: {keywords.join(', ')}
+      </p>
+    </div>
+  );
+};
+
 // Mock components for demonstration
 const ButtonLoader = () => <div className="loading-spinner"></div>;
 
@@ -167,7 +238,7 @@ interface MetaSettings {
   googleTitle: string;
   siteTitle: string;
   siteDescription: string;
-  keywords: string;
+  keywords: string[];
   thumbnail: string;
 }
 
@@ -256,7 +327,7 @@ const GeneralSettingsPage = () => {
     googleTitle: '',
     siteTitle: '',
     siteDescription: '',
-    keywords: '',
+    keywords: [],
     thumbnail: '',
   });
 
@@ -343,7 +414,17 @@ const GeneralSettingsPage = () => {
         // Process meta settings
         if (metaResponse.ok) {
           const data = await metaResponse.json();
-          if (data.metaSettings) setMetaSettings(data.metaSettings);
+          if (data.metaSettings) {
+            const processedMetaSettings = {
+              ...data.metaSettings,
+              keywords: data.metaSettings.keywords 
+                ? (typeof data.metaSettings.keywords === 'string' 
+                    ? data.metaSettings.keywords.split(',').map((k: string) => k.trim()).filter((k: string) => k)
+                    : data.metaSettings.keywords)
+                : []
+            };
+            setMetaSettings(processedMetaSettings);
+          }
         }
 
         // Process user settings
@@ -431,10 +512,16 @@ const GeneralSettingsPage = () => {
   const saveMetaSettings = async () => {
     setLoadingStates(prev => ({ ...prev, meta: true }));
     try {
+      // Convert keywords array to comma-separated string for API
+      const metaSettingsForAPI = {
+        ...metaSettings,
+        keywords: metaSettings.keywords.join(', ')
+      };
+
       const response = await fetch('/api/admin/meta-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ metaSettings }),
+        body: JSON.stringify({ metaSettings: metaSettingsForAPI }),
       });
 
       if (response.ok) {
@@ -603,7 +690,7 @@ const GeneralSettingsPage = () => {
       formData.append('file', file);
       
       // Set upload type based on field
-      if (field === 'siteIcon' || field === 'siteLogo') {
+      if (field === 'siteIcon' || field === 'siteLogo' || field === 'thumbnail') {
         formData.append('type', 'general');
       }
 
@@ -961,31 +1048,35 @@ const GeneralSettingsPage = () => {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Keywords</label>
-                  <input
-                    type="text"
-                    value={metaSettings.keywords}
-                    onChange={(e) =>
-                      setMetaSettings(prev => ({ ...prev, keywords: e.target.value }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    placeholder="Enter keywords separated by commas"
-                  />
-                </div>
+                <KeywordsInput
+                  keywords={metaSettings.keywords}
+                  onChange={(keywords) => setMetaSettings(prev => ({ ...prev, keywords }))}
+                />
 
                 <div className="form-group">
                   <label className="form-label">Thumbnail (1200x630px)</label>
                   <div className="flex items-center gap-3">
-                    {metaSettings.thumbnail && (
-                      <Image
-                        src={metaSettings.thumbnail}
-                        alt="SEO Thumbnail"
-                        width={80}
-                        height={40}
-                        className="w-20 h-10 rounded object-cover border"
-                      />
-                    )}
+                    {metaSettings.thumbnail ? (
+                      <div className="relative group">
+                        <Image
+                          src={metaSettings.thumbnail}
+                          alt="SEO Thumbnail"
+                          width={80}
+                          height={40}
+                          className="w-20 h-10 rounded object-cover border"
+                        />
+                        <button
+                          onClick={() => {
+                            setMetaSettings(prev => ({ ...prev, thumbnail: '' }));
+                            showToast('Thumbnail removed successfully!', 'success');
+                          }}
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          title="Remove Thumbnail"
+                        >
+                          <FaTimes className="w-2 h-2" />
+                        </button>
+                      </div>
+                    ) : null}
                     <label className="btn btn-secondary cursor-pointer">
                       <FaImage className="w-4 h-4 mr-2" />
                       Upload Thumbnail
