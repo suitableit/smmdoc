@@ -553,7 +553,7 @@ const TicketPage: React.FC = () => {
                     onClick={handleSubmit}
                     className="btn btn-primary w-full"
                   >
-                    {isSubmitting ? <ButtonLoader /> : 'Submit Ticket'}
+                    {isSubmitting ? 'Submitting...' : 'Submit Ticket'}
                   </button>
                 </div>
               </div>

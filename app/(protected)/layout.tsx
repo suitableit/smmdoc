@@ -23,7 +23,7 @@ export default function ProtectedLayout({
       session.user.id,
       () => {
         // Force logout when session is invalidated
-        signOut({ callbackUrl: '/auth/signin' });
+        signOut({ callbackUrl: '/sign-in' });
       }
     );
 
@@ -38,7 +38,7 @@ export default function ProtectedLayout({
       const isValid = await checkSessionValidity();
       if (!isValid) {
         console.log('Session is no longer valid, logging out...');
-        signOut({ callbackUrl: '/auth/signin' });
+        signOut({ callbackUrl: '/sign-in' });
       }
     }, 5000); // Check every 5 seconds
 
