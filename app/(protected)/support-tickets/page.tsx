@@ -54,6 +54,9 @@ const ButtonLoader = () => <div className="loading-spinner"></div>;
 interface TicketFormData {
   category: string;
   subcategory: string;
+  ticketType: 'Human' | 'AI';
+  aiSubcategory: string;
+  humanTicketSubject: string; // New field for Human ticket subjects
   orderIds: string;
   message: string;
   subject: string;
@@ -93,6 +96,9 @@ const TicketPage: React.FC = () => {
   const [formData, setFormData] = useState<TicketFormData>({
     category: '1',
     subcategory: '2',
+    ticketType: 'AI',
+    aiSubcategory: 'Refill',
+    humanTicketSubject: '1', // Default to first subject
     orderIds: '',
     message: '',
     subject: '',
@@ -107,6 +113,7 @@ const TicketPage: React.FC = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
+  const [orderIdsError, setOrderIdsError] = useState<string>('');
 
   // ReCAPTCHA state
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -115,6 +122,10 @@ const TicketPage: React.FC = () => {
   // Tickets data from API
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
+  
+  // Ticket subjects from admin settings
+  const [ticketSubjects, setTicketSubjects] = useState<{ id: number; name: string }[]>([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
 
   // Fetch user tickets
   const fetchTickets = async () => {
@@ -135,10 +146,34 @@ const TicketPage: React.FC = () => {
     }
   };
 
-  // Fetch tickets on component mount
+  // Fetch ticket subjects from admin settings
+  const fetchTicketSubjects = async () => {
+    setSubjectsLoading(true);
+    try {
+      const response = await fetch('/api/ticket-subjects');
+      if (response.ok) {
+        const data = await response.json();
+        setTicketSubjects(data.subjects || []);
+      } else {
+        console.error('Failed to fetch ticket subjects');
+      }
+    } catch (error) {
+      console.error('Error fetching ticket subjects:', error);
+    } finally {
+      setSubjectsLoading(false);
+    }
+  };
+
+  // Fetch tickets and subjects on component mount
   useEffect(() => {
     fetchTickets();
+    fetchTicketSubjects();
   }, []);
+
+  const ticketTypes = [
+    { value: 'Human', label: 'Human Ticket' },
+    { value: 'AI', label: 'AI Ticket' },
+  ];
 
   const categories = [
     { value: '1', label: 'AI Support' },
@@ -151,6 +186,14 @@ const TicketPage: React.FC = () => {
     { value: '6', label: 'Speed up' },
     { value: '14', label: 'Restart' },
     { value: '66', label: 'Fake complete' },
+  ];
+
+  const aiSubcategories = [
+    { value: 'Refill', label: 'Refill' },
+    { value: 'Cancel', label: 'Cancel' },
+    { value: 'Speed Up', label: 'Speed Up' },
+    { value: 'Restart', label: 'Restart' },
+    { value: 'Fake Complete', label: 'Fake Complete' },
   ];
 
   // Simulate initial loading
@@ -172,26 +215,40 @@ const TicketPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (formData.category === '1') {
-      // AI Support - hide message and file upload
+    if (formData.ticketType === 'AI') {
+      // AI Ticket - hide message and file upload, set category to AI Support
       setShowMessageField(false);
       setShowFileUpload(false);
-      // Auto-generate message
-      const subcategoryLabel =
-        subcategories.find((s) => s.value === formData.subcategory)?.label ||
-        'Subcategory Not Found';
-      const orderIdText = formData.orderIds || 'Order ID Not Found';
       setFormData((prev) => ({
         ...prev,
-        message: `${orderIdText} ${subcategoryLabel}`,
+        category: '1', // AI Support
+        message: `${formData.orderIds || 'Order ID Not Found'} ${formData.aiSubcategory}`,
       }));
     } else {
-      // Human Support - show message and file upload
+      // Human Ticket - show message and file upload, set category to Human Support
       setShowMessageField(true);
       setShowFileUpload(true);
-      setFormData((prev) => ({ ...prev, message: '' }));
+      setFormData((prev) => ({
+        ...prev,
+        category: '13', // Human Support
+        message: '',
+      }));
     }
-  }, [formData.category, formData.subcategory, formData.orderIds]);
+  }, [formData.ticketType, formData.aiSubcategory, formData.orderIds]);
+
+  // Handle ticket type change
+  const handleTicketTypeChange = (ticketType: 'Human' | 'AI') => {
+    setFormData((prev) => ({
+      ...prev,
+      ticketType,
+      // Reset relevant fields when switching types
+      aiSubcategory: ticketType === 'AI' ? 'Refill' : prev.aiSubcategory,
+      subcategory: ticketType === 'Human' ? '2' : prev.subcategory,
+      humanTicketSubject: ticketType === 'Human' ? '1' : prev.humanTicketSubject,
+      orderIds: '',
+      message: '',
+    }));
+  };
 
   const handleInputChange = (field: keyof TicketFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -200,6 +257,26 @@ const TicketPage: React.FC = () => {
   const handleOrderIdsChange = (value: string) => {
     // Only allow numbers and commas
     const sanitized = value.replace(/[^0-9,]/g, '');
+    
+    // Validate order ID format
+    if (sanitized) {
+      const orderIds = sanitized.split(',').map(id => id.trim()).filter(id => id);
+      const invalidIds = orderIds.filter(id => {
+        // Order ID should be numeric
+        return !/^\d+$/.test(id);
+      });
+      
+      if (invalidIds.length > 0) {
+        setOrderIdsError(`Invalid order ID format: ${invalidIds.join(', ')}. Order IDs should be numeric.`);
+      } else if (orderIds.length > 10) {
+        setOrderIdsError('Maximum 10 order IDs allowed per ticket.');
+      } else {
+        setOrderIdsError('');
+      }
+    } else {
+      setOrderIdsError('');
+    }
+    
     handleInputChange('orderIds', sanitized);
   };
 
@@ -214,10 +291,31 @@ const TicketPage: React.FC = () => {
         return;
       }
 
-      // Generate subject based on category and subcategory
-      const categoryLabel = categories.find(c => c.value === formData.category)?.label || 'Support';
-      const subcategoryLabel = subcategories.find(s => s.value === formData.subcategory)?.label || '';
-      const subject = `${categoryLabel} - ${subcategoryLabel}`;
+      // Validate order IDs for both Human and AI tickets
+      if (!formData.orderIds.trim()) {
+        showToast('Order ID is required for all tickets', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (orderIdsError) {
+        showToast('Please fix order ID format errors before submitting', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Generate subject based on ticket type
+      let subject = '';
+      if (formData.ticketType === 'Human') {
+        // For Human tickets, use the selected subject from admin settings
+        const selectedSubject = ticketSubjects.find(s => s.id === formData.humanTicketSubject);
+        subject = selectedSubject ? selectedSubject.name : 'General Support';
+      } else {
+        // For AI tickets, use category and subcategory as before
+        const categoryLabel = categories.find(c => c.value === formData.category)?.label || 'Support';
+        const subcategoryLabel = subcategories.find(s => s.value === formData.subcategory)?.label || '';
+        subject = `${categoryLabel} - ${subcategoryLabel}`;
+      }
 
       // Prepare order IDs array
       const orderIds = formData.orderIds ? formData.orderIds.split(',').map(id => id.trim()).filter(id => id) : [];
@@ -227,6 +325,9 @@ const TicketPage: React.FC = () => {
         message: formData.message,
         category: formData.category,
         subcategory: formData.subcategory,
+        ticketType: formData.ticketType,
+        aiSubcategory: formData.aiSubcategory,
+        humanTicketSubject: formData.humanTicketSubject,
         orderIds,
         priority: formData.priority,
         attachments: formData.attachments,
@@ -247,6 +348,9 @@ const TicketPage: React.FC = () => {
         setFormData({
           category: '1',
           subcategory: '2',
+          ticketType: 'AI',
+          aiSubcategory: 'Refill',
+          humanTicketSubject: '1',
           orderIds: '',
           message: '',
           subject: '',
@@ -257,7 +361,7 @@ const TicketPage: React.FC = () => {
         fetchTickets();
       } else {
         const error = await response.json();
-        showToast(error.message || 'Failed to submit ticket', 'error');
+        showToast(error.error || error.message || 'Failed to submit ticket', 'error');
       }
     } catch (error) {
       console.error('Error submitting ticket:', error);
@@ -451,38 +555,62 @@ const TicketPage: React.FC = () => {
               <div className="space-y-4">
                 <div className="space-y-4">
                   <div className="form-group">
-                    <label className="form-label">Category</label>
+                    <label className="form-label">Ticket Type</label>
                     <select
-                      value={formData.category}
+                      value={formData.ticketType}
                       onChange={(e) =>
-                        handleInputChange('category', e.target.value)
+                        handleTicketTypeChange(e.target.value as 'Human' | 'AI')
                       }
                       className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                     >
-                      {categories.map((cat) => (
-                        <option key={cat.value} value={cat.value}>
-                          {cat.label}
+                      {ticketTypes.map((type) => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
                         </option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Subcategory</label>
-                    <select
-                      value={formData.subcategory}
-                      onChange={(e) =>
-                        handleInputChange('subcategory', e.target.value)
-                      }
-                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                    >
-                      {subcategories.map((subcat) => (
-                        <option key={subcat.value} value={subcat.value}>
-                          {subcat.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {formData.ticketType === 'AI' ? (
+                    <div className="form-group">
+                      <label className="form-label">Category</label>
+                      <select
+                        value={formData.aiSubcategory}
+                        onChange={(e) =>
+                          handleInputChange('aiSubcategory', e.target.value)
+                        }
+                        className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                      >
+                        {aiSubcategories.map((subcat) => (
+                          <option key={subcat.value} value={subcat.value}>
+                            {subcat.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="form-group">
+                      <label className="form-label">Subject</label>
+                      <select
+                        value={formData.humanTicketSubject}
+                        onChange={(e) =>
+                          handleInputChange('humanTicketSubject', e.target.value)
+                        }
+                        className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                        disabled={subjectsLoading}
+                      >
+                        {subjectsLoading ? (
+                          <option value="">Loading subjects...</option>
+                        ) : (
+                          ticketSubjects.map((subject) => (
+                            <option key={subject.id} value={subject.id.toString()}>
+                              {subject.name}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+                  )}
 
                   <div className="form-group">
                     <label className="form-label">
@@ -493,8 +621,17 @@ const TicketPage: React.FC = () => {
                       value={formData.orderIds}
                       onChange={(e) => handleOrderIdsChange(e.target.value)}
                       placeholder="Enter order IDs separated by commas"
-                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                      className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
+                        orderIdsError 
+                          ? 'border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 dark:border-gray-600 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)]'
+                      }`}
                     />
+                    {orderIdsError && (
+                      <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                        {orderIdsError}
+                      </p>
+                    )}
                   </div>
 
                   {showMessageField && (

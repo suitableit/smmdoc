@@ -3,20 +3,20 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 
-// Validation schema for updating support tickets
+// Validation schema for updating tickets
 const updateTicketSchema = z.object({
-  status: z.enum(['pending', 'in_progress', 'resolved', 'closed']).optional(),
-  adminReply: z.string().optional(),
+  status: z.enum(['Open', 'in_progress', 'resolved', 'closed', 'on_hold']).optional(),
+  isRead: z.boolean().optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
 });
 
 interface RouteParams {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 }
 
-// GET - Fetch single support ticket
+// GET - Fetch single support ticket (admin)
 export async function GET(
   request: NextRequest,
   { params }: RouteParams
@@ -31,8 +31,20 @@ export async function GET(
       );
     }
 
-    const resolvedParams = await params;
-    const ticketId = parseInt(resolvedParams.id);
+    // Check if user is admin
+    const user = await db.user.findUnique({
+      where: { id: parseInt(session.user.id) },
+      select: { role: true }
+    });
+
+    if (user?.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const ticketId = parseInt(params.id);
     
     if (isNaN(ticketId)) {
       return NextResponse.json(
@@ -41,21 +53,8 @@ export async function GET(
       );
     }
 
-    // Check if user is admin or ticket owner
-    const user = await db.user.findUnique({
-      where: { id: parseInt(session.user.id) },
-      select: { role: true }
-    });
-
-    const whereClause: any = { id: ticketId };
-    
-    // If not admin, only show user's own tickets
-    if (user?.role !== 'admin') {
-      whereClause.userId = parseInt(session.user.id);
-    }
-
     const ticket = await db.supportTicket.findUnique({
-      where: whereClause,
+      where: { id: ticketId },
       include: {
         user: {
           select: {
@@ -71,20 +70,23 @@ export async function GET(
           }
         },
         messages: {
+          orderBy: {
+            createdAt: 'asc'
+          },
           include: {
             user: {
               select: {
                 id: true,
                 name: true,
-                email: true,
+                role: true,
               }
             }
-          },
-          orderBy: {
-            createdAt: 'asc'
           }
         },
         notes: {
+          orderBy: {
+            createdAt: 'desc'
+          },
           include: {
             user: {
               select: {
@@ -92,9 +94,6 @@ export async function GET(
                 name: true,
               }
             }
-          },
-          orderBy: {
-            createdAt: 'desc'
           }
         }
       }
@@ -109,29 +108,23 @@ export async function GET(
 
     // Transform the ticket data to match frontend expectations
     const transformedTicket = {
-      id: ticket.id.toString(),
-      subject: ticket.subject,
-      createdAt: ticket.createdAt.toISOString(),
-      lastUpdated: ticket.updatedAt.toISOString(),
-      status: ticket.status,
-      ticketType: ticket.ticketType,
-      aiSubcategory: ticket.aiSubcategory,
-      systemMessage: ticket.systemMessage,
+      ...ticket,
       messages: ticket.messages.map((msg: any) => ({
-        id: msg.id.toString(),
-        type: msg.messageType,
-        author: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : (msg.user.name || msg.user.email)),
-        authorRole: msg.isFromAdmin ? 'admin' : 'user',
-        content: msg.message,
-        createdAt: msg.createdAt.toISOString(),
-        attachments: msg.attachments ? JSON.parse(msg.attachments) : []
+        ...msg,
+        user: {
+          ...msg.user,
+          name: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : msg.user.name)
+        }
       }))
     };
 
-    return NextResponse.json(transformedTicket);
+    return NextResponse.json({
+      success: true,
+      ticket: transformedTicket
+    });
 
   } catch (error) {
-    console.error('Error fetching support ticket:', error);
+    console.error('Error fetching admin ticket:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -139,7 +132,7 @@ export async function GET(
   }
 }
 
-// PUT - Update support ticket (admin only for status/reply, user for additional info)
+// PUT - Update support ticket (admin only)
 export async function PUT(
   request: NextRequest,
   { params }: RouteParams
@@ -154,16 +147,6 @@ export async function PUT(
       );
     }
 
-    const resolvedParams = await params;
-    const ticketId = parseInt(resolvedParams.id);
-    
-    if (isNaN(ticketId)) {
-      return NextResponse.json(
-        { error: 'Invalid ticket ID' },
-        { status: 400 }
-      );
-    }
-
     // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
@@ -172,8 +155,17 @@ export async function PUT(
 
     if (user?.role !== 'admin') {
       return NextResponse.json(
-        { error: 'Only admins can update tickets' },
+        { error: 'Admin access required' },
         { status: 403 }
+      );
+    }
+
+    const ticketId = parseInt(params.id);
+    
+    if (isNaN(ticketId)) {
+      return NextResponse.json(
+        { error: 'Invalid ticket ID' },
+        { status: 400 }
       );
     }
 
@@ -190,33 +182,24 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { generateSystemMessage = true, ...validatedData } = body;
-    
-    // Validate the data using the schema (excluding generateSystemMessage)
-    const parsedData = updateTicketSchema.parse(validatedData);
+    const validatedData = updateTicketSchema.parse(body);
 
     // Prepare update data
-    const updateData: any = {};
+    const updateData: any = {
+      lastUpdated: new Date()
+    };
     
-    if (parsedData.status) {
-      updateData.status = parsedData.status;
+    if (validatedData.status !== undefined) {
+      updateData.status = validatedData.status;
     }
     
-    if (parsedData.priority) {
-      updateData.priority = parsedData.priority;
+    if (validatedData.isRead !== undefined) {
+      updateData.isRead = validatedData.isRead;
     }
     
-    if (parsedData.adminReply) {
-      updateData.adminReply = parsedData.adminReply;
-      updateData.repliedAt = new Date();
-      updateData.repliedBy = parseInt(session.user.id);
+    if (validatedData.priority !== undefined) {
+      updateData.priority = validatedData.priority;
     }
-
-    // Get the current ticket to compare status changes
-    const currentTicket = await db.supportTicket.findUnique({
-      where: { id: ticketId },
-      select: { status: true }
-    });
 
     // Update the ticket
     const updatedTicket = await db.supportTicket.update({
@@ -239,19 +222,6 @@ export async function PUT(
       }
     });
 
-    // Create a system message for status change only if explicitly requested
-    if (parsedData.status && currentTicket && parsedData.status !== currentTicket.status && generateSystemMessage) {
-      await db.ticketMessage.create({
-        data: {
-          ticketId: ticketId,
-          userId: parseInt(session.user.id),
-          message: `Ticket status changed from ${currentTicket.status} to ${parsedData.status}`,
-          messageType: 'system',
-          isFromAdmin: true
-        }
-      });
-    }
-
     return NextResponse.json({
       success: true,
       message: 'Ticket updated successfully',
@@ -259,7 +229,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error('Error updating support ticket:', error);
+    console.error('Error updating admin ticket:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -298,13 +268,12 @@ export async function DELETE(
 
     if (user?.role !== 'admin') {
       return NextResponse.json(
-        { error: 'Only admins can delete tickets' },
+        { error: 'Admin access required' },
         { status: 403 }
       );
     }
 
-    const resolvedParams = await params;
-    const ticketId = parseInt(resolvedParams.id);
+    const ticketId = parseInt(params.id);
     
     if (isNaN(ticketId)) {
       return NextResponse.json(
@@ -325,7 +294,7 @@ export async function DELETE(
       );
     }
 
-    // Delete the ticket
+    // Delete related records first (if any)
     await db.supportTicket.delete({
       where: { id: ticketId }
     });
@@ -336,7 +305,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('Error deleting support ticket:', error);
+    console.error('Error deleting admin ticket:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
