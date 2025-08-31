@@ -85,11 +85,90 @@ export async function POST(
       }
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Internal note added successfully',
-      note
+    // Fetch the complete updated ticket with all notes
+    const updatedTicket = await db.supportTicket.findUnique({
+      where: { id: ticketId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        },
+        repliedByUser: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+        messages: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        },
+        notes: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
     });
+
+    if (!updatedTicket) {
+      return NextResponse.json(
+        { error: 'Ticket not found after note creation' },
+        { status: 404 }
+      );
+    }
+
+    // Transform the ticket data to match frontend expectations
+    const transformedTicket = {
+      id: updatedTicket.id.toString(),
+      subject: updatedTicket.subject,
+      createdAt: updatedTicket.createdAt.toISOString(),
+      lastUpdated: updatedTicket.updatedAt.toISOString(),
+      status: updatedTicket.status,
+      ticketType: updatedTicket.ticketType,
+      aiSubcategory: updatedTicket.aiSubcategory,
+      systemMessage: updatedTicket.systemMessage,
+      messages: updatedTicket.messages.map((msg: any) => ({
+        id: msg.id.toString(),
+        type: msg.messageType,
+        author: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : (msg.user.name || msg.user.email)),
+        authorRole: msg.isFromAdmin ? 'admin' : 'user',
+        content: msg.message,
+        createdAt: msg.createdAt.toISOString(),
+        attachments: msg.attachments ? JSON.parse(msg.attachments) : []
+      })),
+      notes: updatedTicket.notes.map((note: any) => ({
+        id: note.id.toString(),
+        content: note.content,
+        author: note.user.name || 'Admin',
+        createdAt: note.createdAt.toISOString(),
+        isPrivate: note.isPrivate
+      })),
+      user: updatedTicket.user
+    };
+
+    return NextResponse.json(transformedTicket);
 
   } catch (error) {
     console.error('Error adding internal note:', error);
