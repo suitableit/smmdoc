@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 import {
   FaCheck,
   FaEnvelope,
+  FaEnvelopeOpen,
   FaTimes,
 } from 'react-icons/fa';
 
@@ -79,6 +80,14 @@ const EmailSettingsPage = () => {
     protocol: 'none',
   });
 
+  // Test mail state
+  const [testMailData, setTestMailData] = useState({
+    recipientEmail: '',
+    subject: 'Test Email from ' + APP_NAME,
+    message: 'This is a test email to verify SMTP configuration is working correctly.',
+  });
+  const [isTestingMail, setIsTestingMail] = useState(false);
+
   // Load settings on component mount
   useEffect(() => {
     const loadSettings = async () => {
@@ -89,7 +98,17 @@ const EmailSettingsPage = () => {
         if (response.ok) {
           const data = await response.json();
           
-          if (data.emailSettings) setEmailSettings(data.emailSettings);
+          if (data.success && data.data) {
+            const settings = data.data;
+            setEmailSettings({
+              email: settings.email || '',
+              smtpUsername: settings.smtp_username || '',
+              smtpPassword: settings.smtp_password || '',
+              smtpHostServer: settings.smtp_host || '',
+              port: settings.smtp_port || 587,
+              protocol: settings.smtp_protocol || 'tls'
+            });
+          }
         } else {
           showToast('Failed to load email settings', 'error');
         }
@@ -120,13 +139,21 @@ const EmailSettingsPage = () => {
       const response = await fetch('/api/admin/email-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emailSettings }),
+        body: JSON.stringify({
+          email: emailSettings.email,
+          smtp_username: emailSettings.smtpUsername,
+          smtp_password: emailSettings.smtpPassword,
+          smtp_host: emailSettings.smtpHostServer,
+          smtp_port: emailSettings.port,
+          smtp_protocol: emailSettings.protocol
+        }),
       });
 
       if (response.ok) {
         showToast('Email SMTP settings saved successfully!', 'success');
       } else {
-        showToast('Failed to save email settings', 'error');
+        const errorData = await response.json();
+        showToast(errorData.error || 'Failed to save email settings', 'error');
       }
     } catch (error) {
       console.error('Error saving email settings:', error);
@@ -136,18 +163,65 @@ const EmailSettingsPage = () => {
     }
   };
 
+  // Test mail function
+  const sendTestMail = async () => {
+    if (!testMailData.recipientEmail) {
+      showToast('Please enter recipient email address', 'error');
+      return;
+    }
+
+    setIsTestingMail(true);
+    try {
+      const response = await fetch('/api/admin/test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: testMailData.recipientEmail,
+          subject: testMailData.subject || 'SMTP Configuration Test',
+          message: testMailData.message || 'This is a test email to verify your SMTP configuration is working correctly. If you receive this email, your SMTP settings are properly configured.'
+        }),
+      });
+
+      if (response.ok) {
+        showToast('Test email sent successfully!', 'success');
+        setTestMailData(prev => ({ ...prev, recipientEmail: '' }));
+      } else {
+        const data = await response.json();
+        showToast(data.error || 'Failed to send test email', 'error');
+      }
+    } catch (error) {
+      console.error('Error sending test email:', error);
+      showToast('Error sending test email', 'error');
+    } finally {
+      setIsTestingMail(false);
+    }
+  };
+
   // Show loading state
   if (isPageLoading) {
     return (
       <div className="page-container">
         <div className="page-content">
           <div className="flex justify-center">
-            <div className="w-full max-w-2xl">
-              <div className="card card-padding">
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">Loading email settings...</div>
+            <div className="w-full max-w-6xl">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* SMTP Settings Loading Box */}
+                <div className="card card-padding">
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="text-center flex flex-col items-center">
+                      <GradientSpinner size="w-12 h-12" className="mb-3" />
+                      <div className="text-base font-medium">Loading SMTP settings...</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Test Mail Loading Box */}
+                <div className="card card-padding">
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <div className="text-center flex flex-col items-center">
+                      <GradientSpinner size="w-12 h-12" className="mb-3" />
+                      <div className="text-base font-medium">Loading test mail...</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -179,15 +253,17 @@ const EmailSettingsPage = () => {
 
       <div className="page-content">
         <div className="flex justify-center">
-          <div className="w-full max-w-2xl">
-            {/* Setup Email SMTP Card */}
-            <div className="card card-padding">
-              <div className="card-header">
-                <div className="card-icon">
-                  <FaEnvelope />
+          <div className="page-content">
+            {/* Two Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* First Column - Setup Email SMTP Card */}
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaEnvelope />
+                  </div>
+                  <h3 className="card-title">Setup Email SMTP</h3>
                 </div>
-                <h3 className="card-title">Setup Email SMTP</h3>
-              </div>
 
               <div className="space-y-4">
                 <div className="form-group">
@@ -280,13 +356,87 @@ const EmailSettingsPage = () => {
                   </select>
                 </div>
 
-                <button
-                  onClick={saveEmailSettings}
-                  disabled={isLoading}
-                  className="btn btn-primary w-full"
-                >
-                  {isLoading ? <ButtonLoader /> : 'Save Email SMTP Settings'}
-                </button>
+                  <button
+                    onClick={saveEmailSettings}
+                    disabled={isLoading}
+                    className="btn btn-primary w-full"
+                  >
+                    {isLoading ? 'Updating...' : 'Save Email SMTP Settings'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Second Column - Test Mail Card */}
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaEnvelopeOpen />
+                  </div>
+                  <h3 className="card-title">Test Mail</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <label className="form-label">Recipient Email</label>
+                    <input
+                      type="email"
+                      value={testMailData.recipientEmail}
+                      onChange={(e) =>
+                        setTestMailData(prev => ({ ...prev, recipientEmail: e.target.value }))
+                      }
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                      placeholder="Enter recipient email address"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Subject</label>
+                    <input
+                      type="text"
+                      value={testMailData.subject}
+                      readOnly
+                      className="form-field w-full px-4 py-3 bg-gray-100 dark:bg-gray-600/50 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 cursor-not-allowed transition-all duration-200"
+                      placeholder="Test Email from {APP_NAME}"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Message</label>
+                    <textarea
+                      value={testMailData.message}
+                      readOnly
+                      rows={4}
+                      className="form-field w-full px-4 py-3 bg-gray-100 dark:bg-gray-600/50 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 cursor-not-allowed transition-all duration-200 resize-none"
+                      placeholder="This is a test email to verify your SMTP configuration is working correctly."
+                    />
+                  </div>
+
+                  <button
+                    onClick={sendTestMail}
+                    disabled={isTestingMail || !testMailData.recipientEmail}
+                    className="btn btn-primary w-full"
+                  >
+                    {isTestingMail ? 'Sending...' : 'Send Test Email'}
+                  </button>
+
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                          <FaEnvelope className="w-3 h-3 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                          Test Email Configuration
+                        </h4>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          Use this feature to test your SMTP configuration. Make sure to save your SMTP settings first before sending a test email.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
