@@ -104,6 +104,10 @@ interface SupportTicketDetails {
   notes: TicketNote[];
   assignedTo?: string;
   timeSpent: number; // in minutes
+  ticketType?: 'Human' | 'AI';
+  aiSubcategory?: 'Refill' | 'Cancel' | 'Speed Up' | 'Restart' | 'Fake Complete';
+  systemMessage?: string;
+  ticketStatus?: 'Pending' | 'Processed' | 'Failed';
   userInfo: {
     fullName: string;
     email: string;
@@ -116,13 +120,15 @@ interface SupportTicketDetails {
   };
 }
 
-const SupportTicketDetailsPage = () => {
+const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { appName } = useAppNameWithFallback();
+  const resolvedParams = React.use(params);
+  const ticketId = resolvedParams.id;
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    setPageTitle('Ticket #0001', appName);
-  }, [appName]);
+    setPageTitle(`Ticket #${ticketId}`, appName);
+  }, [appName, ticketId]);
 
   // Dummy data for support ticket details
   const dummyTicketDetails: SupportTicketDetails = {
@@ -207,7 +213,8 @@ const SupportTicketDetailsPage = () => {
   };
 
   // State management
-  const [ticketDetails, setTicketDetails] = useState<SupportTicketDetails>(dummyTicketDetails);
+  const [ticketDetails, setTicketDetails] = useState<SupportTicketDetails | null>(null);
+  const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
   const [isReplying, setIsReplying] = useState(false);
   const [newNote, setNewNote] = useState('');
@@ -215,14 +222,152 @@ const SupportTicketDetailsPage = () => {
   const [showNotes, setShowNotes] = useState(true);
   const [showUserInfo, setShowUserInfo] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isClosingTicket, setIsClosingTicket] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
+  // Fetch ticket details
+  useEffect(() => {
+    const fetchTicketDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/support-tickets/${ticketId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch ticket details');
+        }
+        const data = await response.json();
+        
+        // Fetch additional user statistics
+        if (data.user?.id) {
+          try {
+            // Get user's total tickets count
+            const totalTicketsResponse = await fetch(`/api/admin/tickets?userId=${data.user.id}&limit=1000`);
+            const totalTicketsData = totalTicketsResponse.ok ? await totalTicketsResponse.json() : null;
+            
+            // Get user's open tickets count
+            const openTicketsResponse = await fetch(`/api/admin/tickets?userId=${data.user.id}&status=open&limit=1000`);
+            const openTicketsData = openTicketsResponse.ok ? await openTicketsResponse.json() : null;
+            
+            // Enhance data with user information
+            const enhancedData = {
+              ...data,
+              userInfo: {
+                fullName: data.user?.name || 'N/A',
+                email: data.user?.email || 'N/A',
+                phone: 'N/A', // Not available in current schema
+                company: 'N/A', // Not available in current schema
+                address: 'N/A', // Not available in current schema
+                registeredAt: 'N/A', // Would need user creation date
+                totalTickets: totalTicketsData?.pagination?.total || 0,
+                openTickets: openTicketsData?.pagination?.total || 0,
+              }
+            };
+            
+            setTicketDetails(enhancedData);
+            
+            // Automatically mark ticket as read when admin opens it
+            if (!data.isRead) {
+              try {
+                await fetch(`/api/admin/tickets/${ticketId}/read`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ isRead: true }),
+                });
+              } catch (readError) {
+                console.error('Error marking ticket as read:', readError);
+              }
+            }
+          } catch (userError) {
+            console.error('Error fetching user statistics:', userError);
+            // Use basic user info if statistics fetch fails
+            const basicData = {
+              ...data,
+              userInfo: {
+                fullName: data.user?.name || 'N/A',
+                email: data.user?.email || 'N/A',
+                phone: 'N/A',
+                company: 'N/A',
+                address: 'N/A',
+                registeredAt: 'N/A',
+                totalTickets: 0,
+                openTickets: 0,
+              }
+            };
+            setTicketDetails(basicData);
+            
+            // Automatically mark ticket as read when admin opens it
+            if (!data.isRead) {
+              try {
+                await fetch(`/api/admin/tickets/${ticketId}/read`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ isRead: true }),
+                });
+              } catch (readError) {
+                console.error('Error marking ticket as read:', readError);
+              }
+            }
+          }
+        } else {
+          setTicketDetails(data);
+          
+          // Automatically mark ticket as read when admin opens it
+          if (!data.isRead) {
+            try {
+              await fetch(`/api/admin/tickets/${ticketId}/read`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ isRead: true }),
+              });
+            } catch (readError) {
+              console.error('Error marking ticket as read:', readError);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching ticket details:', error);
+        showToast('Error loading ticket details', 'error');
+        // Fallback to dummy data for development
+        setTicketDetails(dummyTicketDetails);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTicketDetails();
+  }, [ticketId]);
+
   // Utility functions
-  const formatTicketID = (id: string) => {
-    return `${id.padStart(4, '0')}`;
+  const formatTicketID = (id: string | number) => {
+    return String(id || '0');
+  };
+
+  const calculateTimeSpent = (createdAt: string, status: string, lastUpdated?: string) => {
+    const created = new Date(createdAt);
+    let endTime: Date;
+    
+    // If ticket is closed, use lastUpdated as end time, otherwise use current time
+    if (status === 'Closed' && lastUpdated) {
+      endTime = new Date(lastUpdated);
+    } else if (status === 'Closed') {
+      // If no lastUpdated, assume it was closed at creation time
+      endTime = created;
+    } else {
+      endTime = new Date();
+    }
+    
+    const diffMs = endTime.getTime() - created.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${diffHours.toString().padStart(2, '0')}:${diffMinutes.toString().padStart(2, '0')}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -264,28 +409,59 @@ const SupportTicketDetailsPage = () => {
   };
 
   // Handle status change
-  const handleStatusChange = (newStatus: string) => {
-    setTicketDetails(prev => ({
-      ...prev,
-      status: newStatus as 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'Closed',
-      lastUpdated: new Date().toISOString()
-    }));
-    
-    // Add system message
-    const systemMessage: TicketMessage = {
-      id: `msg_${Date.now()}`,
-      type: 'system',
-      author: 'System',
-      content: `Ticket status changed to "${newStatus}"`,
-      createdAt: new Date().toISOString()
-    };
-    
-    setTicketDetails(prev => ({
-      ...prev,
-      messages: [...prev.messages, systemMessage]
-    }));
-    
-    showToast(`Ticket status changed to ${newStatus}`, 'success');
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      const response = await fetch(`/api/admin/tickets/${ticketId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update ticket status');
+      }
+
+      const updatedTicket = await response.json();
+      setTicketDetails(updatedTicket);
+      
+      showToast(`Ticket status updated to ${newStatus}`, 'success');
+    } catch (error) {
+      console.error('Error updating ticket status:', error);
+      showToast('Error updating ticket status', 'error');
+    }
+  };
+
+  // Handle ticket closing
+  const handleCloseTicket = async () => {
+    const confirmed = window.confirm('Are you sure you want to close this ticket? This action cannot be undone.');
+    if (!confirmed) return;
+
+    setIsClosingTicket(true);
+    try {
+      const response = await fetch(`/api/support-tickets/${ticketId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'Closed' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to close ticket');
+      }
+
+      const updatedTicket = await response.json();
+      setTicketDetails(updatedTicket);
+      
+      showToast('Ticket has been closed successfully', 'success');
+    } catch (error) {
+      console.error('Error closing ticket:', error);
+      showToast('Error closing ticket', 'error');
+    } finally {
+      setIsClosingTicket(false);
+    }
   };
 
   // Handle reply submission
@@ -295,37 +471,50 @@ const SupportTicketDetailsPage = () => {
     setIsReplying(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const formData = new FormData();
+      formData.append('message', replyContent);
+      formData.append('type', 'admin_reply');
       
-      const newMessage: TicketMessage = {
-        id: `msg_${Date.now()}`,
-        type: 'staff',
-        author: 'admin_user',
-        authorRole: 'Admin',
-        content: replyContent,
-        createdAt: new Date().toISOString(),
-        attachments: selectedFiles.length > 0 ? selectedFiles.map((file, index) => ({
-          id: `att_${Date.now()}_${index}`,
-          filename: file.name,
-          filesize: `${Math.round(file.size / 1024)} KB`,
-          mimetype: file.type,
-          uploadedAt: new Date().toISOString(),
-          uploadedBy: 'admin_user'
-        })) : undefined
-      };
+      // Add files if any
+      selectedFiles.forEach((file, index) => {
+        formData.append(`attachments`, file);
+      });
+
+      const response = await fetch(`/api/support-tickets/${ticketId}/reply`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send reply');
+      }
+
+      const updatedTicket = await response.json();
+      setTicketDetails(updatedTicket);
       
-      setTicketDetails(prev => ({
-        ...prev,
-        messages: [...prev.messages, newMessage],
-        status: 'Answered',
-        lastUpdated: new Date().toISOString()
-      }));
+      // Automatically change ticket status to 'Answered' when admin replies (without system message)
+      try {
+        const statusResponse = await fetch(`/api/admin/tickets/${ticketId}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: 'Answered', generateSystemMessage: false }),
+        });
+        
+        if (statusResponse.ok) {
+          const statusUpdatedTicket = await statusResponse.json();
+          setTicketDetails(statusUpdatedTicket.ticket);
+        }
+      } catch (statusError) {
+        console.error('Error updating ticket status to Answered:', statusError);
+      }
       
       setReplyContent('');
       setSelectedFiles([]);
       showToast('Reply sent successfully', 'success');
-    } catch {
+    } catch (error) {
+      console.error('Error sending reply:', error);
       showToast('Error sending reply', 'error');
     } finally {
       setIsReplying(false);
@@ -339,24 +528,25 @@ const SupportTicketDetailsPage = () => {
     setIsAddingNote(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const note: TicketNote = {
-        id: `note_${Date.now()}`,
-        content: newNote,
-        author: 'admin_user (Admin)',
-        createdAt: new Date().toISOString(),
-        isPrivate: true
-      };
-      
-      setTicketDetails(prev => ({
-        ...prev,
-        notes: [...prev.notes, note]
-      }));
+      const response = await fetch(`/api/support-tickets/${ticketId}/notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: newNote }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add note');
+      }
+
+      const updatedTicket = await response.json();
+      setTicketDetails(updatedTicket);
       
       setNewNote('');
       showToast('Note added successfully', 'success');
-    } catch {
+    } catch (error) {
+      console.error('Error adding note:', error);
       showToast('Error adding note', 'error');
     } finally {
       setIsAddingNote(false);
@@ -373,6 +563,41 @@ const SupportTicketDetailsPage = () => {
   const removeSelectedFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading ticket details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if no ticket data
+  if (!ticketDetails) {
+    return (
+      <div className="page-container">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <FaExclamationTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Ticket Not Found</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">The ticket you're looking for doesn't exist or has been deleted.</p>
+            <button 
+              onClick={() => window.history.back()}
+              className="btn btn-primary"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -413,13 +638,12 @@ const SupportTicketDetailsPage = () => {
                 <option value="Customer Reply">Customer Reply</option>
                 <option value="On Hold">On Hold</option>
                 <option value="In Progress">In Progress</option>
-                <option value="Closed">Closed</option>
               </select>
             </div>
             
             <div className="flex flex-row items-center gap-1 md:gap-2">
               <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                Ticket {formatTicketID(ticketDetails.id)}
+                Ticket #{formatTicketID(ticketDetails.id)}
               </h1>
               {!ticketDetails.isRead && (
                 <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
@@ -473,10 +697,49 @@ const SupportTicketDetailsPage = () => {
                 </div>
                 <div>
                   <label className="form-label">Time Spent</label>
-                  <p className="mt-1" style={{ color: 'var(--text-primary)' }}>{Math.floor(ticketDetails.timeSpent / 60)}h {ticketDetails.timeSpent % 60}m</p>
+                  <p className="mt-1" style={{ color: 'var(--text-primary)' }}>{calculateTimeSpent(ticketDetails.createdAt, ticketDetails.status, ticketDetails.lastUpdated)}</p>
                 </div>
               </div>
             </div>
+
+            {/* AI Ticket System Message */}
+            {ticketDetails.ticketType === 'AI' && ticketDetails.systemMessage && (
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaExclamationTriangle />
+                  </div>
+                  <h3 className="card-title">System Processing Result</h3>
+                </div>
+                
+                <div className={`p-4 rounded-lg border-l-4 ${
+                  ticketDetails.ticketStatus === 'Processed' 
+                    ? 'bg-green-50 border-green-400 text-green-800' 
+                    : ticketDetails.ticketStatus === 'Failed'
+                    ? 'bg-red-50 border-red-400 text-red-800'
+                    : 'bg-yellow-50 border-yellow-400 text-yellow-800'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm ${
+                      ticketDetails.ticketStatus === 'Processed' 
+                        ? 'bg-green-500' 
+                        : ticketDetails.ticketStatus === 'Failed'
+                        ? 'bg-red-500'
+                        : 'bg-yellow-500'
+                    }`}>
+                      {ticketDetails.ticketStatus === 'Processed' ? '✓' : 
+                       ticketDetails.ticketStatus === 'Failed' ? '✗' : '⏳'}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold mb-2">
+                        AI {ticketDetails.aiSubcategory} Request - {ticketDetails.ticketStatus}
+                      </h4>
+                      <p className="text-sm whitespace-pre-wrap">{ticketDetails.systemMessage}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Messages Thread */}
             <div className="card card-padding">
@@ -484,23 +747,25 @@ const SupportTicketDetailsPage = () => {
                 <div className="card-icon">
                   <FaComments />
                 </div>
-                <h3 className="card-title">Conversation ({ticketDetails.messages.length})</h3>
+                <h3 className="card-title">Conversation ({ticketDetails.messages?.length || 0})</h3>
               </div>
               
               <div className="space-y-6">
-                {ticketDetails.messages.map((message) => (
-                  <div key={message.id} className="flex items-start gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm ${
-                      message.type === 'customer' ? 'bg-gradient-to-r from-[var(--secondary)] to-[var(--primary)]' : 
-                      message.type === 'staff' ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]' : 'bg-gradient-to-r from-gray-500 to-gray-600'
-                    }`}>
-                      {message.type === 'customer' ? <FaUser className="h-4 w-4" /> :
-                       message.type === 'staff' ? <FaUserShield className="h-4 w-4" /> :
-                       <FaExclamationTriangle className="h-4 w-4" />}
-                    </div>
+                {ticketDetails.messages?.map((message) => (
+                  <div key={message.id} className={`flex items-start gap-4 ${(message.type === 'staff' || message.type === 'system') ? 'justify-end' : ''}`}>
+                    {(message.type !== 'staff' && message.type !== 'system') && (
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm ${
+                        message.type === 'customer' ? 'bg-gradient-to-r from-[var(--secondary)] to-[var(--primary)]' : 'bg-gradient-to-r from-gray-500 to-gray-600'
+                      }`}>
+                        {message.type === 'customer' ? <FaUser className="h-4 w-4" /> :
+                         <FaExclamationTriangle className="h-4 w-4" />}
+                      </div>
+                    )}
                     
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className={`${(message.type === 'staff' || message.type === 'system') ? 'max-w-[calc(100%-3.5rem)]' : 'flex-1 min-w-0'} p-4 rounded-lg ${
+                      (message.type === 'staff' || message.type === 'system') ? 'bg-blue-50 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800/50'
+                    }`}>
+                      <div className={`flex items-center gap-2 mb-2 ${(message.type === 'staff' || message.type === 'system') ? 'justify-end' : ''}`}>
                         <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{message.author}</span>
                         {message.authorRole && (
                           <span className="text-xs bg-gray-100 px-2 py-1 rounded font-bold" style={{ color: 'var(--text-muted)' }}>
@@ -517,13 +782,13 @@ const SupportTicketDetailsPage = () => {
                       </div>
                       
                       <div className="prose prose-sm max-w-none">
-                        <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
+                        <div className={`whitespace-pre-wrap ${(message.type === 'staff' || message.type === 'system') ? 'text-right' : ''}`} style={{ color: 'var(--text-primary)' }}>{message.content}</div>
                       </div>
                       
                       {/* Attachments */}
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
-                          <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
+                          <h4 className={`text-sm font-medium ${(message.type === 'staff' || message.type === 'system') ? 'text-right' : ''}`} style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
                           {message.attachments.map((attachment) => (
                             <div key={attachment.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                               {getFileIcon(attachment.mimetype)}
@@ -547,6 +812,14 @@ const SupportTicketDetailsPage = () => {
                         </div>
                       )}
                     </div>
+                    
+                    {(message.type === 'staff' || message.type === 'system') && (
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm ${
+                        message.type === 'staff' ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]' : 'bg-gradient-to-r from-gray-600 to-gray-700'
+                      }`}>
+                        {message.type === 'staff' ? <FaUserShield className="h-4 w-4" /> : <FaExclamationTriangle className="h-4 w-4" />}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -616,10 +889,7 @@ const SupportTicketDetailsPage = () => {
                     disabled={!replyContent.trim() || isReplying}
                     className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
                   >
-                    {isReplying && (
-                      <ButtonLoader />
-                    )}
-                    Send Reply
+                    {isReplying ? 'Sending...' : 'Send Reply'}
                   </button>
                 </div>
               </div>
@@ -651,20 +921,20 @@ const SupportTicketDetailsPage = () => {
                   </div>
                   <div>
                     <div className="form-label">Full Name</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo.fullName}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.fullName || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="form-label">Email</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo.email}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.email || 'N/A'}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-2 border-t">
                     <div>
                       <div className="form-label">Total Tickets</div>
-                      <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo.totalTickets}</div>
+                      <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.totalTickets || 0}</div>
                     </div>
                     <div>
                       <div className="form-label">Open Tickets</div>
-                      <div className="text-lg font-semibold text-orange-600">{ticketDetails.userInfo.openTickets}</div>
+                      <div className="text-lg font-semibold text-orange-600">{ticketDetails.userInfo?.openTickets || 0}</div>
                     </div>
                   </div>
                 </div>
@@ -681,7 +951,7 @@ const SupportTicketDetailsPage = () => {
                   <div className="card-icon">
                     <FaStickyNote />
                   </div>
-                  <h3 className="card-title">Internal Notes ({ticketDetails.notes.length})</h3>
+                  <h3 className="card-title">Internal Notes ({ticketDetails.notes?.length || 0})</h3>
                 </div>
                 {showNotes ? <FaChevronUp /> : <FaChevronDown />}
               </div>
@@ -716,7 +986,7 @@ const SupportTicketDetailsPage = () => {
                   
                   {/* Notes List */}
                   <div className="space-y-3">
-                    {ticketDetails.notes.map((note) => (
+                    {ticketDetails.notes?.map((note) => (
                       <div key={note.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
                           {note.author} • {new Date(note.createdAt).toLocaleDateString()}
@@ -727,6 +997,32 @@ const SupportTicketDetailsPage = () => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Close Ticket Button */}
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaTimes />
+                </div>
+                <h3 className="card-title">Close Ticket</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  Closing this ticket will mark it as resolved and prevent further customer replies.
+                </p>
+                <button
+                  onClick={handleCloseTicket}
+                  disabled={isClosingTicket || ticketDetails.status === 'Closed'}
+                  className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isClosingTicket ? (
+                    <ButtonLoader />
+                  ) : null}
+                  {ticketDetails.status === 'Closed' ? 'Ticket Closed' : 'Close Ticket'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -269,19 +269,25 @@ model SupportTicket {
   userId        Int
   subject       String
   message       String    @db.Text
-  status        String    @default("pending")
+  status        String    @default("Open")
   category      String
   subcategory   String?
+  ticketType    String    @default("Human") // Human or AI
+  aiSubcategory String?   // Refill, Cancel for AI tickets
   orderIds      String?   @db.Text
   priority      String    @default("medium")
   attachments   String?   @db.Text
   adminReply    String?   @db.Text
+  isRead        Boolean   @default(false) // Track if ticket has been read by admin
+  systemMessage String?   @db.Text // For AI ticket system messages
   repliedAt     DateTime?
   repliedBy     Int?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   repliedByUser user?     @relation("RepliedByUser", fields: [repliedBy], references: [id])
   user          user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      TicketMessage[]
+  notes         TicketNote[]
 
   @@index([userId])
   @@index([status])
@@ -290,6 +296,44 @@ model SupportTicket {
   @@index([createdAt])
   @@index([repliedBy], map: "support_tickets_repliedBy_fkey")
   @@map("support_tickets")
+}
+
+model TicketMessage {
+  id          Int      @id @default(autoincrement())
+  ticketId    Int
+  userId      Int
+  message     String   @db.Text
+  messageType String   // customer, staff, system
+  isFromAdmin Boolean  @default(false)
+  attachments String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user        user          @relation("TicketMessages", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("ticket_messages")
+}
+
+model TicketNote {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  userId    Int
+  content   String   @db.Text
+  isPrivate Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user      user          @relation("TicketNotes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("ticket_notes")
 }
 
 model ContactSettings {
@@ -632,6 +676,8 @@ model user {
   sessions                                      Session[]
   repliedSupportTickets                         SupportTicket[]        @relation("RepliedByUser")
   supportTickets                                SupportTicket[]
+  ticketMessages                                TicketMessage[]        @relation("TicketMessages")
+  ticketNotes                                   TicketNote[]           @relation("TicketNotes")
   twoFactorConfirmation                         TwoFactorConfirmation?
 }
 

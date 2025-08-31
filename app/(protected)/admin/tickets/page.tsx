@@ -184,11 +184,11 @@ const SupportTicketsPage = () => {
   ];
 
   // State management
-  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(dummySupportTickets);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
-    total: dummySupportTickets.length,
+    total: 0,
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
@@ -205,14 +205,63 @@ const SupportTicketsPage = () => {
   } | null>(null);
 
   // Loading states
-  const [ticketsLoading, setTicketsLoading] = useState(false);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
 
   // Bulk operations state
   const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
 
+  // Fetch tickets from API
+  const fetchTickets = async () => {
+    try {
+      setTicketsLoading(true);
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        search: searchTerm,
+        status: statusFilter === 'all' ? '' : statusFilter,
+      });
+
+      const response = await fetch(`/api/admin/tickets?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch tickets');
+      }
+
+      const data = await response.json();
+      setSupportTickets(data.tickets || []);
+      setPagination({
+        page: data.page || 1,
+        limit: data.limit || 20,
+        total: data.total || 0,
+        totalPages: data.totalPages || 1,
+        hasNext: data.hasNext || false,
+        hasPrev: data.hasPrev || false,
+      });
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+      showToast('Error loading tickets', 'error');
+      // Fallback to dummy data for development
+      setSupportTickets(dummySupportTickets);
+      setPagination({
+        page: 1,
+        limit: 20,
+        total: dummySupportTickets.length,
+        totalPages: Math.ceil(dummySupportTickets.length / 20),
+        hasNext: false,
+        hasPrev: false,
+      });
+    } finally {
+      setTicketsLoading(false);
+    }
+  };
+
+  // Initial load and when dependencies change
+  useEffect(() => {
+    fetchTickets();
+  }, [pagination.page, pagination.limit, searchTerm, statusFilter]);
+
   // Utility functions
-  const formatTicketID = (id: string) => {
-    return `${id.padStart(4, '0')}`;
+  const formatTicketID = (id: string | number) => {
+    return String(id || '0');
   };
 
   const getStatusColor = (status: string) => {
@@ -298,12 +347,8 @@ const SupportTicketsPage = () => {
   };
 
   const handleRefresh = () => {
-    setTicketsLoading(true);
-    // Simulate loading
-    setTimeout(() => {
-      setTicketsLoading(false);
-      showToast('Support tickets refreshed successfully!', 'success');
-    }, 1000);
+    fetchTickets();
+    showToast('Support tickets refreshed successfully!', 'success');
   };
 
   const handleSelectAll = () => {
@@ -331,13 +376,19 @@ const SupportTicketsPage = () => {
   // Handle ticket deletion
   const handleDeleteTicket = async (ticketId: string) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch(`/api/admin/tickets/${ticketId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete ticket');
+      }
 
       setSupportTickets((prev) => prev.filter((ticket) => ticket.id !== ticketId));
       showToast('Ticket deleted successfully', 'success');
       setDeleteDialogOpen(false);
       setTicketToDelete(null);
+      fetchTickets(); // Refresh the list
     } catch (error) {
       console.error('Error deleting ticket:', error);
       showToast('Error deleting ticket', 'error');
@@ -345,96 +396,169 @@ const SupportTicketsPage = () => {
   };
 
   // Handle mark as read/unread
-  const handleToggleReadStatus = (ticketId: string) => {
-    setSupportTickets((prev) =>
-      prev.map((ticket) =>
-        ticket.id === ticketId
-          ? { ...ticket, isRead: !ticket.isRead }
-          : ticket
-      )
-    );
-    const ticket = supportTickets.find(t => t.id === ticketId);
-    showToast(
-      `Ticket marked as ${ticket?.isRead ? 'unread' : 'read'}`,
-      'success'
-    );
+  const handleToggleReadStatus = async (ticketId: string) => {
+    try {
+      const ticket = supportTickets.find(t => t.id === ticketId);
+      const response = await fetch(`/api/admin/tickets/${ticketId}/read`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isRead: !ticket?.isRead }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update read status');
+      }
+
+      setSupportTickets((prev) =>
+        prev.map((t) =>
+          t.id === ticketId
+            ? { ...t, isRead: !t.isRead }
+            : t
+        )
+      );
+      showToast(
+        `Ticket marked as ${ticket?.isRead ? 'unread' : 'read'}`,
+        'success'
+      );
+    } catch (error) {
+      console.error('Error updating read status:', error);
+      showToast('Error updating ticket status', 'error');
+    }
   };
 
   // Handle hold ticket
-  const handleHoldTicket = (ticketId: string) => {
-    setSupportTickets((prev) =>
-      prev.map((ticket) =>
-        ticket.id === ticketId
-          ? { ...ticket, status: 'On Hold', lastUpdated: new Date().toISOString() }
-          : ticket
-      )
-    );
-    showToast('Ticket put on hold', 'success');
+  const handleHoldTicket = async (ticketId: string) => {
+    try {
+      const response = await fetch(`/api/admin/tickets/${ticketId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'On Hold' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update ticket status');
+      }
+
+      setSupportTickets((prev) =>
+        prev.map((ticket) =>
+          ticket.id === ticketId
+            ? { ...ticket, status: 'On Hold', lastUpdated: new Date().toISOString() }
+            : ticket
+        )
+      );
+      showToast('Ticket put on hold', 'success');
+    } catch (error) {
+      console.error('Error updating ticket status:', error);
+      showToast('Error updating ticket status', 'error');
+    }
   };
 
   // Handle close ticket
-  const handleCloseTicket = (ticketId: string) => {
-    setSupportTickets((prev) =>
-      prev.map((ticket) =>
-        ticket.id === ticketId
-          ? { ...ticket, status: 'Closed', lastUpdated: new Date().toISOString() }
-          : ticket
-      )
-    );
-    showToast('Ticket closed successfully', 'success');
+  const handleCloseTicket = async (ticketId: string) => {
+    try {
+      const response = await fetch(`/api/admin/tickets/${ticketId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'Closed' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update ticket status');
+      }
+
+      setSupportTickets((prev) =>
+        prev.map((ticket) =>
+          ticket.id === ticketId
+            ? { ...ticket, status: 'Closed', lastUpdated: new Date().toISOString() }
+            : ticket
+        )
+      );
+      showToast('Ticket closed successfully', 'success');
+    } catch (error) {
+      console.error('Error updating ticket status:', error);
+      showToast('Error updating ticket status', 'error');
+    }
   };
 
   // Handle bulk operations
-  const handleBulkOperation = (operation: string) => {
-    switch (operation) {
-      case 'mark_read':
-        setSupportTickets((prev) =>
-          prev.map((ticket) =>
-            selectedTickets.includes(ticket.id)
-              ? { ...ticket, isRead: true }
-              : ticket
-          )
-        );
-        showToast(`${selectedTickets.length} tickets marked as read`, 'success');
-        break;
-      case 'mark_unread':
-        setSupportTickets((prev) =>
-          prev.map((ticket) =>
-            selectedTickets.includes(ticket.id)
-              ? { ...ticket, isRead: false }
-              : ticket
-          )
-        );
-        showToast(`${selectedTickets.length} tickets marked as unread`, 'success');
-        break;
-      case 'open_all':
-        setSupportTickets((prev) =>
-          prev.map((ticket) =>
-            selectedTickets.includes(ticket.id)
-              ? { ...ticket, status: 'Open', lastUpdated: new Date().toISOString() }
-              : ticket
-          )
-        );
-        showToast(`${selectedTickets.length} tickets reopened`, 'success');
-        break;
-      case 'hold_all':
-        setSupportTickets((prev) =>
-          prev.map((ticket) =>
-            selectedTickets.includes(ticket.id)
-              ? { ...ticket, status: 'On Hold', lastUpdated: new Date().toISOString() }
-              : ticket
-          )
-        );
-        showToast(`${selectedTickets.length} tickets put on hold`, 'success');
-        break;
-      case 'delete_selected':
-        setSupportTickets((prev) =>
-          prev.filter((ticket) => !selectedTickets.includes(ticket.id))
-        );
-        showToast(`${selectedTickets.length} tickets deleted`, 'success');
-        break;
+  const handleBulkOperation = async (operation: string) => {
+    try {
+      const response = await fetch('/api/admin/tickets/bulk', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ticketIds: selectedTickets,
+          operation,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to perform bulk operation');
+      }
+
+      // Update local state based on operation
+      switch (operation) {
+        case 'mark_read':
+          setSupportTickets((prev) =>
+            prev.map((ticket) =>
+              selectedTickets.includes(ticket.id)
+                ? { ...ticket, isRead: true }
+                : ticket
+            )
+          );
+          showToast(`${selectedTickets.length} tickets marked as read`, 'success');
+          break;
+        case 'mark_unread':
+          setSupportTickets((prev) =>
+            prev.map((ticket) =>
+              selectedTickets.includes(ticket.id)
+                ? { ...ticket, isRead: false }
+                : ticket
+            )
+          );
+          showToast(`${selectedTickets.length} tickets marked as unread`, 'success');
+          break;
+        case 'open_all':
+          setSupportTickets((prev) =>
+            prev.map((ticket) =>
+              selectedTickets.includes(ticket.id)
+                ? { ...ticket, status: 'Open', lastUpdated: new Date().toISOString() }
+                : ticket
+            )
+          );
+          showToast(`${selectedTickets.length} tickets reopened`, 'success');
+          break;
+        case 'hold_all':
+          setSupportTickets((prev) =>
+            prev.map((ticket) =>
+              selectedTickets.includes(ticket.id)
+                ? { ...ticket, status: 'On Hold', lastUpdated: new Date().toISOString() }
+                : ticket
+            )
+          );
+          showToast(`${selectedTickets.length} tickets put on hold`, 'success');
+          break;
+        case 'delete_selected':
+          setSupportTickets((prev) =>
+            prev.filter((ticket) => !selectedTickets.includes(ticket.id))
+          );
+          showToast(`${selectedTickets.length} tickets deleted`, 'success');
+          break;
+      }
+      setSelectedTickets([]);
+      fetchTickets(); // Refresh the list
+    } catch (error) {
+      console.error('Error performing bulk operation:', error);
+      showToast('Error performing bulk operation', 'error');
     }
-    setSelectedTickets([]);
   };
 
   return (
