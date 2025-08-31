@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import { Metadata } from 'next';
+import { getMetaSettings, getOpenGraphImageUrl } from '@/lib/utils/meta-settings';
 
 const Hero = dynamic(() => import('@/components/frontend/homepage/hero'));
 const Statistics = dynamic(() => import('@/components/frontend/homepage/statistics'));
@@ -10,12 +11,42 @@ const HowItWorks = dynamic(() => import('@/components/frontend/homepage/how-it-w
 const Testimonials = dynamic(() => import('@/components/frontend/homepage/testimonials'));
 const FAQs = dynamic(() => import('@/components/frontend/homepage/faqs'));
 
-export const metadata: Metadata = {
-  description: 'Discover the cheapest SMM panel in Bangladesh - a cost-effective solution for amazing business growth. Save money, gain new followers, and easily boost your online presence',
-  keywords: 'SMM Panel, Cheapest SMM Panel, SMM Panel Bangladesh, Social Media Marketing, Facebook likes, Instagram followers, YouTube views',
-};
+// Generate dynamic metadata from Meta Settings
+export async function generateMetadata(): Promise<Metadata> {
+  const metaSettings = await getMetaSettings();
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const openGraphImage = getOpenGraphImageUrl(metaSettings.thumbnail, baseUrl);
 
-export default function Home() {
+  return {
+    title: {
+      absolute: metaSettings.googleTitle,
+    },
+    description: metaSettings.siteDescription,
+    keywords: metaSettings.keywords,
+    openGraph: {
+      title: metaSettings.googleTitle,
+      description: metaSettings.siteDescription,
+      images: [{
+        url: openGraphImage,
+        width: 1200,
+        height: 630,
+        alt: metaSettings.siteTitle,
+      }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: metaSettings.googleTitle,
+      description: metaSettings.siteDescription,
+      images: [openGraphImage],
+    },
+    other: {
+      'og:site_name': metaSettings.siteTitle,
+    },
+  };
+}
+
+export default function HomePage() {
   return (
     <main>
       <Hero />
