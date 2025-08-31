@@ -3,7 +3,8 @@
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import {
     addFundDefaultValues,
     addFundSchema,
@@ -75,8 +76,8 @@ export function AddFundForm() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Add Funds — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Add Funds', appName);
+  }, [appName]);
 
   // Simulate initial loading
   useEffect(() => {

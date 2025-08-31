@@ -17,7 +17,8 @@ import {
 import { useGetCategories } from '@/hooks/categories-fetch';
 import { useGetServices } from '@/hooks/service-fetch';
 import axiosInstance from '@/lib/axiosInstance';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatNumber } from '@/lib/utils';
 import { mutate } from 'swr';
 
@@ -87,10 +88,12 @@ interface PaginationInfo {
 }
 
 const BulkModifyPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Bulk Modify Services — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Bulk Modify Services', appName);
+  }, [appName]);
 
   // API hooks
   const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();

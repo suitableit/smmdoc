@@ -1,7 +1,8 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -60,6 +61,8 @@ const Toast = ({
 );
 
 export default function ContactSupportPage() {
+  const { appName } = useAppNameWithFallback();
+
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,8 +99,8 @@ export default function ContactSupportPage() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Contact Support — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Contact Support', appName);
+  }, [appName]);
 
   // Load contact form data and categories
   useEffect(() => {

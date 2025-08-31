@@ -22,7 +22,8 @@ import {
 
 // Import APP_NAME constant
 import useCurrency from '@/hooks/useCurrency';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { invalidateUserSessions } from '@/lib/session-invalidation';
 
 // Custom Gradient Spinner Component
@@ -240,10 +241,12 @@ const useClickOutside = (
 };
 
 const UsersListPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `All Users — ${APP_NAME}`;
-  }, []);
+    setPageTitle('All Users', appName);
+  }, [appName]);
 
   // Currency hook
   const { currency, currentCurrencyData, formatCurrency: formatCurrencyFromContext } = useCurrency();

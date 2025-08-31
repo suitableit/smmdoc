@@ -4,7 +4,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
@@ -79,11 +80,12 @@ interface Ticket {
 
 const TicketPage: React.FC = () => {
   const router = useRouter();
+  const { appName } = useAppNameWithFallback();
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Support Tickets - ${APP_NAME}`;
-  }, []);
+    setPageTitle('Support Tickets', appName);
+  }, [appName]);
 
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
   const [isSubmitting, setIsSubmitting] = useState(false);

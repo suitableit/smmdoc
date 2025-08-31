@@ -5,7 +5,8 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import {
     dashboardApi,
     useGetUserStatsQuery,
@@ -1140,11 +1141,13 @@ function NewOrder() {
 }
 
 export default function NewOrderPage() {
+  const { appName } = useAppNameWithFallback();
+
   const router = useRouter();
 
   useEffect(() => {
-    document.title = `New Order — ${APP_NAME}`;
-  }, []);
+    setPageTitle('New Order', appName);
+  }, [appName]);
 
   const platforms = [
     {

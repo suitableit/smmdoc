@@ -43,7 +43,8 @@ import { useGetCategories } from '@/hooks/categories-fetch';
 import { useGetServicesId } from '@/hooks/service-fetch-id';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID } from '@/lib/utils';
 import {
   createCategoryDefaultValues,
@@ -2292,8 +2293,8 @@ const EditServiceForm = ({
 function AdminServicesPage() {
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `All Services — ${APP_NAME}`;
-  }, []);
+    setPageTitle('All Services', appName);
+  }, [appName]);
 
   // Hooks
   const user = useCurrentUser();
@@ -2460,6 +2461,8 @@ function AdminServicesPage() {
 
   // Pagination functions
   const handlePreviousPage = () => {
+  const { appName } = useAppNameWithFallback();
+
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }

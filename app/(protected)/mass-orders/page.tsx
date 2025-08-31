@@ -3,7 +3,8 @@
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import axiosInstance from '@/lib/axiosInstance';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import {
     dashboardApi,
     useGetUserStatsQuery,
@@ -163,6 +164,8 @@ const InstructionsPanel: React.FC = () => {
 
 // Main Mass Orders Component
 export default function MassOrder() {
+  const { appName } = useAppNameWithFallback();
+
   const user = useCurrentUser();
   const router = useRouter();
   const dispatch = useDispatch();
@@ -187,8 +190,8 @@ export default function MassOrder() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Mass Orders — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Mass Orders', appName);
+  }, [appName]);
 
   // Check if mass order is enabled by trying to access the user mass-orders API
   useEffect(() => {

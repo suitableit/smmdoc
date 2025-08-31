@@ -17,7 +17,8 @@ import {
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 
 // Custom Form Components
@@ -348,10 +349,12 @@ const dummyStats: ChildPanelStats = {
 };
 
 const ChildPanelsPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Child Panels — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Child Panels', appName);
+  }, [appName]);
 
   // State management
   const [childPanels, setChildPanels] = useState<ChildPanel[]>(dummyChildPanels);

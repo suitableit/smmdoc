@@ -1,6 +1,7 @@
 'use client';
 
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
 import {
   FaClock,
@@ -81,8 +82,8 @@ function PaymentPendingContent() {
 
   // Set document title
   useEffect(() => {
-    document.title = `Payment Under Review — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Payment Under Review', appName);
+  }, [appName]);
 
   useEffect(() => {
     // Show pending toast only once when component mounts
@@ -234,5 +235,7 @@ function PaymentPendingContent() {
 }
 
 export default function PaymentPendingPage() {
+  const { appName } = useAppNameWithFallback();
+
   return <PaymentPendingContent />;
 }

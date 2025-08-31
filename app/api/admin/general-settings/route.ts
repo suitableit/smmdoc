@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { clearAppNameCache } from '@/lib/utils/general-settings';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Default general settings
@@ -57,9 +58,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { generalSettings } = await request.json();
+    const body = await request.json();
+    console.log('🔍 POST Request body:', JSON.stringify(body, null, 2));
+    
+    const { generalSettings } = body;
 
     if (!generalSettings) {
+      console.log('❌ No generalSettings in request body');
       return NextResponse.json(
         { error: 'General settings data is required' },
         { status: 400 }
@@ -68,6 +73,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!generalSettings.siteTitle?.trim()) {
+      console.log('❌ Site title validation failed:', generalSettings.siteTitle);
       return NextResponse.json(
         { error: 'Site title is required' },
         { status: 400 }
@@ -75,6 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!generalSettings.adminEmail?.trim()) {
+      console.log('❌ Admin email validation failed:', generalSettings.adminEmail);
       return NextResponse.json(
         { error: 'Admin email is required' },
         { status: 400 }
@@ -109,6 +116,9 @@ export async function POST(request: NextRequest) {
         adminEmail: generalSettings.adminEmail.trim(),
       }
     });
+
+    // Clear the app name cache so the new site title takes effect immediately
+    clearAppNameCache();
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,8 @@
 'use client';
 
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useGetUserOrdersQuery } from '@/lib/services/userOrderApi';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import moment from 'moment';
@@ -213,6 +214,8 @@ const RefillModal = ({
 };
 
 export default function OrdersList() {
+  const { appName } = useAppNameWithFallback();
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
@@ -265,8 +268,8 @@ export default function OrdersList() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `My Orders — ${APP_NAME}`;
-  }, []);
+    setPageTitle('My Orders', appName);
+  }, [appName]);
 
   // Initialize status from URL parameters on mount
   useEffect(() => {

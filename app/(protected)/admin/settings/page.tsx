@@ -1,7 +1,8 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback, updateGlobalAppName } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import {
@@ -25,6 +26,16 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
+  </div>
+);
+
+// Image Skeleton/Wireframe Component
+const ImageSkeleton = ({ width, height, className = '' }: { width: number; height: number; className?: string }) => (
+  <div 
+    className={`${className} bg-gray-200 dark:bg-gray-700 animate-pulse rounded flex items-center justify-center`}
+    style={{ width: `${width}px`, height: `${height}px` }}
+  >
+    <FaImage className="text-gray-400 dark:text-gray-500" size={Math.min(width, height) * 0.4} />
   </div>
 );
 
@@ -202,18 +213,35 @@ interface ModuleSettings {
 const GeneralSettingsPage = () => {
   const currentUser = useCurrentUser();
 
+  const { appName } = useAppNameWithFallback();
+
   // Set document title
   useEffect(() => {
-    document.title = `General Settings — ${APP_NAME}`;
-  }, []);
+    setPageTitle('General Settings', appName);
+  }, [appName]);
 
   // State management
-  const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+
+  // Separate loading states for each settings section
+  const [loadingStates, setLoadingStates] = useState({
+    general: false,
+    meta: false,
+    user: false,
+    ticket: false,
+    contact: false,
+    module: false,
+  });
+
+  // Image loading states
+  const [imageLoadingStates, setImageLoadingStates] = useState({
+    siteIcon: false,
+    siteLogo: false,
+  });
 
   // Settings state
   const [generalSettings, setGeneralSettings] = useState<GeneralSettings>({
@@ -373,7 +401,7 @@ const GeneralSettingsPage = () => {
 
   // Save functions
   const saveGeneralSettings = async () => {
-    setIsLoading(true);
+    setLoadingStates(prev => ({ ...prev, general: true }));
     try {
       const response = await fetch('/api/admin/general-settings', {
         method: 'POST',
@@ -383,6 +411,8 @@ const GeneralSettingsPage = () => {
 
       if (response.ok) {
         showToast('General settings saved successfully!', 'success');
+        // Update the global app name context with the new site title
+        updateGlobalAppName(generalSettings.siteTitle);
       } else {
         showToast('Failed to save general settings', 'error');
       }
@@ -390,12 +420,16 @@ const GeneralSettingsPage = () => {
       console.error('Error saving general settings:', error);
       showToast('Error saving general settings', 'error');
     } finally {
-      setIsLoading(false);
+      setLoadingStates(prev => ({ ...prev, general: false }));
+      // Clear image loading state for the specific field
+      if (field === 'siteIcon' || field === 'siteLogo') {
+        setImageLoadingStates(prev => ({ ...prev, [field]: false }));
+      }
     }
   };
 
   const saveMetaSettings = async () => {
-    setIsLoading(true);
+    setLoadingStates(prev => ({ ...prev, meta: true }));
     try {
       const response = await fetch('/api/admin/meta-settings', {
         method: 'POST',
@@ -412,12 +446,12 @@ const GeneralSettingsPage = () => {
       console.error('Error saving meta settings:', error);
       showToast('Error saving meta settings', 'error');
     } finally {
-      setIsLoading(false);
+      setLoadingStates(prev => ({ ...prev, meta: false }));
     }
   };
 
   const saveUserSettings = async () => {
-    setIsLoading(true);
+    setLoadingStates(prev => ({ ...prev, user: true }));
     try {
       const response = await fetch('/api/admin/user-settings', {
         method: 'POST',
@@ -434,12 +468,12 @@ const GeneralSettingsPage = () => {
       console.error('Error saving user settings:', error);
       showToast('Error saving user settings', 'error');
     } finally {
-      setIsLoading(false);
+      setLoadingStates(prev => ({ ...prev, user: false }));
     }
   };
 
   const saveTicketSettings = async () => {
-    setIsLoading(true);
+    setLoadingStates(prev => ({ ...prev, ticket: true }));
     try {
       const response = await fetch('/api/admin/ticket-settings', {
         method: 'POST',
@@ -456,12 +490,12 @@ const GeneralSettingsPage = () => {
       console.error('Error saving ticket settings:', error);
       showToast('Error saving ticket settings', 'error');
     } finally {
-      setIsLoading(false);
+      setLoadingStates(prev => ({ ...prev, ticket: false }));
     }
   };
 
   const saveContactSettings = async () => {
-    setIsLoading(true);
+    setLoadingStates(prev => ({ ...prev, contact: true }));
     try {
       console.log('🔍 Frontend - Saving contact settings:', contactSettings);
       const response = await fetch('/api/admin/contact-settings', {
@@ -484,12 +518,12 @@ const GeneralSettingsPage = () => {
       console.error('Error saving contact settings:', error);
       showToast('Error saving contact settings', 'error');
     } finally {
-      setIsLoading(false);
+      setLoadingStates(prev => ({ ...prev, contact: false }));
     }
   };
 
   const saveModuleSettings = async () => {
-    setIsLoading(true);
+    setLoadingStates(prev => ({ ...prev, module: true }));
     try {
       const response = await fetch('/api/admin/module-settings', {
         method: 'POST',
@@ -506,18 +540,72 @@ const GeneralSettingsPage = () => {
       console.error('Error saving module settings:', error);
       showToast('Error saving module settings', 'error');
     } finally {
-      setIsLoading(false);
+      setLoadingStates(prev => ({ ...prev, module: false }));
     }
   };
 
   // File upload handlers
+  // Delete uploaded image
+  const handleDeleteImage = async (field: 'siteIcon' | 'siteLogo') => {
+    const imageType = field === 'siteIcon' ? 'Site Icon' : 'Site Logo';
+    
+    // Show confirmation dialog
+    const confirmed = window.confirm(`Are you sure you want to delete the ${imageType}? This action cannot be undone.`);
+    
+    if (!confirmed) {
+      return;
+    }
+    
+    try {
+      setLoadingStates(prev => ({ ...prev, general: true }));
+      showToast('Removing image...', 'pending');
+
+      // Update local state
+      setGeneralSettings(prev => ({ ...prev, [field]: '' }));
+      
+      // Auto-save to database to persist the change
+      const updatedSettings = { ...generalSettings, [field]: '' };
+      const saveResponse = await fetch('/api/admin/general-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ generalSettings: updatedSettings }),
+      });
+      
+      if (saveResponse.ok) {
+        showToast(`${imageType} removed successfully!`, 'success');
+      } else {
+        showToast(`Failed to remove ${imageType}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error removing image:', error);
+      showToast('Error removing image', 'error');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, general: false }));
+    }
+  };
+
   const handleFileUpload = async (field: 'siteIcon' | 'siteLogo' | 'thumbnail', file: File) => {
     try {
-      setIsLoading(true);
+      // Validate PNG format for site icon and site logo
+      if ((field === 'siteIcon' || field === 'siteLogo') && file.type !== 'image/png') {
+        showToast('Only PNG format is allowed for site icon and site logo', 'error');
+        return;
+      }
+
+      setLoadingStates(prev => ({ ...prev, general: true }));
+      // Set image loading state for the specific field
+      if (field === 'siteIcon' || field === 'siteLogo') {
+        setImageLoadingStates(prev => ({ ...prev, [field]: true }));
+      }
       showToast('Uploading file...', 'pending');
 
       const formData = new FormData();
       formData.append('file', file);
+      
+      // Set upload type based on field
+      if (field === 'siteIcon' || field === 'siteLogo') {
+        formData.append('type', 'general');
+      }
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -532,8 +620,27 @@ const GeneralSettingsPage = () => {
           setMetaSettings(prev => ({ ...prev, [field]: fileUrl }));
           showToast('Thumbnail uploaded successfully!', 'success');
         } else {
+          // Update local state
           setGeneralSettings(prev => ({ ...prev, [field]: fileUrl }));
-          showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded successfully!`, 'success');
+          
+          // Auto-save to database to persist the change
+          try {
+            const updatedSettings = { ...generalSettings, [field]: fileUrl };
+            const saveResponse = await fetch('/api/admin/general-settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ generalSettings: updatedSettings }),
+            });
+            
+            if (saveResponse.ok) {
+              showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded and saved successfully!`, 'success');
+            } else {
+              showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded but failed to save to database`, 'error');
+            }
+          } catch (saveError) {
+            console.error('Error auto-saving general settings:', saveError);
+            showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded but failed to save to database`, 'error');
+          }
         }
       } else {
         const errorData = await response.json();
@@ -543,7 +650,7 @@ const GeneralSettingsPage = () => {
       console.error('Error uploading file:', error);
       showToast('Error uploading file', 'error');
     } finally {
-      setIsLoading(false);
+      setLoadingStates(prev => ({ ...prev, general: false }));
     }
   };
 
@@ -693,21 +800,35 @@ const GeneralSettingsPage = () => {
                 <div className="form-group">
                   <label className="form-label">Site Icon</label>
                   <div className="flex items-center gap-3">
-                    {generalSettings.siteIcon && (
-                      <Image
-                        src={generalSettings.siteIcon}
-                        alt="Site Icon"
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 rounded object-cover"
-                      />
-                    )}
+                    {isPageLoading || imageLoadingStates.siteIcon ? (
+                      <ImageSkeleton width={32} height={32} className="rounded" />
+                    ) : generalSettings.siteIcon ? (
+                      <div className="relative group">
+                        <Image
+                          src={generalSettings.siteIcon}
+                          alt="Site Icon"
+                          width={32}
+                          height={32}
+                          className="w-8 h-8 rounded object-cover"
+                          onLoadStart={() => setImageLoadingStates(prev => ({ ...prev, siteIcon: true }))}
+                          onLoad={() => setImageLoadingStates(prev => ({ ...prev, siteIcon: false }))}
+                          onError={() => setImageLoadingStates(prev => ({ ...prev, siteIcon: false }))}
+                        />
+                        <button
+                          onClick={() => handleDeleteImage('siteIcon')}
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          title="Remove Site Icon"
+                        >
+                          <FaTimes className="w-2 h-2" />
+                        </button>
+                      </div>
+                    ) : null}
                     <label className="btn btn-secondary cursor-pointer">
                       <FaUpload className="w-4 h-4 mr-2" />
                       Upload Icon
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/png"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) handleFileUpload('siteIcon', file);
@@ -721,21 +842,35 @@ const GeneralSettingsPage = () => {
                 <div className="form-group">
                   <label className="form-label">Site Logo</label>
                   <div className="flex items-center gap-3">
-                    {generalSettings.siteLogo && (
-                      <Image
-                        src={generalSettings.siteLogo}
-                        alt="Site Logo"
-                        width={128}
-                        height={32}
-                        className="h-8 max-w-32 object-contain"
-                      />
-                    )}
+                    {isPageLoading || imageLoadingStates.siteLogo ? (
+                      <ImageSkeleton width={128} height={32} className="rounded" />
+                    ) : generalSettings.siteLogo ? (
+                      <div className="relative group">
+                        <Image
+                          src={generalSettings.siteLogo}
+                          alt="Site Logo"
+                          width={128}
+                          height={32}
+                          className="h-8 max-w-32 object-contain"
+                          onLoadStart={() => setImageLoadingStates(prev => ({ ...prev, siteLogo: true }))}
+                          onLoad={() => setImageLoadingStates(prev => ({ ...prev, siteLogo: false }))}
+                          onError={() => setImageLoadingStates(prev => ({ ...prev, siteLogo: false }))}
+                        />
+                        <button
+                          onClick={() => handleDeleteImage('siteLogo')}
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          title="Remove Site Logo"
+                        >
+                          <FaTimes className="w-2 h-2" />
+                        </button>
+                      </div>
+                    ) : null}
                     <label className="btn btn-secondary cursor-pointer">
                       <FaUpload className="w-4 h-4 mr-2" />
                       Upload Logo
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/png"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) handleFileUpload('siteLogo', file);
@@ -761,10 +896,10 @@ const GeneralSettingsPage = () => {
 
                 <button
                   onClick={saveGeneralSettings}
-                  disabled={isLoading}
+                  disabled={loadingStates.general}
                   className="btn btn-primary w-full"
                 >
-                  {isLoading ? <ButtonLoader /> : 'Save General Settings'}
+                  {loadingStates.general ? 'Updating...' : 'Save General Settings'}
                 </button>
               </div>
             </div>
@@ -872,10 +1007,10 @@ const GeneralSettingsPage = () => {
 
                 <button
                   onClick={saveMetaSettings}
-                  disabled={isLoading}
+                  disabled={loadingStates.meta}
                   className="btn btn-primary w-full"
                 >
-                  {isLoading ? <ButtonLoader /> : 'Save Meta (SEO) Settings'}
+                  {loadingStates.meta ? 'Updating...' : 'Save Meta (SEO) Settings'}
                 </button>
               </div>
             </div>
@@ -1070,10 +1205,10 @@ const GeneralSettingsPage = () => {
 
                 <button
                   onClick={saveUserSettings}
-                  disabled={isLoading}
+                  disabled={loadingStates.user}
                   className="btn btn-primary w-full"
                 >
-                  {isLoading ? <ButtonLoader /> : 'Save User Settings'}
+                  {loadingStates.user ? 'Updating...' : 'Save User Settings'}
                 </button>
               </div>
             </div>
@@ -1163,10 +1298,10 @@ const GeneralSettingsPage = () => {
 
                 <button
                   onClick={saveTicketSettings}
-                  disabled={isLoading}
+                  disabled={loadingStates.ticket}
                   className="btn btn-primary w-full"
                 >
-                  {isLoading ? <ButtonLoader /> : 'Save Ticket Settings'}
+                  {loadingStates.ticket ? 'Updating...' : 'Save Ticket Settings'}
                 </button>
               </div>
             </div>
@@ -1253,10 +1388,10 @@ const GeneralSettingsPage = () => {
 
                 <button
                   onClick={saveContactSettings}
-                  disabled={isLoading}
+                  disabled={loadingStates.contact}
                   className="btn btn-primary w-full"
                 >
-                  {isLoading ? <ButtonLoader /> : 'Save Contact Settings'}
+                  {loadingStates.contact ? 'Updating...' : 'Save Contact Settings'}
                 </button>
               </div>
             </div>
@@ -1436,10 +1571,10 @@ const GeneralSettingsPage = () => {
 
                 <button
                   onClick={saveModuleSettings}
-                  disabled={isLoading}
+                  disabled={loadingStates.module}
                   className="btn btn-primary w-full"
                 >
-                  {isLoading ? <ButtonLoader /> : 'Save Module Settings'}
+                  {loadingStates.module ? 'Updating...' : 'Save Module Settings'}
                 </button>
               </div>
             </div>

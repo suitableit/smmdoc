@@ -6,7 +6,8 @@
 
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { clearCurrencyCache } from '@/lib/currency-utils';
 import { useEffect, useState } from 'react';
 import {
@@ -219,13 +220,15 @@ interface Currency {
 }
 
 const PaymentCurrencyPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   const currentUser = useCurrentUser();
   const { refreshCurrencyData } = useCurrency();
 
   // Set document title
   useEffect(() => {
-    document.title = `Payment Currency — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Payment Currency', appName);
+  }, [appName]);
 
   // State management
   const [isLoading, setIsLoading] = useState(false);

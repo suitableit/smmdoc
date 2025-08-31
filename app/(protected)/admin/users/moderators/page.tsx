@@ -17,7 +17,8 @@ import {
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -177,10 +178,12 @@ const useClickOutside = (ref: React.RefObject<HTMLElement | null>, handler: () =
 };
 
 const ModeratorsPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `All Moderators — ${APP_NAME}`;
-  }, []);
+    setPageTitle('All Moderators', appName);
+  }, [appName]);
 
   // Note: Currently using dummy data for demonstration purposes
   // Real API integration is commented out in fetchModerators and fetchStats functions
