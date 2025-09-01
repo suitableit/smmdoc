@@ -159,7 +159,8 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
     ticketId,
     ticketDetails,
     setTicketDetails,
-    3000 // Poll every 3 seconds
+    3000, // Poll every 3 seconds
+    'user' // Use user API endpoint
   );
 
   // Utility functions

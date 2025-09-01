@@ -172,28 +172,140 @@ export async function POST(
       );
     }
 
+    // Get additional ticket data for complete response
+    const ticketWithNotes = await db.supportTicket.findUnique({
+      where: { id: ticketId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+            image: true,
+            createdAt: true
+          }
+        },
+        messages: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                role: true,
+                image: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        },
+        notes: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
+    });
+
+    if (!ticketWithNotes) {
+      return NextResponse.json(
+        { error: 'Failed to fetch complete ticket data' },
+        { status: 500 }
+      );
+    }
+
+    // Get user statistics
+    const totalTickets = await db.supportTicket.count({
+      where: { userId: ticketWithNotes.userId }
+    });
+
+    const openTickets = await db.supportTicket.count({
+      where: {
+        userId: ticketWithNotes.userId,
+        status: { not: 'closed' }
+      }
+    });
+
     // Transform the ticket data to match frontend expectations
     const transformedTicket = {
-      id: updatedTicket.id.toString(),
-      subject: updatedTicket.subject,
-      createdAt: updatedTicket.createdAt.toISOString(),
-      lastUpdated: updatedTicket.updatedAt.toISOString(),
-      status: updatedTicket.status,
-      ticketType: updatedTicket.ticketType,
-      aiSubcategory: updatedTicket.aiSubcategory,
-      systemMessage: updatedTicket.systemMessage,
-      ticketStatus: updatedTicket.ticketStatus,
-      orderIds: updatedTicket.orderIds ? JSON.parse(updatedTicket.orderIds) : [],
-      messages: updatedTicket.messages.map(msg => ({
-        id: msg.id.toString(),
-        type: msg.messageType === 'staff' ? 'staff' : msg.messageType === 'system' ? 'system' : 'customer',
-        author: msg.user?.name || 'Unknown',
-        authorRole: msg.user?.role,
-        content: msg.message,
-        createdAt: msg.createdAt.toISOString(),
-        userImage: msg.user?.image,
-        attachments: msg.attachments ? JSON.parse(msg.attachments) : []
-      }))
+      id: ticketWithNotes.id.toString(),
+      userId: ticketWithNotes.userId.toString(),
+      username: ticketWithNotes.user?.username || 'N/A',
+      userEmail: ticketWithNotes.user?.email || 'N/A',
+      subject: ticketWithNotes.subject,
+      createdAt: ticketWithNotes.createdAt.toISOString(),
+      lastUpdated: ticketWithNotes.updatedAt.toISOString(),
+      status: ticketWithNotes.status,
+      isRead: ticketWithNotes.isRead,
+      timeSpent: 0,
+      ticketType: ticketWithNotes.ticketType,
+      aiSubcategory: ticketWithNotes.aiSubcategory,
+      systemMessage: ticketWithNotes.systemMessage,
+      ticketStatus: ticketWithNotes.ticketStatus,
+      orderIds: ticketWithNotes.orderIds ? JSON.parse(ticketWithNotes.orderIds) : [],
+      userInfo: {
+        fullName: ticketWithNotes.user?.name || 'N/A',
+        username: ticketWithNotes.user?.username,
+        email: ticketWithNotes.user?.email || 'N/A',
+        phone: 'N/A',
+        company: 'N/A',
+        address: 'N/A',
+        registeredAt: ticketWithNotes.user?.createdAt?.toISOString() || 'N/A',
+        totalTickets,
+        openTickets
+      },
+      messages: ticketWithNotes.messages.map(msg => {
+        let authorName;
+        if (msg.messageType === 'system') {
+           authorName = 'System';
+         } else if (msg.isFromAdmin || msg.user?.role === 'admin') {
+           // Hide admin names for users - show generic 'Support Admin' label
+           authorName = 'Support Admin';
+         } else {
+           // Show user's own name
+           authorName = msg.user?.name || 'Unknown';
+         }
+        
+        return {
+          id: msg.id.toString(),
+          type: msg.messageType === 'staff' ? 'staff' : msg.messageType === 'system' ? 'system' : 'customer',
+          author: authorName,
+          authorRole: msg.user?.role,
+          content: msg.message,
+          createdAt: msg.createdAt.toISOString(),
+          userImage: (msg.isFromAdmin || msg.user?.role === 'admin') ? null : msg.user?.image,
+          attachments: msg.attachments ? JSON.parse(msg.attachments) : []
+        };
+      }),
+      notes: ticketWithNotes.notes.map(note => {
+        let authorName;
+         if (note.user.role === 'admin') {
+           // Hide admin names for users - show generic 'Support Admin' label
+           authorName = 'Support Admin';
+         } else {
+           // Show user's own name
+           authorName = note.user.username || note.user.name || 'Unknown';
+         }
+        
+        return {
+          id: note.id.toString(),
+          content: note.content,
+          author: authorName,
+          createdAt: note.createdAt.toISOString(),
+          isPrivate: note.isPrivate
+        };
+      })
     };
 
     return NextResponse.json(transformedTicket);
