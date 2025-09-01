@@ -28,8 +28,10 @@ export const useTicketPolling = (
   const [isPolling, setIsPolling] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [hasNewMessages, setHasNewMessages] = useState(false);
+  const [hasStatusChange, setHasStatusChange] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastUpdateRef = useRef<string>('');
+  const lastStatusRef = useRef<string>('');
 
   const pollTicketUpdates = async () => {
     if (!ticketId) return;
@@ -48,8 +50,9 @@ export const useTicketPolling = (
       const result = await response.json();
       const updatedTicket: TicketDetails = apiEndpoint === 'admin' ? result.ticket : result;
       
-      // Check if there are new messages
+      // Check if there are new messages or status changes
       const currentMessageCount = updatedTicket.messages?.length || 0;
+      const currentStatus = updatedTicket.status;
       const hasUpdates = updatedTicket.lastUpdated !== lastUpdateRef.current;
       
       if (hasUpdates) {
@@ -58,8 +61,14 @@ export const useTicketPolling = (
           setHasNewMessages(true);
         }
         
+        // Check if status changed
+        if (currentStatus !== lastStatusRef.current && lastStatusRef.current !== '') {
+          setHasStatusChange(true);
+        }
+        
         setLastMessageCount(currentMessageCount);
         lastUpdateRef.current = updatedTicket.lastUpdated;
+        lastStatusRef.current = currentStatus;
         
         // Enhance the data with userInfo like in the initial fetch (only for admin)
         if (apiEndpoint === 'admin') {
@@ -107,11 +116,17 @@ export const useTicketPolling = (
     setHasNewMessages(false);
   };
 
+  // Reset status change indicator
+  const markStatusChangeAsRead = () => {
+    setHasStatusChange(false);
+  };
+
   // Initialize state with current ticket details
   useEffect(() => {
     if (ticketDetails) {
       setLastMessageCount(ticketDetails.messages?.length || 0);
       lastUpdateRef.current = ticketDetails.lastUpdated;
+      lastStatusRef.current = ticketDetails.status || '';
     }
   }, [ticketDetails]);
 
@@ -138,7 +153,9 @@ export const useTicketPolling = (
   return {
     isPolling,
     hasNewMessages,
+    hasStatusChange,
     markMessagesAsRead,
+    markStatusChangeAsRead,
     startPolling,
     stopPolling,
     pollTicketUpdates // Manual poll trigger
