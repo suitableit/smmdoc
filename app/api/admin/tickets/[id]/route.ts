@@ -61,6 +61,7 @@ export async function GET(
           select: {
             id: true,
             name: true,
+            username: true,
             email: true,
           }
         },
@@ -136,6 +137,7 @@ export async function GET(
       userInfo: {
         id: ticket.user?.id,
         name: ticket.user?.name,
+        username: ticket.user?.username,
         email: ticket.user?.email,
         totalTickets,
         openTickets
@@ -143,7 +145,7 @@ export async function GET(
       messages: ticket.messages.map((msg: any) => ({
         id: msg.id,
         type: msg.messageType, // Map messageType to type
-        author: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : msg.user.name),
+        author: msg.messageType === 'system' ? 'System' : msg.user.name,
         authorRole: msg.messageType === 'system' ? 'system' : (msg.isFromAdmin ? 'admin' : 'user'),
         content: msg.message, // Map message to content
         createdAt: msg.createdAt,
@@ -152,13 +154,16 @@ export async function GET(
         userImage: msg.user.image,
         user: {
           ...msg.user,
-          name: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : msg.user.name)
+          // For system messages created by admins, show the admin username
+          // For legacy system messages, fall back to 'system'
+          username: msg.messageType === 'system' && msg.isFromAdmin && msg.user.role === 'admin' ? msg.user.username : 
+                   msg.messageType === 'system' ? 'system' : msg.user.username
         }
       })),
       notes: ticket.notes.map((note: any) => ({
         id: note.id.toString(),
         content: note.content,
-        author: note.user.username || note.user.name || 'Admin',
+        author: note.user.username || note.user.name,
         createdAt: note.createdAt.toISOString(),
         isPrivate: note.isPrivate
       }))

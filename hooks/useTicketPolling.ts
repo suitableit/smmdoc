@@ -22,7 +22,8 @@ export const useTicketPolling = (
   ticketId: string | null,
   ticketDetails: TicketDetails | null,
   setTicketDetails: (details: TicketDetails) => void,
-  interval: number = 5000
+  interval: number = 5000,
+  apiEndpoint: 'admin' | 'user' = 'admin'
 ) => {
   const [isPolling, setIsPolling] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
@@ -35,14 +36,17 @@ export const useTicketPolling = (
 
     try {
       setIsPolling(true);
-      const response = await fetch(`/api/admin/tickets/${ticketId}`);
+      const apiUrl = apiEndpoint === 'admin' 
+        ? `/api/admin/tickets/${ticketId}` 
+        : `/api/support-tickets/${ticketId}`;
+      const response = await fetch(apiUrl);
       
       if (!response.ok) {
         throw new Error('Failed to fetch ticket updates');
       }
 
       const result = await response.json();
-      const updatedTicket: TicketDetails = result.ticket;
+      const updatedTicket: TicketDetails = apiEndpoint === 'admin' ? result.ticket : result;
       
       // Check if there are new messages
       const currentMessageCount = updatedTicket.messages?.length || 0;
@@ -57,20 +61,24 @@ export const useTicketPolling = (
         setLastMessageCount(currentMessageCount);
         lastUpdateRef.current = updatedTicket.lastUpdated;
         
-        // Enhance the data with userInfo like in the initial fetch
-        const enhancedData = {
-          ...updatedTicket,
-          userInfo: {
-            ...updatedTicket.userInfo,
-            fullName: updatedTicket.userInfo?.name || 'N/A',
-            phone: 'N/A', // Not available in current schema
-            company: 'N/A', // Not available in current schema
-            address: 'N/A', // Not available in current schema
-            registeredAt: 'N/A', // Would need user creation date
-          }
-        };
-        
-        setTicketDetails(enhancedData);
+        // Enhance the data with userInfo like in the initial fetch (only for admin)
+        if (apiEndpoint === 'admin') {
+          const enhancedData = {
+            ...updatedTicket,
+            userInfo: {
+              ...updatedTicket.userInfo,
+              fullName: updatedTicket.userInfo?.name || 'N/A',
+              username: updatedTicket.userInfo?.username,
+              phone: 'N/A', // Not available in current schema
+              company: 'N/A', // Not available in current schema
+              address: 'N/A', // Not available in current schema
+              registeredAt: 'N/A', // Would need user creation date
+            }
+          };
+          setTicketDetails(enhancedData);
+        } else {
+          setTicketDetails(updatedTicket);
+        }
       }
     } catch (error) {
       console.error('Error polling ticket updates:', error);

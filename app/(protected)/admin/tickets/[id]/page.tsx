@@ -73,6 +73,12 @@ interface TicketMessage {
   isEdited?: boolean;
   editedAt?: string;
   userImage?: string;
+  user?: {
+    id: number;
+    name: string;
+    username: string;
+    role: string;
+  };
 }
 
 interface TicketAttachment {
@@ -113,6 +119,7 @@ interface SupportTicketDetails {
   orderIds?: string[];
   userInfo: {
     fullName: string;
+    username?: string;
     email: string;
     phone?: string;
     company?: string;
@@ -318,7 +325,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
       }
 
       const responseData = await response.json();
-      setTicketDetails(responseData.ticket);
+      setTicketDetails(responseData);
       
       showToast(`Ticket status updated to ${newStatus}`, 'success');
     } catch (error) {
@@ -405,7 +412,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
       }
 
       const responseData = await response.json();
-      setTicketDetails(responseData.ticket);
+      setTicketDetails(responseData);
       
       setReplyContent('');
       setSelectedFiles([]);
@@ -725,7 +732,14 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       (message.authorRole === 'admin' || message.type === 'system') ? 'bg-blue-50 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800/50'
                     }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{message.author}</span>
+                        <span className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                          {message.author}
+                        </span>
+                        {message.type === 'system' && message.user?.username && (
+                          <span className="text-xs bg-blue-100 px-2 py-1 rounded font-bold" style={{ color: 'var(--text-primary)' }}>
+                            by {message.user.username}
+                          </span>
+                        )}
                         {message.authorRole && (
                           <span className="text-xs bg-gray-100 px-2 py-1 rounded font-bold" style={{ color: 'var(--text-muted)' }}>
                             {message.authorRole}
@@ -888,7 +902,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 <div className="space-y-4">
                   <div>
                     <div className="form-label">Username</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.name || 'N/A'}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.username || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="form-label">Full Name</div>

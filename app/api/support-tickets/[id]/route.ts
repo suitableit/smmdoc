@@ -109,16 +109,30 @@ export async function GET(
     }
 
     // Transform the ticket data to match frontend expectations
-    let messages = ticket.messages.map((msg: any) => ({
-      id: msg.id.toString(),
-      type: msg.messageType,
-      author: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : (msg.user.name || msg.user.email)),
-      authorRole: msg.isFromAdmin ? 'admin' : 'user',
-      content: msg.message,
-      createdAt: msg.createdAt.toISOString(),
-      attachments: msg.attachments ? JSON.parse(msg.attachments) : [],
-      userImage: msg.user.image
-    }));
+    // For user-facing API, hide admin names and show generic labels
+    let messages = ticket.messages.map((msg: any) => {
+      let authorName;
+      if (msg.messageType === 'system') {
+        authorName = 'System';
+      } else if (msg.isFromAdmin) {
+        // Hide admin names for users - show generic 'Support Admin' label
+        authorName = 'Support Admin';
+      } else {
+        // Show user's own name
+        authorName = msg.user.name || msg.user.email;
+      }
+      
+      return {
+        id: msg.id.toString(),
+        type: msg.messageType,
+        author: authorName,
+        authorRole: msg.isFromAdmin ? 'admin' : 'user',
+        content: msg.message,
+        createdAt: msg.createdAt.toISOString(),
+        attachments: msg.attachments ? JSON.parse(msg.attachments) : [],
+        userImage: msg.isFromAdmin ? null : msg.user.image // Hide admin images too
+      };
+    });
 
     // If no messages exist but ticket has initial message, create initial message entry
     if (messages.length === 0 && ticket.message) {
@@ -144,13 +158,24 @@ export async function GET(
       systemMessage: ticket.systemMessage,
       orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : [],
       messages: messages,
-      notes: ticket.notes.map((note: any) => ({
-        id: note.id.toString(),
-        content: note.content,
-        author: note.user.name || 'Admin',
-        createdAt: note.createdAt.toISOString(),
-        isPrivate: note.isPrivate
-      })),
+      notes: ticket.notes.map((note: any) => {
+        let authorName;
+       if (note.user.role === 'admin') {
+         // Hide admin names for users - show generic 'Support Admin' label
+         authorName = 'Support Admin';
+       } else {
+         // Show user's own name
+         authorName = note.user.name || note.user.email;
+       }
+        
+        return {
+          id: note.id.toString(),
+          content: note.content,
+          author: authorName,
+          createdAt: note.createdAt.toISOString(),
+          isPrivate: note.isPrivate
+        };
+      }),
       user: ticket.user
     };
 
