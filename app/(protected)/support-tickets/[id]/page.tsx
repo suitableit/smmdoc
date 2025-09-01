@@ -404,10 +404,20 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
   if (loading || !ticketId) {
     return (
       <div className="page-container">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading ticket details...</p>
+        <div className="page-content">
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaTicketAlt />
+              </div>
+              <h3 className="card-title">Loading Ticket Details</h3>
+            </div>
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-center">
+                <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">Loading ticket details...</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -418,17 +428,27 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
   if (!ticketDetails) {
     return (
       <div className="page-container">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <FaExclamationTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Ticket Not Found</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">The ticket you're looking for doesn't exist or you don't have permission to view it.</p>
-            <button 
-              onClick={() => window.history.back()}
-              className="btn btn-primary"
-            >
-              Go Back
-            </button>
+        <div className="page-content">
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaExclamationTriangle />
+              </div>
+              <h3 className="card-title">Ticket Not Found</h3>
+            </div>
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-center">
+                <FaExclamationTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Ticket Not Found</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">The ticket you're looking for doesn't exist or you don't have permission to view it.</p>
+                <button 
+                  onClick={() => window.history.back()}
+                  className="btn btn-primary"
+                >
+                  Go Back
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
