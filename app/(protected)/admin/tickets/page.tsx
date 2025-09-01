@@ -321,20 +321,24 @@ const SupportTicketsPage = () => {
 
   // Handle close ticket
   const handleCloseTicket = async (ticketId: string) => {
+    const confirmed = window.confirm('Are you sure you want to close this ticket? This action cannot be undone.');
+    if (!confirmed) return;
+
     try {
       setClosingTicketId(ticketId);
-      const response = await fetch(`/api/admin/tickets/${ticketId}/status`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/support-tickets/${ticketId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: 'Closed' }),
+        body: JSON.stringify({ status: 'closed' }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update ticket status');
+        throw new Error('Failed to close ticket');
       }
 
+      const updatedTicket = await response.json();
       setSupportTickets((prev) =>
         prev.map((ticket) =>
           ticket.id === ticketId
@@ -342,10 +346,10 @@ const SupportTicketsPage = () => {
             : ticket
         )
       );
-      showToast('Ticket closed successfully', 'success');
+      showToast('Ticket has been closed successfully', 'success');
     } catch (error) {
-      console.error('Error updating ticket status:', error);
-      showToast('Error updating ticket status', 'error');
+      console.error('Error closing ticket:', error);
+      showToast('Error closing ticket', 'error');
     } finally {
       setClosingTicketId(null);
     }
