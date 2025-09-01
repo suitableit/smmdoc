@@ -2345,6 +2345,7 @@ function AdminServicesPage() {
   const [servicesLoading, setServicesLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [providerFilter, setProviderFilter] = useState('all');
   const [pageSize, setPageSize] = useState('10'); // Default to 10 categories per page
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -2560,15 +2561,42 @@ function AdminServicesPage() {
         provider.includes(searchLower) ||
         serviceId.includes(searchLower);
 
-      if (statusFilter === 'all') return matchesSearch;
-      if (statusFilter === 'active')
-        return matchesSearch && service.status === 'active';
-      if (statusFilter === 'inactive')
-        return matchesSearch && service.status === 'inactive';
+      // Provider filter
+      let matchesProvider = true;
+      if (providerFilter === 'all') {
+        matchesProvider = true;
+      } else if (providerFilter === 'Manual System') {
+        // Show services with no provider or empty provider (manual system)
+        matchesProvider = !provider || provider.trim() === '';
+      } else {
+        matchesProvider = provider === providerFilter.toLowerCase();
+      }
 
-      return matchesSearch;
+      // Status filter
+      let matchesStatus = true;
+      if (statusFilter === 'active') {
+        matchesStatus = service.status === 'active';
+      } else if (statusFilter === 'inactive') {
+        matchesStatus = service.status === 'inactive';
+      }
+
+      return matchesSearch && matchesProvider && matchesStatus;
     });
-  }, [data?.data, searchTerm, statusFilter]);
+  }, [data?.data, searchTerm, statusFilter, providerFilter]);
+
+  // Get unique providers for filter dropdown
+  const uniqueProviders = useMemo(() => {
+    if (!data?.data) return [];
+    
+    const providers = data.data
+      .map((service: any) => service.provider)
+      .filter((provider: string) => provider && provider.trim() !== '')
+      .filter((provider: string, index: number, arr: string[]) => arr.indexOf(provider) === index)
+      .sort();
+    
+    // Add Manual System option at the beginning
+    return ['Manual System', ...providers];
+  }, [data?.data]);
 
   // Optimized grouping with better performance for large datasets
   const groupedServices = useMemo(() => {
@@ -3948,6 +3976,20 @@ function AdminServicesPage() {
                 <option value="id">Service ID</option>
                 <option value="name">Service Name</option>
                 <option value="category">Category</option>
+              </select>
+
+              {/* Provider Filter Dropdown */}
+              <select 
+                value={providerFilter}
+                onChange={(e) => setProviderFilter(e.target.value)}
+                className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+              >
+                <option value="all">All Providers</option>
+                {uniqueProviders.map((provider) => (
+                  <option key={provider} value={provider}>
+                    {provider}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

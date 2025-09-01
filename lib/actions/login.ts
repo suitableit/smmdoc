@@ -80,47 +80,47 @@ export const login = async (values: z.infer<typeof signInSchema> & { recaptchaTo
     return { success: true, message: 'Confirmation email sent!' };
   }
 
-  // Todo: Add 2FA check here
-  if (existingUser.isTwoFactorEnabled && existingUser.email) {
-    if (code) {
-      const twoFactorToken = await getTwoFactorTokenByEmail(existingUser.email);
-      if (!twoFactorToken) {
-        return { success: false, error: 'Invalid 2FA Code!' };
-      }
-      if (twoFactorToken.token !== code) {
-        return { success: false, error: 'Invalid 2FA Code!' };
-      }
-      const hasExpired = new Date(twoFactorToken.expires) < new Date();
-      if (hasExpired) {
-        return { success: false, error: '2FA Code has expired!' };
-      }
-      // delete two factor token after use
-      await db.twoFactorToken.delete({
-        where: { id: twoFactorToken.id },
-      });
-      const existingConfirmationToken = await getTwoFactorConfirmationByUserId(
-        existingUser.id.toString()
-      );
-      if (existingConfirmationToken) {
-        await db.twoFactorConfirmation.delete({
-          where: { id: existingConfirmationToken.id },
-        });
-      }
-      await db.twoFactorConfirmation.create({
-        data: {
-          userId: existingUser.id,
-        },
-      });
-    } else {
-      const twoFactorToken = await generateTwoFactorToken(existingUser.email);
-      await sendMail({
-        sendTo: existingUser.email,
-        subject: '2FA Code',
-        html: `<p>2FA Code: ${twoFactorToken?.token}</p>`,
-      });
-      return { twoFactor: true };
-    }
-  }
+  // Todo: Add 2FA check here - COMMENTED OUT FOR DEVELOPMENT
+  // if (existingUser.isTwoFactorEnabled && existingUser.email) {
+  //   if (code) {
+  //     const twoFactorToken = await getTwoFactorTokenByEmail(existingUser.email);
+  //     if (!twoFactorToken) {
+  //       return { success: false, error: 'Invalid 2FA Code!' };
+  //     }
+  //     if (twoFactorToken.token !== code) {
+  //       return { success: false, error: 'Invalid 2FA Code!' };
+  //     }
+  //     const hasExpired = new Date(twoFactorToken.expires) < new Date();
+  //     if (hasExpired) {
+  //       return { success: false, error: '2FA Code has expired!' };
+  //     }
+  //     // delete two factor token after use
+  //     await db.twoFactorToken.delete({
+  //       where: { id: twoFactorToken.id },
+  //     });
+  //     const existingConfirmationToken = await getTwoFactorConfirmationByUserId(
+  //       existingUser.id.toString()
+  //     );
+  //     if (existingConfirmationToken) {
+  //       await db.twoFactorConfirmation.delete({
+  //         where: { id: existingConfirmationToken.id },
+  //       });
+  //     }
+  //     await db.twoFactorConfirmation.create({
+  //       data: {
+  //         userId: existingUser.id,
+  //       },
+  //     });
+  //   } else {
+  //     const twoFactorToken = await generateTwoFactorToken(existingUser.email);
+  //     await sendMail({
+  //       sendTo: existingUser.email,
+  //       subject: '2FA Code',
+  //       html: `<p>2FA Code: ${twoFactorToken?.token}</p>`,
+  //     });
+  //     return { twoFactor: true };
+  //   }
+  // }
 
   try {
     // Check if user is admin
