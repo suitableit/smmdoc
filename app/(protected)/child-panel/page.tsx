@@ -1,6 +1,7 @@
 'use client';
 
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import React, { useEffect, useState } from 'react';
 import {
     FaCheckCircle,
@@ -72,8 +73,8 @@ const ChildPanel: React.FC = () => {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Child Panel — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Child Panel', appName);
+  }, [appName]);
 
   // Simulate initial loading
   useEffect(() => {

@@ -1,7 +1,8 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
@@ -68,10 +69,12 @@ interface ServiceType {
 }
 
 export default function ApiIntegrationPage() {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `API Integration — ${APP_NAME}`;
-  }, []);
+    setPageTitle('API Integration', appName);
+  }, [appName]);
 
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [showApiKey, setShowApiKey] = useState(false);

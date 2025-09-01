@@ -4,7 +4,8 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { setUserDetails } from '@/lib/slice/userDetails';
 import React, { useEffect, useState } from 'react';
 import {
@@ -100,14 +101,16 @@ interface ApiKey {
 }
 
 const ProfilePage = () => {
+  const { appName } = useAppNameWithFallback();
+
   const dispatch = useDispatch();
   const currentUser = useCurrentUser();
   const userDetails = useSelector((state: any) => state.userDetails);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Account Settings — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Account Settings', appName);
+  }, [appName]);
 
   // State management
   const [apiKey, setApiKey] = useState<ApiKey | null>(null);

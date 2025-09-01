@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { clearMetaSettingsCache } from '@/lib/utils/meta-settings';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Default meta settings
@@ -20,22 +21,33 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get meta settings from database (create if not exists)
-    let settings = await db.metaSettings.findFirst();
+    // Get meta settings from general settings table (create if not exists)
+    let settings = await db.generalSettings.findFirst();
     if (!settings) {
-      settings = await db.metaSettings.create({
-        data: defaultMetaSettings
+      settings = await db.generalSettings.create({
+        data: {
+          siteTitle: 'SMM Panel',
+          tagline: 'Best SMM Services Provider',
+          siteIcon: '',
+          siteLogo: '',
+          adminEmail: 'admin@example.com',
+          googleTitle: defaultMetaSettings.googleTitle,
+          metaSiteTitle: defaultMetaSettings.siteTitle,
+          siteDescription: defaultMetaSettings.siteDescription,
+          metaKeywords: defaultMetaSettings.keywords,
+          thumbnail: defaultMetaSettings.thumbnail
+        }
       });
     }
 
     return NextResponse.json({
       success: true,
       metaSettings: {
-        googleTitle: settings.googleTitle,
-        siteTitle: settings.siteTitle,
-        siteDescription: settings.siteDescription,
-        keywords: settings.keywords,
-        thumbnail: settings.thumbnail,
+        googleTitle: settings.googleTitle || '',
+        siteTitle: settings.metaSiteTitle || '',
+        siteDescription: settings.siteDescription || '',
+        keywords: settings.metaKeywords || '',
+        thumbnail: settings.thumbnail || '',
       }
     });
 
@@ -96,25 +108,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update meta settings
-    await db.metaSettings.upsert({
+    // Update meta settings in general settings table
+    await db.generalSettings.upsert({
       where: { id: 1 },
       update: {
         googleTitle: metaSettings.googleTitle.trim(),
-        siteTitle: metaSettings.siteTitle.trim(),
+        metaSiteTitle: metaSettings.siteTitle.trim(),
         siteDescription: metaSettings.siteDescription.trim(),
-        keywords: metaSettings.keywords?.trim() || '',
+        metaKeywords: metaSettings.keywords?.trim() || '',
         thumbnail: metaSettings.thumbnail || '',
+        updatedAt: new Date()
       },
       create: {
         id: 1,
+        siteTitle: 'SMM Panel',
+        tagline: 'Best SMM Services Provider',
+        siteIcon: '',
+        siteLogo: '',
+        adminEmail: 'admin@example.com',
         googleTitle: metaSettings.googleTitle.trim(),
-        siteTitle: metaSettings.siteTitle.trim(),
+        metaSiteTitle: metaSettings.siteTitle.trim(),
         siteDescription: metaSettings.siteDescription.trim(),
-        keywords: metaSettings.keywords?.trim() || '',
-        thumbnail: metaSettings.thumbnail || '',
+        metaKeywords: metaSettings.keywords?.trim() || '',
+        thumbnail: metaSettings.thumbnail || ''
       }
     });
+
+    // Clear cache to ensure homepage gets updated meta settings
+    clearMetaSettingsCache();
 
     return NextResponse.json({
       success: true,

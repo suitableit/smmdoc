@@ -123,7 +123,9 @@ export async function POST(request: NextRequest) {
       const userName = session.user.name || session.user.username || 'User';
       
       // Send email notification to admin
-      const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_FROM;
+      // Import the email config function at the top of the file
+      const { getFromEmailAddress } = await import('@/lib/email-config');
+      const adminEmail = process.env.ADMIN_EMAIL || await getFromEmailAddress();
       if (adminEmail) {
         const emailTemplate = contactEmailTemplates.newContactMessageAdmin({
           userName,

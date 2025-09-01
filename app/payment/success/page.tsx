@@ -1,6 +1,7 @@
 'use client';
 
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import {
@@ -57,8 +58,8 @@ function PaymentSuccessContent() {
 
   // Set document title
   useEffect(() => {
-    document.title = `Payment Success — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Payment Success', appName);
+  }, [appName]);
 
   useEffect(() => {
     // Show success toast only once when component mounts
@@ -203,6 +204,8 @@ function PaymentSuccessContent() {
 }
 
 export default function PaymentSuccessPage() {
+  const { appName } = useAppNameWithFallback();
+
   return (
     <Suspense
       fallback={

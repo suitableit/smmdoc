@@ -7,14 +7,34 @@ import { db } from "../db";
 import { sendMail } from "../nodemailer";
 import { generateVerificationToken } from "../tokens";
 import { signUpSchema } from "../validators/auth.validator";
+import { verifyReCAPTCHA, getReCAPTCHASettings } from "../recaptcha";
 
-export const register = async (values: z.infer<typeof signUpSchema>) => {
+export const register = async (values: z.infer<typeof signUpSchema> & { recaptchaToken?: string }) => {
   console.log('Received values:', values);
   
   // Add confirmPassword if it doesn't exist
   if (!values.confirmPassword && values.password) {
     values = { ...values, confirmPassword: values.password };
     console.log('Added confirmPassword:', values);
+  }
+  
+  // Verify reCAPTCHA if enabled and token provided
+  const recaptchaSettings = await getReCAPTCHASettings();
+  if (recaptchaSettings && recaptchaSettings.enabledForms?.signUp) {
+    if (!values.recaptchaToken) {
+      return { success: false, error: "reCAPTCHA verification is required" };
+    }
+
+    const recaptchaResult = await verifyReCAPTCHA(
+      values.recaptchaToken,
+      recaptchaSettings.secretKey,
+      recaptchaSettings.version === 'v3' ? 'signup' : undefined,
+      recaptchaSettings.version === 'v3' ? recaptchaSettings.threshold : undefined
+    );
+
+    if (!recaptchaResult.success) {
+      return { success: false, error: recaptchaResult.error || "reCAPTCHA verification failed" };
+    }
   }
   
   const validatedFields = signUpSchema.safeParse(values);

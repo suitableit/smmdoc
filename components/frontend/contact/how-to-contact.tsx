@@ -15,6 +15,8 @@ import {
     FaYoutube
 } from 'react-icons/fa';
 import { GradientSpinner } from '@/components/ui/GradientSpinner';
+import ReCAPTCHA from '@/components/ReCAPTCHA';
+import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 
 // Contact Form Component
 const ContactForm: React.FC = () => {
@@ -31,6 +33,10 @@ const ContactForm: React.FC = () => {
   const [submitStatus, setSubmitStatus] = useState<
     'idle' | 'success' | 'error'
   >('idle');
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  
+  // Get ReCAPTCHA settings
+  const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -81,19 +87,33 @@ const ContactForm: React.FC = () => {
       return;
     }
 
+    // Check ReCAPTCHA if enabled
+    if (isEnabledForForm('contact') && !recaptchaToken) {
+      setErrors({ ...errors, recaptcha: 'Please complete the ReCAPTCHA verification.' });
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitStatus('idle');
+    setErrors({});
 
     try {
-      // Simulate form submission - replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Prepare submission data
+      const submitData = {
+        ...formData,
+        adminEmail: 'support@smmdoc.com',
+        ...(recaptchaToken && { recaptchaToken })
+      };
 
-      // Here you would typically send the data to your backend
-      // const response = await fetch('/api/contact', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ ...formData, adminEmail: 'support@smmdoc.com' })
-      // });
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submitData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit contact form');
+      }
 
       setSubmitStatus('success');
       setFormData({
@@ -103,7 +123,9 @@ const ContactForm: React.FC = () => {
         subject: '',
         message: '',
       });
+      setRecaptchaToken(null);
     } catch (error) {
+      console.error('Contact form submission error:', error);
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -281,6 +303,39 @@ const ContactForm: React.FC = () => {
             </p>
           )}
         </div>
+
+        {/* ReCAPTCHA Component */}
+        {isEnabledForForm('contact') && recaptchaSettings && (
+          <ReCAPTCHA
+            siteKey={recaptchaSettings.siteKey}
+            version={recaptchaSettings.version}
+            action="contact"
+            threshold={recaptchaSettings.threshold}
+            onVerify={(token) => {
+              setRecaptchaToken(token);
+              // Clear any previous ReCAPTCHA error
+              if (errors.recaptcha) {
+                setErrors(prev => ({ ...prev, recaptcha: '' }));
+              }
+            }}
+            onError={() => {
+              setRecaptchaToken(null);
+                // Let Google's native error messages display instead of custom ones
+                // This allows 'Invalid domain for site key' and other specific errors to show
+              }}
+              onExpired={() => {
+                setRecaptchaToken(null);
+                // Let Google's native expired message display
+              }}
+            />
+        )}
+        
+        {/* ReCAPTCHA Error */}
+        {errors.recaptcha && (
+          <p className="text-red-500 dark:text-red-400 text-sm text-center transition-colors duration-200">
+            {errors.recaptcha}
+          </p>
+        )}
 
         {/* Submit Button */}
         <button

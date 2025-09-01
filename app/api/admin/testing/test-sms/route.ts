@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Add test prefix to message
-    smsMessage = `[TEST] ${smsMessage}`;
+    smsMessage = `${smsMessage}`;
     
     // Send test SMS
     const smsResult = await sendSMS({

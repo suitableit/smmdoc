@@ -22,7 +22,8 @@ import {
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -81,13 +82,21 @@ interface SupportTicketDetails {
   lastUpdated: string;
   status: 'Open' | 'Answered' | 'Customer Reply' | 'Closed';
   messages: TicketMessage[];
+  ticketType?: 'Human' | 'AI';
+  aiSubcategory?: 'Refill' | 'Cancel' | 'Speed Up' | 'Restart' | 'Fake Complete';
+  systemMessage?: string;
+  ticketStatus?: 'Pending' | 'Processed' | 'Failed';
 }
 
-const UserSupportTicketPage = () => {
+const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) => {
+  const { appName } = useAppNameWithFallback();
+  const resolvedParams = React.use(params);
+  const ticketId = resolvedParams.id;
+
   // Set document title
   useEffect(() => {
-    document.title = `Ticket #0001 — ${APP_NAME}`;
-  }, []);
+    setPageTitle(`Ticket #${ticketId}`, appName);
+  }, [appName, ticketId]);
 
   // Dummy data for support ticket details
   const dummyTicketDetails: SupportTicketDetails = {
@@ -139,18 +148,45 @@ const UserSupportTicketPage = () => {
   };
 
   // State management
-  const [ticketDetails, setTicketDetails] = useState<SupportTicketDetails>(dummyTicketDetails);
+  const [ticketDetails, setTicketDetails] = useState<SupportTicketDetails | null>(null);
+  const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
   const [isReplying, setIsReplying] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isClosingTicket, setIsClosingTicket] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
+  // Fetch ticket details
+  useEffect(() => {
+    const fetchTicketDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/support-tickets/${ticketId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch ticket details');
+        }
+        const data = await response.json();
+        setTicketDetails(data);
+      } catch (error) {
+        console.error('Error fetching ticket details:', error);
+        showToast('Error loading ticket details', 'error');
+        // Fallback to dummy data for development
+        setTicketDetails(dummyTicketDetails);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTicketDetails();
+  }, [ticketId]);
+
   // Utility functions
-  const formatTicketID = (id: string) => {
-    return `${id.padStart(4, '0')}`;
+  const formatTicketID = (id: string | undefined) => {
+    if (!id) return '0';
+    return id.toString();
   };
 
   const getStatusColor = (status: string) => {
@@ -194,35 +230,32 @@ const UserSupportTicketPage = () => {
     setIsReplying(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const formData = new FormData();
+      formData.append('message', replyContent);
+      formData.append('type', 'customer_reply');
       
-      const newMessage: TicketMessage = {
-        id: `msg_${Date.now()}`,
-        type: 'customer',
-        author: 'john_doe',
-        content: replyContent,
-        createdAt: new Date().toISOString(),
-        attachments: selectedFiles.length > 0 ? selectedFiles.map((file, index) => ({
-          id: `att_${Date.now()}_${index}`,
-          filename: file.name,
-          filesize: `${Math.round(file.size / 1024)} KB`,
-          mimetype: file.type,
-          url: URL.createObjectURL(file)
-        })) : undefined
-      };
-      
-      setTicketDetails(prev => ({
-        ...prev,
-        messages: [...prev.messages, newMessage],
-        status: 'Customer Reply',
-        lastUpdated: new Date().toISOString()
-      }));
+      // Add files if any
+      selectedFiles.forEach((file, index) => {
+        formData.append(`attachments`, file);
+      });
+
+      const response = await fetch(`/api/support-tickets/${ticketId}/reply`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send reply');
+      }
+
+      const updatedTicket = await response.json();
+      setTicketDetails(updatedTicket);
       
       setReplyContent('');
       setSelectedFiles([]);
       showToast('Reply sent successfully', 'success');
     } catch (error) {
+      console.error('Error sending reply:', error);
       showToast('Error sending reply', 'error');
     } finally {
       setIsReplying(false);
@@ -240,6 +273,72 @@ const UserSupportTicketPage = () => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Handle ticket closing
+  const handleCloseTicket = async () => {
+    const confirmed = window.confirm('Are you sure you want to close this ticket? This action cannot be undone.');
+    if (!confirmed) return;
+
+    setIsClosingTicket(true);
+    try {
+      const response = await fetch(`/api/support-tickets/${ticketId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'closed' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to close ticket');
+      }
+
+      const updatedTicket = await response.json();
+      setTicketDetails(updatedTicket);
+      
+      showToast('Ticket has been closed successfully', 'success');
+    } catch (error) {
+      console.error('Error closing ticket:', error);
+      showToast('Error closing ticket', 'error');
+    } finally {
+      setIsClosingTicket(false);
+    }
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading ticket details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if no ticket data
+  if (!ticketDetails) {
+    return (
+      <div className="page-container">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <FaExclamationTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Ticket Not Found</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">The ticket you're looking for doesn't exist or you don't have permission to view it.</p>
+            <button 
+              onClick={() => window.history.back()}
+              className="btn btn-primary"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container">
       {/* Toast Container */}
@@ -256,7 +355,7 @@ const UserSupportTicketPage = () => {
       <div className="page-content">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-4">
             <button 
               onClick={() => window.history.back()}
               className="btn btn-primary flex items-center gap-2"
@@ -265,7 +364,7 @@ const UserSupportTicketPage = () => {
               Back to Tickets
             </button>
             <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-              Ticket #{formatTicketID(ticketDetails.id)}
+              Ticket #{formatTicketID(ticketDetails?.id)}
             </h1>
           </div>
         </div>
@@ -273,6 +372,45 @@ const UserSupportTicketPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="md:col-span-2 space-y-6">
+            {/* AI Ticket System Message */}
+            {ticketDetails && ticketDetails.ticketType === 'AI' && ticketDetails.systemMessage && (
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaExclamationTriangle />
+                  </div>
+                  <h3 className="card-title">System Processing Result</h3>
+                </div>
+                
+                <div className={`p-4 rounded-lg border-l-4 ${
+                  ticketDetails.ticketStatus === 'Processed' 
+                    ? 'bg-green-50 border-green-400 text-green-800' 
+                    : ticketDetails.ticketStatus === 'Failed'
+                    ? 'bg-red-50 border-red-400 text-red-800'
+                    : 'bg-yellow-50 border-yellow-400 text-yellow-800'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm ${
+                      ticketDetails.ticketStatus === 'Processed' 
+                        ? 'bg-green-500' 
+                        : ticketDetails.ticketStatus === 'Failed'
+                        ? 'bg-red-500'
+                        : 'bg-yellow-500'
+                    }`}>
+                      {ticketDetails.ticketStatus === 'Processed' ? '✓' : 
+                       ticketDetails.ticketStatus === 'Failed' ? '✗' : '⏳'}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold mb-2">
+                        AI {ticketDetails.aiSubcategory} Request - {ticketDetails.ticketStatus}
+                      </h4>
+                      <p className="text-sm whitespace-pre-wrap">{ticketDetails.systemMessage}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Messages Thread */}
             <div className="card card-padding">
               <div className="card-header">
@@ -283,16 +421,16 @@ const UserSupportTicketPage = () => {
               </div>
               
               <div className="space-y-6">
-                {ticketDetails.messages.map((message) => (
-                  <div key={message.id} className={`flex items-start gap-4 ${message.type === 'customer' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm ${
-                      message.type === 'customer' ? 'bg-gradient-to-r from-[var(--secondary)] to-[var(--primary)]' : 
-                      message.type === 'staff' ? 'bg-gradient-to-r from-gray-600 to-gray-700' : 'bg-gradient-to-r from-gray-400 to-gray-500'
-                    }`}>
-                      {message.type === 'customer' ? <FaUser className="h-4 w-4" /> :
-                       message.type === 'staff' ? <FaUserShield className="h-4 w-4" /> :
-                       <FaExclamationTriangle className="h-4 w-4" />}
-                    </div>
+                {ticketDetails && ticketDetails.messages && ticketDetails.messages.map((message) => (
+                  <div key={message.id} className={`flex items-start gap-4 ${message.type === 'customer' ? 'justify-end' : ''}`}>
+                    {message.type !== 'customer' && (
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm ${
+                        message.type === 'staff' ? 'bg-gradient-to-r from-gray-600 to-gray-700' : 'bg-gradient-to-r from-gray-400 to-gray-500'
+                      }`}>
+                        {message.type === 'staff' ? <FaUserShield className="h-4 w-4" /> :
+                         <FaExclamationTriangle className="h-4 w-4" />}
+                      </div>
+                    )}
                     
                     <div className={`flex-1 min-w-0 p-4 rounded-lg ${
                       message.type === 'customer' ? 'bg-blue-50 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800/50'
@@ -306,13 +444,13 @@ const UserSupportTicketPage = () => {
                       </div>
                       
                       <div className="prose prose-sm max-w-none">
-                        <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
+                        <div className={`whitespace-pre-wrap ${message.type === 'customer' ? 'text-right' : ''}`} style={{ color: 'var(--text-primary)' }}>{message.content}</div>
                       </div>
                       
                       {/* Attachments */}
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
-                          {message.attachments.map((attachment) => (
+                          {message.attachments && message.attachments.map((attachment) => (
                             <a 
                               key={attachment.id} 
                               href={attachment.url}
@@ -334,6 +472,12 @@ const UserSupportTicketPage = () => {
                         </div>
                       )}
                     </div>
+                    
+                    {message.type === 'customer' && (
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm bg-gradient-to-r from-[var(--secondary)] to-[var(--primary)]">
+                        <FaUser className="h-4 w-4" />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -398,10 +542,7 @@ const UserSupportTicketPage = () => {
                     disabled={!replyContent.trim() || isReplying}
                     className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
                   >
-                    {isReplying && (
-                      <ButtonLoader />
-                    )}
-                    Submit Reply
+                    {isReplying ? 'Submitting...' : 'Submit Reply'}
                   </button>
                 </div>
               </div>
@@ -410,19 +551,21 @@ const UserSupportTicketPage = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Ticket Information */}
-            <div className="card card-padding">
-              <div className="card-header">
-                <div className="card-icon">
-                  <FaTicketAlt />
-                </div>
-                <h3 className="card-title">Ticket Details</h3>
-              </div>
+            {ticketDetails && (
+              <>
+                {/* Ticket Information */}
+                <div className="card card-padding">
+                  <div className="card-header">
+                    <div className="card-icon">
+                      <FaTicketAlt />
+                    </div>
+                    <h3 className="card-title">Ticket Details</h3>
+                  </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="form-label">Subject</label>
-                  <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{ticketDetails.subject}</p>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="form-label">Subject</label>
+                      <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{ticketDetails.subject}</p>
                 </div>
                 <div>
                   <label className="form-label">Status</label>
@@ -444,6 +587,34 @@ const UserSupportTicketPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Close Ticket Section */}
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaTimes />
+                </div>
+                <h3 className="card-title">Close Ticket</h3>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>  
+                  If your issue has been resolved, you can close this ticket. Once closed, you won't be able to add more replies.
+                </p>
+                <button
+                  onClick={handleCloseTicket}
+                  disabled={isClosingTicket || ticketDetails.status === 'Closed'}
+                  className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isClosingTicket ? (
+                    <ButtonLoader />
+                  ) : null}
+                  {ticketDetails.status === 'Closed' ? 'Ticket Closed' : 'Close Ticket'}
+                </button>
+              </div>
+            </div>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -20,7 +20,8 @@ import {
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
@@ -366,12 +367,14 @@ const dummyStats: BlogStats = {
 };
 
 const BlogsPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   const router = useRouter(); // Add router hook
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Blogs — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Blogs', appName);
+  }, [appName]);
 
   // State management
   const [blogs, setBlogs] = useState<BlogPost[]>(dummyBlogs);

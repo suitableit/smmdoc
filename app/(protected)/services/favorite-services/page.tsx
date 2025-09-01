@@ -20,7 +20,8 @@ import {
 import ServiceViewModal from '@/app/(protected)/services/serviceViewModal';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatNumber } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
@@ -114,8 +115,8 @@ const FavoriteServicesTable: React.FC = () => {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Favorite Services — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Favorite Services', appName);
+  }, [appName]);
 
   // Show toast notification
   const showToast = (

@@ -23,7 +23,8 @@ import {
   FaTrash
 } from 'react-icons/fa';
 
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -121,10 +122,12 @@ interface Provider {
 }
 
 const APIProvidersPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `API Providers — ${APP_NAME}`;
-  }, []);
+    setPageTitle('API Providers', appName);
+  }, [appName]);
 
   // Real providers data from API
   const [providers, setProviders] = useState<Provider[]>([]);

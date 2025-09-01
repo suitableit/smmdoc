@@ -23,23 +23,23 @@ export async function GET() {
     }
 
     // Get ticket settings from database (create if not exists)
-    let settings = await db.ticketSettings.findFirst({
+    let settings = await db.ticket_settings.findFirst({
       include: {
-        subjects: true
+        ticket_subjects: true
       }
     });
 
     if (!settings) {
-      settings = await db.ticketSettings.create({
+      settings = await db.ticket_settings.create({
         data: {
           ticketSystemEnabled: defaultTicketSettings.ticketSystemEnabled,
           maxPendingTickets: defaultTicketSettings.maxPendingTickets,
-          subjects: {
+          ticket_subjects: {
             create: defaultTicketSettings.subjects
           }
         },
         include: {
-          subjects: true
+          ticket_subjects: true
         }
       });
     }
@@ -49,7 +49,7 @@ export async function GET() {
       ticketSettings: {
         ticketSystemEnabled: settings.ticketSystemEnabled,
         maxPendingTickets: settings.maxPendingTickets,
-        subjects: settings.subjects.map(subject => ({
+        subjects: settings.ticket_subjects.map(subject => ({
           id: subject.id,
           name: subject.name
         })),
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update ticket settings
-    await db.ticketSettings.upsert({
+    await db.ticket_settings.upsert({
       where: { id: 1 },
       update: {
         ticketSystemEnabled: ticketSettings.ticketSystemEnabled ?? true,
@@ -123,11 +123,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Delete existing subjects and create new ones
-    await db.ticketSubject.deleteMany({
+    await db.ticket_subjects.deleteMany({
       where: { ticketSettingsId: 1 }
     });
 
-    await db.ticketSubject.createMany({
+    await db.ticket_subjects.createMany({
       data: ticketSettings.subjects.map((subject: any) => ({
         name: subject.name.trim(),
         ticketSettingsId: 1

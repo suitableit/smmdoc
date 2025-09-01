@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import {
   FaBan,
   FaCreditCard,
@@ -15,10 +16,12 @@ import {
 } from 'react-icons/fa';
 
 export default function TermsPage() {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Terms & Conditions — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Terms & Conditions', appName);
+  }, [appName]);
 
   const termsData = [
     {

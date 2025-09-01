@@ -1,7 +1,8 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -68,10 +69,12 @@ const Toast = ({
 );
 
 export default function AffiliateProgram() {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Affiliate Program — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Affiliate Program', appName);
+  }, [appName]);
 
   return (
     <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">

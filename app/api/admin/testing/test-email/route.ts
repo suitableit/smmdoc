@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     // Send test email
     const emailSent = await sendMail({
       sendTo: testEmail,
-      subject: `[TEST] ${emailData.subject}`,
+      subject: `${emailData.subject}`,
       html: emailData.html
     });
     
