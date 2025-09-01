@@ -102,6 +102,7 @@ const SupportTicketsPage = () => {
   // Loading states
   const [ticketsLoading, setTicketsLoading] = useState(true);
   const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
+  const [closingTicketId, setClosingTicketId] = useState<string | null>(null);
 
   // Bulk operations state
   const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
@@ -172,9 +173,19 @@ const SupportTicketsPage = () => {
       case 'In Progress':
         return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Closed':
+      case 'closed':
         return 'bg-gray-50 text-gray-700 border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
+  const formatStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'closed':
+        return 'Closed';
+      default:
+        return status;
     }
   };
 
@@ -311,6 +322,7 @@ const SupportTicketsPage = () => {
   // Handle close ticket
   const handleCloseTicket = async (ticketId: string) => {
     try {
+      setClosingTicketId(ticketId);
       const response = await fetch(`/api/admin/tickets/${ticketId}/status`, {
         method: 'PATCH',
         headers: {
@@ -334,6 +346,8 @@ const SupportTicketsPage = () => {
     } catch (error) {
       console.error('Error updating ticket status:', error);
       showToast('Error updating ticket status', 'error');
+    } finally {
+      setClosingTicketId(null);
     }
   };
 
@@ -808,11 +822,12 @@ const SupportTicketsPage = () => {
                           </td>
                           <td className="p-3">
                             <span
-                              className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium border w-26 ${getStatusColor(
+                              className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium border w-26 ${
+                                getStatusColor(
                                 ticket.status
                               )}`}
                             >
-                              {ticket.status}
+                              {formatStatusDisplay(ticket.status)}
                             </span>
                           </td>
                           <td className="p-3">
@@ -877,10 +892,10 @@ const SupportTicketsPage = () => {
                                             ?.classList.add('hidden');
                                         }}
                                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                        disabled={ticket.status === 'Closed'}
+                                        disabled={ticket.status === 'Closed' || closingTicketId === ticket.id}
                                       >
                                         <FaCheck className="h-3 w-3" />
-                                        Close Ticket
+                                        {closingTicketId === ticket.id ? 'Closing...' : 'Close Ticket'}
                                       </button>
                                     )}
                                     <button

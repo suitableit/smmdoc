@@ -107,9 +107,34 @@ export async function GET(
       );
     }
 
+    // Calculate user ticket statistics
+    const [totalTickets, openTickets] = await Promise.all([
+      // Count total tickets for this user
+      db.supportTicket.count({
+        where: { userId: ticket.userId }
+      }),
+      // Count open tickets for this user (status: 'pending' or 'Open')
+      db.supportTicket.count({
+        where: {
+          userId: ticket.userId,
+          OR: [
+            { status: 'pending' },
+            { status: 'Open' }
+          ]
+        }
+      })
+    ]);
+
     // Transform the ticket data to match frontend expectations
     const transformedTicket = {
       ...ticket,
+      userInfo: {
+        id: ticket.user?.id,
+        name: ticket.user?.name,
+        email: ticket.user?.email,
+        totalTickets,
+        openTickets
+      },
       messages: ticket.messages.map((msg: any) => ({
         ...msg,
         userImage: msg.user.image,

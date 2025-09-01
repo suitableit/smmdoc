@@ -645,9 +645,25 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(totalCount / limit);
 
+    // Transform tickets to match frontend expectations
+    const transformedTickets = tickets.map(ticket => ({
+      id: ticket.id,
+      subject: ticket.subject,
+      status: ticket.status,
+      createdAt: ticket.createdAt.toISOString(),
+      lastUpdated: ticket.updatedAt.toISOString(),
+      priority: ticket.priority,
+      ticketType: ticket.ticketType,
+      category: ticket.category,
+      subcategory: ticket.subcategory,
+      aiSubcategory: ticket.aiSubcategory,
+      orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : [],
+      repliedByUser: ticket.repliedByUser
+    }));
+
     return NextResponse.json({
       success: true,
-      tickets,
+      tickets: transformedTickets,
       pagination: {
         currentPage: page,
         totalPages,

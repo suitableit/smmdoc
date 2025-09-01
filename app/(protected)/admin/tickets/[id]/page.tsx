@@ -100,7 +100,7 @@ interface SupportTicketDetails {
   subject: string;
   createdAt: string;
   lastUpdated: string;
-  status: 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'Closed';
+  status: 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'closed';
   isRead: boolean;
   messages: TicketMessage[];
   notes: TicketNote[];
@@ -329,9 +329,19 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
       case 'In Progress':
         return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Closed':
+      case 'closed':
         return 'bg-gray-50 text-gray-700 border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
+  const formatStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'closed':
+        return 'Closed';
+      default:
+        return status;
     }
   };
 
@@ -392,7 +402,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: 'Closed' }),
+        body: JSON.stringify({ status: 'closed' }),
       });
 
       if (!response.ok) {
@@ -606,18 +616,28 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 Back to Tickets
               </button>
 
-              {/* Status Controls */}
-              <select 
-                value={ticketDetails.status}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                className="form-field pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-              >
-                <option value="Open">Open</option>
-                <option value="Answered">Answered</option>
-                <option value="Customer Reply">Customer Reply</option>
-                <option value="On Hold">On Hold</option>
-                <option value="In Progress">In Progress</option>
-              </select>
+              {/* Status Controls - Only show if ticket is not closed */}
+              {ticketDetails.status !== 'closed' && (
+                <select 
+                  value={ticketDetails.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className="form-field pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                >
+                  <option value="Open">Open</option>
+                  <option value="Answered">Answered</option>
+                  <option value="Customer Reply">Customer Reply</option>
+                  <option value="On Hold">On Hold</option>
+                  <option value="In Progress">In Progress</option>
+                </select>
+              )}
+              {ticketDetails.status === 'closed' && (
+                <button 
+                  disabled
+                  className="btn btn-primary opacity-75 cursor-not-allowed"
+                >
+                  Closed
+                </button>
+              )}
             </div>
             
             <div className="flex flex-row items-center gap-1 md:gap-2">
@@ -659,7 +679,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 <div>
                   <label className="form-label">Status</label>
                   <span className={`mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(ticketDetails.status)}`}>
-                    {ticketDetails.status}
+                    {formatStatusDisplay(ticketDetails.status)}
                   </span>
                 </div>
               </div>
@@ -831,7 +851,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
             </div>
 
             {/* Reply Section - Only show if ticket is not closed */}
-            {ticketDetails.status !== 'Closed' && (
+            {ticketDetails.status !== 'closed' && (
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
@@ -1023,13 +1043,10 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 </p>
                 <button
                   onClick={handleCloseTicket}
-                  disabled={isClosingTicket || ticketDetails.status === 'Closed'}
+                  disabled={isClosingTicket || ticketDetails.status === 'closed'}
                   className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
                 >
-                  {isClosingTicket ? (
-                    <ButtonLoader />
-                  ) : null}
-                  {ticketDetails.status === 'Closed' ? 'Ticket Closed' : 'Close Ticket'}
+                  {isClosingTicket ? 'Closing...' : (ticketDetails.status === 'closed' ? 'Ticket Closed' : 'Close Ticket')}
                 </button>
               </div>
             </div>
