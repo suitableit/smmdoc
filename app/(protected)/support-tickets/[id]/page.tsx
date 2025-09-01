@@ -83,7 +83,7 @@ interface SupportTicketDetails {
   subject: string;
   createdAt: string;
   lastUpdated: string;
-  status: 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'Closed';
+  status: 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'closed';
   messages: TicketMessage[];
   ticketType?: 'Human' | 'AI';
   aiSubcategory?: 'Refill' | 'Cancel' | 'Speed Up' | 'Restart' | 'Fake Complete';
@@ -181,9 +181,19 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
       case 'In Progress':
         return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Closed':
+      case 'closed':
         return 'bg-gray-50 text-gray-700 border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
+  const formatStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'closed':
+        return 'Closed';
+      default:
+        return status;
     }
   };
 
@@ -558,7 +568,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
             </div>
 
             {/* Reply Section - Only show if ticket is not closed */}
-            {ticketDetails.status !== 'Closed' && (
+            {ticketDetails.status !== 'closed' && (
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
@@ -659,8 +669,8 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                 <div>
                   <label className="form-label">Status</label>
                   <span className={`mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(ticketDetails.status)}`}>
-                    {ticketDetails.status}
-                  </span>
+                  {formatStatusDisplay(ticketDetails.status)}
+                </span>
                 </div>
                 <div>
                   <label className="form-label">Created</label>
@@ -678,30 +688,50 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
             </div>
 
             {/* Close Ticket Section */}
-            <div className="card card-padding">
-              <div className="card-header">
-                <div className="card-icon">
-                  <FaTimes />
+            {ticketDetails.status !== 'closed' ? (
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaTimes />
+                  </div>
+                  <h3 className="card-title">Close Ticket</h3>
                 </div>
-                <h3 className="card-title">Close Ticket</h3>
-              </div>
 
-              <div className="space-y-4">
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>  
-                  If your issue has been resolved, you can close this ticket. Once closed, you won't be able to add more replies.
-                </p>
-                <button
-                  onClick={handleCloseTicket}
-                  disabled={isClosingTicket || ticketDetails.status === 'Closed'}
-                  className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isClosingTicket ? (
-                    <ButtonLoader />
-                  ) : null}
-                  {ticketDetails.status === 'Closed' ? 'Ticket Closed' : 'Close Ticket'}
-                </button>
+                <div className="space-y-4">
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>  
+                    If your issue has been resolved, you can close this ticket. Once closed, you won't be able to add more replies.
+                  </p>
+                  <button
+                    onClick={handleCloseTicket}
+                    disabled={isClosingTicket}
+                    className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isClosingTicket ? 'Closing...' : 'Close Ticket'}
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaTimes />
+                  </div>
+                  <h3 className="card-title">Ticket Status</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>  
+                    This ticket has been closed and no further replies can be added.
+                  </p>
+                  <button
+                    disabled
+                    className="btn btn-primary opacity-75 cursor-not-allowed"
+                  >
+                    Closed
+                  </button>
+                </div>
+              </div>
+            )}
               </>
             )}
           </div>
