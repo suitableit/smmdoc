@@ -77,6 +77,7 @@ export async function GET(
                 id: true,
                 name: true,
                 email: true,
+                image: true,
               }
             }
           },
@@ -108,6 +109,30 @@ export async function GET(
     }
 
     // Transform the ticket data to match frontend expectations
+    let messages = ticket.messages.map((msg: any) => ({
+      id: msg.id.toString(),
+      type: msg.messageType,
+      author: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : (msg.user.name || msg.user.email)),
+      authorRole: msg.isFromAdmin ? 'admin' : 'user',
+      content: msg.message,
+      createdAt: msg.createdAt.toISOString(),
+      attachments: msg.attachments ? JSON.parse(msg.attachments) : [],
+      userImage: msg.user.image
+    }));
+
+    // If no messages exist but ticket has initial message, create initial message entry
+    if (messages.length === 0 && ticket.message) {
+      messages = [{
+        id: 'initial',
+        type: 'customer',
+        author: ticket.user.name || ticket.user.email,
+        authorRole: 'user',
+        content: ticket.message,
+        createdAt: ticket.createdAt.toISOString(),
+        attachments: ticket.attachments ? JSON.parse(ticket.attachments) : []
+      }];
+    }
+
     const transformedTicket = {
       id: ticket.id.toString(),
       subject: ticket.subject,
@@ -117,15 +142,8 @@ export async function GET(
       ticketType: ticket.ticketType,
       aiSubcategory: ticket.aiSubcategory,
       systemMessage: ticket.systemMessage,
-      messages: ticket.messages.map((msg: any) => ({
-        id: msg.id.toString(),
-        type: msg.messageType,
-        author: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : (msg.user.name || msg.user.email)),
-        authorRole: msg.isFromAdmin ? 'admin' : 'user',
-        content: msg.message,
-        createdAt: msg.createdAt.toISOString(),
-        attachments: msg.attachments ? JSON.parse(msg.attachments) : []
-      })),
+      orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : [],
+      messages: messages,
       notes: ticket.notes.map((note: any) => ({
         id: note.id.toString(),
         content: note.content,

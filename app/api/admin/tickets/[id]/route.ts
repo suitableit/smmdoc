@@ -79,6 +79,7 @@ export async function GET(
                 id: true,
                 name: true,
                 role: true,
+                image: true,
               }
             }
           }
@@ -111,6 +112,7 @@ export async function GET(
       ...ticket,
       messages: ticket.messages.map((msg: any) => ({
         ...msg,
+        userImage: msg.user.image,
         user: {
           ...msg.user,
           name: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : msg.user.name)

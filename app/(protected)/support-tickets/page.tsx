@@ -114,6 +114,8 @@ const TicketPage: React.FC = () => {
   } | null>(null);
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const [orderIdsError, setOrderIdsError] = useState<string>('');
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<{name: string, url: string}[]>([]);
 
   // ReCAPTCHA state
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -214,6 +216,7 @@ const TicketPage: React.FC = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
+  // Handle ticket type changes and AI-specific updates
   useEffect(() => {
     if (formData.ticketType === 'AI') {
       // AI Ticket - hide message and file upload, set category to AI Support
@@ -224,17 +227,22 @@ const TicketPage: React.FC = () => {
         category: '1', // AI Support
         message: `${formData.orderIds || 'Order ID Not Found'} ${formData.aiSubcategory}`,
       }));
-    } else {
+    }
+  }, [formData.ticketType, formData.aiSubcategory, formData.orderIds]);
+
+  // Handle Human ticket type setup (only when ticket type changes)
+  useEffect(() => {
+    if (formData.ticketType === 'Human') {
       // Human Ticket - show message and file upload, set category to Human Support
       setShowMessageField(true);
       setShowFileUpload(true);
       setFormData((prev) => ({
         ...prev,
         category: '13', // Human Support
-        message: '',
+        // Preserve existing message content
       }));
     }
-  }, [formData.ticketType, formData.aiSubcategory, formData.orderIds]);
+  }, [formData.ticketType]);
 
   // Handle ticket type change
   const handleTicketTypeChange = (ticketType: 'Human' | 'AI') => {
@@ -280,6 +288,83 @@ const TicketPage: React.FC = () => {
     handleInputChange('orderIds', sanitized);
   };
 
+  // File upload handler
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingFiles(true);
+    const newUploadedFiles: {name: string, url: string}[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        // Validate file size (3MB max)
+        const maxSize = 3 * 1024 * 1024; // 3MB
+        if (file.size > maxSize) {
+          showToast(`File "${file.name}" is too large. Maximum 3MB allowed.`, 'error');
+          continue;
+        }
+
+        // Validate file type (only images and PDFs)
+        const allowedTypes = [
+          'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+          'application/pdf'
+        ];
+        if (!allowedTypes.includes(file.type)) {
+          showToast(`File "${file.name}" has an unsupported format. Only images and PDFs are allowed.`, 'error');
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'uploads'); // Store in public/uploads folder
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          newUploadedFiles.push({
+            name: file.name,
+            url: result.fileUrl
+          });
+        } else {
+          const error = await response.json();
+          showToast(`Failed to upload "${file.name}": ${error.error}`, 'error');
+        }
+      }
+
+      if (newUploadedFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...newUploadedFiles]);
+        const newAttachments = newUploadedFiles.map(file => file.url);
+        setFormData(prev => ({
+          ...prev,
+          attachments: [...prev.attachments, ...newAttachments]
+        }));
+        showToast(`${newUploadedFiles.length} file(s) uploaded successfully!`, 'success');
+      }
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      showToast('Error uploading files. Please try again.', 'error');
+    } finally {
+      setUploadingFiles(false);
+      // Reset the input value to allow uploading the same file again
+      event.target.value = '';
+    }
+  };
+
+  // Remove uploaded file
+  const removeUploadedFile = (index: number) => {
+    const fileToRemove = uploadedFiles[index];
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setFormData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter(url => url !== fileToRemove.url)
+    }));
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
@@ -287,6 +372,20 @@ const TicketPage: React.FC = () => {
       // Check ReCAPTCHA if enabled
       if (isEnabledForForm('supportTicket') && !recaptchaToken) {
         showToast('Please complete the ReCAPTCHA verification', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Check if both order ID and message fields are empty
+      if (!formData.orderIds.trim() && !formData.message.trim()) {
+        showToast('Please fill order ID and message field', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate message field for Human Support tickets
+      if (formData.ticketType === 'Human' && !formData.message.trim()) {
+        showToast('Message is required for Human Support ticket', 'error');
         setIsSubmitting(false);
         return;
       }
@@ -357,6 +456,8 @@ const TicketPage: React.FC = () => {
           priority: 'medium',
           attachments: [],
         });
+        // Clear uploaded files
+        setUploadedFiles([]);
         // Refresh tickets list
         fetchTickets();
       } else {
@@ -652,13 +753,59 @@ const TicketPage: React.FC = () => {
 
                   {showFileUpload && (
                     <div className="form-group">
-                      <button
-                        type="button"
-                        className="btn btn-secondary flex items-center gap-2"
-                      >
-                        <FaPaperclip className="w-4 h-4" />
-                        Attach files
-                      </button>
+                      <label className="form-label">Attachments</label>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <label
+                            htmlFor="file-upload"
+                            className="btn btn-secondary flex items-center gap-2 cursor-pointer"
+                          >
+                            <FaPaperclip className="w-4 h-4" />
+                            {uploadingFiles ? 'Uploading...' : 'Attach Files'}
+                          </label>
+                          <input
+                            id="file-upload"
+                            type="file"
+                            multiple
+                            onChange={handleFileUpload}
+                            disabled={uploadingFiles}
+                            className="hidden"
+                            accept="image/*,.pdf,.txt,.doc,.docx"
+                          />
+                          <span className="text-sm text-gray-500">
+                            Max 3MB per file. Supported file: images and PDF
+                          </span>
+                        </div>
+                        
+                        {/* Display uploaded files */}
+                        {uploadedFiles.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Uploaded Files:
+                            </p>
+                            {uploadedFiles.map((file, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <FaPaperclip className="w-3 h-3 text-gray-500" />
+                                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    {file.name}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeUploadedFile(index)}
+                                  className="text-red-500 hover:text-red-700 transition-colors"
+                                >
+                                  <FaTimes className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 

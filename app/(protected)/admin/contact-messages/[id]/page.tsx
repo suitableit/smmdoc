@@ -753,26 +753,37 @@ Support Manager`,
                     {message.attachments && message.attachments.length > 0 && (
                       <div className="mt-4 space-y-2">
                         <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
-                        {message.attachments.map((attachment) => (
-                          <div key={attachment.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                            {getFileIcon(attachment.mimetype)}
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                                {attachment.filename}
+                        {message.attachments.map((attachment, index) => {
+                          // Handle both string paths and object attachments
+                          const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                          const filename = typeof attachment === 'string' 
+                            ? attachment.split('/').pop() || 'Unknown file'
+                            : attachment.filename;
+                          const mimetype = typeof attachment === 'string'
+                            ? ''
+                            : attachment.mimetype;
+                          
+                          return (
+                            <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                              {getFileIcon(mimetype)}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                                  {filename}
+                                </div>
+                                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                  {typeof attachment === 'object' && attachment.filesize ? `${attachment.filesize} • ` : ''}Attachment
+                                </div>
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                {attachment.filesize} • Uploaded by {attachment.uploadedBy}
-                              </div>
+                              <button 
+                                className="text-blue-600 hover:text-blue-800"
+                                onClick={() => window.open(attachmentUrl, '_blank')}
+                                title="View attachment"
+                              >
+                                <FaEye className="h-4 w-4" />
+                              </button>
                             </div>
-                            <button 
-                              className="text-blue-600 hover:text-blue-800"
-                              onClick={() => window.open(`/attachments/${attachment.id}/${attachment.filename}`, '_blank')}
-                              title="View attachment"
-                            >
-                              <FaEye className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -809,26 +820,37 @@ Support Manager`,
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
                           <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
-                          {message.attachments.map((attachment) => (
-                            <div key={attachment.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                              {getFileIcon(attachment.mimetype)}
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                                  {attachment.filename}
+                          {message.attachments.map((attachment, index) => {
+                            // Handle both string paths and object attachments
+                            const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                            const filename = typeof attachment === 'string' 
+                              ? attachment.split('/').pop() || 'Unknown file'
+                              : attachment.filename;
+                            const mimetype = typeof attachment === 'string'
+                              ? ''
+                              : attachment.mimetype;
+                            
+                            return (
+                              <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                {getFileIcon(mimetype)}
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                                    {filename}
+                                  </div>
+                                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                    {typeof attachment === 'object' && attachment.filesize ? `${attachment.filesize} • ` : ''}Attachment
+                                  </div>
                                 </div>
-                                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                  {attachment.filesize} • Uploaded by {attachment.uploadedBy}
-                                </div>
+                                <button 
+                                  className="text-blue-600 hover:text-blue-800"
+                                  onClick={() => window.open(attachmentUrl, '_blank')}
+                                  title="View attachment"
+                                >
+                                  <FaEye className="h-4 w-4" />
+                                </button>
                               </div>
-                              <button 
-                                className="text-blue-600 hover:text-blue-800"
-                                onClick={() => window.open(`/attachments/${attachment.id}/${attachment.filename}`, '_blank')}
-                                title="View attachment"
-                              >
-                                <FaEye className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
