@@ -35,13 +35,14 @@ export const useTicketPolling = (
 
     try {
       setIsPolling(true);
-      const response = await fetch(`/api/support-tickets/${ticketId}`);
+      const response = await fetch(`/api/admin/tickets/${ticketId}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch ticket updates');
       }
 
-      const updatedTicket: TicketDetails = await response.json();
+      const result = await response.json();
+      const updatedTicket: TicketDetails = result.ticket;
       
       // Check if there are new messages
       const currentMessageCount = updatedTicket.messages?.length || 0;
@@ -56,7 +57,20 @@ export const useTicketPolling = (
         setLastMessageCount(currentMessageCount);
         lastUpdateRef.current = updatedTicket.lastUpdated;
         
-        setTicketDetails(updatedTicket);
+        // Enhance the data with userInfo like in the initial fetch
+        const enhancedData = {
+          ...updatedTicket,
+          userInfo: {
+            ...updatedTicket.userInfo,
+            fullName: updatedTicket.userInfo?.name || 'N/A',
+            phone: 'N/A', // Not available in current schema
+            company: 'N/A', // Not available in current schema
+            address: 'N/A', // Not available in current schema
+            registeredAt: 'N/A', // Would need user creation date
+          }
+        };
+        
+        setTicketDetails(enhancedData);
       }
     } catch (error) {
       console.error('Error polling ticket updates:', error);

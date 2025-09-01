@@ -180,103 +180,40 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     const fetchTicketDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/support-tickets/${ticketId}`);
+        const response = await fetch(`/api/admin/tickets/${ticketId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch ticket details');
         }
-        const data = await response.json();
+        const result = await response.json();
+        const data = result.ticket;
         
-        // Fetch additional user statistics
-        if (data.user?.id) {
-          try {
-            // Get user's total tickets count
-            const totalTicketsResponse = await fetch(`/api/admin/tickets?userId=${data.user.id}&limit=1000`);
-            const totalTicketsData = totalTicketsResponse.ok ? await totalTicketsResponse.json() : null;
-            
-            // Get user's open tickets count
-            const openTicketsResponse = await fetch(`/api/admin/tickets?userId=${data.user.id}&status=open&limit=1000`);
-            const openTicketsData = openTicketsResponse.ok ? await openTicketsResponse.json() : null;
-            
-            // Enhance data with user information
-            const enhancedData = {
-              ...data,
-              userInfo: {
-                fullName: data.user?.name || 'N/A',
-                email: data.user?.email || 'N/A',
-                phone: 'N/A', // Not available in current schema
-                company: 'N/A', // Not available in current schema
-                address: 'N/A', // Not available in current schema
-                registeredAt: 'N/A', // Would need user creation date
-                totalTickets: totalTicketsData?.pagination?.total || 0,
-                openTickets: openTicketsData?.pagination?.total || 0,
-              }
-            };
-            
-            setTicketDetails(enhancedData);
-            
-            // Automatically mark ticket as read when admin opens it
-            if (!data.isRead) {
-              try {
-                await fetch(`/api/admin/tickets/${ticketId}/read`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ isRead: true }),
-                });
-              } catch (readError) {
-                console.error('Error marking ticket as read:', readError);
-              }
-            }
-          } catch (userError) {
-            console.error('Error fetching user statistics:', userError);
-            // Use basic user info if statistics fetch fails
-            const basicData = {
-              ...data,
-              userInfo: {
-                fullName: data.user?.name || 'N/A',
-                email: data.user?.email || 'N/A',
-                phone: 'N/A',
-                company: 'N/A',
-                address: 'N/A',
-                registeredAt: 'N/A',
-                totalTickets: 0,
-                openTickets: 0,
-              }
-            };
-            setTicketDetails(basicData);
-            
-            // Automatically mark ticket as read when admin opens it
-            if (!data.isRead) {
-              try {
-                await fetch(`/api/admin/tickets/${ticketId}/read`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ isRead: true }),
-                });
-              } catch (readError) {
-                console.error('Error marking ticket as read:', readError);
-              }
-            }
+        // Use the userInfo data from the API response
+        const enhancedData = {
+          ...data,
+          userInfo: {
+            ...data.userInfo,
+            fullName: data.userInfo?.name || 'N/A',
+            phone: 'N/A', // Not available in current schema
+            company: 'N/A', // Not available in current schema
+            address: 'N/A', // Not available in current schema
+            registeredAt: 'N/A', // Would need user creation date
           }
-        } else {
-          setTicketDetails(data);
-          
-          // Automatically mark ticket as read when admin opens it
-          if (!data.isRead) {
-            try {
-              await fetch(`/api/admin/tickets/${ticketId}/read`, {
-                method: 'PATCH',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ isRead: true }),
-              });
-            } catch (readError) {
-              console.error('Error marking ticket as read:', readError);
-            }
+        };
+        
+        setTicketDetails(enhancedData);
+        
+        // Automatically mark ticket as read when admin opens it
+        if (!data.isRead) {
+          try {
+            await fetch(`/api/admin/tickets/${ticketId}/read`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ isRead: true }),
+            });
+          } catch (readError) {
+            console.error('Error marking ticket as read:', readError);
           }
         }
       } catch (error) {
@@ -757,7 +694,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
               </div>
               
               <div className="space-y-6" onClick={() => hasNewMessages && markMessagesAsRead()}>
-                {ticketDetails.messages?.map((message) => (
+                {ticketDetails.messages && ticketDetails.messages.length > 0 ? (
+                  ticketDetails.messages.map((message) => (
                   <div key={message.id} className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
                       {message.type === 'system' ? (
@@ -807,7 +745,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       </div>
                       
                       {/* Attachments */}
-                      {message.attachments && message.attachments.length > 0 && (
+                      {message.attachments && Array.isArray(message.attachments) && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
                           <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
                           {message.attachments.map((attachment, index) => {
@@ -846,7 +784,13 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                     </div>
 
                   </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FaComments className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                    <p>No messages found for this ticket.</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -944,11 +888,11 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 <div className="space-y-4">
                   <div>
                     <div className="form-label">Username</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.username  || 'N/A'}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.name || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="form-label">Full Name</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.fullName || 'N/A'}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.fullName || ticketDetails.userInfo?.name || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="form-label">Email</div>
