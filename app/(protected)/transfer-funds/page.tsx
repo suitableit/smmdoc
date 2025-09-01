@@ -1,6 +1,7 @@
 'use client';
 
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { FaExchangeAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
@@ -46,6 +47,8 @@ const Toast = ({
 );
 
 export default function TransferFund() {
+  const { appName } = useAppNameWithFallback();
+
   const className = '';
   const { currency: globalCurrency, rate: globalRate } = useCurrency();
   const { settings: userSettings, loading: settingsLoading } = useUserSettings();
@@ -68,8 +71,8 @@ export default function TransferFund() {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Transfer Funds — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Transfer Funds', appName);
+  }, [appName]);
 
   // Simulate initial loading
   useEffect(() => {

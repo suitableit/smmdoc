@@ -5,7 +5,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import React, { useEffect, useState } from 'react';
 import {
   FaCheck,
@@ -56,12 +57,14 @@ interface PriceUpdateSettings {
 }
 
 const UpdatePricePage = () => {
+  const { appName } = useAppNameWithFallback();
+
   const currentUser = useCurrentUser();
 
   // Set document title
   useEffect(() => {
-    document.title = `Update Price — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Update Price', appName);
+  }, [appName]);
 
   // State management
   const [isLoading, setIsLoading] = useState(false);

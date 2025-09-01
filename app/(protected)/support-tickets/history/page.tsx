@@ -1,7 +1,9 @@
 'use client';
 
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import moment from 'moment';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     FaBan,
@@ -131,6 +133,8 @@ const dummyTickets: Ticket[] = [
 ];
 
 export default function TicketsHistory() {
+  const { appName } = useAppNameWithFallback();
+
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [status, setStatus] = useState('all');
@@ -143,23 +147,106 @@ export default function TicketsHistory() {
     type: 'success' | 'error' | 'info';
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error] = useState(false);
+  const [error, setError] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'human' | 'ai'>('all');
   const [searchResults, setSearchResults] = useState<Ticket[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Tickets History — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Tickets History', appName);
+  }, [appName]);
 
-  // Simulate initial loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  // Fetch tickets from API
+  const fetchTickets = async () => {
+    try {
+      setIsLoading(true);
+      setError(false);
+      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      
+      if (status !== 'all') {
+        params.append('status', status);
+      }
+      
+      const response = await fetch(`/api/support-tickets?${params}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch tickets');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Map API response to frontend format
+        const mappedTickets: Ticket[] = data.tickets.map((ticket: any) => ({
+           id: ticket.id,
+           subject: ticket.subject,
+           status: mapApiStatusToFrontend(ticket.status),
+           createdAt: ticket.createdAt,
+           lastUpdated: ticket.lastUpdated,
+           priority: ticket.priority,
+           type: ticket.ticketType === 'Human' ? 'human' : 'ai'
+         }));
+         
+         // Filter by tab type if needed (since API doesn't handle this filter)
+         let finalTickets = mappedTickets;
+         if (activeTab !== 'all') {
+           finalTickets = mappedTickets.filter((ticket) => ticket.type === activeTab);
+         }
+        
+        setTickets(finalTickets);
+         setTotalPages(data.pagination.totalPages);
+         setTotalCount(data.pagination.totalCount || 0);
+      } else {
+        throw new Error(data.error || 'Failed to fetch tickets');
+      }
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+      setError(true);
+      showToast('Failed to load tickets', 'error');
+    } finally {
       setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  };
+  
+  // Map API status to frontend status
+  const mapApiStatusToFrontend = (apiStatus: string) => {
+    const statusMap: { [key: string]: string } = {
+      'pending': 'open',
+      'in_progress': 'in_progress',
+      'on_hold': 'on_hold',
+      'closed': 'closed',
+      'Open': 'open',
+      'Answered': 'answered',
+      'Customer Reply': 'customer_reply',
+      'Closed': 'closed'
+    };
+    return statusMap[apiStatus] || apiStatus.toLowerCase();
+  };
+  
+  // Load tickets on component mount and when filters change
+  useEffect(() => {
+    fetchTickets();
+  }, [page, status, activeTab]);
+  
+  // Handle search with debounce
+  useEffect(() => {
+    if (search) {
+      // For search, we'll use client-side filtering of already loaded tickets
+      // In a production app, you might want to implement server-side search
+      return;
+    }
+    // If search is cleared, refetch tickets
+    if (!search && searchInput === '') {
+      fetchTickets();
+    }
+  }, [search]);
 
   // Show toast notification
   const showToast = (
@@ -175,7 +262,7 @@ export default function TicketsHistory() {
     const timer = setTimeout(() => {
       if (searchInput.trim()) {
         // Filter tickets based on search input
-        const results = dummyTickets.filter(
+        const results = tickets.filter(
           (ticket) =>
             ticket.subject.toLowerCase().includes(searchInput.toLowerCase()) ||
             ticket.id.toString().includes(searchInput) ||
@@ -207,35 +294,32 @@ export default function TicketsHistory() {
     };
   }, []);
 
-  // Filter tickets based on status, search, and tab
+  // Filter tickets based on tab and search (status filtering is handled by API)
   const filteredTickets = useMemo(() => {
-    let tickets = [...dummyTickets];
+    let filteredTickets = [...tickets];
 
     // Filter by tab type
     if (activeTab !== 'all') {
-      tickets = tickets.filter((ticket) => ticket.type === activeTab);
+      filteredTickets = filteredTickets.filter((ticket) => ticket.type === activeTab);
     }
 
-    if (status !== 'all') {
-      tickets = tickets.filter((ticket) => ticket.status === status);
-    }
-
+    // Client-side search filtering (for real-time search)
     if (search) {
-      tickets = tickets.filter(
+      filteredTickets = filteredTickets.filter(
         (ticket) =>
           ticket.subject.toLowerCase().includes(search.toLowerCase()) ||
           ticket.id.toString().includes(search)
       );
     }
 
-    return tickets;
-  }, [status, search, activeTab]);
+    return filteredTickets;
+  }, [tickets, search, activeTab]);
 
   const pagination = {
-    total: filteredTickets.length,
+    total: totalCount,
     page: page,
     limit: limit,
-    totalPages: Math.ceil(filteredTickets.length / limit),
+    totalPages: totalPages,
   };
 
   // Handle search submit
@@ -247,15 +331,15 @@ export default function TicketsHistory() {
 
   // Calculate counts for each status filter
   const getStatusCount = (statusKey: string) => {
-    let tickets = [...dummyTickets];
+    let filteredTickets = [...tickets];
 
     // Filter by current tab first
     if (activeTab !== 'all') {
-      tickets = tickets.filter((ticket) => ticket.type === activeTab);
+      filteredTickets = filteredTickets.filter((ticket) => ticket.type === activeTab);
     }
 
-    if (statusKey === 'all') return tickets.length;
-    return tickets.filter((ticket) => ticket.status === statusKey).length;
+    if (statusKey === 'all') return filteredTickets.length;
+    return filteredTickets.filter((ticket) => ticket.status === statusKey).length;
   };
 
   // Status filter buttons configuration
@@ -324,42 +408,7 @@ export default function TicketsHistory() {
     }
   };
 
-  // Get priority badge
-  const getPriorityBadge = (priority?: string) => {
-    if (!priority) return null;
 
-    const baseClasses =
-      'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium';
-
-    switch (priority) {
-      case 'high':
-        return (
-          <span
-            className={`${baseClasses} bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200`}
-          >
-            High
-          </span>
-        );
-      case 'medium':
-        return (
-          <span
-            className={`${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200`}
-          >
-            Medium
-          </span>
-        );
-      case 'low':
-        return (
-          <span
-            className={`${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200`}
-          >
-            Low
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
 
   // Handle search selection from dropdown
   const handleSearchSelect = (ticket: Ticket) => {
@@ -371,9 +420,10 @@ export default function TicketsHistory() {
     setPage(1);
   };
 
+  const router = useRouter();
+
   const handleViewTicket = (ticketId: string) => {
-    console.log(`Navigate to ticket ${ticketId}`);
-    showToast(`Opening ticket ${ticketId}`, 'info');
+    router.push(`/support-tickets/${ticketId}`);
   };
 
   if (error) {
@@ -391,20 +441,7 @@ export default function TicketsHistory() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="page-container">
-        <div className="page-content">
-          <div className="card card-padding">
-            <div className="text-center py-8 flex flex-col items-center">
-              <GradientSpinner size="w-14 h-14" className="mb-4" />
-              <div className="text-lg font-medium">Loading tickets...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Remove the full-page loading return - we'll handle loading in the table area
 
   return (
     <div className="page-container">
@@ -588,9 +625,6 @@ export default function TicketsHistory() {
                     Subject
                   </th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">
-                    Priority
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
                     Status
                   </th>
                   <th className="text-left py-3 px-4 font-medium text-gray-900">
@@ -605,7 +639,16 @@ export default function TicketsHistory() {
                 </tr>
               </thead>
               <tbody>
-                {filteredTickets.length > 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <GradientSpinner size="w-8 h-8" className="mb-4" />
+                        <div className="text-lg font-medium">Loading tickets...</div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredTickets.length > 0 ? (
                   filteredTickets.map((ticket, index) => {
                     const isLastRow = index === filteredTickets.length - 1;
                     return (
@@ -647,13 +690,6 @@ export default function TicketsHistory() {
                           <div className="truncate text-sm font-medium text-gray-900">
                             {ticket.subject}
                           </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          {ticket.type === 'ai' ? (
-                            <span className="text-sm text-gray-500">N/A</span>
-                          ) : (
-                            getPriorityBadge(ticket.priority)
-                          )}
                         </td>
                         <td className="py-3 px-4">
                           <span
@@ -702,7 +738,7 @@ export default function TicketsHistory() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-gray-500">
+                    <td colSpan={7} className="py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center">
                         <FaTicketAlt className="text-4xl text-gray-400 mb-4" />
                         <div className="text-lg font-medium">

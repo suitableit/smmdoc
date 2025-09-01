@@ -19,7 +19,8 @@ import {
 // Import APP_NAME constant and useCurrency hook
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { convertCurrency } from '@/lib/currency-utils';
 const formatID = (id: any) => id;
 const formatNumber = (num: number) => num.toLocaleString();
@@ -97,10 +98,12 @@ interface PaginationInfo {
 }
 
 const AdminAllTransactionsPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title
   useEffect(() => {
-    document.title = `All Transactions — ${APP_NAME}`;
-  }, []);
+    setPageTitle('All Transactions', appName);
+  }, [appName]);
 
   // Currency hook for dynamic formatting
   const { currency, currentCurrencyData, availableCurrencies } = useCurrency();

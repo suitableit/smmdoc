@@ -15,7 +15,8 @@ import {
 
 // Import APP_NAME constant
 import axiosInstance from '@/lib/axiosInstance';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatNumber } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
@@ -102,8 +103,8 @@ const ServiceTypes = () => {
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `Service Types — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Service Types', appName);
+  }, [appName]);
 
   // Fetch service types on component mount
   useEffect(() => {

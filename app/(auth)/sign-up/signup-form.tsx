@@ -2,7 +2,9 @@
 import ButtonLoader from '@/components/button-loader';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
+import ReCAPTCHA from '@/components/ReCAPTCHA';
 import { useUserSettings } from '@/hooks/use-user-settings';
+import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 import { register } from '@/lib/actions/register';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
@@ -23,9 +25,13 @@ export default function SignUpForm() {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
   const [showPassword, setShowPassword] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   // Get user settings to check if name field is enabled
   const { settings: userSettings, loading: settingsLoading } = useUserSettings();
+  
+  // Get ReCAPTCHA settings
+  const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
   // Create dynamic schema based on name field setting
   const dynamicSchema = useMemo(() => {
@@ -235,10 +241,21 @@ export default function SignUpForm() {
     setError('');
     setSuccess('');
 
+    // Check ReCAPTCHA if enabled for sign-up form
+    if (isEnabledForForm('signUp') && !recaptchaToken) {
+      setError('Please complete the reCAPTCHA verification');
+      return;
+    }
+
     // Handle optional name field based on admin settings
     const submitData = { ...values } as any;
     if (!userSettings?.nameFieldEnabled && submitData.name === '') {
       delete submitData.name; // Remove empty name field if not required
+    }
+
+    // Add reCAPTCHA token if available
+    if (recaptchaToken) {
+      submitData.recaptchaToken = recaptchaToken;
     }
 
     // Check if username is available before submitting
@@ -557,6 +574,26 @@ export default function SignUpForm() {
 
         <FormError message={error} />
         <FormSuccess message={success} />
+
+        {/* ReCAPTCHA Component */}
+        {isEnabledForForm('signUp') && recaptchaSettings && (
+          <ReCAPTCHA
+            siteKey={recaptchaSettings.siteKey}
+            version={recaptchaSettings.version}
+            action="signup"
+            threshold={recaptchaSettings.threshold}
+            onVerify={(token) => setRecaptchaToken(token)}
+            onError={() => {
+              setRecaptchaToken(null);
+              // Let Google's native error messages display instead of custom ones
+              // This allows 'Invalid domain for site key' and other specific errors to show
+            }}
+            onExpired={() => {
+              setRecaptchaToken(null);
+              setError('ReCAPTCHA expired. Please verify again.');
+            }}
+          />
+        )}
 
         <button
           type="submit"

@@ -5,7 +5,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import React, { useEffect, useState } from 'react';
 import {
   FaCode,
@@ -23,8 +24,7 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   </div>
 );
 
-// Mock components for demonstration
-const ButtonLoader = () => <div className="loading-spinner"></div>;
+// ButtonLoader removed - using text instead
 
 // Toast Message Component
 const Toast = ({
@@ -51,12 +51,14 @@ interface CustomCodesSettings {
 }
 
 const CustomCodesPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   const currentUser = useCurrentUser();
 
   // Set document title
   useEffect(() => {
-    document.title = `Custom Codes — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Custom Codes', appName);
+  }, [appName]);
 
   // State management
   const [isLoading, setIsLoading] = useState(false);
@@ -120,6 +122,8 @@ const CustomCodesPage = () => {
 
       if (response.ok) {
         showToast('Custom codes settings saved successfully!', 'success');
+        // Dispatch custom event to refresh custom codes on the frontend
+        window.dispatchEvent(new CustomEvent('customCodesUpdated'));
       } else {
         showToast('Failed to save custom codes settings', 'error');
       }
@@ -282,7 +286,7 @@ const CustomCodesPage = () => {
             disabled={isLoading}
             className="btn btn-primary px-8 py-3"
           >
-            {isLoading ? <ButtonLoader /> : 'Save Custom Codes'}
+            {isLoading ? 'Updating...' : 'Save Custom Codes'}
           </button>
         </div>
       </div>

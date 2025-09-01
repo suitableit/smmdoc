@@ -2,7 +2,8 @@
 
 import { useCurrency } from '@/contexts/CurrencyContext';
 import axiosInstance from '@/lib/axiosInstance';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import moment from 'moment';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
@@ -132,10 +133,12 @@ type DashboardStats = {
 };
 
 export default function AdminDashboardPage() {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title
   useEffect(() => {
-    document.title = `Admin Dashboard — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Admin Dashboard', appName);
+  }, [appName]);
 
   const { currency, rate } = useCurrency();
   const [stats, setStats] = useState<DashboardStats>({

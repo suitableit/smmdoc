@@ -269,19 +269,25 @@ model SupportTicket {
   userId        Int
   subject       String
   message       String    @db.Text
-  status        String    @default("pending")
+  status        String    @default("Open")
   category      String
   subcategory   String?
+  ticketType    String    @default("Human") // Human or AI
+  aiSubcategory String?   // Refill, Cancel for AI tickets
   orderIds      String?   @db.Text
   priority      String    @default("medium")
   attachments   String?   @db.Text
   adminReply    String?   @db.Text
+  isRead        Boolean   @default(false) // Track if ticket has been read by admin
+  systemMessage String?   @db.Text // For AI ticket system messages
   repliedAt     DateTime?
   repliedBy     Int?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   repliedByUser user?     @relation("RepliedByUser", fields: [repliedBy], references: [id])
   user          user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      TicketMessage[]
+  notes         TicketNote[]
 
   @@index([userId])
   @@index([status])
@@ -290,6 +296,44 @@ model SupportTicket {
   @@index([createdAt])
   @@index([repliedBy], map: "support_tickets_repliedBy_fkey")
   @@map("support_tickets")
+}
+
+model TicketMessage {
+  id          Int      @id @default(autoincrement())
+  ticketId    Int
+  userId      Int
+  message     String   @db.Text
+  messageType String   // customer, staff, system
+  isFromAdmin Boolean  @default(false)
+  attachments String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user        user          @relation("TicketMessages", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("ticket_messages")
+}
+
+model TicketNote {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  userId    Int
+  content   String   @db.Text
+  isPrivate Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user      user          @relation("TicketNotes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("ticket_notes")
 }
 
 model ContactSettings {
@@ -632,6 +676,8 @@ model user {
   sessions                                      Session[]
   repliedSupportTickets                         SupportTicket[]        @relation("RepliedByUser")
   supportTickets                                SupportTicket[]
+  ticketMessages                                TicketMessage[]        @relation("TicketMessages")
+  ticketNotes                                   TicketNote[]           @relation("TicketNotes")
   twoFactorConfirmation                         TwoFactorConfirmation?
 }
 
@@ -653,6 +699,89 @@ model userSettings {
   @@map("user_settings")
 }
 
+model CustomCodesSettings {
+  id          Int      @id @default(autoincrement())
+  headerCodes String?  @db.Text
+  footerCodes String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("custom_codes_settings")
+}
+
+model IntegrationSettings {
+  id                    Int      @id @default(autoincrement())
+  // ReCAPTCHA Settings
+  recaptchaEnabled      Boolean  @default(false)
+  recaptchaVersion      String   @default("v3")
+  // Legacy fields (deprecated but kept for migration)
+  recaptchaSiteKey      String?  @db.Text
+  recaptchaSecretKey    String?  @db.Text
+  // Separate v2 and v3 fields
+  recaptchaV2SiteKey    String?  @db.Text
+  recaptchaV2SecretKey  String?  @db.Text
+  recaptchaV3SiteKey    String?  @db.Text
+  recaptchaV3SecretKey  String?  @db.Text
+  recaptchaThreshold    Float    @default(0.5)
+  recaptchaSignUp       Boolean  @default(false)
+  recaptchaSignIn       Boolean  @default(false)
+  recaptchaContact      Boolean  @default(false)
+  recaptchaSupportTicket Boolean @default(false)
+  recaptchaContactSupport Boolean @default(false)
+  // Live Chat Settings
+  liveChatEnabled       Boolean  @default(false)
+  liveChatHoverTitle    String   @default("Chat with us")
+  liveChatSocialEnabled Boolean  @default(false)
+  liveChatMessengerEnabled Boolean @default(false)
+  liveChatMessengerUrl  String?  @db.Text
+  liveChatWhatsappEnabled Boolean @default(false)
+  liveChatWhatsappNumber String?
+  liveChatTelegramEnabled Boolean @default(false)
+  liveChatTelegramUsername String?
+  liveChatTawkToEnabled Boolean  @default(false)
+  liveChatTawkToCode    String?  @db.Text
+  liveChatVisibility    String   @default("all")
+  // Analytics Settings
+  analyticsEnabled      Boolean  @default(false)
+  googleAnalyticsEnabled Boolean @default(false)
+  googleAnalyticsCode   String?  @db.Text
+  googleAnalyticsVisibility String @default("all")
+  facebookPixelEnabled  Boolean  @default(false)
+  facebookPixelCode     String?  @db.Text
+  facebookPixelVisibility String @default("all")
+  gtmEnabled            Boolean  @default(false)
+  gtmCode               String?  @db.Text
+  gtmVisibility         String   @default("all")
+  // Notification Settings
+  pushNotificationsEnabled Boolean @default(false)
+  oneSignalCode         String?  @db.Text
+  oneSignalVisibility   String   @default("all")
+  emailNotificationsEnabled Boolean @default(false)
+  // User Notifications
+  userNotifWelcome      Boolean  @default(false)
+  userNotifApiKeyChanged Boolean @default(false)
+  userNotifOrderStatusChanged Boolean @default(false)
+  userNotifNewService   Boolean  @default(false)
+  userNotifServiceUpdates Boolean @default(false)
+  // Admin Notifications
+  adminNotifApiBalanceAlerts Boolean @default(false)
+  adminNotifSupportTickets Boolean @default(false)
+  adminNotifNewMessages Boolean @default(false)
+  adminNotifNewManualServiceOrders Boolean @default(false)
+  adminNotifFailOrders  Boolean  @default(false)
+  adminNotifNewManualRefillRequests Boolean @default(false)
+  adminNotifNewManualCancelRequests Boolean @default(false)
+  adminNotifNewUsers    Boolean  @default(false)
+  adminNotifUserActivityLogs Boolean @default(false)
+  adminNotifPendingTransactions Boolean @default(false)
+  adminNotifApiSyncLogs Boolean  @default(false)
+  adminNotifNewChildPanelOrders Boolean @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("integration_settings")
+}
+
 enum CategoryPosition {
   top
   bottom
@@ -669,5 +798,38 @@ enum addfund_transaction_type {
   withdrawal
   purchase
   refund
+}
+
+model EmailSettings {
+  id            Int      @id @default(autoincrement())
+  email         String   @default("")
+  smtp_username String   @default("")
+  smtp_password String   @default("")
+  smtp_host     String   @default("")
+  smtp_port     Int      @default(587)
+  smtp_protocol String   @default("tls")
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("email_settings")
+}
+
+model GeneralSettings {
+  id              Int      @id @default(autoincrement())
+  siteTitle       String   @default("SMM Panel")
+  tagline         String   @default("Best SMM Services Provider")
+  siteIcon        String   @default("")
+  siteLogo        String   @default("")
+  adminEmail      String   @default("admin@example.com")
+  // Meta (SEO) Settings
+  googleTitle     String   @default("")
+  metaSiteTitle   String   @default("")
+  siteDescription String   @default("")
+  metaKeywords    String   @default("")
+  thumbnail       String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("general_settings")
 }
 

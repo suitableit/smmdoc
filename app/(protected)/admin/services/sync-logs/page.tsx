@@ -11,7 +11,8 @@ import {
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatNumber } from '@/lib/utils';
 
 // Custom Gradient Spinner Component
@@ -63,10 +64,12 @@ interface PaginationInfo {
 }
 
 const SyncLogsPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `API Sync Logs — ${APP_NAME}`;
-  }, []);
+    setPageTitle('API Sync Logs', appName);
+  }, [appName]);
 
   // Dummy data for sync logs
   const dummySyncLogs: SyncLog[] = [

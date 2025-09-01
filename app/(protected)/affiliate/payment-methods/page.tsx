@@ -1,7 +1,8 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
 import {
     FaCheckCircle,
@@ -90,6 +91,8 @@ interface NewPaymentMethodForm {
 }
 
 export default function ActivateAffiliatePage() {
+  const { appName } = useAppNameWithFallback();
+
   const user = useCurrentUser();
   const [loading, setLoading] = useState(false);
   const [isActivated, setIsActivated] = useState(false);
@@ -116,8 +119,8 @@ export default function ActivateAffiliatePage() {
 
   // Set document title
   useEffect(() => {
-    document.title = `Activate Affiliate Account — ${APP_NAME}`;
-  }, []);
+    setPageTitle('Activate Affiliate Account', appName);
+  }, [appName]);
 
   // Check if user already has affiliate account activated
   useEffect(() => {

@@ -16,7 +16,7 @@ export default function AdminLayout({
     if (status === 'loading') return; // Still loading
 
     if (!session) {
-      router.push('/auth/signin');
+      router.push('/sign-in');
       return;
     }
 

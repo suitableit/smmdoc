@@ -1,6 +1,7 @@
 'use client';
 
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { setPageTitle } from '@/lib/utils/set-page-title';
 import { ChevronDown } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import {
@@ -30,14 +31,16 @@ interface FAQItem {
 }
 
 const FAQPage = () => {
+  const { appName } = useAppNameWithFallback();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [openItems, setOpenItems] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `FAQs — ${APP_NAME}`;
-  }, []);
+    setPageTitle('FAQs', appName);
+  }, [appName]);
 
   // Simulate initial loading
   useEffect(() => {

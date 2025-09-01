@@ -11,9 +11,9 @@ const updateTicketSchema = z.object({
 });
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // GET - Fetch single support ticket
@@ -31,7 +31,8 @@ export async function GET(
       );
     }
 
-    const ticketId = parseInt(params.id);
+    const resolvedParams = await params;
+    const ticketId = parseInt(resolvedParams.id);
     
     if (isNaN(ticketId)) {
       return NextResponse.json(
@@ -68,6 +69,33 @@ export async function GET(
             id: true,
             name: true,
           }
+        },
+        messages: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        },
+        notes: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
         }
       }
     });
@@ -79,10 +107,36 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      ticket
-    });
+    // Transform the ticket data to match frontend expectations
+    const transformedTicket = {
+      id: ticket.id.toString(),
+      subject: ticket.subject,
+      createdAt: ticket.createdAt.toISOString(),
+      lastUpdated: ticket.updatedAt.toISOString(),
+      status: ticket.status,
+      ticketType: ticket.ticketType,
+      aiSubcategory: ticket.aiSubcategory,
+      systemMessage: ticket.systemMessage,
+      messages: ticket.messages.map((msg: any) => ({
+        id: msg.id.toString(),
+        type: msg.messageType,
+        author: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : (msg.user.name || msg.user.email)),
+        authorRole: msg.isFromAdmin ? 'admin' : 'user',
+        content: msg.message,
+        createdAt: msg.createdAt.toISOString(),
+        attachments: msg.attachments ? JSON.parse(msg.attachments) : []
+      })),
+      notes: ticket.notes.map((note: any) => ({
+        id: note.id.toString(),
+        content: note.content,
+        author: note.user.name || 'Admin',
+        createdAt: note.createdAt.toISOString(),
+        isPrivate: note.isPrivate
+      })),
+      user: ticket.user
+    };
+
+    return NextResponse.json(transformedTicket);
 
   } catch (error) {
     console.error('Error fetching support ticket:', error);
@@ -108,7 +162,8 @@ export async function PUT(
       );
     }
 
-    const ticketId = parseInt(params.id);
+    const resolvedParams = await params;
+    const ticketId = parseInt(resolvedParams.id);
     
     if (isNaN(ticketId)) {
       return NextResponse.json(
@@ -143,24 +198,33 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const validatedData = updateTicketSchema.parse(body);
+    const { generateSystemMessage = true, ...validatedData } = body;
+    
+    // Validate the data using the schema (excluding generateSystemMessage)
+    const parsedData = updateTicketSchema.parse(validatedData);
 
     // Prepare update data
     const updateData: any = {};
     
-    if (validatedData.status) {
-      updateData.status = validatedData.status;
+    if (parsedData.status) {
+      updateData.status = parsedData.status;
     }
     
-    if (validatedData.priority) {
-      updateData.priority = validatedData.priority;
+    if (parsedData.priority) {
+      updateData.priority = parsedData.priority;
     }
     
-    if (validatedData.adminReply) {
-      updateData.adminReply = validatedData.adminReply;
+    if (parsedData.adminReply) {
+      updateData.adminReply = parsedData.adminReply;
       updateData.repliedAt = new Date();
       updateData.repliedBy = parseInt(session.user.id);
     }
+
+    // Get the current ticket to compare status changes
+    const currentTicket = await db.supportTicket.findUnique({
+      where: { id: ticketId },
+      select: { status: true }
+    });
 
     // Update the ticket
     const updatedTicket = await db.supportTicket.update({
@@ -182,6 +246,19 @@ export async function PUT(
         }
       }
     });
+
+    // Create a system message for status change only if explicitly requested
+    if (parsedData.status && currentTicket && parsedData.status !== currentTicket.status && generateSystemMessage) {
+      await db.ticketMessage.create({
+        data: {
+          ticketId: ticketId,
+          userId: parseInt(session.user.id),
+          message: `Ticket status changed from ${currentTicket.status} to ${parsedData.status}`,
+          messageType: 'system',
+          isFromAdmin: true
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -234,7 +311,8 @@ export async function DELETE(
       );
     }
 
-    const ticketId = parseInt(params.id);
+    const resolvedParams = await params;
+    const ticketId = parseInt(resolvedParams.id);
     
     if (isNaN(ticketId)) {
       return NextResponse.json(
