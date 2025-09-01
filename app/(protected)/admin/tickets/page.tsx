@@ -5,13 +5,9 @@ import {
     FaBox,
     FaCheck,
     FaCheckCircle,
-    FaClock,
     FaEllipsisH,
-    FaEnvelope,
     FaEye,
     FaEyeSlash,
-    FaPause,
-    FaReply,
     FaSearch,
     FaSync,
     FaTimes,
@@ -55,6 +51,7 @@ interface SupportTicket {
   id: string;
   userId: string;
   username: string;
+  name: string;
   subject: string;
   createdAt: string;
   lastUpdated: string;
@@ -79,109 +76,7 @@ const SupportTicketsPage = () => {
     setPageTitle('Support Tickets', appName);
   }, [appName]);
 
-  // Dummy data for support tickets
-  const dummySupportTickets: SupportTicket[] = [
-    {
-      id: '001',
-      userId: 'user_001',
-      username: 'john_doe',
-      subject: 'Instagram followers not delivered - Order #12345',
-      createdAt: '2024-06-28T10:30:00Z',
-      lastUpdated: '2024-06-29T14:20:00Z',
-      status: 'Open',
-      isRead: false,
-    },
-    {
-      id: '002',
-      userId: 'user_002',
-      username: 'sarah_smith',
-      subject: 'YouTube views delivery too slow',
-      createdAt: '2024-06-27T15:45:00Z',
-      lastUpdated: '2024-06-28T09:15:00Z',
-      status: 'In Progress',
-      isRead: true,
-    },
-    {
-      id: '003',
-      userId: 'user_003',
-      username: 'mike_johnson',
-      subject: 'Facebook likes dropped after completion',
-      createdAt: '2024-06-26T08:20:00Z',
-      lastUpdated: '2024-06-27T16:30:00Z',
-      status: 'Customer Reply',
-      isRead: false,
-    },
-    {
-      id: '004',
-      userId: 'user_004',
-      username: 'emily_wilson',
-      subject: 'TikTok followers order cancelled - need refund',
-      createdAt: '2024-06-25T13:10:00Z',
-      lastUpdated: '2024-06-26T11:45:00Z',
-      status: 'Answered',
-      isRead: true,
-    },
-    {
-      id: '005',
-      userId: 'user_005',
-      username: 'alex_brown',
-      subject: 'API integration not working properly',
-      createdAt: '2024-06-24T16:55:00Z',
-      lastUpdated: '2024-06-25T12:20:00Z',
-      status: 'On Hold',
-      isRead: true,
-    },
-    {
-      id: '006',
-      userId: 'user_006',
-      username: 'lisa_davis',
-      subject: 'Payment failed but money deducted',
-      createdAt: '2024-06-23T11:30:00Z',
-      lastUpdated: '2024-06-24T14:10:00Z',
-      status: 'Closed',
-      isRead: true,
-    },
-    {
-      id: '007',
-      userId: 'user_007',
-      username: 'robert_clark',
-      subject: 'Twitter retweets quality is very poor',
-      createdAt: '2024-06-22T09:15:00Z',
-      lastUpdated: '2024-06-23T17:25:00Z',
-      status: 'Open',
-      isRead: false,
-    },
-    {
-      id: '008',
-      userId: 'user_008',
-      username: 'jennifer_taylor',
-      subject: 'Instagram story views not starting',
-      createdAt: '2024-06-21T14:40:00Z',
-      lastUpdated: '2024-06-22T10:50:00Z',
-      status: 'In Progress',
-      isRead: true,
-    },
-    {
-      id: '009',
-      userId: 'user_009',
-      username: 'david_martinez',
-      subject: 'Bulk discount not applied to my order',
-      createdAt: '2024-06-20T12:25:00Z',
-      lastUpdated: '2024-06-21T15:30:00Z',
-      status: 'Customer Reply',
-      isRead: false,
-    },
-    {
-      id: '010',
-      userId: 'user_010',
-      username: 'amanda_lee',
-      subject: 'YouTube subscribers dropping continuously',
-      createdAt: '2024-06-19T17:10:00Z',
-      lastUpdated: '2024-06-20T13:45:00Z',
-      status: 'Answered',
-      isRead: true,
-    },
-  ];
+
 
   // State management
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
@@ -206,6 +101,7 @@ const SupportTicketsPage = () => {
 
   // Loading states
   const [ticketsLoading, setTicketsLoading] = useState(true);
+  const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
 
   // Bulk operations state
   const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
@@ -239,13 +135,12 @@ const SupportTicketsPage = () => {
     } catch (error) {
       console.error('Error fetching tickets:', error);
       showToast('Error loading tickets', 'error');
-      // Fallback to dummy data for development
-      setSupportTickets(dummySupportTickets);
+      setSupportTickets([]);
       setPagination({
         page: 1,
         limit: 20,
-        total: dummySupportTickets.length,
-        totalPages: Math.ceil(dummySupportTickets.length / 20),
+        total: 0,
+        totalPages: 1,
         hasNext: false,
         hasPrev: false,
       });
@@ -283,24 +178,7 @@ const SupportTicketsPage = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Open':
-        return <FaEnvelope className="h-3 w-3" />;
-      case 'Answered':
-        return <FaCheck className="h-3 w-3" />;
-      case 'Customer Reply':
-        return <FaReply className="h-3 w-3" />;
-      case 'On Hold':
-        return <FaPause className="h-3 w-3" />;
-      case 'In Progress':
-        return <FaClock className="h-3 w-3" />;
-      case 'Closed':
-        return <FaCheckCircle className="h-3 w-3" />;
-      default:
-        return <FaEnvelope className="h-3 w-3" />;
-    }
-  };
+  // Removed getStatusIcon function as icons are no longer needed in status display
 
   // Filter tickets based on search term and status
   const filteredTickets = supportTickets.filter((ticket) => {
@@ -369,8 +247,8 @@ const SupportTicketsPage = () => {
 
   // Handle view ticket
   const handleViewTicket = (ticketId: string) => {
-    // Open ticket details in new tab
-    window.open(`/${ticketId}`, '_blank');
+    // Navigate to admin ticket details page
+    window.open(`/admin/tickets/${ticketId}`, '_blank');
   };
 
   // Handle ticket deletion
@@ -428,34 +306,7 @@ const SupportTicketsPage = () => {
     }
   };
 
-  // Handle hold ticket
-  const handleHoldTicket = async (ticketId: string) => {
-    try {
-      const response = await fetch(`/api/admin/tickets/${ticketId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: 'On Hold' }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update ticket status');
-      }
-
-      setSupportTickets((prev) =>
-        prev.map((ticket) =>
-          ticket.id === ticketId
-            ? { ...ticket, status: 'On Hold', lastUpdated: new Date().toISOString() }
-            : ticket
-        )
-      );
-      showToast('Ticket put on hold', 'success');
-    } catch (error) {
-      console.error('Error updating ticket status:', error);
-      showToast('Error updating ticket status', 'error');
-    }
-  };
+  // Removed handleHoldTicket function as Hold Ticket option is no longer needed
 
   // Handle close ticket
   const handleCloseTicket = async (ticketId: string) => {
@@ -489,7 +340,8 @@ const SupportTicketsPage = () => {
   // Handle bulk operations
   const handleBulkOperation = async (operation: string) => {
     try {
-      const response = await fetch('/api/admin/tickets/bulk', {
+      setBulkOperationLoading(true);
+      const response = await fetch('/api/admin/tickets', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -504,6 +356,8 @@ const SupportTicketsPage = () => {
         throw new Error('Failed to perform bulk operation');
       }
 
+      const result = await response.json();
+      
       // Update local state based on operation
       switch (operation) {
         case 'mark_read':
@@ -514,7 +368,6 @@ const SupportTicketsPage = () => {
                 : ticket
             )
           );
-          showToast(`${selectedTickets.length} tickets marked as read`, 'success');
           break;
         case 'mark_unread':
           setSupportTickets((prev) =>
@@ -524,40 +377,23 @@ const SupportTicketsPage = () => {
                 : ticket
             )
           );
-          showToast(`${selectedTickets.length} tickets marked as unread`, 'success');
-          break;
-        case 'open_all':
-          setSupportTickets((prev) =>
-            prev.map((ticket) =>
-              selectedTickets.includes(ticket.id)
-                ? { ...ticket, status: 'Open', lastUpdated: new Date().toISOString() }
-                : ticket
-            )
-          );
-          showToast(`${selectedTickets.length} tickets reopened`, 'success');
-          break;
-        case 'hold_all':
-          setSupportTickets((prev) =>
-            prev.map((ticket) =>
-              selectedTickets.includes(ticket.id)
-                ? { ...ticket, status: 'On Hold', lastUpdated: new Date().toISOString() }
-                : ticket
-            )
-          );
-          showToast(`${selectedTickets.length} tickets put on hold`, 'success');
           break;
         case 'delete_selected':
           setSupportTickets((prev) =>
             prev.filter((ticket) => !selectedTickets.includes(ticket.id))
           );
-          showToast(`${selectedTickets.length} tickets deleted`, 'success');
           break;
       }
+      
+      showToast(result.message || 'Operation completed successfully', 'success');
       setSelectedTickets([]);
       fetchTickets(); // Refresh the list
     } catch (error) {
       console.error('Error performing bulk operation:', error);
       showToast('Error performing bulk operation', 'error');
+    } finally {
+      setBulkOperationLoading(false);
+      setSelectedBulkOperation(''); // Reset after execution
     }
   };
 
@@ -801,8 +637,6 @@ const SupportTicketsPage = () => {
                     <option value="" disabled>Bulk Operations</option>
                     <option value="mark_read">Mark all as read</option>
                     <option value="mark_unread">Mark all as unread</option>
-                    <option value="open_all">Open all</option>
-                    <option value="hold_all">Hold all</option>
                     <option value="delete_selected">Delete Selected</option>
                   </select>
                 </div>
@@ -812,12 +646,11 @@ const SupportTicketsPage = () => {
                   <button
                     onClick={() => {
                       handleBulkOperation(selectedBulkOperation);
-                      setSelectedBulkOperation(''); // Reset after execution
                     }}
-                    disabled={ticketsLoading}
+                    disabled={ticketsLoading || bulkOperationLoading}
                     className="btn btn-primary flex items-center gap-2 px-4 py-2.5 disabled:opacity-50 w-full md:w-auto"
                   >
-                    Save Changes
+                    {bulkOperationLoading ? 'Updating...' : 'Save Changes'}
                   </button>
                 )}
               </div>
@@ -959,21 +792,26 @@ const SupportTicketsPage = () => {
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs">
-                                {new Date(ticket.lastUpdated).toLocaleDateString()}
-                              </div>
-                              <div className="text-xs">
-                                {new Date(ticket.lastUpdated).toLocaleTimeString()}
-                              </div>
+                              {ticket.lastUpdated && ticket.lastUpdated !== ticket.createdAt ? (
+                                <>
+                                  <div className="text-xs">
+                                    {new Date(ticket.lastUpdated).toLocaleDateString()}
+                                  </div>
+                                  <div className="text-xs">
+                                    {new Date(ticket.lastUpdated).toLocaleTimeString()}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-xs text-gray-500">-</div>
+                              )}
                             </div>
                           </td>
                           <td className="p-3">
                             <span
-                              className={`inline-flex items-center justify-center gap-1 px-2 py-1 rounded-full text-xs font-medium border w-26 ${getStatusColor(
+                              className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium border w-26 ${getStatusColor(
                                 ticket.status
                               )}`}
                             >
-                              {getStatusIcon(ticket.status)}
                               {ticket.status}
                             </span>
                           </td>
@@ -1029,32 +867,22 @@ const SupportTicketsPage = () => {
                                       )}
                                       Mark as {ticket.isRead ? 'Unread' : 'Read'}
                                     </button>
-                                    <button
-                                      onClick={() => {
-                                        handleHoldTicket(ticket.id);
-                                        document
-                                          .querySelector('.dropdown-menu:not(.hidden)')
-                                          ?.classList.add('hidden');
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                      disabled={ticket.status === 'On Hold'}
-                                    >
-                                      <FaPause className="h-3 w-3" />
-                                      Hold Ticket
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        handleCloseTicket(ticket.id);
-                                        document
-                                          .querySelector('.dropdown-menu:not(.hidden)')
-                                          ?.classList.add('hidden');
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                      disabled={ticket.status === 'Closed'}
-                                    >
-                                      <FaCheck className="h-3 w-3" />
-                                      Close Ticket
-                                    </button>
+                                    {/* Removed Hold Ticket option */}
+                                    {ticket.status !== 'Closed' && (
+                                      <button
+                                        onClick={() => {
+                                          handleCloseTicket(ticket.id);
+                                          document
+                                            .querySelector('.dropdown-menu:not(.hidden)')
+                                            ?.classList.add('hidden');
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                        disabled={ticket.status === 'Closed'}
+                                      >
+                                        <FaCheck className="h-3 w-3" />
+                                        Close Ticket
+                                      </button>
+                                    )}
                                     <button
                                       onClick={() => {
                                         setTicketToDelete(ticket.id);

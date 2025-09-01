@@ -547,6 +547,18 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Create initial message record for the ticket
+    await db.ticketMessage.create({
+      data: {
+        ticketId: ticket.id,
+        userId: parseInt(session.user.id),
+        message: validatedData.message,
+        messageType: 'customer',
+        isFromAdmin: false,
+        attachments: validatedData.attachments ? JSON.stringify(validatedData.attachments) : null,
+      }
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Support ticket created successfully',

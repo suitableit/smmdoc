@@ -123,7 +123,7 @@ export async function POST(
     });
 
     // Update ticket status and last updated time
-    const newStatus = isAdmin ? 'in_progress' : 'Open';
+    const newStatus = isAdmin ? 'Answered' : 'Customer Reply';
     await db.supportTicket.update({
       where: { id: ticketId },
       data: {
@@ -134,11 +134,69 @@ export async function POST(
       }
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Reply added successfully',
-      reply
+    // Fetch the complete updated ticket with all messages
+    const updatedTicket = await db.supportTicket.findUnique({
+      where: { id: ticketId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+            image: true
+          }
+        },
+        messages: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                role: true,
+                image: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        }
+      }
     });
+
+    if (!updatedTicket) {
+      return NextResponse.json(
+        { error: 'Failed to fetch updated ticket' },
+        { status: 500 }
+      );
+    }
+
+    // Transform the ticket data to match frontend expectations
+    const transformedTicket = {
+      id: updatedTicket.id.toString(),
+      subject: updatedTicket.subject,
+      createdAt: updatedTicket.createdAt.toISOString(),
+      lastUpdated: updatedTicket.updatedAt.toISOString(),
+      status: updatedTicket.status,
+      ticketType: updatedTicket.ticketType,
+      aiSubcategory: updatedTicket.aiSubcategory,
+      systemMessage: updatedTicket.systemMessage,
+      ticketStatus: updatedTicket.ticketStatus,
+      orderIds: updatedTicket.orderIds ? JSON.parse(updatedTicket.orderIds) : [],
+      messages: updatedTicket.messages.map(msg => ({
+        id: msg.id.toString(),
+        type: msg.messageType === 'staff' ? 'staff' : msg.messageType === 'system' ? 'system' : 'customer',
+        author: msg.user?.name || 'Unknown',
+        authorRole: msg.user?.role,
+        content: msg.message,
+        createdAt: msg.createdAt.toISOString(),
+        userImage: msg.user?.image,
+        attachments: msg.attachments ? JSON.parse(msg.attachments) : []
+      }))
+    };
+
+    return NextResponse.json(transformedTicket);
 
   } catch (error) {
     console.error('Error adding reply:', error);
