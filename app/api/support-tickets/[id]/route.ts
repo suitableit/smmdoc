@@ -3,6 +3,12 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 
+// Helper function to capitalize status for display
+const capitalizeStatus = (status: string): string => {
+  if (status === 'closed') return 'Closed';
+  return status;
+};
+
 // Validation schema for updating support tickets
 const updateTicketSchema = z.object({
   status: z.enum(['pending', 'in_progress', 'resolved', 'closed']).optional(),
@@ -215,22 +221,16 @@ export async function PUT(
       );
     }
 
-    // Check if user is admin
+    // Check if user is admin or ticket owner
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
 
-    if (user?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Only admins can update tickets' },
-        { status: 403 }
-      );
-    }
-
-    // Check if ticket exists
+    // Check if ticket exists and get ownership info
     const existingTicket = await db.supportTicket.findUnique({
-      where: { id: ticketId }
+      where: { id: ticketId },
+      select: { id: true, userId: true, status: true }
     });
 
     if (!existingTicket) {
@@ -240,11 +240,40 @@ export async function PUT(
       );
     }
 
+    const isAdmin = user?.role === 'admin';
+    const isOwner = existingTicket.userId === parseInt(session.user.id);
+
     const body = await request.json();
     const { generateSystemMessage = true, ...validatedData } = body;
     
     // Validate the data using the schema (excluding generateSystemMessage)
     const parsedData = updateTicketSchema.parse(validatedData);
+
+    // Check permissions based on what's being updated
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
+      );
+    }
+
+    // Users can only close their own tickets, admins can do everything
+    if (!isAdmin && isOwner) {
+      // Users can only update status to 'closed'
+      if (parsedData.status && parsedData.status !== 'closed') {
+        return NextResponse.json(
+          { error: 'Users can only close their own tickets' },
+          { status: 403 }
+        );
+      }
+      // Users cannot update adminReply or priority
+      if (parsedData.adminReply || parsedData.priority) {
+        return NextResponse.json(
+          { error: 'Only admins can update admin reply or priority' },
+          { status: 403 }
+        );
+      }
+    }
 
     // Prepare update data
     const updateData: any = {};
@@ -262,12 +291,6 @@ export async function PUT(
       updateData.repliedAt = new Date();
       updateData.repliedBy = parseInt(session.user.id);
     }
-
-    // Get the current ticket to compare status changes
-    const currentTicket = await db.supportTicket.findUnique({
-      where: { id: ticketId },
-      select: { status: true }
-    });
 
     // Update the ticket
     const updatedTicket = await db.supportTicket.update({
@@ -291,12 +314,12 @@ export async function PUT(
     });
 
     // Create a system message for status change only if explicitly requested
-    if (parsedData.status && currentTicket && parsedData.status !== currentTicket.status && generateSystemMessage) {
+    if (parsedData.status && existingTicket && parsedData.status !== existingTicket.status && generateSystemMessage) {
       await db.ticketMessage.create({
         data: {
           ticketId: ticketId,
           userId: parseInt(session.user.id),
-          message: `Ticket status changed from ${currentTicket.status} to ${parsedData.status}`,
+          message: `Ticket status changed from ${capitalizeStatus(existingTicket.status)} to ${capitalizeStatus(parsedData.status)}`,
           messageType: 'system',
           isFromAdmin: true
         }

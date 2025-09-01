@@ -407,7 +407,7 @@ const TicketPage: React.FC = () => {
       let subject = '';
       if (formData.ticketType === 'Human') {
         // For Human tickets, use the selected subject from admin settings
-        const selectedSubject = ticketSubjects.find(s => s.id === formData.humanTicketSubject);
+        const selectedSubject = ticketSubjects.find(s => s.id === parseInt(formData.humanTicketSubject));
         subject = selectedSubject ? selectedSubject.name : 'General Support';
       } else {
         // For AI tickets, use category and subcategory as before

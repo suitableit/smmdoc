@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     FaArrowLeft,
     FaCheckCircle,
@@ -131,6 +132,7 @@ interface SupportTicketDetails {
 }
 
 const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
+  const router = useRouter();
   const { appName } = useAppNameWithFallback();
   const [ticketId, setTicketId] = useState<string | null>(null);
 
@@ -501,10 +503,20 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
   if (loading || !ticketId) {
     return (
       <div className="page-container">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading ticket details...</p>
+        <div className="page-content">
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaTicketAlt />
+              </div>
+              <h3 className="card-title">Loading Ticket Details</h3>
+            </div>
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-center">
+                <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">Loading ticket details...</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -553,7 +565,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-4">
               <button 
-                onClick={() => window.history.back()}
+                onClick={() => router.push('/admin/tickets')}
                 className="btn btn-primary flex items-center gap-2"
               >
                 <FaArrowLeft className="h-4 w-4" />

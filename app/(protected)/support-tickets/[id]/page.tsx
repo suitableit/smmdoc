@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     FaArrowLeft,
     FaCheckCircle,
@@ -93,6 +94,7 @@ interface SupportTicketDetails {
 }
 
 const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) => {
+  const router = useRouter();
   const { appName } = useAppNameWithFallback();
   const [ticketId, setTicketId] = useState<string | null>(null);
   
@@ -226,6 +228,12 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
       return;
     }
     
+    // Check if ticket is closed before attempting to reply
+    if (ticketDetails?.status === 'closed') {
+      showToast('This ticket has been closed and no longer accepts replies.', 'error');
+      return;
+    }
+    
     setIsReplying(true);
     console.log('Starting reply submission...');
     
@@ -270,6 +278,26 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         console.error('API Error:', errorData);
+        
+        // Handle specific error cases
+        if (response.status === 400 && errorData.error && errorData.error.toLowerCase().includes('closed')) {
+          // Ticket was closed while user was composing reply
+          showToast('This ticket has been closed and no longer accepts replies. Please refresh the page.', 'error');
+          // Optionally refresh ticket details to sync status
+          if (ticketId) {
+            try {
+              const refreshResponse = await fetch(`/api/support-tickets/${ticketId}`);
+              if (refreshResponse.ok) {
+                const refreshedTicket = await refreshResponse.json();
+                setTicketDetails(refreshedTicket);
+              }
+            } catch (refreshError) {
+              console.error('Error refreshing ticket details:', refreshError);
+            }
+          }
+          return;
+        }
+        
         throw new Error(errorData.error || 'Failed to send reply');
       }
 
@@ -425,7 +453,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
             <button 
-              onClick={() => window.history.back()}
+              onClick={() => router.push('/support-tickets/history')}
               className="btn btn-primary flex items-center gap-2"
             >
               <FaArrowLeft className="h-4 w-4" />
