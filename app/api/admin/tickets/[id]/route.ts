@@ -134,6 +134,7 @@ export async function GET(
       id: ticket.id.toString(),
       createdAt: ticket.createdAt.toISOString(),
       lastUpdated: ticket.updatedAt.toISOString(), // Map updatedAt to lastUpdated
+      orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : null, // Parse orderIds JSON
       userInfo: {
         id: ticket.user?.id,
         name: ticket.user?.name,
