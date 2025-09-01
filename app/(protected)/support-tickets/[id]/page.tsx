@@ -488,8 +488,9 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
               </div>
               
               <div className="space-y-6" onClick={() => hasNewMessages && markMessagesAsRead()}>
-                {ticketDetails && ticketDetails.messages && ticketDetails.messages.map((message) => (
-                  <div key={message.id} className="flex items-start gap-4">
+                {ticketDetails && ticketDetails.messages && ticketDetails.messages.length > 0 ? (
+                  ticketDetails.messages.map((message) => (
+                    <div key={message.id} className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
                       {message.userImage && message.type === 'customer' ? (
                         <img
@@ -563,7 +564,13 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                       )}
                     </div>
                   </div>
-                ))}
+                ))
+                ) : (
+                  <div className="text-center py-8">
+                    <FaComments className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-500">No messages found for this ticket.</p>
+                  </div>
+                )}
               </div>
             </div>
 

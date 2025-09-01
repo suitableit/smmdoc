@@ -443,23 +443,30 @@ const TicketPage: React.FC = () => {
 
       if (response.ok) {
         const result = await response.json();
-        showToast('Ticket submitted successfully!', 'success');
-        setFormData({
-          category: '1',
-          subcategory: '2',
-          ticketType: 'AI',
-          aiSubcategory: 'Refill',
-          humanTicketSubject: '1',
-          orderIds: '',
-          message: '',
-          subject: '',
-          priority: 'medium',
-          attachments: [],
-        });
-        // Clear uploaded files
-        setUploadedFiles([]);
-        // Refresh tickets list
-        fetchTickets();
+        showToast('Ticket submitted successfully! Redirecting to ticket details...', 'success');
+        
+        // Redirect to the created ticket details page
+        if (result.ticket && result.ticket.id) {
+          router.push(`/support-tickets/${result.ticket.id}`);
+        } else {
+          // Fallback: reset form and refresh tickets list if no ticket ID
+          setFormData({
+            category: '1',
+            subcategory: '2',
+            ticketType: 'AI',
+            aiSubcategory: 'Refill',
+            humanTicketSubject: '1',
+            orderIds: '',
+            message: '',
+            subject: '',
+            priority: 'medium',
+            attachments: [],
+          });
+          // Clear uploaded files
+          setUploadedFiles([]);
+          // Refresh tickets list
+          fetchTickets();
+        }
       } else {
         const error = await response.json();
         showToast(error.error || error.message || 'Failed to submit ticket', 'error');
