@@ -199,7 +199,7 @@ const TicketPage: React.FC = () => {
     { value: 'Fake Complete', label: 'Fake Complete' },
   ];
 
-  // Simulate initial loading
+  // Simulate initial loading for ticket form only
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -533,91 +533,6 @@ const TicketPage: React.FC = () => {
     setOpenAccordion(openAccordion === id ? null : id);
   };
 
-  if (isLoading) {
-    return (
-      <div className="page-container">
-        <div className="page-content">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Loading State */}
-            <div className="space-y-6">
-              {/* Tab Navigation - Static */}
-              <div className="card" style={{ padding: '8px' }}>
-                <div className="flex space-x-2">
-                  <button className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25">
-                    <FaTicketAlt className="mr-2 w-4 h-4" />
-                    New Ticket
-                  </button>
-                  <button className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600">
-                    <FaClock className="mr-2 w-4 h-4" />
-                    Tickets History
-                  </button>
-                </div>
-              </div>
-
-              {/* Form Card - Loading State */}
-              <div className="card card-padding">
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-14 h-14" className="mb-4" />
-                    <div className="text-lg font-medium">
-                      Loading ticket form...
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - Information (Static) */}
-            <div className="space-y-6">
-              <div className="card card-padding">
-                <div className="card-header">
-                  <div className="card-icon">
-                    <FaInfoCircle />
-                  </div>
-                  <h3 className="card-title">Read before create Ticket</h3>
-                </div>
-
-                <div className="space-y-3 mt-4">
-                  {/* Static accordion items while loading */}
-                  <div className="card">
-                    <div className="w-full p-4 text-left flex justify-between items-center">
-                      <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
-                        <FaCreditCard className="w-4 h-4" />
-                        How to Create Ticket ?
-                      </span>
-                      <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                    </div>
-                  </div>
-
-                  <div className="card">
-                    <div className="w-full p-4 text-left flex justify-between items-center">
-                      <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
-                        <FaClock className="w-4 h-4" />
-                        How long does it take to get a reply from support
-                        regarding my complaint?
-                      </span>
-                      <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                    </div>
-                  </div>
-
-                  <div className="card">
-                    <div className="w-full p-4 text-left flex justify-between items-center">
-                      <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
-                        <FaInfoCircle className="w-4 h-4" />
-                        Important Guidelines
-                      </span>
-                      <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="page-container">
       {/* Toast Container */}
@@ -660,25 +575,36 @@ const TicketPage: React.FC = () => {
             </div>
 
             <div className="card card-padding">
-              {/* Tab Content */}
-              <div className="space-y-4">
-                <div className="space-y-4">
-                  <div className="form-group">
-                    <label className="form-label">Ticket Type</label>
-                    <select
-                      value={formData.ticketType}
-                      onChange={(e) =>
-                        handleTicketTypeChange(e.target.value as 'Human' | 'AI')
-                      }
-                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                    >
-                      {ticketTypes.map((type) => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
+              {isLoading ? (
+                // Loading state for ticket form only
+                <div className="flex items-center justify-center min-h-[400px]">
+                  <div className="text-center flex flex-col items-center">
+                    <GradientSpinner size="w-14 h-14" className="mb-4" />
+                    <div className="text-lg font-medium">
+                      Loading...
+                    </div>
                   </div>
+                </div>
+              ) : (
+                // Main ticket form content
+                <div className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="form-group">
+                      <label className="form-label">Ticket Type</label>
+                      <select
+                        value={formData.ticketType}
+                        onChange={(e) =>
+                          handleTicketTypeChange(e.target.value as 'Human' | 'AI')
+                        }
+                        className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                      >
+                        {ticketTypes.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
                   {formData.ticketType === 'AI' ? (
                     <div className="form-group">
@@ -720,6 +646,7 @@ const TicketPage: React.FC = () => {
                       </select>
                     </div>
                   )}
+                  </div>
 
                   <div className="form-group">
                     <label className="form-label">
@@ -848,7 +775,7 @@ const TicketPage: React.FC = () => {
                     {isSubmitting ? 'Submitting...' : 'Submit Ticket'}
                   </button>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
+import { isTicketSystemEnabled, getTicketSettings } from '@/lib/utils/ticket-settings';
 
 // Helper function to process refill requests
 async function processRefillRequest(orderIds: string[], userId: number) {
@@ -439,6 +439,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    const ticketSettings = await getTicketSettings();
     const maxPendingTickets = parseInt(ticketSettings.maxPendingTickets || '3');
     if (pendingTicketsCount >= maxPendingTickets) {
       return NextResponse.json(
