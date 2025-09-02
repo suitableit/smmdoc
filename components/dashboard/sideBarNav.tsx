@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Session } from 'next-auth';
 import * as FaIcons from 'react-icons/fa';
 
@@ -63,6 +63,26 @@ export default function SideBarNav({
 }: SideBarNavProps) {
   const path = usePathname() || '';
   const isAdmin = session?.user?.role === 'admin';
+  const [ticketSystemEnabled, setTicketSystemEnabled] = useState(true);
+
+  // Fetch ticket system settings
+  useEffect(() => {
+    const fetchTicketSettings = async () => {
+      try {
+        const response = await fetch('/api/ticket-system-status');
+        if (response.ok) {
+          const data = await response.json();
+          setTicketSystemEnabled(data.ticketSystemEnabled ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching ticket settings:', error);
+        // Default to enabled on error
+        setTicketSystemEnabled(true);
+      }
+    };
+
+    fetchTicketSettings();
+  }, []);
 
   // Memoize items based on user role to prevent unnecessary recalculations
   const items = useMemo(() => {
@@ -115,9 +135,13 @@ export default function SideBarNav({
             'All Transactions',
           ].includes(item.title)
         ),
-        support: items.filter((item) =>
-          ['Support Tickets', 'Contact Messages'].includes(item.title)
-        ),
+        support: items.filter((item) => {
+          const supportItems = ['Support Tickets', 'Contact Messages'];
+          if (!ticketSystemEnabled && item.title === 'Support Tickets') {
+            return false;
+          }
+          return supportItems.includes(item.title);
+        }),
         posts: items.filter((item) =>
           ['Blogs', 'Blog Categories', 'Tags', 'Announcements'].includes(item.title)
         ),
@@ -167,14 +191,18 @@ export default function SideBarNav({
         funds: items.filter((item) =>
           ['Add Funds', 'Transfer Funds', 'Transactions'].includes(item.title)
         ),
-        support: items.filter((item) =>
-          [
+        support: items.filter((item) => {
+          const supportItems = [
             'Support Tickets',
             'Tickets History',
             'Contact Support',
             'FAQs',
-          ].includes(item.title)
-        ),
+          ];
+          if (!ticketSystemEnabled && (item.title === 'Support Tickets' || item.title === 'Tickets History')) {
+            return false;
+          }
+          return supportItems.includes(item.title);
+        }),
         integrations: items.filter((item) =>
           ['API Integration', 'Child Panel'].includes(item.title)
         ),
@@ -186,7 +214,7 @@ export default function SideBarNav({
         ),
       } as UserSections;
     }
-  }, [isAdmin, items]);
+  }, [isAdmin, items, ticketSystemEnabled]);
 
   const isActive = (itemPath: string) => {
     // Exact match

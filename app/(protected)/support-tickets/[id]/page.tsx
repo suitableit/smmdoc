@@ -22,6 +22,7 @@ import {
     FaUserShield,
     FaVideo
 } from 'react-icons/fa';
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 
 // Import APP_NAME constant
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
@@ -456,6 +457,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
   }
 
   return (
+    <TicketSystemGuard>
     <div className="page-container">
       {/* Toast Container */}
       <div className="toast-container">
@@ -794,6 +796,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
         </div>
       </div>
     </div>
+    </TicketSystemGuard>
   );
 };
 

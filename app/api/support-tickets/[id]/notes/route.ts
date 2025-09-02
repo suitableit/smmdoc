@@ -172,6 +172,7 @@ export async function POST(
       timeSpent: 0,
       ticketType: updatedTicket.ticketType,
       aiSubcategory: updatedTicket.aiSubcategory,
+      humanTicketSubject: updatedTicket.humanTicketSubject,
       systemMessage: updatedTicket.systemMessage,
       ticketStatus: updatedTicket.ticketStatus,
       orderIds: updatedTicket.orderIds ? JSON.parse(updatedTicket.orderIds) : [],

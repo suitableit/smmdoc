@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
 
 // Validation schema for bulk operations
 const bulkOperationSchema = z.object({
@@ -49,6 +50,15 @@ export async function GET(request: NextRequest) {
     if (user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
         { status: 403 }
       );
     }
@@ -154,6 +164,7 @@ export async function GET(request: NextRequest) {
       lastUpdated: ticket.updatedAt ? ticket.updatedAt.toISOString() : ticket.createdAt.toISOString(),
       status: mapDatabaseStatusToFrontend(ticket.status),
       isRead: ticket.isRead,
+      humanTicketSubject: ticket.humanTicketSubject,
     }));
 
     return NextResponse.json({
@@ -197,6 +208,15 @@ export async function PATCH(request: NextRequest) {
     if (user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
         { status: 403 }
       );
     }

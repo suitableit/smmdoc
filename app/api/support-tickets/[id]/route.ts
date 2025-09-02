@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
 
 // Helper function to capitalize status for display
 const capitalizeStatus = (status: string): string => {
@@ -34,6 +35,15 @@ export async function GET(
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
       );
     }
 
@@ -161,6 +171,7 @@ export async function GET(
       status: ticket.status,
       ticketType: ticket.ticketType,
       aiSubcategory: ticket.aiSubcategory,
+      humanTicketSubject: ticket.humanTicketSubject,
       systemMessage: ticket.systemMessage,
       orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : [],
       messages: messages,
@@ -208,6 +219,15 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
       );
     }
 
@@ -373,6 +393,15 @@ export async function DELETE(
     if (user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Only admins can delete tickets' },
+        { status: 403 }
+      );
+    }
+
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
         { status: 403 }
       );
     }

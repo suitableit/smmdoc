@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-
-// Mock ticket subjects - in a real app, this would come from database
-const defaultSubjects = [
-  { id: 1, name: 'General Support' },
-  { id: 2, name: 'Technical Issue' },
-  { id: 3, name: 'Billing Question' },
-  { id: 4, name: 'Account Problem' },
-  { id: 5, name: 'Service Inquiry' },
-];
+import { db } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,11 +13,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // In a real implementation, you would fetch from database
-    // For now, return default subjects
+    // Get ticket settings with subjects from database
+    const ticketSettings = await db.ticket_settings.findFirst({
+      include: {
+        ticket_subjects: {
+          orderBy: {
+            id: 'asc'
+          }
+        }
+      }
+    });
+
+    // Only return subjects from database - no fallback
+    const subjects = ticketSettings?.ticket_subjects?.map(subject => ({
+      id: subject.id,
+      name: subject.name
+    })) || [];
+
     return NextResponse.json({
       success: true,
-      subjects: defaultSubjects
+      subjects: subjects
     });
   } catch (error) {
     console.error('Error fetching ticket subjects:', error);

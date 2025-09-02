@@ -9,6 +9,7 @@ const defaultGeneralSettings = {
   tagline: 'Best SMM Services Provider',
   siteIcon: '',
   siteLogo: '',
+  siteDarkLogo: '',
   adminEmail: 'admin@example.com',
 };
 
@@ -36,6 +37,7 @@ export async function GET() {
         tagline: settings.tagline,
         siteIcon: settings.siteIcon,
         siteLogo: settings.siteLogo,
+        siteDarkLogo: settings.siteDarkLogo,
         adminEmail: settings.adminEmail,
       }
     });
@@ -105,6 +107,7 @@ export async function POST(request: NextRequest) {
         tagline: generalSettings.tagline?.trim() || '',
         siteIcon: generalSettings.siteIcon || '',
         siteLogo: generalSettings.siteLogo || '',
+        siteDarkLogo: generalSettings.siteDarkLogo || '',
         adminEmail: generalSettings.adminEmail.trim(),
       },
       create: {
@@ -113,6 +116,7 @@ export async function POST(request: NextRequest) {
         tagline: generalSettings.tagline?.trim() || '',
         siteIcon: generalSettings.siteIcon || '',
         siteLogo: generalSettings.siteLogo || '',
+        siteDarkLogo: generalSettings.siteDarkLogo || '',
         adminEmail: generalSettings.adminEmail.trim(),
       }
     });

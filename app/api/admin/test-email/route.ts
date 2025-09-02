@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import nodemailer from 'nodemailer';
+import { getAdminEmail } from '@/lib/utils/general-settings';
 
 const prisma = new PrismaClient();
 
@@ -63,8 +64,11 @@ export async function POST(req: NextRequest) {
 
     // Send test email
     try {
+      // Get admin email from General Settings
+      const adminEmail = await getAdminEmail();
+      
       await transporter.sendMail({
-         from: `"SMMDOC Test" <${emailSettings.email || emailSettings.smtp_username}>`,
+         from: `"SMMDOC Test" <${adminEmail || emailSettings.smtp_username}>`,
          to: to,
          subject: subject,
         html: `

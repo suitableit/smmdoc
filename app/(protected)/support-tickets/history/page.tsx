@@ -17,6 +17,7 @@ import {
     FaTimes,
     FaUser,
 } from 'react-icons/fa';
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -469,17 +470,18 @@ export default function TicketsHistory() {
   // Remove the full-page loading return - we'll handle loading in the table area
 
   return (
-    <div className="page-container">
-      {/* Toast Container */}
-      {toastMessage && (
-        <Toast
-          message={toastMessage.message}
-          type={toastMessage.type}
-          onClose={() => setToastMessage(null)}
-        />
-      )}
+    <TicketSystemGuard>
+      <div className="page-container">
+        {/* Toast Container */}
+        {toastMessage && (
+          <Toast
+            message={toastMessage.message}
+            type={toastMessage.type}
+            onClose={() => setToastMessage(null)}
+          />
+        )}
 
-      <div className="page-content">
+        <div className="page-content">
         <div className="card card-padding">
           {/* Tab Navigation */}
           <div className="card mb-6" style={{ padding: '8px' }}>
@@ -855,7 +857,8 @@ export default function TicketsHistory() {
           )}
         </div>
         </div>
+        </div>
       </div>
-    </div>
+    </TicketSystemGuard>
   );
 }
