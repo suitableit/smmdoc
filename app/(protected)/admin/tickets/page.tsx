@@ -17,6 +17,7 @@ import {
 // Import APP_NAME constant
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -1026,4 +1027,10 @@ const SupportTicketsPage = () => {
   );
 };
 
-export default SupportTicketsPage;
+const ProtectedSupportTicketsPage = () => (
+  <TicketSystemGuard>
+    <SupportTicketsPage />
+  </TicketSystemGuard>
+);
+
+export default ProtectedSupportTicketsPage;

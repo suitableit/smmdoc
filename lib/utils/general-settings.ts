@@ -6,6 +6,7 @@ export interface GeneralSettings {
   siteDescription: string;
   siteIcon: string;
   siteLogo: string;
+  siteDarkLogo: string;
   adminEmail: string;
   siteUrl: string;
   metaKeywords: string;
@@ -23,6 +24,7 @@ const DEFAULT_SETTINGS: GeneralSettings = {
   siteDescription: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Professional Social Media Marketing Panel',
   siteIcon: '/favicon.png',
   siteLogo: '/logo.png',
+  siteDarkLogo: '',
   adminEmail: process.env.ADMIN_EMAIL || 'admin@example.com',
   siteUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   metaKeywords: 'SMM, Social Media Marketing, Panel',
@@ -50,6 +52,7 @@ export async function getGeneralSettings(): Promise<GeneralSettings> {
         siteDescription: settings.siteDescription || DEFAULT_SETTINGS.siteDescription,
         siteIcon: settings.siteIcon || DEFAULT_SETTINGS.siteIcon,
         siteLogo: settings.siteLogo || DEFAULT_SETTINGS.siteLogo,
+        siteDarkLogo: settings.siteDarkLogo || DEFAULT_SETTINGS.siteDarkLogo,
         adminEmail: settings.adminEmail || DEFAULT_SETTINGS.adminEmail,
         siteUrl: settings.siteUrl || DEFAULT_SETTINGS.siteUrl,
         metaKeywords: settings.metaKeywords || DEFAULT_SETTINGS.metaKeywords,

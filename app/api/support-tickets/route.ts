@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
 
 // Helper function to process refill requests
 async function processRefillRequest(orderIds: string[], userId: number) {
@@ -420,8 +421,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if ticket system is enabled
-    const ticketSettings = await db.ticket_settings.findFirst();
-    if (!ticketSettings?.ticketSystemEnabled) {
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
       return NextResponse.json(
         { error: 'Ticket system is currently disabled' },
         { status: 403 }
@@ -530,6 +531,7 @@ export async function POST(request: NextRequest) {
         subcategory: validatedData.subcategory,
         ticketType: validatedData.ticketType,
         aiSubcategory: validatedData.aiSubcategory,
+        humanTicketSubject: validatedData.humanTicketSubject,
         systemMessage: systemMessage || null,
         orderIds: validatedData.orderIds ? JSON.stringify(validatedData.orderIds) : null,
         priority: validatedData.priority,
@@ -601,6 +603,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -657,6 +668,7 @@ export async function GET(request: NextRequest) {
       category: ticket.category,
       subcategory: ticket.subcategory,
       aiSubcategory: ticket.aiSubcategory,
+      humanTicketSubject: ticket.humanTicketSubject,
       orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : [],
       repliedByUser: ticket.repliedByUser
     }));

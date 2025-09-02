@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
 
 // Validation schema for updating tickets
 const updateTicketSchema = z.object({
@@ -40,6 +41,15 @@ export async function GET(
     if (user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
         { status: 403 }
       );
     }
@@ -212,6 +222,15 @@ export async function PUT(
       );
     }
 
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
+      );
+    }
+
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);
     
@@ -322,6 +341,15 @@ export async function DELETE(
     if (user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
         { status: 403 }
       );
     }

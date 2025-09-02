@@ -820,6 +820,7 @@ model GeneralSettings {
   tagline         String   @default("Best SMM Services Provider")
   siteIcon        String   @default("")
   siteLogo        String   @default("")
+  siteDarkLogo    String   @default("")
   adminEmail      String   @default("admin@example.com")
   // Meta (SEO) Settings
   googleTitle     String   @default("")

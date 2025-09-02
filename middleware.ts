@@ -62,6 +62,55 @@ export default auth(async (req) => {
     });
   }
 
+  // Check ticket system status for ticket-related pages
+  const ticketPages = [
+    '/admin/tickets',
+    '/support-tickets',
+    '/support-tickets/history'
+  ];
+  
+  const isTicketPage = ticketPages.some(page => 
+    nextUrl.pathname === page || nextUrl.pathname.startsWith(page + '/')
+  );
+  
+  if (isTicketPage && isLoggedIn) {
+    console.log('Middleware: Ticket page detected:', nextUrl.pathname);
+    console.log('Middleware: User role:', userRole?.role);
+    try {
+      // Use fetch to call our API endpoint since Prisma can't run in middleware
+      const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:3000`;
+      console.log('Middleware: Fetching ticket status from:', `${baseUrl}/api/ticket-system-status`);
+      const response = await fetch(`${baseUrl}/api/ticket-system-status`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('Middleware: API response status:', response.status);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Middleware: Ticket system enabled:', data.ticketSystemEnabled);
+        if (!data.ticketSystemEnabled) {
+          // Redirect based on user role
+          const redirectPath = userRole?.role === 'admin' ? '/admin' : '/dashboard';
+          console.log('Middleware: Redirecting to:', redirectPath);
+          return NextResponse.redirect(new URL(redirectPath, nextUrl));
+        }
+      } else {
+        console.log('Middleware: API error, redirecting to safe page');
+        // On API error, redirect to safe page
+        const redirectPath = userRole?.role === 'admin' ? '/admin' : '/dashboard';
+        return NextResponse.redirect(new URL(redirectPath, nextUrl));
+      }
+    } catch (error) {
+      console.error('Error checking ticket system status in middleware:', error);
+      // On error, redirect to safe page
+      const redirectPath = userRole?.role === 'admin' ? '/admin' : '/dashboard';
+      return NextResponse.redirect(new URL(redirectPath, nextUrl));
+    }
+  }
+
   // Admin-only routes protection
   if (nextUrl.pathname.startsWith('/admin') && userRole?.role !== 'admin') {
     return NextResponse.redirect(new URL('/dashboard', nextUrl));

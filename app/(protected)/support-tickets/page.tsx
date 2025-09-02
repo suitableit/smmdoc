@@ -20,6 +20,7 @@ import {
 } from 'react-icons/fa';
 import ReCAPTCHA from '@/components/ReCAPTCHA';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -1021,4 +1022,10 @@ const TicketPage: React.FC = () => {
   );
 };
 
-export default TicketPage;
+const ProtectedTicketPage = () => (
+  <TicketSystemGuard>
+    <TicketPage />
+  </TicketSystemGuard>
+);
+
+export default ProtectedTicketPage;

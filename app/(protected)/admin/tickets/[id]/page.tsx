@@ -30,6 +30,7 @@ import {
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import useTicketPolling from '@/hooks/useTicketPolling';
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -1027,4 +1028,10 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
   );
 };
 
-export default SupportTicketDetailsPage;
+const ProtectedSupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => (
+  <TicketSystemGuard>
+    <SupportTicketDetailsPage params={params} />
+  </TicketSystemGuard>
+);
+
+export default ProtectedSupportTicketDetailsPage;
