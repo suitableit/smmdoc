@@ -350,21 +350,13 @@ const GeneralSettingsPage = () => {
   const [ticketSettings, setTicketSettings] = useState<TicketSettings>({
     ticketSystemEnabled: true,
     maxPendingTickets: '3',
-    subjects: [
-      { id: 1, name: 'General Support' },
-      { id: 2, name: 'Technical Issue' },
-      { id: 3, name: 'Billing Question' },
-    ],
+    subjects: [],
   });
 
   const [originalTicketSettings, setOriginalTicketSettings] = useState<TicketSettings>({
     ticketSystemEnabled: true,
     maxPendingTickets: '3',
-    subjects: [
-      { id: 1, name: 'General Support' },
-      { id: 2, name: 'Technical Issue' },
-      { id: 3, name: 'Billing Question' },
-    ],
+    subjects: [],
   });
 
   const [contactSettings, setContactSettings] = useState<ContactSettings>({

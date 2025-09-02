@@ -99,7 +99,7 @@ const TicketPage: React.FC = () => {
     subcategory: '2',
     ticketType: 'AI',
     aiSubcategory: 'Refill',
-    humanTicketSubject: '1', // Default to first subject
+    humanTicketSubject: '', // Will be set when subjects are loaded
     orderIds: '',
     message: '',
     subject: '',
@@ -172,6 +172,16 @@ const TicketPage: React.FC = () => {
     fetchTickets();
     fetchTicketSubjects();
   }, []);
+
+  // Set default humanTicketSubject when subjects are loaded
+  useEffect(() => {
+    if (ticketSubjects.length > 0 && !formData.humanTicketSubject) {
+      setFormData(prev => ({
+        ...prev,
+        humanTicketSubject: ticketSubjects[0].id.toString()
+      }));
+    }
+  }, [ticketSubjects, formData.humanTicketSubject]);
 
   const ticketTypes = [
     { value: 'Human', label: 'Human Ticket' },
@@ -253,7 +263,7 @@ const TicketPage: React.FC = () => {
       // Reset relevant fields when switching types
       aiSubcategory: ticketType === 'AI' ? 'Refill' : prev.aiSubcategory,
       subcategory: ticketType === 'Human' ? '2' : prev.subcategory,
-      humanTicketSubject: ticketType === 'Human' ? '1' : prev.humanTicketSubject,
+      humanTicketSubject: ticketType === 'Human' ? (ticketSubjects.length > 0 ? ticketSubjects[0].id.toString() : '1') : prev.humanTicketSubject,
       orderIds: '',
       message: '',
     }));

@@ -7,11 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const defaultTicketSettings = {
   ticketSystemEnabled: true,
   maxPendingTickets: '3',
-  subjects: [
-    { id: 1, name: 'General Support' },
-    { id: 2, name: 'Technical Issue' },
-    { id: 3, name: 'Billing Question' },
-  ],
+  subjects: [],
 };
 
 // GET - Load ticket settings
@@ -34,10 +30,7 @@ export async function GET() {
       settings = await db.ticket_settings.create({
         data: {
           ticketSystemEnabled: defaultTicketSettings.ticketSystemEnabled,
-          maxPendingTickets: defaultTicketSettings.maxPendingTickets,
-          ticket_subjects: {
-            create: defaultTicketSettings.subjects
-          }
+          maxPendingTickets: defaultTicketSettings.maxPendingTickets
         },
         include: {
           ticket_subjects: true
