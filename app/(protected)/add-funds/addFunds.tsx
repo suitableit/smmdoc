@@ -66,6 +66,7 @@ const Toast = ({
 
 export function AddFundForm() {
   const user = useCurrentUser();
+  const { appName } = useAppNameWithFallback();
   const [isPending, startTransition] = useTransition();
   const { currency: globalCurrency, rate: globalRate } = useCurrency();
   const [toastMessage, setToastMessage] = useState<{

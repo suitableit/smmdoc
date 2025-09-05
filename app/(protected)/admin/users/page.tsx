@@ -522,9 +522,38 @@ const UsersListPage = () => {
     );
   }, []);
 
-  const handleViewUser = useCallback((userId: number) => {
-    window.open(`/admin/users/${userId}`, '_blank');
-  }, []);
+  const handleViewUser = useCallback(async (userId: number) => {
+    try {
+      setActionLoading(userId.toString());
+      
+      const response = await fetch('/api/admin/switch-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast(result.message || 'Successfully switched to user', 'success');
+        
+        // Force a complete page reload to ensure NextAuth processes the new cookies
+        // This is necessary because the JWT callback needs to run with the new cookies
+        setTimeout(() => {
+          window.location.replace('/dashboard');
+        }, 800);
+      } else {
+        showToast(result.error || 'Failed to switch user', 'error');
+      }
+    } catch (error) {
+      console.error('Switch user error:', error);
+      showToast('Failed to switch user', 'error');
+    } finally {
+      setActionLoading('');
+    }
+  }, [showToast]);
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([fetchUsers(), fetchStats()]);
