@@ -25,10 +25,10 @@ export default auth(async (req) => {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-client-ip', clientIP);
 
-  // Only log for debugging when needed
-  // console.log('Path:', nextUrl.pathname);
-  // console.log('User logged in:', isLoggedIn);
-  // console.log('User role:', userRole?.role);
+  // Check for impersonation cookies as fallback since middleware may have stale session
+  const impersonatedUserId = req.cookies.get('impersonated-user-id')?.value;
+  const originalAdminId = req.cookies.get('original-admin-id')?.value;
+  const isImpersonating = userRole?.isImpersonating || !!impersonatedUserId;
 
   const callbackUrl =
     nextUrl.searchParams.get('callbackUrl') || DEFAULT_SIGN_IN_REDIRECT;
@@ -47,6 +47,10 @@ export default auth(async (req) => {
   // If accessing auth routes while logged in
   if (isAuthRoute) {
     if (isLoggedIn) {
+      // Check if user is impersonating - if so, redirect based on impersonated user's role
+      if (isImpersonating) {
+        return NextResponse.redirect(new URL('/dashboard', nextUrl));
+      }
       // Redirect admin to admin dashboard, users to user dashboard
       if (userRole?.role === 'admin') {
         console.log('Admin user detected, redirecting to admin dashboard');
@@ -92,36 +96,43 @@ export default auth(async (req) => {
         const data = await response.json();
         console.log('Middleware: Ticket system enabled:', data.ticketSystemEnabled);
         if (!data.ticketSystemEnabled) {
-          // Redirect based on user role
-          const redirectPath = userRole?.role === 'admin' ? '/admin' : '/dashboard';
+          // Redirect based on user role and impersonation status
+          const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
           console.log('Middleware: Redirecting to:', redirectPath);
           return NextResponse.redirect(new URL(redirectPath, nextUrl));
         }
       } else {
         console.log('Middleware: API error, redirecting to safe page');
         // On API error, redirect to safe page
-        const redirectPath = userRole?.role === 'admin' ? '/admin' : '/dashboard';
+        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
         return NextResponse.redirect(new URL(redirectPath, nextUrl));
       }
     } catch (error) {
       console.error('Error checking ticket system status in middleware:', error);
       // On error, redirect to safe page
-      const redirectPath = userRole?.role === 'admin' ? '/admin' : '/dashboard';
+      const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
       return NextResponse.redirect(new URL(redirectPath, nextUrl));
     }
   }
 
   // Admin-only routes protection
-  if (nextUrl.pathname.startsWith('/admin') && userRole?.role !== 'admin') {
-    return NextResponse.redirect(new URL('/dashboard', nextUrl));
+  if (nextUrl.pathname.startsWith('/admin')) {
+    // If impersonating, redirect to user dashboard
+    if (isImpersonating) {
+      return NextResponse.redirect(new URL('/dashboard', nextUrl));
+    }
+    // If not admin, redirect to user dashboard
+    if (userRole?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/dashboard', nextUrl));
+    }
   }
   
   // User-only routes protection
-  if (
-    nextUrl.pathname.startsWith('/dashboard') &&
-    userRole?.role === 'admin'
-  ) {
-    return NextResponse.redirect(new URL('/admin', nextUrl));
+  if (nextUrl.pathname.startsWith('/dashboard')) {
+    // If admin but not impersonating, redirect to admin dashboard
+    if (userRole?.role === 'admin' && !isImpersonating) {
+      return NextResponse.redirect(new URL('/admin', nextUrl));
+    }
   }
 
   // Redirect unauthenticated users to sign-in page

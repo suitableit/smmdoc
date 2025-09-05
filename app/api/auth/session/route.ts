@@ -18,7 +18,10 @@ export async function GET(req: NextRequest) {
         name: session.user.name,
         email: session.user.email,
         image: session.user.image,
-        role: session.user.role
+        role: session.user.role,
+        username: session.user.username,
+        isImpersonating: session.user.isImpersonating || false,
+        originalAdminId: session.user.originalAdminId || null
       },
       expires: session.expires
     });
