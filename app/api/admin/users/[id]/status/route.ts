@@ -37,12 +37,24 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { status } = body;
+    const { status, suspensionDuration } = body;
 
     if (!status || !['active', 'suspended', 'banned'].includes(status)) {
       return NextResponse.json(
         {
           error: 'Valid status is required (active, suspended, or banned)',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate suspension duration if status is suspended
+    if (status === 'suspended' && !suspensionDuration) {
+      return NextResponse.json(
+        {
+          error: 'Suspension duration is required when suspending a user',
           success: false,
           data: null
         },
@@ -79,17 +91,42 @@ export async function PUT(
       );
     }
 
+    // Calculate suspension end time if status is suspended
+    let suspendedUntil: Date | null = null;
+    if (status === 'suspended' && suspensionDuration) {
+      const now = new Date();
+      const durationMap: { [key: string]: number } = {
+        '24 hours': 24 * 60 * 60 * 1000,
+        '48 hours': 48 * 60 * 60 * 1000,
+        '72 hours': 72 * 60 * 60 * 1000,
+        '7 days': 7 * 24 * 60 * 60 * 1000,
+        '30 days': 30 * 24 * 60 * 60 * 1000,
+        '3 months': 90 * 24 * 60 * 60 * 1000,
+        '6 months': 180 * 24 * 60 * 60 * 1000,
+        '1 year': 365 * 24 * 60 * 60 * 1000,
+      };
+      
+      const durationMs = durationMap[suspensionDuration];
+      if (durationMs) {
+        suspendedUntil = new Date(now.getTime() + durationMs);
+      }
+    }
+
     // Update user status and invalidate sessions if suspended or banned
     const updatedUser = await db.$transaction(async (prisma) => {
       // Update user status
       const user = await prisma.user.update({
         where: { id: userId },
-        data: { status },
+        data: { 
+          status,
+          suspendedUntil: status === 'suspended' ? suspendedUntil : null
+        },
         select: {
           id: true,
           username: true,
           email: true,
           status: true,
+          suspendedUntil: true,
           updatedAt: true,
         }
       });
@@ -191,6 +228,7 @@ export async function GET(
         username: true,
         email: true,
         status: true,
+        suspendedUntil: true,
         role: true,
         updatedAt: true,
       }

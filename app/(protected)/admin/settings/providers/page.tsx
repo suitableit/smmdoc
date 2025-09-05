@@ -49,9 +49,6 @@ const Toast = ({
   onClose: () => void;
 }) => (
   <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheck className="toast-icon" />}
-    {type === 'error' && <FaTimes className="toast-icon" />}
-    {type === 'info' && <FaExclamationTriangle className="toast-icon" />}
     <span className="font-medium">{message}</span>
     <button onClick={onClose} className="toast-close">
       <FaTimes className="toast-close-icon" />
