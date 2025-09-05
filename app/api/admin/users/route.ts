@@ -46,6 +46,11 @@ export async function GET(request: NextRequest) {
       if (status === 'deleted') {
         // If specifically requesting deleted users, override the default filter
         whereClause.status = 'deleted';
+      } else if (status === 'pending') {
+        // For pending users, filter by emailVerified being null
+        whereClause.emailVerified = null;
+        // Keep the not deleted filter
+        whereClause.status = { not: 'deleted' };
       } else {
         // For other statuses, combine with not deleted filter
         whereClause.status = { not: 'deleted', equals: status };
