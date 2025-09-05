@@ -64,7 +64,43 @@ export const login = async (values: z.infer<typeof signInSchema> & { recaptchaTo
   }
 
   if (existingUser.status === 'suspended') {
-    return { success: false, error: "You're suspended from our platform! Please contact support." };
+    // Check if suspension has expired
+    if (existingUser.suspendedUntil && new Date() > existingUser.suspendedUntil) {
+      // Suspension has expired, automatically reactivate the user
+      await db.user.update({
+        where: { id: existingUser.id },
+        data: {
+          status: 'active',
+          suspendedUntil: null
+        }
+      });
+    } else {
+      // User is still suspended, calculate remaining time and show detailed message
+      let suspensionMessage = "You're suspended from our platform!";
+      
+      if (existingUser.suspendedUntil) {
+        const now = new Date();
+        const suspendedUntil = new Date(existingUser.suspendedUntil);
+        const diffMs = suspendedUntil.getTime() - now.getTime();
+        
+        if (diffMs > 0) {
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          
+          if (diffDays > 0) {
+            suspensionMessage += ` Your suspension will be lifted in ${diffDays} day${diffDays > 1 ? 's' : ''} and ${diffHours} hour${diffHours > 1 ? 's' : ''}.`;
+          } else if (diffHours > 0) {
+            suspensionMessage += ` Your suspension will be lifted in ${diffHours} hour${diffHours > 1 ? 's' : ''} and ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}.`;
+          } else {
+            suspensionMessage += ` Your suspension will be lifted in ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}.`;
+          }
+        }
+      }
+      
+      suspensionMessage += " Please contact support if you have any questions.";
+      return { success: false, error: suspensionMessage };
+    }
   }
 
   if (!existingUser.emailVerified) {
@@ -258,7 +294,43 @@ export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
   }
 
   if (existingUser.status === 'suspended') {
-    return { success: false, error: "You're suspended from our platform! Please contact support." };
+    // Check if suspension has expired
+    if (existingUser.suspendedUntil && new Date() > existingUser.suspendedUntil) {
+      // Suspension has expired, automatically reactivate the user
+      await db.user.update({
+        where: { id: existingUser.id },
+        data: {
+          status: 'active',
+          suspendedUntil: null
+        }
+      });
+    } else {
+      // User is still suspended, calculate remaining time and show detailed message
+      let suspensionMessage = "You're suspended from our platform!";
+      
+      if (existingUser.suspendedUntil) {
+        const now = new Date();
+        const suspendedUntil = new Date(existingUser.suspendedUntil);
+        const diffMs = suspendedUntil.getTime() - now.getTime();
+        
+        if (diffMs > 0) {
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          
+          if (diffDays > 0) {
+            suspensionMessage += ` Your suspension will be lifted in ${diffDays} day${diffDays > 1 ? 's' : ''} and ${diffHours} hour${diffHours > 1 ? 's' : ''}.`;
+          } else if (diffHours > 0) {
+            suspensionMessage += ` Your suspension will be lifted in ${diffHours} hour${diffHours > 1 ? 's' : ''} and ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}.`;
+          } else {
+            suspensionMessage += ` Your suspension will be lifted in ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}.`;
+          }
+        }
+      }
+      
+      suspensionMessage += " Please contact support if you have any questions.";
+      return { success: false, error: suspensionMessage };
+    }
   }
 
   try {

@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
         dollarRate: true,
         role: true,
         status: true,
+        suspendedUntil: true,
         emailVerified: true,
         createdAt: true,
         updatedAt: true,

@@ -73,6 +73,7 @@ interface User {
   lastLoginAt?: string;
   emailVerified: boolean;
   role: 'user' | 'admin' | 'moderator';
+  suspendedUntil?: string;
 }
 
 interface UserStats {
@@ -155,6 +156,8 @@ interface UpdateStatusModalProps {
   onClose: () => void;
   onConfirm: () => void;
   isLoading: boolean;
+  suspensionDuration?: string;
+  onSuspensionDurationChange?: (value: string) => void;
 }
 
 interface EditDiscountModalProps {
@@ -316,6 +319,7 @@ const UsersListPage = () => {
     currentStatus: '',
   });
   const [newStatus, setNewStatus] = useState('');
+  const [suspensionDuration, setSuspensionDuration] = useState('');
   const [editDiscountDialog, setEditDiscountDialog] = useState<{
     open: boolean;
     userId: number;
@@ -391,9 +395,18 @@ const UsersListPage = () => {
 
       if (result.success) {
         // Client-side filter as backup to ensure no admins slip through
-        const filteredUsers = (result.data || []).filter(
+        let filteredUsers = (result.data || []).filter(
           (user: User) => user.role === 'user'
         );
+        
+        // Apply client-side filtering for 'pending' status based on emailVerified
+        if (statusFilter === 'pending') {
+          filteredUsers = filteredUsers.filter((user: User) => !user.emailVerified);
+        } else if (statusFilter === 'active' && statusFilter !== 'all') {
+          // For 'active' filter, show users with emailVerified = true AND status = 'active'
+          filteredUsers = filteredUsers.filter((user: User) => user.emailVerified && user.status === 'active');
+        }
+        
         setUsers(filteredUsers);
         setPagination((prev) => ({
           ...prev,
@@ -579,11 +592,18 @@ const UsersListPage = () => {
 
   // Handle user status update
   const handleStatusUpdate = useCallback(
-    async (userId: number, newStatus: string) => {
+    async (userId: number, newStatus: string, duration?: string) => {
+      const requestBody: any = { status: newStatus };
+      
+      // Add suspension duration if status is suspended and duration is provided
+      if (newStatus === 'suspended' && duration) {
+        requestBody.suspensionDuration = duration;
+      }
+      
       const success = await handleApiAction(
         `/api/admin/users/${userId}/status`,
         'PUT',
-        { status: newStatus },
+        requestBody,
         `User status updated to ${newStatus}`
       );
 
@@ -759,6 +779,8 @@ const UsersListPage = () => {
       email: editUserFormData.email,
       balance: parseFloat(editUserFormData.balance) || 0,
       emailVerified: editUserFormData.emailVerified,
+      // Automatically set status to 'active' when email is verified
+      status: editUserFormData.emailVerified ? 'active' : 'pending',
       ...(editUserFormData.password && { password: editUserFormData.password }),
     };
 
@@ -804,12 +826,44 @@ const UsersListPage = () => {
     [users]
   );
 
+  // Helper function to calculate suspension duration from suspendedUntil
+  const calculateSuspensionDuration = (suspendedUntil: string): string => {
+    const suspendedDate = new Date(suspendedUntil);
+    const now = new Date();
+    const diffMs = suspendedDate.getTime() - now.getTime();
+    
+    if (diffMs <= 0) return ''; // Suspension has expired
+    
+    const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const diffMonths = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30));
+    
+    // Match the closest suspension option
+    if (diffHours <= 24) return '24 hours';
+    if (diffHours <= 48) return '48 hours';
+    if (diffHours <= 72) return '72 hours';
+    if (diffDays <= 7) return '7 days';
+    if (diffDays <= 30) return '30 days';
+    if (diffMonths <= 3) return '3 months';
+    if (diffMonths <= 6) return '6 months';
+    return '1 year';
+  };
+
   const openUpdateStatusDialog = useCallback(
     (userId: number, currentStatus: string) => {
+      const user = users.find((u) => u.id === userId);
       setUpdateStatusDialog({ open: true, userId, currentStatus });
       setNewStatus(currentStatus);
+      
+      // If user is suspended and has suspendedUntil, calculate current duration
+      if (currentStatus === 'suspended' && user?.suspendedUntil) {
+        const currentDuration = calculateSuspensionDuration(user.suspendedUntil);
+        setSuspensionDuration(currentDuration);
+      } else {
+        setSuspensionDuration('');
+      }
     },
-    []
+    [users]
   );
 
   const openEditDiscountDialog = useCallback(
@@ -1038,6 +1092,25 @@ const UsersListPage = () => {
                     }`}
                   >
                     {stats.activeUsers.toLocaleString()}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('pending')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'pending'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Pending
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'pending'
+                        ? 'bg-white/20'
+                        : 'bg-orange-100 text-orange-700'
+                    }`}
+                  >
+                    {(stats.totalUsers - stats.activeUsers - stats.suspendedUsers - stats.bannedUsers).toLocaleString()}
                   </span>
                 </button>
                 <button
@@ -1432,6 +1505,8 @@ const UsersListPage = () => {
           currentStatus={updateStatusDialog.currentStatus}
           newStatus={newStatus}
           onStatusChange={setNewStatus}
+          suspensionDuration={suspensionDuration}
+          onSuspensionDurationChange={setSuspensionDuration}
           onClose={() => {
             setUpdateStatusDialog({
               open: false,
@@ -1439,9 +1514,14 @@ const UsersListPage = () => {
               currentStatus: '',
             });
             setNewStatus('');
+            setSuspensionDuration('');
           }}
           onConfirm={() => {
-            handleStatusUpdate(updateStatusDialog.userId, newStatus).then(
+            handleStatusUpdate(
+              updateStatusDialog.userId, 
+              newStatus, 
+              newStatus === 'suspended' ? suspensionDuration : undefined
+            ).then(
               (success) => {
                 if (success) {
                   setUpdateStatusDialog({
@@ -1450,6 +1530,7 @@ const UsersListPage = () => {
                     currentStatus: '',
                   });
                   setNewStatus('');
+                  setSuspensionDuration('');
                 }
               }
             );
@@ -1594,77 +1675,97 @@ const UserActions: React.FC<UserActionsProps> = ({
                 <FaEdit className="h-3 w-3" />
                 Edit User
               </button>
-              <button
-                onClick={() => {
-                  onEditBalance(user.id);
-                  setIsOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-              >
-                <FaCoins className="h-3 w-3" />
-                Add/Deduct Balance
-              </button>
-              <button
-                onClick={() => {
-                  onEditDiscount(user.id, user.servicesDiscount || 0);
-                  setIsOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-              >
-                <FaGift className="h-3 w-3" />
-                Edit Discount
-              </button>
-              <button
-                onClick={() => {
-                  onChangeRole(user.id, user.role || 'user');
-                  setIsOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-              >
-                <FaUserCheck className="h-3 w-3" />
-                Change Role
-              </button>
-              <button
-                onClick={() => {
-                  onResetSpecialPricing(user.id);
-                  setIsOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-              >
-                <FaTimesCircle className="h-3 w-3" />
-                Reset Special Pricing
-              </button>
-              <button
-                onClick={() => {
-                  onSetNewApiKey(user.id);
-                  setIsOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-              >
-                <FaSync className="h-3 w-3" />
-                Set New API Key
-              </button>
-              <button
-                onClick={() => {
-                  onUpdateStatus(user.id, user.status);
-                  setIsOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-              >
-                <FaUserCheck className="h-3 w-3" />
-                Update User Status
-              </button>
-              <hr className="my-1" />
-              <button
-                onClick={() => {
-                  onDelete(user.id);
-                  setIsOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
-              >
-                <FaTrash className="h-3 w-3" />
-                Delete User
-              </button>
+              
+              {/* Show Update User Status for suspended and banned users */}
+              {(user.status === 'suspended' || user.status === 'banned') && (
+                <button
+                  onClick={() => {
+                    onUpdateStatus(user.id, user.status);
+                    setIsOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <FaUserCheck className="h-3 w-3" />
+                  Update User Status
+                </button>
+              )}
+              
+              {/* Show all options for pending users (emailVerified false) and active users */}
+              {user.emailVerified && user.status !== 'suspended' && user.status !== 'banned' && (
+                <>
+                  <button
+                    onClick={() => {
+                      onEditBalance(user.id);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <FaCoins className="h-3 w-3" />
+                    Add/Deduct Balance
+                  </button>
+                  <button
+                    onClick={() => {
+                      onEditDiscount(user.id, user.servicesDiscount || 0);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <FaGift className="h-3 w-3" />
+                    Edit Discount
+                  </button>
+                  <button
+                    onClick={() => {
+                      onChangeRole(user.id, user.role || 'user');
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <FaUserCheck className="h-3 w-3" />
+                    Change Role
+                  </button>
+                  <button
+                    onClick={() => {
+                      onResetSpecialPricing(user.id);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <FaTimesCircle className="h-3 w-3" />
+                    Reset Special Pricing
+                  </button>
+                  <button
+                    onClick={() => {
+                      onSetNewApiKey(user.id);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <FaSync className="h-3 w-3" />
+                    Set New API Key
+                  </button>
+                  <button
+                    onClick={() => {
+                      onUpdateStatus(user.id, user.status);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <FaUserCheck className="h-3 w-3" />
+                    Update User Status
+                  </button>
+                  <hr className="my-1" />
+                  <button
+                    onClick={() => {
+                      onDelete(user.id);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <FaTrash className="h-3 w-3" />
+                    Delete User
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -1729,6 +1830,44 @@ const UserCard: React.FC<UserCardProps> = ({
             style={{ color: 'var(--text-primary)' }}
           >
             {user.username || 'null'}
+          </div>
+        </div>
+        <div className="text-right">
+          <div
+            className="text-xs font-medium mb-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Status
+          </div>
+          <div className="flex items-center justify-end">
+            {user.emailVerified ? (
+              <>
+                <FaCheckCircle className="h-3 w-3 text-green-500" />
+                <span className="text-xs text-green-600 ml-1">Active</span>
+              </>
+            ) : (
+              <>
+                <FaTimesCircle className="h-3 w-3 text-yellow-500" />
+                <span className="text-xs text-yellow-600 ml-1">Pending</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div>
+          <div
+            className="text-xs font-medium mb-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Role
+          </div>
+          <div
+            className="font-medium text-sm capitalize"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {user.role || 'user'}
           </div>
         </div>
         <div className="text-right">
@@ -2210,8 +2349,21 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
   onClose,
   onConfirm,
   isLoading,
+  suspensionDuration,
+  onSuspensionDurationChange,
 }) => {
   if (!isOpen) return null;
+
+  const suspensionOptions = [
+    { value: '24 hours', label: '24 hours' },
+    { value: '48 hours', label: '48 hours' },
+    { value: '72 hours', label: '72 hours' },
+    { value: '7 days', label: '7 days' },
+    { value: '30 days', label: '30 days' },
+    { value: '3 months', label: '3 months' },
+    { value: '6 months', label: '6 months' },
+    { value: '1 year', label: '1 year' },
+  ];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2230,6 +2382,40 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
             <option value="banned">Banned</option>
           </select>
         </div>
+        
+        {(newStatus === 'suspended' || (currentStatus === 'suspended' && newStatus === currentStatus)) && (
+          <div className="mb-4">
+            <label className="form-label mb-2">
+              Suspension Duration
+              {currentStatus === 'suspended' && newStatus === currentStatus && (
+                <span className="text-xs text-gray-500 ml-2">(Current Duration)</span>
+              )}
+            </label>
+            <select
+              value={suspensionDuration || ''}
+              onChange={(e) => onSuspensionDurationChange?.(e.target.value)}
+              className={`form-field w-full pl-4 pr-10 py-3 border rounded-lg focus:outline-none shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none ${
+                currentStatus === 'suspended' && newStatus === currentStatus
+                  ? 'bg-gray-100 dark:bg-gray-600 border-gray-200 dark:border-gray-500 cursor-not-allowed'
+                  : 'bg-white dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent cursor-pointer'
+              }`}
+              disabled={isLoading || (currentStatus === 'suspended' && newStatus === currentStatus)}
+            >
+              <option value="">
+                {currentStatus === 'suspended' && newStatus === currentStatus
+                  ? (suspensionDuration ? suspensionOptions.find(opt => opt.value === suspensionDuration)?.label || 'Unknown Duration' : 'No Duration Set')
+                  : 'Select duration...'
+                }
+              </option>
+              {!(currentStatus === 'suspended' && newStatus === currentStatus) && suspensionOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        
         <div className="flex gap-2 justify-end">
           <button
             onClick={onClose}
@@ -2241,7 +2427,7 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
           <button
             onClick={onConfirm}
             className="btn btn-primary"
-            disabled={isLoading}
+            disabled={isLoading || (newStatus === 'suspended' && !suspensionDuration)}
           >
             {isLoading ? 'Updating...' : 'Update'}
           </button>

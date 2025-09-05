@@ -652,6 +652,7 @@ model user {
   servicesDiscount                              Float                  @default(0)
   specialPricing                                Boolean                @default(false)
   status                                        String                 @default("active")
+  suspendedUntil                                DateTime?
   apiKey                                        String?                @unique(map: "User_apiKey_key")
   isTwoFactorEnabled                            Boolean                @default(false)
   createdAt                                     DateTime               @default(now())
