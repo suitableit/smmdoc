@@ -655,7 +655,7 @@ model user {
   apiKey                                        String?                @unique(map: "User_apiKey_key")
   isTwoFactorEnabled                            Boolean                @default(false)
   createdAt                                     DateTime               @default(now())
-  updatedAt                                     DateTime
+  updatedAt                                     DateTime               @updatedAt
   lastLoginAt                                   DateTime?
   balanceUSD                                    Float                  @default(0)
   preferredCurrency                             String                 @default("USD")

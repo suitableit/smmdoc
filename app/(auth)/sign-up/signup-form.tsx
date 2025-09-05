@@ -36,13 +36,37 @@ export default function SignUpForm() {
   // Create dynamic schema based on name field setting
   const dynamicSchema = useMemo(() => {
     if (settingsLoading || !userSettings) {
-      return signUpSchema; // Use default schema while loading
+      return createSignUpSchema(false); // Use optional name field while loading
     }
     return createSignUpSchema(userSettings.nameFieldEnabled);
   }, [userSettings, settingsLoading]);
 
+  // Create a key to force form recreation when schema changes
+  const formKey = useMemo(() => {
+    return `form-${settingsLoading}-${userSettings?.nameFieldEnabled}`;
+  }, [settingsLoading, userSettings?.nameFieldEnabled]);
+
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  // Handle email input change
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    form.setValue('email', value, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true
+    });
+
+    // Only reset email status if there's a validation message showing
+    if (emailStatus.message) {
+      setEmailStatus({
+        checking: false,
+        available: null,
+        message: ''
+      });
+    }
   };
 
   // Username validation states
@@ -69,7 +93,7 @@ export default function SignUpForm() {
 
   const form = useForm<SignUpSchema>({
     mode: 'all',
-    resolver: zodResolver(signUpSchema), // Use default schema for now
+    resolver: zodResolver(dynamicSchema), // Use dynamic schema based on settings
     defaultValues: signUpDefaultValues,
   });
 
@@ -189,53 +213,17 @@ export default function SignUpForm() {
       shouldTouch: true
     });
 
-    // Reset username status when user types
-    setUsernameStatus({
-      checking: false,
-      available: null,
-      message: ''
-    });
-  };
-
-  // Debounced username check
-  useEffect(() => {
-    const username = form.watch('username');
-
-    if (!username || username.length < 3) {
+    // Only reset username status if there's a validation message showing
+    if (usernameStatus.message) {
       setUsernameStatus({
         checking: false,
         available: null,
         message: ''
       });
-      return;
     }
+  };
 
-    const timer = setTimeout(() => {
-      checkUsernameAvailability(username);
-    }, 500); // 500ms delay
-
-    return () => clearTimeout(timer);
-  }, [form.watch('username'), checkUsernameAvailability]);
-
-  // Debounced email check
-  useEffect(() => {
-    const email = form.watch('email');
-
-    if (!email || !email.includes('@')) {
-      setEmailStatus({
-        checking: false,
-        available: null,
-        message: ''
-      });
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      checkEmailAvailability(email);
-    }, 500); // 500ms delay
-
-    return () => clearTimeout(timer);
-  }, [form.watch('email'), checkEmailAvailability]);
+  // Removed live validation - validation now happens only on form submission
 
   const onSubmit: SubmitHandler<SignUpSchema> = async (values) => {
     setError('');
@@ -258,20 +246,20 @@ export default function SignUpForm() {
       submitData.recaptchaToken = recaptchaToken;
     }
 
-    // Check if username is available before submitting
-    if (usernameStatus.available === false) {
-      setError('Please choose a different username');
-      return;
-    }
+    // Reset validation status before checking
+    setUsernameStatus({
+      checking: false,
+      available: null,
+      message: ''
+    });
+    setEmailStatus({
+      checking: false,
+      available: null,
+      message: ''
+    });
 
-    // Check if email is available before submitting
-    if (emailStatus.available === false) {
-      setError('Please choose a different email address');
-      return;
-    }
-
-    // If username status is still checking or unknown, check it now
-    if (usernameStatus.available === null && values.username) {
+    // Check username availability on form submission
+    if (values.username) {
       setUsernameStatus({
         checking: true,
         available: null,
@@ -311,6 +299,47 @@ export default function SignUpForm() {
       }
     }
 
+    // Check email availability on form submission
+    if (values.email) {
+      setEmailStatus({
+        checking: true,
+        available: null,
+        message: 'Checking email availability...'
+      });
+
+      try {
+        const response = await fetch('/api/auth/check-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: values.email }),
+        });
+
+        const result = await response.json();
+
+        if (!result.available) {
+          setEmailStatus({
+            checking: false,
+            available: false,
+            message: result.error || 'Email is not available'
+          });
+          setError(result.error || 'Email is not available');
+          return;
+        }
+
+        setEmailStatus({
+          checking: false,
+          available: true,
+          message: 'Email is available'
+        });
+      } catch (error) {
+        console.error('Error checking email:', error);
+        setError('Error checking email availability');
+        return;
+      }
+    }
+
     startTransition(() => {
       register(submitData)
         .then((data) => {
@@ -343,7 +372,7 @@ export default function SignUpForm() {
         </p>
       </div>
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <form key={formKey} onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <label
             htmlFor="username"
@@ -365,19 +394,14 @@ export default function SignUpForm() {
               className={`w-full pl-12 pr-12 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
                 usernameStatus.available === false
                   ? 'border-red-500 dark:border-red-400'
-                  : usernameStatus.available === true
-                  ? 'border-green-500 dark:border-green-400'
                   : 'border-gray-300 dark:border-gray-600'
               }`}
             />
 
-            {/* Username validation status indicator */}
+            {/* Username validation status indicator - only show warnings */}
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               {usernameStatus.checking && (
                 <FaSpinner className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
-              )}
-              {!usernameStatus.checking && usernameStatus.available === true && (
-                <FaCheck className="w-4 h-4 text-green-500 dark:text-green-400" />
               )}
               {!usernameStatus.checking && usernameStatus.available === false && (
                 <FaTimes className="w-4 h-4 text-red-500 dark:text-red-400" />
@@ -388,15 +412,9 @@ export default function SignUpForm() {
             Only lowercase letters, numbers, dots (.) and underscores (_) are allowed
           </p>
 
-          {/* Username validation message */}
-          {usernameStatus.message && (
-            <p className={`text-sm mt-1 transition-colors duration-200 ${
-              usernameStatus.available === true
-                ? 'text-green-500 dark:text-green-400'
-                : usernameStatus.available === false
-                ? 'text-red-500 dark:text-red-400'
-                : 'text-gray-500 dark:text-gray-400'
-            }`}>
+          {/* Username validation message - only show warnings */}
+          {usernameStatus.message && usernameStatus.available === false && (
+            <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
               {usernameStatus.message}
             </p>
           )}
@@ -409,7 +427,7 @@ export default function SignUpForm() {
         </div>
 
         {/* Name field - conditionally shown based on admin settings */}
-        {(!settingsLoading && userSettings?.nameFieldEnabled !== false) && (
+        {(settingsLoading || userSettings?.nameFieldEnabled !== false) && (
           <div>
             <label
               htmlFor="name"
@@ -454,23 +472,19 @@ export default function SignUpForm() {
               id="email"
               placeholder="eg: mail@email.com"
               disabled={isPending}
-              {...form.register('email')}
+              value={form.watch('email') || ''}
+              onChange={handleEmailChange}
               className={`w-full pl-12 pr-12 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
                 emailStatus.available === false
                   ? 'border-red-500 dark:border-red-400'
-                  : emailStatus.available === true
-                  ? 'border-green-500 dark:border-green-400'
                   : 'border-gray-300 dark:border-gray-600'
               }`}
             />
 
-            {/* Email validation status indicator */}
+            {/* Email validation status indicator - only show warnings */}
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               {emailStatus.checking && (
                 <FaSpinner className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
-              )}
-              {!emailStatus.checking && emailStatus.available === true && (
-                <FaCheck className="w-4 h-4 text-green-500 dark:text-green-400" />
               )}
               {!emailStatus.checking && emailStatus.available === false && (
                 <FaTimes className="w-4 h-4 text-red-500 dark:text-red-400" />
@@ -478,15 +492,9 @@ export default function SignUpForm() {
             </div>
           </div>
 
-          {/* Email validation message */}
-          {emailStatus.message && (
-            <p className={`text-sm mt-1 transition-colors duration-200 ${
-              emailStatus.available === true
-                ? 'text-green-500 dark:text-green-400'
-                : emailStatus.available === false
-                ? 'text-red-500 dark:text-red-400'
-                : 'text-gray-500 dark:text-gray-400'
-            }`}>
+          {/* Email validation message - only show warnings */}
+          {emailStatus.message && emailStatus.available === false && (
+            <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
               {emailStatus.message}
             </p>
           )}
@@ -514,6 +522,7 @@ export default function SignUpForm() {
               id="password"
               placeholder="e.g: ********"
               disabled={isPending}
+              autoComplete="new-password"
               {...form.register('password')}
               className="w-full pl-12 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
@@ -551,6 +560,7 @@ export default function SignUpForm() {
               id="confirmPassword"
               placeholder="e.g: ********"
               disabled={isPending}
+              autoComplete="new-password"
               {...form.register('confirmPassword')}
               className="w-full pl-12 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
