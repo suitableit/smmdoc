@@ -188,7 +188,10 @@ export async function PUT(
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
     if (balance !== undefined) updateData.balance = parseFloat(balance);
-    if (emailVerified !== undefined) updateData.emailVerified = emailVerified;
+    if (emailVerified !== undefined) {
+      // Convert boolean to DateTime or null
+      updateData.emailVerified = emailVerified ? new Date() : null;
+    }
     if (role !== undefined) updateData.role = role;
     if (status !== undefined) updateData.status = status;
     

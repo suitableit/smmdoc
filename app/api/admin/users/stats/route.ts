@@ -96,20 +96,51 @@ export async function GET(req: NextRequest) {
       })
     ]);
 
-    // Get status breakdown (since User model doesn't have status field, we'll create a mock breakdown)
-    // For now, we'll consider all users as 'active' since there's no status field
-    const activeUsersCount = await db.user.count({
-      where: {
-        role: roleFilter as any,
-        ...dateFilter
-      }
-    });
+    // Get status breakdown - count users by their effective status (considering emailVerified)
+    const [verifiedActiveUsers, verifiedSuspendedUsers, verifiedBannedUsers, unverifiedUsers] = await Promise.all([
+      // Verified active users
+      db.user.count({
+        where: {
+          role: roleFilter as any,
+          emailVerified: { not: null },
+          status: 'active',
+          ...dateFilter
+        }
+      }),
+      // Verified suspended users
+      db.user.count({
+        where: {
+          role: roleFilter as any,
+          emailVerified: { not: null },
+          status: 'suspended',
+          ...dateFilter
+        }
+      }),
+      // Verified banned users
+      db.user.count({
+        where: {
+          role: roleFilter as any,
+          emailVerified: { not: null },
+          status: 'banned',
+          ...dateFilter
+        }
+      }),
+      // Unverified users (all count as pending)
+      db.user.count({
+        where: {
+          role: roleFilter as any,
+          emailVerified: null,
+          ...dateFilter
+        }
+      })
+    ]);
 
-    const statusBreakdown = [
-      { status: 'active', _count: { id: activeUsersCount } },
-      { status: 'inactive', _count: { id: 0 } },
-      { status: 'suspended', _count: { id: 0 } },
-      { status: 'banned', _count: { id: 0 } }
+    // Create complete status breakdown with proper pending count
+    const completeStatusBreakdown = [
+      { status: 'active', _count: { id: verifiedActiveUsers } },
+      { status: 'suspended', _count: { id: verifiedSuspendedUsers } },
+      { status: 'banned', _count: { id: verifiedBannedUsers } },
+      { status: 'pending', _count: { id: unverifiedUsers } }
     ];
 
     // Get daily registration trends for the last 30 days
@@ -200,7 +231,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Format status breakdown for easier consumption
-    const formattedStatusBreakdown = statusBreakdown.map(status => ({
+    const formattedStatusBreakdown = completeStatusBreakdown.map(status => ({
       status: status.status || 'active',
       count: status._count.id
     }));

@@ -71,7 +71,7 @@ interface User {
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
-  emailVerified: boolean;
+  emailVerified: string | null;
   role: 'user' | 'admin' | 'moderator';
   suspendedUntil?: string;
 }
@@ -81,6 +81,7 @@ interface UserStats {
   activeUsers: number;
   suspendedUsers: number;
   bannedUsers: number;
+  pendingUsers: number;
   totalBalance: number;
   totalSpent: number;
   todayRegistrations: number;
@@ -261,6 +262,7 @@ const UsersListPage = () => {
     activeUsers: 0,
     suspendedUsers: 0,
     bannedUsers: 0,
+    pendingUsers: 0,
     totalBalance: 0,
     totalSpent: 0,
     todayRegistrations: 0,
@@ -357,7 +359,7 @@ const UsersListPage = () => {
     name: '',
     email: '',
     balance: '',
-    emailVerified: false,
+    emailVerified: null,
     password: '',
   });
 
@@ -369,6 +371,7 @@ const UsersListPage = () => {
     () => [
       { key: 'all', label: 'All', count: stats.totalUsers },
       { key: 'active', label: 'Active', count: stats.activeUsers },
+      { key: 'pending', label: 'Pending', count: stats.pendingUsers },
       { key: 'suspended', label: 'Suspended', count: stats.suspendedUsers },
       { key: 'banned', label: 'Banned', count: stats.bannedUsers },
     ],
@@ -403,7 +406,7 @@ const UsersListPage = () => {
         if (statusFilter === 'pending') {
           filteredUsers = filteredUsers.filter((user: User) => !user.emailVerified);
         } else if (statusFilter === 'active' && statusFilter !== 'all') {
-          // For 'active' filter, show users with emailVerified = true AND status = 'active'
+          // For 'active' filter, show users with emailVerified not null AND status = 'active'
           filteredUsers = filteredUsers.filter((user: User) => user.emailVerified && user.status === 'active');
         }
         
@@ -452,6 +455,7 @@ const UsersListPage = () => {
           activeUsers: statusBreakdown.active || 0,
           suspendedUsers: statusBreakdown.suspended || 0,
           bannedUsers: statusBreakdown.banned || 0,
+          pendingUsers: statusBreakdown.pending || 0,
           totalBalance: data.overview?.totalBalance || 0,
           totalSpent: data.overview?.totalSpent || 0,
           todayRegistrations: data.dailyTrends?.[0]?.registrations || 0,
@@ -543,18 +547,18 @@ const UsersListPage = () => {
           body: body ? JSON.stringify(body) : undefined,
         });
 
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
-
         const result = await response.json();
 
-        if (result.success) {
+        if (response.ok && result.success) {
           if (successMessage) showToast(successMessage, 'success');
           await fetchUsers();
           await fetchStats();
           return true;
         } else {
-          throw new Error(result.error || 'Operation failed');
+          // Handle specific error messages from the API
+          const errorMessage = result.error || 'Operation failed';
+          showToast(errorMessage, 'error');
+          return false;
         }
       } catch (error) {
         console.error('API action error:', error);
@@ -741,7 +745,7 @@ const UsersListPage = () => {
         name: currentUser.name || '',
         email: currentUser.email || '',
         balance: (currentUser.balance || 0).toString(),
-        emailVerified: currentUser.emailVerified || false,
+        emailVerified: !!currentUser.emailVerified,
         password: '',
       });
     },
@@ -1098,7 +1102,7 @@ const UsersListPage = () => {
                   onClick={() => setStatusFilter('pending')}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'pending'
-                      ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
@@ -1107,17 +1111,17 @@ const UsersListPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'pending'
                         ? 'bg-white/20'
-                        : 'bg-orange-100 text-orange-700'
+                        : 'bg-yellow-100 text-yellow-700'
                     }`}
                   >
-                    {(stats.totalUsers - stats.activeUsers - stats.suspendedUsers - stats.bannedUsers).toLocaleString()}
+                    {stats.pendingUsers.toLocaleString()}
                   </span>
                 </button>
                 <button
                   onClick={() => setStatusFilter('suspended')}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'suspended'
-                      ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
@@ -1126,7 +1130,7 @@ const UsersListPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'suspended'
                         ? 'bg-white/20'
-                        : 'bg-yellow-100 text-yellow-700'
+                        : 'bg-orange-100 text-orange-700'
                     }`}
                   >
                     {stats.suspendedUsers.toLocaleString()}
@@ -1308,16 +1312,18 @@ const UsersListPage = () => {
                             <div className="flex items-center justify-start">
                               <span
                                 className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
-                                  user.status === 'active'
+                                  !user.emailVerified
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : user.status === 'active'
                                     ? 'bg-green-100 text-green-700'
                                     : user.status === 'suspended'
-                                    ? 'bg-yellow-100 text-yellow-700'
+                                    ? 'bg-orange-100 text-orange-700'
                                     : user.status === 'banned'
                                     ? 'bg-red-100 text-red-700'
                                     : 'bg-green-100 text-green-700'
                                 }`}
                               >
-                                {user.status || 'active'}
+                                {!user.emailVerified ? 'pending' : (user.status || 'active')}
                               </span>
                             </div>
                           </td>
