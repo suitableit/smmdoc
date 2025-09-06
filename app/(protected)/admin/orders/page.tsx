@@ -23,6 +23,9 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+import ProviderOrderStatus from '@/components/admin/ProviderOrderStatus';
+import ManualOrderCreation from '@/components/admin/ManualOrderCreation';
+import { toast } from 'react-hot-toast';
 
 // Dynamic imports for modal components
 const ChangeAllStatusModal = dynamic(() => import('@/components/admin/orders/modals/change-all-status'), {
@@ -114,6 +117,19 @@ interface Order {
   avg_time: string;
   seller: string;
   mode: string;
+  // Provider order fields
+  isProviderService?: boolean;
+  providerId?: string;
+  providerServiceId?: string;
+  providerOrderId?: string;
+  providerStatus?: string;
+  lastSyncAt?: string;
+  apiProvider?: {
+    id: string;
+    name: string;
+    apiUrl: string;
+    status: string;
+  };
 }
 
 interface OrderStats {
@@ -180,6 +196,32 @@ const AdminOrdersPage = () => {
   // Loading states
   const [statsLoading, setStatsLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
+
+  // Provider sync handler
+  const handleProviderSync = async (orderId: string) => {
+    try {
+      const response = await fetch('/api/admin/provider-sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderIds: [orderId] }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success('Provider sync completed successfully');
+        // Refresh orders after sync
+        await fetchOrders();
+      } else {
+        toast.error(result.error || 'Failed to sync provider order');
+      }
+    } catch (error) {
+      console.error('Error syncing provider order:', error);
+      toast.error('Failed to sync provider order');
+    }
+  };
 
   // New state for action modals
   const [editStartCountDialog, setEditStartCountDialog] = useState<{
@@ -724,6 +766,29 @@ const AdminOrdersPage = () => {
                 />
                 Refresh
               </button>
+
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/admin/provider-sync', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'sync_all' })
+                    });
+                    if (response.ok) {
+                      await fetchOrders();
+                      // Show success toast
+                    }
+                  } catch (error) {
+                    console.error('Provider sync failed:', error);
+                  }
+                }}
+                disabled={ordersLoading || statsLoading}
+                className="btn btn-secondary flex items-center gap-2 px-3 py-2.5"
+              >
+                <FaSync className="h-4 w-4" />
+                Sync Providers
+              </button>
             </div>
 
             {/* Right: Search Controls Only */}
@@ -1023,6 +1088,12 @@ const AdminOrdersPage = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
+                          Provider Status
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
                           Status
                         </th>
                         <th
@@ -1207,14 +1278,20 @@ const AdminOrdersPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
-                              {getStatusIcon(order.status)}
-                              <span className="text-xs font-medium capitalize">
-                                {order.status
-                                  ? order.status.replace('_', ' ')
-                                  : 'null'}
-                              </span>
-                            </div>
+                            <ProviderOrderStatus 
+                              order={{
+                                id: order.id.toString(),
+                                status: order.status,
+                                isProviderService: order.isProviderService,
+                                providerId: order.providerId,
+                                providerServiceId: order.providerServiceId,
+                                providerOrderId: order.providerOrderId,
+                                providerStatus: order.providerStatus,
+                                lastSyncAt: order.lastSyncAt,
+                                apiProvider: order.apiProvider
+                              }}
+                              onSync={handleProviderSync}
+                            />
                           </td>
                           <td className="p-3">
                             <div className="space-y-1">
@@ -1514,6 +1591,33 @@ const AdminOrdersPage = () => {
                             {order.category?.category_name || 'null'} •
                             Provider: {order.seller || 'null'}
                           </div>
+                          {/* Provider Order Status */}
+                          {order.isProviderService && (
+                            <div className="mt-2 p-2 bg-gray-50 rounded-lg border">
+                              <div className="text-xs font-medium text-gray-600 mb-1">
+                                Provider Order Status
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-mono bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                  ID: {order.providerOrderId || 'N/A'}
+                                </span>
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  order.providerStatus === 'Completed' ? 'bg-green-100 text-green-700' :
+                                  order.providerStatus === 'In progress' ? 'bg-yellow-100 text-yellow-700' :
+                                  order.providerStatus === 'Pending' ? 'bg-orange-100 text-orange-700' :
+                                  order.providerStatus === 'Canceled' ? 'bg-red-100 text-red-700' :
+                                  'bg-gray-100 text-gray-700'
+                                }`}>
+                                  {order.providerStatus || 'Unknown'}
+                                </span>
+                              </div>
+                              {order.lastSyncAt && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Last sync: {new Date(order.lastSyncAt).toLocaleString()}
+                                </div>
+                              )}
+                            </div>
+                          )}
                           {order.link ? (
                             <div className="flex items-center gap-1 mt-1">
                               <a

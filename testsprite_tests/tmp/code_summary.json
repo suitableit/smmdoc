@@ -1,0 +1,139 @@
+{
+  "tech_stack": [
+    "TypeScript",
+    "Next.js 15 (App Router)",
+    "React 19",
+    "NextAuth.js 5 (beta)",
+    "Prisma ORM 6",
+    "MySQL (mysql2)",
+    "TailwindCSS 3",
+    "SWR",
+    "Redux Toolkit"
+  ],
+  "features": [
+    {
+      "name": "Currencies: Enabled List",
+      "description": "Return enabled currencies and related client settings used across the UI.",
+      "files": [
+        "app/api/currencies/enabled/route.ts",
+        "data/currency-settings.json"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {"title": "Currencies API", "version": "1.0.0"},
+        "paths": {
+          "/api/currencies/enabled": {
+            "get": {
+              "summary": "Get enabled currencies",
+              "responses": {
+                "200": {"description": "Enabled currencies returned"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Public: Analytics Settings",
+      "description": "Public endpoint serving analytics and custom codes settings for the frontend.",
+      "files": [
+        "app/api/public/analytics-settings/route.ts",
+        "components/analytics-injector.tsx",
+        "components/CustomCodesInjector.tsx"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {"title": "Public Settings API", "version": "1.0.0"},
+        "paths": {
+          "/api/public/analytics-settings": {
+            "get": {"summary": "Get analytics settings", "responses": {"200": {"description": "Settings"}}}
+          },
+          "/api/public/custom-codes": {
+            "get": {"summary": "Get custom codes", "responses": {"200": {"description": "Codes"}}}
+          }
+        }
+      }
+    },
+    {
+      "name": "Auth: Session & NextAuth Routes",
+      "description": "Authentication with NextAuth (credentials/social), includes session introspection and logout.",
+      "files": [
+        "app/api/auth/[...nextauth]/route.ts",
+        "app/api/auth/session/route.ts",
+        "app/api/auth/logout/route.ts",
+        "auth.ts",
+        "auth.config.ts",
+        "middleware.ts"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {"title": "Auth API", "version": "1.0.0"},
+        "paths": {
+          "/api/auth/session": {"get": {"summary": "Get session", "responses": {"200": {"description": "Session info"}}}},
+          "/api/auth/logout": {"post": {"summary": "Logout current user", "responses": {"200": {"description": "Logged out"}}}}
+        }
+      }
+    },
+    {
+      "name": "Orders: Place To Provider",
+      "description": "Forward new user orders to external providers and log provider order id/status.",
+      "files": [
+        "app/api/orders/place-to-provider/route.ts",
+        "app/api/admin/providers/route.ts",
+        "app/api/admin/provider-sync/route.ts",
+        "app/api/cron/sync-provider-orders/route.ts"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {"title": "Orders Provider API", "version": "1.0.0"},
+        "paths": {
+          "/api/orders/place-to-provider": {
+            "post": {
+              "summary": "Place order to provider",
+              "requestBody": {"required": true},
+              "responses": {"200": {"description": "Placed"}, "400": {"description": "Validation error"}}
+            }
+          },
+          "/api/cron/sync-provider-orders": {"get": {"summary": "Cron sync status", "responses": {"200": {"description": "Synced"}}}}
+        }
+      }
+    },
+    {
+      "name": "Admin: Services & Providers",
+      "description": "Admin CRUD for services and providers, bulk update, toggle features, and import pipeline.",
+      "files": [
+        "app/api/admin/services/route.ts",
+        "app/api/admin/services/import/route.ts",
+        "app/api/admin/providers/route.ts",
+        "app/api/admin/providers/auto-sync/route.ts"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {"title": "Admin Services/Providers API", "version": "1.0.0"},
+        "paths": {
+          "/api/admin/services": {"get": {"summary": "List services"}},
+          "/api/admin/providers": {"get": {"summary": "List providers"}, "post": {"summary": "Create provider"}}
+        }
+      }
+    },
+    {
+      "name": "Payments: Create Charge & Verify",
+      "description": "Payment creation and verification flows (includes Uddoktapay webhook/verify endpoints).",
+      "files": [
+        "app/api/payment/create-charge/route.ts",
+        "app/api/payment/verify-payment/route.ts",
+        "app/api/payment/verify-transaction/route.ts",
+        "app/api/payment/webhook/route.ts"
+      ],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {"title": "Payments API", "version": "1.0.0"},
+        "paths": {
+          "/api/payment/create-charge": {"post": {"summary": "Create charge"}},
+          "/api/payment/verify-payment": {"post": {"summary": "Verify payment"}},
+          "/api/payment/webhook": {"post": {"summary": "Webhook receiver"}}
+        }
+      }
+    }
+  ]
+}
