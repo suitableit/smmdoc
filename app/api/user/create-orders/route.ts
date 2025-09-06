@@ -65,6 +65,9 @@ export async function POST(request: Request) {
           max_order: true,
           avg_time: true,
           status: true,
+          providerId: true,
+          providerServiceId: true,
+          providerApiUrl: true,
         },
       });
 
@@ -284,6 +287,33 @@ export async function POST(request: Request) {
       );
     } catch (error) {
       console.error('Failed to log order creation activity:', error);
+    }
+
+    // Forward provider orders to external providers
+    for (const order of result) {
+      if (order.service.providerId && order.service.providerServiceId) {
+        try {
+          const forwardResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/orders/place-to-provider`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.accessToken}`,
+            },
+            body: JSON.stringify({
+              orderId: order.id,
+              providerId: order.service.providerId,
+            }),
+          });
+
+          if (!forwardResponse.ok) {
+            console.error(`Failed to forward order ${order.id} to provider:`, await forwardResponse.text());
+          } else {
+            console.log(`Successfully forwarded order ${order.id} to provider`);
+          }
+        } catch (error) {
+          console.error(`Error forwarding order ${order.id} to provider:`, error);
+        }
+      }
     }
 
     return NextResponse.json(

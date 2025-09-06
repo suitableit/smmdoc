@@ -1,0 +1,15 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "executionArgs": {
+    "projectName": "smmdoc21",
+    "projectPath": "j:\\samdoc13\\smmdoc21\\",
+    "testIds": [],
+    "additionalInstruction": "Use Playwright-based E2E and API tests. Base URL: http://localhost:3000. Generate and execute tests focusing on: 1) Public pages render (home, any landing components) without runtime errors; 2) Auth: accessing protected endpoints/pages should redirect to login or return 401; verify GET /api/auth/session returns 401 when not logged in; 3) Public APIs return 200: /api/currencies/enabled, /api/public/analytics-settings, /api/public/custom-codes; 4) Payments: ensure endpoints are reachable; do not call real gateways; mock network calls; verify expected 200/400 semantics for /api/payment/create-charge, /api/payment/verify-payment, /api/payment/webhook with safe mocks; 5) Orders & Providers: POST /api/orders/place-to-provider without session should be 401; admin endpoints (/api/admin/services, /api/admin/providers, /api/admin/providers/auto-sync) should be 401 unauthenticated; 6) Add smoke test for Next.js app boot: page.goto('/') loads and has no console errors; 7) If test user creation is not available, skip authenticated happy-path flows and mark as pending in report; 8) Save a human-readable markdown report to testsprite_tests/reports/test_report.md, include pass/fail with reasons and follow-ups; 9) Respect project docs in .trae/documents (Provider Order System docs) to infer expected behaviors; 10) Avoid destructive operations and external side effects.",
+    "envs": {
+      "API_KEY": "sk-user-9JW3nXbo_U7dbEGOJWIG39ZGQrkrl5_ShWjEoaqH14bOtSliaF9ux1tUod1wGwzQt0N45_76v4EFvoMq6vanML0-k6UnwfwS_HhSqo8A1IEFtmSBdMILXM7MpWGHhL95Ibg"
+    }
+  }
+}

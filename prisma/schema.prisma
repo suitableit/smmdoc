@@ -37,6 +37,7 @@ model Service {
   userId              Int
   categoryId          Int
   favrouteCatId       Int?
+  providerId          String?           // Provider reference
   status              String            @default("active")
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
@@ -50,47 +51,47 @@ model Service {
   personalizedService Boolean?          @default(false)
   refillDisplay       Int?              @default(24)
   rateUSD             Float             @default(0)
-  providerId          Int?
-  providerName        String?
   favoriteServices    FavoriteService[]
   newOrders           NewOrder[]
   category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   favrouteCat         FavrouteCat?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
   serviceType         servicetype?      @relation(fields: [serviceTypeId], references: [id])
   user                user              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider            providers?        @relation(fields: [providerId], references: [id], onDelete: SetNull)
 
   @@index([categoryId], map: "Service_categoryId_fkey")
   @@index([favrouteCatId], map: "Service_favrouteCatId_fkey")
   @@index([serviceTypeId], map: "Service_serviceTypeId_idx")
+  @@index([providerId], map: "Service_providerId_idx")
   @@index([status], map: "Service_status_idx")
   @@index([userId], map: "Service_userId_idx")
   @@map("service")
 }
 
 model NewOrder {
-  id             Int             @id @default(autoincrement())
-  categoryId     Int
-  serviceId      Int
-  userId         Int
-  link           String
-  qty            Int
-  price          Float
-  avg_time       String
-  status         String          @default("pending")
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  remains        Int             @default(0)
-  startCount     Int             @default(0)
-  bdtPrice       Float
-  currency       String
-  usdPrice       Float
-  charge         Float           @default(0)
-  profit         Float           @default(0)
-  cancelRequests CancelRequest[]
-  category       Category        @relation(fields: [categoryId], references: [id])
-  service        Service         @relation(fields: [serviceId], references: [id])
-  user           user            @relation(fields: [userId], references: [id])
-  refillRequests RefillRequest[]
+  id                Int                @id @default(autoincrement())
+  categoryId        Int
+  serviceId         Int
+  userId            Int
+  link              String
+  qty               Int
+  price             Float
+  avg_time          String
+  status            String             @default("pending")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  remains           Int                @default(0)
+  startCount        Int                @default(0)
+  bdtPrice          Float
+  currency          String
+  usdPrice          Float
+  charge            Float              @default(0)
+  profit            Float              @default(0)
+  cancelRequests    CancelRequest[]
+  category          Category           @relation(fields: [categoryId], references: [id])
+  service           Service            @relation(fields: [serviceId], references: [id])
+  user              user               @relation(fields: [userId], references: [id])
+  refillRequests    RefillRequest[]
 
   @@index([categoryId], map: "NewOrder_categoryId_fkey")
   @@index([serviceId], map: "NewOrder_serviceId_fkey")
@@ -491,22 +492,7 @@ model affiliates {
   affiliate_referrals   affiliate_referrals[]
 }
 
-model apiProvider {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  api_key    String
-  login_user String?
-  login_pass String?
-  status     String   @default("active")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  api_url    String   @default("")
-  is_custom  Boolean  @default(false)
 
-  @@index([name])
-  @@index([status])
-  @@map("api_providers")
-}
 
 model child_panel_subscriptions {
   id            Int          @id @default(autoincrement())
@@ -831,5 +817,39 @@ model GeneralSettings {
   updatedAt       DateTime @updatedAt
 
   @@map("general_settings")
+}
+
+// Providers Model - External API providers
+model providers {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  apiUrl    String
+  apiKey    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  services  Service[]
+  
+  @@index([name])
+  @@index([isActive])
+  @@map("providers")
+}
+
+// Provider Order Log Model
+model providerOrderLog {
+  id               Int      @id @default(autoincrement())
+  orderId          Int      // NewOrder reference
+  action           String   // created, status_check, completed, failed
+  providerResponse String?  @db.Text
+  status           String?
+  errorMessage     String?  @db.Text
+  createdAt        DateTime @default(now())
+
+  @@index([orderId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("provider_order_log")
 }
 
