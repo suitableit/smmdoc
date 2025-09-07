@@ -153,7 +153,8 @@ export async function PUT(
                 subject: contactMessage.subject,
                 adminReply: adminReply.trim(),
                 adminName: session.user.name || session.user.username || 'Admin',
-                messageId: messageId
+                messageId: messageId,
+                originalMessage: contactMessage.message
               });
               
               await sendMail({

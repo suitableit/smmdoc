@@ -91,16 +91,16 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
     console.log('🔍 Attempting to verify transporter...');
     try {
       await transporter.verify();
-      console.log('✅ Email transporter created and verified successfully');
+      console.log('Email transporter created and verified successfully');
     } catch (verifyError) {
-      console.warn('⚠️ Transporter verification failed, but continuing anyway:', verifyError.message);
-      console.log('📧 Transporter created without verification');
+      console.warn('Transporter verification failed, but continuing anyway:', verifyError.message);
+      console.log('Transporter created without verification');
     }
     
     return transporter;
   } catch (error) {
-    console.error('❌ Error creating email transporter:', error.message);
-    console.error('❌ Full error details:', {
+    console.error('Error creating email transporter:', error.message);
+    console.error('Full error details:', {
       name: error.name,
       code: error.code,
       command: error.command,
