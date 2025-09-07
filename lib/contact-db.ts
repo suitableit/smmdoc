@@ -298,6 +298,17 @@ class ContactDB {
         notes = await this.prisma.$queryRawUnsafe(notesQuery, id) as any[];
       }
 
+      // Get user statistics
+      const userStatsQuery = `
+        SELECT 
+          COUNT(*) as total_messages,
+          SUM(CASE WHEN adminReply IS NULL OR adminReply = '' THEN 1 ELSE 0 END) as open_messages
+        FROM contact_messages 
+        WHERE userId = ?
+      `;
+      const userStats = await this.prisma.$queryRawUnsafe(userStatsQuery, message.userId) as any[];
+      const stats = userStats[0] || { total_messages: 0, open_messages: 0 };
+
       // Format the response to match expected structure
       return {
         id: message.id,
@@ -322,7 +333,9 @@ class ContactDB {
         user: {
           username: message.username || 'Unknown User',
           email: message.email || 'No Email',
-          name: message.name || null
+          name: message.name || null,
+          total_messages: Number(stats.total_messages) || 0,
+          open_messages: Number(stats.open_messages) || 0
         },
         category: {
           name: message.categoryName || 'Unknown Category'
@@ -370,7 +383,7 @@ class ContactDB {
     }
   }
 
-  async replyToContactMessage(id: number, adminReply: string, repliedBy: number) {
+  async replyToContactMessage(id: number, adminReply: string, repliedBy: number, attachments?: string) {
     try {
       // Get current message to check for existing replies
       const currentMessage = await this.prisma.contactMessage.findUnique({
@@ -416,7 +429,8 @@ class ContactDB {
         content: adminReply,
         repliedAt: new Date().toISOString(),
         repliedBy: repliedBy,
-        author: adminUser?.username || adminUser?.name || 'Admin'
+        author: adminUser?.username || adminUser?.name || 'Admin',
+        attachments: attachments ? JSON.parse(attachments) : undefined
       });
 
       // Update the message with the new replies array

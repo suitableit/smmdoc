@@ -57,6 +57,9 @@ interface ContactMessage {
   message: string;
   createdAt: string;
   status: 'Unread' | 'Read' | 'Replied';
+  adminReply?: string;
+  repliedAt?: string;
+  repliedBy?: number;
   user?: {
     username?: string;
   };
@@ -224,6 +227,7 @@ const ContactMessagesPage = () => {
 
   // Loading states
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
 
   // Fallback mode state
   const [fallbackMode, setFallbackMode] = useState(false);
@@ -295,7 +299,7 @@ const ContactMessagesPage = () => {
 
   // Utility functions
   const formatMessageID = (id: number | string) => {
-    return `${String(id).padStart(4, '0')}`;
+    return `${String(id)}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -406,13 +410,13 @@ const ContactMessagesPage = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const handleRefresh = () => {
-    setMessagesLoading(true);
-    // Simulate loading
-    setTimeout(() => {
-      setMessagesLoading(false);
+  const handleRefresh = async () => {
+    try {
+      await fetchContactMessages();
       showToast('Contact messages refreshed successfully!', 'success');
-    }, 1000);
+    } catch (error) {
+      showToast('Failed to refresh contact messages', 'error');
+    }
   };
 
   const handleSelectAll = () => {
@@ -500,36 +504,52 @@ const ContactMessagesPage = () => {
   };
 
   // Handle bulk operations
-  const handleBulkOperation = (operation: string) => {
-    switch (operation) {
-      case 'mark_read':
-        setContactMessages((prev) =>
-          prev.map((message) =>
-            selectedMessages.includes(message.id)
-              ? { ...message, status: 'Read' }
-              : message
-          )
-        );
-        showToast(`${selectedMessages.length} messages marked as read`, 'success');
-        break;
-      case 'mark_unread':
-        setContactMessages((prev) =>
-          prev.map((message) =>
-            selectedMessages.includes(message.id)
-              ? { ...message, status: 'Unread' }
-              : message
-          )
-        );
-        showToast(`${selectedMessages.length} messages marked as unread`, 'success');
-        break;
-      case 'delete_selected':
-        setContactMessages((prev) =>
-          prev.filter((message) => !selectedMessages.includes(message.id))
-        );
-        showToast(`${selectedMessages.length} messages deleted`, 'success');
-        break;
+  const handleBulkOperation = async (operation: string) => {
+    if (!operation || selectedMessages.length === 0) return;
+
+    setBulkOperationLoading(true);
+    const selectedIds = selectedMessages;
+
+    try {
+      const response = await fetch('/api/admin/contact-messages/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation,
+          messageIds: selectedIds,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Refresh the messages to get updated data
+        await fetchContactMessages();
+        
+        switch (operation) {
+          case 'mark_read':
+            showToast(`Marked ${selectedIds.length} message(s) as read`, 'success');
+            break;
+          case 'mark_unread':
+            showToast(`Marked ${selectedIds.length} message(s) as unread`, 'success');
+            break;
+          case 'delete_selected':
+            showToast(`Deleted ${selectedIds.length} message(s)`, 'success');
+            break;
+        }
+        
+        setSelectedMessages([]);
+      } else {
+        showToast(data.error || 'Bulk operation failed', 'error');
+      }
+    } catch (error) {
+      console.error('Bulk operation error:', error);
+      showToast('Failed to perform bulk operation', 'error');
+    } finally {
+      setBulkOperationLoading(false);
     }
-    setSelectedMessages([]);
   };
 
   return (
@@ -732,7 +752,7 @@ const ContactMessagesPage = () => {
                   <select 
                     value={selectedBulkOperation}
                     onChange={(e) => setSelectedBulkOperation(e.target.value)}
-                    disabled={messagesLoading}
+                    disabled={bulkOperationLoading || messagesLoading}
                     className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm disabled:opacity-50"
                   >
                     <option value="" disabled>Bulk Operations</option>
@@ -749,10 +769,17 @@ const ContactMessagesPage = () => {
                       handleBulkOperation(selectedBulkOperation);
                       setSelectedBulkOperation(''); // Reset after execution
                     }}
-                    disabled={messagesLoading}
+                    disabled={bulkOperationLoading || messagesLoading}
                     className="btn btn-primary flex items-center gap-2 px-4 py-2.5 disabled:opacity-50 w-full md:w-auto"
                   >
-                    Save Changes
+                    {bulkOperationLoading ? (
+                      <>
+                        <GradientSpinner size="w-4 h-4" />
+                        Updating...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
                   </button>
                 )}
               </div>
@@ -930,7 +957,7 @@ const ContactMessagesPage = () => {
                           <td className="p-3">
                             <div className="flex items-center gap-2">
                               {/* Conditional Action Button */}
-                              {message.status === 'Replied' ? (
+                              {message.adminReply ? (
                                 <button
                                   className="btn btn-secondary p-2"
                                   title="View Message"
@@ -1068,4 +1095,12 @@ const ContactMessagesPage = () => {
   );
 };
 
-export default ContactMessagesPage;
+import ContactSystemGuard from '@/components/ContactSystemGuard';
+
+const ProtectedContactMessagesPage = () => (
+  <ContactSystemGuard>
+    <ContactMessagesPage />
+  </ContactSystemGuard>
+);
+
+export default ProtectedContactMessagesPage;

@@ -8,6 +8,13 @@ export interface ContactMessageEmailData {
   message: string;
   category: string;
   messageId: number;
+  attachments?: Array<{
+    originalName: string;
+    encryptedName: string;
+    fileUrl: string;
+    fileSize: number;
+    mimeType: string;
+  }>;
 }
 
 export interface AdminReplyEmailData {
@@ -17,6 +24,13 @@ export interface AdminReplyEmailData {
   adminName: string;
   messageId: number;
   originalMessage: string;
+  attachments?: Array<{
+    originalName: string;
+    encryptedName: string;
+    fileUrl: string;
+    fileSize: number;
+    mimeType: string;
+  }>;
 }
 
 export const contactMessageTemplates = {
@@ -27,7 +41,8 @@ export const contactMessageTemplates = {
     subject,
     message,
     category,
-    messageId
+    messageId,
+    attachments
   }: ContactMessageEmailData) => ({
     subject: `New Contact Message - ${subject}`,
     html: `
@@ -41,7 +56,7 @@ export const contactMessageTemplates = {
       <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
           <!-- Header -->
-          <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 30px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #5f1de8 0%, #b131f8 100%); padding: 30px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">New Contact Message</h1>
           </div>
           
@@ -54,7 +69,7 @@ export const contactMessageTemplates = {
             
             <!-- Message Details -->
             <div style="background-color: #f8f9fa; border-radius: 12px; padding: 25px; margin: 30px 0;">
-              <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">Message Details</h3>
+              <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px; border-bottom: 2px solid #5f1de8; padding-bottom: 10px;">Message Details</h3>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">From:</td>
@@ -77,10 +92,27 @@ export const contactMessageTemplates = {
               <p style="color: #4b5563; font-size: 16px; line-height: 1.6; white-space: pre-line; margin: 0;">${message}</p>
             </div>
             
+            ${attachments && attachments.length > 0 ? `
+            <!-- Attachments -->
+            <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 12px; padding: 25px; margin: 30px 0;">
+              <h4 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Attachments (${attachments.length}):</h4>
+              ${attachments.map(attachment => `
+                <div style="display: flex; align-items: center; padding: 10px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px;">
+                  <div style="flex: 1;">
+                    <div style="color: #1f2937; font-weight: 600; margin-bottom: 4px;">
+                       <a style="color: linear-gradient(135deg, #5f1de8 0%, #b131f8 100%)" href="${process.env.NEXT_PUBLIC_APP_URL}${attachment.fileUrl}">${attachment.encryptedName}</a>
+                     </div>
+                    <div style="color: #6b7280; font-size: 14px;">${Math.round(attachment.fileSize / 1024)} KB</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            ` : ''}
+            
             <!-- Admin Panel Link -->
             <div style="text-align: center; margin: 40px 0;">
               <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/contact-messages/${messageId}" 
-                 style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                 style="background: linear-gradient(135deg, #5f1de8 0%, #b131f8 100%); color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(95, 29, 232, 0.3);">
                 View Message in Admin Panel
               </a>
             </div>
@@ -109,7 +141,8 @@ export const contactMessageTemplates = {
     adminReply,
     adminName,
     messageId,
-    originalMessage
+    originalMessage,
+    attachments
   }: AdminReplyEmailData) => ({
     subject: `RE: ${subject}`,
     html: `
@@ -144,7 +177,23 @@ export const contactMessageTemplates = {
               </div>
               <div style="border-left: 2px solid #e8eaed; padding-left: 10px; color: #5f6368; font-size: 13px;">
                 <div style="font-weight: 500; margin-bottom: 5px;">Subject: ${subject}</div>
-                <div style="white-space: pre-line;">${originalMessage}</div>
+                <div style="white-space: pre-line; margin-bottom: 15px;">${originalMessage}</div>
+                
+                ${attachments && attachments.length > 0 ? `
+                <div style="margin-top: 15px;">
+                  <div style="font-weight: 500; margin-bottom: 10px; color: #5f6368;">Attachments (${attachments.length}):</div>
+                  ${attachments.map(attachment => `
+                    <div style="display: flex; align-items: center; padding: 8px; background-color: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; margin-bottom: 8px;">
+                      <div style="flex: 1;">
+                        <div style="color: #202124; font-weight: 500; font-size: 12px; margin-bottom: 2px;">
+                          <a href="${process.env.NEXT_PUBLIC_APP_URL}${attachment.fileUrl}">${attachment.encryptedName}</a>
+                        </div>
+                        <div style="color: #5f6368; font-size: 11px;">${Math.round(attachment.fileSize / 1024)} KB</div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+                ` : ''}
               </div>
             </div>
           </div>

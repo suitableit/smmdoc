@@ -19,6 +19,7 @@ import {
 } from 'react-icons/fa';
 import ReCAPTCHA from '@/components/ReCAPTCHA';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
+import ContactSystemGuard from '@/components/ContactSystemGuard';
 
 // Custom Gradient Spinner Component (Large version for loading state)
 const GradientSpinner = ({ size = 'w-5 h-5', className = '' }) => (
@@ -60,7 +61,7 @@ const Toast = ({
   </div>
 );
 
-export default function ContactSupportPage() {
+function ContactSupportPage() {
   const { appName } = useAppNameWithFallback();
 
   const router = useRouter();
@@ -76,6 +77,7 @@ export default function ContactSupportPage() {
     message: '',
     attachments: null as FileList | null,
   });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [categories, setCategories] = useState<Array<{id: number, name: string}>>([]);
   const [contactFormData, setContactFormData] = useState<{
     userPendingCount: number;
@@ -189,19 +191,28 @@ export default function ContactSupportPage() {
     setIsSubmitting(true);
 
     try {
+      // Create FormData for file upload
+      const submitData = new FormData();
+      submitData.append('subject', formData.subject);
+      submitData.append('category', formData.category);
+      submitData.append('message', formData.message);
+      
+      // Add files if any
+      if (formData.attachments) {
+        Array.from(formData.attachments).forEach((file) => {
+          submitData.append('attachments', file);
+        });
+      }
+      
+      // Add recaptcha token if available
+      if (recaptchaToken) {
+        submitData.append('recaptchaToken', recaptchaToken);
+      }
+      
       // Submit contact form to API
       const response = await fetch('/api/contact-support', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          subject: formData.subject,
-          category: formData.category,
-          message: formData.message,
-          attachments: formData.attachments ? Array.from(formData.attachments) : null,
-          ...(recaptchaToken && { recaptchaToken }),
-        }),
+        body: submitData,
       });
 
       const data = await response.json();
@@ -217,7 +228,14 @@ export default function ContactSupportPage() {
           message: '',
           attachments: null,
         });
+        setSelectedFiles([]);
         setRecaptchaToken(null);
+        
+        // Reset file input
+        const fileInput = document.getElementById('attachments') as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = '';
+        }
       } else {
         // Show error message from API
         showToast(data.error || 'Failed to send message. Please try again later.', 'error');
@@ -234,10 +252,90 @@ export default function ContactSupportPage() {
     field: string,
     value: string | FileList | null
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    if (field === 'attachments' && value instanceof FileList) {
+      handleFileSelection(value);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
+  };
+
+  const handleFileSelection = (fileList: FileList) => {
+    const files = Array.from(fileList);
+    const validFiles: File[] = [];
+    const maxFileSize = 3 * 1024 * 1024; // 3MB
+    const allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
+      'application/pdf'
+    ];
+
+    // Check if user is trying to select more files than allowed
+    const totalFiles = selectedFiles.length + files.length;
+    if (totalFiles > 4) {
+      showToast(`You can only select up to 4 files. You currently have ${selectedFiles.length} files selected.`, 'error');
+      return;
+    }
+
+    for (const file of files) {
+      // Check file type
+      if (!allowedTypes.includes(file.type)) {
+        showToast(`File "${file.name}" has an unsupported format. Only images (JPEG, PNG, GIF, WebP, BMP) and PDFs are allowed.`, 'error');
+        continue;
+      }
+
+      // Check file size
+      if (file.size > maxFileSize) {
+        showToast(`File "${file.name}" is too large. Maximum file size is 3MB.`, 'error');
+        continue;
+      }
+
+      // Check for duplicate files
+      if (selectedFiles.some(existingFile => existingFile.name === file.name && existingFile.size === file.size)) {
+        showToast(`File "${file.name}" is already selected.`, 'error');
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    if (validFiles.length > 0) {
+      const newSelectedFiles = [...selectedFiles, ...validFiles];
+      setSelectedFiles(newSelectedFiles);
+      
+      // Create a new FileList-like object for form submission
+      const dataTransfer = new DataTransfer();
+      newSelectedFiles.forEach(file => dataTransfer.items.add(file));
+      
+      setFormData((prev) => ({
+        ...prev,
+        attachments: dataTransfer.files,
+      }));
+      
+      showToast(`${validFiles.length} file(s) selected successfully!`, 'success');
+    }
+  };
+
+  const removeSelectedFile = (index: number) => {
+    const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newSelectedFiles);
+    
+    if (newSelectedFiles.length === 0) {
+      setFormData((prev) => ({
+        ...prev,
+        attachments: null,
+      }));
+    } else {
+      // Create a new FileList-like object for form submission
+      const dataTransfer = new DataTransfer();
+      newSelectedFiles.forEach(file => dataTransfer.items.add(file));
+      
+      setFormData((prev) => ({
+        ...prev,
+        attachments: dataTransfer.files,
+      }));
+    }
   };
 
   if (isLoading) {
@@ -479,14 +577,54 @@ export default function ContactSupportPage() {
                     id="attachments"
                     className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
                     multiple
+                    accept="image/*,.pdf"
                     onChange={(e) =>
                       handleInputChange('attachments', e.target.files)
                     }
                   />
                   <small className="text-xs text-gray-500 mt-1">
-                    You can upload screenshots or other relevant files (max 5MB
-                    each).
+                    You can upload up to 4 files. Supported: Images and PDFs (max 3MB each).
                   </small>
+                  
+                  {/* Selected Files Display */}
+                  {selectedFiles.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Selected Files ({selectedFiles.length}/4):
+                      </p>
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <div className="flex-shrink-0">
+                            {file.type.startsWith('image/') ? (
+                              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                <span className="text-blue-600 dark:text-blue-400 text-xs font-bold">IMG</span>
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                                <span className="text-red-600 dark:text-red-400 text-xs font-bold">PDF</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                              {file.name}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeSelectedFile(index)}
+                            className="flex-shrink-0 p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                            title="Remove file"
+                          >
+                            <FaTimes className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* ReCAPTCHA */}
@@ -629,3 +767,11 @@ export default function ContactSupportPage() {
     </div>
   );
 }
+
+const ProtectedContactSupportPage = () => (
+  <ContactSystemGuard>
+    <ContactSupportPage />
+  </ContactSystemGuard>
+);
+
+export default ProtectedContactSupportPage;
