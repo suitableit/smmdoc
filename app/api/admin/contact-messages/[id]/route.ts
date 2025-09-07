@@ -23,8 +23,12 @@ export async function GET(
       );
     }
 
+    // Check if notes should be included
+    const { searchParams } = new URL(request.url);
+    const includeNotes = searchParams.get('include_notes') === 'true';
+
     // Get the contact message
-    const message = await contactDB.getContactMessageById(messageId);
+    const message = await contactDB.getContactMessageById(messageId, includeNotes);
 
     if (!message) {
       return NextResponse.json(
@@ -49,7 +53,8 @@ export async function GET(
       updatedAt: message.updatedAt,
       user: message.user,
       category: message.category,
-      repliedByUser: message.repliedByUser
+      repliedByUser: message.repliedByUser,
+      notes: message.notes || []
     };
 
     // Mark as read if it's unread
