@@ -6,6 +6,16 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     
+    // Check if contact system is enabled
+    const { contactDB } = await import('@/lib/contact-db');
+    const contactSettings = await contactDB.getContactSettings();
+    if (!contactSettings?.contactSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Contact system is currently disabled' },
+        { status: 403 }
+      );
+    }
+    
     // Parse request body
     const body = await request.json();
     const { name, email, phone, subject, message, adminEmail, recaptchaToken } = body;

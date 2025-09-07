@@ -631,6 +631,7 @@ const Header = () => {
   const user = userData?.id ? userData : currentUser;
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
   
   // Dropdown state management
   const [openDropdowns, setOpenDropdowns] = useState({
@@ -652,6 +653,25 @@ const Header = () => {
   
   // Check if any dropdown is open
   const isAnyDropdownOpen = Object.values(openDropdowns).some(Boolean);
+
+  // Fetch contact system settings
+  useEffect(() => {
+    const fetchContactSettings = async () => {
+      try {
+        const response = await fetch('/api/contact-system-status');
+        if (response.ok) {
+          const data = await response.json();
+          setContactSystemEnabled(data.contactSystemEnabled ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching contact settings:', error);
+        // Default to enabled on error
+        setContactSystemEnabled(true);
+      }
+    };
+
+    fetchContactSettings();
+  }, []);
 
   const isAdmin =
     user?.role?.toLowerCase() === 'admin' ||
@@ -929,35 +949,37 @@ const Header = () => {
                     </span>
                   </div>
                 </Link>
-                <Link
-                  href="/contact-support"
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 hover:opacity-80 block"
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: 'var(--header-text)',
-                  }}
-                >
-                  <div
-                    className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
+                {contactSystemEnabled && (
+                  <Link
+                    href="/contact-support"
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 hover:opacity-80 block"
                     style={{
-                      backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--header-text)',
                     }}
                   >
-                    <FaHeadset className="h-4 w-4 text-orange-500" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm">Contact Support</span>
-                    <span
-                      className="text-xs"
+                    <div
+                      className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
                       style={{
-                        color: 'var(--header-text)',
-                        opacity: 0.7,
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
                       }}
                     >
-                      Live chat & help
-                    </span>
-                  </div>
-                </Link>
+                      <FaHeadset className="h-4 w-4 text-orange-500" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm">Contact Support</span>
+                      <span
+                        className="text-xs"
+                        style={{
+                          color: 'var(--header-text)',
+                          opacity: 0.7,
+                        }}
+                      >
+                        Live chat & help
+                      </span>
+                    </div>
+                  </Link>
+                )}
                 <Link
                   href="/child-panel"
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 hover:opacity-80 block"

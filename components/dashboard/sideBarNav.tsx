@@ -64,6 +64,7 @@ export default function SideBarNav({
   const path = usePathname() || '';
   const isAdmin = session?.user?.role === 'admin';
   const [ticketSystemEnabled, setTicketSystemEnabled] = useState(true);
+  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
 
   // Fetch ticket system settings
   useEffect(() => {
@@ -82,6 +83,25 @@ export default function SideBarNav({
     };
 
     fetchTicketSettings();
+  }, []);
+
+  // Fetch contact system settings
+  useEffect(() => {
+    const fetchContactSettings = async () => {
+      try {
+        const response = await fetch('/api/contact-system-status');
+        if (response.ok) {
+          const data = await response.json();
+          setContactSystemEnabled(data.contactSystemEnabled ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching contact settings:', error);
+        // Default to enabled on error
+        setContactSystemEnabled(true);
+      }
+    };
+
+    fetchContactSettings();
   }, []);
 
   // Memoize items based on user role to prevent unnecessary recalculations
@@ -138,6 +158,9 @@ export default function SideBarNav({
         support: items.filter((item) => {
           const supportItems = ['Support Tickets', 'Contact Messages'];
           if (!ticketSystemEnabled && item.title === 'Support Tickets') {
+            return false;
+          }
+          if (!contactSystemEnabled && item.title === 'Contact Messages') {
             return false;
           }
           return supportItems.includes(item.title);
@@ -201,6 +224,9 @@ export default function SideBarNav({
           if (!ticketSystemEnabled && (item.title === 'Support Tickets' || item.title === 'Tickets History')) {
             return false;
           }
+          if (!contactSystemEnabled && item.title === 'Contact Support') {
+            return false;
+          }
           return supportItems.includes(item.title);
         }),
         integrations: items.filter((item) =>
@@ -214,7 +240,7 @@ export default function SideBarNav({
         ),
       } as UserSections;
     }
-  }, [isAdmin, items, ticketSystemEnabled]);
+  }, [isAdmin, items, ticketSystemEnabled, contactSystemEnabled]);
 
   const isActive = (itemPath: string) => {
     // Exact match

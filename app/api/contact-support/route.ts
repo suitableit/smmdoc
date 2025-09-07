@@ -1,5 +1,8 @@
 import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
+import crypto from 'crypto';
 
 // POST - Submit contact form
 export async function POST(request: NextRequest) {
@@ -12,7 +15,11 @@ export async function POST(request: NextRequest) {
 
     console.log('Contact Support POST - Session user:', session.user);
 
-    const { subject, category, message, attachments } = await request.json();
+    const data = await request.formData();
+    const subject = data.get('subject') as string;
+    const category = data.get('category') as string;
+    const message = data.get('message') as string;
+    const files = data.getAll('attachments') as File[];
 
     // Validate required fields
     if (!subject || !subject.trim()) {
@@ -52,9 +59,16 @@ export async function POST(request: NextRequest) {
     const maxPendingContactsStr = contactSettings.maxPendingContacts || '3';
 
     if (maxPendingContactsStr.toLowerCase() !== 'unlimited') {
-      const userPendingCount = await contactDB.countContactMessages({
-        userId: session.user.id,
-        status: ['Unread', 'Read']
+      // Count unreplied messages (where adminReply is NULL or empty)
+      const { db } = await import('@/lib/db');
+      const userPendingCount = await db.contactMessage.count({
+        where: {
+          userId: session.user.id,
+          OR: [
+            { adminReply: null },
+            { adminReply: '' }
+          ]
+        }
       });
       const maxPendingContacts = parseInt(maxPendingContactsStr);
 
@@ -79,16 +93,69 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process attachments if any
+    // Process file attachments if any
     let attachmentsJson = null;
-    if (attachments && Array.isArray(attachments) && attachments.length > 0) {
-      // Validate file attachments
-      const validAttachments = attachments.filter(file =>
-        file && file.name && file.size && file.size <= 10 * 1024 * 1024 // 10MB limit
-      );
-
-      if (validAttachments.length > 0) {
-        attachmentsJson = JSON.stringify(validAttachments);
+    if (files && files.length > 0) {
+      const uploadedFiles = [];
+      
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+      try {
+        await mkdir(uploadsDir, { recursive: true });
+      } catch (error) {
+        // Directory might already exist
+      }
+      
+      for (const file of files) {
+        if (file && file.name && file.size > 0) {
+          // Validate file size (5MB limit)
+          if (file.size > 5 * 1024 * 1024) {
+            continue; // Skip files larger than 5MB
+          }
+          
+          // Validate file type
+          const allowedTypes = [
+            'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+            'application/pdf', 'text/plain', 'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          ];
+          
+          if (!allowedTypes.includes(file.type)) {
+            continue; // Skip invalid file types
+          }
+          
+          try {
+            const bytes = await file.arrayBuffer();
+            const buffer = Buffer.from(bytes);
+            
+            // Generate encrypted filename
+            const fileExtension = path.extname(file.name);
+            const randomBytes = crypto.randomBytes(16).toString('hex');
+            const timestamp = Date.now().toString();
+            const hash = crypto.createHash('sha256').update(`${file.name}${timestamp}${randomBytes}`).digest('hex');
+            const encryptedFilename = `${hash.substring(0, 16)}${fileExtension}`;
+            const filepath = path.join(uploadsDir, encryptedFilename);
+            
+            // Write file
+            await writeFile(filepath, buffer);
+            
+            // Store file info
+            uploadedFiles.push({
+              originalName: file.name,
+              encryptedName: encryptedFilename,
+              fileUrl: `/uploads/${encryptedFilename}`,
+              fileSize: file.size,
+              mimeType: file.type
+            });
+          } catch (error) {
+            console.error(`Error uploading file ${file.name}:`, error);
+            // Continue with other files
+          }
+        }
+      }
+      
+      if (uploadedFiles.length > 0) {
+        attachmentsJson = JSON.stringify(uploadedFiles);
       }
     }
 
@@ -133,7 +200,8 @@ export async function POST(request: NextRequest) {
           subject: subject.trim(),
           message: message.trim(),
           category: categories.find(cat => cat.id === parseInt(category))?.name || 'Unknown',
-          messageId: messageId
+          messageId: messageId,
+          attachments: attachmentsJson ? JSON.parse(attachmentsJson) : undefined
         });
         
         await sendMail({
@@ -208,9 +276,16 @@ export async function GET() {
     if (maxPendingContactsStr.toLowerCase() === 'unlimited') {
       canSubmit = true;
     } else {
-      userPendingCount = await contactDB.countContactMessages({
-        userId: session.user.id,
-        status: ['Unread', 'Read']
+      // Count unreplied messages (where adminReply is NULL or empty)
+      const { db } = await import('@/lib/db');
+      userPendingCount = await db.contactMessage.count({
+        where: {
+          userId: session.user.id,
+          OR: [
+            { adminReply: null },
+            { adminReply: '' }
+          ]
+        }
       });
       const maxPendingContacts = parseInt(maxPendingContactsStr);
       canSubmit = userPendingCount < maxPendingContacts;

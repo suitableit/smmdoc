@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import {
     FaArrowLeft,
@@ -57,8 +58,18 @@ const Toast = ({
   </div>
 );
 
-// Mock ButtonLoader component
 const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
+
+const getFileIcon = (mimetype: string) => {
+  if (!mimetype) return <FaFileAlt className="h-4 w-4" />;
+  if (mimetype.startsWith('image/')) return <FaImage className="h-4 w-4" />;
+  if (mimetype.startsWith('video/')) return <FaVideo className="h-4 w-4" />;
+  if (mimetype.includes('pdf')) return <FaFilePdf className="h-4 w-4" />;
+  if (mimetype.includes('word')) return <FaFileWord className="h-4 w-4" />;
+  if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return <FaFileExcel className="h-4 w-4" />;
+  if (mimetype.includes('zip') || mimetype.includes('rar') || mimetype.includes('archive')) return <FaFileArchive className="h-4 w-4" />;
+  return <FaFileAlt className="h-4 w-4" />;
+};
 
 // Interfaces
 interface ContactMessage {
@@ -76,8 +87,14 @@ interface ContactMessage {
 interface ContactAttachment {
   id: string;
   filename: string;
+  originalName?: string;
+  encryptedName?: string;
   filesize: string;
   mimetype: string;
+  mimeType?: string;
+  fileSize?: number;
+  url?: string;
+  fileUrl?: string;
   uploadedAt: string;
   uploadedBy: string;
 }
@@ -116,6 +133,7 @@ interface ContactMessageDetails {
 }
 
 const ContactDetailsPage = () => {
+  const router = useRouter();
   const { appName } = useAppNameWithFallback();
   const currentUser = useCurrentUser();
 
@@ -134,6 +152,7 @@ const ContactDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
   const [isReplying, setIsReplying] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [newNote, setNewNote] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [showNotes, setShowNotes] = useState(true);
@@ -143,6 +162,9 @@ const ContactDetailsPage = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+
+  // File input ref for resetting
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
 
 
@@ -175,13 +197,36 @@ const ContactDetailsPage = () => {
         
         // Add customer's original message
         if (data.message.message) {
+          // Parse attachments from the new format
+          let parsedAttachments = [];
+          if (data.message.attachments) {
+            try {
+              const attachmentData = JSON.parse(data.message.attachments);
+              if (Array.isArray(attachmentData)) {
+                parsedAttachments = attachmentData.map((att, index) => {
+                  return {
+                    id: `${data.message.id}_${index}`,
+                    filename: att.encryptedName || att.originalName || att.filename || 'Unknown file',
+                    filesize: att.fileSize ? `${Math.round(att.fileSize / 1024)} KB` : 'Unknown size',
+                    mimetype: att.mimeType || att.mimetype || 'application/octet-stream',
+                    url: att.fileUrl || att.url,
+                    uploadedAt: data.message.createdAt,
+                    uploadedBy: data.message.user?.username || 'User'
+                  };
+                });
+              }
+            } catch (error) {
+              console.error('Error parsing attachments:', error);
+            }
+          }
+          
           messages.push({
             id: `customer_${data.message.id}`,
             type: 'customer',
             author: data.message.user?.username || 'Unknown User',
             content: data.message.message,
             createdAt: data.message.createdAt,
-            attachments: data.message.attachments || []
+            attachments: parsedAttachments
           });
         }
         
@@ -193,22 +238,104 @@ const ContactDetailsPage = () => {
             if (Array.isArray(replies)) {
               // New format: multiple replies
               replies.forEach((reply, index) => {
+                // Parse reply attachments if they exist
+                let replyAttachments: ContactAttachment[] = [];
+                if (reply.attachments && Array.isArray(reply.attachments)) {
+                  replyAttachments = reply.attachments.map((attachment: any, attachIndex: number) => {
+                    // Handle both old format (string paths) and new format (objects)
+                    let filename, fileUrl, filesize = '0 KB', mimetype = 'application/octet-stream';
+                    
+                    if (typeof attachment === 'string') {
+                      // Old format - encrypted path only
+                      filename = attachment.split('/').pop() || 'attachment';
+                      fileUrl = attachment;
+                      const extension = filename.split('.').pop()?.toLowerCase() || '';
+                      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+                        mimetype = `image/${extension === 'jpg' ? 'jpeg' : extension}`;
+                      } else if (extension === 'pdf') {
+                        mimetype = 'application/pdf';
+                      } else if (['doc', 'docx'].includes(extension)) {
+                        mimetype = 'application/msword';
+                      } else if (['xls', 'xlsx'].includes(extension)) {
+                        mimetype = 'application/vnd.ms-excel';
+                      }
+                    } else {
+                      // New format - has original name
+                      filename = attachment.encryptedName || attachment.filename || 'attachment';
+                      fileUrl = attachment.encryptedPath || attachment.fileUrl;
+                      filesize = attachment.fileSize ? `${Math.round(attachment.fileSize / 1024)} KB` : 'Unknown size';
+                      mimetype = attachment.mimeType || 'application/octet-stream';
+                    }
+                    
+                    return {
+                      id: `admin_reply_${data.message.id}_${index}_${attachIndex}`,
+                      filename: filename,
+                      filesize: filesize,
+                      mimetype: mimetype,
+                      url: fileUrl,
+                      uploadedAt: reply.repliedAt,
+                      uploadedBy: reply.author || 'Admin'
+                    };
+                  });
+                }
+                
                 messages.push({
                   id: `admin_${data.message.id}_${index}`,
                   type: 'staff',
                   author: reply.author || 'Admin',
                   content: reply.content,
-                  createdAt: reply.repliedAt
+                  createdAt: reply.repliedAt,
+                  attachments: replyAttachments
                 });
               });
             } else {
               // Fallback: single reply
+              let singleReplyAttachments: ContactAttachment[] = [];
+              if (data.message.attachments) {
+                try {
+                  const attachmentData = JSON.parse(data.message.attachments);
+                  singleReplyAttachments = attachmentData.map((attachment: any, index: number) => {
+                    let filename, fileUrl, fileSize = 0, mimeType = 'application/octet-stream';
+                    
+                    if (typeof attachment === 'string') {
+                      filename = attachment.split('/').pop() || 'attachment';
+                      fileUrl = attachment;
+                      const extension = filename.split('.').pop()?.toLowerCase() || '';
+                      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+                        mimeType = `image/${extension === 'jpg' ? 'jpeg' : extension}`;
+                      } else if (extension === 'pdf') {
+                        mimeType = 'application/pdf';
+                      }
+                    } else {
+                      // Handle both encryptedName and encryptedPath properties
+                      const encryptedName = attachment.encryptedName || (attachment.encryptedPath ? attachment.encryptedPath.split('/').pop() : null);
+                      filename = encryptedName || attachment.filename || 'attachment';
+                      fileUrl = attachment.encryptedPath || attachment.fileUrl;
+                      fileSize = attachment.fileSize || 0;
+                      mimeType = attachment.mimeType || 'application/octet-stream';
+                    }
+                    
+                    return {
+                      id: `single-admin-reply-${index}`,
+                      filename: filename,
+                      filesize: fileSize ? `${Math.round(fileSize / 1024)} KB` : '0 KB',
+                      mimetype: mimeType,
+                      uploadedAt: data.message.repliedAt || data.message.updatedAt,
+                      uploadedBy: 'Admin'
+                    };
+                  });
+                } catch (e) {
+                  console.error('Error parsing single reply attachments:', e);
+                }
+              }
+              
               messages.push({
                 id: `admin_${data.message.id}`,
                 type: 'staff',
                 author: data.message.repliedByUser?.username || 'Admin',
                 content: data.message.adminReply,
-                createdAt: data.message.repliedAt || data.message.updatedAt
+                createdAt: data.message.repliedAt || data.message.updatedAt,
+                attachments: singleReplyAttachments
               });
             }
           } catch {
@@ -305,6 +432,27 @@ const ContactDetailsPage = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
+  // Remove selected file
+  const removeSelectedFile = (index: number) => {
+    const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newSelectedFiles);
+    
+    if (newSelectedFiles.length === 0) {
+      // Clear the file input when no files are selected
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+
+
+  // Handle file selection
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setSelectedFiles(prev => [...prev, ...files]);
+  };
+
 
 
   // Handle reply submission
@@ -314,6 +462,46 @@ const ContactDetailsPage = () => {
     setIsReplying(true);
     
     try {
+      // Upload files if any are selected
+      let attachmentData: Array<{originalName: string, encryptedPath: string}> = [];
+      if (selectedFiles.length > 0) {
+        const formData = new FormData();
+        selectedFiles.forEach(file => {
+          formData.append('files', file);
+        });
+        formData.append('uploadType', 'admin_uploads');
+        
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        const uploadData = await uploadResponse.json();
+        
+        if (!uploadData.success) {
+          throw new Error(uploadData.error || 'Failed to upload files');
+        }
+        
+        // Handle both single and multiple file responses
+        if (uploadData.files) {
+          // Multiple files
+          attachmentData = uploadData.files.map((file: any) => ({
+            originalName: file.originalName,
+            encryptedPath: file.fileUrl,
+            fileSize: file.fileSize,
+            mimeType: file.mimeType
+          }));
+        } else if (uploadData.originalName) {
+          // Single file
+          attachmentData = [{
+            originalName: uploadData.originalName,
+            encryptedPath: uploadData.fileUrl,
+            fileSize: uploadData.fileSize,
+            mimeType: uploadData.mimeType
+          }];
+        }
+      }
+      
       const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
         method: 'PUT',
         headers: {
@@ -321,7 +509,8 @@ const ContactDetailsPage = () => {
         },
         body: JSON.stringify({
           action: 'reply',
-          adminReply: replyContent.trim()
+          adminReply: replyContent.trim(),
+          attachments: attachmentData.length > 0 ? JSON.stringify(attachmentData) : undefined
         }),
       });
 
@@ -338,6 +527,11 @@ const ContactDetailsPage = () => {
         }) : null);
 
         setReplyContent('');
+        setSelectedFiles([]);
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
         showToast(data.message || 'Reply sent successfully', 'success');
 
         // Refresh the data to get updated information
@@ -346,7 +540,7 @@ const ContactDetailsPage = () => {
         showToast(data.error || 'Error sending reply', 'error');
       }
     } catch (error) {
-      showToast('Error sending reply', 'error');
+      showToast(error instanceof Error ? error.message : 'Error sending reply', 'error');
     } finally {
       setIsReplying(false);
     }
@@ -461,7 +655,7 @@ const ContactDetailsPage = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-4">
               <button 
-                onClick={() => window.history.back()}
+                onClick={() => router.push('/admin/contact-messages')}
                 className="btn btn-primary flex items-center gap-2"
               >
                 <FaArrowLeft className="h-4 w-4" />
@@ -545,24 +739,21 @@ const ContactDetailsPage = () => {
                       <div className="mt-4 space-y-2">
                         <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
                         {message.attachments.map((attachment, index) => {
-                          // Handle both string paths and object attachments
-                          const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
-                          const filename = typeof attachment === 'string' 
-                            ? attachment.split('/').pop() || 'Unknown file'
-                            : attachment.filename;
-                          const mimetype = typeof attachment === 'string'
-                            ? ''
-                            : attachment.mimetype;
+                          // Handle the new attachment format
+                          const attachmentUrl = attachment.url || attachment.fileUrl;
+                          const filename = attachment.encryptedName || attachment.filename || 'Unknown file';
+                          const mimetype = attachment.mimetype || attachment.mimeType || 'application/octet-stream';
+                          const filesize = attachment.filesize || (attachment.fileSize ? `${Math.round(attachment.fileSize / 1024)} KB` : '');
                           
                           return (
-                            <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                               {getFileIcon(mimetype)}
                               <div className="flex-1 min-w-0">
                                 <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
                                   {filename}
                                 </div>
                                 <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                  {typeof attachment === 'object' && attachment.filesize ? `${attachment.filesize} • ` : ''}Attachment
+                                  {filesize ? `${filesize} • ` : ''}Attachment
                                 </div>
                               </div>
                               <button 
@@ -613,24 +804,21 @@ const ContactDetailsPage = () => {
                         <div className="mt-4 space-y-2">
                           <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
                           {message.attachments.map((attachment, index) => {
-                            // Handle both string paths and object attachments
-                            const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
-                            const filename = typeof attachment === 'string' 
-                              ? attachment.split('/').pop() || 'Unknown file'
-                              : attachment.filename;
-                            const mimetype = typeof attachment === 'string'
-                              ? ''
-                              : attachment.mimetype;
+                            // Handle the new attachment format
+                            const attachmentUrl = attachment.url || attachment.fileUrl;
+                            const filename = attachment.encryptedName || attachment.filename || 'Unknown file';
+                            const mimetype = attachment.mimetype || attachment.mimeType || 'application/octet-stream';
+                            const filesize = attachment.filesize || (attachment.fileSize ? `${Math.round(attachment.fileSize / 1024)} KB` : '');
                             
                             return (
-                              <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                              <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                                 {getFileIcon(mimetype)}
                                 <div className="flex-1 min-w-0">
                                   <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
                                     {filename}
                                   </div>
                                   <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                    {typeof attachment === 'object' && attachment.filesize ? `${attachment.filesize} • ` : ''}Attachment
+                                    {filesize ? `${filesize} • ` : ''}Attachment
                                   </div>
                                 </div>
                                 <button 
@@ -680,7 +868,56 @@ const ContactDetailsPage = () => {
                     </small>
                   </div>
                   
+                  {/* File Upload */}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="attachments">
+                      Attachments (Optional)
+                    </label>
+                    <input
+                      type="file"
+                      id="attachments"
+                      ref={fileInputRef}
+                      multiple
+                      onChange={handleFileSelect}
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
+                      accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.zip,.rar"
+                    />
+                    <small className="text-xs text-gray-500 mt-1">
+                      You can upload screenshots or other relevant files (max 5MB each).
+                    </small>
+                  </div>
 
+                  {/* Selected Files */}
+                  {selectedFiles.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                        Selected Files ({selectedFiles.length}):
+                      </p>
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <div className="flex-shrink-0">
+                            {getFileIcon(file.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                              {file.name}
+                            </div>
+                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="flex-shrink-0 p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                            title="Remove file"
+                          >
+                            <FaTimes className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   
                   <div className="flex items-center gap-2">
                     <button
@@ -813,4 +1050,12 @@ const ContactDetailsPage = () => {
     </div>
   );
 };
-export default ContactDetailsPage;
+import ContactSystemGuard from '@/components/ContactSystemGuard';
+
+const ProtectedContactDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => (
+  <ContactSystemGuard>
+    <ContactDetailsPage params={params} />
+  </ContactSystemGuard>
+);
+
+export default ProtectedContactDetailsPage;

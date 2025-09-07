@@ -637,8 +637,6 @@ const GeneralSettingsPage = () => {
 
       if (response.ok && responseData.success) {
         showToast('Contact settings saved successfully!', 'success');
-        // Reload settings to ensure UI is in sync
-        window.location.reload();
       } else {
         showToast('Failed to save contact settings', 'error');
       }

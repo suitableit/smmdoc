@@ -115,6 +115,55 @@ export default auth(async (req) => {
     }
   }
 
+  // Check contact system status for contact-related pages
+  const contactPages = [
+    '/admin/contact-messages',
+    '/contact-support',
+    '/contact'
+  ];
+  
+  const isContactPage = contactPages.some(page => 
+    nextUrl.pathname === page || nextUrl.pathname.startsWith(page + '/')
+  );
+  
+  if (isContactPage && isLoggedIn) {
+    console.log('Middleware: Contact page detected:', nextUrl.pathname);
+    console.log('Middleware: User role:', userRole?.role);
+    try {
+      // Use fetch to call our API endpoint since Prisma can't run in middleware
+      const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:3000`;
+      console.log('Middleware: Fetching contact status from:', `${baseUrl}/api/contact-system-status`);
+      const response = await fetch(`${baseUrl}/api/contact-system-status`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('Middleware: API response status:', response.status);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Middleware: Contact system enabled:', data.contactSystemEnabled);
+        if (!data.contactSystemEnabled) {
+          // Redirect based on user role and impersonation status
+          const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+          console.log('Middleware: Redirecting to:', redirectPath);
+          return NextResponse.redirect(new URL(redirectPath, nextUrl));
+        }
+      } else {
+        console.log('Middleware: API error, redirecting to safe page');
+        // On API error, redirect to safe page
+        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        return NextResponse.redirect(new URL(redirectPath, nextUrl));
+      }
+    } catch (error) {
+      console.error('Error checking contact system status in middleware:', error);
+      // On error, redirect to safe page
+      const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+      return NextResponse.redirect(new URL(redirectPath, nextUrl));
+    }
+  }
+
   // Admin-only routes protection
   if (nextUrl.pathname.startsWith('/admin')) {
     // If impersonating, redirect to user dashboard
