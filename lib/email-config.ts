@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 import nodemailer, { Transporter } from 'nodemailer';
-import { getAdminEmail } from '@/lib/utils/general-settings';
 
 const prisma = new PrismaClient();
 
@@ -30,8 +29,8 @@ export async function getEmailConfig(): Promise<EmailConfig | null> {
       return null;
     }
 
-    // Get admin email from General Settings
-    const adminEmail = await getAdminEmail();
+    // Use support email from Email Settings, fallback to SMTP username
+    const supportEmail = emailSettings.email || emailSettings.smtp_username;
 
     return {
       host: emailSettings.smtp_host,
@@ -41,7 +40,7 @@ export async function getEmailConfig(): Promise<EmailConfig | null> {
         user: emailSettings.smtp_username,
         pass: emailSettings.smtp_password,
       },
-      from: adminEmail || emailSettings.smtp_username,
+      from: supportEmail,
     };
   } catch (error) {
     console.error('Error fetching email configuration from database:', error);
@@ -74,15 +73,40 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
       maxConnections: 1,
       rateDelta: 20000,
       rateLimit: 5,
+      // Connection timeout settings
+      connectionTimeout: 60000,
+      greetingTimeout: 30000,
+      socketTimeout: 60000,
+      // Only add DKIM if private key is provided
+      ...(process.env.DKIM_PRIVATE_KEY && {
+        dkim: {
+          domainName: config.from.split('@')[1] || config.host,
+          keySelector: 'default',
+          privateKey: process.env.DKIM_PRIVATE_KEY,
+        }
+      }),
     });
 
     // Verify the transporter
-    await transporter.verify();
-    console.log('✅ Email transporter created and verified successfully');
+    console.log('🔍 Attempting to verify transporter...');
+    try {
+      await transporter.verify();
+      console.log('✅ Email transporter created and verified successfully');
+    } catch (verifyError) {
+      console.warn('⚠️ Transporter verification failed, but continuing anyway:', verifyError.message);
+      console.log('📧 Transporter created without verification');
+    }
     
     return transporter;
   } catch (error) {
-    console.error('❌ Error creating email transporter:', error);
+    console.error('❌ Error creating email transporter:', error.message);
+    console.error('❌ Full error details:', {
+      name: error.name,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode
+    });
     return null;
   }
 }
@@ -93,11 +117,19 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
  */
 export async function getFromEmailAddress(): Promise<string | null> {
   try {
-    // Use Administration Email Address from General Settings
-    const adminEmail = await getAdminEmail();
-    return adminEmail || null;
+    // Use Support Email Address from Email Settings
+    const emailSettings = await prisma.emailSettings.findFirst({
+      orderBy: { updated_at: 'desc' }
+    });
+    
+    if (emailSettings?.email) {
+      return emailSettings.email;
+    }
+    
+    // Fallback to SMTP username if support email not set
+    return emailSettings?.smtp_username || null;
   } catch (error) {
-    console.error('Error fetching admin email from General Settings:', error);
+    console.error('Error fetching support email from Email Settings:', error);
     return null;
   }
 }

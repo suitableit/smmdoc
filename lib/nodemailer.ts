@@ -1,5 +1,6 @@
 import nodemailer, { Transporter } from "nodemailer";
 import { createEmailTransporter, getFromEmailAddress } from './email-config';
+import { getAppName } from './utils/general-settings';
 
 interface MailOptions {
   sendTo: string;
@@ -30,11 +31,27 @@ export const sendMail = async ({
       return false;
     }
     
+    // Get app name from general settings
+    const appName = await getAppName();
+    
+    // Generate unique Message-ID for better deliverability
+    const messageId = `<${Date.now()}.${Math.random().toString(36).substr(2, 9)}@${fromEmail.split('@')[1]}>`;
+    
     await transporter.sendMail({
-      from: `"SMMDOC" <${fromEmail}>`,
+      from: `"${appName}" <${fromEmail}>`,
       to: sendTo,
       subject: subject,
       html: html,
+      replyTo: fromEmail,
+      messageId: messageId,
+      headers: {
+        'X-Mailer': `${appName} Mail System`,
+        'X-Priority': '3',
+        'X-MSMail-Priority': 'Normal',
+        'Importance': 'Normal',
+        'List-Unsubscribe': `<mailto:${fromEmail}?subject=Unsubscribe>`,
+        'Return-Path': fromEmail,
+      },
     });
     
     console.log(`✅ Email sent successfully to: ${sendTo}`);
@@ -70,10 +87,11 @@ export const sendVerificationEmail = async (
 ): Promise<boolean> => {
   const verificationUrl = `${process.env.NEXTAUTH_URL}/auth/verify-email?token=${token}`;
   const name = userName || 'User';
+  const appName = await getAppName();
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2>Email Verification - SMMDOC</h2>
+      <h2>Email Verification - ${appName}</h2>
       <p>Hello ${name},</p>
       <p>Please click the button below to verify your email address:</p>
       <a href="${verificationUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
@@ -82,13 +100,13 @@ export const sendVerificationEmail = async (
       <p>If the button doesn't work, copy and paste this link into your browser:</p>
       <p>${verificationUrl}</p>
       <p>This link will expire in 24 hours.</p>
-      <p>Best regards,<br>SMMDOC Team</p>
+      <p>Best regards,<br>${appName} Team</p>
     </div>
   `;
 
   return await sendMail({
     sendTo: email,
-    subject: 'Verify Your Email - SMMDOC',
+    subject: `Verify Your Email - ${appName}`,
     html: html,
   });
 };
@@ -101,10 +119,11 @@ export const sendPasswordResetEmail = async (
 ): Promise<boolean> => {
   const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`;
   const name = userName || 'User';
+  const appName = await getAppName();
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2>Password Reset - SMMDOC</h2>
+      <h2>Password Reset - ${appName}</h2>
       <p>Hello ${name},</p>
       <p>You requested a password reset. Click the button below to reset your password:</p>
       <a href="${resetUrl}" style="background-color: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
@@ -114,13 +133,13 @@ export const sendPasswordResetEmail = async (
       <p>${resetUrl}</p>
       <p>This link will expire in 1 hour.</p>
       <p>If you didn't request this, please ignore this email.</p>
-      <p>Best regards,<br>SMMDOC Team</p>
+      <p>Best regards,<br>${appName} Team</p>
     </div>
   `;
 
   return await sendMail({
     sendTo: email,
-    subject: 'Password Reset - SMMDOC',
+    subject: `Password Reset - ${appName}`,
     html: html,
   });
 };

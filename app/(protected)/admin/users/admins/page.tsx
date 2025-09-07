@@ -468,7 +468,7 @@ const AdminsListPage = () => {
   const handleDeleteAdmin = useCallback(
     async (adminId: string) => {
       const success = await handleApiAction(
-        `/api/admin/users/${adminId}`,
+        `/api/admin/users/admins/${adminId}`,
         'DELETE',
         undefined,
         'Admin deleted successfully'

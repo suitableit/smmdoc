@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useCurrentUser } from '@/hooks/use-current-user';
 import {
     FaArrowLeft,
     FaCheckCircle,
     FaChevronDown,
     FaChevronUp,
     FaComments,
-    FaEdit,
     FaEnvelope,
     FaEye,
     FaFileAlt,
@@ -19,7 +19,6 @@ import {
     FaPaperPlane,
     FaPlus,
     FaReply,
-    FaSave,
     FaStickyNote,
     FaTimes,
     FaUser,
@@ -118,13 +117,14 @@ interface ContactMessageDetails {
 
 const ContactDetailsPage = () => {
   const { appName } = useAppNameWithFallback();
+  const currentUser = useCurrentUser();
 
   // Get message ID from URL
   const messageId = typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : '1';
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    setPageTitle('Contact Message #${messageId}', appName);
+    setPageTitle(`Message Details ${formatMessageID(messageId)}`, appName);
   }, [messageId]);
 
   // Dummy data for contact message details
@@ -251,29 +251,25 @@ Support Manager`,
   };
 
   // State management
-  const [contactDetails, setContactDetails] = useState<ContactMessageDetails>(dummyContactDetails);
-  const [loading, setLoading] = useState(false);
+  const [contactDetails, setContactDetails] = useState<ContactMessageDetails | null>(null);
+  const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
   const [isReplying, setIsReplying] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [showNotes, setShowNotes] = useState(true);
   const [showUserInfo, setShowUserInfo] = useState(true);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   
-  // Edit state management
-  const [isEditing, setIsEditing] = useState(false);
-  const [editSubject, setEditSubject] = useState('');
-  const [editCategory, setEditCategory] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+
 
   // Utility functions
   const formatMessageID = (id: string) => {
-    return `#${id.padStart(4, '0')}`;
+    return `#${parseInt(id.toString()).toString()}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -301,9 +297,8 @@ Support Manager`,
 
   // Fetch contact details from API
   const fetchContactDetails = async () => {
-    setLoading(true);
     try {
-      const response = await fetch(`/api/admin/contact-messages/${messageId}`);
+      const response = await fetch(`/api/admin/contact-messages/${messageId}?include_notes=true`);
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -322,15 +317,42 @@ Support Manager`,
           });
         }
         
-        // Add admin reply if exists
+        // Add admin replies if they exist
         if (data.message.adminReply) {
-          messages.push({
-            id: `admin_${data.message.id}`,
-            type: 'staff',
-            author: data.message.repliedByUser?.username || 'Admin',
-            content: data.message.adminReply,
-            createdAt: data.message.repliedAt || data.message.updatedAt
-          });
+          try {
+            // Try to parse as JSON array (new format with multiple replies)
+            const replies = JSON.parse(data.message.adminReply);
+            if (Array.isArray(replies)) {
+              // New format: multiple replies
+              replies.forEach((reply, index) => {
+                messages.push({
+                  id: `admin_${data.message.id}_${index}`,
+                  type: 'staff',
+                  author: reply.author || 'Admin',
+                  content: reply.content,
+                  createdAt: reply.repliedAt
+                });
+              });
+            } else {
+              // Fallback: single reply
+              messages.push({
+                id: `admin_${data.message.id}`,
+                type: 'staff',
+                author: data.message.repliedByUser?.username || 'Admin',
+                content: data.message.adminReply,
+                createdAt: data.message.repliedAt || data.message.updatedAt
+              });
+            }
+          } catch {
+            // Old format: single reply string
+            messages.push({
+              id: `admin_${data.message.id}`,
+              type: 'staff',
+              author: data.message.repliedByUser?.username || 'Admin',
+              content: data.message.adminReply,
+              createdAt: data.message.repliedAt || data.message.updatedAt
+            });
+          }
         }
 
         // Transform API data to match the expected format
@@ -343,12 +365,18 @@ Support Manager`,
           subject: data.message.subject,
           createdAt: data.message.createdAt,
           lastUpdated: data.message.updatedAt,
-          status: data.message.status,
+          status: 'Read', // Auto-mark as read when opened
           messages: messages, // Now populated with actual conversation
-          notes: [], // Default empty notes
+          notes: (data.message.notes || []).map((note: any) => ({
+            id: note.id,
+            content: note.content,
+            author: note.admin_username || note.author || 'Unknown',
+            createdAt: note.created_at,
+            isPrivate: note.is_private || true
+          })),
           timeSpent: 0, // Default value
           userInfo: {
-            fullName: data.message.user?.username || 'Unknown User',
+            fullName: data.message.user?.name || data.message.user?.username || 'Unknown User',
             email: data.message.user?.email || 'No Email',
             phone: '',
             company: '',
@@ -360,6 +388,11 @@ Support Manager`,
         };
 
         setContactDetails(transformedData);
+        
+        // Auto-mark message as read if it wasn't already
+        if (data.message.status !== 'Read') {
+          markAsRead();
+        }
       } else {
         showToast(data.error || 'Failed to load contact details', 'error');
       }
@@ -368,6 +401,23 @@ Support Manager`,
       showToast('Error loading contact details', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Mark message as read
+  const markAsRead = async () => {
+    try {
+      await fetch(`/api/admin/contact-messages/${messageId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'Read'
+        }),
+      });
+    } catch (error) {
+      console.error('Error marking message as read:', error);
     }
   };
 
@@ -387,30 +437,7 @@ Support Manager`,
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Handle status change
-  const handleStatusChange = (newStatus: string) => {
-    setContactDetails(prev => ({
-      ...prev,
-      status: newStatus as any,
-      lastUpdated: new Date().toISOString()
-    }));
-    
-    // Add system message
-    const systemMessage: ContactMessage = {
-      id: `msg_${Date.now()}`,
-      type: 'system',
-      author: 'System',
-      content: `Message status changed to "${newStatus}"`,
-      createdAt: new Date().toISOString()
-    };
-    
-    setContactDetails(prev => ({
-      ...prev,
-      messages: [...prev.messages, systemMessage]
-    }));
-    
-    showToast(`Message status changed to ${newStatus}`, 'success');
-  };
+
 
   // Handle reply submission
   const handleReplySubmit = async () => {
@@ -434,16 +461,15 @@ Support Manager`,
 
       if (response.ok && data.success) {
         // Update the contact details with the reply
-        setContactDetails(prev => ({
+        setContactDetails(prev => prev ? ({
           ...prev,
           adminReply: replyContent.trim(),
           status: 'Replied',
           lastUpdated: new Date().toISOString(),
           repliedAt: new Date().toISOString()
-        }));
+        }) : null);
 
         setReplyContent('');
-        setSelectedFiles([]);
         showToast(data.message || 'Reply sent successfully', 'success');
 
         // Refresh the data to get updated information
@@ -465,98 +491,86 @@ Support Manager`,
     setIsAddingNote(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await fetch(`/api/admin/contact-messages/${messageId}/notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: newNote }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add note');
+      }
+
+      const updatedMessage = await response.json();
       
-      const note: ContactNote = {
-        id: `note_${Date.now()}`,
-        content: newNote,
-        author: 'admin_user (Admin)',
-        createdAt: new Date().toISOString(),
-        isPrivate: true
-      };
-      
-      setContactDetails(prev => ({
+      // Update contact details with the new notes
+      setContactDetails(prev => prev ? ({
         ...prev,
-        notes: [...prev.notes, note]
-      }));
+        notes: updatedMessage.notes.map((note: any) => ({
+          id: note.id,
+          content: note.content,
+          author: note.author,
+          createdAt: note.createdAt,
+          isPrivate: note.isPrivate
+        }))
+      }) : null);
       
       setNewNote('');
       showToast('Note added successfully', 'success');
     } catch (error) {
+      console.error('Error adding note:', error);
       showToast('Error adding note', 'error');
     } finally {
       setIsAddingNote(false);
     }
   };
 
-  // Handle edit mode
-  const handleEditClick = () => {
-    setEditSubject(contactDetails.subject);
-    setEditCategory(contactDetails.category);
-    setIsEditing(true);
-  };
 
-  // Handle cancel edit
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditSubject('');
-    setEditCategory('');
-  };
 
-  // Handle save edit
-  const handleSaveEdit = async () => {
-    if (!editSubject.trim() || !editCategory.trim()) {
-      showToast('Subject and category are required', 'error');
-      return;
-    }
 
-    setIsSaving(true);
-    
-    try {
-      const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'update',
-          subject: editSubject.trim(),
-          category: editCategory.trim()
-        }),
-      });
 
-      const data = await response.json();
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <GradientSpinner size="w-16 h-16" className="mx-auto mb-4" />
+              <p className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>Loading contact details...</p>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Please wait while we fetch the message information.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-      if (response.ok && data.success) {
-        setContactDetails(prev => ({
-          ...prev,
-          subject: editSubject.trim(),
-          category: editCategory.trim(),
-          lastUpdated: new Date().toISOString()
-        }));
-        
-        setIsEditing(false);
-        showToast('Message updated successfully', 'success');
-      } else {
-        showToast(data.error || 'Error updating message', 'error');
-      }
-    } catch (error) {
-      showToast('Error updating message', 'error');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Handle file selection
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
-  };
-
-  // Remove selected file
-  const removeSelectedFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
+  // Show error state if no contact details
+  if (!contactDetails) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="text-red-500 text-6xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Message Not Found</h2>
+              <p className="text-lg mb-4" style={{ color: 'var(--text-muted)' }}>The requested contact message could not be found.</p>
+              <button 
+                onClick={() => window.history.back()}
+                className="btn btn-primary flex items-center gap-2 mx-auto"
+              >
+                <FaArrowLeft className="h-4 w-4" />
+                Back to Messages
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -586,27 +600,14 @@ Support Manager`,
                 Back to Messages
               </button>
 
-              {/* Status Controls */}
-              <select 
-                value={contactDetails.status}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                className="form-field pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-              >
-                <option value="Unread">Unread</option>
-                <option value="Read">Read</option>
-                <option value="Replied">Replied</option>
-              </select>
+
             </div>
             
             <div className="flex flex-row items-center gap-1 md:gap-2">
               <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                Message {formatMessageID(contactDetails.id)}
+                Message {formatMessageID(contactDetails?.id || '1')}
               </h1>
-              {contactDetails.status === 'Unread' && (
-                <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded-full">
-                  Unread
-                </span>
-              )}
+
             </div>
           </div>
           </div>
@@ -622,111 +623,37 @@ Support Manager`,
                   <FaEnvelope />
                 </div>
                 <h3 className="card-title">Message Information</h3>
-                {!isEditing ? (
-                  <button
-                    onClick={handleEditClick}
-                    className="btn btn-secondary flex items-center gap-2 ml-auto"
-                  >
-                    <FaEdit className="h-4 w-4" />
-                    Edit
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2 ml-auto">
-                    <button
-                      onClick={handleCancelEdit}
-                      className="btn btn-secondary flex items-center gap-2"
-                      disabled={isSaving}
-                    >
-                      <FaTimes className="h-4 w-4" />
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveEdit}
-                      className="btn btn-primary flex items-center gap-2"
-                      disabled={isSaving}
-                    >
-                      {isSaving ? (
-                        <ButtonLoader />
-                      ) : (
-                        <FaSave className="h-4 w-4" />
-                      )}
-                      {isSaving ? 'Saving...' : 'Save'}
-                    </button>
-                  </div>
-                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="form-label">Subject</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editSubject}
-                      onChange={(e) => setEditSubject(e.target.value)}
-                      className="form-field mt-1"
-                      placeholder="Enter subject"
-                      disabled={isSaving}
-                    />
-                  ) : (
-                    <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{contactDetails.subject}</p>
-                  )}
+                  <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{contactDetails?.subject || 'No Subject'}</p>
                 </div>
                 <div>
                   <label className="form-label">Category</label>
-                  {isEditing ? (
-                    <select
-                      value={editCategory}
-                      onChange={(e) => setEditCategory(e.target.value)}
-                      className="form-field mt-1"
-                      disabled={isSaving}
-                    >
-                      <option value="">Select Category</option>
-                      <option value="Instagram Services">Instagram Services</option>
-                      <option value="Facebook Services">Facebook Services</option>
-                      <option value="Twitter Services">Twitter Services</option>
-                      <option value="YouTube Services">YouTube Services</option>
-                      <option value="TikTok Services">TikTok Services</option>
-                      <option value="General Support">General Support</option>
-                      <option value="Billing Question">Billing Question</option>
-                      <option value="Feature Request">Feature Request</option>
-                      <option value="Technical Issue">Technical Issue</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  ) : (
-                    <div className="mt-1">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                        {contactDetails.category}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <label className="form-label">Status</label>
-                  <span className={`mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(contactDetails.status)}`}>
-                    {contactDetails.status}
-                  </span>
+                  <div className="mt-1">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                      {contactDetails?.category || 'Unknown'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <label className="form-label">Created</label>
                   <p className="mt-1" style={{ color: 'var(--text-primary)' }}>
-                    {new Date(contactDetails.createdAt).toLocaleDateString()} at{' '}
-                    {new Date(contactDetails.createdAt).toLocaleTimeString()}
+                    {contactDetails?.createdAt ? new Date(contactDetails.createdAt).toLocaleDateString() : 'Unknown'} at{' '}
+                    {contactDetails?.createdAt ? new Date(contactDetails.createdAt).toLocaleTimeString() : 'Unknown'}
                   </p>
                 </div>
                 <div>
                   <label className="form-label">Last Updated</label>
                   <p className="mt-1" style={{ color: 'var(--text-primary)' }}>
-                    {new Date(contactDetails.lastUpdated).toLocaleDateString()} at{' '}
-                    {new Date(contactDetails.lastUpdated).toLocaleTimeString()}
+                    {contactDetails?.lastUpdated ? new Date(contactDetails.lastUpdated).toLocaleDateString() : 'Unknown'} at{' '}
+                    {contactDetails?.lastUpdated ? new Date(contactDetails.lastUpdated).toLocaleTimeString() : 'Unknown'}
                   </p>
-                </div>
-                <div>
-                  <label className="form-label">Time Spent</label>
-                  <p className="mt-1" style={{ color: 'var(--text-primary)' }}>{Math.floor(contactDetails.timeSpent / 60)}h {contactDetails.timeSpent % 60}m</p>
                 </div>
               </div>
             </div>
@@ -741,7 +668,7 @@ Support Manager`,
               </div>
               
               <div className="space-y-6">
-                {contactDetails.messages
+                {(contactDetails?.messages || [])
                   .filter(message => message.type === 'customer')
                   .map((message) => (
                   <div key={message.id}>
@@ -801,14 +728,15 @@ Support Manager`,
               </div>
               
               <div className="space-y-6">
-                {contactDetails.messages.filter(message => message.type === 'staff').length > 0 ? (
-                  contactDetails.messages
+                {(contactDetails?.messages || []).filter(message => message.type === 'staff').length > 0 ? (
+                  (contactDetails?.messages || [])
                     .filter(message => message.type === 'staff')
+                    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
                     .map((message) => (
                     <div key={message.id}>
                       <div className="mb-2">
                         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                          Time: {new Date(message.createdAt).toLocaleDateString()} at {new Date(message.createdAt).toLocaleTimeString()}
+                          {message.author} • {new Date(message.createdAt).toLocaleDateString()} at {new Date(message.createdAt).toLocaleTimeString()}
                         </span>
                       </div>
                       
@@ -865,7 +793,7 @@ Support Manager`,
             </div>
 
             {/* Reply Section */}
-            <div className="card card-padding">
+            <div className="card card-padding overflow-hidden">
               <div className="card-header">
                 <div className="card-icon">
                   <FaPaperPlane />
@@ -880,47 +808,14 @@ Support Manager`,
                     onChange={(e) => setReplyContent(e.target.value)}
                     placeholder="Type your reply to the customer..."
                     rows={6}
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
+                    className="form-field w-full min-w-0 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none max-h-48 overflow-y-auto"
                   />
                   <small className="text-xs text-gray-500 mt-1 block">
                     This reply will be sent to the customer and will update the message status to "Replied".
                   </small>
                 </div>
                 
-                {/* File Upload */}
-                <div className="form-group">
-                  <label className="form-label mb-2">
-                    Attachments
-                  </label>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileSelect}
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
-                  />
-                  <small className="text-xs text-gray-500 mt-1">
-                    You can upload screenshots or other relevant files (max 5MB each).
-                  </small>
-                  
-                  {/* Selected Files */}
-                  {selectedFiles.length > 0 && (
-                    <div className="mt-2 space-y-2">
-                      {selectedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
-                          {getFileIcon(file.type)}
-                          <span className="text-sm flex-1" style={{ color: 'var(--text-primary)' }}>{file.name}</span>
-                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{Math.round(file.size / 1024)} KB</span>
-                          <button
-                            onClick={() => removeSelectedFile(index)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <FaTimes className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+
                 
                 <div className="flex items-center gap-2">
                   <button
@@ -928,11 +823,8 @@ Support Manager`,
                     disabled={!replyContent.trim() || isReplying}
                     className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
                   >
-                    {isReplying && (
-                      <ButtonLoader />
-                    )}
-                    <FaPaperPlane className="h-3 w-3" />
-                    Send Reply
+                    {!isReplying && <FaPaperPlane className="h-3 w-3" />}
+                    {isReplying ? 'Sending...' : 'Send Reply'}
                   </button>
                 </div>
               </div>
@@ -960,24 +852,24 @@ Support Manager`,
                 <div className="space-y-4">
                   <div>
                     <div className="form-label">Username</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails.username || 'No Username'}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails?.username || 'No Username'}</div>
                   </div>
                   <div>
                     <div className="form-label">Full Name</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails.userInfo?.fullName || 'No Name'}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails?.userInfo?.fullName || 'No Name'}</div>
                   </div>
                   <div>
                     <div className="form-label">Email</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails.userInfo?.email || contactDetails.userEmail}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails?.userInfo?.email || contactDetails?.userEmail}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-2 border-t">
                     <div>
                       <div className="form-label">Total Messages</div>
-                      <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{contactDetails.userInfo?.totalMessages || 0}</div>
+                      <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{contactDetails?.userInfo?.totalMessages || 0}</div>
                     </div>
                     <div>
                       <div className="form-label">Open Messages</div>
-                      <div className="text-lg font-semibold text-orange-600">{contactDetails.userInfo?.openMessages || 0}</div>
+                      <div className="text-lg font-semibold text-orange-600">{contactDetails?.userInfo?.openMessages || 0}</div>
                     </div>
                   </div>
                 </div>
@@ -985,7 +877,7 @@ Support Manager`,
             </div>
 
             {/* Internal Notes */}
-            <div className="card card-padding">
+            <div className="card card-padding overflow-hidden">
               <div 
                 className="card-header cursor-pointer flex items-center justify-between"
                 onClick={() => setShowNotes(!showNotes)}
@@ -994,7 +886,7 @@ Support Manager`,
                   <div className="card-icon">
                     <FaStickyNote />
                   </div>
-                  <h3 className="card-title">Internal Notes ({contactDetails.notes.length})</h3>
+                  <h3 className="card-title">Internal Notes ({contactDetails?.notes?.length || 0})</h3>
                 </div>
                 {showNotes ? <FaChevronUp /> : <FaChevronDown />}
               </div>
@@ -1008,7 +900,7 @@ Support Manager`,
                       onChange={(e) => setNewNote(e.target.value)}
                       placeholder="Add an internal note..."
                       rows={3}
-                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
+                      className="form-field w-full min-w-0 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none max-h-32 overflow-y-auto"
                     />
                     <small className="text-xs text-gray-500 mt-1 block">
                       Internal notes are only visible to support staff members.
@@ -1018,25 +910,21 @@ Support Manager`,
                       disabled={!newNote.trim() || isAddingNote}
                       className="mt-2 btn btn-primary text-xs flex items-center gap-2 disabled:opacity-50"
                     >
-                      {isAddingNote ? (
-                        <ButtonLoader />
-                      ) : (
-                        <FaPlus className="h-3 w-3" />
-                      )}
-                      Add Note
+                      {!isAddingNote && <FaPlus className="h-3 w-3" />}
+                      {isAddingNote ? 'Adding...' : 'Add Note'}
                     </button>
                   </div>
                   
                   {/* Notes List */}
                   <div className="space-y-3">
-                    {contactDetails.notes.map((note) => (
-                      <div key={note.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
-                          {note.author} • {new Date(note.createdAt).toLocaleDateString()}
-                        </div>
-                        <div className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{note.content}</div>
-                      </div>
-                    ))}
+                    {(contactDetails?.notes || []).map((note) => (
+                       <div key={note.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                         <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                           {note.author} • {new Date(note.createdAt).toLocaleDateString()}
+                         </div>
+                         <div className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{note.content}</div>
+                       </div>
+                     ))}
                   </div>
                 </div>
               )}
@@ -1047,5 +935,4 @@ Support Manager`,
     </div>
   );
 };
-
 export default ContactDetailsPage;
