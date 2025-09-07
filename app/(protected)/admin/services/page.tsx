@@ -2291,13 +2291,14 @@ const EditServiceForm = ({
 };
 
 function AdminServicesPage() {
+  // Hooks
+  const user = useCurrentUser();
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
     setPageTitle('All Services', appName);
   }, [appName]);
-
-  // Hooks
-  const user = useCurrentUser();
   const { data: categoriesData, mutate: refreshCategories } =
     useGetCategories();
 
@@ -2462,8 +2463,6 @@ function AdminServicesPage() {
 
   // Pagination functions
   const handlePreviousPage = () => {
-  const { appName } = useAppNameWithFallback();
-
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }

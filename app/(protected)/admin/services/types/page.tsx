@@ -68,6 +68,9 @@ interface PaginationInfo {
 }
 
 const ServiceTypes = () => {
+  // Hooks
+  const { appName } = useAppNameWithFallback();
+
   // Toast function
   const showToast = (
     message: string,

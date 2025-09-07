@@ -86,7 +86,7 @@ const EmailSettingsPage = () => {
   // Test mail state
   const [testMailData, setTestMailData] = useState({
     recipientEmail: '',
-    subject: 'Test Email from ' + APP_NAME,
+    subject: `Test Email from ${appName}`,
     message: 'This is a test email to verify SMTP configuration is working correctly.',
   });
   const [isTestingMail, setIsTestingMail] = useState(false);
@@ -270,7 +270,7 @@ const EmailSettingsPage = () => {
 
               <div className="space-y-4">
                 <div className="form-group">
-                  <label className="form-label">Email</label>
+                  <label className="form-label">Support Email Address</label>
                   <input
                     type="email"
                     value={emailSettings.email}
@@ -278,10 +278,10 @@ const EmailSettingsPage = () => {
                       setEmailSettings(prev => ({ ...prev, email: e.target.value }))
                     }
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    placeholder="Enter email address"
+                    placeholder="support@example.com"
                   />
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Note: The 'from' address for outgoing emails is now set in General Settings → Administration Email Address.
+                    System alerts will be sent to the email defined in General Settings → Administration Email Address.
                   </p>
                 </div>
 
@@ -402,7 +402,7 @@ const EmailSettingsPage = () => {
                       value={testMailData.subject}
                       readOnly
                       className="form-field w-full px-4 py-3 bg-gray-100 dark:bg-gray-600/50 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 cursor-not-allowed transition-all duration-200"
-                      placeholder="Test Email from {APP_NAME}"
+                      placeholder={`Test Email from ${appName}`}
                     />
                   </div>
 

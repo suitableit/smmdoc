@@ -44,6 +44,7 @@ const Toast = ({
 );
 
 function PaymentSuccessContent() {
+  const { appName } = useAppNameWithFallback();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [toast, setToast] = useState<{
@@ -204,7 +205,6 @@ function PaymentSuccessContent() {
 }
 
 export default function PaymentSuccessPage() {
-  const { appName } = useAppNameWithFallback();
 
   return (
     <Suspense
