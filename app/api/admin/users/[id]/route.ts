@@ -324,46 +324,153 @@ export async function DELETE(
       console.error('Failed to log user deletion activity:', logError);
     }
 
-    // Soft delete approach - mark user as deleted first, then cleanup
+    // Complete user deletion with cascading deletes for all associated data
     try {
-      // First, mark user as deleted to prevent login
-      await db.user.update({
-        where: { id: userId },
-        data: {
-          status: 'deleted',
-          email: `deleted_${userId}_${Date.now()}@deleted.com`,
-          name: `Deleted User ${userId}`,
-          username: `deleted_${userId}`,
-          // Clear sensitive data
-          password: null,
-          emailVerified: null,
-          image: null,
-          balance: 0
+      // Use transaction to ensure all deletions succeed or fail together
+      await db.$transaction(async (tx) => {
+        // Delete all user-associated data in proper order (child records first)
+        
+        // 1. Delete activity logs
+        await tx.activitylog.deleteMany({
+          where: { userId: userId }
+        });
+
+        // 2. Delete fund transactions (addFund)
+        await tx.addFund.deleteMany({
+          where: { userId: userId }
+        });
+
+        // 3. Delete orders and related data
+        await tx.newOrder.deleteMany({
+          where: { userId: userId }
+        });
+
+        // 4. Delete cancel requests
+        await tx.cancelRequest.deleteMany({
+          where: { userId: userId }
+        });
+
+        // 5. Delete refill requests
+        await tx.refillRequest.deleteMany({
+          where: { userId: userId }
+        });
+
+        // 6. Delete favorite services and categories
+        await tx.favoriteService.deleteMany({
+          where: { userId: userId }
+        });
+        
+        await tx.favrouteCat.deleteMany({
+          where: { userId: userId }
+        });
+
+        // 7. Delete support tickets and related messages/notes
+        const userTickets = await tx.supportTicket.findMany({
+          where: { userId: userId },
+          select: { id: true }
+        });
+        
+        for (const ticket of userTickets) {
+          await tx.ticketMessage.deleteMany({
+            where: { ticketId: ticket.id }
+          });
+          await tx.ticketNote.deleteMany({
+            where: { ticketId: ticket.id }
+          });
         }
-      });
-
-      // Then delete sessions to log them out immediately
-      await db.session.deleteMany({
-        where: { userId: userId }
-      });
-
-      // Delete user API keys for security (optional cleanup)
-      try {
-        await db.apiKey.deleteMany({
+        
+        await tx.supportTicket.deleteMany({
           where: { userId: userId }
         });
-      } catch (error) {
-        console.warn('Could not delete API keys:', error);
-      }
 
-      // Delete OAuth accounts (optional cleanup)
-      try {
-        await db.account.deleteMany({
+        // 8. Delete contact messages and notes
+        const userContactMessages = await tx.contactMessage.findMany({
+          where: { userId: userId },
+          select: { id: true }
+        });
+        
+        for (const message of userContactMessages) {
+          await tx.contactNote.deleteMany({
+            where: { contactMessageId: message.id }
+          });
+        }
+        
+        await tx.contactMessage.deleteMany({
           where: { userId: userId }
         });
-      } catch (error) {
-        console.warn('Could not delete OAuth accounts:', error);
-      }
+
+        // 9. Delete affiliate data (if user is an affiliate)
+        const userAffiliate = await tx.affiliates.findUnique({
+          where: { userId: userId },
+          select: { id: true }
+        });
+        
+        if (userAffiliate) {
+          // Delete affiliate commissions, payouts, and referrals
+          await tx.affiliate_commissions.deleteMany({
+            where: { affiliateId: userAffiliate.id }
+          });
+          
+          await tx.affiliate_payouts.deleteMany({
+            where: { affiliateId: userAffiliate.id }
+          });
+          
+          await tx.affiliate_referrals.deleteMany({
+            where: { affiliateId: userAffiliate.id }
+          });
+          
+          await tx.affiliates.delete({
+            where: { id: userAffiliate.id }
+          });
+        }
+
+        // 10. Delete child panel data (if user has a child panel)
+        const userChildPanel = await tx.child_panels.findUnique({
+          where: { userId: userId },
+          select: { id: true }
+        });
+        
+        if (userChildPanel) {
+          await tx.child_panel_subscriptions.deleteMany({
+            where: { childPanelId: userChildPanel.id }
+          });
+          
+          await tx.child_panels.delete({
+            where: { id: userChildPanel.id }
+          });
+        }
+
+        // 11. Delete user-created services and categories
+        await tx.service.deleteMany({
+          where: { userId: userId }
+        });
+        
+        await tx.category.deleteMany({
+          where: { userId: userId }
+        });
+
+        // 12. Delete authentication-related data
+        await tx.session.deleteMany({
+          where: { userId: userId }
+        });
+        
+        await tx.apiKey.deleteMany({
+          where: { userId: userId }
+        });
+        
+        await tx.account.deleteMany({
+          where: { userId: userId }
+        });
+        
+        await tx.twoFactorConfirmation.deleteMany({
+          where: { userId: userId }
+        });
+
+        // 13. Finally, delete the user record
+        await tx.user.delete({
+          where: { id: userId }
+        });
+      });
     } catch (error) {
       console.error('Error during user deletion process:', error);
       throw error;
@@ -372,7 +479,7 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       data: null,
-      message: 'User deleted successfully and sessions invalidated',
+      message: 'User and all associated data deleted successfully',
       error: null
     });
 

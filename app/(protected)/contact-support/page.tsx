@@ -520,7 +520,6 @@ export default function ContactSupportPage() {
                 >
                   {isSubmitting ? (
                     <>
-                      <GradientSpinner size="w-4 h-4" className="mr-2" />
                       Sending...
                     </>
                   ) : (

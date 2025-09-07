@@ -127,128 +127,7 @@ const ContactDetailsPage = () => {
     setPageTitle(`Message Details ${formatMessageID(messageId)}`, appName);
   }, [messageId]);
 
-  // Dummy data for contact message details
-  const dummyContactDetails: ContactMessageDetails = {
-    id: '001',
-    userId: 'user_001',
-    username: 'socialmarketer_john',
-    userEmail: 'john.doe@agency.com',
-    category: 'Instagram Services',
-    subject: 'Instagram followers delivery time inquiry',
-    createdAt: '2024-06-28T10:30:00Z',
-    lastUpdated: '2024-06-29T14:20:00Z',
-    status: 'Unread',
-    timeSpent: 25,
-    messages: [
-      {
-        id: 'msg_001',
-        type: 'customer',
-        author: 'socialmarketer_john',
-        content: `Hi there,
 
-I'm interested in your Instagram follower services and have a few questions before placing an order:
-
-1. What's the typical delivery timeframe for 10K Instagram followers?
-2. Are these real, active accounts or bot accounts?
-3. What's the retention rate and do you offer refill guarantees?
-4. Can you provide followers that match my target demographic (US-based, aged 25-35)?
-5. Do you offer any bulk discounts for agencies like ours?
-
-We're planning to launch a major campaign for our client @techstartup_innovations next week and want to boost their social proof beforehand.
-
-We've worked with other SMM providers before, but we're looking for higher quality services with better retention rates.
-
-Please let me know your recommendations and pricing.
-
-Best regards,
-John Doe
-Digital Marketing Manager
-TechFlow Agency`,
-        createdAt: '2024-06-28T10:30:00Z',
-        attachments: [
-          {
-            id: 'att_001',
-            filename: 'client_instagram_profile.png',
-            filesize: '445 KB',
-            mimetype: 'image/png',
-            uploadedAt: '2024-06-28T10:30:00Z',
-            uploadedBy: 'socialmarketer_john'
-          },
-          {
-            id: 'att_002',
-            filename: 'campaign_brief.pdf',
-            filesize: '1.2 MB',
-            mimetype: 'application/pdf',
-            uploadedAt: '2024-06-28T10:31:00Z',
-            uploadedBy: 'socialmarketer_john'
-          }
-        ]
-      },
-      {
-        id: 'msg_002',
-        type: 'staff',
-        author: 'sarah_support',
-        authorRole: 'Support Manager',
-        content: `Hi John,
-
-Thank you for your interest in our Instagram services! I'm happy to answer all your questions:
-
-**Service Details:**
-1. **Delivery Time:** 10K followers typically delivered within 24-48 hours with gradual delivery
-2. **Account Quality:** Mix of real users and high-quality aged accounts with profile pictures, posts, and engagement history
-3. **Retention:** 95%+ retention rate with 30-day automatic refill guarantee
-4. **Targeting:** Yes, we can provide US-based followers in your specified age range
-5. **Agency Discounts:** 15% bulk discount for orders over $500, 20% for orders over $1000
-
-**Recommended Package for Your Client:**
-- 10K Premium Instagram Followers (US-targeted, 25-35 age range)
-- Regular Price: $89
-- Agency Price: $75.65 (15% discount)
-- Delivery: 24-48 hours
-- Includes: 30-day refill guarantee
-
-**Additional Services:**
-- Instagram likes, views, comments
-- Story views and saves
-- Custom engagement packages
-
-I've reviewed your client's profile and campaign brief. For maximum impact, I'd also recommend adding some engagement (likes/comments) to recent posts to maintain authenticity.
-
-Would you like me to prepare a custom quote for the full package?
-
-Best regards,
-Sarah Johnson
-Support Manager`,
-        createdAt: '2024-06-28T15:20:00Z'
-      }
-    ],
-    notes: [
-      {
-        id: 'note_001',
-        content: 'High-value agency client. Provide best pricing and priority support.',
-        author: 'Sarah Johnson',
-        createdAt: '2024-06-28T15:25:00Z',
-        isPrivate: true
-      },
-      {
-        id: 'note_002',
-        content: 'Client has experience with SMM panels. Focus on quality and retention in response.',
-        author: 'Sarah Johnson',
-        createdAt: '2024-06-28T15:26:00Z',
-        isPrivate: true
-      }
-    ],
-    userInfo: {
-      fullName: 'John Doe',
-      email: 'john.doe@agency.com',
-      phone: '+1 (555) 123-4567',
-      company: 'TechFlow Digital Agency',
-      address: '123 Business St, San Francisco, CA 94105',
-      registeredAt: '2024-03-15T00:00:00Z',
-      totalMessages: 3,
-      openMessages: 1
-    }
-  };
 
   // State management
   const [contactDetails, setContactDetails] = useState<ContactMessageDetails | null>(null);
@@ -272,18 +151,7 @@ Support Manager`,
     return `#${parseInt(id.toString()).toString()}`;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Unread':
-        return 'bg-orange-50 text-orange-700 border-orange-200';
-      case 'Read':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'Replied':
-        return 'bg-green-50 text-green-700 border-green-200';
-      default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
-    }
-  };
+
 
   const getFileIcon = (mimetype: string) => {
     if (mimetype.startsWith('image/')) return <FaImage className="h-4 w-4" />;
@@ -365,7 +233,7 @@ Support Manager`,
           subject: data.message.subject,
           createdAt: data.message.createdAt,
           lastUpdated: data.message.updatedAt,
-          status: 'Read', // Auto-mark as read when opened
+          status: data.message.status || 'Read', // Use actual status from database
           messages: messages, // Now populated with actual conversation
           notes: (data.message.notes || []).map((note: any) => ({
             id: note.id,
@@ -374,16 +242,16 @@ Support Manager`,
             createdAt: note.created_at,
             isPrivate: note.is_private || true
           })),
-          timeSpent: 0, // Default value
+          timeSpent: data.message.time_spent || 0,
           userInfo: {
             fullName: data.message.user?.name || data.message.user?.username || 'Unknown User',
             email: data.message.user?.email || 'No Email',
-            phone: '',
-            company: '',
-            address: '',
-            registeredAt: '2024-01-01T00:00:00Z',
-            totalMessages: 1,
-            openMessages: 0
+            phone: data.message.user?.phone || '',
+            company: data.message.user?.company || '',
+            address: data.message.user?.address || '',
+            registeredAt: data.message.user?.created_at || data.message.user?.registeredAt || new Date().toISOString(),
+            totalMessages: data.message.user?.total_messages || 1,
+            openMessages: data.message.user?.open_messages || 0
           }
         };
 
@@ -632,11 +500,7 @@ Support Manager`,
                 </div>
                 <div>
                   <label className="form-label">Category</label>
-                  <div className="mt-1">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
-                      {contactDetails?.category || 'Unknown'}
-                    </span>
-                  </div>
+                  <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{contactDetails?.category || 'Unknown'}</p>
                 </div>
               </div>
 
@@ -792,43 +656,57 @@ Support Manager`,
               </div>
             </div>
 
-            {/* Reply Section */}
-            <div className="card card-padding overflow-hidden">
-              <div className="card-header">
-                <div className="card-icon">
-                  <FaPaperPlane />
-                </div>
-                <h3 className="card-title">Send Reply</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="form-group">
-                  <textarea
-                    value={replyContent}
-                    onChange={(e) => setReplyContent(e.target.value)}
-                    placeholder="Type your reply to the customer..."
-                    rows={6}
-                    className="form-field w-full min-w-0 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none max-h-48 overflow-y-auto"
-                  />
-                  <small className="text-xs text-gray-500 mt-1 block">
-                    This reply will be sent to the customer and will update the message status to "Replied".
-                  </small>
+            {/* Reply Section - Only show if no reply exists */}
+            {(contactDetails?.messages || []).filter(message => message.type === 'staff').length === 0 && (
+              <div className="card card-padding overflow-hidden">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaPaperPlane />
+                  </div>
+                  <h3 className="card-title">Send Reply</h3>
                 </div>
                 
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <textarea
+                      value={replyContent}
+                      onChange={(e) => setReplyContent(e.target.value)}
+                      placeholder="Type your reply to the customer..."
+                      rows={6}
+                      className="form-field w-full min-w-0 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none max-h-48 overflow-y-auto"
+                    />
+                    <small className="text-xs text-gray-500 mt-1 block">
+                      This reply will be sent to the customer and will update the message status to "Replied". You can only reply once.
+                    </small>
+                  </div>
+                  
 
-                
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleReplySubmit}
-                    disabled={!replyContent.trim() || isReplying}
-                    className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {!isReplying && <FaPaperPlane className="h-3 w-3" />}
-                    {isReplying ? 'Sending...' : 'Send Reply'}
-                  </button>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleReplySubmit}
+                      disabled={!replyContent.trim() || isReplying}
+                      className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {!isReplying && <FaPaperPlane className="h-3 w-3" />}
+                      {isReplying ? 'Sending...' : 'Send Reply'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+            
+            {/* Replied button when reply already sent */}
+            {(contactDetails?.messages || []).filter(message => message.type === 'staff').length > 0 && (
+              <div className="flex justify-left mt-4">
+                <button
+                  disabled
+                  className="btn btn-primary opacity-50 cursor-not-allowed"
+                >
+                  Replied
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
