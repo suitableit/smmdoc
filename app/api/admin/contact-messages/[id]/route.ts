@@ -23,8 +23,12 @@ export async function GET(
       );
     }
 
+    // Check if notes should be included
+    const { searchParams } = new URL(request.url);
+    const includeNotes = searchParams.get('include_notes') === 'true';
+
     // Get the contact message
-    const message = await contactDB.getContactMessageById(messageId);
+    const message = await contactDB.getContactMessageById(messageId, includeNotes);
 
     if (!message) {
       return NextResponse.json(
@@ -49,7 +53,8 @@ export async function GET(
       updatedAt: message.updatedAt,
       user: message.user,
       category: message.category,
-      repliedByUser: message.repliedByUser
+      repliedByUser: message.repliedByUser,
+      notes: message.notes || []
     };
 
     // Mark as read if it's unread
@@ -93,7 +98,7 @@ export async function PUT(
       );
     }
 
-    const { action, status, adminReply } = await request.json();
+    const { action, status, adminReply, attachments } = await request.json();
 
     if (!action) {
       return NextResponse.json(
@@ -125,7 +130,8 @@ export async function PUT(
         result = await contactDB.replyToContactMessage(
           messageId,
           adminReply.trim(),
-          session.user.id
+          session.user.id,
+          attachments
         );
 
         // Send notification to user
@@ -143,12 +149,46 @@ export async function PUT(
             
             // Send email notification to user
             if (userEmail) {
+              // Parse admin reply attachments if any
+              let adminAttachments = undefined;
+              if (attachments) {
+                try {
+                  const attachmentData = JSON.parse(attachments);
+                  adminAttachments = attachmentData.map((attachment: any) => {
+                    // Handle both old format (string paths) and new format (objects)
+                    if (typeof attachment === 'string') {
+                      const filename = attachment.split('/').pop() || 'attachment';
+                      return {
+                        originalName: filename,
+                        encryptedName: filename,
+                        fileUrl: attachment,
+                        fileSize: 0,
+                        mimeType: 'application/octet-stream'
+                      };
+                    } else {
+                      // New format with original and encrypted names
+                      return {
+                        originalName: attachment.originalName,
+                        encryptedName: attachment.encryptedPath.split('/').pop() || 'attachment',
+                        fileUrl: attachment.encryptedPath,
+                        fileSize: attachment.fileSize || 0,
+                        mimeType: attachment.mimeType || 'application/octet-stream'
+                      };
+                    }
+                  });
+                } catch (e) {
+                  console.error('Error parsing admin attachments:', e);
+                }
+              }
+              
               const emailTemplate = contactEmailTemplates.adminReplyToUser({
                 userName,
                 subject: contactMessage.subject,
                 adminReply: adminReply.trim(),
                 adminName: session.user.name || session.user.username || 'Admin',
-                messageId: messageId
+                messageId: messageId,
+                originalMessage: contactMessage.message,
+                attachments: adminAttachments
               });
               
               await sendMail({

@@ -370,11 +370,30 @@ model ContactMessage {
   repliedBy   Int?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
+  notes       ContactNote[]
 
   @@index([userId])
   @@index([categoryId])
   @@index([status])
   @@map("contact_messages")
+}
+
+model ContactNote {
+  id        Int      @id @default(autoincrement())
+  messageId Int
+  userId    Int
+  content   String   @db.Text
+  isPrivate Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  message   ContactMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      user           @relation("ContactNotes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("contact_notes")
 }
 
 model activitylog {
@@ -660,6 +679,7 @@ model user {
   supportTickets                                SupportTicket[]
   ticketMessages                                TicketMessage[]        @relation("TicketMessages")
   ticketNotes                                   TicketNote[]           @relation("TicketNotes")
+  contactNotes                                  ContactNote[]          @relation("ContactNotes")
   twoFactorConfirmation                         TwoFactorConfirmation?
 }
 

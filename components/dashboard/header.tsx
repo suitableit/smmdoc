@@ -10,7 +10,7 @@ import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import { setUserDetails } from '@/lib/slice/userDetails';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
     FaBell,
     FaChevronDown,
@@ -80,7 +80,15 @@ const AvatarFallback = ({ children }: { children: React.ReactNode }) => (
 );
 
 // Enhanced Theme Toggle Component
-const ThemeToggle = ({ isMobile = false }: { isMobile?: boolean }) => {
+const ThemeToggle = ({ 
+  isMobile = false, 
+  openDropdowns, 
+  handleDropdownChange 
+}: { 
+  isMobile?: boolean;
+  openDropdowns?: any;
+  handleDropdownChange?: (dropdown: string, isOpen: boolean) => void;
+}) => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -166,7 +174,10 @@ const ThemeToggle = ({ isMobile = false }: { isMobile?: boolean }) => {
 
   // Desktop version - dropdown
   return (
-    <DropdownMenu>
+    <DropdownMenu 
+      open={openDropdowns?.theme}
+      onOpenChange={(isOpen) => handleDropdownChange?.('theme', isOpen)}
+    >
       <DropdownMenuTrigger asChild>
         <button
           className="h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 group"
@@ -293,11 +304,18 @@ const MobileCurrencyToggle = () => {
 const MobileMenuToggle = ({
   isMenuOpen,
   toggleMenu,
+  openDropdowns,
+  handleDropdownChange,
 }: {
   isMenuOpen: boolean;
   toggleMenu: () => void;
+  openDropdowns?: any;
+  handleDropdownChange?: (dropdown: string, isOpen: boolean) => void;
 }) => (
-  <DropdownMenu>
+  <DropdownMenu 
+    open={openDropdowns?.mobile}
+    onOpenChange={(isOpen) => handleDropdownChange?.('mobile', isOpen)}
+  >
     <DropdownMenuTrigger asChild>
       <button
         className="lg:hidden h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 group"
@@ -328,12 +346,23 @@ const MobileMenuToggle = ({
 );
 
 // Enhanced Menu Component with updated styling
-const Menu = ({ user }: { user: any }) => {
+const Menu = ({ 
+  user, 
+  openDropdowns, 
+  handleDropdownChange 
+}: { 
+  user: any;
+  openDropdowns?: any;
+  handleDropdownChange?: (dropdown: string, isOpen: boolean) => void;
+}) => {
   const currentUser = useCurrentUser();
   const dispatch = useDispatch();
-  const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  // Use managed dropdown state or fallback to local state
+  const isOpen = openDropdowns?.profile || false;
+  const setIsOpen = (open: boolean) => handleDropdownChange?.('profile', open);
   const { currency, rate, currentCurrencyData, availableCurrencies } = useCurrency();
   const userData = useSelector((state: any) => state.userDetails);
 
@@ -602,6 +631,47 @@ const Header = () => {
   const user = userData?.id ? userData : currentUser;
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
+  
+  // Dropdown state management
+  const [openDropdowns, setOpenDropdowns] = useState({
+    notifications: false,
+    currency: false,
+    theme: false,
+    plus: false,
+    profile: false,
+    mobile: false
+  });
+  
+  // Handle dropdown state changes
+  const handleDropdownChange = (dropdownName: string, isOpen: boolean) => {
+    setOpenDropdowns(prev => ({
+      ...prev,
+      [dropdownName]: isOpen
+    }));
+  };
+  
+  // Check if any dropdown is open
+  const isAnyDropdownOpen = Object.values(openDropdowns).some(Boolean);
+
+  // Fetch contact system settings
+  useEffect(() => {
+    const fetchContactSettings = async () => {
+      try {
+        const response = await fetch('/api/contact-system-status');
+        if (response.ok) {
+          const data = await response.json();
+          setContactSystemEnabled(data.contactSystemEnabled ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching contact settings:', error);
+        // Default to enabled on error
+        setContactSystemEnabled(true);
+      }
+    };
+
+    fetchContactSettings();
+  }, []);
 
   const isAdmin =
     user?.role?.toLowerCase() === 'admin' ||
@@ -694,6 +764,23 @@ const Header = () => {
     };
   }, []);
 
+  // Manage body overflow to ensure scrollbar remains visible
+  useEffect(() => {
+    // Ensure body scrollbar is always visible and not affected by dropdowns
+    if (typeof document !== 'undefined') {
+      // Store original overflow style
+      const originalOverflow = document.body.style.overflow;
+      
+      // Ensure scrollbar is always visible
+      document.body.style.overflowY = 'scroll';
+      
+      return () => {
+        // Restore original overflow on cleanup
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, []);
+
   const handleCurrencyChange = async (newCurrency: string) => {
     await setCurrency(newCurrency);
     // Live update - no page reload needed
@@ -752,7 +839,10 @@ const Header = () => {
             <FaCog className="h-4 w-4 text-white" />
           </Link>
         ) : (
-          <DropdownMenu>
+          <DropdownMenu 
+            open={openDropdowns.plus}
+            onOpenChange={(isOpen) => handleDropdownChange('plus', isOpen)}
+          >
             <DropdownMenuTrigger asChild>
               <button
                 className="h-10 w-10 rounded-lg text-white shadow-sm hover:shadow-lg gradient-button-hover transition-all duration-300 hover:-translate-y-0.5 flex-shrink-0 flex items-center justify-center"
@@ -859,35 +949,37 @@ const Header = () => {
                     </span>
                   </div>
                 </Link>
-                <Link
-                  href="/contact-support"
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 hover:opacity-80 block"
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: 'var(--header-text)',
-                  }}
-                >
-                  <div
-                    className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
+                {contactSystemEnabled && (
+                  <Link
+                    href="/contact-support"
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 hover:opacity-80 block"
                     style={{
-                      backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--header-text)',
                     }}
                   >
-                    <FaHeadset className="h-4 w-4 text-orange-500" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm">Contact Support</span>
-                    <span
-                      className="text-xs"
+                    <div
+                      className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
                       style={{
-                        color: 'var(--header-text)',
-                        opacity: 0.7,
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
                       }}
                     >
-                      Live chat & help
-                    </span>
-                  </div>
-                </Link>
+                      <FaHeadset className="h-4 w-4 text-orange-500" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm">Contact Support</span>
+                      <span
+                        className="text-xs"
+                        style={{
+                          color: 'var(--header-text)',
+                          opacity: 0.7,
+                        }}
+                      >
+                        Live chat & help
+                      </span>
+                    </div>
+                  </Link>
+                )}
                 <Link
                   href="/child-panel"
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 hover:opacity-80 block"
@@ -927,7 +1019,10 @@ const Header = () => {
       <div className="flex items-center gap-3 sm:gap-4 ml-auto">
         {/* Currency Selector - Hidden on mobile, visible on desktop */}
         <div className="hidden sm:flex items-center gap-3">
-          <DropdownMenu>
+          <DropdownMenu 
+            open={openDropdowns.currency}
+            onOpenChange={(isOpen) => handleDropdownChange('currency', isOpen)}
+          >
             <DropdownMenuTrigger asChild>
               <button
                 className="h-10 sm:h-10 px-3 sm:px-4 rounded-lg header-theme-transition flex items-center gap-2 sm:gap-2 hover:opacity-80 transition-all duration-200 group min-w-[80px] sm:min-w-[80px] flex-shrink-0"
@@ -1037,10 +1132,13 @@ const Header = () => {
         )}
 
         {/* Notifications */}
-        <DropdownMenu>
+        <DropdownMenu 
+          open={openDropdowns.notifications}
+          onOpenChange={(isOpen) => handleDropdownChange('notifications', isOpen)}
+        >
           <DropdownMenuTrigger asChild>
             <button
-              className="h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 flex-shrink-0"
+              className="h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 flex-shrink-0 relative"
               style={{
                 backgroundColor: 'var(--dropdown-bg)',
                 border: `1px solid var(--header-border)`,
@@ -1050,6 +1148,10 @@ const Header = () => {
                 className="h-4 w-4 sm:h-4 sm:w-4"
                 style={{ color: 'var(--header-text)' }}
               />
+              {/* Notification Badge */}
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                3
+              </span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -1070,38 +1172,248 @@ const Header = () => {
               >
                 Notifications
               </h3>
-              <button className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+              <button 
+                className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                onClick={() => {
+                  // Mark all notifications as read functionality
+                  console.log('Marking all notifications as read...');
+                  // TODO: Implement API call to mark all notifications as read
+                }}
+              >
                 Mark all as read
               </button>
             </div>
-            <div className="flex flex-col p-4 sm:p-6 items-center justify-center text-center">
-              <div
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mb-3"
-                style={{ backgroundColor: 'var(--dropdown-hover)' }}
-              >
-                <FaBell
-                  className="h-5 w-5 sm:h-6 sm:w-6"
-                  style={{ color: 'var(--header-text)', opacity: 0.5 }}
-                />
+            <div className="max-h-96 overflow-y-auto">
+              {/* Notification Items */}
+              <div className="p-2">
+                {/* Admin Notifications */}
+                {isAdmin ? (
+                  <>
+                    {/* New User Registration */}
+                    <div
+                      className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
+                      style={{ backgroundColor: 'var(--dropdown-hover)' }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                        <FaUserCog className="h-4 w-4 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-sm font-medium mb-1"
+                          style={{ color: 'var(--header-text)' }}
+                        >
+                          New User Registration
+                        </p>
+                        <p
+                          className="text-xs mb-2"
+                          style={{ color: 'var(--header-text)', opacity: 0.7 }}
+                        >
+                          User "john_doe123" has registered and is pending approval. Review their account details.
+                        </p>
+                        <span
+                          className="text-xs"
+                          style={{ color: 'var(--header-text)', opacity: 0.5 }}
+                        >
+                          2 minutes ago
+                        </span>
+                      </div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
+                    </div>
+
+                    {/* System Alert */}
+                    <div
+                      className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
+                      style={{ backgroundColor: 'var(--dropdown-hover)' }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <FaCog className="h-4 w-4 text-red-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-sm font-medium mb-1"
+                          style={{ color: 'var(--header-text)' }}
+                        >
+                          System Alert
+                        </p>
+                        <p
+                          className="text-xs mb-2"
+                          style={{ color: 'var(--header-text)', opacity: 0.7 }}
+                        >
+                          High server load detected. Consider scaling resources or optimizing database queries.
+                        </p>
+                        <span
+                          className="text-xs"
+                          style={{ color: 'var(--header-text)', opacity: 0.5 }}
+                        >
+                          1 hour ago
+                        </span>
+                      </div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
+                    </div>
+
+                    {/* Revenue Report */}
+                    <div
+                      className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
+                      style={{ backgroundColor: 'var(--dropdown-hover)' }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <FaMoneyBillWave className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-sm font-medium mb-1"
+                          style={{ color: 'var(--header-text)' }}
+                        >
+                          Daily Revenue Report
+                        </p>
+                        <p
+                          className="text-xs mb-2"
+                          style={{ color: 'var(--header-text)', opacity: 0.7 }}
+                        >
+                          Today's revenue: $2,450.00 (+15% from yesterday). 47 orders completed successfully.
+                        </p>
+                        <span
+                          className="text-xs"
+                          style={{ color: 'var(--header-text)', opacity: 0.5 }}
+                        >
+                          3 hours ago
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* User Notifications */}
+                    {/* Order Completed Notification */}
+                    <div
+                      className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
+                      style={{ backgroundColor: 'var(--dropdown-hover)' }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <FaShoppingCart className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-sm font-medium mb-1"
+                          style={{ color: 'var(--header-text)' }}
+                        >
+                          Order #12345 Completed
+                        </p>
+                        <p
+                          className="text-xs mb-2"
+                          style={{ color: 'var(--header-text)', opacity: 0.7 }}
+                        >
+                          Your Instagram followers order has been successfully completed. 1,000 followers added to your account.
+                        </p>
+                        <span
+                          className="text-xs"
+                          style={{ color: 'var(--header-text)', opacity: 0.5 }}
+                        >
+                          2 minutes ago
+                        </span>
+                      </div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
+                    </div>
+
+                    {/* Support Ticket Response */}
+                    <div
+                      className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
+                      style={{ backgroundColor: 'var(--dropdown-hover)' }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                        <FaTicketAlt className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-sm font-medium mb-1"
+                          style={{ color: 'var(--header-text)' }}
+                        >
+                          Support Ticket Response
+                        </p>
+                        <p
+                          className="text-xs mb-2"
+                          style={{ color: 'var(--header-text)', opacity: 0.7 }}
+                        >
+                          Our support team has responded to your ticket #ST-789. Please check your support tickets for the update.
+                        </p>
+                        <span
+                          className="text-xs"
+                          style={{ color: 'var(--header-text)', opacity: 0.5 }}
+                        >
+                          1 hour ago
+                        </span>
+                      </div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
+                    </div>
+
+                    {/* Payment Successful */}
+                    <div
+                      className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
+                      style={{ backgroundColor: 'var(--dropdown-hover)' }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <FaWallet className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-sm font-medium mb-1"
+                          style={{ color: 'var(--header-text)' }}
+                        >
+                          Payment Successful
+                        </p>
+                        <p
+                          className="text-xs mb-2"
+                          style={{ color: 'var(--header-text)', opacity: 0.7 }}
+                        >
+                          Your account has been credited with $50.00. Your new balance is $125.50.
+                        </p>
+                        <span
+                          className="text-xs"
+                          style={{ color: 'var(--header-text)', opacity: 0.5 }}
+                        >
+                          3 hours ago
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-              <p
-                className="font-medium text-sm"
-                style={{ color: 'var(--header-text)', opacity: 0.7 }}
+            </div>
+            
+            {/* See More Footer */}
+            <div
+              className="p-3 text-center border-t"
+              style={{ borderTop: `1px solid var(--header-border)` }}
+            >
+              <button
+                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                onClick={() => {
+                  // See more notifications functionality
+                  console.log('Loading more notifications...');
+                  // TODO: Implement functionality to load more notifications
+                }}
               >
-                No notifications found
-              </p>
+                See more
+              </button>
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
 
         {/* Theme Toggle - Hidden on mobile, visible on desktop */}
         <div className="hidden sm:flex items-center">
-          <ThemeToggle />
+          <ThemeToggle 
+            openDropdowns={openDropdowns}
+            handleDropdownChange={handleDropdownChange}
+          />
         </div>
 
         {/* User Menu */}
         <div className="flex items-center justify-center">
-          {user && <Menu user={user} />}
+          {user && <Menu 
+            user={user} 
+            openDropdowns={openDropdowns}
+            handleDropdownChange={handleDropdownChange}
+          />}
         </div>
 
         {/* Mobile Menu Toggle (3-dot menu) - Hidden on desktop */}

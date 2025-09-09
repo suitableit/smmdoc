@@ -68,6 +68,7 @@ const Toast = ({
 );
 
 function PaymentPendingContent() {
+  const { appName } = useAppNameWithFallback();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [toast, setToast] = useState<{
@@ -235,7 +236,5 @@ function PaymentPendingContent() {
 }
 
 export default function PaymentPendingPage() {
-  const { appName } = useAppNameWithFallback();
-
   return <PaymentPendingContent />;
 }
