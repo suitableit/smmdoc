@@ -1297,7 +1297,9 @@ const UsersListPage = () => {
                       {users.map((user) => (
                         <tr
                           key={user.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                          className={`border-t hover:bg-gray-50 transition-colors duration-200 ${
+                            !user.emailVerified ? 'border-l-4 border-l-yellow-400 bg-yellow-50/30' : ''
+                          }`}
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
@@ -1725,7 +1727,24 @@ const UserActions: React.FC<UserActionsProps> = ({
                 </button>
               )}
               
-              {/* Show all options for pending users (emailVerified false) and active users */}
+              {/* Show delete option for pending users */}
+              {!user.emailVerified && (
+                <>
+                  <hr className="my-1" />
+                  <button
+                    onClick={() => {
+                      onDelete(user.id);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <FaTrash className="h-3 w-3" />
+                    Delete User
+                  </button>
+                </>
+              )}
+              
+              {/* Show all options for verified users */}
               {user.emailVerified && user.status !== 'suspended' && user.status !== 'banned' && (
                 <>
                   <button

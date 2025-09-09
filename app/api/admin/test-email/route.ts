@@ -1,8 +1,8 @@
 import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import nodemailer from 'nodemailer';
-import { getAdminEmail } from '@/lib/utils/general-settings';
+import { createEmailTransporter, getFromEmailAddress } from '@/lib/email-config';
+import { getAppName } from '@/lib/utils/general-settings';
 
 const prisma = new PrismaClient();
 
@@ -38,37 +38,31 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Get SMTP settings from database
-    const emailSettings = await prisma.emailSettings.findFirst();
+    // Create transporter using database settings
+    const transporter = await createEmailTransporter();
     
-    if (!emailSettings || !emailSettings.smtp_host || !emailSettings.smtp_username) {
+    if (!transporter) {
       return NextResponse.json(
         { error: 'SMTP settings not configured. Please configure SMTP settings first.' },
         { status: 400 }
       );
     }
 
-    // Create transporter with database SMTP settings
-    const transporter = nodemailer.createTransport({
-      host: emailSettings.smtp_host,
-      port: emailSettings.smtp_port,
-      secure: emailSettings.smtp_protocol === 'ssl', // true for SSL, false for TLS/STARTTLS
-      auth: {
-        user: emailSettings.smtp_username,
-        pass: emailSettings.smtp_password,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
-
     // Send test email
     try {
-      // Get admin email from General Settings
-      const adminEmail = await getAdminEmail();
+      // Get support email from Email Settings and app name from General Settings
+      const fromEmail = await getFromEmailAddress();
+      const appName = await getAppName();
+      
+      if (!fromEmail) {
+        return NextResponse.json(
+          { error: 'Support email address not configured. Please configure email settings first.' },
+          { status: 400 }
+        );
+      }
       
       await transporter.sendMail({
-         from: `"SMMDOC Test" <${adminEmail || emailSettings.smtp_username}>`,
+         from: `"${appName} Test" <${fromEmail}>`,
          to: to,
          subject: subject,
         html: `

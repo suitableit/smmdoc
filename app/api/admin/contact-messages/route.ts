@@ -77,7 +77,8 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(counts.total / limit),
         hasNext: page < Math.ceil(counts.total / limit),
         hasPrev: page > 1
-      }
+      },
+      fallbackMode: false
     });
 
   } catch (error) {
@@ -166,76 +167,5 @@ export async function GET(request: NextRequest) {
       fallbackMode: true,
       warning: 'Database connection unavailable. Showing sample data.'
     });
-  }
-}
-
-// POST - Bulk operations on contact messages
-export async function POST(request: NextRequest) {
-  try {
-    const session = await auth();
-
-    if (!session?.user || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { action, messageIds } = await request.json();
-
-    if (!action || !messageIds || !Array.isArray(messageIds)) {
-      return NextResponse.json(
-        { error: 'Action and message IDs are required' },
-        { status: 400 }
-      );
-    }
-
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (const messageId of messageIds) {
-      try {
-        switch (action) {
-          case 'markAsRead':
-            const readResult = await contactDB.updateContactMessageStatus(messageId, 'Read');
-            if (readResult) successCount++;
-            else errorCount++;
-            break;
-
-          case 'markAsUnread':
-            const unreadResult = await contactDB.updateContactMessageStatus(messageId, 'Unread');
-            if (unreadResult) successCount++;
-            else errorCount++;
-            break;
-
-          case 'delete':
-            const deleteResult = await contactDB.deleteContactMessage(messageId);
-            if (deleteResult) successCount++;
-            else errorCount++;
-            break;
-
-          default:
-            errorCount++;
-            break;
-        }
-      } catch (error) {
-        console.error(`Error processing message ${messageId}:`, error);
-        errorCount++;
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: `Bulk operation completed. ${successCount} successful, ${errorCount} failed.`,
-      results: {
-        successCount,
-        errorCount,
-        totalProcessed: messageIds.length
-      }
-    });
-
-  } catch (error) {
-    console.error('Error performing bulk operation:', error);
-    return NextResponse.json(
-      { error: 'Failed to perform bulk operation' },
-      { status: 500 }
-    );
   }
 }

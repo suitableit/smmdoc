@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import dynamic from 'next/dynamic';
+import PublicContactSystemGuard from '@/components/PublicContactSystemGuard';
 
 const Hero = dynamic(() => import('@/components/frontend/contact/hero'));
 const HowToContact = dynamic(() => import('@/components/frontend/contact/how-to-contact'));
@@ -11,9 +12,9 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <>
+    <PublicContactSystemGuard>
       <Hero />
       <HowToContact />
-    </>
+    </PublicContactSystemGuard>
   );
 }

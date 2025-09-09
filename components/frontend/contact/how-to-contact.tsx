@@ -345,7 +345,6 @@ const ContactForm: React.FC = () => {
         >
           {isSubmitting ? (
             <>
-              <GradientSpinner size="w-4 h-4" />
               <span>Sending...</span>
             </>
           ) : (

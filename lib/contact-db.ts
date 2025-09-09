@@ -212,6 +212,7 @@ class ContactDB {
           cm.*,
           u.username,
           u.email,
+          u.name,
           cc.name as categoryName,
           ru.username as repliedByUsername
         FROM contact_messages cm
@@ -241,7 +242,8 @@ class ContactDB {
         updatedAt: msg.updatedAt,
         user: {
           username: msg.username || 'Unknown User',
-          email: msg.email || 'No Email'
+          email: msg.email || 'No Email',
+          name: msg.name || null
         },
         category: {
           name: msg.categoryName || 'Unknown Category'
@@ -258,13 +260,14 @@ class ContactDB {
     }
   }
 
-  async getContactMessageById(id: number) {
+  async getContactMessageById(id: number, includeNotes: boolean = false) {
     try {
       const query = `
         SELECT
           cm.*,
           u.username,
           u.email,
+          u.name,
           cc.name as categoryName,
           ru.username as repliedByUsername
         FROM contact_messages cm
@@ -278,6 +281,33 @@ class ContactDB {
       const message = messages[0];
 
       if (!message) return null;
+
+      // Get notes if requested
+      let notes = [];
+      if (includeNotes) {
+        const notesQuery = `
+          SELECT
+            cn.*,
+            u.username as admin_username,
+            u.name as admin_name
+          FROM contact_notes cn
+          LEFT JOIN user u ON cn.userId = u.id
+          WHERE cn.messageId = ?
+          ORDER BY cn.createdAt DESC
+        `;
+        notes = await this.prisma.$queryRawUnsafe(notesQuery, id) as any[];
+      }
+
+      // Get user statistics
+      const userStatsQuery = `
+        SELECT 
+          COUNT(*) as total_messages,
+          SUM(CASE WHEN adminReply IS NULL OR adminReply = '' THEN 1 ELSE 0 END) as open_messages
+        FROM contact_messages 
+        WHERE userId = ?
+      `;
+      const userStats = await this.prisma.$queryRawUnsafe(userStatsQuery, message.userId) as any[];
+      const stats = userStats[0] || { total_messages: 0, open_messages: 0 };
 
       // Format the response to match expected structure
       return {
@@ -293,9 +323,19 @@ class ContactDB {
         repliedBy: message.repliedBy,
         createdAt: message.createdAt,
         updatedAt: message.updatedAt,
+        notes: notes.map((note: any) => ({
+          id: note.id,
+          content: note.content,
+          admin_username: note.admin_name || note.admin_username || 'Admin',
+          created_at: note.createdAt,
+          is_private: note.isPrivate
+        })),
         user: {
           username: message.username || 'Unknown User',
-          email: message.email || 'No Email'
+          email: message.email || 'No Email',
+          name: message.name || null,
+          total_messages: Number(stats.total_messages) || 0,
+          open_messages: Number(stats.open_messages) || 0
         },
         category: {
           name: message.categoryName || 'Unknown Category'
@@ -343,12 +383,61 @@ class ContactDB {
     }
   }
 
-  async replyToContactMessage(id: number, adminReply: string, repliedBy: number) {
+  async replyToContactMessage(id: number, adminReply: string, repliedBy: number, attachments?: string) {
     try {
+      // Get current message to check for existing replies
+      const currentMessage = await this.prisma.contactMessage.findUnique({
+        where: { id },
+        select: { adminReply: true }
+      });
+
+      let replies = [];
+      
+      // Parse existing replies if they exist
+      if (currentMessage?.adminReply) {
+        try {
+          // Try to parse as JSON array (new format)
+          replies = JSON.parse(currentMessage.adminReply);
+          if (!Array.isArray(replies)) {
+            // If it's not an array, it's the old single reply format
+            replies = [{
+              content: currentMessage.adminReply,
+              repliedAt: new Date().toISOString(),
+              repliedBy: repliedBy,
+              author: 'Admin' // Default for old replies
+            }];
+          }
+        } catch {
+          // If JSON parsing fails, it's the old single reply format
+          replies = [{
+            content: currentMessage.adminReply,
+            repliedAt: new Date().toISOString(),
+            repliedBy: repliedBy,
+            author: 'Admin' // Default for old replies
+          }];
+        }
+      }
+
+      // Get admin username for the new reply
+      const adminUser = await this.prisma.user.findUnique({
+        where: { id: repliedBy },
+        select: { username: true, name: true }
+      });
+
+      // Add new reply to the array
+      replies.push({
+        content: adminReply,
+        repliedAt: new Date().toISOString(),
+        repliedBy: repliedBy,
+        author: adminUser?.username || adminUser?.name || 'Admin',
+        attachments: attachments ? JSON.parse(attachments) : undefined
+      });
+
+      // Update the message with the new replies array
       await this.prisma.contactMessage.update({
         where: { id },
         data: {
-          adminReply,
+          adminReply: JSON.stringify(replies),
           repliedAt: new Date(),
           repliedBy,
           status: 'Replied'
