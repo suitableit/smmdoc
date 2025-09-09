@@ -1,4 +1,5 @@
 import { auth } from '@/auth';
+import { getCurrentUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 // Available Providers Configuration
@@ -33,10 +34,13 @@ const AVAILABLE_PROVIDERS = [
 // GET - Get all available providers
 export async function GET() {
   try {
-    const session = await auth();
+    console.log('API /admin/providers called');
+    const session = await getCurrentUser();
+    console.log('Session:', session?.user?.email, session?.user?.role);
 
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
+      console.log('No session found or user is not admin:', session?.user?.role);
       return NextResponse.json(
         {
           error: 'Unauthorized access. Admin privileges required.',
@@ -56,9 +60,11 @@ export async function GET() {
           \`id\` int NOT NULL AUTO_INCREMENT,
           \`name\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
           \`api_key\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+          \`api_url\` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
           \`login_user\` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
           \`login_pass\` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
           \`status\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'inactive',
+          \`is_custom\` boolean DEFAULT FALSE,
           \`createdAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
           \`updatedAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
           PRIMARY KEY (\`id\`),
@@ -67,10 +73,23 @@ export async function GET() {
           KEY \`api_providers_name_idx\` (\`name\`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `;
+      
+      // Add missing columns if they don't exist
+      try {
+        await db.$executeRaw`ALTER TABLE \`api_providers\` ADD COLUMN \`api_url\` varchar(500) DEFAULT NULL`;
+      } catch (e) {
+        // Column already exists
+      }
+      
+      try {
+        await db.$executeRaw`ALTER TABLE \`api_providers\` ADD COLUMN \`is_custom\` boolean DEFAULT FALSE`;
+      } catch (e) {
+        // Column already exists
+      }
 
 
 
-      configuredProviders = await db.apiProvider.findMany({
+      configuredProviders = await db.api_providers.findMany({
         select: {
           id: true,
           name: true,
@@ -147,7 +166,7 @@ export async function GET() {
 // POST - Add new provider
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getCurrentUser();
 
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
@@ -202,7 +221,7 @@ export async function POST(req: NextRequest) {
     let newProvider: any;
     try {
       // Check if provider already exists
-      const existingProvider = await db.apiProvider.findUnique({
+      const existingProvider = await db.api_providers.findUnique({
         where: { name: selectedProvider }
       });
 
@@ -218,7 +237,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Create new provider
-      newProvider = await db.apiProvider.create({
+      newProvider = await db.api_providers.create({
         data: {
           name: selectedProvider,
           api_key: apiKey,
@@ -271,7 +290,7 @@ export async function POST(req: NextRequest) {
 // PUT - Update provider status
 export async function PUT(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getCurrentUser();
 
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
@@ -308,7 +327,7 @@ export async function PUT(req: NextRequest) {
 
     // If activating provider, validate required fields first
     if (status === 'active') {
-      const provider = await db.apiProvider.findUnique({
+      const provider = await db.api_providers.findUnique({
         where: { id: parseInt(id) }
       });
 
@@ -365,7 +384,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Update provider
-    const updatedProvider = await db.apiProvider.update({
+    const updatedProvider = await db.api_providers.update({
       where: { id: parseInt(id) },
       data: updateData
     });
@@ -395,7 +414,7 @@ export async function PUT(req: NextRequest) {
 // DELETE - Delete provider
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getCurrentUser();
 
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
@@ -424,7 +443,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete provider
-    await db.apiProvider.delete({
+    await db.api_providers.delete({
       where: { id: parseInt(id) }
     });
 

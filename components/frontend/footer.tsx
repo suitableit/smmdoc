@@ -33,8 +33,8 @@ const Footer = () => {
     { name: 'Home', href: '/' },
     { name: 'Blog', href: '/blog' },
     { name: 'Services', href: '/services' },
-    { name: 'About Us', href: '/about' },
-    { name: 'Contact Us', href: '/contact' },
+    { name: 'About', href: '/about' },
+    { name: 'Contact', href: '/contact' },
   ];
 
   const supportLinks = [
@@ -189,8 +189,9 @@ const Footer = () => {
 
         {/* Bottom Section */}
         <div className="border-t border-white/20 mt-8 pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-center">
-            <div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+            {/* Desktop: Copyright left, Mobile: Privacy/Terms top */}
+            <div className="order-2 lg:order-1">
               <p className="text-white text-sm text-center lg:text-left">
                 © {currentYear} All Rights Reserved by{' '}
                 <Link
@@ -202,7 +203,8 @@ const Footer = () => {
                 .
               </p>
             </div>
-            <div className="footer_links_middle flex flex-wrap justify-center gap-4 text-sm">
+            {/* Desktop: Privacy/Terms right, Mobile: Privacy/Terms top */}
+            <div className="order-1 lg:order-2 flex flex-wrap justify-center lg:justify-end gap-4 text-sm">
               {bottomLinks.map((link, index) => (
                 <React.Fragment key={index}>
                   <Link
@@ -216,20 +218,6 @@ const Footer = () => {
                   )}
                 </React.Fragment>
               ))}
-            </div>
-            <div className="text-center lg:text-right">
-              <p className="text-white text-sm">
-                Developed by{' '}
-                <Link
-                  href="https://www.suitableit.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white font-bold hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
-                >
-                  Suitable IT
-                </Link>
-                .
-              </p>
             </div>
           </div>
         </div>

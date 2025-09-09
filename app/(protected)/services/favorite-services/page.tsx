@@ -89,6 +89,7 @@ interface Service {
 
 const FavoriteServicesTable: React.FC = () => {
   const user = useCurrentUser();
+  const { appName } = useAppNameWithFallback();
   const [services, setServices] = useState<Service[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState<Service | null>(null);

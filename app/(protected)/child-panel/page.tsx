@@ -55,6 +55,7 @@ const Toast = ({
 );
 
 const ChildPanel: React.FC = () => {
+  const { appName } = useAppNameWithFallback();
   const [formData, setFormData] = useState<FormData>({
     domain: '',
     currency: 'USD',

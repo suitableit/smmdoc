@@ -2291,6 +2291,8 @@ const EditServiceForm = ({
 };
 
 function AdminServicesPage() {
+  const { appName } = useAppNameWithFallback();
+
   // Set document title using useEffect for client-side
   useEffect(() => {
     setPageTitle('All Services', appName);

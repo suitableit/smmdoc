@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     FaArrowLeft,
     FaCheckCircle,
@@ -28,6 +29,8 @@ import {
 // Import APP_NAME constant
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
+import useTicketPolling from '@/hooks/useTicketPolling';
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -71,6 +74,13 @@ interface TicketMessage {
   attachments?: TicketAttachment[];
   isEdited?: boolean;
   editedAt?: string;
+  userImage?: string;
+  user?: {
+    id: number;
+    name: string;
+    username: string;
+    role: string;
+  };
 }
 
 interface TicketAttachment {
@@ -98,7 +108,7 @@ interface SupportTicketDetails {
   subject: string;
   createdAt: string;
   lastUpdated: string;
-  status: 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'Closed';
+  status: 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'closed';
   isRead: boolean;
   messages: TicketMessage[];
   notes: TicketNote[];
@@ -108,8 +118,10 @@ interface SupportTicketDetails {
   aiSubcategory?: 'Refill' | 'Cancel' | 'Speed Up' | 'Restart' | 'Fake Complete';
   systemMessage?: string;
   ticketStatus?: 'Pending' | 'Processed' | 'Failed';
+  orderIds?: string[];
   userInfo: {
     fullName: string;
+    username?: string;
     email: string;
     phone?: string;
     company?: string;
@@ -121,96 +133,31 @@ interface SupportTicketDetails {
 }
 
 const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
+  const router = useRouter();
   const { appName } = useAppNameWithFallback();
-  const resolvedParams = React.use(params);
-  const ticketId = resolvedParams.id;
+  const [ticketId, setTicketId] = useState<string | null>(null);
+
+  // Safely resolve params
+  useEffect(() => {
+    const resolveParams = async () => {
+      try {
+        const resolvedParams = await params;
+        setTicketId(resolvedParams.id);
+      } catch (error) {
+        console.error('Error resolving params:', error);
+      }
+    };
+    resolveParams();
+  }, [params]);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
-    setPageTitle(`Ticket #${ticketId}`, appName);
+    if (ticketId) {
+      setPageTitle(`Ticket #${ticketId}`, appName);
+    }
   }, [appName, ticketId]);
 
-  // Dummy data for support ticket details
-  const dummyTicketDetails: SupportTicketDetails = {
-    id: '001',
-    userId: 'user_001',
-    username: 'john_doe',
-    userEmail: 'john.doe@email.com',
-    subject: 'Instagram followers not delivered - Order #12345',
-    createdAt: '2024-06-28T10:30:00Z',
-    lastUpdated: '2024-06-29T14:20:00Z',
-    status: 'Customer Reply',
-    isRead: false,
-    assignedTo: 'sarah_admin (Admin)',
-    timeSpent: 45,
-    messages: [
-      {
-        id: 'msg_001',
-        type: 'customer',
-        author: 'john_doe',
-        content: 'Hi, I placed an order for 1000 Instagram followers 3 days ago (Order #12345) but I haven\'t received any followers yet. The delivery was supposed to start within 24 hours. Can you please check what\'s wrong?',
-        createdAt: '2024-06-28T10:30:00Z',
-        attachments: [
-          {
-            id: 'att_001',
-            filename: 'order_screenshot.png',
-            filesize: '234 KB',
-            mimetype: 'image/png',
-            uploadedAt: '2024-06-28T10:30:00Z',
-            uploadedBy: 'john_doe'
-          }
-        ]
-      },
-      {
-        id: 'msg_002',
-        type: 'staff',
-        author: 'sarah_admin',
-        authorRole: 'Admin',
-        content: 'Hello John,\n\nThank you for contacting us. I\'ve checked your order #12345 and I can see that there was a technical issue with our delivery system that affected orders placed on June 25th.\n\nI\'ve manually triggered your order and the delivery should start within the next 2 hours. You should start seeing followers added to your account gradually over the next 24-48 hours.\n\nI\'ve also added a 10% bonus to your order as compensation for the delay.\n\nPlease let me know if you don\'t see any progress within 4 hours.\n\nBest regards,\nSarah',
-        createdAt: '2024-06-28T14:15:00Z'
-      },
-      {
-        id: 'msg_003',
-        type: 'customer',
-        author: 'john_doe',
-        content: 'Thank you for the quick response! I can see that followers are starting to come in now. However, I noticed that some of the followers look like bot accounts. Is this normal? I was expecting real, active followers.',
-        createdAt: '2024-06-29T09:20:00Z'
-      },
-      {
-        id: 'msg_004',
-        type: 'system',
-        author: 'System',
-        content: 'Ticket status changed from "Answered" to "Customer Reply"',
-        createdAt: '2024-06-29T09:21:00Z'
-      }
-    ],
-    notes: [
-      {
-        id: 'note_001',
-        content: 'Customer seems frustrated about delivery delay. Provided bonus compensation.',
-        author: 'Sarah Johnson',
-        createdAt: '2024-06-28T14:20:00Z',
-        isPrivate: true
-      },
-      {
-        id: 'note_002',
-        content: 'Need to check quality of followers being delivered. Customer mentioned bot accounts.',
-        author: 'Sarah Johnson',
-        createdAt: '2024-06-29T14:20:00Z',
-        isPrivate: true
-      }
-    ],
-    userInfo: {
-      fullName: 'John Doe',
-      email: 'john.doe@email.com',
-      phone: '+1 (555) 123-4567',
-      company: 'Digital Marketing Co.',
-      address: '123 Business St, New York, NY 10001',
-      registeredAt: '2024-03-15T00:00:00Z',
-      totalTickets: 5,
-      openTickets: 2
-    }
-  };
+
 
   // State management
   const [ticketDetails, setTicketDetails] = useState<SupportTicketDetails | null>(null);
@@ -228,115 +175,61 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
+  // Real-time polling for message updates
+  const { hasNewMessages, markMessagesAsRead, isPolling } = useTicketPolling(
+    ticketId,
+    ticketDetails,
+    setTicketDetails,
+    3000 // Poll every 3 seconds
+  );
+
   // Fetch ticket details
   useEffect(() => {
+    if (!ticketId) return;
+    
     const fetchTicketDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/support-tickets/${ticketId}`);
+        const response = await fetch(`/api/admin/tickets/${ticketId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch ticket details');
         }
-        const data = await response.json();
+        const result = await response.json();
+        const data = result.ticket;
         
-        // Fetch additional user statistics
-        if (data.user?.id) {
-          try {
-            // Get user's total tickets count
-            const totalTicketsResponse = await fetch(`/api/admin/tickets?userId=${data.user.id}&limit=1000`);
-            const totalTicketsData = totalTicketsResponse.ok ? await totalTicketsResponse.json() : null;
-            
-            // Get user's open tickets count
-            const openTicketsResponse = await fetch(`/api/admin/tickets?userId=${data.user.id}&status=open&limit=1000`);
-            const openTicketsData = openTicketsResponse.ok ? await openTicketsResponse.json() : null;
-            
-            // Enhance data with user information
-            const enhancedData = {
-              ...data,
-              userInfo: {
-                fullName: data.user?.name || 'N/A',
-                email: data.user?.email || 'N/A',
-                phone: 'N/A', // Not available in current schema
-                company: 'N/A', // Not available in current schema
-                address: 'N/A', // Not available in current schema
-                registeredAt: 'N/A', // Would need user creation date
-                totalTickets: totalTicketsData?.pagination?.total || 0,
-                openTickets: openTicketsData?.pagination?.total || 0,
-              }
-            };
-            
-            setTicketDetails(enhancedData);
-            
-            // Automatically mark ticket as read when admin opens it
-            if (!data.isRead) {
-              try {
-                await fetch(`/api/admin/tickets/${ticketId}/read`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ isRead: true }),
-                });
-              } catch (readError) {
-                console.error('Error marking ticket as read:', readError);
-              }
-            }
-          } catch (userError) {
-            console.error('Error fetching user statistics:', userError);
-            // Use basic user info if statistics fetch fails
-            const basicData = {
-              ...data,
-              userInfo: {
-                fullName: data.user?.name || 'N/A',
-                email: data.user?.email || 'N/A',
-                phone: 'N/A',
-                company: 'N/A',
-                address: 'N/A',
-                registeredAt: 'N/A',
-                totalTickets: 0,
-                openTickets: 0,
-              }
-            };
-            setTicketDetails(basicData);
-            
-            // Automatically mark ticket as read when admin opens it
-            if (!data.isRead) {
-              try {
-                await fetch(`/api/admin/tickets/${ticketId}/read`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ isRead: true }),
-                });
-              } catch (readError) {
-                console.error('Error marking ticket as read:', readError);
-              }
-            }
+        // Use the userInfo data from the API response
+        const enhancedData = {
+          ...data,
+          userInfo: {
+            ...data.userInfo,
+            fullName: data.userInfo?.name || 'N/A',
+            phone: 'N/A', // Not available in current schema
+            company: 'N/A', // Not available in current schema
+            address: 'N/A', // Not available in current schema
+            registeredAt: 'N/A', // Would need user creation date
           }
-        } else {
-          setTicketDetails(data);
-          
-          // Automatically mark ticket as read when admin opens it
-          if (!data.isRead) {
-            try {
-              await fetch(`/api/admin/tickets/${ticketId}/read`, {
-                method: 'PATCH',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ isRead: true }),
-              });
-            } catch (readError) {
-              console.error('Error marking ticket as read:', readError);
-            }
+        };
+        
+        setTicketDetails(enhancedData);
+        
+        // Automatically mark ticket as read when admin opens it
+        if (!data.isRead) {
+          try {
+            await fetch(`/api/admin/tickets/${ticketId}/read`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ isRead: true }),
+            });
+          } catch (readError) {
+            console.error('Error marking ticket as read:', readError);
           }
         }
       } catch (error) {
         console.error('Error fetching ticket details:', error);
         showToast('Error loading ticket details', 'error');
-        // Fallback to dummy data for development
-        setTicketDetails(dummyTicketDetails);
+        setTicketDetails(null);
       } finally {
         setLoading(false);
       }
@@ -383,13 +276,24 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
       case 'In Progress':
         return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Closed':
+      case 'closed':
         return 'bg-gray-50 text-gray-700 border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
+  const formatStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'closed':
+        return 'Closed';
+      default:
+        return status;
+    }
+  };
+
   const getFileIcon = (mimetype: string) => {
+    if (!mimetype) return <FaFileAlt className="h-4 w-4" />;
     if (mimetype.startsWith('image/')) return <FaImage className="h-4 w-4" />;
     if (mimetype.startsWith('video/')) return <FaVideo className="h-4 w-4" />;
     if (mimetype.includes('pdf')) return <FaFilePdf className="h-4 w-4" />;
@@ -423,8 +327,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
         throw new Error('Failed to update ticket status');
       }
 
-      const updatedTicket = await response.json();
-      setTicketDetails(updatedTicket);
+      const responseData = await response.json();
+      setTicketDetails(responseData);
       
       showToast(`Ticket status updated to ${newStatus}`, 'success');
     } catch (error) {
@@ -445,7 +349,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: 'Closed' }),
+        body: JSON.stringify({ status: 'closed' }),
       });
 
       if (!response.ok) {
@@ -471,51 +375,54 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     setIsReplying(true);
     
     try {
-      const formData = new FormData();
-      formData.append('message', replyContent);
-      formData.append('type', 'admin_reply');
+      let attachmentPaths: string[] = [];
       
-      // Add files if any
-      selectedFiles.forEach((file, index) => {
-        formData.append(`attachments`, file);
-      });
-
+      // Upload files first if any
+      if (selectedFiles.length > 0) {
+        for (const file of selectedFiles) {
+          const fileFormData = new FormData();
+          fileFormData.append('file', file);
+          fileFormData.append('uploadType', 'admin_uploads');
+          
+          const uploadResponse = await fetch('/api/upload', {
+            method: 'POST',
+            body: fileFormData,
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error(`Failed to upload file: ${file.name}`);
+          }
+          
+          const uploadResult = await uploadResponse.json();
+          attachmentPaths.push(uploadResult.filePath);
+        }
+      }
+      
+      // Send reply with attachment paths
       const response = await fetch(`/api/support-tickets/${ticketId}/reply`, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: replyContent,
+          attachments: attachmentPaths.length > 0 ? JSON.stringify(attachmentPaths) : undefined,
+        }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to send reply');
       }
 
-      const updatedTicket = await response.json();
-      setTicketDetails(updatedTicket);
-      
-      // Automatically change ticket status to 'Answered' when admin replies (without system message)
-      try {
-        const statusResponse = await fetch(`/api/admin/tickets/${ticketId}/status`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ status: 'Answered', generateSystemMessage: false }),
-        });
-        
-        if (statusResponse.ok) {
-          const statusUpdatedTicket = await statusResponse.json();
-          setTicketDetails(statusUpdatedTicket.ticket);
-        }
-      } catch (statusError) {
-        console.error('Error updating ticket status to Answered:', statusError);
-      }
+      const responseData = await response.json();
+      setTicketDetails(responseData);
       
       setReplyContent('');
       setSelectedFiles([]);
       showToast('Reply sent successfully', 'success');
     } catch (error) {
       console.error('Error sending reply:', error);
-      showToast('Error sending reply', 'error');
+      showToast(error instanceof Error ? error.message : 'Error sending reply', 'error');
     } finally {
       setIsReplying(false);
     }
@@ -556,7 +463,36 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
   // Handle file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
+    const validFiles: File[] = [];
+    
+    for (const file of files) {
+      // Validate file type (only images and PDFs)
+      const allowedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'application/pdf'
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        showToast(`File "${file.name}" has an unsupported format. Only images and PDFs are allowed.`, 'error');
+        continue;
+      }
+      
+      // Validate file size (10MB max for admin)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        showToast(`File "${file.name}" is too large. Maximum 10MB allowed for admin uploads.`, 'error');
+        continue;
+      }
+      
+      validFiles.push(file);
+    }
+    
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...validFiles]);
+      showToast(`${validFiles.length} file(s) selected successfully!`, 'success');
+    }
+    
+    // Reset the input value to allow uploading the same file again
+    event.target.value = '';
   };
 
   // Remove selected file
@@ -565,13 +501,23 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
   };
 
   // Show loading state
-  if (loading) {
+  if (loading || !ticketId) {
     return (
       <div className="page-container">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading ticket details...</p>
+        <div className="page-content">
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaTicketAlt />
+              </div>
+              <h3 className="card-title">Loading Ticket Details</h3>
+            </div>
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-center">
+                <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">Loading ticket details...</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -620,36 +566,41 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-4">
               <button 
-                onClick={() => window.history.back()}
+                onClick={() => router.push('/admin/tickets')}
                 className="btn btn-primary flex items-center gap-2"
               >
                 <FaArrowLeft className="h-4 w-4" />
                 Back to Tickets
               </button>
 
-              {/* Status Controls */}
-              <select 
-                value={ticketDetails.status}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                className="form-field pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-              >
-                <option value="Open">Open</option>
-                <option value="Answered">Answered</option>
-                <option value="Customer Reply">Customer Reply</option>
-                <option value="On Hold">On Hold</option>
-                <option value="In Progress">In Progress</option>
-              </select>
+              {/* Status Controls - Only show if ticket is not closed */}
+              {ticketDetails.status !== 'closed' && (
+                <select 
+                  value={ticketDetails.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className="form-field pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+                >
+                  <option value="Open">Open</option>
+                  <option value="Answered">Answered</option>
+                  <option value="Customer Reply">Customer Reply</option>
+                  <option value="On Hold">On Hold</option>
+                  <option value="In Progress">In Progress</option>
+                </select>
+              )}
+              {ticketDetails.status === 'closed' && (
+                <button 
+                  disabled
+                  className="btn btn-primary opacity-75 cursor-not-allowed"
+                >
+                  Closed
+                </button>
+              )}
             </div>
             
             <div className="flex flex-row items-center gap-1 md:gap-2">
               <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
                 Ticket #{formatTicketID(ticketDetails.id)}
               </h1>
-              {!ticketDetails.isRead && (
-                <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-                  Unread
-                </span>
-              )}
             </div>
           </div>
           </div>
@@ -667,15 +618,25 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 <h3 className="card-title">Ticket Information</h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
                   <label className="form-label">Subject</label>
                   <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{ticketDetails.subject}</p>
                 </div>
+                {ticketDetails.orderIds && Array.isArray(ticketDetails.orderIds) && ticketDetails.orderIds.length > 0 && (
+                  <div>
+                    <label className="form-label">
+                      {ticketDetails.orderIds.length === 1 ? 'Order ID' : 'Order IDs'}
+                    </label>
+                    <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {ticketDetails.orderIds.join(', ')}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label className="form-label">Status</label>
                   <span className={`mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(ticketDetails.status)}`}>
-                    {ticketDetails.status}
+                    {formatStatusDisplay(ticketDetails.status)}
                   </span>
                 </div>
               </div>
@@ -747,26 +708,51 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 <div className="card-icon">
                   <FaComments />
                 </div>
-                <h3 className="card-title">Conversation ({ticketDetails.messages?.length || 0})</h3>
+                <div className="flex items-center gap-3 flex-1">
+                  <h3 className="card-title">Conversation ({ticketDetails.messages?.length || 0})</h3>
+                </div>
               </div>
               
-              <div className="space-y-6">
-                {ticketDetails.messages?.map((message) => (
-                  <div key={message.id} className={`flex items-start gap-4 ${(message.type === 'staff' || message.type === 'system') ? 'justify-end' : ''}`}>
-                    {(message.type !== 'staff' && message.type !== 'system') && (
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm ${
-                        message.type === 'customer' ? 'bg-gradient-to-r from-[var(--secondary)] to-[var(--primary)]' : 'bg-gradient-to-r from-gray-500 to-gray-600'
-                      }`}>
-                        {message.type === 'customer' ? <FaUser className="h-4 w-4" /> :
-                         <FaExclamationTriangle className="h-4 w-4" />}
-                      </div>
-                    )}
+              <div className="space-y-6" onClick={() => hasNewMessages && markMessagesAsRead()}>
+                {ticketDetails.messages && ticketDetails.messages.length > 0 ? (
+                  ticketDetails.messages.map((message) => (
+                  <div key={message.id} className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+                      {message.type === 'system' ? (
+                         <div className="w-full h-full flex items-center justify-center text-white font-medium text-sm bg-gradient-to-r from-gray-600 to-gray-700">
+                           <FaExclamationTriangle className="h-4 w-4" />
+                         </div>
+                      ) : message.userImage ? (
+                        <img
+                          src={message.userImage}
+                          alt={message.author}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className={`w-full h-full flex items-center justify-center text-white font-medium text-sm ${
+                          message.authorRole === 'user' ? 'bg-gradient-to-r from-[var(--secondary)] to-[var(--primary)]' : 
+                          message.authorRole === 'admin' ? 'bg-gradient-to-r from-gray-600 to-gray-700' : 
+                          'bg-gradient-to-r from-gray-500 to-gray-600'
+                        }`}>
+                          {message.authorRole === 'user' ? <FaUser className="h-4 w-4" /> :
+                           message.authorRole === 'admin' ? <FaUserShield className="h-4 w-4" /> :
+                           <FaExclamationTriangle className="h-4 w-4" />}
+                        </div>
+                      )}
+                    </div>
                     
                     <div className={`flex-1 min-w-0 p-4 rounded-lg ${
-                      (message.type === 'staff' || message.type === 'system') ? 'bg-blue-50 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800/50'
+                      (message.authorRole === 'admin' || message.type === 'system') ? 'bg-blue-50 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800/50'
                     }`}>
-                      <div className={`flex items-center gap-2 mb-2 ${(message.type === 'staff' || message.type === 'system') ? 'justify-end' : ''}`}>
-                        <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{message.author}</span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                          {message.author}
+                        </span>
+                        {message.type === 'system' && message.user?.username && (
+                          <span className="text-xs bg-blue-100 px-2 py-1 rounded font-bold" style={{ color: 'var(--text-primary)' }}>
+                            by {message.user.username}
+                          </span>
+                        )}
                         {message.authorRole && (
                           <span className="text-xs bg-gray-100 px-2 py-1 rounded font-bold" style={{ color: 'var(--text-muted)' }}>
                             {message.authorRole}
@@ -782,118 +768,130 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       </div>
                       
                       <div className="prose prose-sm max-w-none">
-                        <div className={`whitespace-pre-wrap ${(message.type === 'staff' || message.type === 'system') ? 'text-right' : ''}`} style={{ color: 'var(--text-primary)' }}>{message.content}</div>
+                        <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
                       </div>
                       
                       {/* Attachments */}
-                      {message.attachments && message.attachments.length > 0 && (
+                      {message.attachments && Array.isArray(message.attachments) && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
-                          <h4 className={`text-sm font-medium ${(message.type === 'staff' || message.type === 'system') ? 'text-right' : ''}`} style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
-                          {message.attachments.map((attachment) => (
-                            <div key={attachment.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                              {getFileIcon(attachment.mimetype)}
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                                  {attachment.filename}
+                          <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
+                          {message.attachments.map((attachment, index) => {
+                            // Handle both string paths and object attachments
+                            const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                            const filename = typeof attachment === 'string' 
+                              ? attachment.split('/').pop() || 'Unknown file'
+                              : attachment.filename;
+                            const mimetype = typeof attachment === 'string'
+                              ? ''
+                              : attachment.mimetype;
+                            
+                            return (
+                              <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
+                                {getFileIcon(mimetype)}
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                                    {filename}
+                                  </div>
+                                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                    {typeof attachment === 'object' && attachment.filesize ? `${attachment.filesize} • ` : ''}Attachment
+                                  </div>
                                 </div>
-                                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                  {attachment.filesize} • Uploaded by {attachment.uploadedBy}
-                                </div>
+                                <button 
+                                  className="text-blue-600 hover:text-blue-800"
+                                  onClick={() => window.open(attachmentUrl, '_blank')}
+                                  title="View attachment"
+                                >
+                                  <FaEye className="h-4 w-4" />
+                                </button>
                               </div>
-                              <button 
-                                className="text-blue-600 hover:text-blue-800"
-                                onClick={() => window.open(`/attachments/${attachment.id}/${attachment.filename}`, '_blank')}
-                                title="View attachment"
-                              >
-                                <FaEye className="h-4 w-4" />
-                              </button>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
-                    
-                    {(message.type === 'staff' || message.type === 'system') && (
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm ${
-                        message.type === 'staff' ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]' : 'bg-gradient-to-r from-gray-600 to-gray-700'
-                      }`}>
-                        {message.type === 'staff' ? <FaUserShield className="h-4 w-4" /> : <FaExclamationTriangle className="h-4 w-4" />}
-                      </div>
-                    )}
+
                   </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FaComments className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                    <p>No messages found for this ticket.</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Reply Section */}
-            <div className="card card-padding">
-              <div className="card-header">
-                <div className="card-icon">
-                  <FaReply />
-                </div>
-                <h3 className="card-title">Reply to Ticket</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="form-group">
-                  <textarea
-                    value={replyContent}
-                    onChange={(e) => setReplyContent(e.target.value)}
-                    placeholder="Type your reply to the customer..."
-                    rows={6}
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
-                  />
-                  <small className="text-xs text-gray-500 mt-1 block">
-                    This reply will be visible to the customer and will update the ticket status.
-                  </small>
+            {/* Reply Section - Only show if ticket is not closed */}
+            {ticketDetails.status !== 'closed' && (
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaReply />
+                  </div>
+                  <h3 className="card-title">Reply to Ticket</h3>
                 </div>
                 
-                {/* File Upload */}
-                <div className="form-group">
-                  <label className="form-label mb-2">
-                    Attachments
-                  </label>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileSelect}
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
-                  />
-                  <small className="text-xs text-gray-500 mt-1">
-                    You can upload screenshots or other relevant files (max 5MB each).
-                  </small>
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <textarea
+                      value={replyContent}
+                      onChange={(e) => setReplyContent(e.target.value)}
+                      placeholder="Type your reply to the customer..."
+                      rows={6}
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
+                    />
+                    <small className="text-xs text-gray-500 mt-1 block">
+                      This reply will be visible to the customer and will update the ticket status.
+                    </small>
+                  </div>
                   
-                  {/* Selected Files */}
-                  {selectedFiles.length > 0 && (
-                    <div className="mt-2 space-y-2">
-                      {selectedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
-                          {getFileIcon(file.type)}
-                          <span className="text-sm flex-1" style={{ color: 'var(--text-primary)' }}>{file.name}</span>
-                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{Math.round(file.size / 1024)} KB</span>
-                          <button
-                            onClick={() => removeSelectedFile(index)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <FaTimes className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleReplySubmit}
-                    disabled={!replyContent.trim() || isReplying}
-                    className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {isReplying ? 'Sending...' : 'Send Reply'}
-                  </button>
+                  {/* File Upload */}
+                  <div className="form-group">
+                    <label className="form-label mb-2">
+                      Attachments
+                    </label>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
+                    />
+                    <small className="text-xs text-gray-500 mt-1">
+                      You can upload screenshots or other relevant files (max 10MB each).
+                    </small>
+                    
+                    {/* Selected Files */}
+                    {selectedFiles.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {selectedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
+                            {getFileIcon(file.type)}
+                            <span className="text-sm flex-1" style={{ color: 'var(--text-primary)' }}>{file.name}</span>
+                            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{Math.round(file.size / 1024)} KB</span>
+                            <button
+                              onClick={() => removeSelectedFile(index)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <FaTimes className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleReplySubmit}
+                      disabled={!replyContent.trim() || isReplying}
+                      className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {isReplying ? 'Sending...' : 'Send Reply'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -917,11 +915,11 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 <div className="space-y-4">
                   <div>
                     <div className="form-label">Username</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.username}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.username || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="form-label">Full Name</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.fullName || 'N/A'}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.fullName || ticketDetails.userInfo?.name || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="form-label">Email</div>
@@ -976,11 +974,13 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       className="mt-2 btn btn-primary text-xs flex items-center gap-2 disabled:opacity-50"
                     >
                       {isAddingNote ? (
-                        <ButtonLoader />
+                        "Adding Note..."
                       ) : (
-                        <FaPlus className="h-3 w-3" />
+                        <>
+                          <FaPlus className="h-3 w-3" />
+                          Add Note
+                        </>
                       )}
-                      Add Note
                     </button>
                   </div>
                   
@@ -1014,13 +1014,10 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 </p>
                 <button
                   onClick={handleCloseTicket}
-                  disabled={isClosingTicket || ticketDetails.status === 'Closed'}
+                  disabled={isClosingTicket || ticketDetails.status === 'closed'}
                   className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
                 >
-                  {isClosingTicket ? (
-                    <ButtonLoader />
-                  ) : null}
-                  {ticketDetails.status === 'Closed' ? 'Ticket Closed' : 'Close Ticket'}
+                  {isClosingTicket ? 'Closing...' : (ticketDetails.status === 'closed' ? 'Ticket Closed' : 'Close Ticket')}
                 </button>
               </div>
             </div>
@@ -1031,4 +1028,10 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
   );
 };
 
-export default SupportTicketDetailsPage;
+const ProtectedSupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => (
+  <TicketSystemGuard>
+    <SupportTicketDetailsPage params={params} />
+  </TicketSystemGuard>
+);
+
+export default ProtectedSupportTicketDetailsPage;

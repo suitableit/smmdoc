@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     // Handle services request
     if (action === 'services' && providerId && categories && Array.isArray(categories)) {
       try {
-        const provider = await db.apiProvider.findUnique({
+        const provider = await db.api_providers.findUnique({
           where: { id: parseInt(providerId) }
         });
 
@@ -322,7 +322,7 @@ export async function GET(req: NextRequest) {
       try {
         console.log('🔥 Services request:', { providerId, categories });
 
-      const provider = await db.apiProvider.findUnique({
+      const provider = await db.api_providers.findUnique({
         where: { id: parseInt(providerId) }
       });
 
@@ -515,7 +515,7 @@ export async function GET(req: NextRequest) {
 
     // If requesting categories for a specific provider
     if (action === 'categories' && providerId) {
-      const provider = await db.apiProvider.findUnique({
+      const provider = await db.api_providers.findUnique({
         where: { id: parseInt(providerId) }
       });
 
@@ -1005,7 +1005,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Default: Get all configured providers (both active and inactive)
-    const configuredProviders = await db.apiProvider.findMany({
+    const configuredProviders = await db.api_providers.findMany({
       select: {
         id: true,
         name: true,
@@ -1070,7 +1070,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Get provider details
-    const provider = await db.apiProvider.findUnique({
+    const provider = await db.api_providers.findUnique({
       where: { id: parseInt(providerId) }
     });
 

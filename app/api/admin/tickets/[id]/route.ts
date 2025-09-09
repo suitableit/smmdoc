@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
 
 // Validation schema for updating tickets
 const updateTicketSchema = z.object({
@@ -44,7 +45,17 @@ export async function GET(
       );
     }
 
-    const ticketId = parseInt(params.id);
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
+      );
+    }
+
+    const resolvedParams = await params;
+    const ticketId = parseInt(resolvedParams.id);
     
     if (isNaN(ticketId)) {
       return NextResponse.json(
@@ -60,6 +71,7 @@ export async function GET(
           select: {
             id: true,
             name: true,
+            username: true,
             email: true,
           }
         },
@@ -79,6 +91,7 @@ export async function GET(
                 id: true,
                 name: true,
                 role: true,
+                image: true,
               }
             }
           }
@@ -92,6 +105,7 @@ export async function GET(
               select: {
                 id: true,
                 name: true,
+                username: true,
               }
             }
           }
@@ -106,15 +120,63 @@ export async function GET(
       );
     }
 
+    // Calculate user ticket statistics
+    const [totalTickets, openTickets] = await Promise.all([
+      // Count total tickets for this user
+      db.supportTicket.count({
+        where: { userId: ticket.userId }
+      }),
+      // Count open tickets for this user (status: 'pending' or 'Open')
+      db.supportTicket.count({
+        where: {
+          userId: ticket.userId,
+          OR: [
+            { status: 'pending' },
+            { status: 'Open' }
+          ]
+        }
+      })
+    ]);
+
     // Transform the ticket data to match frontend expectations
     const transformedTicket = {
       ...ticket,
+      id: ticket.id.toString(),
+      createdAt: ticket.createdAt.toISOString(),
+      lastUpdated: ticket.updatedAt.toISOString(), // Map updatedAt to lastUpdated
+      orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : null, // Parse orderIds JSON
+      userInfo: {
+        id: ticket.user?.id,
+        name: ticket.user?.name,
+        username: ticket.user?.username,
+        email: ticket.user?.email,
+        totalTickets,
+        openTickets
+      },
       messages: ticket.messages.map((msg: any) => ({
-        ...msg,
+        id: msg.id,
+        type: msg.messageType, // Map messageType to type
+        author: msg.messageType === 'system' ? 'System' : msg.user.name,
+        authorRole: msg.messageType === 'system' ? 'system' : (msg.isFromAdmin ? 'admin' : 'user'),
+        content: msg.message, // Map message to content
+        createdAt: msg.createdAt,
+        attachments: msg.attachments ? JSON.parse(msg.attachments) : [],
+        isEdited: false,
+        userImage: msg.user.image,
         user: {
           ...msg.user,
-          name: msg.messageType === 'system' ? 'System' : (msg.user.name === 'Admin User' ? 'Admin' : msg.user.name)
+          // For system messages created by admins, show the admin username
+          // For legacy system messages, fall back to 'system'
+          username: msg.messageType === 'system' && msg.isFromAdmin && msg.user.role === 'admin' ? msg.user.username : 
+                   msg.messageType === 'system' ? 'system' : msg.user.username
         }
+      })),
+      notes: ticket.notes.map((note: any) => ({
+        id: note.id.toString(),
+        content: note.content,
+        author: note.user.username || note.user.name,
+        createdAt: note.createdAt.toISOString(),
+        isPrivate: note.isPrivate
       }))
     };
 
@@ -160,7 +222,17 @@ export async function PUT(
       );
     }
 
-    const ticketId = parseInt(params.id);
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
+      );
+    }
+
+    const resolvedParams = await params;
+    const ticketId = parseInt(resolvedParams.id);
     
     if (isNaN(ticketId)) {
       return NextResponse.json(
@@ -273,7 +345,17 @@ export async function DELETE(
       );
     }
 
-    const ticketId = parseInt(params.id);
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
+      );
+    }
+
+    const resolvedParams = await params;
+    const ticketId = parseInt(resolvedParams.id);
     
     if (isNaN(ticketId)) {
       return NextResponse.json(

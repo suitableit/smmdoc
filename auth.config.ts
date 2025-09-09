@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import type { NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
+// import { cookies } from 'next/headers'; // Removed to fix edge runtime error
 import { getTwoFactorConfirmationByUserId } from './data/two-factor-confirmation';
 import { getUserByEmail, getUserById, getUserByUsername } from './data/user';
 import { ActivityLogger } from './lib/activity-logger';
@@ -112,11 +113,48 @@ export default {
         session.user.email = token.email;
         session.user.balance = token.balance;
         session.user.image = token.image;
+        
+        // Handle impersonation
+        session.user.isImpersonating = token.isImpersonating || false;
+        session.user.originalAdminId = token.originalAdminId || null;
       }
       return session;
     },
-    async jwt({ token }: any) {
+    async jwt({ token, req }: any) {
       if (!token.sub) return token;
+
+      // Check for impersonation cookies using Next.js cookies() function
+      // Temporarily disabled to fix edge runtime error
+      // const cookieStore = await cookies();
+      // const impersonatedUserId = cookieStore.get('impersonated-user-id')?.value;
+      // const originalAdminId = cookieStore.get('original-admin-id')?.value;
+      const impersonatedUserId = null;
+      const originalAdminId = null;
+
+
+
+      if (impersonatedUserId && originalAdminId) {
+        // User is being impersonated
+        const impersonatedUser = await getUserById(parseInt(impersonatedUserId));
+        if (impersonatedUser) {
+          token.sub = impersonatedUser.id;
+          token.role = impersonatedUser.role;
+          token.isTwoFactorEnabled = impersonatedUser.isTwoFactorEnabled;
+          token.currency = impersonatedUser.currency;
+          token.name = impersonatedUser.name;
+          token.username = impersonatedUser.username;
+          token.email = impersonatedUser.email;
+          token.balance = impersonatedUser.balance;
+          token.image = impersonatedUser.image;
+          token.isImpersonating = true;
+          token.originalAdminId = parseInt(originalAdminId);
+          return token;
+        }
+      }
+
+      // Normal user session (not impersonating)
+      token.isImpersonating = false;
+      token.originalAdminId = null;
 
       // Convert string ID to number if needed
       const numericId = parseInt(token.sub);

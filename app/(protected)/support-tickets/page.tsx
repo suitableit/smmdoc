@@ -20,6 +20,7 @@ import {
 } from 'react-icons/fa';
 import ReCAPTCHA from '@/components/ReCAPTCHA';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -98,7 +99,7 @@ const TicketPage: React.FC = () => {
     subcategory: '2',
     ticketType: 'AI',
     aiSubcategory: 'Refill',
-    humanTicketSubject: '1', // Default to first subject
+    humanTicketSubject: '', // Will be set when subjects are loaded
     orderIds: '',
     message: '',
     subject: '',
@@ -114,6 +115,8 @@ const TicketPage: React.FC = () => {
   } | null>(null);
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const [orderIdsError, setOrderIdsError] = useState<string>('');
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<{name: string, url: string}[]>([]);
 
   // ReCAPTCHA state
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -170,6 +173,16 @@ const TicketPage: React.FC = () => {
     fetchTicketSubjects();
   }, []);
 
+  // Set default humanTicketSubject when subjects are loaded
+  useEffect(() => {
+    if (ticketSubjects.length > 0 && !formData.humanTicketSubject) {
+      setFormData(prev => ({
+        ...prev,
+        humanTicketSubject: ticketSubjects[0].id.toString()
+      }));
+    }
+  }, [ticketSubjects, formData.humanTicketSubject]);
+
   const ticketTypes = [
     { value: 'Human', label: 'Human Ticket' },
     { value: 'AI', label: 'AI Ticket' },
@@ -196,7 +209,7 @@ const TicketPage: React.FC = () => {
     { value: 'Fake Complete', label: 'Fake Complete' },
   ];
 
-  // Simulate initial loading
+  // Simulate initial loading for ticket form only
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -214,6 +227,7 @@ const TicketPage: React.FC = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
+  // Handle ticket type changes and AI-specific updates
   useEffect(() => {
     if (formData.ticketType === 'AI') {
       // AI Ticket - hide message and file upload, set category to AI Support
@@ -224,17 +238,22 @@ const TicketPage: React.FC = () => {
         category: '1', // AI Support
         message: `${formData.orderIds || 'Order ID Not Found'} ${formData.aiSubcategory}`,
       }));
-    } else {
+    }
+  }, [formData.ticketType, formData.aiSubcategory, formData.orderIds]);
+
+  // Handle Human ticket type setup (only when ticket type changes)
+  useEffect(() => {
+    if (formData.ticketType === 'Human') {
       // Human Ticket - show message and file upload, set category to Human Support
       setShowMessageField(true);
       setShowFileUpload(true);
       setFormData((prev) => ({
         ...prev,
         category: '13', // Human Support
-        message: '',
+        // Preserve existing message content
       }));
     }
-  }, [formData.ticketType, formData.aiSubcategory, formData.orderIds]);
+  }, [formData.ticketType]);
 
   // Handle ticket type change
   const handleTicketTypeChange = (ticketType: 'Human' | 'AI') => {
@@ -244,7 +263,7 @@ const TicketPage: React.FC = () => {
       // Reset relevant fields when switching types
       aiSubcategory: ticketType === 'AI' ? 'Refill' : prev.aiSubcategory,
       subcategory: ticketType === 'Human' ? '2' : prev.subcategory,
-      humanTicketSubject: ticketType === 'Human' ? '1' : prev.humanTicketSubject,
+      humanTicketSubject: ticketType === 'Human' ? (ticketSubjects.length > 0 ? ticketSubjects[0].id.toString() : '1') : prev.humanTicketSubject,
       orderIds: '',
       message: '',
     }));
@@ -280,6 +299,83 @@ const TicketPage: React.FC = () => {
     handleInputChange('orderIds', sanitized);
   };
 
+  // File upload handler
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingFiles(true);
+    const newUploadedFiles: {name: string, url: string}[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        // Validate file size (3MB max)
+        const maxSize = 3 * 1024 * 1024; // 3MB
+        if (file.size > maxSize) {
+          showToast(`File "${file.name}" is too large. Maximum 3MB allowed.`, 'error');
+          continue;
+        }
+
+        // Validate file type (only images and PDFs)
+        const allowedTypes = [
+          'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+          'application/pdf'
+        ];
+        if (!allowedTypes.includes(file.type)) {
+          showToast(`File "${file.name}" has an unsupported format. Only images and PDFs are allowed.`, 'error');
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'uploads'); // Store in public/uploads folder
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          newUploadedFiles.push({
+            name: file.name,
+            url: result.fileUrl
+          });
+        } else {
+          const error = await response.json();
+          showToast(`Failed to upload "${file.name}": ${error.error}`, 'error');
+        }
+      }
+
+      if (newUploadedFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...newUploadedFiles]);
+        const newAttachments = newUploadedFiles.map(file => file.url);
+        setFormData(prev => ({
+          ...prev,
+          attachments: [...prev.attachments, ...newAttachments]
+        }));
+        showToast(`${newUploadedFiles.length} file(s) uploaded successfully!`, 'success');
+      }
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      showToast('Error uploading files. Please try again.', 'error');
+    } finally {
+      setUploadingFiles(false);
+      // Reset the input value to allow uploading the same file again
+      event.target.value = '';
+    }
+  };
+
+  // Remove uploaded file
+  const removeUploadedFile = (index: number) => {
+    const fileToRemove = uploadedFiles[index];
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setFormData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter(url => url !== fileToRemove.url)
+    }));
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
@@ -287,6 +383,20 @@ const TicketPage: React.FC = () => {
       // Check ReCAPTCHA if enabled
       if (isEnabledForForm('supportTicket') && !recaptchaToken) {
         showToast('Please complete the ReCAPTCHA verification', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Check if both order ID and message fields are empty
+      if (!formData.orderIds.trim() && !formData.message.trim()) {
+        showToast('Please fill order ID and message field', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate message field for Human Support tickets
+      if (formData.ticketType === 'Human' && !formData.message.trim()) {
+        showToast('Message is required for Human Support ticket', 'error');
         setIsSubmitting(false);
         return;
       }
@@ -308,7 +418,7 @@ const TicketPage: React.FC = () => {
       let subject = '';
       if (formData.ticketType === 'Human') {
         // For Human tickets, use the selected subject from admin settings
-        const selectedSubject = ticketSubjects.find(s => s.id === formData.humanTicketSubject);
+        const selectedSubject = ticketSubjects.find(s => s.id === parseInt(formData.humanTicketSubject));
         subject = selectedSubject ? selectedSubject.name : 'General Support';
       } else {
         // For AI tickets, use category and subcategory as before
@@ -344,21 +454,30 @@ const TicketPage: React.FC = () => {
 
       if (response.ok) {
         const result = await response.json();
-        showToast('Ticket submitted successfully!', 'success');
-        setFormData({
-          category: '1',
-          subcategory: '2',
-          ticketType: 'AI',
-          aiSubcategory: 'Refill',
-          humanTicketSubject: '1',
-          orderIds: '',
-          message: '',
-          subject: '',
-          priority: 'medium',
-          attachments: [],
-        });
-        // Refresh tickets list
-        fetchTickets();
+        showToast('Ticket submitted successfully! Redirecting to ticket details...', 'success');
+        
+        // Redirect to the created ticket details page
+        if (result.ticket && result.ticket.id) {
+          router.push(`/support-tickets/${result.ticket.id}`);
+        } else {
+          // Fallback: reset form and refresh tickets list if no ticket ID
+          setFormData({
+            category: '1',
+            subcategory: '2',
+            ticketType: 'AI',
+            aiSubcategory: 'Refill',
+            humanTicketSubject: '1',
+            orderIds: '',
+            message: '',
+            subject: '',
+            priority: 'medium',
+            attachments: [],
+          });
+          // Clear uploaded files
+          setUploadedFiles([]);
+          // Refresh tickets list
+          fetchTickets();
+        }
       } else {
         const error = await response.json();
         showToast(error.error || error.message || 'Failed to submit ticket', 'error');
@@ -424,91 +543,6 @@ const TicketPage: React.FC = () => {
     setOpenAccordion(openAccordion === id ? null : id);
   };
 
-  if (isLoading) {
-    return (
-      <div className="page-container">
-        <div className="page-content">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Loading State */}
-            <div className="space-y-6">
-              {/* Tab Navigation - Static */}
-              <div className="card" style={{ padding: '8px' }}>
-                <div className="flex space-x-2">
-                  <button className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25">
-                    <FaTicketAlt className="mr-2 w-4 h-4" />
-                    New Ticket
-                  </button>
-                  <button className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600">
-                    <FaClock className="mr-2 w-4 h-4" />
-                    Tickets History
-                  </button>
-                </div>
-              </div>
-
-              {/* Form Card - Loading State */}
-              <div className="card card-padding">
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-14 h-14" className="mb-4" />
-                    <div className="text-lg font-medium">
-                      Loading ticket form...
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - Information (Static) */}
-            <div className="space-y-6">
-              <div className="card card-padding">
-                <div className="card-header">
-                  <div className="card-icon">
-                    <FaInfoCircle />
-                  </div>
-                  <h3 className="card-title">Read before create Ticket</h3>
-                </div>
-
-                <div className="space-y-3 mt-4">
-                  {/* Static accordion items while loading */}
-                  <div className="card">
-                    <div className="w-full p-4 text-left flex justify-between items-center">
-                      <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
-                        <FaCreditCard className="w-4 h-4" />
-                        How to Create Ticket ?
-                      </span>
-                      <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                    </div>
-                  </div>
-
-                  <div className="card">
-                    <div className="w-full p-4 text-left flex justify-between items-center">
-                      <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
-                        <FaClock className="w-4 h-4" />
-                        How long does it take to get a reply from support
-                        regarding my complaint?
-                      </span>
-                      <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                    </div>
-                  </div>
-
-                  <div className="card">
-                    <div className="w-full p-4 text-left flex justify-between items-center">
-                      <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
-                        <FaInfoCircle className="w-4 h-4" />
-                        Important Guidelines
-                      </span>
-                      <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="page-container">
       {/* Toast Container */}
@@ -551,25 +585,36 @@ const TicketPage: React.FC = () => {
             </div>
 
             <div className="card card-padding">
-              {/* Tab Content */}
-              <div className="space-y-4">
-                <div className="space-y-4">
-                  <div className="form-group">
-                    <label className="form-label">Ticket Type</label>
-                    <select
-                      value={formData.ticketType}
-                      onChange={(e) =>
-                        handleTicketTypeChange(e.target.value as 'Human' | 'AI')
-                      }
-                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                    >
-                      {ticketTypes.map((type) => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
+              {isLoading ? (
+                // Loading state for ticket form only
+                <div className="flex items-center justify-center min-h-[400px]">
+                  <div className="text-center flex flex-col items-center">
+                    <GradientSpinner size="w-14 h-14" className="mb-4" />
+                    <div className="text-lg font-medium">
+                      Loading...
+                    </div>
                   </div>
+                </div>
+              ) : (
+                // Main ticket form content
+                <div className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="form-group">
+                      <label className="form-label">Ticket Type</label>
+                      <select
+                        value={formData.ticketType}
+                        onChange={(e) =>
+                          handleTicketTypeChange(e.target.value as 'Human' | 'AI')
+                        }
+                        className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                      >
+                        {ticketTypes.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
                   {formData.ticketType === 'AI' ? (
                     <div className="form-group">
@@ -611,6 +656,7 @@ const TicketPage: React.FC = () => {
                       </select>
                     </div>
                   )}
+                  </div>
 
                   <div className="form-group">
                     <label className="form-label">
@@ -652,13 +698,59 @@ const TicketPage: React.FC = () => {
 
                   {showFileUpload && (
                     <div className="form-group">
-                      <button
-                        type="button"
-                        className="btn btn-secondary flex items-center gap-2"
-                      >
-                        <FaPaperclip className="w-4 h-4" />
-                        Attach files
-                      </button>
+                      <label className="form-label">Attachments</label>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <label
+                            htmlFor="file-upload"
+                            className="btn btn-secondary flex items-center gap-2 cursor-pointer"
+                          >
+                            <FaPaperclip className="w-4 h-4" />
+                            {uploadingFiles ? 'Uploading...' : 'Attach Files'}
+                          </label>
+                          <input
+                            id="file-upload"
+                            type="file"
+                            multiple
+                            onChange={handleFileUpload}
+                            disabled={uploadingFiles}
+                            className="hidden"
+                            accept="image/*,.pdf,.txt,.doc,.docx"
+                          />
+                          <span className="text-sm text-gray-500">
+                            Max 3MB per file. Supported file: images and PDF
+                          </span>
+                        </div>
+                        
+                        {/* Display uploaded files */}
+                        {uploadedFiles.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Uploaded Files:
+                            </p>
+                            {uploadedFiles.map((file, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <FaPaperclip className="w-3 h-3 text-gray-500" />
+                                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                                    {file.name}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeUploadedFile(index)}
+                                  className="text-red-500 hover:text-red-700 transition-colors"
+                                >
+                                  <FaTimes className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -693,7 +785,7 @@ const TicketPage: React.FC = () => {
                     {isSubmitting ? 'Submitting...' : 'Submit Ticket'}
                   </button>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -867,4 +959,10 @@ const TicketPage: React.FC = () => {
   );
 };
 
-export default TicketPage;
+const ProtectedTicketPage = () => (
+  <TicketSystemGuard>
+    <TicketPage />
+  </TicketSystemGuard>
+);
+
+export default ProtectedTicketPage;

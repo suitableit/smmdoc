@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import nodemailer, { Transporter } from 'nodemailer';
+import { getAdminEmail } from '@/lib/utils/general-settings';
 
 const prisma = new PrismaClient();
 
@@ -29,6 +30,9 @@ export async function getEmailConfig(): Promise<EmailConfig | null> {
       return null;
     }
 
+    // Get admin email from General Settings
+    const adminEmail = await getAdminEmail();
+
     return {
       host: emailSettings.smtp_host,
       port: emailSettings.smtp_port,
@@ -37,7 +41,7 @@ export async function getEmailConfig(): Promise<EmailConfig | null> {
         user: emailSettings.smtp_username,
         pass: emailSettings.smtp_password,
       },
-      from: emailSettings.email || emailSettings.smtp_username,
+      from: adminEmail || emailSettings.smtp_username,
     };
   } catch (error) {
     console.error('Error fetching email configuration from database:', error);
@@ -84,10 +88,16 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
 }
 
 /**
- * Gets the "from" email address from database settings
+ * Gets the "from" email address from General Settings (Administration Email Address)
  * @returns from email address or null if not configured
  */
 export async function getFromEmailAddress(): Promise<string | null> {
-  const config = await getEmailConfig();
-  return config ? config.from : null;
+  try {
+    // Use Administration Email Address from General Settings
+    const adminEmail = await getAdminEmail();
+    return adminEmail || null;
+  } catch (error) {
+    console.error('Error fetching admin email from General Settings:', error);
+    return null;
+  }
 }
