@@ -3,15 +3,46 @@ import { convertToUSD } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Mock validateProvider function
-const validateProvider = async (providerId: string) => ({
-  isValid: true,
-  provider: { id: providerId, name: 'Provider', status: 'active' },
-  error: null
-});
+// Validate provider function
+const validateProvider = async (providerId: string) => {
+  try {
+    const provider = await db.apiProvider.findUnique({
+      where: { id: parseInt(providerId) }
+    });
+    
+    if (!provider) {
+      return { isValid: false, provider: null, error: 'Provider not found' };
+    }
+    
+    if (provider.status !== 'active') {
+      return { isValid: false, provider: null, error: 'Provider is not active' };
+    }
+    
+    if (!provider.api_key || !provider.api_url) {
+      return { isValid: false, provider: null, error: 'Provider missing API key or URL' };
+    }
+    
+    return { isValid: true, provider, error: null };
+  } catch (error) {
+    return { isValid: false, provider: null, error: 'Database error' };
+  }
+};
 
-// Mock getValidProviders function
-const getValidProviders = async () => [];
+// Get valid providers function
+const getValidProviders = async () => {
+  try {
+    return await db.apiProvider.findMany({
+      where: {
+        status: 'active',
+        api_key: { not: '' },
+        api_url: { not: '' }
+      }
+    });
+  } catch (error) {
+    console.error('Error getting valid providers:', error);
+    return [];
+  }
+};
 
 // Provider configurations
 const PROVIDER_CONFIGS = {

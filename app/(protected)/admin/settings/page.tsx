@@ -231,6 +231,7 @@ interface GeneralSettings {
   tagline: string;
   siteIcon: string;
   siteLogo: string;
+  siteDarkLogo: string;
   adminEmail: string;
 }
 
@@ -312,6 +313,7 @@ const GeneralSettingsPage = () => {
   const [imageLoadingStates, setImageLoadingStates] = useState({
     siteIcon: false,
     siteLogo: false,
+    siteDarkLogo: false,
   });
 
   // Settings state
@@ -320,6 +322,7 @@ const GeneralSettingsPage = () => {
     tagline: '',
     siteIcon: '',
     siteLogo: '',
+    siteDarkLogo: '',
     adminEmail: '',
   });
 
@@ -347,11 +350,13 @@ const GeneralSettingsPage = () => {
   const [ticketSettings, setTicketSettings] = useState<TicketSettings>({
     ticketSystemEnabled: true,
     maxPendingTickets: '3',
-    subjects: [
-      { id: 1, name: 'General Support' },
-      { id: 2, name: 'Technical Issue' },
-      { id: 3, name: 'Billing Question' },
-    ],
+    subjects: [],
+  });
+
+  const [originalTicketSettings, setOriginalTicketSettings] = useState<TicketSettings>({
+    ticketSystemEnabled: true,
+    maxPendingTickets: '3',
+    subjects: [],
   });
 
   const [contactSettings, setContactSettings] = useState<ContactSettings>({
@@ -436,7 +441,10 @@ const GeneralSettingsPage = () => {
         // Process ticket settings
         if (ticketResponse.ok) {
           const data = await ticketResponse.json();
-          if (data.ticketSettings) setTicketSettings(data.ticketSettings);
+          if (data.ticketSettings) {
+            setTicketSettings(data.ticketSettings);
+            setOriginalTicketSettings(data.ticketSettings);
+          }
         }
 
         // Process contact settings
@@ -559,7 +567,38 @@ const GeneralSettingsPage = () => {
     }
   };
 
+  const hasTicketSettingsChanged = () => {
+    // Compare basic settings
+    if (ticketSettings.ticketSystemEnabled !== originalTicketSettings.ticketSystemEnabled ||
+        ticketSettings.maxPendingTickets !== originalTicketSettings.maxPendingTickets) {
+      return true;
+    }
+
+    // Compare subjects
+    if (ticketSettings.subjects.length !== originalTicketSettings.subjects.length) {
+      return true;
+    }
+
+    // Check if any subject has changed
+    for (let i = 0; i < ticketSettings.subjects.length; i++) {
+      const current = ticketSettings.subjects[i];
+      const original = originalTicketSettings.subjects.find(s => s.id === current.id);
+      
+      if (!original || current.name !== original.name) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const saveTicketSettings = async () => {
+    // Check if there are any changes
+    if (!hasTicketSettingsChanged()) {
+      showToast('No unsaved changes to save', 'info');
+      return;
+    }
+
     setLoadingStates(prev => ({ ...prev, ticket: true }));
     try {
       const response = await fetch('/api/admin/ticket-settings', {
@@ -570,6 +609,8 @@ const GeneralSettingsPage = () => {
 
       if (response.ok) {
         showToast('Ticket settings saved successfully!', 'success');
+        // Update the original settings to reflect the saved state
+        setOriginalTicketSettings(ticketSettings);
       } else {
         showToast('Failed to save ticket settings', 'error');
       }
@@ -633,8 +674,8 @@ const GeneralSettingsPage = () => {
 
   // File upload handlers
   // Delete uploaded image
-  const handleDeleteImage = async (field: 'siteIcon' | 'siteLogo') => {
-    const imageType = field === 'siteIcon' ? 'Site Icon' : 'Site Logo';
+  const handleDeleteImage = async (field: 'siteIcon' | 'siteLogo' | 'siteDarkLogo') => {
+    const imageType = field === 'siteIcon' ? 'Site Icon' : field === 'siteLogo' ? 'Site Logo' : 'Site Dark Logo';
     
     // Show confirmation dialog
     const confirmed = window.confirm(`Are you sure you want to delete the ${imageType}? This action cannot be undone.`);
@@ -671,17 +712,17 @@ const GeneralSettingsPage = () => {
     }
   };
 
-  const handleFileUpload = async (field: 'siteIcon' | 'siteLogo' | 'thumbnail', file: File) => {
+  const handleFileUpload = async (field: 'siteIcon' | 'siteLogo' | 'siteDarkLogo' | 'thumbnail', file: File) => {
     try {
-      // Validate PNG format for site icon and site logo
-      if ((field === 'siteIcon' || field === 'siteLogo') && file.type !== 'image/png') {
-        showToast('Only PNG format is allowed for site icon and site logo', 'error');
+      // Validate PNG format for site icon, site logo, and site dark logo
+      if ((field === 'siteIcon' || field === 'siteLogo' || field === 'siteDarkLogo') && file.type !== 'image/png') {
+        showToast('Only PNG format is allowed for site icon, site logo, and site dark logo', 'error');
         return;
       }
 
       setLoadingStates(prev => ({ ...prev, general: true }));
       // Set image loading state for the specific field
-      if (field === 'siteIcon' || field === 'siteLogo') {
+      if (field === 'siteIcon' || field === 'siteLogo' || field === 'siteDarkLogo') {
         setImageLoadingStates(prev => ({ ...prev, [field]: true }));
       }
       showToast('Uploading file...', 'pending');
@@ -690,7 +731,7 @@ const GeneralSettingsPage = () => {
       formData.append('file', file);
       
       // Set upload type based on field
-      if (field === 'siteIcon' || field === 'siteLogo' || field === 'thumbnail') {
+      if (field === 'siteIcon' || field === 'siteLogo' || field === 'siteDarkLogo' || field === 'thumbnail') {
         formData.append('type', 'general');
       }
 
@@ -720,13 +761,16 @@ const GeneralSettingsPage = () => {
             });
             
             if (saveResponse.ok) {
-              showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded and saved successfully!`, 'success');
+              const fieldName = field === 'siteIcon' ? 'Site Icon' : field === 'siteLogo' ? 'Site Logo' : 'Site Dark Logo';
+              showToast(`${fieldName} uploaded and saved successfully!`, 'success');
             } else {
-              showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded but failed to save to database`, 'error');
+              const fieldName = field === 'siteIcon' ? 'Site Icon' : field === 'siteLogo' ? 'Site Logo' : 'Site Dark Logo';
+              showToast(`${fieldName} uploaded but failed to save to database`, 'error');
             }
           } catch (saveError) {
             console.error('Error auto-saving general settings:', saveError);
-            showToast(`${field === 'siteIcon' ? 'Site Icon' : 'Site Logo'} uploaded but failed to save to database`, 'error');
+            const fieldName = field === 'siteIcon' ? 'Site Icon' : field === 'siteLogo' ? 'Site Logo' : 'Site Dark Logo';
+            showToast(`${fieldName} uploaded but failed to save to database`, 'error');
           }
         }
       } else {
@@ -750,7 +794,6 @@ const GeneralSettingsPage = () => {
         subjects: [...prev.subjects, { id: newId, name: newSubject.trim() }]
       }));
       setNewSubject('');
-      showToast('Subject added successfully!', 'success');
     }
   };
 
@@ -759,7 +802,6 @@ const GeneralSettingsPage = () => {
       ...prev,
       subjects: prev.subjects.map(s => s.id === id ? { ...s, name } : s)
     }));
-    showToast('Subject updated successfully!', 'success');
   };
 
   const deleteSubject = (id: number) => {
@@ -767,7 +809,6 @@ const GeneralSettingsPage = () => {
       ...prev,
       subjects: prev.subjects.filter(s => s.id !== id)
     }));
-    showToast('Subject deleted successfully!', 'success');
   };
 
   const addCategory = () => {
@@ -778,7 +819,6 @@ const GeneralSettingsPage = () => {
         categories: [...prev.categories, { id: null, name: newCategory.trim() }]
       }));
       setNewCategory('');
-      showToast('Category added successfully!', 'success');
     }
   };
 
@@ -787,7 +827,6 @@ const GeneralSettingsPage = () => {
       ...prev,
       categories: prev.categories.map(c => c.id === id ? { ...c, name } : c)
     }));
-    showToast('Category updated successfully!', 'success');
   };
 
   const deleteCategory = (id: number) => {
@@ -795,7 +834,6 @@ const GeneralSettingsPage = () => {
       ...prev,
       categories: prev.categories.filter(c => c.id !== id)
     }));
-    showToast('Category deleted successfully!', 'success');
   };
 
   // Show loading state
@@ -827,7 +865,6 @@ const GeneralSettingsPage = () => {
     { value: '3', label: '3' },
     { value: '4', label: '4' },
     { value: '5', label: '5' },
-    { value: '6', label: '6' },
     { value: 'unlimited', label: 'Unlimited' },
   ];
 
@@ -927,44 +964,92 @@ const GeneralSettingsPage = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Site Logo</label>
-                  <div className="flex items-center gap-3">
-                    {isPageLoading || imageLoadingStates.siteLogo ? (
-                      <ImageSkeleton width={128} height={32} className="rounded" />
-                    ) : generalSettings.siteLogo ? (
-                      <div className="relative group">
-                        <Image
-                          src={generalSettings.siteLogo}
-                          alt="Site Logo"
-                          width={128}
-                          height={32}
-                          className="h-8 max-w-32 object-contain"
-                          onLoadStart={() => setImageLoadingStates(prev => ({ ...prev, siteLogo: true }))}
-                          onLoad={() => setImageLoadingStates(prev => ({ ...prev, siteLogo: false }))}
-                          onError={() => setImageLoadingStates(prev => ({ ...prev, siteLogo: false }))}
-                        />
-                        <button
-                          onClick={() => handleDeleteImage('siteLogo')}
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          title="Remove Site Logo"
-                        >
-                          <FaTimes className="w-2 h-2" />
-                        </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Site Logo Column */}
+                    <div>
+                      <label className="form-label text-sm mb-2 block">Site Logo</label>
+                      <div className="flex items-center gap-3">
+                        {isPageLoading || imageLoadingStates.siteLogo ? (
+                          <ImageSkeleton width={128} height={32} className="rounded" />
+                        ) : generalSettings.siteLogo ? (
+                          <div className="relative group">
+                            <Image
+                              src={generalSettings.siteLogo}
+                              alt="Site Logo"
+                              width={128}
+                              height={32}
+                              className="h-8 max-w-32 object-contain"
+                              onLoadStart={() => setImageLoadingStates(prev => ({ ...prev, siteLogo: true }))}
+                              onLoad={() => setImageLoadingStates(prev => ({ ...prev, siteLogo: false }))}
+                              onError={() => setImageLoadingStates(prev => ({ ...prev, siteLogo: false }))}
+                            />
+                            <button
+                              onClick={() => handleDeleteImage('siteLogo')}
+                              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              title="Remove Site Logo"
+                            >
+                              <FaTimes className="w-2 h-2" />
+                            </button>
+                          </div>
+                        ) : null}
+                        <label className="btn btn-secondary cursor-pointer">
+                          <FaUpload className="w-4 h-4 mr-2" />
+                          Upload Logo
+                          <input
+                            type="file"
+                            accept="image/png"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload('siteLogo', file);
+                            }}
+                            className="hidden"
+                          />
+                        </label>
                       </div>
-                    ) : null}
-                    <label className="btn btn-secondary cursor-pointer">
-                      <FaUpload className="w-4 h-4 mr-2" />
-                      Upload Logo
-                      <input
-                        type="file"
-                        accept="image/png"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileUpload('siteLogo', file);
-                        }}
-                        className="hidden"
-                      />
-                    </label>
+                    </div>
+
+                    {/* Site Dark Logo Column */}
+                    <div>
+                      <label className="form-label text-sm mb-2 block">Site Dark Logo</label>
+                      <div className="flex items-center gap-3">
+                        {isPageLoading || imageLoadingStates.siteDarkLogo ? (
+                          <ImageSkeleton width={128} height={32} className="rounded" />
+                        ) : generalSettings.siteDarkLogo ? (
+                          <div className="relative group">
+                            <Image
+                              src={generalSettings.siteDarkLogo}
+                              alt="Site Dark Logo"
+                              width={128}
+                              height={32}
+                              className="h-8 max-w-32 object-contain"
+                              onLoadStart={() => setImageLoadingStates(prev => ({ ...prev, siteDarkLogo: true }))}
+                              onLoad={() => setImageLoadingStates(prev => ({ ...prev, siteDarkLogo: false }))}
+                              onError={() => setImageLoadingStates(prev => ({ ...prev, siteDarkLogo: false }))}
+                            />
+                            <button
+                              onClick={() => handleDeleteImage('siteDarkLogo')}
+                              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              title="Remove Site Dark Logo"
+                            >
+                              <FaTimes className="w-2 h-2" />
+                            </button>
+                          </div>
+                        ) : null}
+                        <label className="btn btn-secondary cursor-pointer">
+                          <FaUpload className="w-4 h-4 mr-2" />
+                          Upload Dark Logo
+                          <input
+                            type="file"
+                            accept="image/png"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload('siteDarkLogo', file);
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

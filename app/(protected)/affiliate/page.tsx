@@ -1041,14 +1041,12 @@ function AffiliateEarningsSection() {
                           </div>
                         </td>
                         <td className="p-3 text-right hidden md:table-cell">
-                          <td className="p-3 text-right hidden md:table-cell">
                           <div className="text-sm font-semibold text-green-600">
                             ${formatPrice(earning.commission, 2)}
                           </div>
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                             {((earning.commission / earning.amount) * 100).toFixed(1)}%
                           </div>
-                        </td>
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit mx-auto">

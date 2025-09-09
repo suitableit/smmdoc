@@ -17,6 +17,7 @@ import {
     FaTimes,
     FaUser,
 } from 'react-icons/fa';
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -388,23 +389,48 @@ export default function TicketsHistory() {
     },
   ];
 
-  // Get badge color based on status
-  const getStatusBadge = (status: string) => {
+  // Get badge color based on status - matching admin tickets page styling
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Open':
+      case 'open':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'Answered':
+      case 'answered':
+        return 'bg-green-50 text-green-700 border-green-200';
+      case 'Customer Reply':
+      case 'customer_reply':
+        return 'bg-orange-50 text-orange-700 border-orange-200';
+      case 'On Hold':
+      case 'on_hold':
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'In Progress':
+      case 'in_progress':
+        return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'Closed':
+      case 'closed':
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
+
+  const formatStatusDisplay = (status: string) => {
     switch (status) {
       case 'open':
-        return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800';
+        return 'Open';
       case 'answered':
-        return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800';
+        return 'Answered';
       case 'customer_reply':
-        return 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-800';
+        return 'Customer Reply';
       case 'on_hold':
-        return 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-800';
+        return 'On Hold';
       case 'in_progress':
-        return 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800';
+        return 'In Progress';
       case 'closed':
-        return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800';
+        return 'Closed';
       default:
-        return 'bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-800';
+        return status;
     }
   };
 
@@ -444,19 +470,21 @@ export default function TicketsHistory() {
   // Remove the full-page loading return - we'll handle loading in the table area
 
   return (
-    <div className="page-container">
-      {/* Toast Container */}
-      {toastMessage && (
-        <Toast
-          message={toastMessage.message}
-          type={toastMessage.type}
-          onClose={() => setToastMessage(null)}
-        />
-      )}
+    <TicketSystemGuard>
+      <div className="page-container">
+        {/* Toast Container */}
+        {toastMessage && (
+          <Toast
+            message={toastMessage.message}
+            type={toastMessage.type}
+            onClose={() => setToastMessage(null)}
+          />
+        )}
 
-      <div className="page-content">
-        {/* Tab Navigation */}
-        <div className="card mb-6" style={{ padding: '8px' }}>
+        <div className="page-content">
+        <div className="card card-padding">
+          {/* Tab Navigation */}
+          <div className="card mb-6" style={{ padding: '8px' }}>
           <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
             <button
               onClick={() => {
@@ -553,11 +581,11 @@ export default function TicketsHistory() {
                           </div>
                           <div className="flex items-center gap-2 mt-1">
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(
-                                ticket.status
-                              )}`}
+                              className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium border w-26 ${
+                                getStatusColor(ticket.status)
+                              }`}
                             >
-                              {ticket.status}
+                              {formatStatusDisplay(ticket.status)}
                             </span>
                             {ticket.type === 'ai' ? (
                               <span className="text-xs text-purple-600 flex items-center gap-1">
@@ -664,7 +692,7 @@ export default function TicketsHistory() {
                           }`}
                         >
                           <span className="text-sm font-mono text-gray-700">
-                            #{ticket.id}
+                            {ticket.id}
                           </span>
                         </td>
                         <td className="py-3 px-4">
@@ -693,11 +721,11 @@ export default function TicketsHistory() {
                         </td>
                         <td className="py-3 px-4">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(
-                              ticket.status
-                            )}`}
+                            className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium border w-26 ${
+                              getStatusColor(ticket.status)
+                            }`}
                           >
-                            {ticket.status}
+                            {formatStatusDisplay(ticket.status)}
                           </span>
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
@@ -828,7 +856,9 @@ export default function TicketsHistory() {
             </div>
           )}
         </div>
+        </div>
+        </div>
       </div>
-    </div>
+    </TicketSystemGuard>
   );
 }

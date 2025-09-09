@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get provider details
-    const provider = await db.apiProvider.findUnique({
+    const provider = await db.api_providers.findUnique({
       where: { id: providerId },
       select: {
         id: true,

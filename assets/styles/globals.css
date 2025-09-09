@@ -875,7 +875,7 @@ body {
 .dark main,
 .dark .page-content,
 .dark .dashboard-content,
-.dark .h-full:not(.sidebar):not(.bg-[#170c21]) {
+.dark .h-full:not(.sidebar):not(.bg-\[\#170c21\]) {
   background-color: #0d0712;
   color: #e5e7eb;
 }
@@ -886,7 +886,7 @@ body {
 .dark input,
 .dark textarea,
 .dark select,
-.dark button:not(.sidebar button):not(.bg-[#170c21] button),
+.dark button:not(.sidebar button):not(.bg-\[\#170c21\] button),
 .dark .dialog,
 .dark .modal {
   background-color: #0d0712;
@@ -895,32 +895,32 @@ body {
 }
 
 /* Apply Nunito to all text elements except in sidebar */
-p:not(.sidebar p):not(.bg-[#1B1E2F] p),
-h1:not(.sidebar h1):not(.bg-[#1B1E2F] h1),
-h2:not(.sidebar h2):not(.bg-[#1B1E2F] h2),
-h3:not(.sidebar h3):not(.bg-[#1B1E2F] h3),
-h4:not(.sidebar h4):not(.bg-[#1B1E2F] h4),
-h5:not(.sidebar h5):not(.bg-[#1B1E2F] h5),
-h6:not(.sidebar h6):not(.bg-[#1B1E2F] h6),
-span:not(.sidebar span):not(.bg-[#1B1E2F] span),
-div:not(.sidebar div):not(.bg-[#1B1E2F] div),
-a:not(.sidebar a):not(.bg-[#1B1E2F] a),
-li:not(.sidebar li):not(.bg-[#1B1E2F] li) {
+p:not(.sidebar p):not(.bg-\[\#1B1E2F\] p),
+h1:not(.sidebar h1):not(.bg-\[\#1B1E2F\] h1),
+h2:not(.sidebar h2):not(.bg-\[\#1B1E2F\] h2),
+h3:not(.sidebar h3):not(.bg-\[\#1B1E2F\] h3),
+h4:not(.sidebar h4):not(.bg-\[\#1B1E2F\] h4),
+h5:not(.sidebar h5):not(.bg-\[\#1B1E2F\] h5),
+h6:not(.sidebar h6):not(.bg-\[\#1B1E2F\] h6),
+span:not(.sidebar span):not(.bg-\[\#1B1E2F\] span),
+div:not(.sidebar div):not(.bg-\[\#1B1E2F\] div),
+a:not(.sidebar a):not(.bg-\[\#1B1E2F\] a),
+li:not(.sidebar li):not(.bg-\[\#1B1E2F\] li) {
   font-family: 'Nunito', sans-serif;
 }
 
 /* Dark mode text elements */
-.dark p:not(.sidebar p):not(.bg-[#170c21] p),
-.dark h1:not(.sidebar h1):not(.bg-[#170c21] h1),
-.dark h2:not(.sidebar h2):not(.bg-[#170c21] h2),
-.dark h3:not(.sidebar h3):not(.bg-[#170c21] h3),
-.dark h4:not(.sidebar h4):not(.bg-[#170c21] h4),
-.dark h5:not(.sidebar h5):not(.bg-[#170c21] h5),
-.dark h6:not(.sidebar h6):not(.bg-[#170c21] h6),
-.dark span:not(.sidebar span):not(.bg-[#170c21] span),
-.dark div:not(.sidebar div):not(.bg-[#170c21] div),
-.dark a:not(.sidebar a):not(.bg-[#170c21] a),
-.dark li:not(.sidebar li):not(.bg-[#170c21] li):not(.nav-item) {
+.dark p:not(.sidebar p):not(.bg-\[\#170c21\] p),
+.dark h1:not(.sidebar h1):not(.bg-\[\#170c21\] h1),
+.dark h2:not(.sidebar h2):not(.bg-\[\#170c21\] h2),
+.dark h3:not(.sidebar h3):not(.bg-\[\#170c21\] h3),
+.dark h4:not(.sidebar h4):not(.bg-\[\#170c21\] h4),
+.dark h5:not(.sidebar h5):not(.bg-\[\#170c21\] h5),
+.dark h6:not(.sidebar h6):not(.bg-\[\#170c21\] h6),
+.dark span:not(.sidebar span):not(.bg-\[\#170c21\] span),
+.dark div:not(.sidebar div):not(.bg-\[\#170c21\] div),
+.dark a:not(.sidebar a):not(.bg-\[\#170c21\] a),
+.dark li:not(.sidebar li):not(.bg-\[\#170c21\] li):not(.nav-item) {
   color: #e5e7eb;
 }
 

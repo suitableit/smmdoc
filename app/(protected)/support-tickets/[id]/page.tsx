@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     FaArrowLeft,
     FaCheckCircle,
     FaComments,
     FaExclamationTriangle,
+    FaEye,
     FaFileAlt,
     FaFileArchive,
     FaFileExcel,
@@ -20,10 +22,12 @@ import {
     FaUserShield,
     FaVideo
 } from 'react-icons/fa';
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 
 // Import APP_NAME constant
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
+import useTicketPolling from '@/hooks/useTicketPolling';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -65,6 +69,7 @@ interface TicketMessage {
   content: string;
   createdAt: string;
   attachments?: TicketAttachment[];
+  userImage?: string;
 }
 
 interface TicketAttachment {
@@ -80,72 +85,41 @@ interface SupportTicketDetails {
   subject: string;
   createdAt: string;
   lastUpdated: string;
-  status: 'Open' | 'Answered' | 'Customer Reply' | 'Closed';
+  status: 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'closed';
   messages: TicketMessage[];
   ticketType?: 'Human' | 'AI';
   aiSubcategory?: 'Refill' | 'Cancel' | 'Speed Up' | 'Restart' | 'Fake Complete';
   systemMessage?: string;
   ticketStatus?: 'Pending' | 'Processed' | 'Failed';
+  orderIds?: string[];
 }
 
 const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) => {
+  const router = useRouter();
   const { appName } = useAppNameWithFallback();
-  const resolvedParams = React.use(params);
-  const ticketId = resolvedParams.id;
+  const [ticketId, setTicketId] = useState<string | null>(null);
+  
+  // Resolve params safely
+  useEffect(() => {
+    const resolveParams = async () => {
+      try {
+        const resolvedParams = await params;
+        setTicketId(resolvedParams.id);
+      } catch (error) {
+        console.error('Error resolving params:', error);
+      }
+    };
+    resolveParams();
+  }, [params]);
 
   // Set document title
   useEffect(() => {
-    setPageTitle(`Ticket #${ticketId}`, appName);
+    if (ticketId) {
+      setPageTitle(`Ticket #${ticketId}`, appName);
+    }
   }, [appName, ticketId]);
 
-  // Dummy data for support ticket details
-  const dummyTicketDetails: SupportTicketDetails = {
-    id: '001',
-    subject: 'Instagram followers not delivered - Order #12345',
-    createdAt: '2024-06-28T10:30:00Z',
-    lastUpdated: '2024-06-29T14:20:00Z',
-    status: 'Customer Reply',
-    messages: [
-      {
-        id: 'msg_001',
-        type: 'customer',
-        author: 'john_doe',
-        content: 'Hi, I placed an order for 1000 Instagram followers 3 days ago (Order #12345) but I haven\'t received any followers yet. The delivery was supposed to start within 24 hours. Can you please check what\'s wrong?',
-        createdAt: '2024-06-28T10:30:00Z',
-        attachments: [
-          {
-            id: 'att_001',
-            filename: 'order_screenshot.png',
-            filesize: '234 KB',
-            mimetype: 'image/png',
-            url: '#'
-          }
-        ]
-      },
-      {
-        id: 'msg_002',
-        type: 'staff',
-        author: 'Sarah (Support Team)',
-        authorRole: 'Support Team',
-        content: 'Hello John,\n\nThank you for contacting us. I\'ve checked your order #12345 and I can see that there was a technical issue with our delivery system that affected orders placed on June 25th.\n\nI\'ve manually triggered your order and the delivery should start within the next 2 hours. You should start seeing followers added to your account gradually over the next 24-48 hours.\n\nI\'ve also added a 10% bonus to your order as compensation for the delay.\n\nPlease let me know if you don\'t see any progress within 4 hours.\n\nBest regards,\nSarah',
-        createdAt: '2024-06-28T14:15:00Z'
-      },
-      {
-        id: 'msg_003',
-        type: 'customer',
-        author: 'john_doe',
-        content: 'Thank you for the quick response! I can see that followers are starting to come in now. However, I noticed that some of the followers look like bot accounts. Is this normal? I was expecting real, active followers.',
-        createdAt: '2024-06-29T09:20:00Z'
-      },
-      {
-        id: 'msg_004',
-        type: 'system',
-        author: 'System',
-        content: 'Ticket status changed from "Answered" to "Customer Reply"',
-        createdAt: '2024-06-29T09:21:00Z'
-      }
-    ]
-  };
+
 
   // State management
   const [ticketDetails, setTicketDetails] = useState<SupportTicketDetails | null>(null);
@@ -161,6 +135,8 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
 
   // Fetch ticket details
   useEffect(() => {
+    if (!ticketId) return;
+    
     const fetchTicketDetails = async () => {
       try {
         setLoading(true);
@@ -173,8 +149,6 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
       } catch (error) {
         console.error('Error fetching ticket details:', error);
         showToast('Error loading ticket details', 'error');
-        // Fallback to dummy data for development
-        setTicketDetails(dummyTicketDetails);
       } finally {
         setLoading(false);
       }
@@ -182,6 +156,15 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
 
     fetchTicketDetails();
   }, [ticketId]);
+
+  // Real-time polling for message updates
+  const { hasNewMessages, isPolling, markMessagesAsRead } = useTicketPolling(
+    ticketId,
+    ticketDetails,
+    setTicketDetails,
+    3000, // Poll every 3 seconds
+    'user' // Use user API endpoint
+  );
 
   // Utility functions
   const formatTicketID = (id: string | undefined) => {
@@ -197,14 +180,29 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
         return 'bg-green-50 text-green-700 border-green-200';
       case 'Customer Reply':
         return 'bg-orange-50 text-orange-700 border-orange-200';
+      case 'On Hold':
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'In Progress':
+        return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Closed':
+      case 'closed':
         return 'bg-gray-50 text-gray-700 border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
+  const formatStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'closed':
+        return 'Closed';
+      default:
+        return status;
+    }
+  };
+
   const getFileIcon = (mimetype: string) => {
+    if (!mimetype) return <FaFileAlt className="h-4 w-4" />;
     if (mimetype.startsWith('image/')) return <FaImage className="h-4 w-4" />;
     if (mimetype.startsWith('video/')) return <FaVideo className="h-4 w-4" />;
     if (mimetype.includes('pdf')) return <FaFilePdf className="h-4 w-4" />;
@@ -225,39 +223,109 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
 
   // Handle reply submission
   const handleReplySubmit = async () => {
-    if (!replyContent.trim()) return;
+    console.log('handleReplySubmit called with:', { replyContent, ticketId });
+    if (!replyContent.trim()) {
+      console.log('Reply content is empty, returning');
+      return;
+    }
+    
+    // Check if ticket is closed before attempting to reply
+    if (ticketDetails?.status === 'closed') {
+      showToast('This ticket has been closed and no longer accepts replies.', 'error');
+      return;
+    }
     
     setIsReplying(true);
+    console.log('Starting reply submission...');
     
     try {
-      const formData = new FormData();
-      formData.append('message', replyContent);
-      formData.append('type', 'customer_reply');
+      let attachmentPaths: string[] = [];
       
-      // Add files if any
-      selectedFiles.forEach((file, index) => {
-        formData.append(`attachments`, file);
-      });
-
+      // Upload files first if any
+      if (selectedFiles.length > 0) {
+        for (const file of selectedFiles) {
+          const fileFormData = new FormData();
+          fileFormData.append('file', file);
+          fileFormData.append('uploadType', 'uploads');
+          
+          const uploadResponse = await fetch('/api/upload', {
+            method: 'POST',
+            body: fileFormData,
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error(`Failed to upload file: ${file.name}`);
+          }
+          
+          const uploadResult = await uploadResponse.json();
+          attachmentPaths.push(uploadResult.filePath);
+        }
+      }
+      
+      // Send reply with attachment paths
+      console.log('Sending request to:', `/api/support-tickets/${ticketId}/reply`);
       const response = await fetch(`/api/support-tickets/${ticketId}/reply`, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: replyContent,
+          attachments: attachmentPaths.length > 0 ? JSON.stringify(attachmentPaths) : undefined,
+        }),
       });
 
+      console.log('Response status:', response.status, response.statusText);
       if (!response.ok) {
-        throw new Error('Failed to send reply');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('API Error:', errorData);
+        
+        // Handle specific error cases
+        if (response.status === 400 && errorData.error && errorData.error.toLowerCase().includes('closed')) {
+          // Ticket was closed while user was composing reply
+          showToast('This ticket has been closed and no longer accepts replies. Please refresh the page.', 'error');
+          // Optionally refresh ticket details to sync status
+          if (ticketId) {
+            try {
+              const refreshResponse = await fetch(`/api/support-tickets/${ticketId}`);
+              if (refreshResponse.ok) {
+                const refreshedTicket = await refreshResponse.json();
+                setTicketDetails(refreshedTicket);
+              }
+            } catch (refreshError) {
+              console.error('Error refreshing ticket details:', refreshError);
+            }
+          }
+          return;
+        }
+        
+        throw new Error(errorData.error || 'Failed to send reply');
       }
 
-      const updatedTicket = await response.json();
+      const responseData = await response.json();
+      console.log('Received response data:', responseData);
+      
+      // Extract ticket from response (API returns { success, message, ticket })
+      const updatedTicket = responseData.ticket || responseData;
+      
+      // Validate the response structure
+      if (!updatedTicket || !updatedTicket.id) {
+        console.error('Invalid response structure:', updatedTicket);
+        throw new Error('Invalid response from server');
+      }
+      
+      console.log('Setting ticket details with updated data');
       setTicketDetails(updatedTicket);
       
+      console.log('Reply submitted successfully, clearing form');
       setReplyContent('');
       setSelectedFiles([]);
       showToast('Reply sent successfully', 'success');
     } catch (error) {
       console.error('Error sending reply:', error);
-      showToast('Error sending reply', 'error');
+      showToast(error instanceof Error ? error.message : 'Error sending reply', 'error');
     } finally {
+      console.log('Reply submission completed, setting isReplying to false');
       setIsReplying(false);
     }
   };
@@ -265,7 +333,36 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
   // Handle file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
+    const validFiles: File[] = [];
+    
+    for (const file of files) {
+      // Validate file type (only images and PDFs)
+      const allowedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'application/pdf'
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        showToast(`File "${file.name}" has an unsupported format. Only images and PDFs are allowed.`, 'error');
+        continue;
+      }
+      
+      // Validate file size (3MB max for users)
+      const maxSize = 3 * 1024 * 1024; // 3MB
+      if (file.size > maxSize) {
+        showToast(`File "${file.name}" is too large. Maximum 3MB allowed for user uploads.`, 'error');
+        continue;
+      }
+      
+      validFiles.push(file);
+    }
+    
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...validFiles]);
+      showToast(`${validFiles.length} file(s) selected successfully!`, 'success');
+    }
+    
+    // Reset the input value to allow uploading the same file again
+    event.target.value = '';
   };
 
   // Remove selected file
@@ -305,13 +402,23 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
   };
 
   // Show loading state
-  if (loading) {
+  if (loading || !ticketId) {
     return (
       <div className="page-container">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading ticket details...</p>
+        <div className="page-content">
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaTicketAlt />
+              </div>
+              <h3 className="card-title">Loading Ticket Details</h3>
+            </div>
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-center">
+                <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">Loading ticket details...</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -322,17 +429,27 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
   if (!ticketDetails) {
     return (
       <div className="page-container">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <FaExclamationTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Ticket Not Found</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">The ticket you're looking for doesn't exist or you don't have permission to view it.</p>
-            <button 
-              onClick={() => window.history.back()}
-              className="btn btn-primary"
-            >
-              Go Back
-            </button>
+        <div className="page-content">
+          <div className="card card-padding">
+            <div className="card-header">
+              <div className="card-icon">
+                <FaExclamationTriangle />
+              </div>
+              <h3 className="card-title">Ticket Not Found</h3>
+            </div>
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-center">
+                <FaExclamationTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Ticket Not Found</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">The ticket you're looking for doesn't exist or you don't have permission to view it.</p>
+                <button 
+                  onClick={() => window.history.back()}
+                  className="btn btn-primary"
+                >
+                  Go Back
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -340,6 +457,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
   }
 
   return (
+    <TicketSystemGuard>
     <div className="page-container">
       {/* Toast Container */}
       <div className="toast-container">
@@ -357,7 +475,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
             <button 
-              onClick={() => window.history.back()}
+              onClick={() => router.push('/support-tickets/history')}
               className="btn btn-primary flex items-center gap-2"
             >
               <FaArrowLeft className="h-4 w-4" />
@@ -420,22 +538,33 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                 <h3 className="card-title">Conversation</h3>
               </div>
               
-              <div className="space-y-6">
-                {ticketDetails && ticketDetails.messages && ticketDetails.messages.map((message) => (
-                  <div key={message.id} className={`flex items-start gap-4 ${message.type === 'customer' ? 'justify-end' : ''}`}>
-                    {message.type !== 'customer' && (
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm ${
-                        message.type === 'staff' ? 'bg-gradient-to-r from-gray-600 to-gray-700' : 'bg-gradient-to-r from-gray-400 to-gray-500'
-                      }`}>
-                        {message.type === 'staff' ? <FaUserShield className="h-4 w-4" /> :
-                         <FaExclamationTriangle className="h-4 w-4" />}
-                      </div>
-                    )}
+              <div className="space-y-6" onClick={() => hasNewMessages && markMessagesAsRead()}>
+                {ticketDetails && ticketDetails.messages && ticketDetails.messages.length > 0 ? (
+                  ticketDetails.messages.map((message) => (
+                    <div key={message.id} className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+                      {message.userImage && message.type === 'customer' ? (
+                        <img
+                          src={message.userImage}
+                          alt={message.author}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className={`w-full h-full flex items-center justify-center text-white font-medium text-sm ${
+                          message.type === 'customer' ? 'bg-gradient-to-r from-[var(--secondary)] to-[var(--primary)]' :
+                          message.type === 'staff' ? 'bg-gradient-to-r from-gray-600 to-gray-700' : 'bg-gradient-to-r from-gray-600 to-gray-700'
+                        }`}>
+                          {message.type === 'customer' ? <FaUser className="h-4 w-4" /> :
+                           message.type === 'staff' ? <FaUserShield className="h-4 w-4" /> :
+                           <FaExclamationTriangle className="h-4 w-4" />}
+                        </div>
+                      )}
+                    </div>
                     
                     <div className={`flex-1 min-w-0 p-4 rounded-lg ${
                       message.type === 'customer' ? 'bg-blue-50 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800/50'
                     }`}>
-                      <div className={`flex items-center gap-2 mb-2 ${message.type === 'customer' ? 'justify-end' : ''}`}>
+                      <div className="flex items-center gap-2 mb-2">
                         <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{message.author}</span>
                         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                           {new Date(message.createdAt).toLocaleDateString()} at{' '}
@@ -444,109 +573,127 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                       </div>
                       
                       <div className="prose prose-sm max-w-none">
-                        <div className={`whitespace-pre-wrap ${message.type === 'customer' ? 'text-right' : ''}`} style={{ color: 'var(--text-primary)' }}>{message.content}</div>
+                        <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
                       </div>
                       
                       {/* Attachments */}
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
-                          {message.attachments && message.attachments.map((attachment) => (
-                            <a 
-                              key={attachment.id} 
-                              href={attachment.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                            >
-                              {getFileIcon(attachment.mimetype)}
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                                  {attachment.filename}
+                          {message.attachments && message.attachments.map((attachment, index) => {
+                            // Handle both string paths and object attachments
+                            const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                            const filename = typeof attachment === 'string' 
+                              ? attachment.split('/').pop() || 'Unknown file'
+                              : attachment.filename;
+                            const mimetype = typeof attachment === 'string'
+                              ? ''
+                              : attachment.mimetype;
+                            const filesize = typeof attachment === 'object' && attachment.filesize ? attachment.filesize : '';
+                            
+                            return (
+                              <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
+                                {getFileIcon(mimetype)}
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                                    {filename}
+                                  </div>
+                                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                    {filesize ? `${filesize} • ` : ''}Attachment
+                                  </div>
                                 </div>
-                                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                  {attachment.filesize}
-                                </div>
+                                <button 
+                                  className="text-blue-600 hover:text-blue-800"
+                                  onClick={() => window.open(attachmentUrl, '_blank')}
+                                  title="View attachment"
+                                >
+                                  <FaEye className="h-4 w-4" />
+                                </button>
                               </div>
-                            </a>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
-                    
-                    {message.type === 'customer' && (
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium text-sm bg-gradient-to-r from-[var(--secondary)] to-[var(--primary)]">
-                        <FaUser className="h-4 w-4" />
-                      </div>
-                    )}
                   </div>
-                ))}
+                ))
+                ) : (
+                  <div className="text-center py-8">
+                    <FaComments className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-500">No messages found for this ticket.</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Reply Section */}
-            <div className="card card-padding">
-              <div className="card-header">
-                <div className="card-icon">
-                  <FaReply />
-                </div>
-                <h3 className="card-title">Post a Reply</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="form-group">
-                  <textarea
-                    value={replyContent}
-                    onChange={(e) => setReplyContent(e.target.value)}
-                    placeholder="Type your reply..."
-                    rows={6}
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
-                  />
+            {/* Reply Section - Only show if ticket is not closed */}
+            {ticketDetails.status !== 'closed' && (
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaReply />
+                  </div>
+                  <h3 className="card-title">Post a Reply</h3>
                 </div>
                 
-                {/* File Upload */}
-                <div className="form-group">
-                  <label className="form-label mb-2 flex items-center gap-2">
-                    <FaPaperclip />
-                    Attachments
-                  </label>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileSelect}
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
-                  />
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <textarea
+                      value={replyContent}
+                      onChange={(e) => setReplyContent(e.target.value)}
+                      placeholder="Type your reply..."
+                      rows={6}
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
+                    />
+                  </div>
                   
-                  {/* Selected Files */}
-                  {selectedFiles.length > 0 && (
-                    <div className="mt-2 space-y-2">
-                      {selectedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800/50 rounded">
-                          {getFileIcon(file.type)}
-                          <span className="text-sm flex-1" style={{ color: 'var(--text-primary)' }}>{file.name}</span>
-                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{Math.round(file.size / 1024)} KB</span>
-                          <button
-                            onClick={() => removeSelectedFile(index)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <FaTimes className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleReplySubmit}
-                    disabled={!replyContent.trim() || isReplying}
-                    className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {isReplying ? 'Submitting...' : 'Submit Reply'}
-                  </button>
+                  {/* File Upload */}
+                  <div className="form-group">
+                    <label className="form-label mb-2 flex items-center gap-2">
+                      <FaPaperclip />
+                      Attachments
+                    </label>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
+                    />
+                    <small className="text-xs text-gray-500 mt-1">
+                      You can upload screenshots or other relevant files (max 3MB each, images and PDFs only).
+                    </small>
+                    
+                    {/* Selected Files */}
+                    {selectedFiles.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        {selectedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800/50 rounded">
+                            {getFileIcon(file.type)}
+                            <span className="text-sm flex-1" style={{ color: 'var(--text-primary)' }}>{file.name}</span>
+                            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{Math.round(file.size / 1024)} KB</span>
+                            <button
+                              onClick={() => removeSelectedFile(index)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <FaTimes className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleReplySubmit}
+                      disabled={!replyContent.trim() || isReplying}
+                      className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {isReplying ? 'Submitting...' : 'Submit Reply'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -566,12 +713,22 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                     <div>
                       <label className="form-label">Subject</label>
                       <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{ticketDetails.subject}</p>
-                </div>
+                    </div>
+                    {ticketDetails.orderIds && Array.isArray(ticketDetails.orderIds) && ticketDetails.orderIds.length > 0 && (
+                       <div>
+                         <label className="form-label">
+                           {ticketDetails.orderIds.length === 1 ? 'Order ID' : 'Order IDs'}
+                         </label>
+                         <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                           {ticketDetails.orderIds.join(', ')}
+                         </p>
+                       </div>
+                     )}
                 <div>
                   <label className="form-label">Status</label>
                   <span className={`mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(ticketDetails.status)}`}>
-                    {ticketDetails.status}
-                  </span>
+                  {formatStatusDisplay(ticketDetails.status)}
+                </span>
                 </div>
                 <div>
                   <label className="form-label">Created</label>
@@ -589,36 +746,57 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
             </div>
 
             {/* Close Ticket Section */}
-            <div className="card card-padding">
-              <div className="card-header">
-                <div className="card-icon">
-                  <FaTimes />
+            {ticketDetails.status !== 'closed' ? (
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaTimes />
+                  </div>
+                  <h3 className="card-title">Close Ticket</h3>
                 </div>
-                <h3 className="card-title">Close Ticket</h3>
-              </div>
 
-              <div className="space-y-4">
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>  
-                  If your issue has been resolved, you can close this ticket. Once closed, you won't be able to add more replies.
-                </p>
-                <button
-                  onClick={handleCloseTicket}
-                  disabled={isClosingTicket || ticketDetails.status === 'Closed'}
-                  className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isClosingTicket ? (
-                    <ButtonLoader />
-                  ) : null}
-                  {ticketDetails.status === 'Closed' ? 'Ticket Closed' : 'Close Ticket'}
-                </button>
+                <div className="space-y-4">
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>  
+                    If your issue has been resolved, you can close this ticket. Once closed, you won't be able to add more replies.
+                  </p>
+                  <button
+                    onClick={handleCloseTicket}
+                    disabled={isClosingTicket}
+                    className="btn btn-primary flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isClosingTicket ? 'Closing...' : 'Close Ticket'}
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaTimes />
+                  </div>
+                  <h3 className="card-title">Ticket Status</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>  
+                    This ticket has been closed and no further replies can be added.
+                  </p>
+                  <button
+                    disabled
+                    className="btn btn-primary opacity-75 cursor-not-allowed"
+                  >
+                    Closed
+                  </button>
+                </div>
+              </div>
+            )}
               </>
             )}
           </div>
         </div>
       </div>
     </div>
+    </TicketSystemGuard>
   );
 };
 

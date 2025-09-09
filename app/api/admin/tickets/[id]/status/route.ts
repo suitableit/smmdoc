@@ -3,6 +3,12 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 
+// Helper function to capitalize status for display
+const capitalizeStatus = (status: string): string => {
+  if (status === 'closed') return 'Closed';
+  return status;
+};
+
 // Validation schema for status update
 const statusUpdateSchema = z.object({
   status: z.enum(['Open', 'Answered', 'Customer Reply', 'On Hold', 'In Progress', 'Closed'])
@@ -96,7 +102,7 @@ export async function PATCH(
         data: {
           ticketId: ticketId,
           userId: parseInt(session.user.id),
-          message: `Ticket status changed from ${existingTicket.status} to ${status}`,
+          message: `Ticket status changed from ${capitalizeStatus(existingTicket.status)} to ${capitalizeStatus(status)}`,
           messageType: 'system',
           isFromAdmin: true
         }

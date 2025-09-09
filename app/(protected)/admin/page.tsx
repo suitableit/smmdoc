@@ -61,7 +61,7 @@ interface User {
   email: string;
   name?: string;
   balance: number;
-  spent: number;
+  total_spent: number;
   totalOrders: number;
   servicesDiscount: number;
   specialPricing: boolean;

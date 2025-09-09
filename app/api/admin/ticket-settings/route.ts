@@ -1,16 +1,13 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { clearTicketSettingsCache } from '@/lib/utils/ticket-settings';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Default ticket settings
 const defaultTicketSettings = {
   ticketSystemEnabled: true,
   maxPendingTickets: '3',
-  subjects: [
-    { id: 1, name: 'General Support' },
-    { id: 2, name: 'Technical Issue' },
-    { id: 3, name: 'Billing Question' },
-  ],
+  subjects: [],
 };
 
 // GET - Load ticket settings
@@ -33,10 +30,7 @@ export async function GET() {
       settings = await db.ticket_settings.create({
         data: {
           ticketSystemEnabled: defaultTicketSettings.ticketSystemEnabled,
-          maxPendingTickets: defaultTicketSettings.maxPendingTickets,
-          ticket_subjects: {
-            create: defaultTicketSettings.subjects
-          }
+          maxPendingTickets: defaultTicketSettings.maxPendingTickets
         },
         include: {
           ticket_subjects: true
@@ -114,11 +108,14 @@ export async function POST(request: NextRequest) {
       update: {
         ticketSystemEnabled: ticketSettings.ticketSystemEnabled ?? true,
         maxPendingTickets: ticketSettings.maxPendingTickets ?? '3',
+        updatedAt: new Date(),
       },
       create: {
         id: 1,
         ticketSystemEnabled: ticketSettings.ticketSystemEnabled ?? true,
         maxPendingTickets: ticketSettings.maxPendingTickets ?? '3',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }
     });
 
@@ -130,9 +127,14 @@ export async function POST(request: NextRequest) {
     await db.ticket_subjects.createMany({
       data: ticketSettings.subjects.map((subject: any) => ({
         name: subject.name.trim(),
-        ticketSettingsId: 1
+        ticketSettingsId: 1,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }))
     });
+
+    // Clear the cache to ensure immediate updates
+    clearTicketSettingsCache();
 
     return NextResponse.json({
       success: true,

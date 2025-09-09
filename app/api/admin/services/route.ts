@@ -4,6 +4,20 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
+    const session = await auth();
+
+    // Check if user is authenticated and is an admin
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized access. Admin privileges required.',
+          success: false,
+          data: null,
+        },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limitParam = searchParams.get('limit') || '10';
@@ -199,12 +213,14 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await auth();
-    if (!session || !session.user) {
+    
+    // Check if user is authenticated and is an admin
+    if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
-          error: 'Unauthorized',
-          data: null,
+          error: 'Unauthorized access. Admin privileges required.',
           success: false,
+          data: null
         },
         { status: 401 }
       );

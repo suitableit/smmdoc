@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     // Sync orders for each provider
     for (const [providerId, orders] of ordersByProvider) {
       try {
-        const provider = await db.apiProvider.findUnique({
+        const provider = await db.api_providers.findUnique({
           where: { id: providerId },
           select: {
             id: true,
@@ -327,7 +327,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const provider = await db.apiProvider.findUnique({
+    const provider = await db.api_providers.findUnique({
       where: { id: providerId },
       select: {
         id: true,

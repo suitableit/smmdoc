@@ -2,12 +2,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
 
 // Validation schema for bulk operations
 const bulkOperationSchema = z.object({
   ticketIds: z.array(z.string()),
-  operation: z.enum(['mark_read', 'mark_unread', 'open_all', 'hold_all', 'delete_selected'])
+  operation: z.enum(['mark_read', 'mark_unread', 'delete_selected'])
 });
+
+// Helper function to map database status to frontend status
+function mapDatabaseStatusToFrontend(dbStatus: string): string {
+  const statusMap: { [key: string]: string } = {
+    'pending': 'Open',
+    'in_progress': 'In Progress',
+    'resolved': 'Answered',
+    'closed': 'Closed',
+    'on_hold': 'On Hold'
+  };
+  
+  // If the status is already in the correct frontend format, return it directly
+  const frontendStatuses = ['Open', 'Answered', 'Customer Reply', 'On Hold', 'In Progress', 'Closed'];
+  if (frontendStatuses.includes(dbStatus)) {
+    return dbStatus;
+  }
+  
+  return statusMap[dbStatus] || 'Open';
+}
 
 // GET - Fetch all support tickets (admin only)
 export async function GET(request: NextRequest) {
@@ -30,6 +50,15 @@ export async function GET(request: NextRequest) {
     if (user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
         { status: 403 }
       );
     }
@@ -76,6 +105,14 @@ export async function GET(request: NextRequest) {
         },
         {
           user: {
+            username: {
+              contains: search,
+              mode: 'insensitive'
+            }
+          }
+        },
+        {
+          user: {
             email: {
               contains: search,
               mode: 'insensitive'
@@ -99,6 +136,7 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               name: true,
+              username: true,
               email: true,
             }
           },
@@ -115,9 +153,23 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(totalCount / limit);
 
+    // Transform tickets to match frontend interface
+    const transformedTickets = tickets.map(ticket => ({
+      id: ticket.id.toString(),
+      userId: ticket.userId.toString(),
+      username: ticket.user?.username || 'N/A',
+      name: ticket.user?.name || 'Unknown User',
+      subject: ticket.subject,
+      createdAt: ticket.createdAt.toISOString(),
+      lastUpdated: ticket.updatedAt ? ticket.updatedAt.toISOString() : ticket.createdAt.toISOString(),
+      status: mapDatabaseStatusToFrontend(ticket.status),
+      isRead: ticket.isRead,
+      humanTicketSubject: ticket.humanTicketSubject,
+    }));
+
     return NextResponse.json({
       success: true,
-      tickets,
+      tickets: transformedTickets,
       page,
       limit,
       total: totalCount,
@@ -160,6 +212,15 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { ticketIds, operation } = bulkOperationSchema.parse(body);
 
@@ -176,14 +237,6 @@ export async function PATCH(request: NextRequest) {
       case 'mark_unread':
         updateData = { isRead: false };
         message = `${ticketIds.length} tickets marked as unread`;
-        break;
-      case 'open_all':
-        updateData = { status: 'pending', lastUpdated: new Date() };
-        message = `${ticketIds.length} tickets reopened`;
-        break;
-      case 'hold_all':
-        updateData = { status: 'on_hold', lastUpdated: new Date() };
-        message = `${ticketIds.length} tickets put on hold`;
         break;
       case 'delete_selected':
         await db.supportTicket.deleteMany({

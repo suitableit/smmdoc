@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { isTicketSystemEnabled, getTicketSettings } from '@/lib/utils/ticket-settings';
 
 // Helper function to process refill requests
 async function processRefillRequest(orderIds: string[], userId: number) {
@@ -362,7 +363,6 @@ const createTicketSchema = z.object({
   subcategory: z.string().optional(),
   ticketType: z.enum(['Human', 'AI']).default('Human'),
   aiSubcategory: z.string().optional(),
-  humanTicketSubject: z.string().optional(),
   orderIds: z.array(z.string()).optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
   attachments: z.array(z.string()).optional(),
@@ -420,8 +420,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if ticket system is enabled
-    const ticketSettings = await db.ticket_settings.findFirst();
-    if (!ticketSettings?.ticketSystemEnabled) {
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
       return NextResponse.json(
         { error: 'Ticket system is currently disabled' },
         { status: 403 }
@@ -438,6 +438,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    const ticketSettings = await getTicketSettings();
     const maxPendingTickets = parseInt(ticketSettings.maxPendingTickets || '3');
     if (pendingTicketsCount >= maxPendingTickets) {
       return NextResponse.json(
@@ -547,6 +548,18 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Create initial message record for the ticket
+    await db.ticketMessage.create({
+      data: {
+        ticketId: ticket.id,
+        userId: parseInt(session.user.id),
+        message: validatedData.message,
+        messageType: 'customer',
+        isFromAdmin: false,
+        attachments: validatedData.attachments ? JSON.stringify(validatedData.attachments) : null,
+      }
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Support ticket created successfully',
@@ -586,6 +599,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Check if ticket system is enabled
+    const ticketSystemEnabled = await isTicketSystemEnabled();
+    if (!ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
       );
     }
 
@@ -633,9 +655,26 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(totalCount / limit);
 
+    // Transform tickets to match frontend expectations
+    const transformedTickets = tickets.map(ticket => ({
+      id: ticket.id,
+      subject: ticket.subject,
+      status: ticket.status,
+      createdAt: ticket.createdAt.toISOString(),
+      lastUpdated: ticket.updatedAt.toISOString(),
+      priority: ticket.priority,
+      ticketType: ticket.ticketType,
+      category: ticket.category,
+      subcategory: ticket.subcategory,
+      aiSubcategory: ticket.aiSubcategory,
+      humanTicketSubject: ticket.humanTicketSubject,
+      orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : [],
+      repliedByUser: ticket.repliedByUser
+    }));
+
     return NextResponse.json({
       success: true,
-      tickets,
+      tickets: transformedTickets,
       pagination: {
         currentPage: page,
         totalPages,

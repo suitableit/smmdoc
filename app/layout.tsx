@@ -15,6 +15,7 @@ import { Nunito } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
 import StoreProvider from './StoreProvider';
+import UserSwitchWrapper from '@/components/admin/UserSwitchWrapper';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -74,6 +75,7 @@ export default async function RootLayout({
                 <CurrencyProvider serverCurrency={serverCurrency}>
                   <div className="non-sidebar-content font-nunito text-black">
                     {children}
+                    <UserSwitchWrapper />
                   </div>
                 </CurrencyProvider>
               </AppNameProvider>
