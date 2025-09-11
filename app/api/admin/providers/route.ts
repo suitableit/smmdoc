@@ -74,18 +74,7 @@ export async function GET() {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `;
       
-      // Add missing columns if they don't exist
-      try {
-        await db.$executeRaw`ALTER TABLE \`api_providers\` ADD COLUMN \`api_url\` varchar(500) DEFAULT NULL`;
-      } catch (e) {
-        // Column already exists
-      }
-      
-      try {
-        await db.$executeRaw`ALTER TABLE \`api_providers\` ADD COLUMN \`is_custom\` boolean DEFAULT FALSE`;
-      } catch (e) {
-        // Column already exists
-      }
+      // Columns api_url and is_custom already exist in schema, no need to add them
 
 
 
@@ -180,12 +169,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { selectedProvider, apiKey, apiUrl, username, password, isCustom } = await req.json();
+    const { selectedProvider, customProviderName, apiKey, apiUrl, username, password, isCustom } = await req.json();
 
-    if (!selectedProvider || !apiKey) {
+    // Determine the provider name based on type
+    const providerName = isCustom ? customProviderName : selectedProvider;
+
+    if (!providerName || !apiKey) {
       return NextResponse.json(
         {
-          error: 'Provider and API key are required',
+          error: isCustom ? 'Custom provider name and API key are required' : 'Provider and API key are required',
           success: false,
           data: null
         },
@@ -211,9 +203,9 @@ export async function POST(req: NextRequest) {
     } else {
       // For custom providers, create a basic config
       providerConfig = {
-        value: selectedProvider,
-        label: selectedProvider,
-        description: `Custom provider: ${selectedProvider}`
+        value: providerName,
+        label: providerName,
+        description: `Custom provider: ${providerName}`
       };
     }
 
@@ -222,7 +214,7 @@ export async function POST(req: NextRequest) {
     try {
       // Check if provider already exists
       const existingProvider = await db.api_providers.findUnique({
-        where: { name: selectedProvider }
+        where: { name: providerName }
       });
 
       if (existingProvider) {
@@ -239,7 +231,7 @@ export async function POST(req: NextRequest) {
       // Create new provider
       newProvider = await db.api_providers.create({
         data: {
-          name: selectedProvider,
+          name: providerName,
           api_key: apiKey,
           api_url: apiUrl || '',
           login_user: username || null,
