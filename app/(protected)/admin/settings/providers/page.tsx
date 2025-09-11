@@ -175,9 +175,8 @@ const APIProvidersPage = () => {
         // Set all available providers for dropdown
         setAvailableProviders(result.data.providers);
 
-        // Convert configured providers to Provider format for UI
+        // Convert all providers to Provider format for UI
         const uiProviders = result.data.providers
-          .filter((p: any) => p.configured)
           .map((p: any) => ({
             id: p.id,
             name: p.label,
@@ -1050,8 +1049,8 @@ const APIProvidersPage = () => {
                   provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   provider.status.toLowerCase().includes(searchQuery.toLowerCase())
                 )
-                .map((provider) => (
-                <div key={provider.id} className="card card-padding">
+                .map((provider, index) => (
+                <div key={provider.id || `provider-${provider.value || provider.name}-${index}`} className="card card-padding">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="card-icon">

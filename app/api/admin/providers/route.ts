@@ -94,9 +94,34 @@ export async function GET() {
       configuredProviders = [];
     }
 
+    // Helper function to match provider names (case-insensitive and flexible matching)
+    const findMatchingProvider = (dbName: string) => {
+      return AVAILABLE_PROVIDERS.find(provider => {
+        // Direct match
+        if (provider.value.toLowerCase() === dbName.toLowerCase()) return true;
+        if (provider.name.toLowerCase() === dbName.toLowerCase()) return true;
+        
+        // Partial match for providers like 'SMMProvider1' -> 'smmgen'
+        if (dbName.toLowerCase().includes('smm') && provider.value === 'smmgen') return true;
+        if (dbName.toLowerCase().includes('growfollows') && provider.value === 'growfollows') return true;
+        if (dbName.toLowerCase().includes('attpanel') && provider.value === 'attpanel') return true;
+        if (dbName.toLowerCase().includes('smmcoder') && provider.value === 'smmcoder') return true;
+        
+        // Check if db name contains provider name
+        if (dbName.toLowerCase().includes(provider.value.toLowerCase())) return true;
+        if (dbName.toLowerCase().includes(provider.name.toLowerCase())) return true;
+        
+        return false;
+      });
+    };
+
     // Merge available providers with configured status
     const providersWithStatus = AVAILABLE_PROVIDERS.map(provider => {
-      const configured = configuredProviders.find((cp: any) => cp.name === provider.value);
+      const configured = configuredProviders.find((cp: any) => {
+        const matchingProvider = findMatchingProvider(cp.name);
+        return matchingProvider && matchingProvider.value === provider.value;
+      });
+      
       return {
         ...provider,
         configured: !!configured,
@@ -109,9 +134,21 @@ export async function GET() {
       };
     });
 
-    // Add custom providers that are not in AVAILABLE_PROVIDERS
+    // Add custom providers that are not matched with AVAILABLE_PROVIDERS
     const customProviders = configuredProviders
-      .filter((cp: any) => cp.is_custom && !AVAILABLE_PROVIDERS.find(p => p.value === cp.name))
+      .filter((cp: any) => {
+        // If it's explicitly marked as custom, include it
+        if (cp.is_custom) return true;
+        
+        // If it doesn't match any predefined provider, treat as custom
+        const matchingProvider = findMatchingProvider(cp.name);
+        return !matchingProvider;
+      })
+      .filter((cp: any) => {
+        // Don't duplicate providers that are already in providersWithStatus
+        const matchingProvider = findMatchingProvider(cp.name);
+        return !matchingProvider;
+      })
       .map((cp: any) => ({
         value: cp.name,
         label: cp.name,
