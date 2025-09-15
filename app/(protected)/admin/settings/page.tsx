@@ -510,10 +510,6 @@ const GeneralSettingsPage = () => {
       showToast('Error saving general settings', 'error');
     } finally {
       setLoadingStates(prev => ({ ...prev, general: false }));
-      // Clear image loading state for the specific field
-      if (field === 'siteIcon' || field === 'siteLogo') {
-        setImageLoadingStates(prev => ({ ...prev, [field]: false }));
-      }
     }
   };
 

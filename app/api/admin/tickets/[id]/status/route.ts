@@ -15,9 +15,9 @@ const statusUpdateSchema = z.object({
 });
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // PATCH - Update ticket status (admin only)

@@ -138,7 +138,9 @@ const ContactDetailsPage = () => {
   const currentUser = useCurrentUser();
 
   // Get message ID from URL
-  const messageId = typeof window !== 'undefined' ? window.location.pathname.split('/').pop() : '1';
+  const messageId: string = typeof window !== 'undefined'
+    ? (window.location.pathname.split('/').pop() ?? '1')
+    : '1';
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -198,7 +200,7 @@ const ContactDetailsPage = () => {
         // Add customer's original message
         if (data.message.message) {
           // Parse attachments from the new format
-          let parsedAttachments = [];
+          let parsedAttachments: ContactAttachment[] = [];
           if (data.message.attachments) {
             try {
               const attachmentData = JSON.parse(data.message.attachments);
@@ -463,7 +465,12 @@ const ContactDetailsPage = () => {
     
     try {
       // Upload files if any are selected
-      let attachmentData: Array<{originalName: string, encryptedPath: string}> = [];
+      let attachmentData: Array<{
+        originalName: string;
+        encryptedPath: string;
+        fileSize?: number;
+        mimeType?: string;
+      }> = [];
       if (selectedFiles.length > 0) {
         const formData = new FormData();
         selectedFiles.forEach(file => {
@@ -908,7 +915,7 @@ const ContactDetailsPage = () => {
                           </div>
                           <button
                             type="button"
-                            onClick={() => removeFile(index)}
+                            onClick={() => removeSelectedFile(index)}
                             className="flex-shrink-0 p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                             title="Remove file"
                           >
@@ -1052,9 +1059,9 @@ const ContactDetailsPage = () => {
 };
 import ContactSystemGuard from '@/components/ContactSystemGuard';
 
-const ProtectedContactDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => (
+const ProtectedContactDetailsPage = () => (
   <ContactSystemGuard>
-    <ContactDetailsPage params={params} />
+    <ContactDetailsPage />
   </ContactSystemGuard>
 );
 

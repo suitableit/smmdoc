@@ -16,7 +16,18 @@ import { generateTwoFactorToken, generateVerificationToken } from '../tokens';
 import { signInSchema } from '../validators/auth.validator';
 import { verifyReCAPTCHA, getReCAPTCHASettings } from '../recaptcha';
 
-export const login = async (values: z.infer<typeof signInSchema> & { recaptchaToken?: string }) => {
+export type LoginResult = {
+  success: boolean;
+  error?: string;
+  message?: string;
+  twoFactor?: boolean;
+  redirectTo?: string;
+  isAdmin?: boolean;
+};
+
+export const login = async (
+  values: z.infer<typeof signInSchema> & { recaptchaToken?: string }
+): Promise<LoginResult> => {
   // Verify reCAPTCHA if enabled and token provided
   const recaptchaSettings = await getReCAPTCHASettings();
   if (recaptchaSettings && recaptchaSettings.enabledForms?.signIn) {
