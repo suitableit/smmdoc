@@ -50,14 +50,11 @@ export async function POST(request: NextRequest) {
     try {
       const contactMessage = await db.contactMessage.create({
         data: {
-          name,
-          email,
-          phone,
           subject,
-          message,
+          message: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nMessage: ${message}`,
           status: 'PENDING',
-          userId: session?.user?.id || null,
-          createdAt: new Date(),
+          userId: session?.user?.id ? parseInt(session.user.id) : 1, // Default to user ID 1 if no session
+          categoryId: 1, // Default category
         },
       });
 

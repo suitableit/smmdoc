@@ -1,4 +1,4 @@
-import { getAppName } from './app-name';
+import { getAppName } from './general-settings';
 
 /**
  * Initialize the app name from database on server startup

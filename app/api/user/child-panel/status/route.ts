@@ -38,10 +38,10 @@ export async function GET(request: Request) {
     const userId = parseInt(session.user.id);
 
     // Get user's child panel
-    const childPanel = await db.childPanel.findUnique({
+    const childPanel = await db.child_panels.findUnique({
       where: { userId },
       include: {
-        subscriptions: {
+        child_panel_subscriptions: {
           orderBy: { createdAt: 'desc' },
           take: 1
         }
@@ -90,7 +90,7 @@ export async function GET(request: Request) {
           daysUntilExpiry,
           settings: childPanel.settings,
           createdAt: childPanel.createdAt,
-          latestSubscription: childPanel.subscriptions[0] || null
+          latestSubscription: childPanel.child_panel_subscriptions[0] || null
         }
       },
     });

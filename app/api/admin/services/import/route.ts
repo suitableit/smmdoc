@@ -346,9 +346,10 @@ export async function GET(req: NextRequest) {
           apiUrl: provider.api_url,
           endpoints: {
             services: '',
-            categories: ''
+            balance: ''
           },
-          alternativeUrls: []
+          alternativeUrls: [],
+          method: 'POST'
         };
       }
 
@@ -536,9 +537,10 @@ export async function GET(req: NextRequest) {
           apiUrl: provider.api_url,
           endpoints: {
             services: '',
-            categories: ''
+            balance: ''
           },
-          alternativeUrls: []
+          alternativeUrls: [],
+          method: 'POST'
         };
       }
 

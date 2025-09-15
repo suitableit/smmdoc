@@ -14,7 +14,7 @@ export interface ProviderValidationResult {
 export async function validateProvider(providerId: number): Promise<ProviderValidationResult> {
   try {
     // Get provider from database
-    const provider = await db.apiProvider.findUnique({
+    const provider = await db.api_providers.findUnique({
       where: { id: providerId },
       select: {
         id: true,
@@ -44,11 +44,11 @@ export async function validateProvider(providerId: number): Promise<ProviderVali
     if (!provider.api_key || provider.api_key.trim() === '') {
       return {
         isValid: false,
-        error: 'API key is missing or empty'
+        error: 'Provider API key is missing or empty'
       };
     }
 
-    // Check if API URL exists and is not empty
+    // Validate API URL
     if (!provider.api_url || provider.api_url.trim() === '') {
       return {
         isValid: false,
@@ -88,7 +88,7 @@ export async function validateProvider(providerId: number): Promise<ProviderVali
 export async function validateProviderByName(providerName: string): Promise<ProviderValidationResult> {
   try {
     // Get provider from database
-    const provider = await db.apiProvider.findUnique({
+    const provider = await db.api_providers.findUnique({
       where: { name: providerName },
       select: {
         id: true,
@@ -123,7 +123,7 @@ export async function validateProviderByName(providerName: string): Promise<Prov
  */
 export async function getValidProviders(): Promise<any[]> {
   try {
-    const providers = await db.apiProvider.findMany({
+    const providers = await db.api_providers.findMany({
       where: {
         status: 'active',
         api_key: {

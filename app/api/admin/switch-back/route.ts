@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const originalAdminId = cookieStore.get('original-admin-id')?.value;
     const impersonatedUserId = cookieStore.get('impersonated-user-id')?.value;
 

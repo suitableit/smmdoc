@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
+
 
 // Validation schema for updating tickets
 const updateTicketSchema = z.object({
@@ -45,14 +45,8 @@ export async function GET(
       );
     }
 
-    // Check if ticket system is enabled
-    const ticketSystemEnabled = await isTicketSystemEnabled();
-    if (!ticketSystemEnabled) {
-      return NextResponse.json(
-        { error: 'Ticket system is currently disabled' },
-        { status: 403 }
-      );
-    }
+    // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);
@@ -223,13 +217,8 @@ export async function PUT(
     }
 
     // Check if ticket system is enabled
-    const ticketSystemEnabled = await isTicketSystemEnabled();
-    if (!ticketSystemEnabled) {
-      return NextResponse.json(
-        { error: 'Ticket system is currently disabled' },
-        { status: 403 }
-      );
-    }
+    // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);
@@ -345,14 +334,8 @@ export async function DELETE(
       );
     }
 
-    // Check if ticket system is enabled
-    const ticketSystemEnabled = await isTicketSystemEnabled();
-    if (!ticketSystemEnabled) {
-      return NextResponse.json(
-        { error: 'Ticket system is currently disabled' },
-        { status: 403 }
-      );
-    }
+    // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);

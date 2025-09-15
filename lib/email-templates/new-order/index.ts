@@ -81,7 +81,7 @@ export const newOrderTemplates = {
             
       
       ${emailContentSections.actionButtons([
-        {text: 'Track Order Status', url: `${process.env.NEXT_PUBLIC_APP_URL}/orders/${data.orderId}`, color: 'blue'}
+        {text: 'Track Order Status', url: `${process.env.NEXT_PUBLIC_APP_URL}/orders/${data.orderId}`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
@@ -150,8 +150,8 @@ export const newOrderTemplates = {
             <div style="background-color: #f9fafb; border-radius: 12px; padding: 25px; margin: 30px 0;">
               <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 18px;">Ordered Items:</h3>
               <div style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
-                ${data.orderItems.map((item, index) => `
-                <div style="padding: 15px; ${index < data.orderItems.length - 1 ? 'border-bottom: 1px solid #f3f4f6;' : ''} display: flex; justify-content: space-between; align-items: center;">
+                ${data.orderItems!.map((item, index) => `
+                <div style="padding: 15px; ${index < data.orderItems!.length - 1 ? 'border-bottom: 1px solid #f3f4f6;' : ''} display: flex; justify-content: space-between; align-items: center;">
                   <div>
                     <div style="color: #1f2937; font-weight: bold; margin-bottom: 4px;">${item.name}</div>
                     <div style="color: #6b7280; font-size: 14px;">Qty: ${item.quantity}</div>
@@ -176,7 +176,7 @@ export const newOrderTemplates = {
             
       
       ${emailContentSections.actionButtons([
-        {text: 'Process Order', url: `${process.env.NEXT_PUBLIC_APP_URL}/admin/orders/${data.orderId}`, color: 'blue'}
+        {text: 'Process Order', url: `${process.env.NEXT_PUBLIC_APP_URL}/admin/orders/${data.orderId}`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
@@ -194,7 +194,7 @@ export const newOrderTemplates = {
     
     const layoutData: EmailLayoutData = {
       title: `Order ${statusTitle}!`,
-      headerColor: statusColor,
+      headerColor: 'primary-color',
       footerMessage: 'Thank you for choosing our services!',
       userEmail: data.userEmail
     };
@@ -253,7 +253,7 @@ export const newOrderTemplates = {
             
       
       ${emailContentSections.actionButtons([
-        {text: 'View Order Details', url: `${process.env.NEXT_PUBLIC_APP_URL}/orders/${data.orderId}`, color: 'blue'}
+        {text: 'View Order Details', url: `${process.env.NEXT_PUBLIC_APP_URL}/orders/${data.orderId}`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">

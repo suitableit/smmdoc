@@ -65,7 +65,7 @@ export const supportTicketTemplates = {
       </div>
       
       ${emailContentSections.actionButtons([
-        {text: 'View Ticket Status', url: `${process.env.NEXT_PUBLIC_APP_URL}/support/tickets/${data.ticketId}`, color: 'blue'}
+        {text: 'View Ticket Status', url: `${process.env.NEXT_PUBLIC_APP_URL}/support/tickets/${data.ticketId}`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
@@ -123,7 +123,7 @@ export const supportTicketTemplates = {
       </div>
       
       ${emailContentSections.actionButtons([
-        {text: 'Respond to Ticket', url: `${process.env.NEXT_PUBLIC_APP_URL}/admin/support/tickets/${data.ticketId}`, color: 'red'}
+        {text: 'Respond to Ticket', url: `${process.env.NEXT_PUBLIC_APP_URL}/admin/support/tickets/${data.ticketId}`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
@@ -167,7 +167,7 @@ export const supportTicketTemplates = {
       </div>
       
       ${emailContentSections.actionButtons([
-        {text: 'View Full Conversation', url: `${process.env.NEXT_PUBLIC_APP_URL}/support/tickets/${data.ticketId}`, color: 'green'}
+        {text: 'View Full Conversation', url: `${process.env.NEXT_PUBLIC_APP_URL}/support/tickets/${data.ticketId}`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">

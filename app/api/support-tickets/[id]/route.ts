@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
 
 // Helper function to capitalize status for display
 const capitalizeStatus = (status: string): string => {
@@ -38,14 +37,8 @@ export async function GET(
       );
     }
 
-    // Check if ticket system is enabled
-    const ticketSystemEnabled = await isTicketSystemEnabled();
-    if (!ticketSystemEnabled) {
-      return NextResponse.json(
-        { error: 'Ticket system is currently disabled' },
-        { status: 403 }
-      );
-    }
+    // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);
@@ -78,6 +71,7 @@ export async function GET(
             id: true,
             name: true,
             email: true,
+            image: true,
           }
         },
         repliedByUser: {
@@ -159,7 +153,8 @@ export async function GET(
         authorRole: 'user',
         content: ticket.message,
         createdAt: ticket.createdAt.toISOString(),
-        attachments: ticket.attachments ? JSON.parse(ticket.attachments) : []
+        attachments: ticket.attachments ? JSON.parse(ticket.attachments) : [],
+        userImage: ticket.user.image
       }];
     }
 
@@ -171,7 +166,6 @@ export async function GET(
       status: ticket.status,
       ticketType: ticket.ticketType,
       aiSubcategory: ticket.aiSubcategory,
-      humanTicketSubject: ticket.humanTicketSubject,
       systemMessage: ticket.systemMessage,
       orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : [],
       messages: messages,
@@ -222,14 +216,8 @@ export async function PUT(
       );
     }
 
-    // Check if ticket system is enabled
-    const ticketSystemEnabled = await isTicketSystemEnabled();
-    if (!ticketSystemEnabled) {
-      return NextResponse.json(
-        { error: 'Ticket system is currently disabled' },
-        { status: 403 }
-      );
-    }
+    // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);
@@ -397,14 +385,8 @@ export async function DELETE(
       );
     }
 
-    // Check if ticket system is enabled
-    const ticketSystemEnabled = await isTicketSystemEnabled();
-    if (!ticketSystemEnabled) {
-      return NextResponse.json(
-        { error: 'Ticket system is currently disabled' },
-        { status: 403 }
-      );
-    }
+    // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);

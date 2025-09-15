@@ -68,10 +68,10 @@ interface TicketMessage {
   id: string;
   type: 'customer' | 'staff' | 'system';
   author: string;
-  authorRole?: string;
+  authorRole?: 'user' | 'admin';
   content: string;
   createdAt: string;
-  attachments?: TicketAttachment[];
+  attachments?: (string | TicketAttachment)[];
   isEdited?: boolean;
   editedAt?: string;
   userImage?: string;
@@ -90,6 +90,7 @@ interface TicketAttachment {
   mimetype: string;
   uploadedAt: string;
   uploadedBy: string;
+  url?: string;
 }
 
 interface TicketNote {
@@ -919,7 +920,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                   </div>
                   <div>
                     <div className="form-label">Full Name</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.fullName || ticketDetails.userInfo?.name || 'N/A'}</div>
+                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.fullName || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="form-label">Email</div>

@@ -65,7 +65,10 @@ export async function GET() {
             rate: currency.rate,
             enabled: currency.enabled
           },
-          create: currency
+          create: {
+            ...currency,
+            updatedAt: new Date()
+          }
         });
       }
 

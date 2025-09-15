@@ -54,9 +54,9 @@ export async function getGeneralSettings(): Promise<GeneralSettings> {
         siteLogo: settings.siteLogo || DEFAULT_SETTINGS.siteLogo,
         siteDarkLogo: settings.siteDarkLogo || DEFAULT_SETTINGS.siteDarkLogo,
         adminEmail: settings.adminEmail || DEFAULT_SETTINGS.adminEmail,
-        siteUrl: settings.siteUrl || DEFAULT_SETTINGS.siteUrl,
         metaKeywords: settings.metaKeywords || DEFAULT_SETTINGS.metaKeywords,
-        footerText: settings.footerText || DEFAULT_SETTINGS.footerText
+        footerText: DEFAULT_SETTINGS.footerText,
+        siteUrl: DEFAULT_SETTINGS.siteUrl
       };
       lastFetchTime = now;
       return cachedSettings;
