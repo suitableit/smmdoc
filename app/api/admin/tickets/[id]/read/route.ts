@@ -10,9 +10,9 @@ const readStatusSchema = z.object({
 });
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // PATCH - Update ticket read status (admin only)
@@ -52,7 +52,8 @@ export async function PATCH(
       );
     }
 
-    const ticketId = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
     
     if (isNaN(ticketId)) {
       return NextResponse.json(

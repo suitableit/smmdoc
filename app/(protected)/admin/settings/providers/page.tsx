@@ -607,7 +607,9 @@ const APIProvidersPage = () => {
               if (e.target === e.currentTarget) {
                 setShowAddForm(false);
                 setFormData({
+                  providerType: 'predefined',
                   selectedProvider: '',
+                  customProviderName: '',
                   apiKey: '',
                   apiUrl: '',
                   syncEnabled: true,

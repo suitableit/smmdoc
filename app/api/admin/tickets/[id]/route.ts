@@ -12,9 +12,9 @@ const updateTicketSchema = z.object({
 });
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // GET - Fetch single support ticket (admin)
