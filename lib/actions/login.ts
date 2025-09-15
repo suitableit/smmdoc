@@ -37,7 +37,7 @@ export const login = async (
 
     const recaptchaResult = await verifyReCAPTCHA(
       values.recaptchaToken,
-      recaptchaSettings.secretKey,
+      recaptchaSettings.secretKey!,
       recaptchaSettings.version === 'v3' ? 'signin' : undefined,
       recaptchaSettings.version === 'v3' ? recaptchaSettings.threshold : undefined
     );

@@ -160,7 +160,7 @@ export const transactionTemplates = {
   adminAutoApproved: (data: TransactionEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Payment Auto-Approved',
-      headerColor: 'green',
+      headerColor: 'primary-color',
       footerMessage: 'This is an automated admin notification.',
       userEmail: 'admin@example.com'
     };

@@ -94,6 +94,20 @@ export const emailContentSections = {
       </div>
     `;
   },
+
+  // CTA Button - single button with primary styling
+  ctaButton: (text: string, url: string) => {
+    const primaryStyle = 'background: linear-gradient(135deg, var(--primary, #5f1de8) 0%, var(--secondary, #b131f8) 100%); box-shadow: 0 4px 12px rgba(95, 29, 232, 0.3);';
+    
+    return `
+      <div style="text-align: center; margin: 40px 0;">
+        <a href="${url}" 
+           style="${primaryStyle} color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+          ${text}
+        </a>
+      </div>
+    `;
+  },
   
   // Information table
   infoTable: (rows: Array<{label: string, value: string, valueColor?: string}>) => {

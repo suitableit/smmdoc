@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Role } from '@prisma/client';
+import { user_role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import type { NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
@@ -105,7 +105,7 @@ export default {
         }
       }
       if (token.role && session.user) {
-        session.user.role = token.role as Role;
+        session.user.role = token.role as user_role;
         session.user.isTwoFactorEnabled = token.isTwoFactorEnabled;
         session.user.currency = token.currency;
         session.user.name = token.name;

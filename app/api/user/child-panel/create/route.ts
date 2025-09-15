@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     }
 
     // Check if user already has a child panel
-    const existingPanel = await db.childPanel.findUnique({
+    const existingPanel = await db.child_panels.findUnique({
       where: { userId }
     });
 
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     }
 
     // Check if domain is already taken
-    const existingDomain = await db.childPanel.findUnique({
+    const existingDomain = await db.child_panels.findUnique({
       where: { domain }
     });
 
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
       });
 
       // Create child panel
-      const childPanel = await prisma.childPanel.create({
+      const childPanel = await prisma.child_panels.create({
         data: {
           userId,
           domain,
@@ -130,6 +130,7 @@ export async function POST(request: Request) {
           plan,
           status: 'pending',
           expiryDate,
+          updatedAt: new Date(),
           settings: JSON.stringify({
             theme: 'default',
             customBranding: false,
@@ -149,7 +150,7 @@ export async function POST(request: Request) {
       });
 
       // Create subscription record
-      await prisma.childPanelSubscription.create({
+      await prisma.child_panel_subscriptions.create({
         data: {
           childPanelId: childPanel.id,
           amount: childPanelPrice,
@@ -157,7 +158,8 @@ export async function POST(request: Request) {
           status: 'active',
           startDate: new Date(),
           endDate: expiryDate,
-          paymentMethod: 'balance'
+          paymentMethod: 'balance',
+          updatedAt: new Date()
         }
       });
 

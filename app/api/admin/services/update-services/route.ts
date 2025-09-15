@@ -233,7 +233,7 @@ export async function PUT(request: Request) {
           }
         });
 
-        await db.serviceUpdateLog.create({
+        await db.service_update_logs.create({
           data: {
             serviceId: parseInt(id),
             serviceName: currentService.name,

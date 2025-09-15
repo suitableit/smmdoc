@@ -1052,7 +1052,7 @@ const APIProvidersPage = () => {
                   provider.status.toLowerCase().includes(searchQuery.toLowerCase())
                 )
                 .map((provider, index) => (
-                <div key={provider.id || `provider-${provider.value || provider.name}-${index}`} className="card card-padding">
+                <div key={provider.id || `provider-${provider.name}-${index}`} className="card card-padding">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="card-icon">

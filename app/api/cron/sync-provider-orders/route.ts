@@ -10,7 +10,6 @@ export async function GET(req: NextRequest) {
     // Get all pending provider orders
     const pendingOrders = await db.newOrder.findMany({
       where: {
-        isProviderOrder: true,
         providerOrderId: { not: null },
         providerStatus: { in: ['pending', 'processing', 'in_progress'] }
       },
@@ -140,7 +139,7 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
     });
 
     if (service?.providerId) {
-      return service.providerId;
+      return service.providerId.toString();
     }
 
     // If no provider in service, try to get from provider order logs
@@ -150,7 +149,7 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
       select: { providerId: true }
     });
 
-    return lastLog?.providerId || null;
+    return lastLog?.providerId ? lastLog.providerId.toString() : null;
   } catch (error) {
     console.error(`Error getting provider for order ${order.id}:`, error);
     return null;
@@ -251,9 +250,7 @@ async function syncSingleOrder(order: any, provider: any) {
         providerId: provider.id,
         action: 'status_sync',
         status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        response: JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-        createdAt: new Date()
+        response: JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' })
       }
     });
 
@@ -311,7 +308,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!order.isProviderOrder || !order.providerOrderId) {
+    if (!order.providerOrderId) {
       return NextResponse.json(
         { success: false, message: 'Order is not a provider order', data: null },
         { status: 400 }
@@ -328,7 +325,7 @@ export async function POST(req: NextRequest) {
     }
 
     const provider = await db.api_providers.findUnique({
-      where: { id: providerId },
+      where: { id: parseInt(providerId) },
       select: {
         id: true,
         name: true,

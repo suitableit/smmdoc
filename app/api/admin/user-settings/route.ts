@@ -14,6 +14,7 @@ const defaultUserSettings = {
   freeAmount: 0,
   paymentBonusEnabled: false,
   bonusPercentage: 0,
+  updatedAt: new Date(),
 };
 
 // GET - Load user settings
@@ -132,6 +133,7 @@ export async function POST(request: NextRequest) {
         freeAmount: userSettings.freeAmount ?? 0,
         paymentBonusEnabled: userSettings.paymentBonusEnabled ?? false,
         bonusPercentage: userSettings.bonusPercentage ?? 0,
+        updatedAt: new Date(),
       }
     });
 

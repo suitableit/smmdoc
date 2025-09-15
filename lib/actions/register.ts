@@ -27,7 +27,7 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
 
     const recaptchaResult = await verifyReCAPTCHA(
       values.recaptchaToken,
-      recaptchaSettings.secretKey,
+      recaptchaSettings.secretKey!,
       recaptchaSettings.version === 'v3' ? 'signup' : undefined,
       recaptchaSettings.version === 'v3' ? recaptchaSettings.threshold : undefined
     );

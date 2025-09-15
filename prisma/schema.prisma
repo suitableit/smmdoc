@@ -52,6 +52,7 @@ model Service {
   rateUSD             Float             @default(0)
   providerId          Int?
   providerName        String?
+  providerServiceId   String?
   favoriteServices    FavoriteService[]
   newOrders           NewOrder[]
   category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -86,11 +87,15 @@ model NewOrder {
   usdPrice       Float
   charge         Float           @default(0)
   profit         Float           @default(0)
+  providerOrderId String?        // Provider থেকে আসা order ID
+  providerStatus String?         // Provider এর status
+  lastSyncAt     DateTime?       // শেষ sync এর সময়
   cancelRequests CancelRequest[]
   category       Category        @relation(fields: [categoryId], references: [id])
   service        Service         @relation(fields: [serviceId], references: [id])
   user           user            @relation(fields: [userId], references: [id])
   refillRequests RefillRequest[]
+  providerOrderLogs ProviderOrderLog[]
 
   @@index([categoryId], map: "NewOrder_categoryId_fkey")
   @@index([serviceId], map: "NewOrder_serviceId_fkey")
@@ -307,7 +312,7 @@ model TicketMessage {
   isFromAdmin Boolean       @default(false)
   attachments String?       @db.Text
   createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  updatedAt   DateTime  @updatedAt
   ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   user        user          @relation("TicketMessages", fields: [userId], references: [id], onDelete: Cascade)
 
@@ -370,11 +375,28 @@ model ContactMessage {
   repliedBy   Int?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
+  notes       ContactNote[]
 
   @@index([userId])
   @@index([categoryId])
   @@index([status])
   @@map("contact_messages")
+}
+
+model ContactNote {
+  id        Int            @id @default(autoincrement())
+  messageId Int
+  userId    Int
+  content   String         @db.Text
+  isPrivate Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  message   ContactMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      user           @relation(fields: [userId], references: [id])
+
+  @@index([messageId])
+  @@index([userId])
+  @@map("contact_notes")
 }
 
 model activitylog {
@@ -592,13 +614,12 @@ model servicetype {
   description String?
   status      String    @default("active")
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime  @updatedAt
   services    Service[]
 }
 
 model ticket_settings {
   id                  Int               @id @default(autoincrement())
-  ticketSystemEnabled Boolean           @default(true)
   maxPendingTickets   String            @default("3")
   createdAt           DateTime          @default(now())
   updatedAt           DateTime
@@ -660,6 +681,7 @@ model user {
   supportTickets                                SupportTicket[]
   ticketMessages                                TicketMessage[]        @relation("TicketMessages")
   ticketNotes                                   TicketNote[]           @relation("TicketNotes")
+  contactNotes                                  ContactNote[]
   twoFactorConfirmation                         TwoFactorConfirmation?
 }
 
@@ -797,9 +819,12 @@ model api_providers {
   login_pass String?
   status     String   @default("active")
   createdAt  DateTime @default(now())
-  updatedAt  DateTime
+  updatedAt  DateTime @updatedAt
   api_url    String   @default("")
   is_custom  Boolean  @default(false)
+  
+  // Relations
+  providerOrderLogs ProviderOrderLog[]
 
   @@index([name])
   @@index([status])
@@ -821,4 +846,26 @@ enum addfund_transaction_type {
   withdrawal
   purchase
   refund
+}
+
+model ProviderOrderLog {
+  id               Int      @id @default(autoincrement())
+  orderId          Int      // NewOrder এর reference
+  providerId       Int?     // API Provider reference
+  action           String   // created, status_check, completed, failed
+  providerResponse String?  @db.Text // Provider এর response data
+  response         String?  @db.Text // Response data
+  status           String?  // Provider status
+  errorMessage     String?  @db.Text // Error message if any
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  order            NewOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider         api_providers? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+
+  @@index([orderId], map: "ProviderOrderLog_orderId_idx")
+  @@index([action], map: "ProviderOrderLog_action_idx")
+  @@index([createdAt], map: "ProviderOrderLog_createdAt_idx")
+  @@map("provider_order_log")
 }

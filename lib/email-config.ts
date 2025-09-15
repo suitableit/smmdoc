@@ -93,19 +93,20 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
       await transporter.verify();
       console.log('Email transporter created and verified successfully');
     } catch (verifyError) {
-      console.warn('Transporter verification failed, but continuing anyway:', verifyError.message);
+      console.warn('Transporter verification failed, but continuing anyway:', (verifyError as Error).message);
       console.log('Transporter created without verification');
     }
     
     return transporter;
   } catch (error) {
-    console.error('Error creating email transporter:', error.message);
+    const err = error as Error & { code?: string; command?: string; response?: string; responseCode?: number };
+    console.error('Error creating email transporter:', err.message);
     console.error('Full error details:', {
-      name: error.name,
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode
+      name: err.name,
+      code: err.code,
+      command: err.command,
+      response: err.response,
+      responseCode: err.responseCode
     });
     return null;
   }

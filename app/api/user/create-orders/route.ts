@@ -67,7 +67,6 @@ export async function POST(request: Request) {
           status: true,
           providerId: true,
           providerServiceId: true,
-          providerApiUrl: true,
         },
       });
 
@@ -215,6 +214,8 @@ export async function POST(request: Request) {
                 id: true,
                 name: true,
                 rate: true,
+                providerId: true,
+                providerServiceId: true,
               },
             },
             category: {
@@ -297,7 +298,6 @@ export async function POST(request: Request) {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.accessToken}`,
             },
             body: JSON.stringify({
               orderId: order.id,

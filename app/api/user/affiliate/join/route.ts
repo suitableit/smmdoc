@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     const userId = parseInt(session.user.id);
 
     // Check if user is already an affiliate
-    const existingAffiliate = await db.affiliate.findUnique({
+    const existingAffiliate = await db.affiliates.findUnique({
       where: { userId }
     });
 
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     // Generate unique referral code
     const generateReferralCode = async (): Promise<string> => {
       const baseCode = `REF${userId}${Date.now().toString().slice(-4)}`;
-      const existingCode = await db.affiliate.findUnique({
+      const existingCode = await db.affiliates.findUnique({
         where: { referralCode: baseCode }
       });
       
@@ -69,12 +69,13 @@ export async function POST(request: Request) {
     const commissionRate = moduleSettings?.commissionRate ?? 5;
 
     // Create affiliate record
-    const affiliate = await db.affiliate.create({
+    const affiliate = await db.affiliates.create({
       data: {
         userId,
         referralCode,
         commissionRate,
-        status: 'active'
+        status: 'active',
+        updatedAt: new Date()
       }
     });
 

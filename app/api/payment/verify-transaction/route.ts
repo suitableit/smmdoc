@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
 
         // Send admin notification for pending transaction
         const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-        const adminEmailData = emailTemplates.adminPendingTransaction({
+        const adminEmailData = emailTemplates.adminPendingReview({
           userName: payment.user?.name || 'Unknown User',
           userEmail: payment.user?.email || '',
           transactionId: transaction_id,

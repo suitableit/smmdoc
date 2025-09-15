@@ -83,7 +83,7 @@ export async function PATCH(
         status,
         updatedAt: new Date(),
         // If closing the ticket, mark as read
-        ...(status === 'closed' && { isRead: true })
+        ...(status === 'Closed' && { isRead: true })
       },
       include: {
         user: {

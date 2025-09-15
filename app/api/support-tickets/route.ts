@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { isTicketSystemEnabled, getTicketSettings } from '@/lib/utils/ticket-settings';
+import { getTicketSettings } from '@/lib/utils/ticket-settings';
 
 // Helper function to process refill requests
 async function processRefillRequest(orderIds: string[], userId: number) {
@@ -419,14 +419,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if ticket system is enabled
-    const ticketSystemEnabled = await isTicketSystemEnabled();
-    if (!ticketSystemEnabled) {
-      return NextResponse.json(
-        { error: 'Ticket system is currently disabled' },
-        { status: 403 }
-      );
-    }
+    // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
     // Check user's pending tickets limit
     const pendingTicketsCount = await db.supportTicket.count({
@@ -603,13 +597,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if ticket system is enabled
-    const ticketSystemEnabled = await isTicketSystemEnabled();
-    if (!ticketSystemEnabled) {
-      return NextResponse.json(
-        { error: 'Ticket system is currently disabled' },
-        { status: 403 }
-      );
-    }
+    // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -667,7 +656,6 @@ export async function GET(request: NextRequest) {
       category: ticket.category,
       subcategory: ticket.subcategory,
       aiSubcategory: ticket.aiSubcategory,
-      humanTicketSubject: ticket.humanTicketSubject,
       orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : [],
       repliedByUser: ticket.repliedByUser
     }));
