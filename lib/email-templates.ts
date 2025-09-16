@@ -29,7 +29,7 @@ export const emailTemplates = {
   welcome: (data: { userName: string; userEmail: string }) => {
     const layoutData: EmailLayoutData = {
       title: 'Welcome to Our Platform!',
-      headerColor: 'blue',
+      headerColor: 'primary-color',
       footerMessage: 'Welcome to our community',
       userEmail: data.userEmail
     };
@@ -42,7 +42,7 @@ export const emailTemplates = {
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
         Your account has been successfully created with email: ${data.userEmail}
       </p>
-      ${emailContentSections.ctaButton('Get Started', `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`)}
+      ${emailContentSections.actionButtons([{text: 'Get Started', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`}])}
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         Best regards,<br>The Team
       </p>
@@ -53,6 +53,15 @@ export const emailTemplates = {
       html: createEmailTemplate(layoutData, content)
     };
   },
+  
+  // Payment success template
+  paymentSuccess: transactionTemplates.paymentSuccess,
+  
+  // Payment cancelled template
+  paymentCancelled: transactionTemplates.paymentCancelled,
+  
+  // Admin pending review template
+  adminPendingReview: transactionTemplates.adminPendingReview,
 };
 
 // Re-export all template categories

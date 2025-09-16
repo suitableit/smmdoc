@@ -85,7 +85,7 @@ export const accountTemplates = {
   userPasswordChanged: (data: AccountEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Password Updated',
-      headerColor: 'green',
+      headerColor: 'primary-color',
       footerMessage: 'This is an automated security notification. Please do not reply to this email.',
       userEmail: data.userEmail
     };
@@ -109,16 +109,19 @@ export const accountTemplates = {
       </div>
             
       
-      ${emailContentSections.securityAlert('If you did not change your password, your account may be compromised.', [
-        'Contact our support team immediately',
-        'Review your recent account activity',
-        'Enable two-factor authentication if not already active',
-        'Check for any unauthorized changes to your account'
-      ])}
+      ${emailContentSections.alertBox(`
+        <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">If you did not change your password, your account may be compromised.</h3>
+        <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+          <li style="margin-bottom: 8px;">Contact our support team immediately</li>
+          <li style="margin-bottom: 8px;">Review your recent account activity</li>
+          <li style="margin-bottom: 8px;">Enable two-factor authentication if not already active</li>
+          <li style="margin-bottom: 8px;">Check for any unauthorized changes to your account</li>
+        </ul>
+      `)}
       
       ${emailContentSections.actionButtons([
-        {text: 'Security Settings', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/security`, color: 'blue'},
-        {text: 'Report Issue', url: `${process.env.NEXT_PUBLIC_APP_URL}/support`, color: 'red'}
+        {text: 'Security Settings', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/security`},
+        {text: 'Report Issue', url: `${process.env.NEXT_PUBLIC_APP_URL}/support`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
@@ -157,13 +160,16 @@ export const accountTemplates = {
       </div>
             
       
-      ${emailContentSections.securityAlert('If this wasn\'t you:', [
-        'Change your password immediately',
-        'Enable two-factor authentication',
-        'Review your recent account activity',
-        'Contact our support team',
-        'Log out of all devices'
-      ])}
+      ${emailContentSections.alertBox(`
+        <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">If this wasn't you:</h3>
+        <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+          <li style="margin-bottom: 8px;">Change your password immediately</li>
+          <li style="margin-bottom: 8px;">Enable two-factor authentication</li>
+          <li style="margin-bottom: 8px;">Review your recent account activity</li>
+          <li style="margin-bottom: 8px;">Contact our support team</li>
+          <li style="margin-bottom: 8px;">Log out of all devices</li>
+        </ul>
+      `)}
             
             <!-- If it was you -->
             <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #22c55e;">
@@ -178,8 +184,8 @@ export const accountTemplates = {
             
       
       ${emailContentSections.actionButtons([
-        {text: 'Secure My Account', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/security`, color: 'red'},
-        {text: 'View Activity', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/activity`, color: 'blue'}
+        {text: 'Secure My Account', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/security`},
+        {text: 'View Activity', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/activity`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
@@ -241,9 +247,7 @@ export const accountTemplates = {
       
       ${emailContentSections.actionButtons([{
         text: 'Verify My Account',
-        url: `${process.env.NEXT_PUBLIC_APP_URL}/verify-account`,
-        color: 'blue',
-        large: true
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/verify-account`
       }])}
       
       <!-- Help -->

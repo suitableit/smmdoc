@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
+
 
 // Validation schema for read status
 const readStatusSchema = z.object({
@@ -10,9 +10,9 @@ const readStatusSchema = z.object({
 });
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // PATCH - Update ticket read status (admin only)
@@ -43,16 +43,11 @@ export async function PATCH(
       );
     }
 
-    // Check if ticket system is enabled
-    const ticketSystemEnabled = await isTicketSystemEnabled();
-    if (!ticketSystemEnabled) {
-      return NextResponse.json(
-        { error: 'Ticket system is currently disabled' },
-        { status: 403 }
-      );
-    }
+    // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
-    const ticketId = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
     
     if (isNaN(ticketId)) {
       return NextResponse.json(

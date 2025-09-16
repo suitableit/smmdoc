@@ -207,7 +207,8 @@ export async function POST(
               select: {
                 id: true,
                 name: true,
-                username: true
+                username: true,
+                role: true
               }
             }
           },
@@ -251,9 +252,7 @@ export async function POST(
       timeSpent: 0,
       ticketType: ticketWithNotes.ticketType,
       aiSubcategory: ticketWithNotes.aiSubcategory,
-      humanTicketSubject: ticketWithNotes.humanTicketSubject,
       systemMessage: ticketWithNotes.systemMessage,
-      ticketStatus: ticketWithNotes.ticketStatus,
       orderIds: ticketWithNotes.orderIds ? JSON.parse(ticketWithNotes.orderIds) : [],
       userInfo: {
         fullName: ticketWithNotes.user?.name || 'N/A',

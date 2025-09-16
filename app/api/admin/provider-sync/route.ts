@@ -118,7 +118,9 @@ export async function GET(req: NextRequest) {
         id: true
       },
       where: {
-        isProviderOrder: true
+        providerOrderId: {
+          not: null
+        }
       }
     });
 
@@ -220,7 +222,6 @@ export async function POST(req: NextRequest) {
       ordersToSync = await db.newOrder.findMany({
         where: {
           id: { in: orderIds },
-          isProviderOrder: true,
           providerOrderId: { not: null }
         },
         include: {
@@ -355,7 +356,7 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
     });
 
     if (service?.providerId) {
-      return service.providerId;
+      return service.providerId.toString();
     }
 
     const lastLog = await db.providerOrderLog.findFirst({
@@ -364,7 +365,7 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
       select: { providerId: true }
     });
 
-    return lastLog?.providerId || null;
+    return lastLog?.providerId?.toString() || null;
   } catch (error) {
     console.error(`Error getting provider for order ${order.id}:`, error);
     return null;
@@ -455,7 +456,7 @@ async function syncSingleOrder(order: any, provider: any) {
         providerId: provider.id,
         action: 'manual_sync',
         status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
         response: JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
         createdAt: new Date()
       }

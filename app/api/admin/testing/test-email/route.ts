@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         break;
         
       case 'admin_pending':
-        emailData = emailTemplates.adminPendingTransaction({
+        emailData = transactionEmailTemplates.adminPendingReview({
           userName: 'Test User',
           userEmail: testEmail,
           transactionId: transaction_id || 'TEST-TXN-123',

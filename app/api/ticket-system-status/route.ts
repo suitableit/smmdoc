@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { isTicketSystemEnabled } from '@/lib/utils/ticket-settings';
 
 // GET - Check if ticket system is enabled (public endpoint)
 export async function GET() {
   try {
-    const ticketSystemEnabled = await isTicketSystemEnabled();
+    const ticketSystemEnabled = true; // Ticket system is always enabled
     
     return NextResponse.json({
       success: true,

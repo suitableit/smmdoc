@@ -130,13 +130,7 @@ export const announcementTemplates = {
       
       ${data.actionUrl && data.actionText ? emailContentSections.actionButtons([{
         text: data.actionText,
-        url: data.actionUrl,
-        color: data.announcementType === 'maintenance' ? 'orange' :
-               data.announcementType === 'security' ? 'red' :
-               data.announcementType === 'promotion' ? 'green' :
-               data.announcementType === 'feature' ? 'purple' :
-               data.announcementType === 'policy' ? 'gray' :
-               'blue'
+        url: data.actionUrl
       }]) : ''}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
@@ -156,7 +150,7 @@ export const announcementTemplates = {
   userNewsletter: (data: AnnouncementEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Newsletter',
-      headerColor: 'indigo',
+      headerColor: 'primary-color',
       footerMessage: 'You\'re receiving this newsletter because you\'re a valued member of our community.',
       userEmail: data.userEmail
     };
@@ -169,8 +163,7 @@ export const announcementTemplates = {
       
       ${data.actionUrl && data.actionText ? emailContentSections.actionButtons([{
         text: data.actionText,
-        url: data.actionUrl,
-        color: 'indigo'
+        url: data.actionUrl
       }]) : ''}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">

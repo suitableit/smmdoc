@@ -24,8 +24,7 @@ import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import ProviderOrderStatus from '@/components/admin/ProviderOrderStatus';
-import ManualOrderCreation from '@/components/admin/ManualOrderCreation';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 // Dynamic imports for modal components
 const ChangeAllStatusModal = dynamic(() => import('@/components/admin/orders/modals/change-all-status'), {
@@ -188,7 +187,7 @@ const AdminOrdersPage = () => {
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<number | null>(null);
-  const [toast, setToast] = useState<{
+  const [toastNotification, setToastNotification] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
@@ -345,7 +344,7 @@ const AdminOrdersPage = () => {
           }
         );
       } else {
-        toast && showToast(result.error || 'Failed to fetch orders', 'error');
+        toastNotification && showToast(result.error || 'Failed to fetch orders', 'error');
         setOrders([]);
       }
     } catch (error) {
@@ -470,8 +469,8 @@ const AdminOrdersPage = () => {
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
+    setToastNotification({ message, type });
+    setTimeout(() => setToastNotification(null), 4000);
   };
 
   // Utility functions
@@ -631,13 +630,13 @@ const AdminOrdersPage = () => {
     <div className="page-container">
       {/* Toast Container */}
       <div className="toast-container">
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
+        {toastNotification && (
+        <Toast
+          message={toastNotification.message}
+          type={toastNotification.type}
+          onClose={() => setToastNotification(null)}
+        />
+      )}
       </div>
 
       <div className="page-content">

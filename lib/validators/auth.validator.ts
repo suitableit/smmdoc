@@ -87,6 +87,9 @@ const createSignUpSchema = (nameFieldEnabled: boolean = true) => {
     });
 };
 
+// Type that matches the dynamic sign up schema produced by createSignUpSchema
+export type DynamicSignUpSchema = z.infer<ReturnType<typeof createSignUpSchema>>;
+
 type SignUpSchema = z.infer<typeof signUpSchema>;
 
 const signUpDefaultValues: SignUpSchema = {

@@ -47,12 +47,15 @@ export const apiTemplates = {
       </div>
             
       
-      ${emailContentSections.securityAlert('Security Best Practices:', [
-        'Store your API key securely and never share it publicly',
-        'Use environment variables to store the key in your applications',
-        'Regenerate your key if you suspect it has been compromised',
-        'Monitor your API usage regularly for unusual activity'
-      ])}
+      ${emailContentSections.alertBox(`
+        <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Security Best Practices:</h3>
+        <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+          <li style="margin-bottom: 8px;">Store your API key securely and never share it publicly</li>
+          <li style="margin-bottom: 8px;">Use environment variables to store the key in your applications</li>
+          <li style="margin-bottom: 8px;">Regenerate your key if you suspect it has been compromised</li>
+          <li style="margin-bottom: 8px;">Monitor your API usage regularly for unusual activity</li>
+        </ul>
+      `)}
       
       <!-- API Documentation -->
       <div style="background-color: #e0f2fe; border-radius: 12px; padding: 25px; margin: 30px 0;">
@@ -64,8 +67,8 @@ export const apiTemplates = {
       </div>
       
       ${emailContentSections.actionButtons([
-        {text: 'View API Documentation', url: `${process.env.NEXT_PUBLIC_APP_URL}/api/documentation`, color: 'blue'},
-        {text: 'Manage API Keys', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/api-keys`, color: 'gray'}
+        {text: 'View API Documentation', url: `${process.env.NEXT_PUBLIC_APP_URL}/api/documentation`},
+        {text: 'Manage API Keys', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/api-keys`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
@@ -104,12 +107,15 @@ export const apiTemplates = {
       </div>
             
       
-      ${emailContentSections.securityAlert('What you can do:', [
-        'Wait for the rate limit window to reset (usually 1 hour)',
-        'Implement exponential backoff in your API calls',
-        'Consider upgrading to a higher tier plan for increased limits',
-        'Optimize your API usage to reduce unnecessary requests'
-      ])}
+      ${emailContentSections.alertBox(`
+        <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">What you can do:</h3>
+        <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+          <li style="margin-bottom: 8px;">Wait for the rate limit window to reset (usually 1 hour)</li>
+          <li style="margin-bottom: 8px;">Implement exponential backoff in your API calls</li>
+          <li style="margin-bottom: 8px;">Consider upgrading to a higher tier plan for increased limits</li>
+          <li style="margin-bottom: 8px;">Optimize your API usage to reduce unnecessary requests</li>
+        </ul>
+      `)}
       
       <!-- Rate Limit Guidelines -->
       <div style="background-color: #f3f4f6; border-radius: 12px; padding: 25px; margin: 30px 0;">
@@ -126,8 +132,8 @@ export const apiTemplates = {
       </div>
       
       ${emailContentSections.actionButtons([
-        {text: 'View API Usage', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/api-usage`, color: 'blue'},
-        {text: 'Upgrade Plan', url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`, color: 'green'}
+        {text: 'View API Usage', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/api-usage`},
+        {text: 'Upgrade Plan', url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
@@ -166,13 +172,16 @@ export const apiTemplates = {
       </div>
             
       
-      ${emailContentSections.securityAlert('Troubleshooting Steps:', [
-        'Check your API key and ensure it\'s valid and active',
-        'Verify the request format and required parameters',
-        'Review the API documentation for the endpoint',
-        'Check if you\'ve exceeded your rate limits',
-        'Ensure your account has sufficient permissions'
-      ])}
+      ${emailContentSections.alertBox(`
+        <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Troubleshooting Steps:</h3>
+        <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
+          <li style="margin-bottom: 8px;">Check your API key and ensure it's valid and active</li>
+          <li style="margin-bottom: 8px;">Verify the request format and required parameters</li>
+          <li style="margin-bottom: 8px;">Review the API documentation for the endpoint</li>
+          <li style="margin-bottom: 8px;">Check if you've exceeded your rate limits</li>
+          <li style="margin-bottom: 8px;">Ensure your account has sufficient permissions</li>
+        </ul>
+      `)}
       
       <!-- Common Error Codes -->
       <div style="background-color: #e0f2fe; border-radius: 12px; padding: 25px; margin: 30px 0;">
@@ -189,8 +198,8 @@ export const apiTemplates = {
       </div>
       
       ${emailContentSections.actionButtons([
-        {text: 'View Documentation', url: `${process.env.NEXT_PUBLIC_APP_URL}/api/documentation`, color: 'blue'},
-        {text: 'Contact Support', url: `${process.env.NEXT_PUBLIC_APP_URL}/support`, color: 'red'}
+        {text: 'View Documentation', url: `${process.env.NEXT_PUBLIC_APP_URL}/api/documentation`},
+        {text: 'Contact Support', url: `${process.env.NEXT_PUBLIC_APP_URL}/support`}
       ])}
       
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">

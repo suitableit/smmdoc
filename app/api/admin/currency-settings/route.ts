@@ -9,6 +9,7 @@ const defaultCurrencySettings = {
   currencyPosition: 'left',
   thousandsSeparator: ',',
   decimalSeparator: '.',
+  updatedAt: new Date(),
 };
 
 // Default currencies to seed database
@@ -97,7 +98,10 @@ export async function GET() {
             rate: currency.rate,
             enabled: currency.enabled
           },
-          create: currency
+          create: {
+            ...currency,
+            updatedAt: new Date()
+          }
         });
       }
       currencies = await db.currency.findMany({
@@ -190,7 +194,8 @@ export async function POST(request: Request) {
             name: currency.name,
             symbol: currency.symbol,
             rate: currency.rate,
-            enabled: currency.enabled
+            enabled: currency.enabled,
+            updatedAt: new Date()
           }
         });
       }
