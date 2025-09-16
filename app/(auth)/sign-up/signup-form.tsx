@@ -10,8 +10,7 @@ import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
   createSignUpSchema,
   signUpDefaultValues,
-  signUpSchema,
-  SignUpSchema
+  type DynamicSignUpSchema
 } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
@@ -91,7 +90,7 @@ export default function SignUpForm() {
     message: ''
   });
 
-  const form = useForm<SignUpSchema>({
+  const form = useForm<DynamicSignUpSchema>({
     mode: 'all',
     resolver: zodResolver(dynamicSchema), // Use dynamic schema based on settings
     defaultValues: signUpDefaultValues,
@@ -225,7 +224,7 @@ export default function SignUpForm() {
 
   // Removed live validation - validation now happens only on form submission
 
-  const onSubmit: SubmitHandler<SignUpSchema> = async (values) => {
+  const onSubmit: SubmitHandler<DynamicSignUpSchema> = async (values) => {
     setError('');
     setSuccess('');
 

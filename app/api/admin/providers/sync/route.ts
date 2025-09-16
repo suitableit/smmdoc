@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Validate provider function
 const validateProvider = async (providerId: string) => {
   try {
-    const provider = await db.apiProvider.findUnique({
+    const provider = await db.api_providers.findUnique({
       where: { id: parseInt(providerId) }
     });
     
@@ -31,7 +31,7 @@ const validateProvider = async (providerId: string) => {
 // Get valid providers function
 const getValidProviders = async () => {
   try {
-    return await db.apiProvider.findMany({
+    return await db.api_providers.findMany({
       where: {
         status: 'active',
         api_key: { not: '' },

@@ -391,7 +391,7 @@ export async function DELETE(
         
         for (const message of userContactMessages) {
           await tx.contactNote.deleteMany({
-            where: { contactMessageId: message.id }
+            where: { messageId: message.id }
           });
         }
         

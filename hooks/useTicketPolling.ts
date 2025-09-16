@@ -18,10 +18,10 @@ interface TicketDetails {
   [key: string]: any;
 }
 
-export const useTicketPolling = (
+export const useTicketPolling = <T extends TicketDetails>(
   ticketId: string | null,
-  ticketDetails: TicketDetails | null,
-  setTicketDetails: (details: TicketDetails) => void,
+  ticketDetails: T | null,
+  setTicketDetails: (details: T) => void,
   interval: number = 5000,
   apiEndpoint: 'admin' | 'user' = 'admin'
 ) => {
@@ -48,7 +48,7 @@ export const useTicketPolling = (
       }
 
       const result = await response.json();
-      const updatedTicket: TicketDetails = apiEndpoint === 'admin' ? result.ticket : result;
+      const updatedTicket: T = apiEndpoint === 'admin' ? result.ticket : result;
       
       // Check if there are new messages or status changes
       const currentMessageCount = updatedTicket.messages?.length || 0;

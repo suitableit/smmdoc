@@ -33,8 +33,7 @@ export async function POST(req: NextRequest) {
           select: {
             id: true,
             name: true,
-            providerServiceId: true,
-            providerApiUrl: true
+            providerServiceId: true
           }
         },
         user: {
@@ -115,9 +114,7 @@ export async function POST(req: NextRequest) {
           providerId: provider.id,
           action: 'forward_order',
           status: 'failed',
-          error: error.message || 'Provider API request failed',
-          response: JSON.stringify({ error: error.message }),
-          createdAt: new Date()
+          response: JSON.stringify({ error: error.message })
         }
       });
 
@@ -140,9 +137,7 @@ export async function POST(req: NextRequest) {
           providerId: provider.id,
           action: 'forward_order',
           status: 'failed',
-          error: 'Invalid provider response',
-          response: JSON.stringify(providerResponse),
-          createdAt: new Date()
+          response: JSON.stringify(providerResponse)
         }
       });
 
@@ -162,8 +157,6 @@ export async function POST(req: NextRequest) {
       data: {
         providerOrderId: providerResponse.order.toString(),
         providerStatus: 'pending',
-        isProviderOrder: true,
-        providerResponse: JSON.stringify(providerResponse),
         lastSyncAt: new Date()
       }
     });

@@ -15,6 +15,7 @@ const defaultModuleSettings = {
   serviceUpdateLogsEnabled: true,
   massOrderEnabled: false,
   servicesListPublic: true,
+  updatedAt: new Date(),
 };
 
 // GET - Load module settings
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest) {
         serviceUpdateLogsEnabled: moduleSettings.serviceUpdateLogsEnabled ?? true,
         massOrderEnabled: moduleSettings.massOrderEnabled ?? false,
         servicesListPublic: moduleSettings.servicesListPublic ?? true,
+        updatedAt: new Date(),
       }
     });
 

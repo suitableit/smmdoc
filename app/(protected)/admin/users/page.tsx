@@ -201,7 +201,7 @@ interface EditUserFormData {
   name: string;
   email: string;
   balance: string;
-  emailVerified: boolean;
+  emailVerified: boolean | null;
   password: string;
 }
 
@@ -405,7 +405,7 @@ const UsersListPage = () => {
         // Apply client-side filtering for 'pending' status based on emailVerified
         if (statusFilter === 'pending') {
           filteredUsers = filteredUsers.filter((user: User) => !user.emailVerified);
-        } else if (statusFilter === 'active' && statusFilter !== 'all') {
+        } else if (statusFilter === 'active') {
           // For 'active' filter, show users with emailVerified not null AND status = 'active'
           filteredUsers = filteredUsers.filter((user: User) => user.emailVerified && user.status === 'active');
         }
@@ -2678,7 +2678,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             >
               <input
                 type="checkbox"
-                checked={formData.emailVerified}
+                checked={Boolean(formData.emailVerified)}
                 onChange={(e) =>
                   onFormDataChange('emailVerified', e.target.checked)
                 }
@@ -2687,8 +2687,8 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                     ? 'opacity-75 cursor-not-allowed'
                     : ''
                 }`}
-                disabled={isLoading || currentUser.emailVerified}
-                readOnly={currentUser.emailVerified}
+                disabled={isLoading || Boolean(currentUser.emailVerified)}
+                readOnly={Boolean(currentUser.emailVerified)}
               />
               <span className="form-label">
                 Email Confirmed

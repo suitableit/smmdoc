@@ -37,11 +37,11 @@ export async function GET(req: NextRequest) {
     const userId = parseInt(session.user.id);
 
     // Get affiliate data
-    const affiliate = await db.affiliate.findUnique({
+    const affiliate = await db.affiliates.findUnique({
       where: { userId },
       include: {
-        referrals: true,
-        commissions: {
+        affiliate_referrals: true,
+        affiliate_commissions: {
           where: { status: 'approved' }
         }
       }
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Calculate stats
-    const totalCommissions = affiliate.commissions.reduce((sum, commission) => sum + commission.commissionAmount, 0);
+    const totalCommissions = affiliate.affiliate_commissions.reduce((sum, commission) => sum + commission.commissionAmount, 0);
     const conversionRate = affiliate.totalVisits > 0 ? ((affiliate.totalReferrals / affiliate.totalVisits) * 100).toFixed(2) : '0.00';
 
     const stats = {

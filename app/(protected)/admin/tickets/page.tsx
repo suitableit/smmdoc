@@ -56,7 +56,7 @@ interface SupportTicket {
   subject: string;
   createdAt: string;
   lastUpdated: string;
-  status: 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'Closed';
+  status: 'Open' | 'Answered' | 'Customer Reply' | 'On Hold' | 'In Progress' | 'Closed' | 'closed';
   isRead: boolean;
 }
 
@@ -897,7 +897,7 @@ const SupportTicketsPage = () => {
                                             ?.classList.add('hidden');
                                         }}
                                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                        disabled={ticket.status === 'Closed' || closingTicketId === ticket.id}
+                                        disabled={ticket.status === 'closed' || closingTicketId === ticket.id}
                                       >
                                         <FaCheck className="h-3 w-3" />
                                         {closingTicketId === ticket.id ? 'Closing...' : 'Close Ticket'}

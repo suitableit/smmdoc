@@ -44,14 +44,14 @@ export class ProviderOrderForwarder {
     orderData: ProviderOrderRequest
   ): Promise<ProviderOrderResponse> {
     try {
-      const requestBody = {
+      const requestBody: Record<string, string> = {
         key: provider.api_key,
         action: 'add',
         service: orderData.service,
         link: orderData.link,
-        quantity: orderData.quantity,
-        ...(orderData.runs && { runs: orderData.runs }),
-        ...(orderData.interval && { interval: orderData.interval })
+        quantity: orderData.quantity.toString(),
+        ...(orderData.runs && { runs: orderData.runs.toString() }),
+        ...(orderData.interval && { interval: orderData.interval.toString() })
       };
 
       const response = await fetch(provider.api_url, {

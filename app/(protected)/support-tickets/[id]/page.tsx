@@ -65,7 +65,7 @@ interface TicketMessage {
   id: string;
   type: 'customer' | 'staff' | 'system';
   author: string;
-  authorRole?: string;
+  authorRole?: 'user' | 'admin';
   content: string;
   createdAt: string;
   attachments?: TicketAttachment[];
@@ -583,7 +583,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                             // Handle both string paths and object attachments
                             const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
                             const filename = typeof attachment === 'string' 
-                              ? attachment.split('/').pop() || 'Unknown file'
+                              ? (attachment as string).split('/').pop() || 'Unknown file'
                               : attachment.filename;
                             const mimetype = typeof attachment === 'string'
                               ? ''
