@@ -9,6 +9,7 @@ import {
   FaTimes,
   FaUpload
 } from 'react-icons/fa';
+import JoditEditor from 'jodit-react';
 
 // Import APP_NAME constant
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
@@ -71,21 +72,53 @@ interface PostFormData {
 const NewPostPage = () => {
   const { appName } = useAppNameWithFallback();
 
+  // State for categories
+  const [categories, setCategories] = useState<PostCategory[]>([]);
+
+  // Show toast notification
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
   // Set document title using useEffect for client-side
   useEffect(() => {
-    setPageTitle('Add New Post', appName);
+    setPageTitle('New Post', appName);
   }, [appName]);
 
-  // Dummy data for categories
-  const dummyCategories: PostCategory[] = [
-    { id: 0, name: 'Uncategorized' },
-    { id: 1, name: 'Technology' },
-    { id: 2, name: 'Business' },
-    { id: 3, name: 'Lifestyle' },
-    { id: 4, name: 'Health & Wellness' },
-    { id: 5, name: 'Travel' },
-    { id: 6, name: 'Food & Recipes' },
-  ];
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        console.log('Fetching categories...');
+        setCategoriesLoading(true);
+        const response = await fetch('/api/blogs/categories');
+        console.log('Categories response:', response.status, response.ok);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Categories data:', data);
+          setCategories(data.data || []);
+        } else {
+          console.error('Failed to load categories:', response.status);
+          showToast('Failed to load categories', 'error');
+          // Fallback to default category
+          setCategories([{ id: 1, name: 'Uncategorized' }]);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        showToast('Error loading categories', 'error');
+        // Fallback to default category
+        setCategories([{ id: 1, name: 'Uncategorized' }]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Dummy data for available tags
   const dummyTags: PostTag[] = [
@@ -107,7 +140,7 @@ const NewPostPage = () => {
     slug: '',
     content: '',
     excerpt: '',
-    categoryId: 'pc_000', // Default to Uncategorized
+    categoryId: '1', // Default to Uncategorized
     tags: [],
     featuredImage: '',
     metaTitle: '',
@@ -125,18 +158,46 @@ const NewPostPage = () => {
   // Loading states
   const [isLoading, setIsLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   // Tag input state
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
 
-  // Show toast notification
-  const showToast = (
-    message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'success'
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
+  // Slug validation states
+  const [slugStatus, setSlugStatus] = useState<{
+    isChecking: boolean;
+    isAvailable: boolean | null;
+    message: string;
+  }>({ isChecking: false, isAvailable: null, message: '' });
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+
+  // Jodit editor configuration
+  const editorConfig = {
+    readonly: false,
+    placeholder: 'Write your post content here...',
+    height: 400,
+    toolbar: true,
+    spellcheck: true,
+    language: 'en',
+    toolbarButtonSize: 'middle',
+    theme: 'default',
+    enableDragAndDropFileToEditor: true,
+    uploader: {
+      insertImageAsBase64URI: true
+    },
+    removeButtons: ['source', 'fullsize', 'about'],
+    showCharsCounter: true,
+    showWordsCounter: true,
+    showXPathInStatusbar: false,
+    askBeforePasteHTML: false,
+    askBeforePasteFromWord: false,
+    defaultActionOnPaste: 'insert_clear_html',
+    style: {
+      background: '#ffffff',
+      color: '#000000'
+    },
+    editorCssClass: 'jodit-editor-white-bg'
   };
 
   // Generate slug from title
@@ -146,8 +207,57 @@ const NewPostPage = () => {
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '')
       .trim();
   };
+
+  // Debounced slug availability check
+  const checkSlugAvailability = async (slug: string) => {
+    if (!slug || slug.length < 3) {
+      setSlugStatus({ isChecking: false, isAvailable: null, message: '' });
+      return;
+    }
+
+    setSlugStatus({ isChecking: true, isAvailable: null, message: 'Checking availability...' });
+
+    try {
+      // Simulate API call to check slug availability
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // For demo purposes, consider slugs containing 'test' as unavailable
+      const isAvailable = !slug.includes('test');
+      
+      setSlugStatus({
+        isChecking: false,
+        isAvailable,
+        message: isAvailable 
+          ? '✓ URL is available' 
+          : '✗ URL is already taken'
+      });
+    } catch (error) {
+      setSlugStatus({
+        isChecking: false,
+        isAvailable: null,
+        message: 'Error checking availability'
+      });
+    }
+  };
+
+  // Debounce function
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return function executedFunction(...args: any[]) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
+
+  // Debounced slug check
+  const debouncedSlugCheck = debounce(checkSlugAvailability, 1000);
 
   // Handle form field changes
   const handleInputChange = (field: keyof PostFormData, value: any) => {
@@ -156,12 +266,22 @@ const NewPostPage = () => {
       [field]: value
     }));
 
-    // Auto-generate slug when title changes
-    if (field === 'title' && value) {
+    // Auto-generate slug when title changes (only if not manually edited)
+    if (field === 'title' && value && !isSlugManuallyEdited) {
+      const newSlug = generateSlug(value);
       setFormData(prev => ({
         ...prev,
-        slug: generateSlug(value)
+        slug: newSlug
       }));
+      // Check availability of the new slug
+      debouncedSlugCheck(newSlug);
+    }
+
+    // Handle manual slug editing
+    if (field === 'slug') {
+      setIsSlugManuallyEdited(true);
+      // Check availability of manually entered slug
+      debouncedSlugCheck(value);
     }
 
     // Auto-generate meta title if not manually set
@@ -170,6 +290,19 @@ const NewPostPage = () => {
         ...prev,
         metaTitle: value
       }));
+    }
+  };
+
+  // Handle slug regeneration from title
+  const regenerateSlug = () => {
+    if (formData.title) {
+      const newSlug = generateSlug(formData.title);
+      setFormData(prev => ({
+        ...prev,
+        slug: newSlug
+      }));
+      setIsSlugManuallyEdited(false);
+      debouncedSlugCheck(newSlug);
     }
   };
 
@@ -208,22 +341,47 @@ const NewPostPage = () => {
     !formData.tags.includes(tag.name)
   );
 
-  // Handle image upload simulation
+  // Handle image upload
   const handleImageUpload = async (file: File) => {
     try {
       setImageUploading(true);
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Simulate successful upload
-      const imageUrl = URL.createObjectURL(file);
-      setFormData(prev => ({
-        ...prev,
-        featuredImage: imageUrl
-      }));
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast('Only image files (JPEG, PNG, GIF, WebP) are allowed', 'error');
+        return;
+      }
       
-      showToast('Image uploaded successfully!', 'success');
+      // Validate file size (5MB max)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        showToast('File size must be less than 5MB', 'error');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'uploads'); // Store in public/uploads folder
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(prev => ({
+          ...prev,
+          featuredImage: data.fileUrl
+        }));
+        showToast('Image uploaded successfully!', 'success');
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.error || 'Error uploading image', 'error');
+      }
     } catch (error) {
+      console.error('Error uploading image:', error);
       showToast('Error uploading image', 'error');
     } finally {
       setImageUploading(false);
@@ -246,17 +404,38 @@ const NewPostPage = () => {
         return;
       }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       const postData = {
-        ...formData,
+        title: formData.title,
+        slug: formData.slug,
+        excerpt: formData.excerpt,
+        content: formData.content,
+        featuredImage: formData.featuredImage,
         status,
-        publishDate: status === 'scheduled' ? `${formData.publishDate}T${formData.publishTime}` : new Date().toISOString(),
-        // Author will be automatically set based on current authenticated user
+        publishedAt: status === 'published' ? new Date().toISOString() : null,
+        scheduledAt: status === 'scheduled' ? `${formData.publishDate}T${formData.publishTime}` : null,
+        categoryId: formData.category ? parseInt(formData.category) : 1, // Default to "Uncategorized"
+        tagIds: formData.tags.map(tag => parseInt(tag)),
+        seoTitle: formData.seoTitle,
+        seoDescription: formData.seoDescription,
+        seoKeywords: formData.seoKeywords
       };
       
       console.log('Submitting post:', postData);
+      
+      // Call API to create blog post
+      const response = await fetch('/api/blogs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create blog post');
+      }
       
       showToast(
         status === 'draft' ? 'Post saved as draft!' : 'Post published successfully!',
@@ -266,7 +445,7 @@ const NewPostPage = () => {
       // Reset form after successful submission
       if (status === 'published') {
         setTimeout(() => {
-          window.location.href = '/admin/posts';
+          window.location.href = '/admin/blogs';
         }, 2000);
       }
       
@@ -363,16 +542,56 @@ const NewPostPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label mb-2">URL Slug</label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">/blog/</span>
-                    <input
-                      type="text"
-                      value={formData.slug}
-                      onChange={(e) => handleInputChange('slug', e.target.value)}
-                      className="form-field flex-1 px-3 py-2 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                      placeholder="post-url-slug"
-                    />
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="form-label">URL Slug</label>
+                    {isSlugManuallyEdited && formData.title && (
+                      <button
+                        type="button"
+                        onClick={regenerateSlug}
+                        className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors"
+                      >
+                        Regenerate from title
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">/blog/</span>
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          value={formData.slug}
+                          onChange={(e) => handleInputChange('slug', e.target.value)}
+                          className={`form-field w-full px-3 py-2 pr-8 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
+                            slugStatus.isAvailable === true
+                              ? 'border-green-300 dark:border-green-600 focus:ring-green-500'
+                              : slugStatus.isAvailable === false
+                              ? 'border-red-300 dark:border-red-600 focus:ring-red-500'
+                              : 'border-gray-300 dark:border-gray-600 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)]'
+                          }`}
+                          placeholder="post-url-slug"
+                        />
+                        {slugStatus.isChecking && (
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                            <GradientSpinner size="w-4 h-4" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {slugStatus.message && (
+                      <div className={`text-xs flex items-center gap-1 ${
+                        slugStatus.isAvailable === true
+                          ? 'text-green-600 dark:text-green-400'
+                          : slugStatus.isAvailable === false
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`}>
+                        {slugStatus.message}
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Preview: <span className="font-mono">/blog/{formData.slug || 'your-post-slug'}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -384,15 +603,28 @@ const NewPostPage = () => {
                 <label className="form-label mb-2">
                   Post Content *
                 </label>
-                <textarea
-                  value={formData.content}
-                  onChange={(e) => handleInputChange('content', e.target.value)}
-                  rows={15}
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
-                  placeholder="Write your post content here..."
-                />
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                  <style jsx>{`
+                    :global(.jodit-editor-white-bg .jodit-wysiwyg) {
+                      background-color: #ffffff !important;
+                      color: #000000 !important;
+                    }
+                    :global(.jodit-editor-white-bg .jodit-wysiwyg *) {
+                      color: #000000 !important;
+                    }
+                    :global(.jodit-editor-white-bg .jodit-workplace) {
+                      background-color: #ffffff !important;
+                    }
+                  `}</style>
+                  <JoditEditor
+                    value={formData.content}
+                    config={editorConfig}
+                    onBlur={(newContent) => handleInputChange('content', newContent)}
+                    onChange={() => {}}
+                  />
+                </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Tip: You can use Markdown syntax for formatting (bold, italic, links, etc.)
+                  Use the rich text editor to format your content with images, links, and styling.
                 </p>
               </div>
             </div>
@@ -509,12 +741,19 @@ const NewPostPage = () => {
                 value={formData.categoryId}
                 onChange={(e) => handleInputChange('categoryId', e.target.value)}
                 className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                disabled={categoriesLoading}
               >
-                {dummyCategories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
+                {categoriesLoading ? (
+                  <option value="">Loading categories...</option>
+                ) : categories.length > 0 ? (
+                  categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">No categories available</option>
+                )}
               </select>
             </div>
 
@@ -666,4 +905,4 @@ const NewPostPage = () => {
   );
 };
 
-export default NewPostPage; 
+export default NewPostPage;

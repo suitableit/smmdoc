@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'; // Add router import
 import React, { useEffect, useState } from 'react';
+import parse from 'html-react-parser';
 import {
     FaBan,
     FaCheckCircle,
@@ -377,7 +378,7 @@ const BlogsPage = () => {
   }, [appName]);
 
   // State management
-  const [blogs, setBlogs] = useState<BlogPost[]>(dummyBlogs);
+  const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [stats, setStats] = useState<BlogStats>(dummyStats);
 
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -422,27 +423,25 @@ const BlogsPage = () => {
     currentStatus: '',
   });
   const [newStatus, setNewStatus] = useState('');
-  const [statusReason, setStatusReason] = useState('');
 
-  const [viewDialog, setViewDialog] = useState<{
-    open: boolean;
-    blog: BlogPost | null;
-  }>({
-    open: false,
-    blog: null,
-  });
+
+
 
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
 
   // Calculate status counts from current blogs data
-  const calculateStatusCounts = (blogsData: BlogPost[]) => {
+  const calculateStatusCounts = (blogsData: BlogPost[] | undefined | null) => {
     const counts = {
       published: 0,
       draft: 0,
       scheduled: 0,
       archived: 0,
     };
+
+    if (!Array.isArray(blogsData)) {
+      return counts;
+    }
 
     blogsData.forEach((blog) => {
       if (blog.status && counts.hasOwnProperty(blog.status)) {
@@ -456,15 +455,33 @@ const BlogsPage = () => {
   // Fetch all blogs to calculate real status counts
   const fetchAllBlogsForCounts = async () => {
     try {
-      console.log('Calculating status counts from dummy data...');
+      console.log('Fetching all blogs for status counts from API...');
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 200));
+      const response = await fetch('/api/blogs?limit=1000'); // Get all blogs for counting
+      const result = await response.json();
 
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to fetch blogs for counts');
+      }
+
+      const allBlogs = result.data?.posts || [];
+      const statusCounts = calculateStatusCounts(allBlogs);
+
+      console.log('Calculated status counts from API:', statusCounts);
+
+      setStats((prev) => ({
+        ...prev,
+        publishedBlogs: statusCounts.published,
+        draftBlogs: statusCounts.draft,
+        scheduledBlogs: statusCounts.scheduled,
+        archivedBlogs: statusCounts.archived,
+        totalBlogs: allBlogs.length,
+      }));
+    } catch (error) {
+      console.error('Error fetching blogs for counts:', error);
+      
+      // Fallback to dummy data calculation on error
       const statusCounts = calculateStatusCounts(dummyBlogs);
-
-      console.log('Calculated status counts:', statusCounts);
-
       setStats((prev) => ({
         ...prev,
         publishedBlogs: statusCounts.published,
@@ -473,8 +490,6 @@ const BlogsPage = () => {
         archivedBlogs: statusCounts.archived,
         totalBlogs: dummyBlogs.length,
       }));
-    } catch (error) {
-      console.error('Error calculating blog counts:', error);
     }
   };
 
@@ -482,20 +497,46 @@ const BlogsPage = () => {
     try {
       setBlogsLoading(true);
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+      });
 
-      // Filter dummy data based on current filters
-      let filteredBlogs = [...dummyBlogs];
-
-      // Apply status filter
       if (statusFilter !== 'all') {
-        filteredBlogs = filteredBlogs.filter(
-          blog => blog.status === statusFilter
-        );
+        params.append('status', statusFilter);
       }
 
-      // Apply search filter
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+
+      const response = await fetch(`/api/blogs?${params}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to fetch blogs');
+      }
+
+      console.log('Blogs fetched successfully from API');
+
+      setBlogs(result.data?.posts || []);
+      setPagination(prev => ({
+        ...prev,
+        total: result.data?.pagination?.totalCount || 0,
+        totalPages: result.data?.pagination?.totalPages || 0,
+        hasNext: result.data?.pagination?.hasNext || false,
+        hasPrev: result.data?.pagination?.hasPrev || false,
+      }));
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+      showToast('Error fetching blogs. Please try again.', 'error');
+      
+      // Fallback to dummy data on error
+      let filteredBlogs = [...dummyBlogs];
+      if (statusFilter !== 'all') {
+        filteredBlogs = filteredBlogs.filter(blog => blog.status === statusFilter);
+      }
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         filteredBlogs = filteredBlogs.filter(
@@ -506,14 +547,10 @@ const BlogsPage = () => {
             blog.tags?.some(tag => tag.toLowerCase().includes(searchLower))
         );
       }
-
-      // Apply pagination
       const startIndex = (pagination.page - 1) * pagination.limit;
       const endIndex = startIndex + pagination.limit;
       const paginatedBlogs = filteredBlogs.slice(startIndex, endIndex);
-
-      console.log('Blogs fetched successfully with filters applied');
-
+      
       setBlogs(paginatedBlogs);
       setPagination(prev => ({
         ...prev,
@@ -522,18 +559,6 @@ const BlogsPage = () => {
         hasNext: endIndex < filteredBlogs.length,
         hasPrev: pagination.page > 1,
       }));
-    } catch (error) {
-      console.error('Error fetching blogs:', error);
-      showToast('Error fetching blogs. Please try again.', 'error');
-      setBlogs([]);
-      setPagination({
-        page: 1,
-        limit: 20,
-        total: 0,
-        totalPages: 0,
-        hasNext: false,
-        hasPrev: false,
-      });
     } finally {
       setBlogsLoading(false);
     }
@@ -541,31 +566,24 @@ const BlogsPage = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('Loading stats from dummy data...');
+      console.log('Loading stats from API...');
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const response = await fetch('/api/blogs/stats');
+      const result = await response.json();
 
-      console.log('Stats loaded successfully:', dummyStats);
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to fetch stats');
+      }
 
-      setStats(dummyStats);
+      console.log('Stats loaded successfully:', result.data);
+
+      setStats(result.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
-      setStats({
-        totalBlogs: 0,
-        publishedBlogs: 0,
-        draftBlogs: 0,
-        scheduledBlogs: 0,
-        archivedBlogs: 0,
-        totalViews: 0,
-        totalLikes: 0,
-        totalComments: 0,
-        averageReadTime: 0,
-        topCategories: 0,
-        todayViews: 0,
-        thisMonthPosts: 0,
-      });
-      showToast('Error fetching statistics. Please refresh the page.', 'error');
+      
+      // Fallback to dummy stats on error
+      setStats(dummyStats);
+      showToast('Error fetching statistics. Using cached data.', 'error');
     }
   };
 
@@ -682,9 +700,9 @@ const BlogsPage = () => {
   };
 
   const handleSelectAll = () => {
-    const selectableBlogs = blogs.filter(
+    const selectableBlogs = Array.isArray(blogs) ? blogs.filter(
       (blog) => blog.status !== 'archived'
-    );
+    ) : [];
 
     const selectableIds = selectableBlogs.map((blog) => 
       blog.id.toString()
@@ -759,8 +777,7 @@ const BlogsPage = () => {
   // Handle status change
   const handleStatusChange = async (
     blogId: number,
-    status: string,
-    reason: string
+    status: string
   ) => {
     try {
       const response = await fetch(`/api/admin/blogs/${blogId}/status`, {
@@ -770,7 +787,6 @@ const BlogsPage = () => {
         },
         body: JSON.stringify({
           status,
-          reason,
         }),
       });
 
@@ -788,7 +804,7 @@ const BlogsPage = () => {
       ]);
       setStatusDialog({ open: false, blogId: 0, currentStatus: '' });
       setNewStatus('');
-      setStatusReason('');
+
     } catch (error) {
       console.error('Error updating status:', error);
       showToast(
@@ -1142,18 +1158,7 @@ const BlogsPage = () => {
                         >
                           Category
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Views
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Engagement
-                        </th>
+
                         <th
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
@@ -1175,7 +1180,7 @@ const BlogsPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {blogs.map((blog) => (
+                      {Array.isArray(blogs) ? blogs.map((blog) => (
                         <tr
                           key={blog.id}
                           className="border-t hover:bg-gray-50 transition-colors duration-200"
@@ -1238,26 +1243,7 @@ const BlogsPage = () => {
                               {blog.category?.name || 'Uncategorized'}
                             </div>
                           </td>
-                          <td className="p-3">
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {formatNumber(blog.views)}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="flex items-center gap-3 text-xs">
-                              <div className="flex items-center gap-1">
-                                <FaHeart className="h-3 w-3 text-red-500" />
-                                <span>{formatNumber(blog.likes)}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <FaComments className="h-3 w-3 text-blue-500" />
-                                <span>{formatNumber(blog.comments)}</span>
-                              </div>
-                            </div>
-                          </td>
+
                           <td className="p-3">
                             <div>
                               {blog.status === 'published' && blog.publishedAt && (
@@ -1316,10 +1302,7 @@ const BlogsPage = () => {
                                 className="btn btn-secondary p-2"
                                 title="View Details"
                                 onClick={() => {
-                                  setViewDialog({
-                                    open: true,
-                                    blog: blog,
-                                  });
+                                  window.open(`/blogs/${blog.slug}`, '_blank');
                                 }}
                               >
                                 <FaEye className="h-3 w-3" />
@@ -1346,7 +1329,7 @@ const BlogsPage = () => {
                                       className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
                                       onClick={() => {
                                         setDropdownOpen(null);
-                                        showToast('Edit functionality coming soon!', 'info');
+                                        router.push(`/admin/blogs/${blog.id}`);
                                       }}
                                     >
                                       <FaEdit className="h-3 w-3 text-blue-600" />
@@ -1380,7 +1363,13 @@ const BlogsPage = () => {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      )) : (
+                        <tr>
+                          <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                            No blogs available
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1504,19 +1493,7 @@ const BlogsPage = () => {
                           <option value="archived">Archived</option>
                         </select>
                       </div>
-                      <div className="mb-4">
-                        <label className="form-label mb-2">
-                          Reason for Change
-                        </label>
-                        <textarea
-                          value={statusReason}
-                          onChange={(e) => setStatusReason(e.target.value)}
-                          className="form-field w-full min-h-[120px] resize-y px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                          placeholder="Explain the reason for status change..."
-                          rows={4}
-                          required
-                        />
-                      </div>
+
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => {
@@ -1526,7 +1503,7 @@ const BlogsPage = () => {
                               currentStatus: '' 
                             });
                             setNewStatus('');
-                            setStatusReason('');
+
                           }}
                           className="btn btn-secondary"
                         >
@@ -1536,12 +1513,11 @@ const BlogsPage = () => {
                           onClick={() =>
                             handleStatusChange(
                               statusDialog.blogId,
-                              newStatus,
-                              statusReason
+                              newStatus
                             )
                           }
                           className="btn btn-primary"
-                          disabled={!statusReason.trim() || newStatus === statusDialog.currentStatus}
+                          disabled={newStatus === statusDialog.currentStatus}
                         >
                           Update Status
                         </button>
@@ -1550,261 +1526,7 @@ const BlogsPage = () => {
                   </div>
                 )}
 
-                {/* View Details Dialog */}
-                {viewDialog.open && viewDialog.blog && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold">
-                          Blog Details
-                        </h3>
-                        <button
-                          onClick={() =>
-                            setViewDialog({ open: false, blog: null })
-                          }
-                          className="text-gray-400 hover:text-gray-600"
-                        >
-                          <FaTimes className="h-5 w-5" />
-                        </button>
-                      </div>
 
-                      {/* Blog Info */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                          <h4 className="text-md font-semibold mb-4 text-gray-800">
-                            Basic Information
-                          </h4>
-                          <div className="space-y-3">
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Blog ID
-                              </label>
-                              <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit mt-1">
-                                {formatID(viewDialog.blog.id.toString())}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Title
-                              </label>
-                              <div className="text-sm text-gray-900 mt-1 font-medium">
-                                {viewDialog.blog.title}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Slug
-                              </label>
-                              <div className="font-mono text-sm bg-gray-50 text-gray-700 px-2 py-1 rounded w-fit mt-1">
-                                /{viewDialog.blog.slug}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Author
-                              </label>
-                              <div className="text-sm text-gray-900 mt-1">
-                                {viewDialog.blog.author?.name} (@{viewDialog.blog.author?.username})
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Category
-                              </label>
-                              <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-sm font-medium w-fit mt-1">
-                                {viewDialog.blog.category?.name}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Status
-                              </label>
-                              <div className={`flex items-center gap-1 px-2 py-1 rounded-full w-fit text-xs font-medium mt-1 ${getStatusColor(viewDialog.blog.status)}`}>
-                                {getStatusIcon(viewDialog.blog.status)}
-                                <span className="capitalize">
-                                  {viewDialog.blog.status}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="text-md font-semibold mb-4 text-gray-800">
-                            Performance Metrics
-                          </h4>
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Views
-                              </label>
-                              <div className="text-lg font-semibold text-gray-900 mt-1">
-                                {formatNumber(viewDialog.blog.views)}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Read Time
-                              </label>
-                              <div className="text-lg font-semibold text-gray-900 mt-1">
-                                {viewDialog.blog.readTime} min
-                              </div>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Likes
-                              </label>
-                              <div className="text-lg font-semibold text-red-600 mt-1">
-                                {formatNumber(viewDialog.blog.likes)}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Comments
-                              </label>
-                              <div className="text-lg font-semibold text-blue-600 mt-1">
-                                {formatNumber(viewDialog.blog.comments)}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Excerpt */}
-                      <div className="mb-6">
-                        <h4 className="text-md font-semibold mb-4 text-gray-800">
-                          Excerpt
-                        </h4>
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <p className="text-sm text-gray-700">
-                            {viewDialog.blog.excerpt}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Tags */}
-                      {viewDialog.blog.tags && viewDialog.blog.tags.length > 0 && (
-                        <div className="mb-6">
-                          <h4 className="text-md font-semibold mb-4 text-gray-800">
-                            Tags
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {viewDialog.blog.tags.map((tag, index) => (
-                              <span
-                                key={index}
-                                className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm"
-                              >
-                                #{tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SEO Information */}
-                      {(viewDialog.blog.seoTitle || viewDialog.blog.seoDescription) && (
-                        <div className="mb-6">
-                          <h4 className="text-md font-semibold mb-4 text-gray-800">
-                            SEO Information
-                          </h4>
-                          <div className="space-y-3">
-                            {viewDialog.blog.seoTitle && (
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">
-                                  SEO Title
-                                </label>
-                                <div className="text-sm text-gray-900 mt-1">
-                                  {viewDialog.blog.seoTitle}
-                                </div>
-                              </div>
-                            )}
-                            {viewDialog.blog.seoDescription && (
-                              <div>
-                                <label className="text-sm font-medium text-gray-600">
-                                  SEO Description
-                                </label>
-                                <div className="text-sm text-gray-900 mt-1">
-                                  {viewDialog.blog.seoDescription}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Dates */}
-                      <div className="mb-6">
-                        <h4 className="text-md font-semibold mb-4 text-gray-800">
-                          Dates
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">
-                              Created
-                            </label>
-                            <div className="text-sm text-gray-900 mt-1">
-                              {formatDate(viewDialog.blog.createdAt)}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-600">
-                              Updated
-                            </label>
-                            <div className="text-sm text-gray-900 mt-1">
-                              {formatDate(viewDialog.blog.updatedAt)}
-                            </div>
-                          </div>
-                          {viewDialog.blog.publishedAt && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Published
-                              </label>
-                              <div className="text-sm text-gray-900 mt-1">
-                                {formatDate(viewDialog.blog.publishedAt)}
-                              </div>
-                            </div>
-                          )}
-                          {viewDialog.blog.scheduledAt && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Scheduled
-                              </label>
-                              <div className="text-sm text-blue-600 mt-1">
-                                {formatDate(viewDialog.blog.scheduledAt)}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-3 justify-end pt-4 border-t">
-                        <button
-                          onClick={() => {
-                            setViewDialog({ open: false, blog: null });
-                            showToast('Edit functionality coming soon!', 'info');
-                          }}
-                          className="btn btn-primary flex items-center gap-2"
-                        >
-                          <FaEdit />
-                          Edit Blog
-                        </button>
-                        <button
-                          onClick={() => {
-                            setViewDialog({ open: false, blog: null });
-                            openStatusDialog(viewDialog.blog!.id, viewDialog.blog!.status);
-                          }}
-                          className="btn btn-secondary flex items-center gap-2"
-                        >
-                          <FaCheckCircle />
-                          Change Status
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </React.Fragment>
             )}
           </div>

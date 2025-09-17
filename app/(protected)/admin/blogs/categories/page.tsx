@@ -71,7 +71,44 @@ const PostCategoriesPage = () => {
     setPageTitle('Post Categories', appName);
   }, [appName]);
 
-  // Dummy data for post categories with post counts (including some with 0 counts)
+  // State for categories data
+  const [categories, setCategories] = useState<PostCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/blogs/categories?includePostCount=true');
+      const data = await response.json();
+      
+      if (data.success) {
+        const formattedCategories = data.data.map((cat: any) => ({
+          id: cat.id,
+          name: cat.name,
+          postCount: cat._count?.posts || 0,
+          createdAt: cat.createdAt
+        }));
+        setCategories(formattedCategories);
+      } else {
+        setError(data.error || 'Failed to fetch categories');
+      }
+    } catch (err) {
+      setError('Failed to fetch categories');
+      console.error('Error fetching categories:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load categories on component mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // Dummy fallback data (will be replaced by API data)
   const dummyPostCategories: PostCategory[] = [
     {
       id: 1,
@@ -172,16 +209,29 @@ const PostCategoriesPage = () => {
   ];
 
   // State management
-  const [postCategories, setPostCategories] =
-    useState<PostCategory[]>(dummyPostCategories);
+  const [postCategories, setPostCategories] = useState<PostCategory[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
-    total: dummyPostCategories.length,
+    total: 0,
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
   });
+
+  // Update postCategories when categories data changes
+  useEffect(() => {
+    if (categories.length > 0) {
+      setPostCategories(categories);
+      setPagination(prev => ({
+        ...prev,
+        total: categories.length,
+        totalPages: Math.ceil(categories.length / prev.limit),
+        hasNext: prev.page < Math.ceil(categories.length / prev.limit),
+        hasPrev: prev.page > 1
+      }));
+    }
+  }, [categories]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -193,8 +243,8 @@ const PostCategoriesPage = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
-  // Loading states
-  const [postCategoriesLoading, setPostCategoriesLoading] = useState(false);
+  // Loading states (using the loading state from API fetch)
+  const postCategoriesLoading = loading;
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -208,7 +258,7 @@ const PostCategoriesPage = () => {
 
   // Utility functions
   const formatID = (id: number) => {
-    return `PC_${String(id).padStart(3, '0')}`;
+    return id.toString();
   };
 
   // Filter post categories based on search term
@@ -248,35 +298,30 @@ const PostCategoriesPage = () => {
   };
 
   const handleRefresh = () => {
-    setPostCategoriesLoading(true);
-    // Simulate loading
-    setTimeout(() => {
-      setPostCategoriesLoading(false);
-      showToast('Post categories refreshed successfully!', 'success');
-    }, 1000);
+    fetchCategories();
+    showToast('Post categories refreshed successfully!', 'success');
   };
 
   // Handle post category deletion
   const handleDeletePostCategory = async (postCategoryId: number) => {
-    // Prevent deletion of default "Uncategorized" category
-    if (postCategoryId === 1) {
-      showToast('Cannot delete the default "Uncategorized" category', 'error');
-      setDeleteDialogOpen(false);
-      setPostCategoryToDelete(null);
-      return;
-    }
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch(`/api/blogs/categories/${postCategoryId}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
 
-      setPostCategories((prev) => prev.filter((pc) => pc.id !== postCategoryId));
-      showToast('Post category deleted successfully', 'success');
-      setDeleteDialogOpen(false);
-      setPostCategoryToDelete(null);
+      if (data.success) {
+        showToast('Post category deleted successfully', 'success');
+        fetchCategories(); // Refresh the list
+      } else {
+        showToast(data.error || 'Error deleting post category', 'error');
+      }
     } catch (error) {
       console.error('Error deleting post category:', error);
       showToast('Error deleting post category', 'error');
+    } finally {
+      setDeleteDialogOpen(false);
+      setPostCategoryToDelete(null);
     }
   };
 
@@ -285,24 +330,30 @@ const PostCategoriesPage = () => {
     if (!editingPostCategory || !editName.trim()) return;
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch(`/api/blogs/categories/${editingPostCategory.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editName.trim(),
+        }),
+      });
+      const data = await response.json();
 
-      setPostCategories((prev) =>
-        prev.map((pc) =>
-          pc.id === editingPostCategory.id
-            ? { ...pc, name: editName.trim() }
-            : pc
-        )
-      );
-
-      showToast('Post category updated successfully', 'success');
-      setEditDialogOpen(false);
-      setEditingPostCategory(null);
-      setEditName('');
+      if (data.success) {
+        showToast('Post category updated successfully', 'success');
+        fetchCategories(); // Refresh the list
+      } else {
+        showToast(data.error || 'Error updating post category', 'error');
+      }
     } catch (error) {
       console.error('Error updating post category:', error);
       showToast('Error updating post category', 'error');
+    } finally {
+      setEditDialogOpen(false);
+      setEditingPostCategory(null);
+      setEditName('');
     }
   };
 
@@ -311,23 +362,29 @@ const PostCategoriesPage = () => {
     if (!newPostCategoryName.trim()) return;
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch('/api/blogs/categories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newPostCategoryName.trim(),
+        }),
+      });
+      const data = await response.json();
 
-      const newPostCategory: PostCategory = {
-        id: postCategories.length + 1,
-        name: newPostCategoryName.trim(),
-        postCount: 0, // New post categories start with 0 posts
-        createdAt: new Date().toISOString(),
-      };
-
-      setPostCategories((prev) => [newPostCategory, ...prev]);
-      showToast('Post category added successfully', 'success');
-      setAddDialogOpen(false);
-      setNewPostCategoryName('');
+      if (data.success) {
+        showToast('Post category added successfully', 'success');
+        fetchCategories(); // Refresh the list
+      } else {
+        showToast(data.error || 'Error adding post category', 'error');
+      }
     } catch (error) {
       console.error('Error adding post category:', error);
       showToast('Error adding post category', 'error');
+    } finally {
+      setAddDialogOpen(false);
+      setNewPostCategoryName('');
     }
   };
 
@@ -427,6 +484,16 @@ const PostCategoriesPage = () => {
                   </div>
                 </div>
               </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <p className="text-sm text-red-500 mb-4">{error}</p>
+                <button
+                  onClick={fetchCategories}
+                  className="btn btn-primary"
+                >
+                  Retry
+                </button>
+              </div>
             ) : getPaginatedData().length === 0 ? (
               <div className="text-center py-12">
                 <FaBox
@@ -473,12 +540,6 @@ const PostCategoriesPage = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
-                          Created
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
                           Actions
                         </th>
                       </tr>
@@ -515,20 +576,6 @@ const PostCategoriesPage = () => {
                               style={{ color: 'var(--text-primary)' }}
                             >
                               {postCategory.postCount}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div>
-                              <div className="text-xs">
-                                {new Date(
-                                  postCategory.createdAt
-                                ).toLocaleDateString()}
-                              </div>
-                              <div className="text-xs">
-                                {new Date(
-                                  postCategory.createdAt
-                                ).toLocaleTimeString()}
-                              </div>
                             </div>
                           </td>
                           <td className="p-3">

@@ -621,6 +621,7 @@ model servicetype {
 model ticket_settings {
   id                  Int               @id @default(autoincrement())
   maxPendingTickets   String            @default("3")
+  ticketSystemEnabled Boolean           @default(true)
   createdAt           DateTime          @default(now())
   updatedAt           DateTime
   ticket_subjects     ticket_subjects[]
@@ -682,6 +683,7 @@ model user {
   ticketMessages                                TicketMessage[]        @relation("TicketMessages")
   ticketNotes                                   TicketNote[]           @relation("TicketNotes")
   contactNotes                                  ContactNote[]
+  blogPosts                                     BlogPost[]
   twoFactorConfirmation                         TwoFactorConfirmation?
 }
 
@@ -868,4 +870,74 @@ model ProviderOrderLog {
   @@index([action], map: "ProviderOrderLog_action_idx")
   @@index([createdAt], map: "ProviderOrderLog_createdAt_idx")
   @@map("provider_order_log")
+}
+
+// Blog Models
+model BlogCategory {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  slug        String     @unique
+  description String?    @db.Text
+  color       String?    @default("#3B82F6")
+  status      String     @default("active")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  // Relations
+  posts       BlogPost[]
+  
+  @@index([slug])
+  @@index([status])
+  @@map("blog_categories")
+}
+
+model BlogTag {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  slug      String     @unique
+  color     String?    @default("#6B7280")
+  status    String     @default("active")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  // Relations
+  posts     BlogPost[]
+  
+  @@index([slug])
+  @@index([status])
+  @@map("blog_tags")
+}
+
+model BlogPost {
+  id              Int           @id @default(autoincrement())
+  title           String
+  slug            String        @unique
+  excerpt         String?       @db.Text
+  content         String        @db.LongText
+  featuredImage   String?
+  status          String        @default("draft") // draft, published, scheduled, archived
+  publishedAt     DateTime?
+  scheduledAt     DateTime?
+  views           Int           @default(0)
+  readingTime     Int?          // in minutes
+  seoTitle        String?
+  seoDescription  String?       @db.Text
+  seoKeywords     String?       @db.Text
+  authorId        Int
+  categoryId      Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  author          user          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category        BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags            BlogTag[]
+  
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([views])
+  @@map("blog_posts")
 }
