@@ -3,15 +3,18 @@
 import { GradientSpinner } from '@/components/ui/GradientSpinner';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaArrowRight } from 'react-icons/fa';
 
 interface BlogPost {
   id: number;
   title: string;
   excerpt: string;
-  image: string;
+  featuredImage?: string;
   slug: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface SectionProps {
@@ -31,24 +34,24 @@ const Section: React.FC<SectionProps> = ({ children, className = '' }) => (
 
 const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => (
   <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 h-full hover:-translate-y-1 group overflow-hidden">
-    <div className="relative h-64 w-full overflow-hidden">
+    <div className="relative overflow-hidden">
       <Image
-        src={post.image}
+        src={post.featuredImage || 'https://picsum.photos/800/400?random=' + post.id}
         alt={post.title}
-        fill
-        className="object-cover transition-transform duration-300 group-hover:scale-105"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        width={800}
+        height={250}
+        className="w-full h-[250px] object-cover transition-transform duration-300 group-hover:scale-105"
       />
     </div>
     <div className="p-6">
       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-200">
-        <Link href="/blog/blog-details">{post.title}</Link>
+        <Link href={`/blogs/${post.slug}`}>{post.title}</Link>
       </h3>
       <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4 line-clamp-3 transition-colors duration-200">
         {post.excerpt}
       </p>
       <Link
-        href="/blog/blog-details"
+        href={`/blogs/${post.slug}`}
         className="inline-flex items-center gap-2 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-4 py-2 text-sm rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
       >
         <span>Read more</span>
@@ -59,16 +62,20 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => (
 );
 
 const BlogPage: React.FC = () => {
+  const [allBlogPosts, setAllBlogPosts] = useState<BlogPost[]>([]);
   const [visiblePosts, setVisiblePosts] = useState(6);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const allBlogPosts: BlogPost[] = [
+  // Dummy data fallback
+  const dummyBlogPosts: BlogPost[] = [
     {
       id: 1,
       title: 'Lorem Ipsum Digital Marketing Strategies',
       excerpt:
         'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.',
-      image: 'https://picsum.photos/350/250?random=1',
+      featuredImage: 'https://picsum.photos/350/250?random=1',
       slug: 'lorem-ipsum-digital-marketing-strategies',
     },
     {
@@ -76,7 +83,7 @@ const BlogPage: React.FC = () => {
       title: 'Consectetur Adipiscing Social Media Trends',
       excerpt:
         'Consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco.',
-      image: 'https://picsum.photos/350/250?random=2',
+      featuredImage: 'https://picsum.photos/350/250?random=2',
       slug: 'consectetur-adipiscing-social-media-trends',
     },
     {
@@ -84,7 +91,7 @@ const BlogPage: React.FC = () => {
       title: 'Sed Do Eiusmod Content Creation Guide',
       excerpt:
         'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.',
-      image: 'https://picsum.photos/350/250?random=3',
+      featuredImage: 'https://picsum.photos/350/250?random=3',
       slug: 'sed-do-eiusmod-content-creation-guide',
     },
     {
@@ -92,7 +99,7 @@ const BlogPage: React.FC = () => {
       title: 'Tempor Incididunt Platform Comparison',
       excerpt:
         'Tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-      image: 'https://picsum.photos/350/250?random=4',
+      featuredImage: 'https://picsum.photos/350/250?random=4',
       slug: 'tempor-incididunt-platform-comparison',
     },
     {
@@ -100,7 +107,7 @@ const BlogPage: React.FC = () => {
       title: 'Ut Labore et Dolore Magna Branding Tips',
       excerpt:
         'Ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure.',
-      image: 'https://picsum.photos/350/250?random=5',
+      featuredImage: 'https://picsum.photos/350/250?random=5',
       slug: 'ut-labore-et-dolore-magna-branding-tips',
     },
     {
@@ -108,58 +115,44 @@ const BlogPage: React.FC = () => {
       title: 'Magna Aliqua Audience Engagement Methods',
       excerpt:
         'Magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.',
-      image: 'https://picsum.photos/350/250?random=6',
+      featuredImage: 'https://picsum.photos/350/250?random=6',
       slug: 'magna-aliqua-audience-engagement-methods',
     },
-    {
-      id: 7,
-      title: 'Ut Enim Ad Minim Growth Strategies',
-      excerpt:
-        'Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate.',
-      image: 'https://picsum.photos/350/250?random=7',
-      slug: 'ut-enim-ad-minim-growth-strategies',
-    },
-    {
-      id: 8,
-      title: 'Quis Nostrud Promotion Techniques',
-      excerpt:
-        'Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore.',
-      image: 'https://picsum.photos/350/250?random=8',
-      slug: 'quis-nostrud-promotion-techniques',
-    },
-    {
-      id: 9,
-      title: 'Exercitation Ullamco Viral Content Tips',
-      excerpt:
-        'Exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore eu fugiat.',
-      image: 'https://picsum.photos/350/250?random=9',
-      slug: 'exercitation-ullamco-viral-content-tips',
-    },
-    {
-      id: 10,
-      title: 'Laboris Nisi B2B Marketing Solutions',
-      excerpt:
-        'Laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
-      image: 'https://picsum.photos/350/250?random=10',
-      slug: 'laboris-nisi-b2b-marketing-solutions',
-    },
-    {
-      id: 11,
-      title: 'Ut Aliquip Future Marketing Trends',
-      excerpt:
-        'Ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint.',
-      image: 'https://picsum.photos/350/250?random=11',
-      slug: 'ut-aliquip-future-marketing-trends',
-    },
-    {
-      id: 12,
-      title: 'Ex Ea Commodo Community Building',
-      excerpt:
-        'Ex ea commodo consequat duis aute irure dolor in reprehenderit voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat.',
-      image: 'https://picsum.photos/350/250?random=12',
-      slug: 'ex-ea-commodo-community-building',
-    },
   ];
+
+  // Fetch blog posts from API
+  const fetchBlogPosts = async () => {
+    try {
+      setError(null);
+      const response = await fetch('/api/blogs?status=published&limit=50');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch blog posts');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.data && data.data.posts) {
+        setAllBlogPosts(data.data.posts);
+        console.log('Frontend: Fetched blog posts from API:', data.data.posts.length);
+      } else {
+        throw new Error('Invalid API response format');
+      }
+    } catch (error) {
+      console.error('Frontend: Error fetching blog posts:', error);
+      setError('Failed to load blog posts');
+      // Fallback to dummy data
+      setAllBlogPosts(dummyBlogPosts);
+      console.log('Frontend: Using dummy data as fallback');
+    } finally {
+      setIsInitialLoading(false);
+    }
+  };
+
+  // Load blog posts on component mount
+  useEffect(() => {
+    fetchBlogPosts();
+  }, []);
 
   const displayedPosts = allBlogPosts.slice(0, visiblePosts);
   const hasMorePosts = visiblePosts < allBlogPosts.length;
@@ -173,6 +166,19 @@ const BlogPage: React.FC = () => {
       setIsLoading(false);
     }, 1000);
   };
+
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <GradientSpinner size="lg" />
+          <p className="text-gray-600 dark:text-gray-300 mt-4 transition-colors duration-200">
+            Loading blog posts...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -196,22 +202,37 @@ const BlogPage: React.FC = () => {
             in the digital marketing landscape with cutting-edge strategies and
             expert guidance.
           </p>
+          {error && (
+            <div className="mt-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg">
+              <p className="text-yellow-800 dark:text-yellow-200 text-sm">
+                {error} - Showing sample content
+              </p>
+            </div>
+          )}
         </div>
       </Section>
 
       {/* Blog Posts Grid */}
       <Section className="pt-[30px]">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {displayedPosts.map((post) => (
-            <BlogCard key={post.id} post={post} />
-          ))}
-        </div>
+        {allBlogPosts.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600 dark:text-gray-300 text-lg transition-colors duration-200">
+              No blog posts available at the moment. Check back soon!
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {displayedPosts.map((post) => (
+              <BlogCard key={post.id} post={post} />
+            ))}
+          </div>
+        )}
       </Section>
 
       {/* Load More Section */}
       <Section className="pt-0 pb-[120px]">
         {/* Load More Button */}
-        {hasMorePosts && (
+        {hasMorePosts && allBlogPosts.length > 0 && (
           <div className="text-center">
             <button
               onClick={loadMorePosts}
@@ -220,6 +241,7 @@ const BlogPage: React.FC = () => {
             >
               {isLoading ? (
                 <>
+                  <GradientSpinner size="sm" />
                   <span>Loading...</span>
                 </>
               ) : (

@@ -82,16 +82,8 @@ const EditBlogPostPage = () => {
     setPageTitle('Edit Post', appName);
   }, [appName]);
 
-  // Dummy data for categories
-  const dummyCategories: PostCategory[] = [
-    { id: 0, name: 'Uncategorized' },
-    { id: 1, name: 'Technology' },
-    { id: 2, name: 'Business' },
-    { id: 3, name: 'Lifestyle' },
-    { id: 4, name: 'Health & Wellness' },
-    { id: 5, name: 'Travel' },
-    { id: 6, name: 'Food & Recipes' },
-  ];
+  // State for categories
+  const [categories, setCategories] = useState<PostCategory[]>([]);
 
   // Dummy data for available tags
   const dummyTags: PostTag[] = [
@@ -163,10 +155,38 @@ This is a sample blog post content that demonstrates how the edit functionality 
   const [isLoading, setIsLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [isLoadingPost, setIsLoadingPost] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   // Tag input state
   const [tagInput, setTagInput] = useState('');
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        const response = await fetch('/api/blogs/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.data || []);
+        } else {
+          showToast('Failed to load categories', 'error');
+          // Fallback to default category
+          setCategories([{ id: 1, name: 'Uncategorized' }]);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        showToast('Error loading categories', 'error');
+        // Fallback to default category
+        setCategories([{ id: 1, name: 'Uncategorized' }]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Load existing post data on component mount
   useEffect(() => {
@@ -272,22 +292,47 @@ This is a sample blog post content that demonstrates how the edit functionality 
     !formData.tags.includes(tag.name)
   );
 
-  // Handle image upload simulation
+  // Handle image upload
   const handleImageUpload = async (file: File) => {
     try {
       setImageUploading(true);
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Simulate successful upload
-      const imageUrl = URL.createObjectURL(file);
-      setFormData(prev => ({
-        ...prev,
-        featuredImage: imageUrl
-      }));
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast('Only image files (JPEG, PNG, GIF, WebP) are allowed', 'error');
+        return;
+      }
       
-      showToast('Image uploaded successfully!', 'success');
+      // Validate file size (5MB max)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        showToast('File size must be less than 5MB', 'error');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'uploads'); // Store in public/uploads folder
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(prev => ({
+          ...prev,
+          featuredImage: data.fileUrl
+        }));
+        showToast('Image uploaded successfully!', 'success');
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.error || 'Error uploading image', 'error');
+      }
     } catch (error) {
+      console.error('Error uploading image:', error);
       showToast('Error uploading image', 'error');
     } finally {
       setImageUploading(false);
@@ -654,12 +699,19 @@ This is a sample blog post content that demonstrates how the edit functionality 
                 value={formData.categoryId}
                 onChange={(e) => handleInputChange('categoryId', e.target.value)}
                 className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                disabled={categoriesLoading}
               >
-                {dummyCategories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
+                {categoriesLoading ? (
+                  <option value="">Loading categories...</option>
+                ) : categories.length > 0 ? (
+                  categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">No categories available</option>
+                )}
               </select>
             </div>
 

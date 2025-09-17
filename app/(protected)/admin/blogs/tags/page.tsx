@@ -71,7 +71,45 @@ const PostTagsPage = () => {
     setPageTitle('Post Tags', appName);
   }, [appName]);
 
-  // Dummy data for post tags with post counts (including some with 0 counts)
+  // API data state
+  const [tags, setTags] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch tags from API
+  const fetchTags = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/blogs/tags?includePostCount=true');
+      const data = await response.json();
+      
+      if (data.success) {
+        // Transform API data to match PostTag interface
+        const transformedTags = data.data.map(tag => ({
+          id: tag.id,
+          name: tag.name,
+          postCount: tag._count?.posts || 0,
+          createdAt: tag.createdAt
+        }));
+        setTags(transformedTags);
+      } else {
+        setError(data.error || 'Failed to fetch tags');
+      }
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+      setError('Failed to fetch tags');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load tags on component mount
+  useEffect(() => {
+    fetchTags();
+  }, []);
+
+  // Dummy data for post tags with post counts (fallback data)
   const dummyPostTags: PostTag[] = [
     {
       id: 1,
@@ -197,15 +235,27 @@ const PostTagsPage = () => {
 
   // State management
   const [postTags, setPostTags] =
-    useState<PostTag[]>(dummyPostTags);
+    useState<PostTag[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
-    total: dummyPostTags.length,
+    total: 0,
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
   });
+
+  // Update postTags when tags data changes
+  useEffect(() => {
+    if (tags.length > 0) {
+      setPostTags(tags);
+      setPagination(prev => ({
+        ...prev,
+        total: tags.length,
+        totalPages: Math.ceil(tags.length / prev.limit)
+      }));
+    }
+  }, [tags]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -217,8 +267,8 @@ const PostTagsPage = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
-  // Loading states
-  const [postTagsLoading, setPostTagsLoading] = useState(false);
+  // Loading states (using the loading state from API fetch)
+  // const [postTagsLoading, setPostTagsLoading] = useState(false);
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -271,23 +321,25 @@ const PostTagsPage = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const handleRefresh = () => {
-    setPostTagsLoading(true);
-    // Simulate loading
-    setTimeout(() => {
-      setPostTagsLoading(false);
-      showToast('Post tags refreshed successfully!', 'success');
-    }, 1000);
+  const handleRefresh = async () => {
+    await fetchTags();
+    showToast('Post tags refreshed successfully!', 'success');
   };
 
   // Handle post tag deletion
   const handleDeletePostTag = async (postTagId: number) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch(`/api/blogs/tags/${postTagId}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
 
-      setPostTags((prev) => prev.filter((pt) => pt.id !== postTagId));
-      showToast('Post tag deleted successfully', 'success');
+      if (data.success) {
+        showToast('Post tag deleted successfully', 'success');
+        fetchTags(); // Refresh the list
+      } else {
+        showToast(data.error || 'Error deleting post tag', 'error');
+      }
       setDeleteDialogOpen(false);
       setPostTagToDelete(null);
     } catch (error) {
@@ -301,24 +353,30 @@ const PostTagsPage = () => {
     if (!editingPostTag || !editName.trim()) return;
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch(`/api/blogs/tags/${editingPostTag.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editName.trim(),
+        }),
+      });
+      const data = await response.json();
 
-      setPostTags((prev) =>
-        prev.map((pt) =>
-          pt.id === editingPostTag.id
-            ? { ...pt, name: editName.trim() }
-            : pt
-        )
-      );
-
-      showToast('Post tag updated successfully', 'success');
-      setEditDialogOpen(false);
-      setEditingPostTag(null);
-      setEditName('');
+      if (data.success) {
+        showToast('Post tag updated successfully', 'success');
+        fetchTags(); // Refresh the list
+      } else {
+        showToast(data.error || 'Error updating post tag', 'error');
+      }
     } catch (error) {
       console.error('Error updating post tag:', error);
       showToast('Error updating post tag', 'error');
+    } finally {
+      setEditDialogOpen(false);
+      setEditingPostTag(null);
+      setEditName('');
     }
   };
 
@@ -327,23 +385,29 @@ const PostTagsPage = () => {
     if (!newPostTagName.trim()) return;
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch('/api/blogs/tags', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newPostTagName.trim(),
+        }),
+      });
+      const data = await response.json();
 
-      const newPostTag: PostTag = {
-        id: postTags.length + 1,
-        name: newPostTagName.trim(),
-        postCount: 0, // New post tags start with 0 posts
-        createdAt: new Date().toISOString(),
-      };
-
-      setPostTags((prev) => [newPostTag, ...prev]);
-      showToast('Post tag added successfully', 'success');
-      setAddDialogOpen(false);
-      setNewPostTagName('');
+      if (data.success) {
+        showToast('Post tag added successfully', 'success');
+        fetchTags(); // Refresh the list
+      } else {
+        showToast(data.error || 'Error adding post tag', 'error');
+      }
     } catch (error) {
       console.error('Error adding post tag:', error);
       showToast('Error adding post tag', 'error');
+    } finally {
+      setAddDialogOpen(false);
+      setNewPostTagName('');
     }
   };
 
@@ -396,10 +460,10 @@ const PostTagsPage = () => {
 
               <button
                 onClick={handleRefresh}
-                disabled={postTagsLoading}
+                disabled={loading}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
               >
-                <FaSync className={postTagsLoading ? 'animate-spin' : ''} />
+                <FaSync className={loading ? 'animate-spin' : ''} />
                 Refresh
               </button>
 
@@ -435,7 +499,7 @@ const PostTagsPage = () => {
         {/* Post Tags Table */}
         <div className="card">
           <div style={{ padding: '24px 24px 0px 24px' }}>
-            {postTagsLoading ? (
+            {loading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-3" />
@@ -443,6 +507,21 @@ const PostTagsPage = () => {
                     Loading post tags...
                   </div>
                 </div>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col justify-center items-center py-12 text-center">
+                <div className="text-red-500 mb-4">
+                  <FaTimes className="w-12 h-12 mx-auto mb-2" />
+                  <p className="text-lg font-semibold">Error loading tags</p>
+                  <p className="text-sm text-gray-600">{error}</p>
+                </div>
+                <button
+                  onClick={fetchTags}
+                  className="btn btn-primary flex items-center gap-2"
+                >
+                  <FaSync className="w-4 h-4" />
+                  Retry
+                </button>
               </div>
             ) : getPaginatedData().length === 0 ? (
               <div className="text-center py-12">
@@ -614,7 +693,7 @@ const PostTagsPage = () => {
                     className="text-sm"
                     style={{ color: 'var(--text-muted)' }}
                   >
-                    {postTagsLoading ? (
+                    {loading ? (
                       <div className="flex items-center gap-2">
                         <GradientSpinner size="w-4 h-4" />
                         <span>Loading pagination...</span>
@@ -638,7 +717,7 @@ const PostTagsPage = () => {
                           page: Math.max(1, prev.page - 1),
                         }))
                       }
-                      disabled={!pagination.hasPrev || postTagsLoading}
+                      disabled={!pagination.hasPrev || loading}
                       className="btn btn-secondary"
                     >
                       Previous
@@ -647,7 +726,7 @@ const PostTagsPage = () => {
                       className="text-sm"
                       style={{ color: 'var(--text-muted)' }}
                     >
-                      {postTagsLoading ? (
+                      {loading ? (
                         <GradientSpinner size="w-4 h-4" />
                       ) : (
                         `Page ${formatNumber(
@@ -662,7 +741,7 @@ const PostTagsPage = () => {
                           page: Math.min(prev.totalPages, prev.page + 1),
                         }))
                       }
-                      disabled={!pagination.hasNext || postTagsLoading}
+                      disabled={!pagination.hasNext || loading}
                       className="btn btn-secondary"
                     >
                       Next

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
+import parse from 'html-react-parser';
 import {
     FaArrowRight,
     FaCalendarAlt,
@@ -91,22 +92,110 @@ const popularTags = [
 // Sidebar Components
 const SearchBar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<BlogPost[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  // Live search functionality
+  useEffect(() => {
+    const searchPosts = async () => {
+      if (searchTerm.trim().length < 2) {
+        setSearchResults([]);
+        setShowResults(false);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        // Simulate API call - replace with actual API endpoint
+        const response = await fetch(`/api/blogs?search=${encodeURIComponent(searchTerm)}&limit=5`);
+        if (response.ok) {
+          const data = await response.json();
+          setSearchResults(data.data?.posts || []);
+          setShowResults(true);
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(searchPosts, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      window.location.href = `/blogs?search=${encodeURIComponent(searchTerm)}`;
+    }
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200">
+    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200 relative">
       <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
         Search
       </h3>
-      <div className="relative">
-        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-        <input
-          type="text"
-          placeholder="Search articles..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all duration-200"
-        />
-      </div>
+      <form onSubmit={handleSearchSubmit}>
+        <div className="relative">
+          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search articles..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onFocus={() => searchTerm.length >= 2 && setShowResults(true)}
+            onBlur={() => setTimeout(() => setShowResults(false), 200)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all duration-200"
+          />
+          {isSearching && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--primary)]"></div>
+            </div>
+          )}
+        </div>
+      </form>
+      
+      {/* Live Search Results */}
+      {showResults && searchResults.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+          {searchResults.map((post) => (
+            <Link
+              key={post.id}
+              href={`/blogs/blog-details?slug=${post.slug}`}
+              className="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors duration-200"
+              onClick={() => setShowResults(false)}
+            >
+              <div className="flex items-start space-x-3">
+                <Image
+                  src={post.image}
+                  alt={post.title}
+                  width={40}
+                  height={30}
+                  className="rounded object-cover flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">
+                    {post.title}
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-1">
+                    {post.excerpt}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+      
+      {/* No Results Message */}
+      {showResults && searchTerm.length >= 2 && searchResults.length === 0 && !isSearching && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 p-4 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">No articles found for "{searchTerm}"</p>
+        </div>
+      )}
     </div>
   );
 };
@@ -356,34 +445,57 @@ const BlogPost: React.FC = () => {
                 {/* Featured Image */}
                 <div className="mb-8">
                   <Image
-                    src="https://picsum.photos/800/400?random=10"
+                    src="https://picsum.photos/350/250?random=10"
                     alt="Lorem Ipsum Featured Image"
-                    width={800}
-                    height={400}
-                    className="w-full h-64 object-cover rounded-lg"
+                    width={350}
+                    height={250}
+                    className="w-full h-[250px] object-cover rounded-lg"
                   />
                 </div>
 
                 {/* Article Content */}
-                <div className="prose prose-lg max-w-none">
-                  <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-6 transition-colors duration-200">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                    do eiusmod tempor incididunt ut labore et dolore magna
-                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-                    ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                    Duis aute irure dolor in reprehenderit in voluptate velit
-                    esse cillum dolore eu fugiat nulla pariatur.
-                  </p>
+                <div className="prose prose-lg max-w-none dark:prose-invert">
+                  {/* Sample HTML content - this will be replaced with dynamic content from database */}
+                  {parse(`
+                    <p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-6 transition-colors duration-200">
+                      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+                      do eiusmod tempor incididunt ut labore et dolore magna
+                      aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+                      ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                      Duis aute irure dolor in reprehenderit in voluptate velit
+                      esse cillum dolore eu fugiat nulla pariatur.
+                    </p>
 
-                  <h2 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6 transition-colors duration-200">
-                    Sed Ut Perspiciatis Unde Omnis Iste Natus Error
-                  </h2>
+                    <h2 class="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6 transition-colors duration-200">
+                      Sed Ut Perspiciatis Unde Omnis Iste Natus Error
+                    </h2>
 
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-8 transition-colors duration-200">
-                    Sit voluptatem accusantium doloremque laudantium, totam rem
-                    aperiam, eaque ipsa quae ab illo inventore veritatis et
-                    quasi architecto beatae vitae dicta sunt explicabo.
-                  </p>  
+                    <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-8 transition-colors duration-200">
+                      Sit voluptatem accusantium doloremque laudantium, totam rem
+                      aperiam, eaque ipsa quae ab illo inventore veritatis et
+                      quasi architecto beatae vitae dicta sunt explicabo.
+                    </p>
+
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                      Rich Text Editor Support
+                    </h3>
+
+                    <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+                      This blog now supports <strong>HTML content</strong> created with the rich text editor. You can use:
+                    </p>
+
+                    <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 mb-4 space-y-2">
+                      <li><strong>Bold</strong> and <em>italic</em> text formatting</li>
+                      <li>Ordered and unordered lists</li>
+                      <li>Links and images</li>
+                      <li>Code blocks and inline code</li>
+                      <li>Tables and other rich content</li>
+                    </ul>
+
+                    <blockquote class="border-l-4 border-blue-500 pl-4 italic text-gray-700 dark:text-gray-300 mb-4">
+                      "The rich text editor makes it easy to create beautiful, formatted blog posts with HTML support."
+                    </blockquote>
+                  `)}
                 </div>
 
                 {/* Tags */}

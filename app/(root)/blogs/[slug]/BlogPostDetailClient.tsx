@@ -1,0 +1,575 @@
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    FaArrowRight,
+    FaCalendarAlt,
+    FaChartLine,
+    FaClock,
+    FaEnvelope,
+    FaEye,
+    FaFacebookF,
+    FaLinkedinIn,
+    FaSearch,
+    FaShare,
+    FaTag,
+    FaTwitter,
+    FaUser
+} from 'react-icons/fa';
+
+// Types
+interface BlogPost {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content: string;
+  featuredImage?: string;
+  status: string;
+  views: number;
+  readingTime?: number;
+  publishedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    id: string;
+    name: string;
+    image?: string;
+  };
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+    color?: string;
+  };
+  tags: Array<{
+    id: number;
+    name: string;
+    slug: string;
+    color?: string;
+  }>;
+}
+
+interface BlogPostDetailClientProps {
+  post: BlogPost;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  color?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    posts: number;
+  };
+}
+
+// Categories will be fetched from API
+
+const popularTags = [
+  'SMM',
+  'Marketing',
+  'Social Media',
+  'Content',
+  'Strategy',
+  'Analytics',
+  'Growth',
+  'Engagement',
+  'Branding',
+  'ROI',
+];
+
+// Sidebar Components
+const SearchBar: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<BlogPost[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  useEffect(() => {
+    const searchBlogs = async () => {
+      if (searchTerm.trim().length < 2) {
+        setSearchResults([]);
+        setShowResults(false);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const response = await fetch(`/api/blogs?search=${encodeURIComponent(searchTerm)}&limit=3`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            // Handle both array and object with posts property
+            const posts = Array.isArray(data.data) ? data.data : (data.data?.posts || []);
+            setSearchResults(posts);
+            setShowResults(true);
+          }
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(searchBlogs, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+
+  return (
+    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
+        Search
+      </h3>
+      <div className="relative">
+        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <input
+          type="text"
+          placeholder="Search articles..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onFocus={() => searchTerm.length >= 2 && setShowResults(true)}
+          onBlur={() => setTimeout(() => setShowResults(false), 200)}
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all duration-200"
+        />
+        
+        {showResults && searchResults.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
+            {searchResults.map((post) => (
+              <Link
+                key={post.id}
+                href={`/blogs/${post.slug}`}
+                className="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+              >
+                <h4 className="font-medium text-gray-900 dark:text-white text-sm line-clamp-2">
+                  {post.title}
+                </h4>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  {new Date(post.publishedAt).toLocaleDateString()}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
+        
+        {isSearching && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-4 text-center">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">Searching...</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const RecentPosts: React.FC = () => {
+  const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRecentPosts = async () => {
+      try {
+        const response = await fetch('/api/blogs?limit=3&sort=recent');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            // Handle both array and object with posts property
+            const posts = Array.isArray(data.data) ? data.data : (data.data?.posts || []);
+            setRecentPosts(posts);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching recent posts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecentPosts();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
+          Recent Posts
+        </h3>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
+        Recent Posts
+      </h3>
+      <div className="space-y-4">
+        {recentPosts.map((post) => (
+          <Link key={post.id} href={`/blogs/${post.slug}`} className="block group">
+            <div className="flex space-x-3">
+              <div className="flex-shrink-0">
+                <Image
+                   src={post.featuredImage || 'https://picsum.photos/300/200?random=1'}
+                   alt={post.title}
+                   width={80}
+                   height={60}
+                   className="rounded-lg object-cover"
+                    style={{ width: '80px', height: '60px', objectFit: 'cover' }}
+                 />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-[var(--primary)] dark:group-hover:text-[var(--secondary)] transition-colors duration-200 line-clamp-2">
+                  {post.title}
+                </h4>
+                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <FaCalendarAlt className="w-3 h-3 mr-1" />
+                  <span>{new Date(post.publishedAt).toLocaleDateString()}</span>
+                  <span className="mx-2">•</span>
+                  <FaClock className="w-3 h-3 mr-1" />
+                  <span>{post.readingTime || 5} min read</span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const Categories: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/blogs/categories?includePostCount=true&onlyActive=true');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setCategories(data.data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
+          Categories
+        </h3>
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
+        Categories
+      </h3>
+      <div className="space-y-2">
+        {categories.map((category) => (
+          <Link
+            key={category.slug}
+            href={`/blogs/category/${category.slug}`}
+            className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 group"
+          >
+            <span className="text-gray-700 dark:text-gray-300 group-hover:text-[var(--primary)] dark:group-hover:text-[var(--secondary)] transition-colors duration-200">
+              {category.name}
+            </span>
+            <span className="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs px-2 py-1 rounded-full">
+               {category._count?.posts || 0}
+             </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const PopularTags: React.FC = () => (
+  <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200">
+    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
+      Popular Tags
+    </h3>
+    <div className="flex flex-wrap gap-2">
+      {popularTags.map((tag) => (
+        <Link
+          key={tag}
+          href={`/blogs/tag/${tag.toLowerCase().replace(/\s+/g, '-')}`}
+          className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-[var(--primary)]/10 to-[var(--secondary)]/10 text-[var(--primary)] dark:text-[var(--secondary)] text-sm rounded-full hover:from-[var(--primary)]/20 hover:to-[var(--secondary)]/20 transition-all duration-200"
+        >
+          <FaTag className="w-3 h-3 mr-1" />
+          {tag}
+        </Link>
+      ))}
+    </div>
+  </div>
+);
+
+const TrendingWidget: React.FC = () => (
+  <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--secondary)]/5 dark:from-[var(--primary)]/10 dark:to-[var(--secondary)]/10 rounded-2xl p-6 mb-6 border border-[var(--primary)]/20 dark:border-[var(--secondary)]/20">
+    <div className="flex items-center mb-4">
+      <FaChartLine className="w-5 h-5 text-[var(--primary)] dark:text-[var(--secondary)] mr-2" />
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white transition-colors duration-200">
+        Trending Now
+      </h3>
+    </div>
+    <div className="space-y-3">
+      <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 transition-colors duration-200">
+          Social Media Marketing Trends 2024
+        </h4>
+        <p className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200">
+          Discover the latest trends shaping social media marketing strategies
+        </p>
+      </div>
+      <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 transition-colors duration-200">
+          Content Strategy Best Practices
+        </h4>
+        <p className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200">
+          Learn how to create engaging content that drives results
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+// Social Share Component
+const SocialShare: React.FC<{ post: BlogPost }> = ({ post }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Get current page URL when component mounts
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUrl(window.location.href);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && event.target && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const shareOnFacebook = () => {
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`;
+    window.open(url, '_blank', 'width=600,height=400');
+    setIsOpen(false);
+  };
+
+  const shareOnTwitter = () => {
+    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(post.title)}`;
+    window.open(url, '_blank', 'width=600,height=400');
+    setIsOpen(false);
+  };
+
+  const shareOnLinkedIn = () => {
+    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`;
+    window.open(url, '_blank', 'width=600,height=400');
+    setIsOpen(false);
+  };
+
+  const shareViaEmail = () => {
+    const subject = encodeURIComponent(post.title);
+    const body = encodeURIComponent(`Check out this article: ${post.title}\n\n${post.excerpt || 'Read this insightful article on SMMDOC blog.'}\n\nRead more: ${currentUrl}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-2 text-gray-500 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-200"
+      >
+        <FaShare className="w-4 h-4" />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute right-0 top-0 transform -translate-y-full -translate-y-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2 min-w-[160px] z-10">
+          <button
+            onClick={shareOnFacebook}
+            className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 rounded-md transition-colors duration-200"
+          >
+            <FaFacebookF className="w-4 h-4 mr-3 text-blue-600" />
+            Facebook
+          </button>
+          
+          <button
+            onClick={shareOnTwitter}
+            className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-500 dark:hover:text-blue-400 rounded-md transition-colors duration-200"
+          >
+            <FaTwitter className="w-4 h-4 mr-3 text-blue-500" />
+            Twitter
+          </button>
+          
+          <button
+            onClick={shareOnLinkedIn}
+            className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 rounded-md transition-colors duration-200"
+          >
+            <FaLinkedinIn className="w-4 h-4 mr-3 text-blue-700" />
+            LinkedIn
+          </button>
+          
+          <button
+            onClick={shareViaEmail}
+            className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 rounded-md transition-colors duration-200"
+          >
+            <FaEnvelope className="w-4 h-4 mr-3 text-gray-600" />
+            Email
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Main Blog Post Component
+const BlogPostDetailClient: React.FC<BlogPostDetailClientProps> = ({ post }) => {
+  return (
+    <div className="min-h-screen bg-white dark:bg-[#0d0712] transition-colors duration-200">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-[30px] lg:pt-[6  0px] pb-[120px]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            <article className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 overflow-hidden transition-colors duration-200">
+              {/* Article Header */}
+              <div className="p-8">
+                <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6 leading-tight transition-colors duration-200">
+                  {post.title}
+                </h1>
+
+                <div className="flex flex-wrap items-center text-gray-600 dark:text-gray-300 mb-6 gap-4">
+                   <div className="flex items-center">
+                     <FaCalendarAlt className="w-5 h-5 mr-2 text-[var(--primary)] dark:text-[var(--secondary)]" />
+                     <span>{new Date(post.publishedAt).toLocaleDateString('en-US', {
+                       year: 'numeric',
+                       month: 'long',
+                       day: 'numeric'
+                     })}</span>
+                   </div>
+                   <div className="flex items-center">
+                     <FaClock className="w-5 h-5 mr-2 text-[var(--primary)] dark:text-[var(--secondary)]" />
+                     <span>{post.readingTime || 8} min read</span>
+                   </div>
+                 </div>
+
+                {/* Featured Image */}
+                {post.featuredImage && (
+                  <div className="mb-8">
+                    <Image
+                       src={post.featuredImage}
+                       alt={post.title}
+                       width={800}
+                       height={450}
+                       className="w-full h-[450px] object-cover rounded-lg"
+                     />
+                  </div>
+                )}
+
+                {/* Article Content */}
+                <div className="prose prose-lg max-w-none">
+                  <div 
+                    className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200"
+                    dangerouslySetInnerHTML={{ __html: post.content }}
+                  />
+                </div>
+
+
+
+                {/* Call to Action */}
+                <div className="mt-8 p-6 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-2xl text-white">
+                  <h3 className="text-xl font-bold mb-2">
+                    Ready to Boost Your Social Media Presence?
+                  </h3>
+                  <p className="mb-4 text-purple-100">
+                    Join thousands of users experiencing explosive growth with our proven SMM services.
+                  </p>
+                  <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 bg-white text-[var(--primary)] hover:bg-gray-100 font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:-translate-y-1"
+                  >
+                    <span>Get Started Today</span>
+                    <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  </Link>
+                </div>
+
+                {/* Social Share */}
+                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-1">
+                        <FaEye className="w-4 h-4" />
+                        <span>{post.views} views</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Share:
+                      </span>
+                      <SocialShare post={post} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8">
+              <SearchBar />
+              <RecentPosts />
+              <TrendingWidget />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BlogPostDetailClient;
