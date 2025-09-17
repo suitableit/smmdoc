@@ -45,6 +45,11 @@ const nextConfig: NextConfig = {
     largePageDataBytes: 128 * 1000, // 128KB
     workerThreads: false,
     cpus: 1,
+    turbo: {
+      resolveAlias: {
+        '@vercel/turbopack-next/internal/font/google/font': 'next/font/google',
+      },
+    },
   },
   // Optimize for large data handling
   onDemandEntries: {

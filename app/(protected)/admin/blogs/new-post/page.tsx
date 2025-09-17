@@ -52,9 +52,7 @@ interface PostFormData {
   featuredImage: string;
   metaTitle: string;
   metaDescription: string;
-  status: 'draft' | 'published' | 'scheduled';
-  publishDate: string;
-  publishTime: string;
+  status: 'draft' | 'published';
 }
 
 const NewPostPage = () => {
@@ -84,8 +82,6 @@ const NewPostPage = () => {
     metaTitle: '',
     metaDescription: '',
     status: 'draft',
-    publishDate: new Date().toISOString().split('T')[0],
-    publishTime: new Date().toTimeString().slice(0, 5),
   });
 
   const [toast, setToast] = useState<{
@@ -222,14 +218,6 @@ const NewPostPage = () => {
       // Check availability of manually entered slug
       debouncedSlugCheck(value);
     }
-
-    // Auto-generate meta title if not manually set
-    if (field === 'title' && value && !formData.metaTitle) {
-      setFormData(prev => ({
-        ...prev,
-        metaTitle: value
-      }));
-    }
   };
 
   // Handle slug regeneration from title
@@ -293,7 +281,7 @@ const NewPostPage = () => {
   };
 
   // Handle form submission
-  const handleSubmit = async (status: 'draft' | 'published' | 'scheduled') => {
+  const handleSubmit = async (status: 'draft' | 'published') => {
     try {
       setIsLoading(true);
       
@@ -316,7 +304,6 @@ const NewPostPage = () => {
         featuredImage: formData.featuredImage,
         status,
         publishedAt: status === 'published' ? new Date().toISOString() : null,
-        scheduledAt: status === 'scheduled' ? `${formData.publishDate}T${formData.publishTime}` : null,
         seoTitle: formData.metaTitle,
         seoDescription: formData.metaDescription
       };
@@ -600,36 +587,8 @@ const NewPostPage = () => {
                   >
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
-                    <option value="scheduled">Scheduled</option>
                   </select>
                 </div>
-
-                {formData.status === 'scheduled' && (
-                  <>
-                    <div>
-                      <label className="form-label mb-2">
-                        Publish Date
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.publishDate}
-                        onChange={(e) => handleInputChange('publishDate', e.target.value)}
-                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label mb-2">
-                        Publish Time
-                      </label>
-                      <input
-                        type="time"
-                        value={formData.publishTime}
-                        onChange={(e) => handleInputChange('publishTime', e.target.value)}
-                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
-                      />
-                    </div>
-                  </>
-                )}
               </div>
             </div>
 
@@ -711,11 +670,7 @@ const NewPostPage = () => {
           className="btn btn-primary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
           disabled={isLoading}
         >
-          {isLoading ? (
-            <GradientSpinner size="w-4 h-4" />
-          ) : (
-            <FaGlobe className="h-4 w-4" />
-          )}
+          {!isLoading && <FaGlobe className="h-4 w-4" />}
           {isLoading ? 'Publishing...' : 'Publish'}
         </button>
       </div>

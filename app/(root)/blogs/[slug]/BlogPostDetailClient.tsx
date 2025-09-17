@@ -186,7 +186,7 @@ const RecentPosts: React.FC = () => {
             <div className="flex space-x-3">
               <div className="flex-shrink-0">
                 <Image
-                   src={post.featuredImage || 'https://picsum.photos/300/200?random=1'}
+                   src={post.featuredImage || '/placeholder.png'}
                    alt={post.title}
                    width={80}
                    height={60}

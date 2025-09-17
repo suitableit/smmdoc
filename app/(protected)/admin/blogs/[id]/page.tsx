@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import {
   FaArrowLeft,
   FaCheckCircle,
@@ -55,7 +56,7 @@ interface PostFormData {
   featuredImage: string;
   metaTitle: string;
   metaDescription: string;
-  status: 'draft' | 'published' | 'scheduled';
+  status: 'draft' | 'published';
   publishDate: string;
   publishTime: string;
   createdAt: string;
@@ -65,51 +66,54 @@ interface PostFormData {
 
 const EditBlogPostPage = () => {
   const { appName } = useAppNameWithFallback();
-
-  // Dummy existing post data (in real app, this would come from API/URL params)
-  const dummyExistingPost: PostFormData = {
-    id: 'post_001',
-    title: 'Getting Started with React Components',
-    slug: 'getting-started-react-components',
-    content: `# Getting Started with React Components
-
-React components are the building blocks of any React application. In this comprehensive guide, we'll explore how to create, manage, and optimize React components for better performance and maintainability.
-
-## What are React Components?
-
-React components are JavaScript functions or classes that return JSX (JavaScript XML) to describe what should appear on the screen. They allow you to split the UI into independent, reusable pieces.
-
-## Functional Components
-
-The most common way to define a component is with a JavaScript function:
-
-\`\`\`jsx
-function Welcome(props) {
-  return <h1>Hello, {props.name}!</h1>;
-}
-\`\`\`
-
-## Props and State
-
-Components can receive data through props and manage their own state using hooks like useState and useEffect.
-
-This is a sample blog post content that demonstrates how the edit functionality works.`,
-    excerpt: 'Learn the fundamentals of React components, from basic functional components to advanced patterns with hooks and state management.',
-    featuredImage: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop',
-    metaTitle: 'Getting Started with React Components - Complete Guide',
-    metaDescription: 'Master React components with this comprehensive guide covering functional components, props, state management, and best practices for modern React development.',
-    status: 'published',
-    publishDate: '2024-01-15',
-    publishTime: '10:00',
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-20T15:30:00Z',
-    author: 'John Doe'
-  };
+  const params = useParams();
+  const postId = params.id as string;
 
   // State management
-  const [formData, setFormData] = useState<PostFormData>(dummyExistingPost);
-  const [originalFormData, setOriginalFormData] = useState<PostFormData>(dummyExistingPost);
+  const [formData, setFormData] = useState<PostFormData>({
+    id: '',
+    title: '',
+    slug: '',
+    content: '',
+    excerpt: '',
+    featuredImage: '',
+    metaTitle: '',
+    metaDescription: '',
+    status: 'draft',
+    publishDate: '',
+    publishTime: '',
+    createdAt: '',
+    updatedAt: '',
+    author: ''
+  });
+  const [originalFormData, setOriginalFormData] = useState<PostFormData>({
+    id: '',
+    title: '',
+    slug: '',
+    content: '',
+    excerpt: '',
+    featuredImage: '',
+    metaTitle: '',
+    metaDescription: '',
+    status: 'draft',
+    publishDate: '',
+    publishTime: '',
+    createdAt: '',
+    updatedAt: '',
+    author: ''
+  });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Track which fields were auto-filled internally
+  const [autoFilledFields, setAutoFilledFields] = useState<{
+    excerpt: boolean;
+    metaTitle: boolean;
+    metaDescription: boolean;
+  }>({
+    excerpt: false,
+    metaTitle: false,
+    metaDescription: false
+  });
 
   const [toast, setToast] = useState<{
     message: string;
@@ -131,25 +135,76 @@ This is a sample blog post content that demonstrates how the edit functionality 
     const loadPost = async () => {
       try {
         setIsLoadingPost(true);
-        // Simulate API call to fetch post data
-        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // In real app, you would fetch based on post ID from URL params
-        // const postId = router.query.id;
-        // const postData = await fetchPost(postId);
+        // Fetch post data from API using the slug (postId)
+        const response = await fetch(`/api/blogs/id/${postId}`);
         
-        setFormData(dummyExistingPost);
-        setOriginalFormData(dummyExistingPost);
+        if (!response.ok) {
+          throw new Error('Failed to fetch post data');
+        }
+        
+        const postData = await response.json();
+        
+        // Auto-fill empty fields internally but don't show in form
+        const autoFilled = {
+          excerpt: false,
+          metaTitle: false,
+          metaDescription: false
+        };
+        
+        // Generate excerpt from content if empty
+        let excerpt = postData.excerpt || '';
+        if (!excerpt && postData.content) {
+          const textContent = postData.content.replace(/<[^>]*>/g, '').replace(/[#*`]/g, '');
+          excerpt = textContent.substring(0, 160) + (textContent.length > 160 ? '...' : '');
+          autoFilled.excerpt = true;
+        }
+        
+        // Generate meta title from title if empty
+        let metaTitle = postData.metaTitle || '';
+        if (!metaTitle && postData.title) {
+          metaTitle = postData.title;
+          autoFilled.metaTitle = true;
+        }
+        
+        // Generate meta description from excerpt/content if empty
+        let metaDescription = postData.metaDescription || '';
+        if (!metaDescription) {
+          if (excerpt) {
+            metaDescription = excerpt;
+          } else if (postData.content) {
+            const textContent = postData.content.replace(/<[^>]*>/g, '').replace(/[#*`]/g, '');
+            metaDescription = textContent.substring(0, 160) + (textContent.length > 160 ? '...' : '');
+          }
+          autoFilled.metaDescription = true;
+        }
+        
+        // Set form data with original values (empty fields remain empty in form)
+        const formDataToSet = {
+          ...postData,
+          excerpt: autoFilled.excerpt ? '' : excerpt,
+          metaTitle: autoFilled.metaTitle ? '' : metaTitle,
+          metaDescription: autoFilled.metaDescription ? '' : metaDescription,
+          publishDate: postData.publishedAt ? new Date(postData.publishedAt).toISOString().split('T')[0] : '',
+          publishTime: postData.publishedAt ? new Date(postData.publishedAt).toTimeString().slice(0, 5) : ''
+        };
+        
+        setFormData(formDataToSet);
+        setOriginalFormData(formDataToSet);
+        setAutoFilledFields(autoFilled);
         
       } catch (error) {
         showToast('Error loading post data', 'error');
+        console.error('Error loading post:', error);
       } finally {
         setIsLoadingPost(false);
       }
     };
 
-    loadPost();
-  }, []);
+    if (postId) {
+      loadPost();
+    }
+  }, [postId]);
 
   // Check for unsaved changes
   useEffect(() => {
@@ -182,6 +237,14 @@ This is a sample blog post content that demonstrates how the edit functionality 
       ...prev,
       [field]: value
     }));
+
+    // Update auto-filled tracking when user provides input
+    if (field === 'excerpt' || field === 'metaTitle' || field === 'metaDescription') {
+      setAutoFilledFields(prev => ({
+        ...prev,
+        [field]: false // Mark as not auto-filled since user provided input
+      }));
+    }
 
     // Auto-generate slug when title changes (only if slug hasn't been manually modified)
     if (field === 'title' && value) {
@@ -271,7 +334,7 @@ This is a sample blog post content that demonstrates how the edit functionality 
   };
 
   // Handle form submission
-  const handleSubmit = async (status: 'draft' | 'published' | 'scheduled') => {
+  const handleSubmit = async (status: 'draft' | 'published') => {
     try {
       setIsLoading(true);
       
@@ -286,24 +349,48 @@ This is a sample blog post content that demonstrates how the edit functionality 
         return;
       }
 
+      // Prepare data with auto-filled values for empty fields
+      const getFieldValue = (field: 'excerpt' | 'metaTitle' | 'metaDescription') => {
+        if (formData[field] && formData[field].trim()) {
+          return formData[field]; // User provided value
+        }
+        
+        // Use auto-filled value if field was auto-filled
+        if (autoFilledFields[field]) {
+          switch (field) {
+            case 'excerpt':
+              const textContent = formData.content.replace(/<[^>]*>/g, '').replace(/[#*`]/g, '');
+              return textContent.substring(0, 160) + (textContent.length > 160 ? '...' : '');
+            case 'metaTitle':
+              return formData.title;
+            case 'metaDescription':
+              const excerptText = formData.excerpt || formData.content.replace(/<[^>]*>/g, '').replace(/[#*`]/g, '');
+              return excerptText.substring(0, 160) + (excerptText.length > 160 ? '...' : '');
+            default:
+              return '';
+          }
+        }
+        
+        return formData[field]; // Return as is if not auto-filled
+      };
+
       const postData = {
         id: formData.id,
         title: formData.title,
         slug: formData.slug,
-        excerpt: formData.excerpt,
+        excerpt: getFieldValue('excerpt'),
         content: formData.content,
         featuredImage: formData.featuredImage,
         status,
         publishedAt: status === 'published' ? new Date().toISOString() : null,
-        scheduledAt: status === 'scheduled' ? `${formData.publishDate}T${formData.publishTime}` : null,
-        seoTitle: formData.metaTitle,
-        seoDescription: formData.metaDescription
+        seoTitle: getFieldValue('metaTitle'),
+        seoDescription: getFieldValue('metaDescription')
       };
       
       console.log('Updating post:', postData);
       
       // Call API to update blog post
-      const response = await fetch(`/api/blogs/${formData.id}`, {
+      const response = await fetch(`/api/blogs/${formData.slug}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -458,11 +545,7 @@ This is a sample blog post content that demonstrates how the edit functionality 
                 className="btn btn-primary flex items-center gap-2 px-4 py-2.5"
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <GradientSpinner size="w-4 h-4" />
-                ) : (
-                  <FaGlobe className="h-4 w-4" />
-                )}
+                {!isLoading && <FaGlobe className="h-4 w-4" />}
                 {isLoading ? 'Updating...' : 'Update & Publish'}
               </button>
             </div>
@@ -545,16 +628,26 @@ This is a sample blog post content that demonstrates how the edit functionality 
             {/* Post Excerpt */}
             <div className="card card-padding">
               <div>
-                <label className="form-label mb-2">Post Excerpt</label>
+                <label className="form-label mb-2">
+                  Post Excerpt
+                  {autoFilledFields.excerpt && (
+                    <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                      (Auto-generated)
+                    </span>
+                  )}
+                </label>
                 <textarea
                   value={formData.excerpt}
                   onChange={(e) => handleInputChange('excerpt', e.target.value)}
                   rows={3}
                   className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
-                  placeholder="Write a brief excerpt or summary of your post..."
+                  placeholder={autoFilledFields.excerpt ? "Auto-generated from content (leave empty to use auto-generated)" : "Write a brief excerpt or summary of your post..."}
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  This will be used in post previews and search results (optional)
+                  {autoFilledFields.excerpt 
+                    ? "This field will be auto-generated from your content if left empty"
+                    : "This will be used in post previews and search results (optional)"
+                  }
                 </p>
               </div>
             </div>
@@ -566,29 +659,45 @@ This is a sample blog post content that demonstrates how the edit functionality 
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="form-label mb-2">Meta Title</label>
+                  <label className="form-label mb-2">
+                    Meta Title
+                    {autoFilledFields.metaTitle && (
+                      <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                        (Auto-generated)
+                      </span>
+                    )}
+                  </label>
                   <input
                     type="text"
                     value={formData.metaTitle}
                     onChange={(e) => handleInputChange('metaTitle', e.target.value)}
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                    placeholder="SEO title for search engines..."
+                    placeholder={autoFilledFields.metaTitle ? "Auto-generated from title (leave empty to use auto-generated)" : "SEO title for search engines..."}
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     {formData.metaTitle.length}/60 characters (recommended)
+                    {autoFilledFields.metaTitle && " - Auto-generated from post title if left empty"}
                   </p>
                 </div>
                 <div>
-                  <label className="form-label mb-2">Meta Description</label>
+                  <label className="form-label mb-2">
+                    Meta Description
+                    {autoFilledFields.metaDescription && (
+                      <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                        (Auto-generated)
+                      </span>
+                    )}
+                  </label>
                   <textarea
                     value={formData.metaDescription}
                     onChange={(e) => handleInputChange('metaDescription', e.target.value)}
                     rows={3}
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
-                    placeholder="SEO description for search engines..."
+                    placeholder={autoFilledFields.metaDescription ? "Auto-generated from content (leave empty to use auto-generated)" : "SEO description for search engines..."}
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     {formData.metaDescription.length}/160 characters (recommended)
+                    {autoFilledFields.metaDescription && " - Auto-generated from content if left empty"}
                   </p>
                 </div>
               </div>
@@ -649,36 +758,9 @@ This is a sample blog post content that demonstrates how the edit functionality 
                   >
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
-                    <option value="scheduled">Scheduled</option>
                   </select>
                 </div>
 
-                {formData.status === 'scheduled' && (
-                  <>
-                    <div>
-                      <label className="form-label mb-2">
-                        Publish Date
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.publishDate}
-                        onChange={(e) => handleInputChange('publishDate', e.target.value)}
-                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label mb-2">
-                        Publish Time
-                      </label>
-                      <input
-                        type="time"
-                        value={formData.publishTime}
-                        onChange={(e) => handleInputChange('publishTime', e.target.value)}
-                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
-                      />
-                    </div>
-                  </>
-                )}
               </div>
             </div>
 
@@ -770,12 +852,8 @@ This is a sample blog post content that demonstrates how the edit functionality 
           className="btn btn-primary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
           disabled={isLoading}
         >
-          {isLoading ? (
-            <GradientSpinner size="w-4 h-4" />
-          ) : (
-            <FaGlobe className="h-4 w-4" />
-          )}
-          {isLoading ? 'Updating...' : 'Update & Publish'}
+          {!isLoading && <FaGlobe className="h-4 w-4" />}
+          {isLoading ? 'Publishing...' : 'Update & Publish'}
         </button>
       </div>
     </div>
