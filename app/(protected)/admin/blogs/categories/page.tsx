@@ -111,12 +111,6 @@ const PostCategoriesPage = () => {
   // Dummy fallback data (will be replaced by API data)
   const dummyPostCategories: PostCategory[] = [
     {
-      id: 1,
-      name: 'Uncategorized',
-      postCount: 5,
-      createdAt: '2024-01-01T00:00:00Z',
-    },
-    {
       id: 2,
       name: 'Technology',
       postCount: 42,

@@ -8,8 +8,6 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
-    const category = searchParams.get('category');
-    const tag = searchParams.get('tag');
     const search = searchParams.get('search');
     const status = searchParams.get('status'); // For admin filtering
     
@@ -31,20 +29,6 @@ export async function GET(req: NextRequest) {
       whereClause.status = status;
     }
     
-    if (category) {
-      whereClause.category = {
-        slug: category
-      };
-    }
-    
-    if (tag) {
-      whereClause.tags = {
-        some: {
-          slug: tag
-        }
-      };
-    }
-    
     if (search) {
       whereClause.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -63,22 +47,6 @@ export async function GET(req: NextRequest) {
               id: true,
               name: true,
               image: true
-            }
-          },
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              color: true
-            }
-          },
-          tags: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              color: true
             }
           }
         },
@@ -148,8 +116,6 @@ export async function POST(req: NextRequest) {
       status,
       publishedAt,
       scheduledAt,
-      categoryId,
-      tagIds,
       seoTitle,
       seoDescription,
       seoKeywords
@@ -211,11 +177,7 @@ export async function POST(req: NextRequest) {
         seoTitle,
         seoDescription,
         seoKeywords,
-        authorId: session.user.id,
-        categoryId: categoryId || 1, // Default to "Uncategorized" category
-        tags: tagIds ? {
-          connect: tagIds.map((id: number) => ({ id }))
-        } : undefined
+        authorId: session.user.id
       },
       include: {
         author: {
@@ -223,22 +185,6 @@ export async function POST(req: NextRequest) {
             id: true,
             name: true,
             image: true
-          }
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            color: true
-          }
-        },
-        tags: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            color: true
           }
         }
       }

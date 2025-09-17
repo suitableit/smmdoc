@@ -66,11 +66,6 @@ interface BlogPost {
     username: string;
     avatar?: string;
   };
-  category: {
-    id: number;
-    name: string;
-    slug: string;
-  };
   tags: string[];
   status: 'published' | 'draft' | 'scheduled' | 'archived';
   featuredImage?: string;
@@ -111,261 +106,9 @@ interface PaginationInfo {
 }
 
 // Dummy data for blog posts
-const dummyBlogs: BlogPost[] = [
-  {
-    id: 1001,
-    title: "The Ultimate Guide to Social Media Marketing in 2024",
-    slug: "ultimate-guide-social-media-marketing-2024",
-    excerpt: "Discover the latest strategies and trends that will help you dominate social media marketing this year.",
-    content: "Full blog content here...",
-    author: {
-      id: 101,
-      name: "Sarah Johnson",
-      username: "sarah_writes",
-      avatar: "/avatars/sarah.jpg"
-    },
-    category: {
-      id: 1,
-      name: "Social Media",
-      slug: "social-media"
-    },
-    tags: ["social media", "marketing", "2024", "strategy"],
-    status: "published",
-    featuredImage: "/blog/social-media-guide.jpg",
-    views: 15420,
-    likes: 892,
-    comments: 156,
-    publishedAt: "2024-06-15T10:30:00Z",
-    createdAt: "2024-06-10T14:20:00Z",
-    updatedAt: "2024-06-15T10:30:00Z",
-    readTime: 8,
-    seoTitle: "Ultimate Social Media Marketing Guide 2024 | Tips & Strategies",
-    seoDescription: "Learn the best social media marketing strategies for 2024. Complete guide with tips, trends, and actionable insights."
-  },
-  {
-    id: 1002,
-    title: "Instagram Growth Hacks That Actually Work",
-    slug: "instagram-growth-hacks-that-work",
-    excerpt: "Proven techniques to grow your Instagram following organically and boost engagement rates.",
-    content: "Full blog content here...",
-    author: {
-      id: 102,
-      name: "Mike Chen",
-      username: "mike_insta",
-      avatar: "/avatars/mike.jpg"
-    },
-    category: {
-      id: 2,
-      name: "Instagram",
-      slug: "instagram"
-    },
-    tags: ["instagram", "growth", "engagement", "followers"],
-    status: "published",
-    featuredImage: "/blog/instagram-growth.jpg",
-    views: 12350,
-    likes: 654,
-    comments: 89,
-    publishedAt: "2024-06-20T09:15:00Z",
-    createdAt: "2024-06-18T11:45:00Z",
-    updatedAt: "2024-06-20T09:15:00Z",
-    readTime: 6,
-    seoTitle: "Instagram Growth Hacks 2024 - Proven Strategies",
-    seoDescription: "Discover effective Instagram growth hacks that actually work. Boost your followers and engagement organically."
-  },
-  {
-    id: 1003,
-    title: "TikTok Algorithm Secrets: How to Go Viral",
-    slug: "tiktok-algorithm-secrets-go-viral",
-    excerpt: "Uncover the mysteries of TikTok's algorithm and learn how to create content that goes viral.",
-    content: "Full blog content here...",
-    author: {
-      id: 103,
-      name: "Emma Rodriguez",
-      username: "emma_tiktok",
-      avatar: "/avatars/emma.jpg"
-    },
-    category: {
-      id: 3,
-      name: "TikTok",
-      slug: "tiktok"
-    },
-    tags: ["tiktok", "algorithm", "viral", "content creation"],
-    status: "draft",
-    featuredImage: "/blog/tiktok-algorithm.jpg",
-    views: 0,
-    likes: 0,
-    comments: 0,
-    createdAt: "2024-06-25T16:30:00Z",
-    updatedAt: "2024-06-28T10:15:00Z",
-    readTime: 7,
-    seoTitle: "TikTok Algorithm Secrets - How to Go Viral in 2024",
-    seoDescription: "Learn TikTok algorithm secrets and discover how to create viral content that reaches millions."
-  },
-  {
-    id: 1004,
-    title: "YouTube SEO: Optimize Your Videos for Maximum Reach",
-    slug: "youtube-seo-optimize-videos-maximum-reach",
-    excerpt: "Master YouTube SEO techniques to increase your video visibility and grow your channel faster.",
-    content: "Full blog content here...",
-    author: {
-      id: 104,
-      name: "David Kim",
-      username: "david_youtube",
-      avatar: "/avatars/david.jpg"
-    },
-    category: {
-      id: 4,
-      name: "YouTube",
-      slug: "youtube"
-    },
-    tags: ["youtube", "seo", "optimization", "video marketing"],
-    status: "scheduled",
-    featuredImage: "/blog/youtube-seo.jpg",
-    views: 0,
-    likes: 0,
-    comments: 0,
-    scheduledAt: "2024-07-05T12:00:00Z",
-    createdAt: "2024-06-22T13:20:00Z",
-    updatedAt: "2024-06-30T09:45:00Z",
-    readTime: 10,
-    seoTitle: "YouTube SEO Guide 2024 - Optimize Videos for Growth",
-    seoDescription: "Complete YouTube SEO guide to optimize your videos for maximum reach and channel growth."
-  },
-  {
-    id: 1005,
-    title: "Content Calendar Planning: A Step-by-Step Guide",
-    slug: "content-calendar-planning-step-by-step-guide",
-    excerpt: "Learn how to create and maintain an effective content calendar that keeps your audience engaged.",
-    content: "Full blog content here...",
-    author: {
-      id: 105,
-      name: "Lisa Anderson",
-      username: "lisa_content",
-      avatar: "/avatars/lisa.jpg"
-    },
-    category: {
-      id: 5,
-      name: "Content Strategy",
-      slug: "content-strategy"
-    },
-    tags: ["content calendar", "planning", "strategy", "organization"],
-    status: "published",
-    featuredImage: "/blog/content-calendar.jpg",
-    views: 8750,
-    likes: 423,
-    comments: 67,
-    publishedAt: "2024-06-18T14:00:00Z",
-    createdAt: "2024-06-15T10:30:00Z",
-    updatedAt: "2024-06-18T14:00:00Z",
-    readTime: 5,
-    seoTitle: "Content Calendar Planning Guide - Step by Step Tutorial",
-    seoDescription: "Learn how to create an effective content calendar. Step-by-step guide with templates and best practices."
-  },
-  {
-    id: 1006,
-    title: "Facebook Ads vs. Organic Reach: What Works Best?",
-    slug: "facebook-ads-vs-organic-reach-what-works-best",
-    excerpt: "Compare Facebook advertising strategies and discover when to use paid vs organic approaches.",
-    content: "Full blog content here...",
-    author: {
-      id: 106,
-      name: "James Wilson",
-      username: "james_fb",
-      avatar: "/avatars/james.jpg"
-    },
-    category: {
-      id: 6,
-      name: "Facebook",
-      slug: "facebook"
-    },
-    tags: ["facebook", "advertising", "organic reach", "marketing"],
-    status: "archived",
-    featuredImage: "/blog/facebook-ads.jpg",
-    views: 5430,
-    likes: 187,
-    comments: 34,
-    publishedAt: "2024-05-10T11:20:00Z",
-    createdAt: "2024-05-08T15:45:00Z",
-    updatedAt: "2024-05-10T11:20:00Z",
-    readTime: 9,
-    seoTitle: "Facebook Ads vs Organic Reach - Complete Comparison",
-    seoDescription: "Detailed comparison of Facebook ads vs organic reach. Learn which strategy works best for your business."
-  },
-  {
-    id: 1007,
-    title: "Building a Personal Brand on LinkedIn",
-    slug: "building-personal-brand-linkedin",
-    excerpt: "Transform your LinkedIn profile into a powerful personal branding tool that attracts opportunities.",
-    content: "Full blog content here...",
-    author: {
-      id: 107,
-      name: "Rachel Green",
-      username: "rachel_linkedin",
-      avatar: "/avatars/rachel.jpg"
-    },
-    category: {
-      id: 7,
-      name: "LinkedIn",
-      slug: "linkedin"
-    },
-    tags: ["linkedin", "personal branding", "networking", "professional"],
-    status: "published",
-    featuredImage: "/blog/linkedin-branding.jpg",
-    views: 9840,
-    likes: 567,
-    comments: 78,
-    publishedAt: "2024-06-12T08:30:00Z",
-    createdAt: "2024-06-09T12:15:00Z",
-    updatedAt: "2024-06-12T08:30:00Z",
-    readTime: 7,
-    seoTitle: "Building a Personal Brand on LinkedIn - Complete Guide",
-    seoDescription: "Learn how to build a powerful personal brand on LinkedIn. Tips for profile optimization and content strategy."
-  },
-  {
-    id: 1008,
-    title: "The Psychology of Social Media Engagement",
-    slug: "psychology-social-media-engagement",
-    excerpt: "Understand the psychological triggers that drive social media engagement and how to use them ethically.",
-    content: "Full blog content here...",
-    author: {
-      id: 108,
-      name: "Dr. Alex Thompson",
-      username: "dr_alex",
-      avatar: "/avatars/alex.jpg"
-    },
-    category: {
-      id: 8,
-      name: "Psychology",
-      slug: "psychology"
-    },
-    tags: ["psychology", "engagement", "behavior", "social media"],
-    status: "draft",
-    featuredImage: "/blog/psychology-engagement.jpg",
-    views: 0,
-    likes: 0,
-    comments: 0,
-    createdAt: "2024-06-28T17:20:00Z",
-    updatedAt: "2024-07-01T14:30:00Z",
-    readTime: 12,
-    seoTitle: "Psychology of Social Media Engagement - Understanding User Behavior",
-    seoDescription: "Discover the psychology behind social media engagement. Learn how to create content that resonates with your audience."
-  }
-];
 
-const dummyStats: BlogStats = {
-  totalBlogs: 8,
-  publishedBlogs: 4,
-  draftBlogs: 2,
-  scheduledBlogs: 1,
-  archivedBlogs: 1,
-  totalViews: 51780,
-  totalLikes: 2723,
-  totalComments: 424,
-  averageReadTime: 8,
-  topCategories: 8,
-  todayViews: 1250,
-  thisMonthPosts: 5,
-};
+
+
 
 const BlogsPage = () => {
   const { appName } = useAppNameWithFallback();
@@ -379,7 +122,20 @@ const BlogsPage = () => {
 
   // State management
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
-  const [stats, setStats] = useState<BlogStats>(dummyStats);
+  const [stats, setStats] = useState<BlogStats>({
+    totalBlogs: 0,
+    publishedBlogs: 0,
+    draftBlogs: 0,
+    scheduledBlogs: 0,
+    archivedBlogs: 0,
+    totalViews: 0,
+    totalLikes: 0,
+    totalComments: 0,
+    averageReadTime: 0,
+    topCategories: 0,
+    todayViews: 0,
+    thisMonthPosts: 0,
+  });
 
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -480,15 +236,14 @@ const BlogsPage = () => {
     } catch (error) {
       console.error('Error fetching blogs for counts:', error);
       
-      // Fallback to dummy data calculation on error
-      const statusCounts = calculateStatusCounts(dummyBlogs);
+      // Set empty state on error
       setStats((prev) => ({
         ...prev,
-        publishedBlogs: statusCounts.published,
-        draftBlogs: statusCounts.draft,
-        scheduledBlogs: statusCounts.scheduled,
-        archivedBlogs: statusCounts.archived,
-        totalBlogs: dummyBlogs.length,
+        publishedBlogs: 0,
+        draftBlogs: 0,
+        scheduledBlogs: 0,
+        archivedBlogs: 0,
+        totalBlogs: 0,
       }));
     }
   };
@@ -532,32 +287,14 @@ const BlogsPage = () => {
       console.error('Error fetching blogs:', error);
       showToast('Error fetching blogs. Please try again.', 'error');
       
-      // Fallback to dummy data on error
-      let filteredBlogs = [...dummyBlogs];
-      if (statusFilter !== 'all') {
-        filteredBlogs = filteredBlogs.filter(blog => blog.status === statusFilter);
-      }
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        filteredBlogs = filteredBlogs.filter(
-          blog =>
-            blog.title?.toLowerCase().includes(searchLower) ||
-            blog.author.name?.toLowerCase().includes(searchLower) ||
-            blog.category.name?.toLowerCase().includes(searchLower) ||
-            blog.tags?.some(tag => tag.toLowerCase().includes(searchLower))
-        );
-      }
-      const startIndex = (pagination.page - 1) * pagination.limit;
-      const endIndex = startIndex + pagination.limit;
-      const paginatedBlogs = filteredBlogs.slice(startIndex, endIndex);
-      
-      setBlogs(paginatedBlogs);
+      // Set empty state on error
+      setBlogs([]);
       setPagination(prev => ({
         ...prev,
-        total: filteredBlogs.length,
-        totalPages: Math.ceil(filteredBlogs.length / pagination.limit),
-        hasNext: endIndex < filteredBlogs.length,
-        hasPrev: pagination.page > 1,
+        total: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
       }));
     } finally {
       setBlogsLoading(false);
@@ -581,9 +318,22 @@ const BlogsPage = () => {
     } catch (error) {
       console.error('Error fetching stats:', error);
       
-      // Fallback to dummy stats on error
-      setStats(dummyStats);
-      showToast('Error fetching statistics. Using cached data.', 'error');
+      // Set empty stats on error
+      setStats({
+        totalBlogs: 0,
+        publishedBlogs: 0,
+        draftBlogs: 0,
+        scheduledBlogs: 0,
+        archivedBlogs: 0,
+        totalViews: 0,
+        totalLikes: 0,
+        totalComments: 0,
+        averageReadTime: 0,
+        topCategories: 0,
+        todayViews: 0,
+        thisMonthPosts: 0,
+      });
+      showToast('Error fetching statistics. Please try again.', 'error');
     }
   };
 
@@ -908,7 +658,6 @@ const BlogsPage = () => {
               <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
                 <option value="title">Title</option>
                 <option value="author">Author</option>
-                <option value="category">Category</option>
                 <option value="tags">Tags</option>
               </select>
             </div>
@@ -1152,12 +901,7 @@ const BlogsPage = () => {
                         >
                           Author
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Category
-                        </th>
+
 
                         <th
                           className="text-left p-3 font-semibold"
@@ -1238,11 +982,7 @@ const BlogsPage = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="p-3">
-                            <div className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium w-fit">
-                              {blog.category?.name || 'Uncategorized'}
-                            </div>
-                          </td>
+
 
                           <td className="p-3">
                             <div>
@@ -1365,7 +1105,7 @@ const BlogsPage = () => {
                         </tr>
                       )) : (
                         <tr>
-                          <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                          <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                             No blogs available
                           </td>
                         </tr>

@@ -141,20 +141,6 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
-    title: 'Blog Categories',
-    href: '/admin/blogs/categories',
-    icon: 'FaThList',
-    label: 'Blog Categories',
-    roles: ['admin'],
-  },
-  {
-    title: 'Tags',
-    href: '/admin/blogs/tags',
-    icon: 'FaTags',
-    label: 'Tags',
-    roles: ['admin'],
-  },
-  {
     title: 'Announcements',
     href: '/admin/announcements',
     icon: 'FaBullhorn',

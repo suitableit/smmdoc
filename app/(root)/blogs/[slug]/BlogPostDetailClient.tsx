@@ -38,52 +38,13 @@ interface BlogPost {
     name: string;
     image?: string;
   };
-  category: {
-    id: number;
-    name: string;
-    slug: string;
-    color?: string;
-  };
-  tags: Array<{
-    id: number;
-    name: string;
-    slug: string;
-    color?: string;
-  }>;
 }
 
 interface BlogPostDetailClientProps {
   post: BlogPost;
 }
 
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  description?: string;
-  color?: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  _count?: {
-    posts: number;
-  };
-}
-
-// Categories will be fetched from API
-
-const popularTags = [
-  'SMM',
-  'Marketing',
-  'Social Media',
-  'Content',
-  'Strategy',
-  'Analytics',
-  'Growth',
-  'Engagement',
-  'Branding',
-  'ROI',
-];
+// Removed unused imports and constants related to categories and tags
 
 // Sidebar Components
 const SearchBar: React.FC = () => {
@@ -254,90 +215,12 @@ const RecentPosts: React.FC = () => {
 };
 
 const Categories: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch('/api/blogs/categories?includePostCount=true&onlyActive=true');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setCategories(data.data);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
-          Categories
-        </h3>
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="animate-pulse">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200">
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
-        Categories
-      </h3>
-      <div className="space-y-2">
-        {categories.map((category) => (
-          <Link
-            key={category.slug}
-            href={`/blogs/category/${category.slug}`}
-            className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 group"
-          >
-            <span className="text-gray-700 dark:text-gray-300 group-hover:text-[var(--primary)] dark:group-hover:text-[var(--secondary)] transition-colors duration-200">
-              {category.name}
-            </span>
-            <span className="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs px-2 py-1 rounded-full">
-               {category._count?.posts || 0}
-             </span>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
+  return null; // Component removed as categories are no longer used
 };
 
-const PopularTags: React.FC = () => (
-  <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 p-6 mb-6 transition-colors duration-200">
-    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">
-      Popular Tags
-    </h3>
-    <div className="flex flex-wrap gap-2">
-      {popularTags.map((tag) => (
-        <Link
-          key={tag}
-          href={`/blogs/tag/${tag.toLowerCase().replace(/\s+/g, '-')}`}
-          className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-[var(--primary)]/10 to-[var(--secondary)]/10 text-[var(--primary)] dark:text-[var(--secondary)] text-sm rounded-full hover:from-[var(--primary)]/20 hover:to-[var(--secondary)]/20 transition-all duration-200"
-        >
-          <FaTag className="w-3 h-3 mr-1" />
-          {tag}
-        </Link>
-      ))}
-    </div>
-  </div>
-);
+const PopularTags: React.FC = () => {
+  return null; // Component removed as tags are no longer used
+};
 
 const TrendingWidget: React.FC = () => (
   <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--secondary)]/5 dark:from-[var(--primary)]/10 dark:to-[var(--secondary)]/10 rounded-2xl p-6 mb-6 border border-[var(--primary)]/20 dark:border-[var(--secondary)]/20">

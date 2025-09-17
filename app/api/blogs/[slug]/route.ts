@@ -19,22 +19,6 @@ export async function GET(
             name: true,
             image: true
           }
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            color: true
-          }
-        },
-        tags: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            color: true
-          }
         }
       }
     });
@@ -121,8 +105,6 @@ export async function PUT(
       status,
       publishedAt,
       scheduledAt,
-      categoryId,
-      tagIds,
       seoTitle,
       seoDescription,
       seoKeywords
@@ -188,30 +170,9 @@ export async function PUT(
     }
     if (publishedAt !== undefined) updateData.publishedAt = publishedAt ? new Date(publishedAt) : null;
     if (scheduledAt !== undefined) updateData.scheduledAt = scheduledAt ? new Date(scheduledAt) : null;
-    if (categoryId !== undefined) updateData.categoryId = categoryId;
     if (seoTitle !== undefined) updateData.seoTitle = seoTitle;
     if (seoDescription !== undefined) updateData.seoDescription = seoDescription;
     if (seoKeywords !== undefined) updateData.seoKeywords = seoKeywords;
-
-    // Handle tags update
-    if (tagIds !== undefined) {
-      // First disconnect all existing tags
-      await db.blogPost.update({
-        where: { slug },
-        data: {
-          tags: {
-            set: []
-          }
-        }
-      });
-      
-      // Then connect new tags
-      if (tagIds.length > 0) {
-        updateData.tags = {
-          connect: tagIds.map((id: number) => ({ id }))
-        };
-      }
-    }
 
     // Update blog post
     const updatedPost = await db.blogPost.update({

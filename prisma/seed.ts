@@ -5,20 +5,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Create default "Uncategorized" blog category
-  const uncategorizedCategory = await prisma.blogCategory.upsert({
-    where: { slug: 'uncategorized' },
-    update: {},
-    create: {
-      name: 'Uncategorized',
-      slug: 'uncategorized',
-      description: 'Default category for blog posts without a specific category',
-      color: '#6B7280',
-      status: 'active'
-    }
-  });
-
-  console.log('✅ Default blog category created:', uncategorizedCategory);
+  // Database seeding can be extended here as needed
 
   console.log('🎉 Database seeding completed!');
 }
