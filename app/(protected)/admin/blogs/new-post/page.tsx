@@ -44,23 +44,11 @@ const Toast = ({
 );
 
 // Define interfaces
-interface PostCategory {
-  id: number;
-  name: string;
-}
-
-interface PostTag {
-  id: number;
-  name: string;
-}
-
 interface PostFormData {
   title: string;
   slug: string;
   content: string;
   excerpt: string;
-  categoryId: string;
-  tags: string[];
   featuredImage: string;
   metaTitle: string;
   metaDescription: string;
@@ -71,9 +59,6 @@ interface PostFormData {
 
 const NewPostPage = () => {
   const { appName } = useAppNameWithFallback();
-
-  // State for categories
-  const [categories, setCategories] = useState<PostCategory[]>([]);
 
   // Show toast notification
   const showToast = (
@@ -89,59 +74,12 @@ const NewPostPage = () => {
     setPageTitle('New Post', appName);
   }, [appName]);
 
-  // Fetch categories on component mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        console.log('Fetching categories...');
-        setCategoriesLoading(true);
-        const response = await fetch('/api/blogs/categories');
-        console.log('Categories response:', response.status, response.ok);
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Categories data:', data);
-          setCategories(data.data || []);
-        } else {
-          console.error('Failed to load categories:', response.status);
-          showToast('Failed to load categories', 'error');
-          // Fallback to default category
-          setCategories([{ id: 1, name: 'Uncategorized' }]);
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-        showToast('Error loading categories', 'error');
-        // Fallback to default category
-        setCategories([{ id: 1, name: 'Uncategorized' }]);
-      } finally {
-        setCategoriesLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  // Dummy data for available tags
-  const dummyTags: PostTag[] = [
-    { id: 1, name: 'JavaScript' },
-    { id: 2, name: 'React' },
-    { id: 3, name: 'Tutorial' },
-    { id: 4, name: 'Beginner' },
-    { id: 5, name: 'Web Development' },
-    { id: 6, name: 'CSS' },
-    { id: 7, name: 'Node.js' },
-    { id: 8, name: 'Frontend' },
-    { id: 9, name: 'Backend' },
-    { id: 10, name: 'API' },
-  ];
-
   // State management
   const [formData, setFormData] = useState<PostFormData>({
     title: '',
     slug: '',
     content: '',
     excerpt: '',
-    categoryId: '1', // Default to Uncategorized
-    tags: [],
     featuredImage: '',
     metaTitle: '',
     metaDescription: '',
@@ -158,18 +96,19 @@ const NewPostPage = () => {
   // Loading states
   const [isLoading, setIsLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-
-  // Tag input state
-  const [tagInput, setTagInput] = useState('');
-  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
 
   // Slug validation states
   const [slugStatus, setSlugStatus] = useState<{
     isChecking: boolean;
     isAvailable: boolean | null;
     message: string;
-  }>({ isChecking: false, isAvailable: null, message: '' });
+  }>({
+    isChecking: false,
+    isAvailable: null,
+    message: ''
+  });
+
+  // Track if slug was manually edited
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
 
   // Jodit editor configuration
@@ -306,41 +245,6 @@ const NewPostPage = () => {
     }
   };
 
-  // Handle tag addition
-  const addTag = (tagName: string) => {
-    const cleanTag = tagName.trim();
-    if (cleanTag && !formData.tags.includes(cleanTag)) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, cleanTag]
-      }));
-    }
-    setTagInput('');
-    setShowTagSuggestions(false);
-  };
-
-  // Handle tag removal
-  const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
-
-  // Handle tag input
-  const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addTag(tagInput);
-    }
-  };
-
-  // Filter tag suggestions
-  const tagSuggestions = dummyTags.filter(tag =>
-    tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
-    !formData.tags.includes(tag.name)
-  );
-
   // Handle image upload
   const handleImageUpload = async (file: File) => {
     try {
@@ -360,13 +264,13 @@ const NewPostPage = () => {
         return;
       }
       
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'uploads'); // Store in public/uploads folder
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      formDataUpload.append('type', 'uploads'); // Store in public/uploads folder
       
       const response = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        body: formDataUpload,
       });
       
       if (response.ok) {
@@ -413,11 +317,8 @@ const NewPostPage = () => {
         status,
         publishedAt: status === 'published' ? new Date().toISOString() : null,
         scheduledAt: status === 'scheduled' ? `${formData.publishDate}T${formData.publishTime}` : null,
-        categoryId: formData.category ? parseInt(formData.category) : 1, // Default to "Uncategorized"
-        tagIds: formData.tags.map(tag => parseInt(tag)),
-        seoTitle: formData.seoTitle,
-        seoDescription: formData.seoDescription,
-        seoKeywords: formData.seoKeywords
+        seoTitle: formData.metaTitle,
+        seoDescription: formData.metaDescription
       };
       
       console.log('Submitting post:', postData);
@@ -728,89 +629,6 @@ const NewPostPage = () => {
                       />
                     </div>
                   </>
-                )}
-              </div>
-            </div>
-
-            {/* Category */}
-            <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Category
-              </h3>
-              <select
-                value={formData.categoryId}
-                onChange={(e) => handleInputChange('categoryId', e.target.value)}
-                className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                disabled={categoriesLoading}
-              >
-                {categoriesLoading ? (
-                  <option value="">Loading categories...</option>
-                ) : categories.length > 0 ? (
-                  categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))
-                ) : (
-                  <option value="">No categories available</option>
-                )}
-              </select>
-            </div>
-
-            {/* Tags */}
-            <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Tags
-              </h3>
-              <div className="space-y-3">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={tagInput}
-                    onChange={(e) => {
-                      setTagInput(e.target.value);
-                      setShowTagSuggestions(true);
-                    }}
-                    onKeyDown={handleTagInput}
-                    onFocus={() => setShowTagSuggestions(true)}
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                    placeholder="Type tag name and press Enter..."
-                  />
-                  
-                  {/* Tag suggestions dropdown */}
-                  {showTagSuggestions && tagInput && tagSuggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 mt-1">
-                      {tagSuggestions.slice(0, 5).map(tag => (
-                        <button
-                          key={tag.id}
-                          onClick={() => addTag(tag.name)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg text-sm"
-                        >
-                          {tag.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Selected tags */}
-                {formData.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {formData.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
-                      >
-                        {tag}
-                        <button
-                          onClick={() => removeTag(tag)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <FaTimes className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
                 )}
               </div>
             </div>

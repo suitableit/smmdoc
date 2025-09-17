@@ -166,7 +166,7 @@ export default function SideBarNav({
           return supportItems.includes(item.title);
         }),
         posts: items.filter((item) =>
-          ['Blogs', 'Blog Categories', 'Tags', 'Announcements'].includes(item.title)
+          ['Blogs', 'Announcements'].includes(item.title)
         ),
         additional: items.filter((item) =>
           ['Affiliates', 'Analytics & Reports'].includes(

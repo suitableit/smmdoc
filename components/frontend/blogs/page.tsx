@@ -68,57 +68,7 @@ const BlogPage: React.FC = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Dummy data fallback
-  const dummyBlogPosts: BlogPost[] = [
-    {
-      id: 1,
-      title: 'Lorem Ipsum Digital Marketing Strategies',
-      excerpt:
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.',
-      featuredImage: 'https://picsum.photos/350/250?random=1',
-      slug: 'lorem-ipsum-digital-marketing-strategies',
-    },
-    {
-      id: 2,
-      title: 'Consectetur Adipiscing Social Media Trends',
-      excerpt:
-        'Consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco.',
-      featuredImage: 'https://picsum.photos/350/250?random=2',
-      slug: 'consectetur-adipiscing-social-media-trends',
-    },
-    {
-      id: 3,
-      title: 'Sed Do Eiusmod Content Creation Guide',
-      excerpt:
-        'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo.',
-      featuredImage: 'https://picsum.photos/350/250?random=3',
-      slug: 'sed-do-eiusmod-content-creation-guide',
-    },
-    {
-      id: 4,
-      title: 'Tempor Incididunt Platform Comparison',
-      excerpt:
-        'Tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-      featuredImage: 'https://picsum.photos/350/250?random=4',
-      slug: 'tempor-incididunt-platform-comparison',
-    },
-    {
-      id: 5,
-      title: 'Ut Labore et Dolore Magna Branding Tips',
-      excerpt:
-        'Ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure.',
-      featuredImage: 'https://picsum.photos/350/250?random=5',
-      slug: 'ut-labore-et-dolore-magna-branding-tips',
-    },
-    {
-      id: 6,
-      title: 'Magna Aliqua Audience Engagement Methods',
-      excerpt:
-        'Magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.',
-      featuredImage: 'https://picsum.photos/350/250?random=6',
-      slug: 'magna-aliqua-audience-engagement-methods',
-    },
-  ];
+
 
   // Fetch blog posts from API
   const fetchBlogPosts = async () => {
@@ -141,9 +91,9 @@ const BlogPage: React.FC = () => {
     } catch (error) {
       console.error('Frontend: Error fetching blog posts:', error);
       setError('Failed to load blog posts');
-      // Fallback to dummy data
-      setAllBlogPosts(dummyBlogPosts);
-      console.log('Frontend: Using dummy data as fallback');
+      // No fallback data - show empty state
+      setAllBlogPosts([]);
+      console.log('Frontend: No blog posts available');
     } finally {
       setIsInitialLoading(false);
     }

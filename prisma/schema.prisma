@@ -873,41 +873,6 @@ model ProviderOrderLog {
 }
 
 // Blog Models
-model BlogCategory {
-  id          Int        @id @default(autoincrement())
-  name        String     @unique
-  slug        String     @unique
-  description String?    @db.Text
-  color       String?    @default("#3B82F6")
-  status      String     @default("active")
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  
-  // Relations
-  posts       BlogPost[]
-  
-  @@index([slug])
-  @@index([status])
-  @@map("blog_categories")
-}
-
-model BlogTag {
-  id        Int        @id @default(autoincrement())
-  name      String     @unique
-  slug      String     @unique
-  color     String?    @default("#6B7280")
-  status    String     @default("active")
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  
-  // Relations
-  posts     BlogPost[]
-  
-  @@index([slug])
-  @@index([status])
-  @@map("blog_tags")
-}
-
 model BlogPost {
   id              Int           @id @default(autoincrement())
   title           String
@@ -924,20 +889,16 @@ model BlogPost {
   seoDescription  String?       @db.Text
   seoKeywords     String?       @db.Text
   authorId        Int
-  categoryId      Int?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   
   // Relations
   author          user          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  category        BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  tags            BlogTag[]
   
   @@index([slug])
   @@index([status])
   @@index([publishedAt])
   @@index([authorId])
-  @@index([categoryId])
   @@index([views])
   @@map("blog_posts")
 }

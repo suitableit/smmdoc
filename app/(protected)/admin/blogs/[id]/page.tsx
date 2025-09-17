@@ -11,6 +11,7 @@ import {
   FaTimes,
   FaUpload
 } from 'react-icons/fa';
+import JoditEditor from 'jodit-react';
 
 // Import APP_NAME constant
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
@@ -45,24 +46,12 @@ const Toast = ({
 );
 
 // Define interfaces
-interface PostCategory {
-  id: number;
-  name: string;
-}
-
-interface PostTag {
-  id: number;
-  name: string;
-}
-
 interface PostFormData {
   id: string;
   title: string;
   slug: string;
   content: string;
   excerpt: string;
-  categoryId: string;
-  tags: string[];
   featuredImage: string;
   metaTitle: string;
   metaDescription: string;
@@ -76,28 +65,6 @@ interface PostFormData {
 
 const EditBlogPostPage = () => {
   const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
-  useEffect(() => {
-    setPageTitle('Edit Post', appName);
-  }, [appName]);
-
-  // State for categories
-  const [categories, setCategories] = useState<PostCategory[]>([]);
-
-  // Dummy data for available tags
-  const dummyTags: PostTag[] = [
-    { id: 1, name: 'JavaScript' },
-    { id: 2, name: 'React' },
-    { id: 3, name: 'Tutorial' },
-    { id: 4, name: 'Beginner' },
-    { id: 5, name: 'Web Development' },
-    { id: 6, name: 'CSS' },
-    { id: 7, name: 'Node.js' },
-    { id: 8, name: 'Frontend' },
-    { id: 9, name: 'Backend' },
-    { id: 10, name: 'API' },
-  ];
 
   // Dummy existing post data (in real app, this would come from API/URL params)
   const dummyExistingPost: PostFormData = {
@@ -128,8 +95,6 @@ Components can receive data through props and manage their own state using hooks
 
 This is a sample blog post content that demonstrates how the edit functionality works.`,
     excerpt: 'Learn the fundamentals of React components, from basic functional components to advanced patterns with hooks and state management.',
-    categoryId: 'pc_001',
-    tags: ['React', 'JavaScript', 'Tutorial', 'Frontend'],
     featuredImage: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop',
     metaTitle: 'Getting Started with React Components - Complete Guide',
     metaDescription: 'Master React components with this comprehensive guide covering functional components, props, state management, and best practices for modern React development.',
@@ -155,38 +120,11 @@ This is a sample blog post content that demonstrates how the edit functionality 
   const [isLoading, setIsLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [isLoadingPost, setIsLoadingPost] = useState(true);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
-  // Tag input state
-  const [tagInput, setTagInput] = useState('');
-  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
-
-  // Fetch categories on component mount
+  // Set document title using useEffect for client-side
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setCategoriesLoading(true);
-        const response = await fetch('/api/blogs/categories');
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data.data || []);
-        } else {
-          showToast('Failed to load categories', 'error');
-          // Fallback to default category
-          setCategories([{ id: 1, name: 'Uncategorized' }]);
-        }
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-        showToast('Error loading categories', 'error');
-        // Fallback to default category
-        setCategories([{ id: 1, name: 'Uncategorized' }]);
-      } finally {
-        setCategoriesLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+    setPageTitle('Edit Post', appName);
+  }, [appName]);
 
   // Load existing post data on component mount
   useEffect(() => {
@@ -257,40 +195,33 @@ This is a sample blog post content that demonstrates how the edit functionality 
     }
   };
 
-  // Handle tag addition
-  const addTag = (tagName: string) => {
-    const cleanTag = tagName.trim();
-    if (cleanTag && !formData.tags.includes(cleanTag)) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, cleanTag]
-      }));
-    }
-    setTagInput('');
-    setShowTagSuggestions(false);
+  // Jodit editor configuration
+  const editorConfig = {
+    readonly: false,
+    placeholder: 'Write your post content here...',
+    height: 400,
+    toolbar: true,
+    spellcheck: true,
+    language: 'en',
+    toolbarButtonSize: 'middle',
+    theme: 'default',
+    enableDragAndDropFileToEditor: true,
+    uploader: {
+      insertImageAsBase64URI: true
+    },
+    removeButtons: ['source', 'fullsize', 'about'],
+    showCharsCounter: true,
+    showWordsCounter: true,
+    showXPathInStatusbar: false,
+    askBeforePasteHTML: false,
+    askBeforePasteFromWord: false,
+    defaultActionOnPaste: 'insert_clear_html',
+    style: {
+      background: '#ffffff',
+      color: '#000000'
+    },
+    editorCssClass: 'jodit-editor-white-bg'
   };
-
-  // Handle tag removal
-  const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
-
-  // Handle tag input
-  const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addTag(tagInput);
-    }
-  };
-
-  // Filter tag suggestions
-  const tagSuggestions = dummyTags.filter(tag =>
-    tag.name.toLowerCase().includes(tagInput.toLowerCase()) &&
-    !formData.tags.includes(tag.name)
-  );
 
   // Handle image upload
   const handleImageUpload = async (file: File) => {
@@ -311,13 +242,13 @@ This is a sample blog post content that demonstrates how the edit functionality 
         return;
       }
       
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'uploads'); // Store in public/uploads folder
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      formDataUpload.append('type', 'uploads'); // Store in public/uploads folder
       
       const response = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        body: formDataUpload,
       });
       
       if (response.ok) {
@@ -355,30 +286,49 @@ This is a sample blog post content that demonstrates how the edit functionality 
         return;
       }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
       const postData = {
-        ...formData,
+        id: formData.id,
+        title: formData.title,
+        slug: formData.slug,
+        excerpt: formData.excerpt,
+        content: formData.content,
+        featuredImage: formData.featuredImage,
         status,
-        updatedAt: new Date().toISOString(),
-        publishDate: status === 'scheduled' ? `${formData.publishDate}T${formData.publishTime}` : formData.publishDate,
+        publishedAt: status === 'published' ? new Date().toISOString() : null,
+        scheduledAt: status === 'scheduled' ? `${formData.publishDate}T${formData.publishTime}` : null,
+        seoTitle: formData.metaTitle,
+        seoDescription: formData.metaDescription
       };
       
       console.log('Updating post:', postData);
       
-      // Update the original form data to reflect saved state
-      setOriginalFormData(postData);
+      // Call API to update blog post
+      const response = await fetch(`/api/blogs/${formData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update blog post');
+      }
       
       showToast(
-        status === 'draft' ? 'Post updated and saved as draft!' : 'Post updated and published!',
+        status === 'draft' ? 'Post saved as draft!' : 'Post updated successfully!',
         'success'
       );
       
-      // Redirect to posts list after successful publication
+      // Update original form data to reflect saved state
+      setOriginalFormData(formData);
+      
+      // Redirect to blog list after successful update
       if (status === 'published') {
         setTimeout(() => {
-          window.location.href = '/admin/posts';
+          window.location.href = '/admin/blogs';
         }, 2000);
       }
       
@@ -400,20 +350,36 @@ This is a sample blog post content that demonstrates how the edit functionality 
 
   // Handle discard changes
   const handleDiscardChanges = () => {
-    if (window.confirm('Are you sure you want to discard all unsaved changes?')) {
-      setFormData(originalFormData);
-      showToast('Changes discarded', 'info');
+    if (hasUnsavedChanges) {
+      const confirmed = window.confirm('Are you sure you want to discard all unsaved changes?');
+      if (confirmed) {
+        setFormData(originalFormData);
+        showToast('Changes discarded', 'info');
+      }
     }
   };
 
-  // Show loading spinner while post data is being fetched
+  // Handle back navigation
+  const handleBack = () => {
+    if (hasUnsavedChanges) {
+      const confirmed = window.confirm('You have unsaved changes. Are you sure you want to leave?');
+      if (confirmed) {
+        window.location.href = '/admin/blogs';
+      }
+    } else {
+      window.location.href = '/admin/blogs';
+    }
+  };
+
   if (isLoadingPost) {
     return (
       <div className="page-container">
-        <div className="page-content flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
-            <p className="text-gray-600">Loading post data...</p>
+        <div className="page-content">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <GradientSpinner size="w-12 h-12" className="mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-400">Loading post...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -436,29 +402,41 @@ This is a sample blog post content that demonstrates how the edit functionality 
       <div className="page-content">
         {/* Page Header */}
         <div className="mb-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <button
-                  onClick={() => window.history.back()}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <FaArrowLeft className="h-4 w-4" />
-                </button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBack}
+                className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+              >
+                <FaArrowLeft className="h-5 w-5" />
+              </button>
+              <div>
                 <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   Edit Post
                 </h1>
-                {hasUnsavedChanges && (
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                    Unsaved changes
-                  </span>
-                )}
+                <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                  {hasUnsavedChanges && (
+                    <span className="text-orange-600 dark:text-orange-400 font-medium">
+                      • Unsaved changes
+                    </span>
+                  )}
+                  {!hasUnsavedChanges && (
+                    <span>Last updated: {new Date(formData.updatedAt).toLocaleDateString()}</span>
+                  )}
+                </p>
               </div>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                Last updated {new Date(formData.updatedAt).toLocaleDateString()} by {formData.author}
-              </p>
             </div>
             <div className="hidden md:flex items-center gap-3">
+              {hasUnsavedChanges && (
+                <button
+                  onClick={handleDiscardChanges}
+                  className="btn btn-ghost flex items-center gap-2 px-4 py-2.5"
+                  disabled={isLoading}
+                >
+                  <FaHistory className="h-4 w-4" />
+                  Discard Changes
+                </button>
+              )}
               <button
                 onClick={handlePreview}
                 className="btn btn-secondary flex items-center gap-2 px-4 py-2.5"
@@ -467,16 +445,6 @@ This is a sample blog post content that demonstrates how the edit functionality 
                 <FaEye className="h-4 w-4" />
                 Preview
               </button>
-              {hasUnsavedChanges && (
-                <button
-                  onClick={handleDiscardChanges}
-                  className="btn btn-outline flex items-center gap-2 px-4 py-2.5"
-                  disabled={isLoading}
-                >
-                  <FaTimes className="h-4 w-4" />
-                  Discard
-                </button>
-              )}
               <button
                 onClick={() => handleSubmit('draft')}
                 className="btn btn-secondary flex items-center gap-2 px-4 py-2.5"
@@ -521,15 +489,22 @@ This is a sample blog post content that demonstrates how the edit functionality 
                 </div>
                 <div>
                   <label className="form-label mb-2">URL Slug</label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">/blog/</span>
-                    <input
-                      type="text"
-                      value={formData.slug}
-                      onChange={(e) => handleInputChange('slug', e.target.value)}
-                      className="form-field flex-1 px-3 py-2 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                      placeholder="post-url-slug"
-                    />
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">/blog/</span>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          value={formData.slug}
+                          onChange={(e) => handleInputChange('slug', e.target.value)}
+                          className="form-field w-full px-3 py-2 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                          placeholder="post-url-slug"
+                        />
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Preview: <span className="font-mono">/blog/{formData.slug || 'your-post-slug'}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -541,15 +516,28 @@ This is a sample blog post content that demonstrates how the edit functionality 
                 <label className="form-label mb-2">
                   Post Content *
                 </label>
-                <textarea
-                  value={formData.content}
-                  onChange={(e) => handleInputChange('content', e.target.value)}
-                  rows={15}
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
-                  placeholder="Write your post content here..."
-                />
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                  <style jsx>{`
+                    :global(.jodit-editor-white-bg .jodit-wysiwyg) {
+                      background-color: #ffffff !important;
+                      color: #000000 !important;
+                    }
+                    :global(.jodit-editor-white-bg .jodit-wysiwyg *) {
+                      color: #000000 !important;
+                    }
+                    :global(.jodit-editor-white-bg .jodit-workplace) {
+                      background-color: #ffffff !important;
+                    }
+                  `}</style>
+                  <JoditEditor
+                    value={formData.content}
+                    config={editorConfig}
+                    onBlur={(newContent) => handleInputChange('content', newContent)}
+                    onChange={() => {}}
+                  />
+                </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Tip: You can use Markdown syntax for formatting (bold, italic, links, etc.)
+                  Use the rich text editor to format your content with images, links, and styling.
                 </p>
               </div>
             </div>
@@ -599,7 +587,7 @@ This is a sample blog post content that demonstrates how the edit functionality 
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
                     placeholder="SEO description for search engines..."
                   />
-                  <p className="text-xs text-gray-5000 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     {formData.metaDescription.length}/160 characters (recommended)
                   </p>
                 </div>
@@ -616,27 +604,31 @@ This is a sample blog post content that demonstrates how the edit functionality 
               </h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Post ID:</span>
-                  <span className="font-mono text-gray-900">{formData.id}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                  <span className={`font-medium capitalize ${
+                    formData.status === 'published' 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : formData.status === 'draft'
+                      ? 'text-yellow-600 dark:text-yellow-400'
+                      : 'text-blue-600 dark:text-blue-400'
+                  }`}>
+                    {formData.status}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Created:</span>
-                  <span className="text-gray-900">
+                  <span className="text-gray-600 dark:text-gray-400">Author:</span>
+                  <span className="font-medium">{formData.author}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Created:</span>
+                  <span className="font-medium">
                     {new Date(formData.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Author:</span>
-                  <span className="text-gray-900">{formData.author}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Current Status:</span>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    formData.status === 'published' ? 'bg-green-100 text-green-800' :
-                    formData.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
-                    {formData.status.charAt(0).toUpperCase() + formData.status.slice(1)}
+                  <span className="text-gray-600 dark:text-gray-400">Updated:</span>
+                  <span className="font-medium">
+                    {new Date(formData.updatedAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
@@ -690,89 +682,6 @@ This is a sample blog post content that demonstrates how the edit functionality 
               </div>
             </div>
 
-            {/* Category */}
-            <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Category
-              </h3>
-              <select
-                value={formData.categoryId}
-                onChange={(e) => handleInputChange('categoryId', e.target.value)}
-                className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                disabled={categoriesLoading}
-              >
-                {categoriesLoading ? (
-                  <option value="">Loading categories...</option>
-                ) : categories.length > 0 ? (
-                  categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))
-                ) : (
-                  <option value="">No categories available</option>
-                )}
-              </select>
-            </div>
-
-            {/* Tags */}
-            <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Tags
-              </h3>
-              <div className="space-y-3">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={tagInput}
-                    onChange={(e) => {
-                      setTagInput(e.target.value);
-                      setShowTagSuggestions(true);
-                    }}
-                    onKeyDown={handleTagInput}
-                    onFocus={() => setShowTagSuggestions(true)}
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                    placeholder="Type tag name and press Enter..."
-                  />
-                  
-                  {/* Tag suggestions dropdown */}
-                  {showTagSuggestions && tagInput && tagSuggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 mt-1">
-                      {tagSuggestions.slice(0, 5).map(tag => (
-                        <button
-                          key={tag.id}
-                          onClick={() => addTag(tag.name)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg text-sm"
-                        >
-                          {tag.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Selected tags */}
-                {formData.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {formData.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
-                      >
-                        {tag}
-                        <button
-                          onClick={() => removeTag(tag)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <FaTimes className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Featured Image */}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
@@ -822,20 +731,6 @@ This is a sample blog post content that demonstrates how the edit functionality 
                 )}
               </div>
             </div>
-
-            {/* Revision History */}
-            <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Revision History
-              </h3>
-              <button
-                onClick={() => showToast('Revision history coming soon!', 'info')}
-                className="btn btn-outline w-full flex items-center justify-center gap-2 px-4 py-2.5"
-              >
-                <FaHistory className="h-4 w-4" />
-                View History
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -843,6 +738,16 @@ This is a sample blog post content that demonstrates how the edit functionality 
       {/* Mobile Fixed Action Buttons */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex flex-wrap justify-center gap-3 md:hidden z-50">
         <div className="flex flex-1 gap-3">
+          {hasUnsavedChanges && (
+            <button
+              onClick={handleDiscardChanges}
+              className="btn btn-ghost flex items-center justify-center gap-2 px-4 py-2.5 w-full"
+              disabled={isLoading}
+            >
+              <FaHistory className="h-4 w-4" />
+              Discard
+            </button>
+          )}
           <button
             onClick={handlePreview}
             className="btn btn-secondary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
@@ -851,16 +756,6 @@ This is a sample blog post content that demonstrates how the edit functionality 
             <FaEye className="h-4 w-4" />
             Preview
           </button>
-          {hasUnsavedChanges && (
-            <button
-              onClick={handleDiscardChanges}
-              className="btn btn-outline flex items-center justify-center gap-2 px-4 py-2.5 w-full"
-              disabled={isLoading}
-            >
-              <FaTimes className="h-4 w-4" />
-              Discard
-            </button>
-          )}
           <button
             onClick={() => handleSubmit('draft')}
             className="btn btn-secondary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
@@ -872,7 +767,7 @@ This is a sample blog post content that demonstrates how the edit functionality 
         </div>
         <button
           onClick={() => handleSubmit('published')}
-          className="btn btn-primary flex items-center justify-center gap-2 px-4 py-2.2 w-full"
+          className="btn btn-primary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
           disabled={isLoading}
         >
           {isLoading ? (
