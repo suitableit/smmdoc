@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
             select: {
               id: true,
               name: true,
+              username: true,
               image: true
             }
           }
@@ -162,20 +163,37 @@ export async function POST(req: NextRequest) {
     const wordCount = content.split(/\s+/).length;
     const readingTime = Math.ceil(wordCount / 200);
 
+    // Auto-fill empty fields
+    // Strip HTML tags from content for auto-fill purposes
+    const stripHtml = (html: string) => {
+      return html.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').trim();
+    };
+    
+    const plainTextContent = stripHtml(content);
+    
+    // Auto-fill Meta Title from Post Title (first 60 characters)
+    const finalSeoTitle = seoTitle || (title.length > 60 ? title.substring(0, 60) + '...' : title);
+    
+    // Auto-fill Meta Description from Post Content (first 160 characters)
+    const finalSeoDescription = seoDescription || (plainTextContent.length > 160 ? plainTextContent.substring(0, 160) + '...' : plainTextContent);
+    
+    // Auto-fill Post Excerpt from Post Content (first 160 characters)
+    const finalExcerpt = excerpt || (plainTextContent.length > 160 ? plainTextContent.substring(0, 160) + '...' : plainTextContent);
+
     // Create blog post
     const post = await db.blogPost.create({
       data: {
         title,
         slug: finalSlug,
-        excerpt,
+        excerpt: finalExcerpt,
         content,
         featuredImage,
         status: status || 'draft',
         publishedAt: status === 'published' ? (publishedAt ? new Date(publishedAt) : new Date()) : null,
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
         readingTime,
-        seoTitle,
-        seoDescription,
+        seoTitle: finalSeoTitle,
+        seoDescription: finalSeoDescription,
         seoKeywords,
         authorId: session.user.id
       },
@@ -190,10 +208,18 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    // Return response with original empty values for fields that were auto-filled
+    const responsePost = {
+      ...post,
+      excerpt: excerpt || null, // Return original empty value if it was empty
+      seoTitle: seoTitle || null, // Return original empty value if it was empty
+      seoDescription: seoDescription || null // Return original empty value if it was empty
+    };
+
     return NextResponse.json({
       success: true,
       message: 'Blog post created successfully',
-      data: post
+      data: responsePost
     });
   } catch (error) {
     console.error('Error creating blog post:', error);

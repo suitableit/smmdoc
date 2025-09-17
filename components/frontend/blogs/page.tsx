@@ -36,7 +36,7 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => (
   <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 h-full hover:-translate-y-1 group overflow-hidden">
     <div className="relative overflow-hidden">
       <Image
-        src={post.featuredImage || 'https://picsum.photos/800/400?random=' + post.id}
+        src={post.featuredImage || '/placeholder.png'}
         alt={post.title}
         width={800}
         height={250}

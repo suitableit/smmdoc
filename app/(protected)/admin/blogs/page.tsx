@@ -67,13 +67,12 @@ interface BlogPost {
     avatar?: string;
   };
   tags: string[];
-  status: 'published' | 'draft' | 'scheduled' | 'archived';
+  status: 'published' | 'draft';
   featuredImage?: string;
   views: number;
   likes: number;
   comments: number;
   publishedAt?: string;
-  scheduledAt?: string;
   createdAt: string;
   updatedAt: string;
   readTime: number; // in minutes
@@ -85,8 +84,6 @@ interface BlogStats {
   totalBlogs: number;
   publishedBlogs: number;
   draftBlogs: number;
-  scheduledBlogs: number;
-  archivedBlogs: number;
   totalViews: number;
   totalLikes: number;
   totalComments: number;
@@ -126,8 +123,6 @@ const BlogsPage = () => {
     totalBlogs: 0,
     publishedBlogs: 0,
     draftBlogs: 0,
-    scheduledBlogs: 0,
-    archivedBlogs: 0,
     totalViews: 0,
     totalLikes: 0,
     totalComments: 0,
@@ -191,8 +186,6 @@ const BlogsPage = () => {
     const counts = {
       published: 0,
       draft: 0,
-      scheduled: 0,
-      archived: 0,
     };
 
     if (!Array.isArray(blogsData)) {
@@ -229,8 +222,6 @@ const BlogsPage = () => {
         ...prev,
         publishedBlogs: statusCounts.published,
         draftBlogs: statusCounts.draft,
-        scheduledBlogs: statusCounts.scheduled,
-        archivedBlogs: statusCounts.archived,
         totalBlogs: allBlogs.length,
       }));
     } catch (error) {
@@ -241,8 +232,6 @@ const BlogsPage = () => {
         ...prev,
         publishedBlogs: 0,
         draftBlogs: 0,
-        scheduledBlogs: 0,
-        archivedBlogs: 0,
         totalBlogs: 0,
       }));
     }
@@ -323,8 +312,6 @@ const BlogsPage = () => {
         totalBlogs: 0,
         publishedBlogs: 0,
         draftBlogs: 0,
-        scheduledBlogs: 0,
-        archivedBlogs: 0,
         totalViews: 0,
         totalLikes: 0,
         totalComments: 0,
@@ -410,10 +397,6 @@ const BlogsPage = () => {
         return <FaCheckCircle className="h-3 w-3 text-green-500" />;
       case 'draft':
         return <FaEdit className="h-3 w-3 text-gray-500" />;
-      case 'scheduled':
-        return <FaClock className="h-3 w-3 text-blue-500" />;
-      case 'archived':
-        return <FaBan className="h-3 w-3 text-red-500" />;
       default:
         return <FaClock className="h-3 w-3 text-gray-500" />;
     }
@@ -425,10 +408,6 @@ const BlogsPage = () => {
         return 'bg-green-100 text-green-700';
       case 'draft':
         return 'bg-gray-100 text-gray-700';
-      case 'scheduled':
-        return 'bg-blue-100 text-blue-700';
-      case 'archived':
-        return 'bg-red-100 text-red-700';
       default:
         return 'bg-gray-100 text-gray-700';
     }
@@ -450,9 +429,7 @@ const BlogsPage = () => {
   };
 
   const handleSelectAll = () => {
-    const selectableBlogs = Array.isArray(blogs) ? blogs.filter(
-      (blog) => blog.status !== 'archived'
-    ) : [];
+    const selectableBlogs = Array.isArray(blogs) ? blogs : [];
 
     const selectableIds = selectableBlogs.map((blog) => 
       blog.id.toString()
@@ -531,7 +508,7 @@ const BlogsPage = () => {
   ) => {
     try {
       const response = await fetch(`/api/admin/blogs/${blogId}/status`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -727,44 +704,6 @@ const BlogsPage = () => {
                     {stats.draftBlogs}
                   </span>
                 </button>
-                <button
-                  onClick={() => setStatusFilter('scheduled')}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
-                    statusFilter === 'scheduled'
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  Scheduled
-                  <span
-                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                      statusFilter === 'scheduled'
-                        ? 'bg-white/20'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}
-                  >
-                    {stats.scheduledBlogs}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setStatusFilter('archived')}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
-                    statusFilter === 'archived'
-                      ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  Archived
-                  <span
-                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                      statusFilter === 'archived'
-                        ? 'bg-white/20'
-                        : 'bg-red-100 text-red-700'
-                    }`}
-                  >
-                    {stats.archivedBlogs}
-                  </span>
-                </button>
               </div>
             </div>
           </div>
@@ -930,18 +869,16 @@ const BlogsPage = () => {
                           className="border-t hover:bg-gray-50 transition-colors duration-200"
                         >
                           <td className="p-3">
-                            {blog.status !== 'archived' && (
-                              <input
-                                type="checkbox"
-                                checked={selectedBlogs.includes(
-                                  blog.id.toString()
-                                )}
-                                onChange={() =>
-                                  handleSelectBlog(blog.id.toString())
-                                }
-                                className="rounded border-gray-300 w-4 h-4"
-                              />
-                            )}
+                            <input
+                              type="checkbox"
+                              checked={selectedBlogs.includes(
+                                blog.id.toString()
+                              )}
+                              onChange={() =>
+                                handleSelectBlog(blog.id.toString())
+                              }
+                              className="rounded border-gray-300 w-4 h-4"
+                            />
                           </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
@@ -972,13 +909,7 @@ const BlogsPage = () => {
                                 className="font-medium text-sm"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {blog.author?.name || 'Unknown'}
-                              </div>
-                              <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
-                              >
-                                @{blog.author?.username || 'unknown'}
+                                {blog.author?.username || 'unknown'}
                               </div>
                             </div>
                           </td>
@@ -1002,21 +933,7 @@ const BlogsPage = () => {
                                   </div>
                                 </>
                               )}
-                              {blog.status === 'scheduled' && blog.scheduledAt && (
-                                <>
-                                  <div
-                                    className="text-sm font-medium text-blue-600"
-                                  >
-                                    {formatDate(blog.scheduledAt)}
-                                  </div>
-                                  <div
-                                    className="text-xs text-blue-500"
-                                  >
-                                    {formatTime(blog.scheduledAt)}
-                                  </div>
-                                </>
-                              )}
-                              {(blog.status === 'draft' || blog.status === 'archived') && (
+                              {blog.status === 'draft' && (
                                 <div
                                   className="text-sm"
                                   style={{ color: 'var(--text-muted)' }}
@@ -1030,7 +947,6 @@ const BlogsPage = () => {
                             <div 
                               className={`flex items-center gap-1 px-2 py-1 rounded-full w-fit text-xs font-medium ${getStatusColor(blog.status)}`}
                             >
-                              {getStatusIcon(blog.status)}
                               <span className="capitalize">
                                 {blog.status}
                               </span>
@@ -1085,18 +1001,16 @@ const BlogsPage = () => {
                                       <FaCheckCircle className="h-3 w-3 text-green-600" />
                                       Change Status
                                     </button>
-                                    {blog.status !== 'archived' && (
-                                      <button
-                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
-                                        onClick={() => {
-                                          setDropdownOpen(null);
-                                          openDeleteDialog(blog.id, blog.title);
-                                        }}
-                                      >
-                                        <FaTrash className="h-3 w-3" />
-                                        Delete Blog
-                                      </button>
-                                    )}
+                                    <button
+                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                                      onClick={() => {
+                                        setDropdownOpen(null);
+                                        openDeleteDialog(blog.id, blog.title);
+                                      }}
+                                    >
+                                      <FaTrash className="h-3 w-3" />
+                                      Delete Blog
+                                    </button>
                                   </div>
                                 )}
                               </div>
@@ -1225,12 +1139,10 @@ const BlogsPage = () => {
                         <select
                           value={newStatus}
                           onChange={(e) => setNewStatus(e.target.value)}
-                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
+                          className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                         >
                           <option value="published">Published</option>
                           <option value="draft">Draft</option>
-                          <option value="scheduled">Scheduled</option>
-                          <option value="archived">Archived</option>
                         </select>
                       </div>
 
