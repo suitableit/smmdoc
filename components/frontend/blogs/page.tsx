@@ -220,7 +220,6 @@ const BlogPage: React.FC = () => {
             >
               {isLoading ? (
                 <>
-                  <GradientSpinner size="w-4 h-4" />
                   <span>Loading...</span>
                 </>
               ) : (

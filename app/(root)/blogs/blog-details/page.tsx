@@ -1,4 +1,4 @@
-import BlogPost from '@/components/frontend/blogs/blog-details';
+import BlogPost from '@/components/frontend/blogs/[id]/page';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
