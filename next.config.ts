@@ -1,85 +1,42 @@
-/**
- * @type {import('next').NextConfig}
- */
-
-import type { NextConfig } from "next";
-
-// Security headers configuration
-const securityHeaders = [
-  {
-    key: 'X-DNS-Prefetch-Control',
-    value: 'on'
-  },
-  {
-    key: 'Strict-Transport-Security',
-    value: 'max-age=63072000; includeSubDomains; preload'
-  },
-  {
-    key: 'X-XSS-Protection',
-    value: '1; mode=block'
-  },
-  {
-    key: 'X-Frame-Options',
-    value: 'SAMEORIGIN'
-  },
-  {
-    key: 'X-Content-Type-Options',
-    value: 'nosniff'
-  },
-  {
-    key: 'Referrer-Policy',
-    value: 'origin-when-cross-origin'
-  }
-];
-
-const nextConfig: NextConfig = {
-  // Security: Enable strict mode for production
-  eslint: {
-    ignoreDuringBuilds: true, // Ignore ESLint errors during build
-  },
-  typescript: {
-    ignoreBuildErrors: false, // Keep TypeScript errors for safety
-  },
-  // Memory optimization for large datasets
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Optimize Fast Refresh behavior
   experimental: {
-    largePageDataBytes: 128 * 1000, // 128KB
-    workerThreads: false,
-    cpus: 1,
-    turbo: {
-      resolveAlias: {
-        '@vercel/turbopack-next/internal/font/google/font': 'next/font/google',
-      },
+    // Reduce Fast Refresh sensitivity
+    optimizePackageImports: ['@/components', '@/hooks', '@/lib'],
+  },
+  
+  // Webpack configuration for better development experience
+  webpack: (config, { dev, isServer }) => {
+    if (dev && !isServer) {
+      // Reduce webpack polling for better performance
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+      };
+      
+      // Optimize module resolution
+      config.resolve.symlinks = false;
+    }
+    
+    return config;
+  },
+  
+  // Compiler options
+  compiler: {
+    // Remove console logs in production
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  
+  // Development server configuration
+  ...(process.env.NODE_ENV === 'development' && {
+    onDemandEntries: {
+      // Period (in ms) where the server will keep pages in the buffer
+      maxInactiveAge: 25 * 1000,
+      // Number of pages that should be kept simultaneously without being disposed
+      pagesBufferLength: 2,
     },
-  },
-  // Optimize for large data handling
-  onDemandEntries: {
-    maxInactiveAge: 25 * 1000,
-    pagesBufferLength: 2,
-  },
-  // Security headers
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: securityHeaders,
-      },
-    ];
-  },
-  images: {
-    formats: ['image/avif', 'image/webp'],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-      {
-        protocol: 'http',
-        hostname: '**',
-      }
-    ],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-  },
+  }),
 };
 
-export default nextConfig;
+module.exports = nextConfig;
