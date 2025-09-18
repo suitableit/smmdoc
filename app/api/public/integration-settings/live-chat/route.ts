@@ -39,7 +39,7 @@ export async function GET() {
       telegramUsername: integrationSettings.liveChatTelegramUsername || '',
       tawkToEnabled: integrationSettings.liveChatTawkToEnabled,
       tawkToWidgetCode: integrationSettings.liveChatTawkToCode || '',
-      visibility: 'all', // This field doesn't exist in schema, using default
+      visibility: integrationSettings.liveChatVisibility || 'all',
     };
 
     return NextResponse.json(liveChatSettings);
