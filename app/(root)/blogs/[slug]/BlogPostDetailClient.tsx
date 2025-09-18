@@ -63,13 +63,11 @@ const SearchBar: React.FC = () => {
 
       setIsSearching(true);
       try {
-        const response = await fetch(`/api/blogs?search=${encodeURIComponent(searchTerm)}&limit=3`);
+        const response = await fetch(`/api/blogs/search?term=${encodeURIComponent(searchTerm)}`);
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            // Handle both array and object with posts property
-            const posts = Array.isArray(data.data) ? data.data : (data.data?.posts || []);
-            setSearchResults(posts);
+            setSearchResults(data.data || []);
             setShowResults(true);
           }
         }
@@ -222,34 +220,93 @@ const PopularTags: React.FC = () => {
   return null; // Component removed as tags are no longer used
 };
 
-const TrendingWidget: React.FC = () => (
-  <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--secondary)]/5 dark:from-[var(--primary)]/10 dark:to-[var(--secondary)]/10 rounded-2xl p-6 mb-6 border border-[var(--primary)]/20 dark:border-[var(--secondary)]/20">
-    <div className="flex items-center mb-4">
-      <FaChartLine className="w-5 h-5 text-[var(--primary)] dark:text-[var(--secondary)] mr-2" />
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white transition-colors duration-200">
-        Trending Now
-      </h3>
-    </div>
-    <div className="space-y-3">
-      <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 transition-colors duration-200">
-          Social Media Marketing Trends 2024
-        </h4>
-        <p className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200">
-          Discover the latest trends shaping social media marketing strategies
-        </p>
+const TrendingWidget: React.FC = () => {
+  const [trendingPosts, setTrendingPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTrendingPosts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/blogs/trending');
+        if (!response.ok) {
+          throw new Error('Failed to fetch trending posts');
+        }
+        const data = await response.json();
+        setTrendingPosts(data.posts || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrendingPosts();
+  }, []);
+
+  return (
+    <div className="bg-gradient-to-br from-[var(--primary)]/5 to-[var(--secondary)]/5 dark:from-[var(--primary)]/10 dark:to-[var(--secondary)]/10 rounded-2xl p-6 mb-6 border border-[var(--primary)]/20 dark:border-[var(--secondary)]/20">
+      <div className="flex items-center mb-4">
+        <FaChartLine className="w-5 h-5 text-[var(--primary)] dark:text-[var(--secondary)] mr-2" />
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white transition-colors duration-200">
+          Trending Now
+        </h3>
       </div>
-      <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 transition-colors duration-200">
-          Content Strategy Best Practices
-        </h4>
-        <p className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200">
-          Learn how to create engaging content that drives results
-        </p>
-      </div>
+      
+      {loading && (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex space-x-3 animate-pulse">
+              <div className="flex-shrink-0">
+                <div className="w-20 h-15 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <div className="text-center py-4">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div>
+          {trendingPosts.length > 0 ? (
+            trendingPosts.map((post) => (
+              <Link key={post.id} href={`/blogs/${post.slug}`}>
+                <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200 cursor-pointer mb-3">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 transition-colors duration-200 line-clamp-2">
+                    {post.title}
+                  </h4>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-600 dark:text-gray-300 transition-colors duration-200 line-clamp-1">
+                      {post.excerpt || 'Read more about this trending topic'}
+                    </p>
+                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 ml-2">
+                      <FaEye className="w-3 h-3 mr-1" />
+                      {post.views}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300">No trending posts available</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 // Social Share Component
 const SocialShare: React.FC<{ post: BlogPost }> = ({ post }) => {

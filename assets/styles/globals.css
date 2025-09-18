@@ -932,6 +932,65 @@ li:not(.sidebar li):not(.bg-\[\#1B1E2F\] li) {
   color: #fff !important;
 }
 
+/* Jodit Editor White Background Theme */
+.jodit-editor-white-bg .jodit-wysiwyg {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.jodit-editor-white-bg .jodit-wysiwyg * {
+  color: #000000 !important;
+}
+
+.jodit-editor-white-bg .jodit-workplace {
+  background-color: #ffffff !important;
+}
+
+.jodit-editor-white-bg .jodit-container {
+  background-color: #ffffff !important;
+}
+
+.jodit-editor-white-bg .jodit-wysiwyg[contenteditable="true"] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.jodit-editor-white-bg .jodit-wysiwyg p {
+  color: #000000 !important;
+}
+
+.jodit-editor-white-bg .jodit-wysiwyg div {
+  color: #000000 !important;
+}
+
+.jodit-editor-white-bg .jodit-wysiwyg span {
+  color: #000000 !important;
+}
+
+.jodit-editor-white-bg .jodit-wysiwyg h1, 
+.jodit-editor-white-bg .jodit-wysiwyg h2, 
+.jodit-editor-white-bg .jodit-wysiwyg h3, 
+.jodit-editor-white-bg .jodit-wysiwyg h4, 
+.jodit-editor-white-bg .jodit-wysiwyg h5, 
+.jodit-editor-white-bg .jodit-wysiwyg h6 {
+  color: #000000 !important;
+}
+
+.jodit-editor-white-bg .jodit-wysiwyg ul, 
+.jodit-editor-white-bg .jodit-wysiwyg ol, 
+.jodit-editor-white-bg .jodit-wysiwyg li {
+  color: #000000 !important;
+}
+
+.jodit-editor-white-bg .jodit-wysiwyg a {
+  color: #0066cc !important;
+}
+
+.jodit-editor-white-bg .jodit-wysiwyg blockquote {
+  color: #000000 !important;
+  background-color: #f8f9fa !important;
+}
+
 /* Sidebar Styles */
 .sidebar-full-height {
   height: 100%;

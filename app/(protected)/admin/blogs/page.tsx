@@ -731,38 +731,98 @@ const BlogsPage = () => {
                     </option>
                     <option value="publish">Publish Selected</option>
                     <option value="draft">Move to Draft</option>
-                    <option value="archive">Archive Selected</option>
                     <option value="delete">Delete Selected</option>
                   </select>
                 </div>
 
                 {selectedBulkAction && (
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (selectedBulkAction === 'publish') {
-                        console.log('Bulk publish selected:', selectedBlogs);
-                        showToast(
-                          `Publishing ${selectedBlogs.length} selected blogs...`,
-                          'info'
-                        );
+                        try {
+                          const response = await fetch('/api/blogs/bulk', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              operation: 'publish',
+                              blogIds: selectedBlogs,
+                            }),
+                          });
+
+                          const data = await response.json();
+
+                          if (response.ok && data.success) {
+                            showToast(data.message, 'success');
+                            await fetchBlogs(); // Refresh the blogs list
+                            await fetchStats(); // Refresh stats
+                          } else {
+                            showToast(data.error || 'Failed to publish blogs', 'error');
+                          }
+                        } catch (error) {
+                          console.error('Error publishing blogs:', error);
+                          showToast('Failed to publish blogs', 'error');
+                        }
                       } else if (selectedBulkAction === 'draft') {
-                        console.log('Bulk draft selected:', selectedBlogs);
-                        showToast(
-                          `Moving ${selectedBlogs.length} selected blogs to draft...`,
-                          'info'
-                        );
-                      } else if (selectedBulkAction === 'archive') {
-                        console.log('Bulk archive selected:', selectedBlogs);
-                        showToast(
-                          `Archiving ${selectedBlogs.length} selected blogs...`,
-                          'info'
-                        );
+                        try {
+                          const response = await fetch('/api/blogs/bulk', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              operation: 'draft',
+                              blogIds: selectedBlogs,
+                            }),
+                          });
+
+                          const data = await response.json();
+
+                          if (response.ok && data.success) {
+                            showToast(data.message, 'success');
+                            await fetchBlogs(); // Refresh the blogs list
+                            await fetchStats(); // Refresh stats
+                          } else {
+                            showToast(data.error || 'Failed to move blogs to draft', 'error');
+                          }
+                        } catch (error) {
+                          console.error('Error moving blogs to draft:', error);
+                          showToast('Failed to move blogs to draft', 'error');
+                        }
                       } else if (selectedBulkAction === 'delete') {
-                        console.log('Bulk delete selected:', selectedBlogs);
-                        showToast(
-                          `Deleting ${selectedBlogs.length} selected blogs...`,
-                          'info'
+                        // Show confirmation dialog for delete
+                        const confirmed = window.confirm(
+                          `Are you sure you want to delete ${selectedBlogs.length} selected blog(s)? This action cannot be undone.`
                         );
+                        
+                        if (confirmed) {
+                          try {
+                            const response = await fetch('/api/blogs/bulk', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                operation: 'delete',
+                                blogIds: selectedBlogs,
+                              }),
+                            });
+
+                            const data = await response.json();
+
+                            if (response.ok && data.success) {
+                              showToast(data.message, 'success');
+                              await fetchBlogs(); // Refresh the blogs list
+                              await fetchStats(); // Refresh stats
+                            } else {
+                              showToast(data.error || 'Failed to delete blogs', 'error');
+                            }
+                          } catch (error) {
+                            console.error('Error deleting blogs:', error);
+                            showToast('Failed to delete blogs', 'error');
+                          }
+                        }
                       }
                       // Reset after action
                       setSelectedBulkAction('');

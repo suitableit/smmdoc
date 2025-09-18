@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import {
   FaArrowLeft,
   FaCheckCircle,
-  FaEye,
   FaGlobe,
   FaHistory,
   FaSave,
@@ -143,7 +142,13 @@ const EditBlogPostPage = () => {
           throw new Error('Failed to fetch post data');
         }
         
-        const postData = await response.json();
+        const responseData = await response.json();
+        
+        if (!responseData.success) {
+          throw new Error(responseData.error || 'Failed to fetch post data');
+        }
+        
+        const postData = responseData.data;
         
         // Auto-fill empty fields internally but don't show in form
         const autoFilled = {
@@ -179,14 +184,22 @@ const EditBlogPostPage = () => {
           autoFilled.metaDescription = true;
         }
         
-        // Set form data with original values (empty fields remain empty in form)
+        // Set form data with all the actual values from the API
         const formDataToSet = {
-          ...postData,
-          excerpt: autoFilled.excerpt ? '' : excerpt,
-          metaTitle: autoFilled.metaTitle ? '' : metaTitle,
-          metaDescription: autoFilled.metaDescription ? '' : metaDescription,
+          id: postData.id || '',
+          title: postData.title || '',
+          slug: postData.slug || '',
+          content: postData.content || '',
+          excerpt: postData.excerpt || excerpt,
+          featuredImage: postData.featuredImage || '',
+          metaTitle: postData.metaTitle || postData.seoTitle || metaTitle,
+          metaDescription: postData.metaDescription || postData.seoDescription || metaDescription,
+          status: postData.status || 'draft',
           publishDate: postData.publishedAt ? new Date(postData.publishedAt).toISOString().split('T')[0] : '',
-          publishTime: postData.publishedAt ? new Date(postData.publishedAt).toTimeString().slice(0, 5) : ''
+          publishTime: postData.publishedAt ? new Date(postData.publishedAt).toTimeString().slice(0, 5) : '',
+          createdAt: postData.createdAt || '',
+          updatedAt: postData.updatedAt || '',
+          author: postData.author?.username || postData.author?.name || postData.author || ''
         };
         
         setFormData(formDataToSet);
@@ -233,10 +246,16 @@ const EditBlogPostPage = () => {
 
   // Handle form field changes
   const handleInputChange = (field: keyof PostFormData, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    console.log(`Updating field ${field} with value:`, value);
+    
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [field]: value
+      };
+      console.log('Updated formData:', updated);
+      return updated;
+    });
 
     // Update auto-filled tracking when user provides input
     if (field === 'excerpt' || field === 'metaTitle' || field === 'metaDescription') {
@@ -258,8 +277,8 @@ const EditBlogPostPage = () => {
     }
   };
 
-  // Jodit editor configuration
-  const editorConfig = {
+  // Jodit editor configuration - memoized to prevent unnecessary re-renders
+  const editorConfig = useMemo(() => ({
     readonly: false,
     placeholder: 'Write your post content here...',
     height: 400,
@@ -283,8 +302,14 @@ const EditBlogPostPage = () => {
       background: '#ffffff',
       color: '#000000'
     },
-    editorCssClass: 'jodit-editor-white-bg'
-  };
+    editorCssClass: 'jodit-editor-white-bg',
+    events: {
+      afterInit: function (editor) {
+        // Ensure editor is properly initialized
+        editor.focus();
+      }
+    }
+  }), []);
 
   // Handle image upload
   const handleImageUpload = async (file: File) => {
@@ -338,7 +363,7 @@ const EditBlogPostPage = () => {
     try {
       setIsLoading(true);
       
-      // Basic validation
+      // Basic validation (same as new-post page)
       if (!formData.title.trim()) {
         showToast('Please enter a post title', 'error');
         return;
@@ -349,48 +374,22 @@ const EditBlogPostPage = () => {
         return;
       }
 
-      // Prepare data with auto-filled values for empty fields
-      const getFieldValue = (field: 'excerpt' | 'metaTitle' | 'metaDescription') => {
-        if (formData[field] && formData[field].trim()) {
-          return formData[field]; // User provided value
-        }
-        
-        // Use auto-filled value if field was auto-filled
-        if (autoFilledFields[field]) {
-          switch (field) {
-            case 'excerpt':
-              const textContent = formData.content.replace(/<[^>]*>/g, '').replace(/[#*`]/g, '');
-              return textContent.substring(0, 160) + (textContent.length > 160 ? '...' : '');
-            case 'metaTitle':
-              return formData.title;
-            case 'metaDescription':
-              const excerptText = formData.excerpt || formData.content.replace(/<[^>]*>/g, '').replace(/[#*`]/g, '');
-              return excerptText.substring(0, 160) + (excerptText.length > 160 ? '...' : '');
-            default:
-              return '';
-          }
-        }
-        
-        return formData[field]; // Return as is if not auto-filled
-      };
-
       const postData = {
-        id: formData.id,
         title: formData.title,
         slug: formData.slug,
-        excerpt: getFieldValue('excerpt'),
+        excerpt: formData.excerpt,
         content: formData.content,
         featuredImage: formData.featuredImage,
         status,
         publishedAt: status === 'published' ? new Date().toISOString() : null,
-        seoTitle: getFieldValue('metaTitle'),
-        seoDescription: getFieldValue('metaDescription')
+        seoTitle: formData.metaTitle,
+        seoDescription: formData.metaDescription
       };
       
       console.log('Updating post:', postData);
       
-      // Call API to update blog post
-      const response = await fetch(`/api/blogs/${formData.slug}`, {
+      // Call API to update blog post using ID instead of slug
+      const response = await fetch(`/api/blogs/id/${formData.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -426,14 +425,7 @@ const EditBlogPostPage = () => {
     }
   };
 
-  // Handle preview
-  const handlePreview = () => {
-    if (!formData.title.trim()) {
-      showToast('Please enter a title to preview', 'error');
-      return;
-    }
-    showToast('Preview functionality coming soon!', 'info');
-  };
+
 
   // Handle discard changes
   const handleDiscardChanges = () => {
@@ -525,14 +517,6 @@ const EditBlogPostPage = () => {
                 </button>
               )}
               <button
-                onClick={handlePreview}
-                className="btn btn-secondary flex items-center gap-2 px-4 py-2.5"
-                disabled={isLoading}
-              >
-                <FaEye className="h-4 w-4" />
-                Preview
-              </button>
-              <button
                 onClick={() => handleSubmit('draft')}
                 className="btn btn-secondary flex items-center gap-2 px-4 py-2.5"
                 disabled={isLoading}
@@ -574,7 +558,7 @@ const EditBlogPostPage = () => {
                   <label className="form-label mb-2">URL Slug</label>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">/blog/</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">/blogs/</span>
                       <div className="flex-1">
                         <input
                           type="text"
@@ -586,7 +570,7 @@ const EditBlogPostPage = () => {
                       </div>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Preview: <span className="font-mono">/blog/{formData.slug || 'your-post-slug'}</span>
+                      Preview: <span className="font-mono">/blogs/{formData.slug || 'your-post-slug'}</span>
                     </div>
                   </div>
                 </div>
@@ -600,23 +584,12 @@ const EditBlogPostPage = () => {
                   Post Content *
                 </label>
                 <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-                  <style jsx>{`
-                    :global(.jodit-editor-white-bg .jodit-wysiwyg) {
-                      background-color: #ffffff !important;
-                      color: #000000 !important;
-                    }
-                    :global(.jodit-editor-white-bg .jodit-wysiwyg *) {
-                      color: #000000 !important;
-                    }
-                    :global(.jodit-editor-white-bg .jodit-workplace) {
-                      background-color: #ffffff !important;
-                    }
-                  `}</style>
                   <JoditEditor
                     value={formData.content}
                     config={editorConfig}
                     onBlur={(newContent) => handleInputChange('content', newContent)}
-                    onChange={() => {}}
+                    onChange={(newContent) => handleInputChange('content', newContent)}
+                    className="jodit-editor-white-bg"
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
@@ -830,14 +803,6 @@ const EditBlogPostPage = () => {
               Discard
             </button>
           )}
-          <button
-            onClick={handlePreview}
-            className="btn btn-secondary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
-            disabled={isLoading}
-          >
-            <FaEye className="h-4 w-4" />
-            Preview
-          </button>
           <button
             onClick={() => handleSubmit('draft')}
             className="btn btn-secondary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
