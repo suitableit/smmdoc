@@ -599,20 +599,24 @@ const IntegrationPage = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {/* Loading cards */}
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="card card-padding h-fit">
-                <div className="flex items-center justify-center min-h-[200px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">Loading integrations...</div>
+        <div className="flex justify-center">
+          <div className="page-content">
+            <div className="columns-1 md:columns-3 gap-6 space-y-6">
+              {/* Loading cards */}
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="card card-padding h-fit break-inside-avoid mb-6">
+                  <div className="flex items-center justify-center min-h-[200px]">
+                    <div className="text-center flex flex-col items-center">
+                      <GradientSpinner size="w-12 h-12" className="mb-3" />
+                      <div className="text-base font-medium">Loading integrations...</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
+      </div>
       </div>
     );
   }
@@ -631,37 +635,20 @@ const IntegrationPage = () => {
       </div>
 
       <div className="page-content">
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {/* Live Chat Integration */}
-          <div className="card card-padding h-fit">
-            <div className="card-header">
-              <div className="card-icon">
-                <FaComments />
-              </div>
-              <h3 className="card-title">Live Chat</h3>
-            </div>
+        <div className="justify-center">
+          <div className="page-content">
+            <div className="columns-1 md:columns-3 gap-6 space-y-6">
+              {/* Live Chat Integration */}
+              <div className="card card-padding h-fit break-inside-avoid mb-6">
+                <div className="card-header">
+                  <div className="card-icon">
+                    <FaComments />
+                  </div>
+                  <h3 className="card-title">Live Chat</h3>
+                </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="form-label mb-1">Enable Live Chat</label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Add live chat functionality to your website
-                  </p>
-                </div>
-                <Switch
-                  checked={liveChatSettings.enabled}
-                  onClick={() =>
-                    setLiveChatSettings(prev => ({
-                      ...prev,
-                      enabled: !prev.enabled
-                    }))
-                  }
-                  title="Toggle live chat"
-                />
-              </div>
-
-              {/* Live Chat content is always visible regardless of the main toggle state */}
+              {/* Live Chat content is always visible */}
               <>
                 <div className="space-y-6">
                     {/* Social Media Section */}
@@ -901,7 +888,7 @@ const IntegrationPage = () => {
           </div>
 
           {/* Analytics Integration */}
-          <div className="card card-padding h-fit">
+          <div className="card card-padding h-fit break-inside-avoid mb-6">
             <div className="card-header">
               <div className="card-icon">
                 <FaChartLine />
@@ -910,26 +897,7 @@ const IntegrationPage = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="form-label mb-1">Enable Analytics</label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Track website analytics and user behavior
-                  </p>
-                </div>
-                <Switch
-                  checked={analyticsSettings.enabled}
-                  onClick={() =>
-                    setAnalyticsSettings(prev => ({
-                      ...prev,
-                      enabled: !prev.enabled
-                    }))
-                  }
-                  title="Toggle analytics"
-                />
-              </div>
-
-              {/* Analytics content is now always visible */}
+              {/* Analytics content is always visible */}
               <>
                 <div className="space-y-6">
                   {/* Google Analytics */}
@@ -1130,7 +1098,7 @@ const IntegrationPage = () => {
           </div>
 
           {/* ReCAPTCHA Integration */}
-          <div className="card card-padding h-fit">
+          <div className="card card-padding h-fit break-inside-avoid mb-6">
             <div className="card-header">
               <div className="card-icon">
                 <FaShieldAlt />
@@ -1451,7 +1419,7 @@ const IntegrationPage = () => {
           </div>
 
           {/* Notification Integration */}
-          <div className="card card-padding h-fit">
+          <div className="card card-padding h-fit break-inside-avoid mb-6">
             <div className="card-header">
               <div className="card-icon">
                 <FaBell />
@@ -2089,6 +2057,8 @@ const IntegrationPage = () => {
                   </button>
                 </div>
               </div>
+            </div>
+            </div>
             </div>
           </div>
         </div>
