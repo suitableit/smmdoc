@@ -4,9 +4,11 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    console.log('🔍 Integration settings API called');
     const session = await auth();
     
     if (!session?.user?.id) {
+      console.log('❌ Unauthorized - no session or user ID');
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }
@@ -20,14 +22,30 @@ export async function GET() {
     });
 
     if (user?.role !== 'admin') {
+      console.log('❌ Access denied - user is not admin:', user?.role);
       return NextResponse.json(
         { success: false, message: 'Access denied' },
         { status: 403 }
       );
     }
 
+    console.log('✅ User authorized as admin');
+
     // Get integration settings
+    console.log('🔍 Querying database for integration settings...');
     const dbSettings = await db.integrationSettings.findFirst();
+    console.log('📦 Database query result:', dbSettings ? 'Found settings' : 'No settings found');
+    
+    if (dbSettings) {
+      console.log('🔐 ReCAPTCHA settings from DB:', {
+        enabled: dbSettings.recaptchaEnabled,
+        version: dbSettings.recaptchaVersion,
+        v2SiteKey: dbSettings.recaptchaV2SiteKey ? '***' : 'empty',
+        v2SecretKey: dbSettings.recaptchaV2SecretKey ? '***' : 'empty',
+        v3SiteKey: dbSettings.recaptchaV3SiteKey ? '***' : 'empty',
+        v3SecretKey: dbSettings.recaptchaV3SecretKey ? '***' : 'empty',
+      });
+    }
     
     // Transform the database response to match the new v2/v3 structure
     const integrationSettings = dbSettings ? {
@@ -39,7 +57,7 @@ export async function GET() {
       v3: {
         siteKey: dbSettings.recaptchaV3SiteKey || '',
         secretKey: dbSettings.recaptchaV3SecretKey || '',
-        threshold: dbSettings.recaptchaThreshold,
+        threshold: dbSettings.recaptchaThreshold || 0.5,
       },
     } : {
       // Default values when no settings exist
@@ -109,12 +127,19 @@ export async function GET() {
       adminNotifNewChildPanelOrders: false,
     };
 
+    console.log('📤 Returning integration settings:', {
+      success: true,
+      hasSettings: !!dbSettings,
+      recaptchaEnabled: integrationSettings.recaptchaEnabled,
+      recaptchaVersion: integrationSettings.recaptchaVersion,
+    });
+
     return NextResponse.json({
       success: true,
       integrationSettings,
     });
   } catch (error) {
-    console.error('Error fetching integration settings:', error);
+    console.error('💥 Error fetching integration settings:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

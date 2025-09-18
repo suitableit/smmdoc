@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Default ticket settings
 const defaultTicketSettings = {
+  ticketSystemEnabled: true,
   maxPendingTickets: '3',
   subjects: [],
 };
@@ -28,6 +29,7 @@ export async function GET() {
     if (!settings) {
       settings = await db.ticket_settings.create({
         data: {
+          ticketSystemEnabled: defaultTicketSettings.ticketSystemEnabled,
           maxPendingTickets: defaultTicketSettings.maxPendingTickets,
           updatedAt: new Date()
         },
@@ -40,6 +42,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       ticketSettings: {
+        ticketSystemEnabled: settings.ticketSystemEnabled,
         maxPendingTickets: settings.maxPendingTickets,
         subjects: settings.ticket_subjects.map((subject: any) => ({
           id: subject.id,
@@ -104,11 +107,13 @@ export async function POST(request: NextRequest) {
     await db.ticket_settings.upsert({
       where: { id: 1 },
       update: {
+        ticketSystemEnabled: ticketSettings.ticketSystemEnabled ?? true,
         maxPendingTickets: ticketSettings.maxPendingTickets ?? '3',
         updatedAt: new Date(),
       },
       create: {
         id: 1,
+        ticketSystemEnabled: ticketSettings.ticketSystemEnabled ?? true,
         maxPendingTickets: ticketSettings.maxPendingTickets ?? '3',
         createdAt: new Date(),
         updatedAt: new Date(),
