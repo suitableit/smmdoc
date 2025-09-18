@@ -376,15 +376,15 @@ const IntegrationPage = () => {
           integrationSettings: {
             liveChatEnabled: liveChatSettings.enabled,
             liveChatHoverTitle: liveChatSettings.hoverTitle,
-            socialMediaEnabled: liveChatSettings.socialMediaEnabled,
-            messengerEnabled: liveChatSettings.messengerEnabled,
-            messengerUrl: liveChatSettings.messengerUrl,
-            whatsappEnabled: liveChatSettings.whatsappEnabled,
-            whatsappNumber: liveChatSettings.whatsappNumber,
-            telegramEnabled: liveChatSettings.telegramEnabled,
-            telegramUsername: liveChatSettings.telegramUsername,
-            tawkToEnabled: liveChatSettings.tawkToEnabled,
-            tawkToWidgetCode: liveChatSettings.tawkToWidgetCode,
+            liveChatSocialEnabled: liveChatSettings.socialMediaEnabled,
+            liveChatMessengerEnabled: liveChatSettings.messengerEnabled,
+            liveChatMessengerUrl: liveChatSettings.messengerUrl,
+            liveChatWhatsappEnabled: liveChatSettings.whatsappEnabled,
+            liveChatWhatsappNumber: liveChatSettings.whatsappNumber,
+            liveChatTelegramEnabled: liveChatSettings.telegramEnabled,
+            liveChatTelegramUsername: liveChatSettings.telegramUsername,
+            liveChatTawkToEnabled: liveChatSettings.tawkToEnabled,
+            liveChatTawkToCode: liveChatSettings.tawkToWidgetCode,
             liveChatVisibility: liveChatSettings.visibility,
           }
         }),
@@ -666,7 +666,8 @@ const IntegrationPage = () => {
                             setLiveChatSettings(prev => ({
                               ...prev,
                               socialMediaEnabled: !prev.socialMediaEnabled,
-                              tawkToEnabled: prev.socialMediaEnabled ? prev.tawkToEnabled : false
+                              // Disable Tawk.to if enabling Social Media
+                              tawkToEnabled: !prev.socialMediaEnabled ? false : prev.tawkToEnabled
                             }))
                           }
                           title="Toggle social media chat"
@@ -815,7 +816,8 @@ const IntegrationPage = () => {
                             setLiveChatSettings(prev => ({
                               ...prev,
                               tawkToEnabled: !prev.tawkToEnabled,
-                              socialMediaEnabled: prev.tawkToEnabled ? prev.socialMediaEnabled : false
+                              // Disable Social Media if enabling Tawk.to
+                              socialMediaEnabled: !prev.tawkToEnabled ? false : prev.socialMediaEnabled
                             }))
                           }
                           title="Toggle tawk.to"
