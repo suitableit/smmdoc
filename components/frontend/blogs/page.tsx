@@ -1,10 +1,10 @@
 'use client';
 
-import { GradientSpinner } from '@/components/ui/GradientSpinner';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import { FaArrowRight } from 'react-icons/fa';
+import { GradientSpinner } from '@/components/ui/GradientSpinner';
 
 interface BlogPost {
   id: number;
@@ -64,15 +64,15 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => (
 const BlogPage: React.FC = () => {
   const [allBlogPosts, setAllBlogPosts] = useState<BlogPost[]>([]);
   const [visiblePosts, setVisiblePosts] = useState(6);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
 
 
   // Fetch blog posts from API
   const fetchBlogPosts = async () => {
     try {
+      setIsLoading(true);
       setError(null);
       const response = await fetch('/api/blogs?status=published&limit=50');
       
@@ -95,7 +95,7 @@ const BlogPage: React.FC = () => {
       setAllBlogPosts([]);
       console.log('Frontend: No blog posts available');
     } finally {
-      setIsInitialLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -108,27 +108,11 @@ const BlogPage: React.FC = () => {
   const hasMorePosts = visiblePosts < allBlogPosts.length;
 
   const loadMorePosts = () => {
-    setIsLoading(true);
-
     // Simulate loading delay
     setTimeout(() => {
       setVisiblePosts((prev) => Math.min(prev + 3, allBlogPosts.length));
-      setIsLoading(false);
     }, 1000);
   };
-
-  if (isInitialLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <GradientSpinner size="lg" />
-          <p className="text-gray-600 dark:text-gray-300 mt-4 transition-colors duration-200">
-            Loading blog posts...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen">
@@ -164,11 +148,14 @@ const BlogPage: React.FC = () => {
 
       {/* Blog Posts Grid */}
       <Section className="pt-[30px]">
-        {allBlogPosts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 dark:text-gray-300 text-lg transition-colors duration-200">
-              No blog posts available at the moment. Check back soon!
-            </p>
+        {isLoading ? (
+          <div className="card-padding bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 transition-all duration-300 p-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <GradientSpinner size="w-16 h-16" className="mb-4" />
+              <p className="text-gray-600 dark:text-gray-300 text-lg font-medium transition-colors duration-200">
+                Loading blog posts...
+              </p>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
@@ -186,17 +173,9 @@ const BlogPage: React.FC = () => {
           <div className="text-center">
             <button
               onClick={loadMorePosts}
-              disabled={isLoading}
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
             >
-              {isLoading ? (
-                <>
-                  <GradientSpinner size="sm" />
-                  <span>Loading...</span>
-                </>
-              ) : (
-                <span>Load More</span>
-              )}
+              <span>Load More</span>
             </button>
           </div>
         )}
