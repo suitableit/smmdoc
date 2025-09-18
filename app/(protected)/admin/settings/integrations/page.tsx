@@ -661,9 +661,9 @@ const IntegrationPage = () => {
                 />
               </div>
 
-              {liveChatSettings.enabled && (
-                <>
-                  <div className="space-y-6">
+              {/* Live Chat content is always visible regardless of the main toggle state */}
+              <>
+                <div className="space-y-6">
                     {/* Social Media Section */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
@@ -897,7 +897,6 @@ const IntegrationPage = () => {
                     </button>
                   </div>
                 </>
-              )}
             </div>
           </div>
 
@@ -930,204 +929,203 @@ const IntegrationPage = () => {
                 />
               </div>
 
-              {analyticsSettings.enabled && (
-                <>
-                  <div className="space-y-6">
-                    {/* Google Analytics */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <label className="form-label mb-1">Google Analytics</label>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Enable Google Analytics tracking
-                          </p>
-                        </div>
-                        <Switch
-                          checked={analyticsSettings.googleAnalyticsEnabled}
-                          onClick={() =>
-                            setAnalyticsSettings(prev => ({
-                              ...prev,
-                              googleAnalyticsEnabled: !prev.googleAnalyticsEnabled
-                            }))
-                          }
-                          title="Toggle Google Analytics"
-                        />
+              {/* Analytics content is now always visible */}
+              <>
+                <div className="space-y-6">
+                  {/* Google Analytics */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="form-label mb-1">Google Analytics</label>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Enable Google Analytics tracking
+                        </p>
                       </div>
-                      {analyticsSettings.googleAnalyticsEnabled && (
-                        <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
-                          <div className="form-group">
-                            <label className="form-label">Google Analytics Code</label>
-                            <textarea
-                              value={analyticsSettings.googleAnalyticsCode}
-                              onChange={(e) =>
-                                setAnalyticsSettings(prev => ({ ...prev, googleAnalyticsCode: e.target.value }))
-                              }
-                              rows={6}
-                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none font-mono text-sm"
-                              placeholder="Paste your Google Analytics code here..."
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label className="form-label">Visibility</label>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                              Choose when to load Google Analytics
-                            </p>
-                            <select
-                              value={analyticsSettings.googleAnalyticsVisibility}
-                              onChange={(e) =>
-                                setAnalyticsSettings(prev => ({ 
-                                  ...prev, 
-                                  googleAnalyticsVisibility: e.target.value as 'all' | 'not-logged-in' | 'signed-in'
-                                }))
-                              }
-                              className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                            >
-                              <option value="all">All pages</option>
-                              <option value="not-logged-in">Not logged in</option>
-                              <option value="signed-in">Signed in</option>
-                            </select>
-                          </div>
-                        </div>
-                      )}
+                      <Switch
+                        checked={analyticsSettings.googleAnalyticsEnabled}
+                        onClick={() =>
+                          setAnalyticsSettings(prev => ({
+                            ...prev,
+                            googleAnalyticsEnabled: !prev.googleAnalyticsEnabled
+                          }))
+                        }
+                        title="Toggle Google Analytics"
+                      />
                     </div>
-
-                    {/* Facebook Pixel */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <label className="form-label mb-1">Facebook Pixel</label>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Enable Facebook Pixel tracking
+                    {analyticsSettings.googleAnalyticsEnabled && (
+                      <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+                        <div className="form-group">
+                          <label className="form-label">Google Analytics Code</label>
+                          <textarea
+                            value={analyticsSettings.googleAnalyticsCode}
+                            onChange={(e) =>
+                              setAnalyticsSettings(prev => ({ ...prev, googleAnalyticsCode: e.target.value }))
+                            }
+                            rows={6}
+                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none font-mono text-sm"
+                            placeholder="Paste your Google Analytics code here..."
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Visibility</label>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            Choose when to load Google Analytics
                           </p>
+                          <select
+                            value={analyticsSettings.googleAnalyticsVisibility}
+                            onChange={(e) =>
+                              setAnalyticsSettings(prev => ({ 
+                                ...prev, 
+                                googleAnalyticsVisibility: e.target.value as 'all' | 'not-logged-in' | 'signed-in'
+                              }))
+                            }
+                            className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                          >
+                            <option value="all">All pages</option>
+                            <option value="not-logged-in">Not logged in</option>
+                            <option value="signed-in">Signed in</option>
+                          </select>
                         </div>
-                        <Switch
-                          checked={analyticsSettings.facebookPixelEnabled}
-                          onClick={() =>
-                            setAnalyticsSettings(prev => ({
-                              ...prev,
-                              facebookPixelEnabled: !prev.facebookPixelEnabled
-                            }))
-                          }
-                          title="Toggle Facebook Pixel"
-                        />
                       </div>
-                      {analyticsSettings.facebookPixelEnabled && (
-                        <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
-                          <div className="form-group">
-                            <label className="form-label">Facebook Pixel Code</label>
-                            <textarea
-                              value={analyticsSettings.facebookPixelCode}
-                              onChange={(e) =>
-                                setAnalyticsSettings(prev => ({ ...prev, facebookPixelCode: e.target.value }))
-                              }
-                              rows={6}
-                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none font-mono text-sm"
-                              placeholder="Paste your Facebook Pixel code here..."
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label className="form-label">Visibility</label>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                              Choose when to load Facebook Pixel
-                            </p>
-                            <select
-                              value={analyticsSettings.facebookPixelVisibility}
-                              onChange={(e) =>
-                                setAnalyticsSettings(prev => ({ 
-                                  ...prev, 
-                                  facebookPixelVisibility: e.target.value as 'all' | 'not-logged-in' | 'signed-in'
-                                }))
-                              }
-                              className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                            >
-                              <option value="all">All pages</option>
-                              <option value="not-logged-in">Not logged in</option>
-                              <option value="signed-in">Signed in</option>
-                            </select>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Google Tag Manager */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <label className="form-label mb-1">Google Tag Manager</label>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Enable Google Tag Manager
-                          </p>
-                        </div>
-                        <Switch
-                          checked={analyticsSettings.gtmEnabled}
-                          onClick={() =>
-                            setAnalyticsSettings(prev => ({
-                              ...prev,
-                              gtmEnabled: !prev.gtmEnabled
-                            }))
-                          }
-                          title="Toggle Google Tag Manager"
-                        />
-                      </div>
-                      {analyticsSettings.gtmEnabled && (
-                        <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
-                          <div className="form-group">
-                            <label className="form-label">Google Tag Manager Code</label>
-                            <textarea
-                              value={analyticsSettings.gtmCode}
-                              onChange={(e) =>
-                                setAnalyticsSettings(prev => ({ ...prev, gtmCode: e.target.value }))
-                              }
-                              rows={6}
-                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none font-mono text-sm"
-                              placeholder="Paste your Google Tag Manager code here..."
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label className="form-label">Visibility</label>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                              Choose when to load Google Tag Manager
-                            </p>
-                            <select
-                              value={analyticsSettings.gtmVisibility}
-                              onChange={(e) =>
-                                setAnalyticsSettings(prev => ({ 
-                                  ...prev, 
-                                  gtmVisibility: e.target.value as 'all' | 'not-logged-in' | 'signed-in'
-                                }))
-                              }
-                              className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                            >
-                              <option value="all">All pages</option>
-                              <option value="not-logged-in">Not logged in</option>
-                              <option value="signed-in">Signed in</option>
-                            </select>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
-                  
-                  {/* Save Button for Analytics */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                    <button
-                      onClick={saveAnalyticsSettings}
-                      disabled={analyticsLoading}
-                      className="w-full btn btn-primary px-6 py-2.5 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {analyticsLoading ? (
-                        <>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          Save Analytics Settings
-                        </>
-                      )}
-                    </button>
+
+                  {/* Facebook Pixel */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="form-label mb-1">Facebook Pixel</label>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Enable Facebook Pixel tracking
+                        </p>
+                      </div>
+                      <Switch
+                        checked={analyticsSettings.facebookPixelEnabled}
+                        onClick={() =>
+                          setAnalyticsSettings(prev => ({
+                            ...prev,
+                            facebookPixelEnabled: !prev.facebookPixelEnabled
+                          }))
+                        }
+                        title="Toggle Facebook Pixel"
+                      />
+                    </div>
+                    {analyticsSettings.facebookPixelEnabled && (
+                      <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+                        <div className="form-group">
+                          <label className="form-label">Facebook Pixel Code</label>
+                          <textarea
+                            value={analyticsSettings.facebookPixelCode}
+                            onChange={(e) =>
+                              setAnalyticsSettings(prev => ({ ...prev, facebookPixelCode: e.target.value }))
+                            }
+                            rows={6}
+                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none font-mono text-sm"
+                            placeholder="Paste your Facebook Pixel code here..."
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Visibility</label>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            Choose when to load Facebook Pixel
+                          </p>
+                          <select
+                            value={analyticsSettings.facebookPixelVisibility}
+                            onChange={(e) =>
+                              setAnalyticsSettings(prev => ({ 
+                                ...prev, 
+                                facebookPixelVisibility: e.target.value as 'all' | 'not-logged-in' | 'signed-in'
+                              }))
+                            }
+                            className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                          >
+                            <option value="all">All pages</option>
+                            <option value="not-logged-in">Not logged in</option>
+                            <option value="signed-in">Signed in</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </>
-              )}
+
+                  {/* Google Tag Manager */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="form-label mb-1">Google Tag Manager</label>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Enable Google Tag Manager
+                        </p>
+                      </div>
+                      <Switch
+                        checked={analyticsSettings.gtmEnabled}
+                        onClick={() =>
+                          setAnalyticsSettings(prev => ({
+                            ...prev,
+                            gtmEnabled: !prev.gtmEnabled
+                          }))
+                        }
+                        title="Toggle Google Tag Manager"
+                      />
+                    </div>
+                    {analyticsSettings.gtmEnabled && (
+                      <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+                        <div className="form-group">
+                          <label className="form-label">Google Tag Manager Code</label>
+                          <textarea
+                            value={analyticsSettings.gtmCode}
+                            onChange={(e) =>
+                              setAnalyticsSettings(prev => ({ ...prev, gtmCode: e.target.value }))
+                            }
+                            rows={6}
+                            className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none font-mono text-sm"
+                            placeholder="Paste your Google Tag Manager code here..."
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Visibility</label>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            Choose when to load Google Tag Manager
+                          </p>
+                          <select
+                            value={analyticsSettings.gtmVisibility}
+                            onChange={(e) =>
+                              setAnalyticsSettings(prev => ({ 
+                                ...prev, 
+                                gtmVisibility: e.target.value as 'all' | 'not-logged-in' | 'signed-in'
+                              }))
+                            }
+                            className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                          >
+                            <option value="all">All pages</option>
+                            <option value="not-logged-in">Not logged in</option>
+                            <option value="signed-in">Signed in</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Save Button for Analytics */}
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                  <button
+                    onClick={saveAnalyticsSettings}
+                    disabled={analyticsLoading}
+                    className="w-full btn btn-primary px-6 py-2.5 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {analyticsLoading ? (
+                      <>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        Save Analytics Settings
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
             </div>
           </div>
 
@@ -1160,9 +1158,9 @@ const IntegrationPage = () => {
                 />
               </div>
 
-              {recaptchaSettings.enabled && (
-                <>
-                  <div className="form-group">
+              {/* ReCAPTCHA content is always visible regardless of the main toggle state */}
+              <>
+                <div className="form-group">
                     <label className="form-label">ReCAPTCHA Version</label>
                     <select
                       value={recaptchaSettings.version}
@@ -1449,7 +1447,6 @@ const IntegrationPage = () => {
                   </div>
 
                 </>
-              )}
             </div>
           </div>
 
