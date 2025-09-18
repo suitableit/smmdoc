@@ -419,8 +419,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ticket system is always enabled
-    const ticketSystemEnabled = true;
+    // Check if ticket system is enabled
+    const ticketSettings = await getTicketSettings();
+    if (!ticketSettings.ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
+      );
+    }
 
     // Check user's pending tickets limit
     const pendingTicketsCount = await db.supportTicket.count({
@@ -432,7 +438,6 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    const ticketSettings = await getTicketSettings();
     const maxPendingTickets = parseInt(ticketSettings.maxPendingTickets || '3');
     if (pendingTicketsCount >= maxPendingTickets) {
       return NextResponse.json(
@@ -597,8 +602,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if ticket system is enabled
-    // Ticket system is always enabled
-    const ticketSystemEnabled = true;
+    const ticketSettings = await getTicketSettings();
+    if (!ticketSettings.ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
+      );
+    }
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');

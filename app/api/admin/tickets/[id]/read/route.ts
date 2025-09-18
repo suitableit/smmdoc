@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { getTicketSettings } from '@/lib/utils/ticket-settings';
 
 
 // Validation schema for read status
@@ -43,8 +44,14 @@ export async function PATCH(
       );
     }
 
-    // Ticket system is always enabled
-    const ticketSystemEnabled = true;
+    // Check if ticket system is enabled
+    const ticketSettings = await getTicketSettings();
+    if (!ticketSettings.ticketSystemEnabled) {
+      return NextResponse.json(
+        { error: 'Ticket system is currently disabled' },
+        { status: 403 }
+      );
+    }
 
     const { id } = await params;
     const ticketId = parseInt(id);

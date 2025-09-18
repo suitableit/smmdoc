@@ -150,13 +150,6 @@ const IntegrationPage = () => {
   // State management
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
-  
-  // Individual loading states for each integration
-  const [liveChatLoading, setLiveChatLoading] = useState(false);
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const [notificationsLoading, setNotificationsLoading] = useState(false);
-  const [recaptchaLoading, setRecaptchaLoading] = useState(false);
-  
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -245,18 +238,13 @@ const IntegrationPage = () => {
     const loadSettings = async () => {
       try {
         setIsPageLoading(true);
-        console.log('🔄 Loading integration settings...');
 
         const response = await fetch('/api/admin/integration-settings');
-        console.log('📡 API Response status:', response.status, response.statusText);
-        
         if (response.ok) {
           const data = await response.json();
-          console.log('📦 API Response data:', data);
           
           if (data.success && data.integrationSettings) {
             const settings = data.integrationSettings;
-            console.log('⚙️ Integration settings loaded:', settings);
             
             // Update ReCAPTCHA settings
             setRecaptchaSettings({
@@ -340,14 +328,12 @@ const IntegrationPage = () => {
             });
           }
         } else {
-          console.error('❌ API request failed:', response.status, response.statusText);
           showToast('Failed to load integration settings', 'error');
         }
       } catch (error) {
-        console.error('💥 Error loading integration settings:', error);
+        console.error('Error loading integration settings:', error);
         showToast('Error loading integration settings', 'error');
       } finally {
-        console.log('✅ Loading complete, setting isPageLoading to false');
         setIsPageLoading(false);
       }
     };
@@ -365,171 +351,6 @@ const IntegrationPage = () => {
   };
 
   // Save functions
-  // Individual save functions for each integration type
-  const saveLiveChatSettings = async () => {
-    setLiveChatLoading(true);
-    try {
-      const response = await fetch('/api/admin/integration-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          integrationSettings: {
-            liveChatEnabled: liveChatSettings.enabled,
-            liveChatHoverTitle: liveChatSettings.hoverTitle,
-            socialMediaEnabled: liveChatSettings.socialMediaEnabled,
-            messengerEnabled: liveChatSettings.messengerEnabled,
-            messengerUrl: liveChatSettings.messengerUrl,
-            whatsappEnabled: liveChatSettings.whatsappEnabled,
-            whatsappNumber: liveChatSettings.whatsappNumber,
-            telegramEnabled: liveChatSettings.telegramEnabled,
-            telegramUsername: liveChatSettings.telegramUsername,
-            tawkToEnabled: liveChatSettings.tawkToEnabled,
-            tawkToWidgetCode: liveChatSettings.tawkToWidgetCode,
-            liveChatVisibility: liveChatSettings.visibility,
-          }
-        }),
-      });
-
-      if (response.ok) {
-        showToast('Live Chat settings saved successfully!', 'success');
-      } else {
-        showToast('Failed to save Live Chat settings', 'error');
-      }
-    } catch (error) {
-      console.error('Error saving Live Chat settings:', error);
-      showToast('Error saving Live Chat settings', 'error');
-    } finally {
-      setLiveChatLoading(false);
-    }
-  };
-
-  const saveAnalyticsSettings = async () => {
-    setAnalyticsLoading(true);
-    try {
-      const response = await fetch('/api/admin/integration-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          integrationSettings: {
-            analyticsEnabled: analyticsSettings.enabled,
-            googleAnalyticsEnabled: analyticsSettings.googleAnalyticsEnabled,
-            googleAnalyticsCode: analyticsSettings.googleAnalyticsCode,
-            googleAnalyticsVisibility: analyticsSettings.googleAnalyticsVisibility,
-            facebookPixelEnabled: analyticsSettings.facebookPixelEnabled,
-            facebookPixelCode: analyticsSettings.facebookPixelCode,
-            facebookPixelVisibility: analyticsSettings.facebookPixelVisibility,
-            gtmEnabled: analyticsSettings.gtmEnabled,
-            gtmCode: analyticsSettings.gtmCode,
-            gtmVisibility: analyticsSettings.gtmVisibility,
-          }
-        }),
-      });
-
-      if (response.ok) {
-        showToast('Analytics settings saved successfully!', 'success');
-      } else {
-        showToast('Failed to save Analytics settings', 'error');
-      }
-    } catch (error) {
-      console.error('Error saving Analytics settings:', error);
-      showToast('Error saving Analytics settings', 'error');
-    } finally {
-      setAnalyticsLoading(false);
-    }
-  };
-
-  const saveNotificationSettings = async () => {
-    setNotificationsLoading(true);
-    try {
-      const response = await fetch('/api/admin/integration-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          integrationSettings: {
-            pushNotificationsEnabled: notificationSettings.pushNotificationsEnabled,
-            oneSignalCode: notificationSettings.oneSignalCode,
-            oneSignalVisibility: notificationSettings.oneSignalVisibility,
-            emailNotificationsEnabled: notificationSettings.emailNotificationsEnabled,
-            userNotifications: notificationSettings.userNotifications,
-            adminNotifications: notificationSettings.adminNotifications,
-          }
-        }),
-      });
-
-      if (response.ok) {
-        showToast('Notification settings saved successfully!', 'success');
-      } else {
-        showToast('Failed to save notification settings', 'error');
-      }
-    } catch (error) {
-      console.error('Error saving Notification settings:', error);
-      showToast('Error saving notification settings', 'error');
-    } finally {
-      setNotificationsLoading(false);
-    }
-  };
-
-  const saveRecaptchaSettings = async () => {
-    setRecaptchaLoading(true);
-    try {
-      // Validate ReCAPTCHA configuration if enabled
-      if (recaptchaSettings.enabled) {
-        if (recaptchaSettings.version === 'v2') {
-          if (!recaptchaSettings.v2.siteKey || !recaptchaSettings.v2.secretKey) {
-            showToast('Please configure ReCAPTCHA v2 Site Key and Secret Key before saving.', 'error');
-            setRecaptchaLoading(false);
-            return;
-          }
-        } else if (recaptchaSettings.version === 'v3') {
-          if (!recaptchaSettings.v3.siteKey || !recaptchaSettings.v3.secretKey) {
-            showToast('Please configure ReCAPTCHA v3 Site Key and Secret Key before saving.', 'error');
-            setRecaptchaLoading(false);
-            return;
-          }
-        }
-      }
-
-      const integrationSettings = {
-        recaptchaEnabled: recaptchaSettings.enabled,
-        recaptchaVersion: recaptchaSettings.version,
-        recaptchaSiteKey: recaptchaSettings.version === 'v2' ? recaptchaSettings.v2.siteKey : recaptchaSettings.v3.siteKey,
-        recaptchaSecretKey: recaptchaSettings.version === 'v2' ? recaptchaSettings.v2.secretKey : recaptchaSettings.v3.secretKey,
-        v2: {
-          siteKey: recaptchaSettings.v2.siteKey,
-          secretKey: recaptchaSettings.v2.secretKey,
-        },
-        v3: {
-          siteKey: recaptchaSettings.v3.siteKey,
-          secretKey: recaptchaSettings.v3.secretKey,
-          threshold: recaptchaSettings.v3.threshold,
-        },
-        recaptchaThreshold: recaptchaSettings.v3.threshold,
-        recaptchaSignUp: recaptchaSettings.enabledForms.signUp,
-        recaptchaSignIn: recaptchaSettings.enabledForms.signIn,
-        recaptchaContact: recaptchaSettings.enabledForms.contact,
-        recaptchaSupportTicket: recaptchaSettings.enabledForms.supportTicket,
-        recaptchaContactSupport: recaptchaSettings.enabledForms.contactSupport,
-      };
-
-      const response = await fetch('/api/admin/integration-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ integrationSettings }),
-      });
-
-      if (response.ok) {
-        showToast('ReCAPTCHA settings saved successfully!', 'success');
-      } else {
-        showToast('Failed to save ReCAPTCHA settings', 'error');
-      }
-    } catch (error) {
-      console.error('Error saving ReCAPTCHA settings:', error);
-      showToast('Error saving ReCAPTCHA settings', 'error');
-    } finally {
-      setRecaptchaLoading(false);
-    }
-  };
-
   const saveIntegrationSettings = async () => {
     setIsLoading(true);
     try {
@@ -877,25 +698,6 @@ const IntegrationPage = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Save Button for Live Chat */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                    <button
-                      onClick={saveLiveChatSettings}
-                      disabled={liveChatLoading}
-                      className="w-full btn btn-primary px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {liveChatLoading ? (
-                        <>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          Save Live Chat Settings
-                        </>
-                      )}
-                    </button>
-                  </div>
                 </>
               )}
             </div>
@@ -1106,25 +908,6 @@ const IntegrationPage = () => {
                         </div>
                       )}
                     </div>
-                  </div>
-                  
-                  {/* Save Button for Analytics */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                    <button
-                      onClick={saveAnalyticsSettings}
-                      disabled={analyticsLoading}
-                      className="w-full btn btn-primary px-6 py-2.5 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {analyticsLoading ? (
-                        <>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          Save Analytics Settings
-                        </>
-                      )}
-                    </button>
                   </div>
                 </>
               )}
@@ -1429,24 +1212,6 @@ const IntegrationPage = () => {
                     </div>
                   </div>
 
-                  {/* Save Button for ReCAPTCHA */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                    <button
-                      onClick={saveRecaptchaSettings}
-                      disabled={recaptchaLoading}
-                      className="w-full btn btn-primary px-6 py-2.5 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {recaptchaLoading ? (
-                        <>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          Save ReCAPTCHA Settings
-                        </>
-                      )}
-                    </button>
-                  </div>
 
                 </>
               )}
@@ -2072,28 +1837,20 @@ const IntegrationPage = () => {
                     </div>
                   </div>
                 )}
-                
-                {/* Save Button for Notifications */}
-                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                  <button
-                    onClick={saveNotificationSettings}
-                    disabled={notificationsLoading}
-                    className="w-full btn btn-primary px-6 py-2.5 font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {notificationsLoading ? (
-                      <>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        Save Notification Settings
-                      </>
-                    )}
-                  </button>
-                </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Save Button */}
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={saveIntegrationSettings}
+            disabled={isLoading}
+            className="btn btn-primary px-8 py-3"
+          >
+            {isLoading ? 'Updating...' : 'Save All Integration Settings'}
+          </button>
         </div>
       </div>
     </div>
