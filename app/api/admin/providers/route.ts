@@ -2,34 +2,7 @@ import { auth } from '@/auth';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-// Available Providers Configuration
-// Remove any provider from here = it won't show in UI
-const AVAILABLE_PROVIDERS = [
-  {
-    name: "SMMGEN",
-    value: "smmgen",
-    label: "SMMGEN",
-    description: "Premium SMM services provider"
-  },
-  {
-    name: "Growfollows",
-    value: "growfollows",
-    label: "Growfollows",
-    description: "High-quality social media growth services"
-  },
-  {
-    name: "ATTPANEL",
-    value: "attpanel",
-    label: "ATTPANEL",
-    description: "Reliable SMM panel with competitive prices"
-  },
-  {
-    name: "SMMCODER",
-    value: "smmcoder",
-    label: "SMMCODER",
-    description: "Professional SMM panel services"
-  }
-];
+// Custom providers only - no predefined providers
 
 // GET - Get all available providers
 export async function GET() {
@@ -94,75 +67,19 @@ export async function GET() {
       configuredProviders = [];
     }
 
-    // Helper function to match provider names (case-insensitive and flexible matching)
-    const findMatchingProvider = (dbName: string) => {
-      return AVAILABLE_PROVIDERS.find(provider => {
-        // Direct match
-        if (provider.value.toLowerCase() === dbName.toLowerCase()) return true;
-        if (provider.name.toLowerCase() === dbName.toLowerCase()) return true;
-        
-        // Partial match for providers like 'SMMProvider1' -> 'smmgen'
-        if (dbName.toLowerCase().includes('smm') && provider.value === 'smmgen') return true;
-        if (dbName.toLowerCase().includes('growfollows') && provider.value === 'growfollows') return true;
-        if (dbName.toLowerCase().includes('attpanel') && provider.value === 'attpanel') return true;
-        if (dbName.toLowerCase().includes('smmcoder') && provider.value === 'smmcoder') return true;
-        
-        // Check if db name contains provider name
-        if (dbName.toLowerCase().includes(provider.value.toLowerCase())) return true;
-        if (dbName.toLowerCase().includes(provider.name.toLowerCase())) return true;
-        
-        return false;
-      });
-    };
-
-    // Merge available providers with configured status
-    const providersWithStatus = AVAILABLE_PROVIDERS.map(provider => {
-      const configured = configuredProviders.find((cp: any) => {
-        const matchingProvider = findMatchingProvider(cp.name);
-        return matchingProvider && matchingProvider.value === provider.value;
-      });
-      
-      return {
-        ...provider,
-        configured: !!configured,
-        status: configured?.status || 'inactive',
-        id: configured?.id || null,
-        apiUrl: (configured as any)?.api_url || (provider as any).apiUrl || '',
-        isCustom: false,
-        createdAt: configured?.createdAt || null,
-        updatedAt: configured?.updatedAt || null
-      };
-    });
-
-    // Add custom providers that are not matched with AVAILABLE_PROVIDERS
-    const customProviders = configuredProviders
-      .filter((cp: any) => {
-        // If it's explicitly marked as custom, include it
-        if (cp.is_custom) return true;
-        
-        // If it doesn't match any predefined provider, treat as custom
-        const matchingProvider = findMatchingProvider(cp.name);
-        return !matchingProvider;
-      })
-      .filter((cp: any) => {
-        // Don't duplicate providers that are already in providersWithStatus
-        const matchingProvider = findMatchingProvider(cp.name);
-        return !matchingProvider;
-      })
-      .map((cp: any) => ({
-        value: cp.name,
-        label: cp.name,
-        description: `Custom provider: ${cp.name}`,
-        configured: true,
-        status: cp.status,
-        id: cp.id,
-        apiUrl: cp.api_url || '',
-        isCustom: true,
-        createdAt: cp.createdAt,
-        updatedAt: cp.updatedAt
-      }));
-
-    const allProviders = [...providersWithStatus, ...customProviders];
+    // Map all providers as custom providers
+    const allProviders = configuredProviders.map((cp: any) => ({
+      value: cp.name,
+      label: cp.name,
+      description: `Custom provider: ${cp.name}`,
+      configured: true,
+      status: cp.status,
+      id: cp.id,
+      apiUrl: cp.api_url || '',
+      isCustom: true,
+      createdAt: cp.createdAt,
+      updatedAt: cp.updatedAt
+    }));
 
     return NextResponse.json({
       success: true,
@@ -170,8 +87,8 @@ export async function GET() {
         providers: allProviders,
         total: allProviders.length,
         configured: configuredProviders.length,
-        available: AVAILABLE_PROVIDERS.length,
-        custom: customProviders.length
+        available: 0,
+        custom: allProviders.length
       },
       error: null
     });
@@ -206,15 +123,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { selectedProvider, customProviderName, apiKey, apiUrl, username, password, isCustom } = await req.json();
+    const { customProviderName, apiKey, apiUrl, username, password } = await req.json();
 
-    // Determine the provider name based on type
-    const providerName = isCustom ? customProviderName : selectedProvider;
+    // All providers are custom providers
+    const providerName = customProviderName;
 
     if (!providerName || !apiKey) {
       return NextResponse.json(
         {
-          error: isCustom ? 'Custom provider name and API key are required' : 'Provider and API key are required',
+          error: 'Provider name and API key are required',
           success: false,
           data: null
         },
@@ -222,29 +139,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // For custom providers, we don't need to validate against AVAILABLE_PROVIDERS
-    let providerConfig = null;
-    if (!isCustom) {
-      // Check if provider is available in predefined list
-      providerConfig = AVAILABLE_PROVIDERS.find(p => p.value === selectedProvider);
-      if (!providerConfig) {
-        return NextResponse.json(
-          {
-            error: 'Invalid provider selected',
-            success: false,
-            data: null
-          },
-          { status: 400 }
-        );
-      }
-    } else {
-      // For custom providers, create a basic config
-      providerConfig = {
-        value: providerName,
-        label: providerName,
-        description: `Custom provider: ${providerName}`
-      };
-    }
+    // All providers are custom providers
+    const providerConfig = {
+      value: providerName,
+      label: providerName,
+      description: `Custom provider: ${providerName}`
+    };
 
     // Check if provider already exists and create new provider
     let newProvider: any;
@@ -274,7 +174,7 @@ export async function POST(req: NextRequest) {
           login_user: username || null,
           login_pass: password || null,
           status: 'inactive',
-          is_custom: isCustom || false
+          is_custom: true
         }
       });
     } catch (error) {
@@ -460,10 +360,24 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
-    if (!id) {
+    // Validate ID parameter
+    if (!id || id === 'null' || id === 'undefined') {
       return NextResponse.json(
         {
-          error: 'Provider ID is required',
+          error: 'Valid Provider ID is required. Cannot delete unconfigured provider.',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
+    // Parse and validate numeric ID
+    const providerId = parseInt(id);
+    if (isNaN(providerId) || providerId <= 0) {
+      return NextResponse.json(
+        {
+          error: 'Invalid Provider ID format. ID must be a positive number.',
           success: false,
           data: null
         },
@@ -473,7 +387,7 @@ export async function DELETE(req: NextRequest) {
 
     // Delete provider
     await db.api_providers.delete({
-      where: { id: parseInt(id) }
+      where: { id: providerId }
     });
 
     return NextResponse.json({

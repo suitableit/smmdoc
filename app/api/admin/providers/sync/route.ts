@@ -44,48 +44,10 @@ const getValidProviders = async () => {
   }
 };
 
-// Provider configurations
-const PROVIDER_CONFIGS = {
-  smmgen: {
-    apiUrl: "https://smmgen.com/api/v2",
-    endpoints: { services: "/services", balance: "/balance" }
-  },
-  growfollows: {
-    apiUrl: "https://growfollows.com/api/v2",
-    endpoints: { services: "/services", balance: "/balance" }
-  },
-  attpanel: {
-    apiUrl: "https://attpanel.com/api/v2",
-    endpoints: { services: "/services", balance: "/balance" }
-  },
-  smmcoder: {
-    apiUrl: "https://smmcoder.com/api/v2",
-    endpoints: { services: "/services", balance: "/balance" }
-  },
-  smmprovider1: {
-    apiUrl: "https://api.smmprovider1.com/v2",
-    endpoints: { services: "/services", balance: "/balance" }
-  },
-  smmprovider2: {
-    apiUrl: "https://api.smmprovider2.com/v1",
-    endpoints: { services: "/services", balance: "/balance" }
-  },
-  customprovider: {
-    apiUrl: "https://custom.provider.com/api",
-    endpoints: { services: "/services", balance: "/balance" }
-  },
-  testprovider: {
-    apiUrl: "https://test.provider.com/v2",
-    endpoints: { services: "/services", balance: "/balance" }
-  },
-  smmking: {
-    apiUrl: "https://api.smmking.com/v2",
-    endpoints: { services: "/services", balance: "/balance" }
-  },
-  socialpanel: {
-    apiUrl: "https://api.socialpanel.com/v2",
-    endpoints: { services: "/services", balance: "/balance" }
-  }
+// Default endpoints for custom providers
+const DEFAULT_ENDPOINTS = {
+  services: "/services",
+  balance: "/balance"
 };
 
 // POST - Sync services from providers
@@ -145,13 +107,8 @@ export async function POST(req: NextRequest) {
       try {
         console.log(`Starting sync for provider: ${provider.name}`);
         
-        // Get provider config or use default endpoints
-        const providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS] || {
-          endpoints: { services: "/services", balance: "/balance" }
-        };
-
-        // Fetch services from provider API - use database URL instead of hardcoded config
-        const servicesUrl = `${provider.api_url}${providerConfig.endpoints.services}?key=${(provider as any).api_key}`;
+        // Use default endpoints for all custom providers
+        const servicesUrl = `${provider.api_url}${DEFAULT_ENDPOINTS.services}?key=${(provider as any).api_key}`;
         
         const response = await fetch(servicesUrl, {
           method: 'GET',

@@ -3,6 +3,70 @@ import { convertToUSD } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Timeout and retry configuration
+const API_TIMEOUT = 30000; // 30 seconds
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 seconds
+
+// Utility function to create fetch with timeout
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout: number = API_TIMEOUT): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Request timeout after ${timeout}ms`);
+    }
+    throw error;
+  }
+};
+
+// Utility function to retry API calls
+const retryApiCall = async <T>(
+  apiCall: () => Promise<T>,
+  maxRetries: number = MAX_RETRIES,
+  delay: number = RETRY_DELAY
+): Promise<T> => {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.log(`❌ Attempt ${attempt}/${maxRetries} failed:`, lastError.message);
+      
+      if (attempt === maxRetries) {
+        throw lastError;
+      }
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, delay * attempt));
+    }
+  }
+  
+  throw lastError!;
+};
+
+// Utility function to check if URL is reachable
+const checkUrlReachability = async (url: string): Promise<boolean> => {
+  try {
+    const response = await fetchWithTimeout(url, { method: 'HEAD' }, 10000);
+    return response.ok || response.status < 500;
+  } catch (error) {
+    console.log(`❌ URL unreachable: ${url}`, error instanceof Error ? error.message : error);
+    return false;
+  }
+};
+
 // Provider configurations with multiple API URL options
 const PROVIDER_CONFIGS = {
   smmgen: {
@@ -103,116 +167,154 @@ export async function POST(req: NextRequest) {
           console.log('✅ Using dynamic provider config for custom provider:', provider.name);
         }
 
-        // Fetch services from provider API
+        // Fetch services from provider API with timeout and retry
         let providerServices = null;
+        let workingUrl = '';
 
-        // Try multiple request methods and formats for all providers
-        for (const baseUrl of apiUrls) {
+        // Check URL reachability first
+        const reachableUrls = [];
+        for (const url of apiUrls) {
+          console.log(`🔍 Checking reachability: ${url}`);
+          const isReachable = await checkUrlReachability(url);
+          if (isReachable) {
+            reachableUrls.push(url);
+            console.log(`✅ URL reachable: ${url}`);
+          } else {
+            console.log(`❌ URL unreachable: ${url}`);
+          }
+        }
+
+        if (reachableUrls.length === 0) {
+          throw new Error(`All provider URLs are unreachable. Please check your internet connection and provider configuration.`);
+        }
+
+        // Try multiple request methods and formats for reachable URLs
+        for (const baseUrl of reachableUrls) {
           if (providerServices) break; // Stop if we already got services
           
           console.log(`🔄 Trying API: ${baseUrl}`);
           
           // Method 1: POST with FormData (works for SMMCoder and some others)
           try {
-            const formData = new FormData();
-            formData.append('key', provider.api_key);
-            formData.append('action', 'services');
+            await retryApiCall(async () => {
+              const formData = new FormData();
+              formData.append('key', provider.api_key);
+              formData.append('action', 'services');
 
-            const response = await fetch(baseUrl, {
-              method: 'POST',
-              body: formData,
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              const response = await fetchWithTimeout(baseUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                  providerServices = data;
+                  workingUrl = baseUrl;
+                  console.log(`✅ FormData POST success: ${baseUrl} - ${data.length} services`);
+                  return data;
+                }
               }
+              throw new Error(`FormData POST failed: ${response.status} ${response.statusText}`);
             });
-
-            if (response.ok) {
-              const data = await response.json();
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                console.log(`✅ FormData POST success: ${baseUrl} - ${data.length} services`);
-                break;
-              }
-            }
+            if (providerServices) break;
           } catch (error) {
-            console.log(`❌ FormData POST failed: ${baseUrl}`, error);
+            console.log(`❌ FormData POST failed after retries: ${baseUrl}`, error instanceof Error ? error.message : error);
           }
           
           // Method 2: POST with URLSearchParams (standard SMM panel format)
           try {
-            const response = await fetch(baseUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-              },
-              body: new URLSearchParams({
-                key: provider.api_key,
-                action: 'services'
-              })
-            });
+            await retryApiCall(async () => {
+              const response = await fetchWithTimeout(baseUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                body: new URLSearchParams({
+                  key: provider.api_key,
+                  action: 'services'
+                })
+              });
 
-            if (response.ok) {
-              const data = await response.json();
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                console.log(`✅ URLSearchParams POST success: ${baseUrl} - ${data.length} services`);
-                break;
+              if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                  providerServices = data;
+                  workingUrl = baseUrl;
+                  console.log(`✅ URLSearchParams POST success: ${baseUrl} - ${data.length} services`);
+                  return data;
+                }
               }
-            }
+              throw new Error(`URLSearchParams POST failed: ${response.status} ${response.statusText}`);
+            });
+            if (providerServices) break;
           } catch (error) {
-            console.log(`❌ URLSearchParams POST failed: ${baseUrl}`, error);
+            console.log(`❌ URLSearchParams POST failed after retries: ${baseUrl}`, error instanceof Error ? error.message : error);
           }
           
           // Method 3: POST with JSON body
           try {
-            const response = await fetch(baseUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-              },
-              body: JSON.stringify({
-                key: provider.api_key,
-                action: 'services'
-              })
-            });
+            await retryApiCall(async () => {
+              const response = await fetchWithTimeout(baseUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                body: JSON.stringify({
+                  key: provider.api_key,
+                  action: 'services'
+                })
+              });
 
-            if (response.ok) {
-              const data = await response.json();
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                console.log(`✅ JSON POST success: ${baseUrl} - ${data.length} services`);
-                break;
+              if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                  providerServices = data;
+                  workingUrl = baseUrl;
+                  console.log(`✅ JSON POST success: ${baseUrl} - ${data.length} services`);
+                  return data;
+                }
               }
-            }
+              throw new Error(`JSON POST failed: ${response.status} ${response.statusText}`);
+            });
+            if (providerServices) break;
           } catch (error) {
-            console.log(`❌ JSON POST failed: ${baseUrl}`, error);
+            console.log(`❌ JSON POST failed after retries: ${baseUrl}`, error instanceof Error ? error.message : error);
           }
           
           // Method 4: GET with query parameters
           try {
-            const url = new URL(baseUrl);
-            url.searchParams.append('key', provider.api_key);
-            url.searchParams.append('action', 'services');
-            
-            const response = await fetch(url.toString(), {
-              method: 'GET',
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-              }
-            });
+            await retryApiCall(async () => {
+              const url = new URL(baseUrl);
+              url.searchParams.append('key', provider.api_key);
+              url.searchParams.append('action', 'services');
+              
+              const response = await fetchWithTimeout(url.toString(), {
+                method: 'GET',
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+              });
 
-            if (response.ok) {
-              const data = await response.json();
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                console.log(`✅ GET success: ${baseUrl} - ${data.length} services`);
-                break;
+              if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                  providerServices = data;
+                  workingUrl = baseUrl;
+                  console.log(`✅ GET success: ${baseUrl} - ${data.length} services`);
+                  return data;
+                }
               }
-            }
+              throw new Error(`GET failed: ${response.status} ${response.statusText}`);
+            });
+            if (providerServices) break;
           } catch (error) {
-            console.log(`❌ GET failed: ${baseUrl}`, error);
+            console.log(`❌ GET failed after retries: ${baseUrl}`, error instanceof Error ? error.message : error);
           }
         }
 
@@ -223,7 +325,12 @@ export async function POST(req: NextRequest) {
             isArray: Array.isArray(providerServices)
           });
           return NextResponse.json(
-            { error: 'Failed to fetch services from provider', success: false, data: null },
+            { 
+              error: `প্রোভাইডার ${provider.name} থেকে সার্ভিস লোড করতে ব্যর্থ। দয়া করে API Key এবং URL চেক করুন।`,
+              success: false, 
+              data: null,
+              details: 'Provider API did not return valid service data. Please check your API credentials.'
+            },
             { status: 500 }
           );
         }
@@ -278,11 +385,31 @@ export async function POST(req: NextRequest) {
 
       } catch (error) {
         console.error('❌ Error in services request:', error);
+        
+        let userFriendlyMessage = 'সার্ভিস লোড করতে সমস্যা হয়েছে।';
+        let details = '';
+        
+        if (error instanceof Error) {
+          if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
+            userFriendlyMessage = `প্রোভাইডার ${provider.name} এর সাথে সংযোগ সময়সীমা শেষ। দয়া করে পরে আবার চেষ্টা করুন।`;
+            details = 'Connection timeout - the provider server is not responding within the expected time.';
+          } else if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
+            userFriendlyMessage = `প্রোভাইডার ${provider.name} এর সার্ভার পাওয়া যাচ্ছে না। URL চেক করুন।`;
+            details = 'Provider server is unreachable. Please verify the API URL.';
+          } else if (error.message.includes('Invalid API Key') || error.message.includes('Unauthorized')) {
+            userFriendlyMessage = `প্রোভাইডার ${provider.name} এর API Key সঠিক নয়। দয়া করে API Key আপডেট করুন।`;
+            details = 'API authentication failed. Please check your API key.';
+          } else {
+            details = error.message;
+          }
+        }
+        
         return NextResponse.json(
           {
-            error: `Failed to fetch services: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            error: userFriendlyMessage,
             success: false,
-            data: null
+            data: null,
+            details: details
           },
           { status: 500 }
         );
@@ -1066,7 +1193,12 @@ export async function PUT(req: NextRequest) {
     if (!services || !Array.isArray(services) || services.length === 0) {
       console.log('❌ No services data received');
       return NextResponse.json(
-        { error: 'Services data is required', success: false, data: null },
+        { 
+          error: 'সার্ভিস ডেটা প্রয়োজন। দয়া করে সার্ভিস নির্বাচন করুন।',
+          success: false, 
+          data: null,
+          details: 'Services data is required for import'
+        },
         { status: 400 }
       );
     }
@@ -1078,7 +1210,12 @@ export async function PUT(req: NextRequest) {
 
     if (!provider) {
       return NextResponse.json(
-        { error: 'Provider not found', success: false, data: null },
+        { 
+          error: 'প্রোভাইডার পাওয়া যায়নি। দয়া করে সঠিক প্রোভাইডার নির্বাচন করুন।',
+          success: false, 
+          data: null,
+          details: 'Provider not found in database'
+        },
         { status: 404 }
       );
     }
@@ -1248,11 +1385,28 @@ export async function PUT(req: NextRequest) {
 
   } catch (error) {
     console.error('Error importing services:', error);
+    
+    let userFriendlyMessage = 'সার্ভিস ইমপোর্ট করতে সমস্যা হয়েছে।';
+    let details = '';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('database') || error.message.includes('UNIQUE constraint')) {
+        userFriendlyMessage = 'ডেটাবেস সমস্যার কারণে সার্ভিস ইমপোর্ট করা যায়নি। দয়া করে আবার চেষ্টা করুন।';
+        details = 'Database constraint error - some services may already exist.';
+      } else if (error.message.includes('timeout')) {
+        userFriendlyMessage = 'সময়সীমা শেষ। দয়া করে পরে আবার চেষ্টা করুন।';
+        details = 'Operation timeout during service import.';
+      } else {
+        details = error.message;
+      }
+    }
+    
     return NextResponse.json(
       {
-        error: 'Failed to import services: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        error: userFriendlyMessage,
         success: false,
-        data: null
+        data: null,
+        details: details
       },
       { status: 500 }
     );

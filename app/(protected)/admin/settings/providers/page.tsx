@@ -145,8 +145,6 @@ const APIProvidersPage = () => {
   } | null>(null);
 
   const [formData, setFormData] = useState({
-    providerType: 'predefined',
-    selectedProvider: '',
     customProviderName: '',
     apiKey: '',
     apiUrl: '',
@@ -243,23 +241,11 @@ const APIProvidersPage = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Validation for predefined providers
-    if (formData.providerType === 'predefined') {
-      const selectedProviderData = availableProviders.find(p => p.value === formData.selectedProvider);
-      if (!selectedProviderData) {
-        showToast('Please select a provider', 'error');
-        setIsLoading(false);
-        return;
-      }
-    }
-
-    // Validation for custom providers
-    if (formData.providerType === 'custom') {
-      if (!formData.customProviderName.trim()) {
-        showToast('Please enter a custom provider name', 'error');
-        setIsLoading(false);
-        return;
-      }
+    // Validation for custom provider name
+    if (!formData.customProviderName.trim()) {
+      showToast('Please enter a provider name', 'error');
+      setIsLoading(false);
+      return;
     }
 
     // Validate that if username is provided, password is also provided
@@ -276,9 +262,7 @@ const APIProvidersPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          selectedProvider: formData.providerType === 'predefined' ? formData.selectedProvider : null,
-          customProviderName: formData.providerType === 'custom' ? formData.customProviderName : null,
-          isCustom: formData.providerType === 'custom',
+          customProviderName: formData.customProviderName,
           apiKey: formData.apiKey,
           apiUrl: formData.apiUrl,
           username: formData.username,
@@ -293,8 +277,6 @@ const APIProvidersPage = () => {
         await fetchProviders();
 
         setFormData({
-          providerType: 'predefined',
-          selectedProvider: '',
           customProviderName: '',
           apiKey: '',
           apiUrl: '',
@@ -428,6 +410,12 @@ const APIProvidersPage = () => {
   };
 
   const handleDeleteProvider = async (providerId: number) => {
+    // Check if providerId is valid
+    if (!providerId || providerId === null || providerId === undefined) {
+      showToast('Cannot delete unconfigured provider', 'error');
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this provider?')) {
       try {
         const response = await fetch(`/api/admin/providers?id=${providerId}`, {
@@ -626,100 +614,18 @@ const APIProvidersPage = () => {
                 </div>
 
                 <form onSubmit={handleAddProvider} className="space-y-6">
-                  {/* Provider Type Selection */}
+                  {/* Provider Name */}
                   <div className="form-group">
-                    <label className="form-label">Provider Type</label>
-                    <div className="flex gap-4 mb-4">
-                      <label className="flex items-center cursor-pointer">
-                        <input
-                          type="radio"
-                          name="providerType"
-                          value="predefined"
-                          checked={formData.providerType === 'predefined'}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            providerType: e.target.value as 'predefined' | 'custom',
-                            selectedProvider: '',
-                            customProviderName: '',
-                            apiKey: '',
-                            apiUrl: '',
-                            username: '',
-                            password: '',
-                            syncEnabled: true
-                          }))}
-                          className="mr-2 text-[var(--primary)] focus:ring-[var(--primary)]"
-                        />
-                        <span className="text-gray-900 dark:text-white">Predefined Provider</span>
-                      </label>
-                      <label className="flex items-center cursor-pointer">
-                        <input
-                          type="radio"
-                          name="providerType"
-                          value="custom"
-                          checked={formData.providerType === 'custom'}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            providerType: e.target.value as 'predefined' | 'custom',
-                            selectedProvider: '',
-                            customProviderName: '',
-                            apiKey: '',
-                            apiUrl: '',
-                            username: '',
-                            password: '',
-                            syncEnabled: true
-                          }))}
-                          className="mr-2 text-[var(--primary)] focus:ring-[var(--primary)]"
-                        />
-                        <span className="text-gray-900 dark:text-white">Custom Provider</span>
-                      </label>
-                    </div>
+                    <label className="form-label">Provider Name</label>
+                    <input
+                      type="text"
+                      value={formData.customProviderName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, customProviderName: e.target.value }))}
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                      placeholder="Enter provider name"
+                      required
+                    />
                   </div>
-
-                  {/* Provider Selection */}
-                  {formData.providerType === 'predefined' && (
-                    <div className="form-group">
-                      <label className="form-label">Select Provider</label>
-                      <select
-                        value={formData.selectedProvider}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          selectedProvider: e.target.value,
-                          // Clear other fields when changing provider
-                          apiKey: '',
-                          apiUrl: '',
-                          username: '',
-                          password: '',
-                          syncEnabled: true
-                        }))}
-                        className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                        required
-                      >
-                        <option value="">Choose a provider...</option>
-                        {availableProviders
-                          .filter((provider: any) => !provider.configured)
-                          .map((provider: any) => (
-                          <option key={provider.value} value={provider.value}>
-                            {provider.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Custom Provider Name */}
-                  {formData.providerType === 'custom' && (
-                    <div className="form-group">
-                      <label className="form-label">Provider Name</label>
-                      <input
-                        type="text"
-                        value={formData.customProviderName}
-                        onChange={(e) => setFormData(prev => ({ ...prev, customProviderName: e.target.value }))}
-                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                        placeholder="Enter custom provider name"
-                        required
-                      />
-                    </div>
-                  )}
 
                   {/* API Configuration */}
                   <div className="space-y-4">
@@ -732,7 +638,7 @@ const APIProvidersPage = () => {
                         onChange={(e: any) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
                         className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Enter your API key"
-                        disabled={formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName}
+                        disabled={!formData.customProviderName}
                         required
                       />
                     </div>
@@ -745,7 +651,7 @@ const APIProvidersPage = () => {
                         onChange={(e) => setFormData(prev => ({ ...prev, apiUrl: e.target.value }))}
                         className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Enter API URL (e.g., https://provider.com/api/v2)"
-                        disabled={formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName}
+                        disabled={!formData.customProviderName}
                         required
                       />
                     </div>
@@ -764,7 +670,7 @@ const APIProvidersPage = () => {
                             onCheckedChange={(checked: boolean) => setFormData(prev => ({ ...prev, syncEnabled: checked }))}
                             onClick={() => formData.selectedProvider && setFormData(prev => ({ ...prev, syncEnabled: !prev.syncEnabled }))}
                             title={`${formData.syncEnabled ? 'Disable' : 'Enable'} Auto Sync`}
-                            disabled={formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName}
+                            disabled={!formData.customProviderName}
                           />
                         </div>
                       </div>
@@ -784,7 +690,7 @@ const APIProvidersPage = () => {
                           onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                           className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                           placeholder="Enter username"
-                          disabled={formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName}
+                          disabled={!formData.customProviderName}
                         />
                       </div>
 
@@ -800,7 +706,7 @@ const APIProvidersPage = () => {
                           onChange={(e: any) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                           className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                           placeholder="Enter password"
-                          disabled={formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName}
+                          disabled={!formData.customProviderName}
                           required={formData.username.trim() !== ''}
                         />
                         {formData.username.trim() !== '' && (
@@ -1129,8 +1035,9 @@ const APIProvidersPage = () => {
                       </button>
                       <button
                         onClick={() => handleDeleteProvider(provider.id)}
-                        className="btn btn-danger btn-sm bg-red-600 hover:bg-red-700"
-                        title="Delete Provider"
+                        className="btn btn-danger btn-sm bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={provider.id ? "Delete Provider" : "Cannot delete unconfigured provider"}
+                        disabled={!provider.id}
                       >
                         <FaTrash className="w-4 h-4 text-white" />
                       </button>
@@ -1167,7 +1074,8 @@ const APIProvidersPage = () => {
                       </button>
                       <button
                         onClick={() => handleDeleteProvider(provider.id)}
-                        className="btn btn-danger btn-sm w-full justify-center bg-red-600 hover:bg-red-700 text-white"
+                        className="btn btn-danger btn-sm w-full justify-center bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!provider.id}
                       >
                         <FaTrash className="w-4 h-4 mr-2" />
                         Delete
