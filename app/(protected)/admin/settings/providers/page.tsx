@@ -10,6 +10,7 @@ import {
   FaCheckCircle,
   FaCog,
   FaEdit,
+  FaEllipsisV,
   FaExclamationTriangle,
   FaEye,
   FaEyeSlash,
@@ -20,6 +21,8 @@ import {
   FaSearch,
   FaSync,
   FaTimes,
+  FaToggleOff,
+  FaToggleOn,
   FaTrash
 } from 'react-icons/fa';
 
@@ -133,6 +136,7 @@ const APIProvidersPage = () => {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [syncingProvider, setSyncingProvider] = useState<number | null>(null);
   const [syncingAll, setSyncingAll] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -535,6 +539,93 @@ const APIProvidersPage = () => {
     }
   };
 
+  // ProviderActions component
+  const ProviderActions = ({ provider }: { provider: Provider }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+      <div className="flex items-center gap-2">
+        {/* Sync Button */}
+        <button
+          onClick={() => handleSyncProvider(provider.id)}
+          disabled={syncingProvider === provider.id}
+          className="btn btn-sm btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Sync Provider"
+        >
+          <FaSync className={`w-3 h-3 ${syncingProvider === provider.id ? 'animate-spin' : ''}`} />
+        </button>
+
+        {/* Actions Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="btn btn-sm btn-secondary p-2"
+            title="More actions"
+          >
+            <FaEllipsisV className="w-3 h-3" />
+          </button>
+
+          {isOpen && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setIsOpen(false)}
+              />
+              
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      handleOpenEditProvider(provider);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    <FaEdit className="w-3 h-3" />
+                    Edit
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      handleToggleStatus(provider.id, provider.status === 'active' ? 'inactive' : 'active');
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    {provider.status === 'active' ? (
+                      <>
+                        <FaPause className="w-3 h-3" />
+                        Deactivate
+                      </>
+                    ) : (
+                      <>
+                        <FaPlay className="w-3 h-3" />
+                        Activate
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      handleDeleteProvider(provider.id);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                  >
+                    <FaTrash className="w-3 h-3" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (isPageLoading) {
     return (
       <div className="page-container">
@@ -910,200 +1001,323 @@ const APIProvidersPage = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Header Card with Action Buttons and Search */}
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className="btn btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <FaSync className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
-                <button
-                  onClick={() => setShowAddForm(!showAddForm)}
-                  className="btn btn-primary flex items-center gap-2"
-                >
-                  <FaPlus className="w-4 h-4" />
-                  Add Provider
-                </button>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <div className="relative w-full">
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search providers..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                  />
-                </div>
-              </div>
+        <div className="space-y-6">
+          {/* Header Card with Action Buttons and Search */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="btn btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FaSync className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="btn btn-primary flex items-center gap-2"
+              >
+                <FaPlus className="w-4 h-4" />
+                Add Provider
+              </button>
             </div>
-
-            {/* Add Provider Form */}
-
-            {/* Providers List */}
-            <div className="space-y-4">
-              {providers
-                .filter(provider =>
-                  searchQuery === '' ||
-                  provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  provider.status.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map((provider, index) => (
-                <div key={provider.id || `provider-${provider.name}-${index}`} className="card card-padding">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="card-icon">
-                        <FaGlobe />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg">{provider.name}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {provider.services} services
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(provider.status)}`}>
-                        {getStatusIcon(provider.status)}
-                        {provider.status.charAt(0).toUpperCase() + provider.status.slice(1)}
-                      </span>
-                      {/* API Configuration Status */}
-                      <span className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${
-                        provider.apiUrl && provider.apiUrl.trim() !== ''
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                      }`}>
-                        {provider.apiUrl && provider.apiUrl.trim() !== '' ? '🔗 API OK' : '⚠️ No API URL'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">{provider.orders.toLocaleString()}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Total Orders</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600">{provider.importedServices.toLocaleString()}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Imported Services</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600">{provider.activeServices.toLocaleString()}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Active Services</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">${provider.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Current Balance</div>
-                    </div>
-                  </div>
-
-                  <div className="hidden md:flex items-center justify-between">
-                    <div className="text-sm text-gray-500">
-                      Last sync: {new Date(provider.lastSync).toLocaleString()}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleOpenEditProvider(provider)}
-                        className="btn btn-secondary btn-sm"
-                        title="Edit Provider"
-                      >
-                        <FaEdit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleSyncProvider(provider.id)}
-                        className="btn btn-secondary btn-sm"
-                        title="Sync Provider"
-                        disabled={syncingProvider === provider.id}
-                      >
-                        <FaSync className={`w-4 h-4 ${syncingProvider === provider.id ? 'animate-spin' : ''}`} />
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(provider.id)}
-                        className={`btn btn-sm ${provider.status === 'active' ? 'btn-secondary' : 'btn-primary'}`}
-                        title={provider.status === 'active' ? 'Deactivate' : 'Activate'}
-                      >
-                        {provider.status === 'active' ? <FaPause className="w-4 h-4" /> : <FaPlay className="w-4 h-4" />}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProvider(provider.id)}
-                        className="btn btn-danger btn-sm bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={provider.id ? "Delete Provider" : "Cannot delete unconfigured provider"}
-                        disabled={!provider.id}
-                      >
-                        <FaTrash className="w-4 h-4 text-white" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Mobile action buttons */}
-                  <div className="md:hidden mt-4 pt-4 border-t border-gray-200">
-                    <div className="text-sm text-gray-500 mb-4">
-                      Last sync: {new Date(provider.lastSync).toLocaleString()}
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      <button
-                        onClick={() => handleOpenEditProvider(provider)}
-                        className="btn btn-secondary btn-sm w-full justify-center"
-                      >
-                        <FaEdit className="w-4 h-4 mr-2" />
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleSyncProvider(provider.id)}
-                        className="btn btn-secondary btn-sm w-full justify-center"
-                        disabled={syncingProvider === provider.id}
-                      >
-                        <FaSync className={`w-4 h-4 mr-2 ${syncingProvider === provider.id ? 'animate-spin' : ''}`} />
-                        Sync
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(provider.id)}
-                        className={`btn btn-sm w-full justify-center ${provider.status === 'active' ? 'btn-secondary' : 'btn-primary'}`}
-                      >
-                        {provider.status === 'active' ? <FaPause className="w-4 h-4 mr-2" /> : <FaPlay className="w-4 h-4 mr-2" />}
-                        {provider.status === 'active' ? 'Pause' : 'Resume'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProvider(provider.id)}
-                        className="btn btn-danger btn-sm w-full justify-center bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!provider.id}
-                      >
-                        <FaTrash className="w-4 h-4 mr-2" />
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {/* No Results Message */}
-              {providers.filter(provider =>
-                searchQuery === '' ||
-                provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                provider.status.toLowerCase().includes(searchQuery.toLowerCase())
-              ).length === 0 && searchQuery !== '' && (
-                <div className="card card-padding text-center py-12">
-                  <div className="text-gray-500 dark:text-gray-400">
-                    <FaGlobe className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-medium mb-2">No providers found</h3>
-                    <p className="text-sm">No providers match your search criteria "{searchQuery}"</p>
-                  </div>
-                </div>
-              )}
+            
+            <div className="flex items-center gap-2">
+              <div className="relative w-full">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search providers..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Right Column - Statistics */}
-          <div className="space-y-6">
+          {/* Add Provider Form */}
+
+          {/* API Providers Table */}
+          <div className="card card-padding">
+            {/* Filter Buttons */}
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    statusFilter === 'all'
+                      ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
+                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  All
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'all'
+                        ? 'bg-white/20'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                    }`}
+                  >
+                    {providers.length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('active')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    statusFilter === 'active'
+                      ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
+                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Active
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'active'
+                        ? 'bg-white/20'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                    }`}
+                  >
+                    {providers.filter(p => p.status === 'active').length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('inactive')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    statusFilter === 'inactive'
+                      ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
+                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Inactive
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'inactive'
+                        ? 'bg-white/20'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                    }`}
+                  >
+                    {providers.filter(p => p.status === 'inactive').length}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-white border-b z-10">
+                  <tr>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Provider</th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Services</th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Orders</th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Current Balance</th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Sync</th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>API Status</th>
+                    <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {providers
+                    .filter(provider => {
+                      // Search filter
+                      const matchesSearch = searchQuery === '' ||
+                        provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        provider.status.toLowerCase().includes(searchQuery.toLowerCase());
+                      
+                      // Status filter
+                      const matchesStatus = statusFilter === 'all' || provider.status === statusFilter;
+                      
+                      return matchesSearch && matchesStatus;
+                    })
+                    .map((provider, index) => (
+                    <tr key={provider.id || `provider-${provider.name}-${index}`} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                      {/* ID Column */}
+                      <td className="p-3">
+                        <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                          {provider.id}
+                        </div>
+                      </td>
+                      
+                      {/* Provider Column */}
+                      <td className="p-3">
+                        <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.name}</div>
+                      </td>
+                      
+                      {/* Services Column */}
+                      <td className="p-3">
+                        <div className="text-sm">
+                          <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.importedServices || provider.services} Total</div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{provider.activeServices} Active</div>
+                        </div>
+                      </td>
+                      
+                      {/* Orders Column */}
+                      <td className="p-3">
+                        <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.orders.toLocaleString()}</div>
+                      </td>
+                      
+                      {/* Current Balance Column */}
+                      <td className="p-3">
+                        <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                          ${provider.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      </td>
+                      
+                      {/* Last Sync Column */}
+                      <td className="p-3">
+                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                          {new Date(provider.lastSync).toLocaleString()}
+                        </div>
+                      </td>
+                      
+                      {/* Status Column */}
+                      <td className="p-3">
+                        <button
+                          onClick={() => handleToggleStatus(provider.id)}
+                          className={`p-1 rounded transition-colors ${
+                            provider.status === 'active'
+                              ? 'text-green-600 hover:bg-green-50'
+                              : 'text-red-600 hover:bg-red-50'
+                          }`}
+                          title={
+                            provider.status === 'active'
+                              ? 'Deactivate Provider'
+                              : 'Activate Provider'
+                          }
+                        >
+                          {provider.status === 'active' ? (
+                            <FaToggleOn className="h-5 w-5" />
+                          ) : (
+                            <FaToggleOff className="h-5 w-5" />
+                          )}
+                        </button>
+                      </td>
+                      
+                      {/* API Status Column */}
+                      <td className="p-3">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
+                          provider.apiUrl && provider.apiUrl.trim() !== '' 
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                        }`}>
+                          {provider.apiUrl && provider.apiUrl.trim() !== '' ? 'Connected' : 'Not Connected'}
+                        </span>
+                      </td>
+                      
+                      {/* Actions Column */}
+                      <td className="p-3">
+                        <ProviderActions provider={provider} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {providers
+                .filter(provider => {
+                  // Search filter
+                  const matchesSearch = searchQuery === '' ||
+                    provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
+                  
+                  // Status filter
+                  const matchesStatus = statusFilter === 'all' || provider.status === statusFilter;
+                  
+                  return matchesSearch && matchesStatus;
+                })
+                .map((provider, index) => (
+                <div key={provider.id || `provider-${provider.name}-${index}`} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                  {/* Header with ID, Provider Name and Status */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">#{provider.id}</span>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{provider.name}</div>
+                    </div>
+                    <button
+                      onClick={() => handleToggleStatus(provider.id)}
+                      className={`p-1 rounded transition-colors ${
+                        provider.status === 'active'
+                          ? 'text-green-600 hover:bg-green-50'
+                          : 'text-red-600 hover:bg-red-50'
+                      }`}
+                      title={
+                        provider.status === 'active'
+                          ? 'Deactivate Provider'
+                          : 'Activate Provider'
+                      }
+                    >
+                      {provider.status === 'active' ? (
+                        <FaToggleOn className="h-5 w-5" />
+                      ) : (
+                        <FaToggleOff className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                  
+                  {/* API Status */}
+                  <div className="mb-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
+                      provider.apiUrl && provider.apiUrl.trim() !== '' 
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                    }`}>
+                      {provider.apiUrl && provider.apiUrl.trim() !== '' ? 'API Connected' : 'API Not Connected'}
+                    </span>
+                  </div>
+                  
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400">Services</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{provider.importedServices || provider.services} Total Imported</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{provider.activeServices} Active Services</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400">Orders</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{provider.orders.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400">Current Balance</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                        ${provider.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 dark:text-gray-400">Last Sync</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{new Date(provider.lastSync).toLocaleString()}</div>
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <ProviderActions provider={provider} />
+                </div>
+              ))}
+            </div>
+            
+            {/* No Results Message */}
+            {providers.filter(provider =>
+              searchQuery === '' ||
+              provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              provider.status.toLowerCase().includes(searchQuery.toLowerCase())
+            ).length === 0 && searchQuery !== '' && (
+              <div className="text-center py-12">
+                <div className="text-gray-500 dark:text-gray-400">
+                  <FaGlobe className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-medium mb-2">No providers found</h3>
+                  <p className="text-sm">No providers match your search criteria "{searchQuery}"</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Statistics Section - Moved after API Providers */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Overview Stats */}
             <div className="card card-padding">
               <div className="card-header">
