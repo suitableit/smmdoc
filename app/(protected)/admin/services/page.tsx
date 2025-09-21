@@ -2577,6 +2577,14 @@ function AdminServicesPage() {
         matchesStatus = service.status === 'active';
       } else if (statusFilter === 'inactive') {
         matchesStatus = service.status === 'inactive';
+      } else if (statusFilter === 'trash') {
+        // Show services associated with trash providers (inactive providers)
+        // These are services that were deactivated when their provider was moved to trash
+        matchesStatus = service.status === 'inactive' && service.provider && service.provider.trim() !== '';
+      } else if (statusFilter === 'all') {
+        // All filter excludes trash services (services with inactive providers)
+        // Only show active services or inactive services without a provider (manual system)
+        matchesStatus = service.status === 'active' || (service.status === 'inactive' && (!service.provider || service.provider.trim() === ''));
       }
 
       return matchesSearch && matchesProvider && matchesStatus;
@@ -4057,6 +4065,25 @@ function AdminServicesPage() {
                     {stats.inactiveServices.toString()}
                   </span>
                 </button>
+                <button
+                  onClick={() => setStatusFilter('trash')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'trash'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Trash
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'trash'
+                        ? 'bg-white/20'
+                        : 'bg-orange-100 text-orange-700'
+                    }`}
+                  >
+                    {stats.trashServices?.toString() || '0'}
+                  </span>
+                </button>
               </div>
             </div>
           </div>
@@ -4729,12 +4756,7 @@ function AdminServicesPage() {
                                             <div className="text-xs text-gray-600 space-y-1">
                                               {service.refillDays && (
                                                 <div>
-                                                  Days: {service.refillDays}
-                                                </div>
-                                              )}
-                                              {service.refillDisplay && (
-                                                <div>
-                                                  Hours: {service.refillDisplay}
+                                                  {service.refillDays}D {service.refillDisplay}H
                                                 </div>
                                               )}
                                             </div>

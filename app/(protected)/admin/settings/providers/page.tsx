@@ -23,7 +23,8 @@ import {
   FaTimes,
   FaToggleOff,
   FaToggleOn,
-  FaTrash
+  FaTrash,
+  FaUndo
 } from 'react-icons/fa';
 
 import { APP_NAME } from '@/lib/constants';
@@ -107,7 +108,7 @@ interface Provider {
   name: string;
   apiUrl: string;
   apiKey: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'trash';
   services: number;
   orders: number;
   importedServices: number;
@@ -432,11 +433,21 @@ const APIProvidersPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Update local state
-        setProviders(prev => prev.filter(provider => provider.id !== providerId));
+        // Update local state based on delete type
+        if (deleteType === 'trash') {
+          // For trash, update the provider status to 'trash'
+          setProviders(prev => prev.map(provider => 
+            provider.id === providerId 
+              ? { ...provider, status: 'trash' as 'active' | 'inactive' | 'trash' }
+              : provider
+          ));
+        } else {
+          // For permanent delete, remove from list
+          setProviders(prev => prev.filter(provider => provider.id !== providerId));
+        }
         
         const message = deleteType === 'trash' 
-          ? 'Provider moved to trash and services deactivated successfully!' 
+          ? 'Provider and associated imported services are moved to trash successfully!' 
           : 'Provider permanently deleted successfully!';
         showToast(result.message || message, 'success');
       } else {
@@ -454,6 +465,33 @@ const APIProvidersPage = () => {
   const openDeletePopup = (provider: Provider) => {
     setProviderToDelete(provider);
     setShowDeletePopup(true);
+  };
+
+  const handleRestoreProvider = async (provider: Provider) => {
+    try {
+      const response = await fetch('/api/admin/providers/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providerId: provider.id })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update local state
+        setProviders(prevProviders =>
+          prevProviders.map(p =>
+            p.id === provider.id ? { ...p, status: 'active' } : p
+          )
+        );
+        showToast(result.message || 'Provider restored successfully!', 'success');
+      } else {
+        showToast(result.error || 'Failed to restore provider', 'error');
+      }
+    } catch (error) {
+      console.error('Error restoring provider:', error);
+      showToast('Failed to restore provider', 'error');
+    }
   };
 
   const handleSyncAllProviders = async () => {
@@ -590,27 +628,55 @@ const APIProvidersPage = () => {
               {/* Dropdown Menu */}
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
                 <div className="py-1">
-                  <button
-                    onClick={() => {
-                      handleOpenEditProvider(provider);
-                      setIsOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                  >
-                    <FaEdit className="w-3 h-3" />
-                    Edit
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      openDeletePopup(provider);
-                      setIsOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-                  >
-                    <FaTrash className="w-3 h-3" />
-                    Delete
-                  </button>
+                  {provider.status === 'trash' ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          handleRestoreProvider(provider);
+                          setIsOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 flex items-center gap-2"
+                      >
+                        <FaUndo className="w-3 h-3" />
+                        Restore
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          openDeletePopup(provider);
+                          setIsOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                      >
+                        <FaTrash className="w-3 h-3" />
+                        Permanently Delete
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          handleOpenEditProvider(provider);
+                          setIsOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                      >
+                        <FaEdit className="w-3 h-3" />
+                        Edit
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          openDeletePopup(provider);
+                          setIsOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                      >
+                        <FaTrash className="w-3 h-3" />
+                        Delete Provider
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </>
@@ -1053,7 +1119,7 @@ const APIProvidersPage = () => {
                         : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
-                    {providers.length}
+                    {providers.filter(p => p.status !== 'trash').length}
                   </span>
                 </button>
                 <button
@@ -1094,38 +1160,88 @@ const APIProvidersPage = () => {
                     {providers.filter(p => p.status === 'inactive').length}
                   </span>
                 </button>
+                <button
+                  onClick={() => setStatusFilter('trash')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    statusFilter === 'trash'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
+                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Trash
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'trash'
+                        ? 'bg-white/20'
+                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                    }`}
+                  >
+                    {providers.filter(p => p.status === 'trash').length}
+                  </span>
+                </button>
               </div>
             </div>
 
             {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-white border-b z-10">
-                  <tr>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Provider</th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Services</th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Orders</th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Current Balance</th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Sync</th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>API Status</th>
-                    <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {providers
-                    .filter(provider => {
-                      // Search filter
-                      const matchesSearch = searchQuery === '' ||
-                        provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        provider.status.toLowerCase().includes(searchQuery.toLowerCase());
-                      
-                      // Status filter
-                      const matchesStatus = statusFilter === 'all' || provider.status === statusFilter;
-                      
-                      return matchesSearch && matchesStatus;
-                    })
+              {(() => {
+                const filteredProviders = providers.filter(provider => {
+                  // Search filter
+                  const matchesSearch = searchQuery === '' ||
+                    provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
+                  
+                  // Status filter
+                  const matchesStatus = statusFilter === 'all' 
+                    ? provider.status !== 'trash' // Exclude trash items from All filter
+                    : provider.status === statusFilter;
+                  
+                  return matchesSearch && matchesStatus;
+                });
+
+                if (filteredProviders.length === 0) {
+                  return (
+                    <div className="p-12 text-center">
+                      <FaGlobe
+                        className="h-16 w-16 mx-auto mb-4"
+                        style={{ color: 'var(--text-muted)' }}
+                      />
+                      <h3
+                        className="text-lg font-semibold mb-2"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        No providers found
+                      </h3>
+                      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                        {searchQuery && statusFilter !== 'all'
+                          ? `No ${statusFilter} providers match your search "${searchQuery}".`
+                          : searchQuery
+                          ? `No providers match your search "${searchQuery}".`
+                          : statusFilter !== 'all'
+                          ? `No ${statusFilter} providers found.`
+                          : 'No providers exist yet.'}
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-white border-b z-10">
+                      <tr>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Provider</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Services</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Orders</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Current Balance</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Sync</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>API Status</th>
+                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredProviders
                     .map((provider, index) => (
                     <tr key={provider.id || `provider-${provider.name}-${index}`} className="border-t hover:bg-gray-50 transition-colors duration-200">
                       {/* ID Column */}
@@ -1222,8 +1338,10 @@ const APIProvidersPage = () => {
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
+                    </tbody>
+                  </table>
+                );
+              })()}
             </div>
 
             {/* Mobile Card View */}
@@ -1236,7 +1354,45 @@ const APIProvidersPage = () => {
                     provider.status.toLowerCase().includes(searchQuery.toLowerCase());
                   
                   // Status filter
-                  const matchesStatus = statusFilter === 'all' || provider.status === statusFilter;
+                  const matchesStatus = statusFilter === 'all' 
+                    ? provider.status !== 'trash' // Exclude trash items from All filter
+                    : provider.status === statusFilter;
+                  
+                  return matchesSearch && matchesStatus;
+                }).length === 0 ? (
+                <div className="text-center py-12">
+                  <FaGlobe
+                    className="h-16 w-16 mx-auto mb-4"
+                    style={{ color: 'var(--text-muted)' }}
+                  />
+                  <h3
+                    className="text-lg font-semibold mb-2"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    No providers found
+                  </h3>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    {searchQuery && statusFilter !== 'all'
+                      ? `No ${statusFilter} providers match your search "${searchQuery}".`
+                      : searchQuery
+                      ? `No providers match your search "${searchQuery}".`
+                      : statusFilter !== 'all'
+                      ? `No ${statusFilter} providers found.`
+                      : 'No providers exist yet.'}
+                  </p>
+                </div>
+              ) : (
+                providers
+                .filter(provider => {
+                  // Search filter
+                  const matchesSearch = searchQuery === '' ||
+                    provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
+                  
+                  // Status filter
+                  const matchesStatus = statusFilter === 'all' 
+                    ? provider.status !== 'trash' // Exclude trash items from All filter
+                    : provider.status === statusFilter;
                   
                   return matchesSearch && matchesStatus;
                 })
@@ -1317,23 +1473,9 @@ const APIProvidersPage = () => {
                   {/* Actions */}
                   <ProviderActions provider={provider} />
                 </div>
-              ))}
+              ))
+              )}
             </div>
-            
-            {/* No Results Message */}
-            {providers.filter(provider =>
-              searchQuery === '' ||
-              provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              provider.status.toLowerCase().includes(searchQuery.toLowerCase())
-            ).length === 0 && searchQuery !== '' && (
-              <div className="text-center py-12">
-                <div className="text-gray-500 dark:text-gray-400">
-                  <FaGlobe className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium mb-2">No providers found</h3>
-                  <p className="text-sm">No providers match your search criteria "{searchQuery}"</p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Statistics Section - Moved after API Providers */}
@@ -1481,7 +1623,10 @@ const APIProvidersPage = () => {
                   className="text-lg font-semibold"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Delete "{providerToDelete.name}" Provider
+                  {providerToDelete.status === 'trash' 
+                    ? `Permanently Delete "${providerToDelete.name}" Provider`
+                    : `Delete "${providerToDelete.name}" Provider`
+                  }
                 </h3>
                 <button
                   onClick={() => setShowDeletePopup(false)}
@@ -1510,58 +1655,76 @@ const APIProvidersPage = () => {
                   {/* Action Options */}
                   <div className="space-y-3">
                     <p className="font-medium text-gray-800">
-                      What would you like to do with this provider?
+                      {providerToDelete.status === 'trash' 
+                        ? 'This provider is currently in trash. This action will permanently delete it.'
+                        : 'What would you like to do with this provider?'
+                      }
                     </p>
 
-                    {/* Option 1: Move to Trash */}
-                     <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                       <input
-                         type="radio"
-                         name="deleteOption"
-                         value="trash"
-                         defaultChecked
-                         className="mt-0.5"
-                       />
-                       <div>
-                         <div className="font-medium text-gray-800">
-                           Move to Trash
-                         </div>
-                         <div className="text-sm text-gray-600">
-                           All imported services will deactivate until restore the provider
-                         </div>
-                       </div>
-                     </label>
+                    {providerToDelete.status === 'trash' ? (
+                      // For trash items, only show permanent delete option
+                      <div className="p-3 border rounded-lg bg-red-50 border-red-200">
+                        <div className="font-medium text-red-800">
+                          Permanently Delete
+                        </div>
+                        <div className="text-sm text-red-600">
+                          This will permanently remove the provider and all imported services. This action cannot be undone.
+                        </div>
+                      </div>
+                    ) : (
+                      // For active/inactive items, show both options
+                      <>
+                        {/* Option 1: Move to Trash */}
+                        <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                          <input
+                            type="radio"
+                            name="deleteOption"
+                            value="trash"
+                            defaultChecked
+                            className="mt-0.5"
+                          />
+                          <div>
+                            <div className="font-medium text-gray-800">
+                              Move to Trash
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              All imported services will be permanently deleted
+                            </div>
+                          </div>
+                        </label>
 
-                     {/* Option 2: Permanently Delete */}
-                     <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                       <input
-                         type="radio"
-                         name="deleteOption"
-                         value="permanent"
-                         className="mt-0.5"
-                       />
-                       <div>
-                         <div className="font-medium text-gray-800">
-                           Permanently Delete
-                         </div>
-                         <div className="text-sm text-gray-600">
-                           Permanently remove the provider and all imported services
-                         </div>
-                       </div>
-                     </label>
+                        {/* Option 2: Permanently Delete */}
+                        <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                          <input
+                            type="radio"
+                            name="deleteOption"
+                            value="permanent"
+                            className="mt-0.5"
+                          />
+                          <div>
+                            <div className="font-medium text-gray-800">
+                              Permanently Delete
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              Permanently remove the provider and all imported services
+                            </div>
+                          </div>
+                        </label>
+                      </>
+                    )}
                   </div>
 
                   {/* Additional Warning for Permanent Delete */}
                    <div className="p-3 bg-red-50 rounded-lg border border-red-200">
                      <p className="text-sm text-red-800">
-                       <strong>Warning:</strong> The action will get scheduled until the completion of any orders/refill/cancel request operation.
+                       <strong>Warning:</strong> The action will be scheduled until the completion of any orders/refill/cancel request operation.
                      </p>
                    </div>
 
                    {/* Operation Note */}
                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                      <p className="text-sm text-blue-800">
-                       <strong>Note:</strong> After being scheduled, users are not avail to show the associated services of the scheduled deletion of the provider.
+                       <strong>Note:</strong> After being scheduled, users are not able to see the associated services of the scheduled deletion or trash of the provider.
                      </p>
                    </div>
 
@@ -1576,13 +1739,15 @@ const APIProvidersPage = () => {
                     <button
                       onClick={() => {
                         const selectedOption = document.querySelector('input[name="deleteOption"]:checked') as HTMLInputElement;
-                        const deleteType = selectedOption?.value as 'trash' | 'permanent' || 'trash';
+                        const deleteType = providerToDelete.status === 'trash' 
+                          ? 'permanent' 
+                          : (selectedOption?.value as 'trash' | 'permanent' || 'trash');
                         handleDeleteProvider(providerToDelete.id, deleteType);
                       }}
                       className="btn bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-6 py-2"
                     >
                       <FaTrash className="h-4 w-4" />
-                      Confirm Delete
+                      {providerToDelete.status === 'trash' ? 'Permanently Delete' : 'Confirm Delete'}
                     </button>
                   </div>
                 </div>

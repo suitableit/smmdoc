@@ -3,16 +3,16 @@ import { convertToUSD } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Timeout and retry configuration
+// Configuration constants
 const API_TIMEOUT = 30000; // 30 seconds
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000; // 2 seconds
 
-// Utility function to create fetch with timeout
+// Utility function to fetch with timeout
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout: number = API_TIMEOUT): Promise<Response> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -49,7 +49,7 @@ const retryApiCall = async <T>(
       }
       
       // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, delay * attempt));
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
   
@@ -59,43 +59,24 @@ const retryApiCall = async <T>(
 // Utility function to check if URL is reachable
 const checkUrlReachability = async (url: string): Promise<boolean> => {
   try {
-    const response = await fetchWithTimeout(url, { method: 'HEAD' }, 10000);
-    return response.ok || response.status < 500;
-  } catch (error) {
-    console.log(`❌ URL unreachable: ${url}`, error instanceof Error ? error.message : error);
+    const response = await fetchWithTimeout(url, { method: 'HEAD' }, 5000);
+    return response.ok;
+  } catch {
     return false;
   }
 };
 
-// Provider configurations with multiple API URL options
-const PROVIDER_CONFIGS = {
-  smmgen: {
-    apiUrl: "https://smmgen.com/api/v2",
-    alternativeUrls: ["https://api.smmgen.com/v2", "https://smmgen.com/api"],
-    endpoints: { services: "", balance: "" },
-    method: "POST"
-  },
-  growfollows: {
-    apiUrl: "https://growfollows.com/api/v2",
-    alternativeUrls: ["https://api.growfollows.com/v2", "https://growfollows.com/api"],
-    endpoints: { services: "", balance: "" },
-    method: "POST"
-  },
-  attpanel: {
-    apiUrl: "https://attpanel.com/api/v2",
-    alternativeUrls: ["https://api.attpanel.com/v3", "https://attpanel.com/api"],
-    endpoints: { services: "", balance: "" },
-    method: "POST"
-  },
-  smmcoder: {
-    apiUrl: "https://smmcoder.com/api/v2",
-    alternativeUrls: ["https://smmcoder.com/api"],
-    endpoints: { services: "", balance: "" },
-    method: "POST"
-  }
+// Create provider configuration dynamically
+const createProviderConfig = (provider: any) => {
+  return {
+    name: provider.name,
+    baseUrl: provider.api_url,
+    apiKey: provider.api_key,
+    endpoints: JSON.parse(provider.endpoints || '{}'),
+    headers: JSON.parse(provider.headers || '{}')
+  };
 };
 
-// POST - Handle services request with categories in body to avoid URL length limits
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -105,332 +86,121 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { action, providerId, categories, page = 1, limit = 1000 } = body;
+    const { providerId, selectedServices } = body;
 
-    console.log('🔥 POST Services request:', { action, providerId, categories: categories?.length, page, limit });
+    if (!providerId || !selectedServices || !Array.isArray(selectedServices)) {
+      return NextResponse.json(
+        { error: 'Provider ID and selected services are required' },
+        { status: 400 }
+      );
+    }
 
-    // Handle services request
-    if (action === 'services' && providerId && categories && Array.isArray(categories)) {
+    console.log('🔥 Import request:', { providerId, servicesCount: selectedServices.length });
+
+    // Get provider configuration
+    const provider = await db.api_providers.findUnique({
+      where: { id: parseInt(providerId) }
+    });
+
+    if (!provider) {
+      return NextResponse.json(
+        { error: 'Provider not found' },
+        { status: 404 }
+      );
+    }
+
+    console.log('✅ Provider found:', provider.name);
+
+    // Create dynamic provider configuration
+    const providerConfig = createProviderConfig(provider);
+    console.log('🔧 Using dynamic config for provider:', provider.name);
+
+    let importedCount = 0;
+    let skippedCount = 0;
+    const errors: string[] = [];
+
+    for (const service of selectedServices) {
       try {
-        const provider = await db.api_providers.findUnique({
-          where: { id: parseInt(providerId) }
+        console.log(`📝 Processing service: ${service.name} (ID: ${service.id})`);
+
+        // Check if service already exists
+        const existingService = await db.services.findFirst({
+          where: {
+            OR: [
+              { name: service.name },
+              { external_id: service.id?.toString() }
+            ]
+          }
         });
 
-        if (!provider) {
-          console.log('❌ Provider not found:', providerId);
-          return NextResponse.json(
-            { error: 'Provider not found', success: false, data: null },
-            { status: 404 }
-          );
+        if (existingService) {
+          console.log(`⚠️ Service already exists: ${service.name}`);
+          skippedCount++;
+          continue;
         }
 
-        console.log('✅ Provider found:', provider.name);
-
-        // Simple validation - check if provider has API URL and key
-        if (!provider.api_url || provider.api_url.trim() === '') {
-          console.log('❌ Provider validation failed: API URL missing');
-          return NextResponse.json(
-            { error: 'Provider validation failed: API URL is missing', success: false, data: null },
-            { status: 400 }
-          );
-        }
-
-        if (!provider.api_key || provider.api_key.trim() === '') {
-          console.log('❌ Provider validation failed: API key missing');
-          return NextResponse.json(
-            { error: 'Provider validation failed: API key is missing', success: false, data: null },
-            { status: 400 }
-          );
-        }
-
-        if (provider.status !== 'active') {
-          console.log('❌ Provider validation failed: Provider not active');
-          return NextResponse.json(
-            { error: 'Provider validation failed: Provider is not active', success: false, data: null },
-            { status: 400 }
-          );
-        }
-
-        console.log('✅ Provider validation passed');
-
-        // Check if provider is in hardcoded configs or use dynamic config for custom providers
-        const providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
-        let apiUrls: string[] = [];
-        
-        if (providerConfig) {
-          // Use hardcoded provider configuration
-          apiUrls = [providerConfig.apiUrl, ...providerConfig.alternativeUrls];
-          console.log('✅ Using hardcoded provider config for:', provider.name);
-        } else {
-          // Use dynamic configuration for custom providers
-          apiUrls = [provider.api_url];
-          console.log('✅ Using dynamic provider config for custom provider:', provider.name);
-        }
-
-        // Fetch services from provider API with timeout and retry
-        let providerServices = null;
-        let workingUrl = '';
-
-        // Check URL reachability first
-        const reachableUrls = [];
-        for (const url of apiUrls) {
-          console.log(`🔍 Checking reachability: ${url}`);
-          const isReachable = await checkUrlReachability(url);
-          if (isReachable) {
-            reachableUrls.push(url);
-            console.log(`✅ URL reachable: ${url}`);
-          } else {
-            console.log(`❌ URL unreachable: ${url}`);
-          }
-        }
-
-        if (reachableUrls.length === 0) {
-          throw new Error(`All provider URLs are unreachable. Please check your internet connection and provider configuration.`);
-        }
-
-        // Try multiple request methods and formats for reachable URLs
-        for (const baseUrl of reachableUrls) {
-          if (providerServices) break; // Stop if we already got services
-          
-          console.log(`🔄 Trying API: ${baseUrl}`);
-          
-          // Method 1: POST with FormData (works for SMMCoder and some others)
+        // Convert price to USD if needed
+        let priceInUSD = service.price;
+        if (service.currency && service.currency !== 'USD') {
           try {
-            await retryApiCall(async () => {
-              const formData = new FormData();
-              formData.append('key', provider.api_key);
-              formData.append('action', 'services');
-
-              const response = await fetchWithTimeout(baseUrl, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                if (Array.isArray(data) && data.length > 0) {
-                  providerServices = data;
-                  workingUrl = baseUrl;
-                  console.log(`✅ FormData POST success: ${baseUrl} - ${data.length} services`);
-                  return data;
-                }
-              }
-              throw new Error(`FormData POST failed: ${response.status} ${response.statusText}`);
-            });
-            if (providerServices) break;
-          } catch (error) {
-            console.log(`❌ FormData POST failed after retries: ${baseUrl}`, error instanceof Error ? error.message : error);
-          }
-          
-          // Method 2: POST with URLSearchParams (standard SMM panel format)
-          try {
-            await retryApiCall(async () => {
-              const response = await fetchWithTimeout(baseUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                },
-                body: new URLSearchParams({
-                  key: provider.api_key,
-                  action: 'services'
-                })
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                if (Array.isArray(data) && data.length > 0) {
-                  providerServices = data;
-                  workingUrl = baseUrl;
-                  console.log(`✅ URLSearchParams POST success: ${baseUrl} - ${data.length} services`);
-                  return data;
-                }
-              }
-              throw new Error(`URLSearchParams POST failed: ${response.status} ${response.statusText}`);
-            });
-            if (providerServices) break;
-          } catch (error) {
-            console.log(`❌ URLSearchParams POST failed after retries: ${baseUrl}`, error instanceof Error ? error.message : error);
-          }
-          
-          // Method 3: POST with JSON body
-          try {
-            await retryApiCall(async () => {
-              const response = await fetchWithTimeout(baseUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                },
-                body: JSON.stringify({
-                  key: provider.api_key,
-                  action: 'services'
-                })
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                if (Array.isArray(data) && data.length > 0) {
-                  providerServices = data;
-                  workingUrl = baseUrl;
-                  console.log(`✅ JSON POST success: ${baseUrl} - ${data.length} services`);
-                  return data;
-                }
-              }
-              throw new Error(`JSON POST failed: ${response.status} ${response.statusText}`);
-            });
-            if (providerServices) break;
-          } catch (error) {
-            console.log(`❌ JSON POST failed after retries: ${baseUrl}`, error instanceof Error ? error.message : error);
-          }
-          
-          // Method 4: GET with query parameters
-          try {
-            await retryApiCall(async () => {
-              const url = new URL(baseUrl);
-              url.searchParams.append('key', provider.api_key);
-              url.searchParams.append('action', 'services');
-              
-              const response = await fetchWithTimeout(url.toString(), {
-                method: 'GET',
-                headers: {
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                if (Array.isArray(data) && data.length > 0) {
-                  providerServices = data;
-                  workingUrl = baseUrl;
-                  console.log(`✅ GET success: ${baseUrl} - ${data.length} services`);
-                  return data;
-                }
-              }
-              throw new Error(`GET failed: ${response.status} ${response.statusText}`);
-            });
-            if (providerServices) break;
-          } catch (error) {
-            console.log(`❌ GET failed after retries: ${baseUrl}`, error instanceof Error ? error.message : error);
+            priceInUSD = await convertToUSD(service.price, service.currency);
+            console.log(`💱 Converted ${service.price} ${service.currency} to ${priceInUSD} USD`);
+          } catch (conversionError) {
+            console.warn(`⚠️ Currency conversion failed for ${service.name}:`, conversionError);
+            // Use original price if conversion fails
           }
         }
 
-        if (!providerServices || !Array.isArray(providerServices)) {
-          console.log('❌ No services fetched from provider:', {
-            providerServices: providerServices ? 'exists but not array' : 'null/undefined',
-            type: typeof providerServices,
-            isArray: Array.isArray(providerServices)
-          });
-          return NextResponse.json(
-            { 
-              error: `প্রোভাইডার ${provider.name} থেকে সার্ভিস লোড করতে ব্যর্থ। দয়া করে API Key এবং URL চেক করুন।`,
-              success: false, 
-              data: null,
-              details: 'Provider API did not return valid service data. Please check your API credentials.'
-            },
-            { status: 500 }
-          );
-        }
-
-        console.log(`✅ Fetched ${providerServices.length} services from ${provider.name}`);
-
-        // Filter services by selected categories
-        console.log('🔍 Filtering by categories:', categories);
-
-        const filteredServices = providerServices.filter((service: any) => {
-          const serviceCategory = service.category || 'Uncategorized';
-          const matches = categories.includes(serviceCategory);
-          return matches;
-        });
-
-        console.log(`📊 Filtered to ${filteredServices.length} services from ${providerServices.length} total`);
-
-        // Apply pagination
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-        const paginatedServices = filteredServices.slice(startIndex, endIndex);
-
-        console.log(`📄 Pagination: Page ${page}, Limit ${limit}, Start: ${startIndex}, End: ${endIndex}`);
-        console.log(`📄 Returning ${paginatedServices.length} services from ${filteredServices.length} total`);
-
-        // Format services with proper ID and description
-        const formattedServices = paginatedServices.map((service: any, index: number) => ({
-          ...service,
-          id: service.service || service.id || `srv_${startIndex + index + 1}`, // Ensure ID exists with proper indexing
-          description: service.description || service.name || 'No description available', // Ensure description exists
-          category: service.category || 'Uncategorized'
-        }));
-
-        console.log(`✅ Returning ${formattedServices.length} formatted services for page ${page}`);
-
-        return NextResponse.json({
-          success: true,
+        // Create service in database
+        const newService = await db.services.create({
           data: {
-            services: formattedServices,
-            pagination: {
-              page: page,
-              limit: limit,
-              total: filteredServices.length,
-              totalPages: Math.ceil(filteredServices.length / limit),
-              hasMore: endIndex < filteredServices.length,
-              returned: formattedServices.length
-            },
-            provider: provider.name
-          },
-          error: null
+            name: service.name,
+            description: service.description || '',
+            category: service.category || 'Other',
+            price: priceInUSD,
+            currency: 'USD', // Always store in USD
+            min_quantity: service.min || 1,
+            max_quantity: service.max || 10000,
+            status: 'active',
+            external_id: service.id?.toString(),
+            provider_id: parseInt(providerId),
+            api_provider_id: parseInt(providerId),
+            created_at: new Date(),
+            updated_at: new Date()
+          }
         });
 
-      } catch (error) {
-        console.error('❌ Error in services request:', error);
-        
-        let userFriendlyMessage = 'সার্ভিস লোড করতে সমস্যা হয়েছে।';
-        let details = '';
-        
-        if (error instanceof Error) {
-          if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
-            userFriendlyMessage = `প্রোভাইডার ${provider.name} এর সাথে সংযোগ সময়সীমা শেষ। দয়া করে পরে আবার চেষ্টা করুন।`;
-            details = 'Connection timeout - the provider server is not responding within the expected time.';
-          } else if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
-            userFriendlyMessage = `প্রোভাইডার ${provider.name} এর সার্ভার পাওয়া যাচ্ছে না। URL চেক করুন।`;
-            details = 'Provider server is unreachable. Please verify the API URL.';
-          } else if (error.message.includes('Invalid API Key') || error.message.includes('Unauthorized')) {
-            userFriendlyMessage = `প্রোভাইডার ${provider.name} এর API Key সঠিক নয়। দয়া করে API Key আপডেট করুন।`;
-            details = 'API authentication failed. Please check your API key.';
-          } else {
-            details = error.message;
-          }
-        }
-        
-        return NextResponse.json(
-          {
-            error: userFriendlyMessage,
-            success: false,
-            data: null,
-            details: details
-          },
-          { status: 500 }
-        );
+        console.log(`✅ Service imported: ${newService.name} (ID: ${newService.id})`);
+        importedCount++;
+
+      } catch (serviceError) {
+        const errorMsg = `Failed to import ${service.name}: ${serviceError instanceof Error ? serviceError.message : 'Unknown error'}`;
+        console.error('❌', errorMsg);
+        errors.push(errorMsg);
       }
     }
 
-    return NextResponse.json(
-      { error: 'Invalid request parameters', success: false, data: null },
-      { status: 400 }
-    );
+    console.log(`🎉 Import completed: ${importedCount} imported, ${skippedCount} skipped, ${errors.length} errors`);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        imported: importedCount,
+        skipped: skippedCount,
+        errors: errors.length,
+        errorDetails: errors
+      }
+    });
 
   } catch (error) {
-    console.error('❌ POST request error:', error);
+    console.error('❌ Import error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', success: false, data: null },
+      { error: 'Import failed: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
     );
   }
 }
 
-// GET - Get available providers for import or categories
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -449,184 +219,134 @@ export async function GET(req: NextRequest) {
       try {
         console.log('🔥 Services request:', { providerId, categories });
 
-      const provider = await db.api_providers.findUnique({
-        where: { id: parseInt(providerId) }
-      });
+        const provider = await db.api_providers.findUnique({
+          where: { id: parseInt(providerId) }
+        });
 
-      if (!provider) {
-        console.log('❌ Provider not found:', providerId);
-        return NextResponse.json(
-          { error: 'Provider not found', success: false, data: null },
-          { status: 404 }
-        );
-      }
+        if (!provider) {
+          console.log('❌ Provider not found:', providerId);
+          return NextResponse.json(
+            { error: 'Provider not found', success: false, data: null },
+            { status: 404 }
+          );
+        }
 
-      console.log('✅ Provider found:', provider.name);
+        console.log('✅ Provider found:', provider.name);
 
-      // Check if provider is in hardcoded configs, otherwise create dynamic config
-      let providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
-      
-      if (!providerConfig) {
-        console.log('🔧 Creating dynamic config for custom provider:', provider.name);
-        // Create dynamic config for custom provider
-        providerConfig = {
-          apiUrl: provider.api_url,
-          endpoints: {
-            services: '',
-            balance: ''
-          },
-          alternativeUrls: [],
-          method: 'POST'
-        };
-      }
+        // Create dynamic provider configuration
+        const providerConfig = createProviderConfig(provider);
+        console.log('🔧 Using dynamic config for provider:', provider.name);
 
-      // Fetch services from provider API
-      let providerServices = null;
+        // Fetch services from provider API
+        let providerServices = null;
+        const categoriesArray = categories.split(',').map(c => c.trim());
+        console.log('📋 Requested categories:', categoriesArray);
 
-      if (provider.name.toLowerCase() === 'smmcoder') {
-        // SMMCoder API requires POST method with form data
-        const smmcoderUrls = [
-          'https://smmcoder.com/api/v2',
-          'https://smmcoder.com/api'
-        ];
+        // Try different API endpoints based on provider configuration
+        const endpoints = providerConfig.endpoints;
+        const baseUrl = providerConfig.baseUrl;
 
-        for (const baseUrl of smmcoderUrls) {
+        if (endpoints.services) {
           try {
-            const formData = new FormData();
-            formData.append('key', provider.api_key);
-            formData.append('action', 'services');
-
-            const response = await fetch(baseUrl, {
-              method: 'POST',
-              body: formData,
+            const servicesUrl = `${baseUrl}${endpoints.services}`;
+            console.log(`🌐 Fetching from services endpoint: ${servicesUrl}`);
+            
+            const response = await retryApiCall(async () => {
+              return await fetchWithTimeout(servicesUrl, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${providerConfig.apiKey}`,
+                  'Content-Type': 'application/json',
+                  ...providerConfig.headers
+                }
+              });
             });
 
             if (response.ok) {
               const data = await response.json();
-              if (Array.isArray(data)) {
-                providerServices = data;
-                break;
-              }
+              providerServices = data.services || data.data || data;
+              console.log(`✅ Services endpoint successful, got ${Array.isArray(providerServices) ? providerServices.length : 'unknown'} services`);
             }
           } catch (error) {
-            console.error(`Error fetching from ${baseUrl}:`, error);
-            continue;
+            console.error(`❌ Services endpoint failed for ${baseUrl}:`, error);
           }
         }
-      } else {
-        // For other providers, try both POST and GET methods with multiple URLs
-        const baseUrls = [providerConfig.apiUrl, ...(providerConfig.alternativeUrls || [])];
 
-        for (const baseUrl of baseUrls) {
-          console.log(`🔥 Trying provider ${provider.name} with URL: ${baseUrl}`);
-
+        // If services endpoint failed, try GET method
+        if (!providerServices && endpoints.get) {
           try {
-            // Try POST method first (standard for most SMM panels)
-            const formData = new FormData();
-            formData.append('key', provider.api_key);
-            formData.append('action', 'services');
-
-            console.log(`📤 POST request to ${baseUrl} with key: ${provider.api_key.substring(0, 10)}...`);
-
-            const postResponse = await fetch(baseUrl, {
-              method: 'POST',
-              body: formData,
+            const getUrl = `${baseUrl}${endpoints.get}`;
+            console.log(`🌐 Trying GET endpoint: ${getUrl}`);
+            
+            const response = await retryApiCall(async () => {
+              return await fetchWithTimeout(getUrl, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${providerConfig.apiKey}`,
+                  'Content-Type': 'application/json',
+                  ...providerConfig.headers
+                }
+              });
             });
 
-            console.log(`📥 POST Response status: ${postResponse.status} for ${baseUrl}`);
-
-            if (postResponse.ok) {
-              const data = await postResponse.json();
-              console.log(`📊 POST Response data type: ${Array.isArray(data) ? 'Array' : typeof data}, length: ${Array.isArray(data) ? data.length : 'N/A'}`);
-
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                console.log(`✅ SUCCESS with POST ${baseUrl}! Found ${data.length} services`);
-                break;
-              }
-            } else {
-              const errorText = await postResponse.text();
-              console.log(`❌ POST Error response: ${errorText}`);
-            }
-          } catch (error) {
-            console.error(`❌ POST method failed for ${baseUrl}:`, error);
-          }
-
-          // If POST failed, try GET method
-          try {
-            const servicesUrl = `${baseUrl}${providerConfig.endpoints.services}?key=${provider.api_key}&action=services`;
-            console.log(`📤 GET request to ${servicesUrl}`);
-
-            const getResponse = await fetch(servicesUrl);
-            console.log(`📥 GET Response status: ${getResponse.status} for ${servicesUrl}`);
-
-            if (getResponse.ok) {
-              const data = await getResponse.json();
-              console.log(`📊 GET Response data type: ${Array.isArray(data) ? 'Array' : typeof data}, length: ${Array.isArray(data) ? data.length : 'N/A'}`);
-
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                console.log(`✅ SUCCESS with GET ${servicesUrl}! Found ${data.length} services`);
-                break;
-              }
-            } else {
-              const errorText = await getResponse.text();
-              console.log(`❌ GET Error response: ${errorText}`);
+            if (response.ok) {
+              const data = await response.json();
+              providerServices = data.services || data.data || data;
+              console.log(`✅ GET endpoint successful, got ${Array.isArray(providerServices) ? providerServices.length : 'unknown'} services`);
             }
           } catch (error) {
             console.error(`❌ GET method failed for ${baseUrl}:`, error);
           }
         }
-      }
 
-      if (!providerServices || !Array.isArray(providerServices)) {
-        console.log('❌ No services fetched from provider:', {
-          providerServices: providerServices ? 'exists but not array' : 'null/undefined',
-          type: typeof providerServices,
-          isArray: Array.isArray(providerServices)
-        });
-        return NextResponse.json(
-          { error: 'Failed to fetch services from provider', success: false, data: null },
-          { status: 500 }
-        );
-      }
-
-      console.log(`✅ Fetched ${providerServices.length} services from ${provider.name}`);
-
-      // Filter services by selected categories
-      const selectedCategories = categories.split(',').map(cat => cat.trim());
-      console.log('🔍 Filtering by categories:', selectedCategories);
-
-      const filteredServices = providerServices.filter((service: any) => {
-        const serviceCategory = service.category || 'Uncategorized';
-        const matches = selectedCategories.includes(serviceCategory);
-        if (!matches) {
-          console.log(`⚠️ Service "${service.name}" category "${serviceCategory}" not in selected categories`);
+        if (!providerServices || !Array.isArray(providerServices)) {
+          console.log('❌ No services fetched from provider:', {
+            providerServices: providerServices ? 'exists but not array' : 'null/undefined',
+            type: typeof providerServices,
+            isArray: Array.isArray(providerServices)
+          });
+          return NextResponse.json(
+            { error: 'Failed to fetch services from provider', success: false, data: null },
+            { status: 500 }
+          );
         }
-        return matches;
-      });
 
-      console.log(`📊 Filtered to ${filteredServices.length} services from ${providerServices.length} total`);
+        console.log(`✅ Fetched ${providerServices.length} services from ${provider.name}`);
 
-      // Format services with proper ID and description
-      const formattedServices = filteredServices.map((service: any, index: number) => ({
-        ...service,
-        id: service.service || service.id || `srv_${index + 1}`, // Ensure ID exists
-        description: service.description || service.name || 'No description available', // Ensure description exists
-        category: service.category || 'Uncategorized'
-      }));
+        // Filter services by categories
+        const filteredServices = providerServices.filter((service: any) => {
+          const serviceCategory = service.category?.toLowerCase() || '';
+          return categoriesArray.some(cat => 
+            serviceCategory.includes(cat.toLowerCase()) || 
+            cat.toLowerCase().includes(serviceCategory)
+          );
+        });
 
-      console.log(`✅ Returning ${formattedServices.length} formatted services`);
+        console.log(`🔍 Filtered to ${filteredServices.length} services for categories: ${categoriesArray.join(', ')}`);
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          services: formattedServices,
-          total: formattedServices.length,
-          provider: provider.name
-        },
-        error: null
-      });
+        // Format services for frontend
+        const formattedServices = filteredServices.map((service: any) => ({
+          id: service.service || service.id,
+          name: service.name,
+          description: service.description || '',
+          category: service.category,
+          price: parseFloat(service.rate || service.price || '0'),
+          currency: service.currency || 'USD',
+          min: parseInt(service.min || '1'),
+          max: parseInt(service.max || '10000')
+        }));
+
+        console.log(`✅ Returning ${formattedServices.length} formatted services`);
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            services: formattedServices,
+            total: formattedServices.length,
+            provider: provider.name
+          },
+          error: null
+        });
 
       } catch (error) {
         console.error('❌ Error in services request:', error);
@@ -643,518 +363,114 @@ export async function GET(req: NextRequest) {
 
     // If requesting categories for a specific provider
     if (action === 'categories' && providerId) {
-      const provider = await db.api_providers.findUnique({
-        where: { id: parseInt(providerId) }
-      });
+      try {
+        const provider = await db.api_providers.findUnique({
+          where: { id: parseInt(providerId) }
+        });
 
-      if (!provider) {
+        if (!provider) {
+          return NextResponse.json(
+            { error: 'Provider not found', success: false, data: null },
+            { status: 404 }
+          );
+        }
+
+        // Create dynamic provider configuration
+        const providerConfig = createProviderConfig(provider);
+
+        // Fetch services to extract categories
+        let providerServices = null;
+        const endpoints = providerConfig.endpoints;
+        const baseUrl = providerConfig.baseUrl;
+
+        // Try services endpoint first
+        if (endpoints.services) {
+          try {
+            const servicesUrl = `${baseUrl}${endpoints.services}`;
+            const response = await retryApiCall(async () => {
+              return await fetchWithTimeout(servicesUrl, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${providerConfig.apiKey}`,
+                  'Content-Type': 'application/json',
+                  ...providerConfig.headers
+                }
+              });
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              providerServices = data.services || data.data || data;
+            }
+          } catch (error) {
+            console.error('Error fetching services for categories:', error);
+          }
+        }
+
+        if (!providerServices || !Array.isArray(providerServices)) {
+          return NextResponse.json(
+            { error: 'Failed to fetch services from provider', success: false, data: null },
+            { status: 500 }
+          );
+        }
+
+        // Extract unique categories
+        const categories = [...new Set(
+          providerServices
+            .map((service: any) => service.category)
+            .filter((category: any) => category && category.trim() !== '')
+        )].sort();
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            categories: categories,
+            total: categories.length,
+            provider: provider.name
+          },
+          error: null
+        });
+      } catch (error) {
+        console.error('Error fetching categories:', error);
         return NextResponse.json(
-          { error: 'Provider not found', success: false, data: null },
-          { status: 404 }
+          { error: 'Failed to fetch categories: ' + (error instanceof Error ? error.message : 'Unknown error'), success: false, data: null },
+          { status: 500 }
         );
       }
+    }
 
-      // Check if provider is in hardcoded configs, otherwise create dynamic config
-      let providerConfig = PROVIDER_CONFIGS[provider.name.toLowerCase() as keyof typeof PROVIDER_CONFIGS];
-      
-      if (!providerConfig) {
-        console.log('🔧 Creating dynamic config for custom provider:', provider.name);
-        // Create dynamic config for custom provider
-        providerConfig = {
-          apiUrl: provider.api_url,
-          endpoints: {
-            services: '',
-            balance: ''
-          },
-          alternativeUrls: [],
-          method: 'POST'
-        };
-      }
-
-      // For SMMCoder, use POST method as per their API documentation
-      let providerServices = null;
-      let workingUrl = null;
-
-
-
-      if (provider.name.toLowerCase() === 'smmcoder') {
-        // SMMCoder API requires POST method with form data
-        const smmcoderUrls = [
-          'https://smmcoder.com/api/v2',
-          'https://smmcoder.com/api'
-        ];
-
-        for (const baseUrl of smmcoderUrls) {
-          try {
-
-            // Create form data for POST request
-            const formData = new FormData();
-            formData.append('key', provider.api_key);
-            formData.append('action', 'services');
-
-            const response = await fetch(baseUrl, {
-              method: 'POST',
-              body: formData
-            });
-
-            if (response.ok) {
-              const data = await response.json();
-
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                workingUrl = baseUrl;
-                break;
-              } else if (data && typeof data === 'object') {
-                // Sometimes API returns object with services array
-                if (data.services && Array.isArray(data.services)) {
-                  providerServices = data.services;
-                  workingUrl = baseUrl;
-                  break;
-                }
-              }
-            }
-          } catch (urlError) {
-            console.log(`❌ SMMCoder failed with ${baseUrl}:`, urlError instanceof Error ? urlError.message : urlError);
-          }
-        }
-      } else if (provider.name.toLowerCase() === 'growfollows') {
-        // GrowFollows specific logic - they use standard POST with FormData
-        console.log(`🧪 GrowFollows trying API: ${providerConfig.apiUrl}`);
-        console.log(`🔑 Using API Key: ${provider.api_key.substring(0, 8)}...`);
-
-        try {
-          // Try FormData first
-          console.log('🔄 Trying FormData approach...');
-          const formData = new FormData();
-          formData.append('key', provider.api_key);
-          formData.append('action', 'services');
-
-          let response = await fetch(providerConfig.apiUrl, {
-            method: 'POST',
-            body: formData,
-          });
-
-          console.log(`GrowFollows FormData Response status:`, response.status);
-
-          // If FormData fails, try URLSearchParams
-          if (!response.ok) {
-            console.log('🔄 Trying URLSearchParams approach...');
-            const params = new URLSearchParams();
-            params.append('key', provider.api_key);
-            params.append('action', 'services');
-
-            response = await fetch(providerConfig.apiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: params,
-            });
-
-            console.log(`GrowFollows URLSearchParams Response status:`, response.status);
-          }
-
-          // If still fails, try JSON approach
-          if (!response.ok) {
-            console.log('🔄 Trying JSON approach...');
-            response = await fetch(providerConfig.apiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                key: provider.api_key,
-                action: 'services'
-              }),
-            });
-
-            console.log(`GrowFollows JSON Response status:`, response.status);
-          }
-
-          console.log(`GrowFollows Response headers:`, Object.fromEntries(response.headers.entries()));
-
-          if (response.ok) {
-            const responseText = await response.text();
-            console.log(`GrowFollows Raw response:`, responseText.substring(0, 500));
-
-            try {
-              const data = JSON.parse(responseText);
-              if (Array.isArray(data) && data.length > 0) {
-                console.log(`✅ GrowFollows success, found ${data.length} services`);
-                providerServices = data;
-                workingUrl = providerConfig.apiUrl;
-              } else if (data.error) {
-                console.log(`❌ GrowFollows API error:`, data.error);
-                throw new Error(`GrowFollows API error: ${data.error}`);
-              } else {
-                console.log(`❌ GrowFollows unexpected response format:`, data);
-                throw new Error('GrowFollows returned unexpected response format');
-              }
-            } catch (parseError) {
-              console.log(`❌ GrowFollows JSON parse error:`, parseError);
-              throw new Error(`GrowFollows response parsing failed: ${parseError instanceof Error ? parseError.message : parseError}`);
-            }
-          } else {
-            const errorText = await response.text();
-            console.log(`❌ GrowFollows HTTP error ${response.status}:`, errorText);
-            throw new Error(`GrowFollows API returned ${response.status}: ${errorText}. Please check API key and URL.`);
-          }
-        } catch (error) {
-          console.log(`❌ GrowFollows request failed:`, error instanceof Error ? error.message : error);
-          throw error;
-        }
-      } else if (provider.name.toLowerCase() === 'smmgen') {
-        // SMMGen specific logic - they use standard POST with FormData
-        console.log(`🧪 SMMGen trying API: ${providerConfig.apiUrl}`);
-        console.log(`🔑 Using API Key: ${provider.api_key.substring(0, 8)}...`);
-
-        try {
-          // Try FormData first
-          console.log('🔄 Trying FormData approach...');
-          const formData = new FormData();
-          formData.append('key', provider.api_key);
-          formData.append('action', 'services');
-
-          let response = await fetch(providerConfig.apiUrl, {
-            method: 'POST',
-            body: formData,
-          });
-
-          console.log(`SMMGen FormData Response status:`, response.status);
-
-          // If FormData fails, try URLSearchParams
-          if (!response.ok) {
-            console.log('🔄 Trying URLSearchParams approach...');
-            const params = new URLSearchParams();
-            params.append('key', provider.api_key);
-            params.append('action', 'services');
-
-            response = await fetch(providerConfig.apiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: params,
-            });
-
-            console.log(`SMMGen URLSearchParams Response status:`, response.status);
-          }
-
-          console.log(`SMMGen Response headers:`, Object.fromEntries(response.headers.entries()));
-
-          if (response.ok) {
-            const responseText = await response.text();
-            console.log(`SMMGen Raw response:`, responseText.substring(0, 500));
-
-            try {
-              const data = JSON.parse(responseText);
-              if (Array.isArray(data) && data.length > 0) {
-                console.log(`✅ SMMGen success, found ${data.length} services`);
-                providerServices = data;
-                workingUrl = providerConfig.apiUrl;
-              } else if (data.error) {
-                console.log(`❌ SMMGen API error:`, data.error);
-                throw new Error(`SMMGen API error: ${data.error}`);
-              } else {
-                console.log(`❌ SMMGen unexpected response format:`, data);
-                throw new Error('SMMGen returned unexpected response format');
-              }
-            } catch (parseError) {
-              console.log(`❌ SMMGen JSON parse error:`, parseError);
-              throw new Error(`SMMGen response parsing failed: ${parseError instanceof Error ? parseError.message : parseError}`);
-            }
-          } else {
-            const errorText = await response.text();
-            console.log(`❌ SMMGen HTTP error ${response.status}:`, errorText);
-            throw new Error(`SMMGen API returned ${response.status}: ${errorText}. Please check API key and URL.`);
-          }
-        } catch (error) {
-          console.log(`❌ SMMGen request failed:`, error instanceof Error ? error.message : error);
-          throw error;
-        }
-      } else if (provider.name.toLowerCase() === 'attpanel') {
-        // ATTPanel specific logic - they use standard POST with FormData
-        console.log(`🧪 ATTPanel trying API: ${providerConfig.apiUrl}`);
-        console.log(`🔑 Using API Key: ${provider.api_key.substring(0, 8)}...`);
-
-        try {
-          // Try FormData first
-          console.log('🔄 Trying FormData approach...');
-          const formData = new FormData();
-          formData.append('key', provider.api_key);
-          formData.append('action', 'services');
-
-          let response = await fetch(providerConfig.apiUrl, {
-            method: 'POST',
-            body: formData,
-          });
-
-          console.log(`ATTPanel FormData Response status:`, response.status);
-
-          // If FormData fails, try URLSearchParams
-          if (!response.ok) {
-            console.log('🔄 Trying URLSearchParams approach...');
-            const params = new URLSearchParams();
-            params.append('key', provider.api_key);
-            params.append('action', 'services');
-
-            response = await fetch(providerConfig.apiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: params,
-            });
-
-            console.log(`ATTPanel URLSearchParams Response status:`, response.status);
-          }
-
-          console.log(`ATTPanel Response headers:`, Object.fromEntries(response.headers.entries()));
-
-          if (response.ok) {
-            const responseText = await response.text();
-            console.log(`ATTPanel Raw response:`, responseText.substring(0, 500));
-
-            try {
-              const data = JSON.parse(responseText);
-              if (Array.isArray(data) && data.length > 0) {
-                console.log(`✅ ATTPanel success, found ${data.length} services`);
-                providerServices = data;
-                workingUrl = providerConfig.apiUrl;
-              } else if (data.error) {
-                console.log(`❌ ATTPanel API error:`, data.error);
-                throw new Error(`ATTPanel API error: ${data.error}`);
-              } else {
-                console.log(`❌ ATTPanel unexpected response format:`, data);
-                throw new Error('ATTPanel returned unexpected response format');
-              }
-            } catch (parseError) {
-              console.log(`❌ ATTPanel JSON parse error:`, parseError);
-              throw new Error(`ATTPanel response parsing failed: ${parseError instanceof Error ? parseError.message : parseError}`);
-            }
-          } else {
-            const errorText = await response.text();
-            console.log(`❌ ATTPanel HTTP error ${response.status}:`, errorText);
-            
-            // Check if it's an API key error
-            try {
-              const errorData = JSON.parse(errorText);
-              if (errorData.error && errorData.error.toLowerCase().includes('invalid api key')) {
-                throw new Error(`ATTPanel API Key is invalid. Please update your API key:\n\n1. Go to https://attpanel.com\n2. Login to your account\n3. Go to Account/API section\n4. Copy your valid API key\n5. Run: node fix-attpanel.js YOUR_NEW_API_KEY\n\nCurrent key: ${provider.api_key.substring(0, 8)}...`);
-              }
-            } catch (parseError) {
-              // If not JSON, continue with original error
-            }
-            
-            throw new Error(`ATTPanel API returned ${response.status}: ${errorText}. Please check API key and URL.`);
-          }
-        } catch (error) {
-          console.log(`❌ ATTPanel request failed:`, error instanceof Error ? error.message : error);
-          
-          // Enhanced error message for API key issues
-          if (error instanceof Error && error.message.includes('Invalid API Key')) {
-            throw new Error(`ATTPanel API Key is invalid. Please update your API key:\n\n1. Go to https://attpanel.com\n2. Login to your account\n3. Go to Account/API section\n4. Copy your valid API key\n5. Run: node fix-attpanel.js YOUR_NEW_API_KEY\n\nCurrent key: ${provider.api_key.substring(0, 8)}...`);
-          }
-          
-          throw error;
-        }
-      } else {
-        // For other providers (including custom providers), try multiple methods and URLs
-        const baseUrls = [providerConfig.apiUrl, ...(providerConfig.alternativeUrls || [])];
-        console.log(`🔥 Testing URLs for ${provider.name} categories:`, baseUrls);
-
-        for (const baseUrl of baseUrls) {
-          console.log(`🔥 Trying provider ${provider.name} with URL: ${baseUrl}`);
-
-          // Method 1: POST with FormData
-          try {
-            console.log(`📤 POST FormData request to ${baseUrl}`);
-            const formData = new FormData();
-            formData.append('key', provider.api_key);
-            formData.append('action', 'services');
-
-            const response = await fetch(baseUrl, {
-              method: 'POST',
-              body: formData,
-            });
-
-            console.log(`📥 POST FormData Response status: ${response.status}`);
-
-            if (response.ok) {
-              const data = await response.json();
-              console.log(`📊 POST FormData Response data:`, JSON.stringify(data, null, 2));
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                workingUrl = baseUrl;
-                console.log(`✅ SUCCESS with POST FormData ${baseUrl}! Found ${data.length} services`);
-                break;
-              } else {
-                console.log(`❌ POST FormData: Invalid data format or empty array`);
-              }
-            }
-          } catch (error) {
-            console.error(`❌ POST FormData failed for ${baseUrl}:`, error);
-          }
-
-          // Method 2: POST with URLSearchParams
-          try {
-            console.log(`📤 POST URLSearchParams request to ${baseUrl}`);
-            const params = new URLSearchParams();
-            params.append('key', provider.api_key);
-            params.append('action', 'services');
-
-            const response = await fetch(baseUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-              body: params,
-            });
-
-            console.log(`📥 POST URLSearchParams Response status: ${response.status}`);
-
-            if (response.ok) {
-              const data = await response.json();
-              console.log(`📊 POST URLSearchParams Response data:`, JSON.stringify(data, null, 2));
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                workingUrl = baseUrl;
-                console.log(`✅ SUCCESS with POST URLSearchParams ${baseUrl}! Found ${data.length} services`);
-                break;
-              } else {
-                console.log(`❌ POST URLSearchParams: Invalid data format or empty array`);
-              }
-            }
-          } catch (error) {
-            console.error(`❌ POST URLSearchParams failed for ${baseUrl}:`, error);
-          }
-
-          // Method 3: POST with JSON
-          try {
-            console.log(`📤 POST JSON request to ${baseUrl}`);
-            const response = await fetch(baseUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                key: provider.api_key,
-                action: 'services'
-              }),
-            });
-
-            console.log(`📥 POST JSON Response status: ${response.status}`);
-
-            if (response.ok) {
-              const data = await response.json();
-              console.log(`📊 POST JSON Response data:`, JSON.stringify(data, null, 2));
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                workingUrl = baseUrl;
-                console.log(`✅ SUCCESS with POST JSON ${baseUrl}! Found ${data.length} services`);
-                break;
-              } else {
-                console.log(`❌ POST JSON: Invalid data format or empty array`);
-              }
-            }
-          } catch (error) {
-            console.error(`❌ POST JSON failed for ${baseUrl}:`, error);
-          }
-
-          // Method 4: GET with query parameters
-          try {
-            const servicesUrl = `${baseUrl}?key=${provider.api_key}&action=services`;
-            console.log(`📤 GET request to ${servicesUrl}`);
-
-            const response = await fetch(servicesUrl);
-            console.log(`📥 GET Response status: ${response.status}`);
-
-            if (response.ok) {
-              const data = await response.json();
-              console.log(`📊 GET Response data:`, JSON.stringify(data, null, 2));
-              if (Array.isArray(data) && data.length > 0) {
-                providerServices = data;
-                workingUrl = baseUrl;
-                console.log(`✅ SUCCESS with GET ${servicesUrl}! Found ${data.length} services`);
-                break;
-              } else {
-                console.log(`❌ GET: Invalid data format or empty array`);
-              }
-            }
-          } catch (error) {
-            console.error(`❌ GET failed for ${baseUrl}:`, error);
-          }
-        }
-
-        // If services were found, we can proceed
-        if (providerServices) {
-          // Services found, continue processing
-        }
-      }
-
-      if (!providerServices) {
-        throw new Error(`All API URLs failed for ${provider.name}. No working API endpoint found.`);
-      }
-
-      if (!Array.isArray(providerServices)) {
-        throw new Error('Invalid response format from provider');
-      }
-
-      console.log(`Using working URL: ${workingUrl} for ${provider.name}`);
-
-      // Extract categories from services
-      const categoryMap = new Map();
-
-      providerServices.forEach((service: any) => {
-        const categoryName = service.category || 'Uncategorized';
-        if (categoryMap.has(categoryName)) {
-          categoryMap.set(categoryName, categoryMap.get(categoryName) + 1);
-        } else {
-          categoryMap.set(categoryName, 1);
-        }
+    // Default: Get only active providers for service import
+    try {
+      const configuredProviders = await db.api_providers.findMany({
+        where: {
+          status: 'active'
+        },
+        select: {
+          id: true,
+          name: true,
+          api_key: true,
+          status: true
+        },
+        orderBy: [
+          { name: 'asc' }     // Alphabetical order
+        ]
       });
-
-      // Convert to array format
-      const categories = Array.from(categoryMap.entries()).map(([name, count], index) => ({
-        id: index + 1,
-        name: name,
-        servicesCount: count,
-        selected: false
-      }));
 
       return NextResponse.json({
         success: true,
         data: {
-          categories: categories,
-          total: categories.length,
-          provider: provider.name
+          providers: configuredProviders,
+          total: configuredProviders.length
         },
         error: null
       });
+    } catch (error) {
+      console.error('Error fetching default providers:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch providers: ' + (error instanceof Error ? error.message : 'Unknown error'), success: false, data: null },
+        { status: 500 }
+      );
     }
-
-    // Default: Get all configured providers (both active and inactive)
-    const configuredProviders = await db.api_providers.findMany({
-      select: {
-        id: true,
-        name: true,
-        api_key: true,
-        status: true
-      },
-      orderBy: [
-        { status: 'desc' }, // Active providers first
-        { name: 'asc' }     // Then alphabetical
-      ]
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        providers: configuredProviders,
-        total: configuredProviders.length
-      },
-      error: null
-    });
 
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -1174,240 +490,94 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { providerId, profitMargin = 20, services } = await req.json();
-
-    console.log('🔥 Import request received:', {
-      providerId,
-      profitMargin,
-      servicesCount: services?.length,
-      firstService: services?.[0]
-    });
+    const body = await req.json();
+    const { providerId, action } = body;
 
     if (!providerId) {
       return NextResponse.json(
-        { error: 'Provider ID is required', success: false, data: null },
+        { error: 'Provider ID is required' },
         { status: 400 }
       );
     }
 
-    if (!services || !Array.isArray(services) || services.length === 0) {
-      console.log('❌ No services data received');
-      return NextResponse.json(
-        { 
-          error: 'সার্ভিস ডেটা প্রয়োজন। দয়া করে সার্ভিস নির্বাচন করুন।',
-          success: false, 
-          data: null,
-          details: 'Services data is required for import'
-        },
-        { status: 400 }
-      );
-    }
-
-    // Get provider details
+    // Get provider configuration
     const provider = await db.api_providers.findUnique({
       where: { id: parseInt(providerId) }
     });
 
     if (!provider) {
       return NextResponse.json(
-        { 
-          error: 'প্রোভাইডার পাওয়া যায়নি। দয়া করে সঠিক প্রোভাইডার নির্বাচন করুন।',
-          success: false, 
-          data: null,
-          details: 'Provider not found in database'
-        },
+        { error: 'Provider not found' },
         { status: 404 }
       );
     }
 
-    // Use services from frontend instead of fetching from API
-    const providerServices = services;
-
-    if (!Array.isArray(providerServices)) {
-      throw new Error('Invalid services data format');
-    }
-
-    console.log(`Processing ${providerServices.length} services from ${provider.name}`);
-
-    // Get enabled currencies for price conversion
-    const currenciesData = await db.currency.findMany({
-      where: { enabled: true }
-    });
-
-    // Convert Decimal to number for currency utils
-    const currencies = currenciesData.map(c => ({
-      ...c,
-      rate: Number(c.rate)
-    }));
-
-    // Create a map to store categories by name for efficient lookup
-    const categoryMap = new Map();
-
-    // Function to get or create category
-    const getOrCreateCategory = async (categoryName: string) => {
-      if (categoryMap.has(categoryName)) {
-        return categoryMap.get(categoryName);
-      }
-
-      // Try to find existing category
-      let category = await db.category.findFirst({
-        where: { category_name: categoryName }
-      });
-
-      // If not found, create new category
-      if (!category) {
-        category = await db.category.create({
-          data: {
-            category_name: categoryName,
-            status: 'active',
-            userId: session.user.id,
-            position: 'bottom',
-            hideCategory: 'no'
-          }
-        });
-        console.log(`✅ Created new category: ${categoryName}`);
-      }
-
-      categoryMap.set(categoryName, category);
-      return category;
-    };
-
-    // Process and import services
-    const importedServices = [];
-    const skippedServices = [];
-    const errors = [];
-
-    for (const providerService of providerServices) {
+    if (action === 'test_connection') {
+      // Test provider connection
+      const providerConfig = createProviderConfig(provider);
+      const baseUrl = providerConfig.baseUrl;
+      
       try {
-        console.log(`🔍 Processing service: ${providerService.name} (ID: ${providerService.service || providerService.id})`);
-
-        // Check if service already exists with exact same provider service ID
-        const existingService = await db.service.findFirst({
-          where: {
-            updateText: {
-              contains: `"providerServiceId":"${providerService.service || providerService.id}"`
-            }
-          }
-        });
-
-        if (existingService) {
-          console.log(`⏭️ Skipping service: ${providerService.name} - Already exists`);
-          skippedServices.push({
-            name: providerService.name,
-            reason: 'Already exists with same provider service ID'
+        const isReachable = await checkUrlReachability(baseUrl);
+        
+        if (!isReachable) {
+          return NextResponse.json({
+            success: false,
+            error: 'Provider API is not reachable',
+            data: { reachable: false }
           });
-          continue;
         }
 
-        // Calculate price with profit margin
-        const providerRate = parseFloat(providerService.rate) || 0;
-        const markupRate = providerRate * (1 + profitMargin / 100);
-
-        // Convert to USD for storage
-        const rateUSD = convertToUSD(markupRate, 'USD', currencies);
-
-        // Get or create category based on provider service category
-        const categoryName = providerService.category || 'Imported Services';
-        const serviceCategory = await getOrCreateCategory(categoryName);
-
-        // Create service
-        console.log('🔥 Creating service:', {
-          name: providerService.name,
-          rate: markupRate,
-          category: categoryName,
-          categoryId: serviceCategory.id,
-          userId: session.user.id
-        });
-
-        const newService = await db.service.create({
-          data: {
-            name: providerService.name,
-            description: `${providerService.description || providerService.name}`,
-            rate: markupRate,
-            rateUSD: rateUSD,
-            min_order: parseInt(providerService.min) || 100,
-            max_order: parseInt(providerService.max) || 10000,
-            avg_time: '0-1 Hours',
-            userId: session.user.id,
-            categoryId: serviceCategory.id, // Use dynamic category instead of default
-            status: 'active',
-            perqty: 1000,
-            // Add provider fields
-            providerId: provider.id,
-            providerName: provider.name,
-            // Store provider info for order forwarding
-            updateText: JSON.stringify({
-              provider: provider.name,
-              providerId: provider.id,
-              providerServiceId: providerService.service || providerService.id,
-              originalRate: providerRate,
-              category: categoryName // Store original category name
-            })
+        // Try to fetch a small sample to test authentication
+        const endpoints = providerConfig.endpoints;
+        let testSuccessful = false;
+        
+        if (endpoints.services) {
+          try {
+            const testUrl = `${baseUrl}${endpoints.services}`;
+            const response = await fetchWithTimeout(testUrl, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${providerConfig.apiKey}`,
+                'Content-Type': 'application/json',
+                ...providerConfig.headers
+              }
+            }, 10000);
+            
+            testSuccessful = response.ok;
+          } catch (error) {
+            console.error('Test connection failed:', error);
           }
+        }
+
+        return NextResponse.json({
+          success: testSuccessful,
+          data: {
+            reachable: isReachable,
+            authenticated: testSuccessful,
+            provider: provider.name
+          },
+          error: testSuccessful ? null : 'Authentication failed or API error'
         });
 
-        console.log(`✅ Successfully created service: ${newService.name} (ID: ${newService.id})`);
-
-        importedServices.push({
-          id: newService.id,
-          name: newService.name,
-          rate: newService.rate,
-          providerRate: providerRate,
-          markup: profitMargin
-        });
-
-      } catch (serviceError) {
-        console.error(`Error importing service ${providerService.name}:`, serviceError);
-        errors.push({
-          service: providerService.name,
-          error: serviceError instanceof Error ? serviceError.message : 'Unknown error'
+      } catch (error) {
+        return NextResponse.json({
+          success: false,
+          error: 'Connection test failed: ' + (error instanceof Error ? error.message : 'Unknown error'),
+          data: { reachable: false, authenticated: false }
         });
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: `Successfully imported ${importedServices.length} services from ${provider.name}`,
-      data: {
-        imported: importedServices.length,
-        skipped: skippedServices.length,
-        errors: errors.length,
-        provider: provider.name,
-        profitMargin: profitMargin,
-        details: {
-          importedServices: importedServices.slice(0, 10), // First 10 for preview
-          skippedServices: skippedServices.slice(0, 5),
-          errors: errors.slice(0, 5)
-        }
-      },
-      error: null
-    });
+    return NextResponse.json(
+      { error: 'Invalid action' },
+      { status: 400 }
+    );
 
   } catch (error) {
-    console.error('Error importing services:', error);
-    
-    let userFriendlyMessage = 'সার্ভিস ইমপোর্ট করতে সমস্যা হয়েছে।';
-    let details = '';
-    
-    if (error instanceof Error) {
-      if (error.message.includes('database') || error.message.includes('UNIQUE constraint')) {
-        userFriendlyMessage = 'ডেটাবেস সমস্যার কারণে সার্ভিস ইমপোর্ট করা যায়নি। দয়া করে আবার চেষ্টা করুন।';
-        details = 'Database constraint error - some services may already exist.';
-      } else if (error.message.includes('timeout')) {
-        userFriendlyMessage = 'সময়সীমা শেষ। দয়া করে পরে আবার চেষ্টা করুন।';
-        details = 'Operation timeout during service import.';
-      } else {
-        details = error.message;
-      }
-    }
-    
+    console.error('PUT error:', error);
     return NextResponse.json(
-      {
-        error: userFriendlyMessage,
-        success: false,
-        data: null,
-        details: details
-      },
+      { error: 'Request failed: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
     );
   }

@@ -389,7 +389,7 @@ export async function DELETE(req: NextRequest) {
     let message = '';
     
     if (deleteType === 'trash') {
-      // Move to trash - deactivate provider and its services
+    // Move to trash - delete provider and its services
       await db.api_providers.update({
         where: { id: providerId },
         data: { 
@@ -398,16 +398,12 @@ export async function DELETE(req: NextRequest) {
         }
       });
 
-      // Deactivate all services associated with this provider
-      await db.services.updateMany({
-        where: { provider_id: providerId },
-        data: { 
-          status: 'inactive',
-          updated_at: new Date()
-        }
+      // Delete all services associated with this provider
+      await db.services.deleteMany({
+        where: { provider_id: providerId }
       });
 
-      message = 'Provider moved to trash and all services deactivated successfully';
+      message = 'Provider moved to trash and all services deleted successfully';
     } else {
       // Permanent delete - remove provider and its services
       // First delete associated services
