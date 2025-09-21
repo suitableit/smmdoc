@@ -359,6 +359,7 @@ export async function DELETE(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
+    const deleteType = searchParams.get('type') || 'permanent';
 
     // Validate ID parameter
     if (!id || id === 'null' || id === 'undefined') {
@@ -385,14 +386,46 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Delete provider
-    await db.api_providers.delete({
-      where: { id: providerId }
-    });
+    let message = '';
+    
+    if (deleteType === 'trash') {
+      // Move to trash - deactivate provider and its services
+      await db.api_providers.update({
+        where: { id: providerId },
+        data: { 
+          status: 'inactive',
+          updated_at: new Date()
+        }
+      });
+
+      // Deactivate all services associated with this provider
+      await db.services.updateMany({
+        where: { provider_id: providerId },
+        data: { 
+          status: 'inactive',
+          updated_at: new Date()
+        }
+      });
+
+      message = 'Provider moved to trash and all services deactivated successfully';
+    } else {
+      // Permanent delete - remove provider and its services
+      // First delete associated services
+      await db.services.deleteMany({
+        where: { provider_id: providerId }
+      });
+
+      // Then delete the provider
+      await db.api_providers.delete({
+        where: { id: providerId }
+      });
+
+      message = 'Provider and all associated services permanently deleted successfully';
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Provider deleted successfully',
+      message: message,
       data: null,
       error: null
     });

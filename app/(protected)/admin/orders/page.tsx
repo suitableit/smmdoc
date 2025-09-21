@@ -1180,7 +1180,7 @@ const AdminOrdersPage = () => {
                                 ${formatPrice(order.usdPrice || 0, 2)}
                               </div>
                               <div className="text-xs text-gray-500">
-                                Rate: ${order.service?.rate || 0}/1000 × {order.qty || 1}
+                                Rate: ${order.service?.rate || 0}
                               </div>
                             </div>
                           </td>

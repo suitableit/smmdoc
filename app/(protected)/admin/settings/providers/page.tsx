@@ -10,7 +10,7 @@ import {
   FaCheckCircle,
   FaCog,
   FaEdit,
-  FaEllipsisV,
+  FaEllipsisH,
   FaExclamationTriangle,
   FaEye,
   FaEyeSlash,
@@ -147,6 +147,10 @@ const APIProvidersPage = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+  
+  // Delete confirmation popup state
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [providerToDelete, setProviderToDelete] = useState<Provider | null>(null);
 
   const [formData, setFormData] = useState({
     customProviderName: '',
@@ -413,33 +417,43 @@ const APIProvidersPage = () => {
     }
   };
 
-  const handleDeleteProvider = async (providerId: number) => {
+  const handleDeleteProvider = async (providerId: number, deleteType: 'trash' | 'permanent') => {
     // Check if providerId is valid
     if (!providerId || providerId === null || providerId === undefined) {
       showToast('Cannot delete unconfigured provider', 'error');
       return;
     }
 
-    if (window.confirm('Are you sure you want to delete this provider?')) {
-      try {
-        const response = await fetch(`/api/admin/providers?id=${providerId}`, {
-          method: 'DELETE'
-        });
+    try {
+      const response = await fetch(`/api/admin/providers?id=${providerId}&deleteType=${deleteType}`, {
+        method: 'DELETE'
+      });
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (result.success) {
-          // Update local state
-          setProviders(prev => prev.filter(provider => provider.id !== providerId));
-          showToast(result.message || 'Provider deleted successfully!', 'success');
-        } else {
-          showToast(result.error || 'Failed to delete provider', 'error');
-        }
-      } catch (error) {
-        console.error('Error deleting provider:', error);
-        showToast('Failed to delete provider', 'error');
+      if (result.success) {
+        // Update local state
+        setProviders(prev => prev.filter(provider => provider.id !== providerId));
+        
+        const message = deleteType === 'trash' 
+          ? 'Provider moved to trash and services deactivated successfully!' 
+          : 'Provider permanently deleted successfully!';
+        showToast(result.message || message, 'success');
+      } else {
+        showToast(result.error || 'Failed to delete provider', 'error');
       }
+    } catch (error) {
+      console.error('Error deleting provider:', error);
+      showToast('Failed to delete provider', 'error');
+    } finally {
+      setShowDeletePopup(false);
+      setProviderToDelete(null);
     }
+  };
+
+  const openDeletePopup = (provider: Provider) => {
+    setProviderToDelete(provider);
+    setShowDeletePopup(true);
   };
 
   const handleSyncAllProviders = async () => {
@@ -544,7 +558,7 @@ const APIProvidersPage = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 justify-center">
         {/* Sync Button */}
         <button
           onClick={() => handleSyncProvider(provider.id)}
@@ -562,7 +576,7 @@ const APIProvidersPage = () => {
             className="btn btn-sm btn-secondary p-2"
             title="More actions"
           >
-            <FaEllipsisV className="w-3 h-3" />
+            <FaEllipsisH className="w-3 h-3" />
           </button>
 
           {isOpen && (
@@ -589,27 +603,7 @@ const APIProvidersPage = () => {
                   
                   <button
                     onClick={() => {
-                      handleToggleStatus(provider.id, provider.status === 'active' ? 'inactive' : 'active');
-                      setIsOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                  >
-                    {provider.status === 'active' ? (
-                      <>
-                        <FaPause className="w-3 h-3" />
-                        Deactivate
-                      </>
-                    ) : (
-                      <>
-                        <FaPlay className="w-3 h-3" />
-                        Activate
-                      </>
-                    )}
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      handleDeleteProvider(provider.id);
+                      openDeletePopup(provider);
                       setIsOpen(false);
                     }}
                     className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
@@ -1116,7 +1110,7 @@ const APIProvidersPage = () => {
                     <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Sync</th>
                     <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
                     <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>API Status</th>
-                    <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                    <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1168,8 +1162,23 @@ const APIProvidersPage = () => {
                       
                       {/* Last Sync Column */}
                       <td className="p-3">
-                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                          {new Date(provider.lastSync).toLocaleString()}
+                        <div>
+                          <div
+                            className="text-sm"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            {provider.lastSync
+                              ? new Date(provider.lastSync).toLocaleDateString()
+                              : 'null'}
+                          </div>
+                          <div
+                            className="text-xs"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            {provider.lastSync
+                              ? new Date(provider.lastSync).toLocaleTimeString()
+                              : 'null'}
+                          </div>
                         </div>
                       </td>
                       
@@ -1208,7 +1217,7 @@ const APIProvidersPage = () => {
                       </td>
                       
                       {/* Actions Column */}
-                      <td className="p-3">
+                      <td className="p-3 text-right">
                         <ProviderActions provider={provider} />
                       </td>
                     </tr>
@@ -1290,7 +1299,18 @@ const APIProvidersPage = () => {
                     </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400">Last Sync</div>
-                      <div className="font-medium text-gray-900 dark:text-gray-100">{new Date(provider.lastSync).toLocaleString()}</div>
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                          {provider.lastSync
+                            ? new Date(provider.lastSync).toLocaleDateString()
+                            : 'null'}
+                        </div>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">
+                          {provider.lastSync
+                            ? new Date(provider.lastSync).toLocaleTimeString()
+                            : 'null'}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
@@ -1318,6 +1338,39 @@ const APIProvidersPage = () => {
 
           {/* Statistics Section - Moved after API Providers */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Quick Actions */}
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaCog />
+                </div>
+                <h3 className="card-title">Quick Actions</h3>
+              </div>
+
+              <div className="space-y-3">
+                <button 
+                  onClick={handleSyncAllProviders}
+                  disabled={syncingAll}
+                  className="btn btn-secondary w-full justify-start disabled:opacity-50"
+                >
+                  <FaSync className={`w-4 h-4 mr-2 ${syncingAll ? 'animate-spin' : ''}`} />
+                  Sync All Providers
+                </button>
+                <button 
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to deactivate all providers? This will stop all provider services.')) {
+                      setProviders(prev => prev.map(provider => ({ ...provider, status: 'inactive' as 'active' | 'inactive' })));
+                      showToast('All providers have been deactivated!', 'success');
+                    }
+                  }}
+                  className="btn btn-secondary w-full justify-start"
+                >
+                  <FaPause className="w-4 h-4 mr-2" />
+                  Deactivate All Providers
+                </button>
+              </div>
+            </div>
+
             {/* Overview Stats */}
             <div className="card card-padding">
               <div className="card-header">
@@ -1371,39 +1424,6 @@ const APIProvidersPage = () => {
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="card card-padding">
-              <div className="card-header">
-                <div className="card-icon">
-                  <FaCog />
-                </div>
-                <h3 className="card-title">Quick Actions</h3>
-              </div>
-
-              <div className="space-y-3">
-                <button 
-                  onClick={handleSyncAllProviders}
-                  disabled={syncingAll}
-                  className="btn btn-secondary w-full justify-start disabled:opacity-50"
-                >
-                  <FaSync className={`w-4 h-4 mr-2 ${syncingAll ? 'animate-spin' : ''}`} />
-                  Sync All Providers
-                </button>
-                <button 
-                  onClick={() => {
-                    if (window.confirm('Are you sure you want to deactivate all providers? This will stop all provider services.')) {
-                      setProviders(prev => prev.map(provider => ({ ...provider, status: 'inactive' as 'active' | 'inactive' })));
-                      showToast('All providers have been deactivated!', 'success');
-                    }
-                  }}
-                  className="btn btn-secondary w-full justify-start"
-                >
-                  <FaPause className="w-4 h-4 mr-2" />
-                  Deactivate All Providers
-                </button>
-              </div>
-            </div>
-
             {/* Top Performing Provider */}
             {providers.length > 0 && (
               <div className="card card-padding">
@@ -1446,6 +1466,131 @@ const APIProvidersPage = () => {
           </div>
         </div>
       </div>
+      
+      {/* Delete Confirmation Popup */}
+      {showDeletePopup && providerToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div
+            className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-full max-w-lg">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6">
+                <h3
+                  className="text-lg font-semibold"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Delete "{providerToDelete.name}" Provider
+                </h3>
+                <button
+                  onClick={() => setShowDeletePopup(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Close"
+                >
+                  <FaTimes className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="px-6 pb-6">
+                <div className="space-y-4">
+                  {/* Warning Icon and Message */}
+                  <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
+                    <FaExclamationTriangle className="h-6 w-6 text-red-500 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-red-800">
+                        This provider may have associated services
+                      </p>
+                      <p className="text-sm text-red-600 mt-1">
+                        Choose how to handle the provider and its services.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Options */}
+                  <div className="space-y-3">
+                    <p className="font-medium text-gray-800">
+                      What would you like to do with this provider?
+                    </p>
+
+                    {/* Option 1: Move to Trash */}
+                     <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                       <input
+                         type="radio"
+                         name="deleteOption"
+                         value="trash"
+                         defaultChecked
+                         className="mt-0.5"
+                       />
+                       <div>
+                         <div className="font-medium text-gray-800">
+                           Move to Trash
+                         </div>
+                         <div className="text-sm text-gray-600">
+                           All imported services will deactivate until restore the provider
+                         </div>
+                       </div>
+                     </label>
+
+                     {/* Option 2: Permanently Delete */}
+                     <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                       <input
+                         type="radio"
+                         name="deleteOption"
+                         value="permanent"
+                         className="mt-0.5"
+                       />
+                       <div>
+                         <div className="font-medium text-gray-800">
+                           Permanently Delete
+                         </div>
+                         <div className="text-sm text-gray-600">
+                           Permanently remove the provider and all imported services
+                         </div>
+                       </div>
+                     </label>
+                  </div>
+
+                  {/* Additional Warning for Permanent Delete */}
+                   <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                     <p className="text-sm text-red-800">
+                       <strong>Warning:</strong> The action will get scheduled until the completion of any orders/refill/cancel request operation.
+                     </p>
+                   </div>
+
+                   {/* Operation Note */}
+                   <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                     <p className="text-sm text-blue-800">
+                       <strong>Note:</strong> After being scheduled, users are not avail to show the associated services of the scheduled deletion of the provider.
+                     </p>
+                   </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 justify-end pt-2">
+                    <button
+                      onClick={() => setShowDeletePopup(false)}
+                      className="btn btn-secondary px-6 py-2"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        const selectedOption = document.querySelector('input[name="deleteOption"]:checked') as HTMLInputElement;
+                        const deleteType = selectedOption?.value as 'trash' | 'permanent' || 'trash';
+                        handleDeleteProvider(providerToDelete.id, deleteType);
+                      }}
+                      className="btn bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-6 py-2"
+                    >
+                      <FaTrash className="h-4 w-4" />
+                      Confirm Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
