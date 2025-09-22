@@ -17,6 +17,8 @@ import {
     FaSearch,
     FaSync,
     FaTimes,
+    FaToggleOn,
+    FaToggleOff,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -204,217 +206,7 @@ const ImportServicesPage = () => {
   }, []);
 
   // Dummy data for providers (fallback)
-  const dummyProviders: Provider[] = [
-    {
-      id: 'provider_001',
-      name: 'SocialPanel API',
-      url: 'https://api.socialpanel.com',
-      status: 'active',
-      description:
-        'Premium social media marketing services provider with high-quality followers, likes, and engagement.',
-    },
-    {
-      id: 'provider_002',
-      name: 'BoostSMM Provider',
-      url: 'https://api.boostsmm.com',
-      status: 'active',
-      description:
-        'Fast delivery SMM services with 24/7 support and guaranteed results for all major platforms.',
-    },
-    {
-      id: 'provider_003',
-      name: 'SMM Heaven API',
-      url: 'https://api.smmheaven.com',
-      status: 'inactive',
-      description:
-        'Cost-effective social media marketing solutions with bulk discounts and API integration.',
-    },
-    {
-      id: 'provider_004',
-      name: 'Digital Boost Pro',
-      url: 'https://api.digitalboostpro.com',
-      status: 'active',
-      description:
-        'Professional grade SMM services with advanced targeting and analytics tracking.',
-    },
-  ];
 
-  // Dummy data for API categories
-  const dummyApiCategories: ApiCategory[] = [
-    {
-      id: 1,
-      name: 'Instagram Services',
-      servicesCount: 45,
-      selected: false,
-    },
-    {
-      id: 2,
-      name: 'Facebook Services',
-      servicesCount: 32,
-      selected: false,
-    },
-    {
-      id: 3,
-      name: 'YouTube Services',
-      servicesCount: 28,
-      selected: false,
-    },
-    {
-      id: 4,
-      name: 'TikTok Services',
-      servicesCount: 35,
-      selected: false,
-    },
-    {
-      id: 5,
-      name: 'Twitter Services',
-      servicesCount: 22,
-      selected: false,
-    },
-    {
-      id: 6,
-      name: 'LinkedIn Services',
-      servicesCount: 18,
-      selected: false,
-    },
-    {
-      id: 7,
-      name: 'Pinterest Services',
-      servicesCount: 15,
-      selected: false,
-    },
-    {
-      id: 8,
-      name: 'Snapchat Services',
-      servicesCount: 12,
-      selected: false,
-    },
-  ];
-
-  // Dummy data for services
-  const dummyServices: Service[] = [
-    {
-      id: '1001',
-      name: 'Instagram Followers - High Quality',
-      category: 'Instagram Services',
-      min: 100,
-      max: 100000,
-      rate: 2.5,
-      description:
-        'Premium Instagram followers with real accounts and gradual delivery',
-      type: 'followers',
-    },
-    {
-      id: '1002',
-      name: 'Instagram Likes - Instant',
-      category: 'Instagram Services',
-      min: 50,
-      max: 50000,
-      rate: 1.2,
-      description: 'Fast Instagram likes delivery within minutes',
-      type: 'likes',
-    },
-    {
-      id: '1003',
-      name: 'Instagram Views - Story',
-      category: 'Instagram Services',
-      min: 100,
-      max: 25000,
-      rate: 0.8,
-      description: 'Instagram story views from real active users',
-      type: 'views',
-    },
-    {
-      id: 'srv_004',
-      name: 'Facebook Page Likes',
-      category: 'Facebook Services',
-      min: 100,
-      max: 20000,
-      rate: 3.0,
-      description: 'Organic Facebook page likes with lifetime guarantee',
-      type: 'likes',
-    },
-    {
-      id: 'srv_005',
-      name: 'Facebook Post Likes',
-      category: 'Facebook Services',
-      min: 25,
-      max: 10000,
-      rate: 1.5,
-      description: 'Fast Facebook post likes from real users',
-      type: 'likes',
-    },
-    {
-      id: 'srv_006',
-      name: 'YouTube Views - Real',
-      category: 'YouTube Services',
-      min: 1000,
-      max: 1000000,
-      rate: 4.0,
-      description: 'High retention YouTube views from real viewers',
-      type: 'views',
-    },
-    {
-      id: 'srv_007',
-      name: 'YouTube Subscribers',
-      category: 'YouTube Services',
-      min: 100,
-      max: 50000,
-      rate: 8.0,
-      description: 'Real YouTube subscribers with profile pictures',
-      type: 'followers',
-    },
-    {
-      id: 'srv_008',
-      name: 'TikTok Followers',
-      category: 'TikTok Services',
-      min: 100,
-      max: 30000,
-      rate: 2.2,
-      description: 'TikTok followers from active profiles',
-      type: 'followers',
-    },
-    {
-      id: 'srv_009',
-      name: 'TikTok Likes',
-      category: 'TikTok Services',
-      min: 50,
-      max: 25000,
-      rate: 1.1,
-      description: 'TikTok video likes with fast delivery',
-      type: 'likes',
-    },
-    {
-      id: 'srv_010',
-      name: 'Twitter Followers',
-      category: 'Twitter Services',
-      min: 100,
-      max: 15000,
-      rate: 3.5,
-      description: 'Real Twitter followers with complete profiles',
-      type: 'followers',
-    },
-    {
-      id: 'srv_011',
-      name: 'Twitter Retweets',
-      category: 'Twitter Services',
-      min: 25,
-      max: 5000,
-      rate: 2.0,
-      description: 'Twitter retweets from genuine accounts',
-      type: 'shares',
-    },
-    {
-      id: 'srv_012',
-      name: 'LinkedIn Connections',
-      category: 'LinkedIn Services',
-      min: 50,
-      max: 2000,
-      rate: 5.0,
-      description: 'Professional LinkedIn connections',
-      type: 'followers',
-    },
-  ];
 
   // State management
   const [currentStep, setCurrentStep] = useState(1);
@@ -434,7 +226,7 @@ const ImportServicesPage = () => {
 
   // Step 2 state
   const [apiCategories, setApiCategories] =
-    useState<ApiCategory[]>(dummyApiCategories);
+    useState<ApiCategory[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
 
   // Step 3 state
@@ -538,14 +330,14 @@ const ImportServicesPage = () => {
         );
       } else {
         showToast(`Failed to load categories: ${result.error}`, 'error');
-        // Fallback to dummy data
-        setApiCategories(dummyApiCategories);
+        // Keep empty array instead of fallback data
+        setApiCategories([]);
       }
     } catch (error) {
       console.error('Error loading categories:', error);
       showToast('Failed to load categories', 'error');
-      // Fallback to dummy data
-      setApiCategories(dummyApiCategories);
+      // Keep empty array instead of fallback data
+      setApiCategories([]);
     } finally {
       setCategoriesLoading(false);
       setIsLoading(false);
@@ -554,8 +346,7 @@ const ImportServicesPage = () => {
 
   // Get provider name
   const getProviderName = (providerId: string) => {
-    const allProviders = realProviders.length > 0 ? realProviders : dummyProviders;
-    const provider = allProviders.find((p) => p.id?.toString() === providerId);
+    const provider = realProviders.find((p) => p.id?.toString() === providerId);
     return provider ? provider.name : 'Unknown Provider';
   };
 
@@ -623,7 +414,7 @@ const ImportServicesPage = () => {
 
       if (result.success) {
         const categoryServices = result.data.services || [];
-        const pagination = result.data.pagination;
+        const pagination = result.data.pagination || {};
 
         console.log('📄 Pagination info:', pagination);
 
@@ -633,29 +424,34 @@ const ImportServicesPage = () => {
           const salePrice = parseFloat((providerPrice * (1 + profitPercent / 100)).toFixed(2));
 
           console.log(`🔥 Service: ${service.name}, Provider: $${providerPrice}, Sale: $${salePrice}, Profit: ${profitPercent}%`);
+          console.log(`📝 Service Description: "${service.description}" (length: ${service.description?.length || 0})`);
+          console.log(`🔄 Refill: ${service.refill}, Cancel: ${service.cancel}`);
 
           return {
             ...service,
             providerPrice: providerPrice, // Store original provider price
             rate: salePrice, // Calculate initial sale price
             percent: profitPercent, // Set initial percent from Step 1
+            description: service.description || '', // Ensure description is preserved
+            refill: service.refill || false, // Explicitly preserve refill status
+            cancel: service.cancel || false, // Explicitly preserve cancel status
           };
         });
 
-        // Update pagination state
-        setCurrentPage(pagination.page);
-        setTotalPages(pagination.totalPages);
-        setTotalServices(pagination.total);
-        setHasMoreServices(pagination.hasMore);
+        // Update pagination state with null checks
+        setCurrentPage(pagination.page || 1);
+        setTotalPages(pagination.totalPages || 1);
+        setTotalServices(pagination.total || categoryServices.length);
+        setHasMoreServices(pagination.hasMore || false);
 
         if (append) {
           // Append new services to existing ones
           setServices(prev => [...prev, ...servicesWithProfit]);
-          showToast(`Loaded ${servicesWithProfit.length} more services (${services.length + servicesWithProfit.length}/${pagination.total} total)`, 'success');
+          showToast(`Loaded ${servicesWithProfit.length} more services (${services.length + servicesWithProfit.length}/${pagination.total || servicesWithProfit.length} total)`, 'success');
         } else {
           // Replace services with new ones
           setServices(servicesWithProfit);
-          showToast(`Loaded ${servicesWithProfit.length} services from selected categories (${pagination.total} total available)`, 'success');
+          showToast(`Loaded ${servicesWithProfit.length} services from selected categories (${pagination.total || servicesWithProfit.length} total available)`, 'success');
         }
       } else {
         showToast(`Failed to load services: ${result.error}`, 'error');
@@ -740,7 +536,7 @@ const ImportServicesPage = () => {
       }
 
       // Check if selected provider is active
-      const selectedProviderData = (realProviders.length > 0 ? realProviders : dummyProviders).find(
+      const selectedProviderData = realProviders.find(
         (p) => p.id?.toString() === selectedProvider
       );
 
@@ -757,12 +553,16 @@ const ImportServicesPage = () => {
       await loadCategories();
     } else if (currentStep === 2) {
       const selectedCategories = apiCategories.filter((cat) => cat.selected);
+      console.log('🔥 DEBUG: Selected categories for step 3:', selectedCategories);
       if (selectedCategories.length === 0) {
         showToast('Please select at least one category', 'error');
         return;
       }
+      console.log('🔥 DEBUG: Moving to step 3, about to load services...');
       setCurrentStep(3);
+      console.log('🔥 DEBUG: Current services before loading:', services.length);
       await loadServicesForCategories();
+      console.log('🔥 DEBUG: Current services after loading:', services.length);
     }
   };
 
@@ -893,7 +693,7 @@ const ImportServicesPage = () => {
                     className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   >
                     <option value="">-- Select API Provider --</option>
-                    {(realProviders.length > 0 ? realProviders : dummyProviders).map((provider) => (
+                    {realProviders.map((provider) => (
                       <option
                         key={provider.id}
                         value={provider.id}
@@ -910,7 +710,7 @@ const ImportServicesPage = () => {
                   {selectedProvider && (
                     <div className="mt-2 space-y-2">
                       {(() => {
-                        const selectedProviderData = (realProviders.length > 0 ? realProviders : dummyProviders).find(
+                        const selectedProviderData = realProviders.find(
                           (p) => p.id?.toString() === selectedProvider
                         );
 
@@ -1378,10 +1178,16 @@ const ImportServicesPage = () => {
                                 Percent
                               </th>
                               <th
-                                className="text-left p-3 font-semibold"
+                                className="text-center p-3 font-semibold"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                Features
+                                Refill
+                              </th>
+                              <th
+                                className="text-center p-3 font-semibold"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                Cancel
                               </th>
                               <th
                                 className="text-left p-3 font-semibold"
@@ -1397,7 +1203,7 @@ const ImportServicesPage = () => {
                                 <React.Fragment key={category}>
                                   {/* Category Header Row */}
                                   <tr className="bg-gray-50 border-t-2 border-gray-200">
-                                    <td colSpan={7} className="p-3">
+                                    <td colSpan={8} className="p-3">
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                           <button
@@ -1529,22 +1335,45 @@ const ImportServicesPage = () => {
                                             />
                                           </td>
                                           <td className="p-3">
-                                            <div className="flex gap-2">
-                                              {service.refill && (
-                                                <span className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                                                  Refill
-                                                </span>
-                                              )}
-                                              {service.cancel && (
-                                                <span className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                                                  Cancel
-                                                </span>
-                                              )}
-                                              {!service.refill && !service.cancel && (
-                                                <span className="inline-block px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs">
-                                                  None
-                                                </span>
-                                              )}
+                                            <div className="text-center">
+                                              <button
+                                                className={`p-1 rounded transition-colors duration-200 ${
+                                                  service.refill
+                                                    ? 'text-green-600 hover:bg-green-50'
+                                                    : 'text-gray-400 hover:bg-gray-50'
+                                                }`}
+                                                title={
+                                                  service.refill ? 'Refill Enabled' : 'Refill Disabled'
+                                                }
+                                                onClick={() => toggleRefill(service)}
+                                              >
+                                                {service.refill ? (
+                                                  <FaToggleOn className="h-5 w-5" />
+                                                ) : (
+                                                  <FaToggleOff className="h-5 w-5" />
+                                                )}
+                                              </button>
+                                            </div>
+                                          </td>
+                                          <td className="p-3">
+                                            <div className="text-center">
+                                              <button
+                                                className={`p-1 rounded transition-colors duration-200 ${
+                                                  service.cancel
+                                                    ? 'text-green-600 hover:bg-green-50'
+                                                    : 'text-gray-400 hover:bg-gray-50'
+                                                }`}
+                                                title={
+                                                  service.cancel ? 'Cancel Enabled' : 'Cancel Disabled'
+                                                }
+                                                onClick={() => toggleCancel(service)}
+                                              >
+                                                {service.cancel ? (
+                                                  <FaToggleOn className="h-5 w-5" />
+                                                ) : (
+                                                  <FaToggleOff className="h-5 w-5" />
+                                                )}
+                                              </button>
                                             </div>
                                           </td>
                                           <td className="p-3">
@@ -1571,7 +1400,7 @@ const ImportServicesPage = () => {
                                     ) : (
                                       <tr className="border-t">
                                         <td
-                                          colSpan={7}
+                                          colSpan={8}
                                           className="p-8 text-center"
                                         >
                                           <div className="flex flex-col items-center justify-center text-gray-500">
@@ -1741,6 +1570,64 @@ const ImportServicesPage = () => {
                                         </div>
                                       </div>
 
+                                      {/* Refill and Cancel Toggles */}
+                                      <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                          <label className="form-label mb-2">
+                                            Refill
+                                          </label>
+                                          <div className="flex items-center">
+                                            <button
+                                              className={`p-1 rounded transition-colors duration-200 ${
+                                                service.refill
+                                                  ? 'text-green-600 hover:bg-green-50'
+                                                  : 'text-gray-400 hover:bg-gray-50'
+                                              }`}
+                                              title={
+                                                service.refill ? 'Refill Enabled' : 'Refill Disabled'
+                                              }
+                                              onClick={() => toggleRefill(service)}
+                                            >
+                                              {service.refill ? (
+                                                <FaToggleOn className="h-6 w-6" />
+                                              ) : (
+                                                <FaToggleOff className="h-6 w-6" />
+                                              )}
+                                            </button>
+                                            <span className="ml-2 text-sm text-gray-600">
+                                              {service.refill ? 'Enabled' : 'Disabled'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <label className="form-label mb-2">
+                                            Cancel
+                                          </label>
+                                          <div className="flex items-center">
+                                            <button
+                                              className={`p-1 rounded transition-colors duration-200 ${
+                                                service.cancel
+                                                  ? 'text-green-600 hover:bg-green-50'
+                                                  : 'text-gray-400 hover:bg-gray-50'
+                                              }`}
+                                              title={
+                                                service.cancel ? 'Cancel Enabled' : 'Cancel Disabled'
+                                              }
+                                              onClick={() => toggleCancel(service)}
+                                            >
+                                              {service.cancel ? (
+                                                <FaToggleOn className="h-6 w-6" />
+                                              ) : (
+                                                <FaToggleOff className="h-6 w-6" />
+                                              )}
+                                            </button>
+                                            <span className="ml-2 text-sm text-gray-600">
+                                              {service.cancel ? 'Enabled' : 'Disabled'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+
                                       {/* Description */}
                                       <div>
                                         <label className="form-label mb-2">
@@ -1835,7 +1722,7 @@ const ImportServicesPage = () => {
                       isLoading ||
                       (currentStep === 1 && (
                         !selectedProvider ||
-                        (realProviders.length > 0 ? realProviders : dummyProviders).find(
+                        realProviders.find(
                           (p) => p.id?.toString() === selectedProvider
                         )?.status === 'inactive'
                       ))
@@ -1853,8 +1740,7 @@ const ImportServicesPage = () => {
                   >
                     {isLoading ? (
                       <>
-                        <GradientSpinner size="w-4 h-4" />
-                        Importing...
+                        Updating...
                       </>
                     ) : (
                       <>
