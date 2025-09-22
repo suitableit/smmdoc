@@ -147,66 +147,128 @@ export async function GET(request: Request) {
       paginatedCategories = [];
       totalCategories = 0;
     } else {
-      // Normal pagination: First get paginated categories
-      [paginatedCategories, totalCategories] = await Promise.all([
-        db.category.findMany({
-          where: {
-            hideCategory: 'no', // Only show categories that are not hidden
-          },
-          skip: categorySkip,
-          take: categoryLimit,
-          orderBy: [
-            { id: 'asc' as any }, // Order by ID first (1, 2, 3...)
-            { position: 'asc' as any },
-            { createdAt: 'asc' as any },
-          ],
-        }),
-        db.category.count({
-          where: {
-            hideCategory: 'no',
-          },
-        }),
-      ]);
+      // Check if we should show all categories (when limit is 'all')
+      const showAllCategories = limitParam === 'all';
+      
+      if (showAllCategories) {
+        // When showing all, get ALL categories (including empty ones)
+        [paginatedCategories, totalCategories] = await Promise.all([
+          db.category.findMany({
+            where: {
+              hideCategory: 'no', // Only show categories that are not hidden
+            },
+            orderBy: [
+              { id: 'asc' as any }, // Order by ID first (1, 2, 3...)
+              { position: 'asc' as any },
+              { createdAt: 'asc' as any },
+            ],
+          }),
+          db.category.count({
+            where: {
+              hideCategory: 'no',
+            },
+          }),
+        ]);
 
-      // Get all services for the paginated categories
-      const categoryIds = paginatedCategories.map((cat: any) => cat.id);
+        // Get ALL services (not limited by category pagination)
+        services = await db.service.findMany({
+          where: {
+            status: 'active',
+            category: {
+              hideCategory: 'no', // Only include services from visible categories
+            },
+          },
+          orderBy: {
+            createdAt: 'desc' as any,
+          },
+          select: {
+            id: true,
+            name: true,
+            rate: true,
+            rateUSD: true,
+            min_order: true,
+            max_order: true,
+            avg_time: true,
+            description: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            category: {
+              select: {
+                id: true,
+                category_name: true,
+              }
+            },
+            serviceType: {
+              select: {
+                id: true,
+                name: true,
+              }
+            },
+          },
+        });
+      } else {
+        // Normal pagination: First get paginated categories
+        [paginatedCategories, totalCategories] = await Promise.all([
+          db.category.findMany({
+            where: {
+              hideCategory: 'no', // Only show categories that are not hidden
+            },
+            skip: categorySkip,
+            take: categoryLimit,
+            orderBy: [
+              { id: 'asc' as any }, // Order by ID first (1, 2, 3...)
+              { position: 'asc' as any },
+              { createdAt: 'asc' as any },
+            ],
+          }),
+          db.category.count({
+            where: {
+              hideCategory: 'no',
+            },
+          }),
+        ]);
 
-      services = await db.service.findMany({
-        where: {
-          status: 'active',
-          categoryId: {
-            in: categoryIds,
+        // Get all services for the paginated categories
+        const categoryIds = paginatedCategories.map((cat: any) => cat.id);
+
+        services = await db.service.findMany({
+          where: {
+            status: 'active',
+            categoryId: {
+              in: categoryIds,
+            },
           },
-        },
-        orderBy: {
-          createdAt: 'desc' as any,
-        },
-        select: {
-          id: true,
-          name: true,
-          rate: true,
-          rateUSD: true,
-          min_order: true,
-          max_order: true,
-          avg_time: true,
-          description: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
-          category: {
-            select: {
-              id: true,
-              category_name: true,
-            }
+          orderBy: {
+            createdAt: 'desc' as any,
           },
-          serviceType: {
-            select: {
-              id: true,
-              name: true,
-            }
+          select: {
+            id: true,
+            name: true,
+            rate: true,
+            rateUSD: true,
+            min_order: true,
+            max_order: true,
+            avg_time: true,
+            description: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            category: {
+              select: {
+                id: true,
+                category_name: true,
+              }
+            },
+            serviceType: {
+              select: {
+                id: true,
+                name: true,
+              }
+            },
           },
-        },
-      });
+        });
+      }
     }
 
 

@@ -22,6 +22,7 @@ import {
   FaEllipsisH,
   FaExclamationTriangle,
   FaFileImport,
+  FaGlobe,
   FaGripVertical,
   FaPlus,
   FaSave,
@@ -2302,6 +2303,16 @@ function AdminServicesPage() {
   const { data: categoriesData, mutate: refreshCategories } =
     useGetCategories();
 
+  // Fetch active providers from API
+  const { data: providersData, mutate: refreshProviders } = useSWR(
+    '/api/admin/providers',
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+  );
+
   // Global refresh function for live updates - will be updated after refreshServices is defined
   const refreshAllData = useCallback(async () => {
     try {
@@ -2346,7 +2357,7 @@ function AdminServicesPage() {
   const [servicesLoading, setServicesLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [providerFilter, setProviderFilter] = useState('all');
+  const [providerFilter, setProviderFilter] = useState('All');
   const [pageSize, setPageSize] = useState('10'); // Default to 10 categories per page
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -2515,6 +2526,7 @@ function AdminServicesPage() {
       const results = await Promise.allSettled([
         refreshServices(),
         refreshCategories(),
+        refreshProviders(),
         // Refresh stats
         fetch('/api/admin/services/stats')
           .then((res) => res.json())
@@ -2539,7 +2551,7 @@ function AdminServicesPage() {
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
-  }, [refreshServices, refreshCategories, categoriesData?.data?.length]);
+  }, [refreshServices, refreshCategories, refreshProviders, categoriesData?.data?.length]);
 
   // Memoized filter function for better performance
   const filteredServices = useMemo(() => {
@@ -2562,9 +2574,9 @@ function AdminServicesPage() {
 
       // Provider filter
       let matchesProvider = true;
-      if (providerFilter === 'all') {
+      if (providerFilter === 'All') {
         matchesProvider = true;
-      } else if (providerFilter === 'Manual System') {
+      } else if (providerFilter === 'Self') {
         // Show services with no provider or empty provider (manual system)
         matchesProvider = !provider || provider.trim() === '';
       } else {
@@ -2591,19 +2603,20 @@ function AdminServicesPage() {
     });
   }, [data?.data, searchTerm, statusFilter, providerFilter]);
 
-  // Get unique providers for filter dropdown
+  // Get unique providers for filter dropdown - now using API data
   const uniqueProviders = useMemo(() => {
-    if (!data?.data) return [];
+    if (!providersData?.data?.providers) return ['All', 'Self'];
     
-    const providers = data.data
-      .map((service: any) => service.provider)
-      .filter((provider: string) => provider && provider.trim() !== '')
-      .filter((provider: string, index: number, arr: string[]) => arr.indexOf(provider) === index)
+    // Get active providers from API, excluding reserved names
+    const reservedNames = ['All', 'Self'];
+    const activeProviders = providersData.data.providers
+      .filter((provider: any) => provider.status === 'active')
+      .map((provider: any) => provider.label || provider.value)
+      .filter((providerName: string) => !reservedNames.includes(providerName))
       .sort();
     
-    // Add Manual System option at the beginning
-    return ['Manual System', ...providers];
-  }, [data?.data]);
+    return ['All', 'Self', ...activeProviders];
+  }, [providersData?.data?.providers]);
 
   // Optimized grouping with better performance for large datasets
   const groupedServices = useMemo(() => {
@@ -3922,6 +3935,19 @@ function AdminServicesPage() {
                 <option value="all">All</option>
               </select>
 
+              {/* Provider Filter Dropdown - Moved after page view dropdown */}
+              <select 
+                value={providerFilter}
+                onChange={(e) => setProviderFilter(e.target.value)}
+                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+              >
+                {uniqueProviders.map((provider) => (
+                  <option key={provider} value={provider}>
+                    {provider}
+                  </option>
+                ))}
+              </select>
+
               <button
                 onClick={handleRefresh}
                 disabled={servicesLoading || statsLoading}
@@ -3978,26 +4004,6 @@ function AdminServicesPage() {
                   className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-
-              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
-                <option value="id">Service ID</option>
-                <option value="name">Service Name</option>
-                <option value="category">Category</option>
-              </select>
-
-              {/* Provider Filter Dropdown */}
-              <select 
-                value={providerFilter}
-                onChange={(e) => setProviderFilter(e.target.value)}
-                className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-              >
-                <option value="all">All Providers</option>
-                {uniqueProviders.map((provider) => (
-                  <option key={provider} value={provider}>
-                    {provider}
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
         </div>
@@ -4125,9 +4131,9 @@ function AdminServicesPage() {
                   {error}
                 </p>
               </div>
-            ) : !data || Object.keys(groupedServices).length === 0 ? (
-              <div className="text-center py-12">
-                <FaBox
+            ) : !data || Object.keys(groupedServices).length === 0 || Object.values(groupedServices).every(services => services.length === 0) ? (
+              <div className="p-12 text-center">
+                <FaGlobe
                   className="h-16 w-16 mx-auto mb-4"
                   style={{ color: 'var(--text-muted)' }}
                 />
@@ -4135,11 +4141,15 @@ function AdminServicesPage() {
                   className="text-lg font-semibold mb-2"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  No information was found for you.
+                  No services found
                 </h3>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {searchTerm
-                    ? `No services match "${searchTerm}"`
+                  {searchTerm && providerFilter !== 'all'
+                    ? `No ${providerFilter} services match your search "${searchTerm}".`
+                    : searchTerm
+                    ? `No services match your search "${searchTerm}".`
+                    : providerFilter !== 'all'
+                    ? `No ${providerFilter} services found.`
                     : 'No services exist yet.'}
                 </p>
               </div>
@@ -4661,10 +4671,10 @@ function AdminServicesPage() {
                                                     )
                                                   : null;
                                               return (
-                                                updateData?.provider || 'Manual'
+                                                updateData?.provider || 'Self'
                                               );
                                             } catch {
-                                              return 'Manual';
+                                              return 'Self';
                                             }
                                           })()}
                                         </div>
