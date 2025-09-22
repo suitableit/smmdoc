@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { ApiRequestBuilder, ApiResponseParser } from '@/lib/provider-api-specification';
 
 // POST /api/orders/place-to-provider - Forward order to external provider
 export async function POST(req: NextRequest) {
@@ -78,30 +79,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Prepare provider API request
-    const providerApiData = {
-      key: provider.api_key,
-      action: 'add',
-      service: order.service.providerServiceId || order.serviceId,
-      link: order.link,
-      quantity: order.qty
-    };
+    // Prepare provider API request using API specification system
+    const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+    
+    const orderRequest = requestBuilder.buildAddOrderRequest(
+      order.service.providerServiceId || order.serviceId,
+      order.link,
+      order.qty
+    );
 
     console.log('Sending order to provider:', {
       providerId: provider.id,
       providerName: provider.name,
       orderId: order.id,
-      apiData: providerApiData
+      requestConfig: orderRequest
     });
 
     // Send request to provider
     let providerResponse;
     try {
-      const response = await axios.post(provider.api_url, providerApiData, {
+      const response = await axios({
+        method: orderRequest.method,
+        url: orderRequest.url,
+        data: orderRequest.body,
+        headers: orderRequest.headers,
         timeout: 30000, // 30 seconds timeout
-        headers: {
-          'Content-Type': 'application/json'
-        }
       });
       providerResponse = response.data;
     } catch (error: any) {
@@ -129,8 +131,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check provider response
-    if (!providerResponse || !providerResponse.order) {
+    // Check provider response using API specification system
+    const responseParser = new ApiResponseParser();
+    let parsedOrder;
+    
+    try {
+      parsedOrder = responseParser.parseAddOrderResponse(providerResponse);
+    } catch (parseError) {
+      await db.providerOrderLog.create({
+        data: {
+          orderId: order.id,
+          providerId: provider.id,
+          action: 'forward_order',
+          status: 'failed',
+          response: JSON.stringify(providerResponse)
+        }
+      });
+
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Invalid response format from provider', 
+          data: null 
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!parsedOrder || !parsedOrder.orderId) {
       await db.providerOrderLog.create({
         data: {
           orderId: order.id,
@@ -155,7 +183,7 @@ export async function POST(req: NextRequest) {
     const updatedOrder = await db.newOrder.update({
       where: { id: orderId },
       data: {
-        providerOrderId: providerResponse.order.toString(),
+        providerOrderId: parsedOrder.orderId.toString(),
         providerStatus: 'pending',
         lastSyncAt: new Date()
       }
@@ -175,7 +203,7 @@ export async function POST(req: NextRequest) {
 
     console.log('Order forwarded successfully:', {
       orderId: order.id,
-      providerOrderId: providerResponse.order,
+      providerOrderId: parsedOrder.orderId,
       providerId: provider.id
     });
 

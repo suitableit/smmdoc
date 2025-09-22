@@ -55,11 +55,20 @@ export async function GET() {
         select: {
           id: true,
           name: true,
+          api_key: true,
           api_url: true,
+          login_user: true,
+          login_pass: true,
+          http_method: true,
           status: true,
           is_custom: true,
           createdAt: true,
-          updatedAt: true
+          updatedAt: true,
+          current_balance: true,
+          balance_last_updated: true
+        },
+        orderBy: {
+          createdAt: 'desc'  // Order by newest first (new to old)
         }
       });
     } catch (error) {
@@ -75,10 +84,16 @@ export async function GET() {
       configured: true,
       status: cp.status,
       id: cp.id,
+      apiKey: cp.api_key || '',
       apiUrl: cp.api_url || '',
+      username: cp.login_user || '',
+      password: cp.login_pass || '',
+      httpMethod: cp.http_method || 'POST',
       isCustom: true,
       createdAt: cp.createdAt,
-      updatedAt: cp.updatedAt
+      updatedAt: cp.updatedAt,
+      currentBalance: cp.current_balance || 0,
+      balanceLastUpdated: cp.balance_last_updated
     }));
 
     return NextResponse.json({
@@ -123,7 +138,53 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { customProviderName, apiKey, apiUrl, username, password } = await req.json();
+    const { 
+      customProviderName, 
+      apiKey, 
+      apiUrl, 
+      httpMethod, 
+      username, 
+      password,
+      // API Specification Fields
+      apiKeyParam,
+      actionParam,
+      servicesAction,
+      servicesEndpoint,
+      addOrderAction,
+      addOrderEndpoint,
+      serviceIdParam,
+      linkParam,
+      quantityParam,
+      runsParam,
+      intervalParam,
+      statusAction,
+      statusEndpoint,
+      orderIdParam,
+      ordersParam,
+      refillAction,
+      refillEndpoint,
+      refillStatusAction,
+      refillIdParam,
+      refillsParam,
+      cancelAction,
+      cancelEndpoint,
+      balanceAction,
+      balanceEndpoint,
+      responseMapping,
+      requestFormat,
+      responseFormat,
+      rateLimitPerMin,
+      timeoutSeconds
+    } = await req.json();
+
+    console.log('POST /api/admin/providers - Received data:', {
+      customProviderName,
+      apiKey: apiKey ? '[REDACTED]' : 'undefined/null',
+      apiUrl,
+      httpMethod,
+      username,
+      password: password ? '[REDACTED]' : 'undefined/null'
+    });
 
     // All providers are custom providers
     const providerName = customProviderName;
@@ -149,20 +210,40 @@ export async function POST(req: NextRequest) {
     // Check if provider already exists and create new provider
     let newProvider: any;
     try {
-      // Check if provider already exists
-      const existingProvider = await db.api_providers.findUnique({
+      // Check if provider name already exists
+      const existingProviderByName = await db.api_providers.findUnique({
         where: { name: providerName }
       });
 
-      if (existingProvider) {
+      if (existingProviderByName) {
         return NextResponse.json(
           {
-            error: 'Provider already exists',
+            error: 'Provider with this name already exists',
             success: false,
             data: null
           },
           { status: 400 }
         );
+      }
+
+      // Check if API URL already exists (if provided)
+      if (apiUrl && apiUrl.trim() !== '') {
+        const existingProviderByUrl = await db.api_providers.findFirst({
+          where: { 
+            api_url: apiUrl.trim()
+          }
+        });
+
+        if (existingProviderByUrl) {
+          return NextResponse.json(
+            {
+              error: 'Provider with this API URL already exists',
+              success: false,
+              data: null
+            },
+            { status: 400 }
+          );
+        }
       }
 
       // Create new provider
@@ -171,11 +252,49 @@ export async function POST(req: NextRequest) {
           name: providerName,
           api_key: apiKey,
           api_url: apiUrl || '',
+          http_method: httpMethod || 'POST',
           login_user: username || null,
           login_pass: password || null,
           status: 'inactive',
-          is_custom: true
+          is_custom: true,
+          // API Specification Fields
+          api_key_param: apiKeyParam || 'key',
+          action_param: actionParam || 'action',
+          services_action: servicesAction || 'services',
+          services_endpoint: servicesEndpoint || '',
+          add_order_action: addOrderAction || 'add',
+          add_order_endpoint: addOrderEndpoint || '',
+          service_id_param: serviceIdParam || 'service',
+          link_param: linkParam || 'link',
+          quantity_param: quantityParam || 'quantity',
+          runs_param: runsParam || 'runs',
+          interval_param: intervalParam || 'interval',
+          status_action: statusAction || 'status',
+          status_endpoint: statusEndpoint || '',
+          order_id_param: orderIdParam || 'order',
+          orders_param: ordersParam || 'orders',
+          refill_action: refillAction || 'refill',
+          refill_endpoint: refillEndpoint || '',
+          refill_status_action: refillStatusAction || 'refill_status',
+          refill_id_param: refillIdParam || 'refill',
+          refills_param: refillsParam || 'refills',
+          cancel_action: cancelAction || 'cancel',
+          cancel_endpoint: cancelEndpoint || '',
+          balance_action: balanceAction || 'balance',
+          balance_endpoint: balanceEndpoint || '',
+          response_mapping: responseMapping || '',
+          request_format: requestFormat || 'form',
+          response_format: responseFormat || 'json',
+          rate_limit_per_min: rateLimitPerMin ? parseInt(rateLimitPerMin) : null,
+          timeout_seconds: timeoutSeconds || 30
         }
+      });
+
+      console.log('Provider created successfully:', {
+        id: newProvider.id,
+        name: newProvider.name,
+        api_key: newProvider.api_key ? '[REDACTED]' : 'null',
+        api_url: newProvider.api_url
       });
     } catch (error) {
       console.error('Provider creation error:', error);
@@ -233,7 +352,18 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const { id, status, apiKey, apiUrl, username, password } = await req.json();
+    const { id, status, name, apiKey, apiUrl, httpMethod, username, password } = await req.json();
+
+    console.log('PUT /api/admin/providers - Received data:', {
+      id,
+      status,
+      name,
+      apiKey: apiKey ? '[REDACTED]' : 'undefined/null',
+      apiUrl,
+      httpMethod,
+      username,
+      password: password ? '[REDACTED]' : 'undefined/null'
+    });
 
     if (!id) {
       return NextResponse.json(
@@ -249,8 +379,10 @@ export async function PUT(req: NextRequest) {
     // Prepare update data
     const updateData: any = {};
     if (status !== undefined) updateData.status = status;
+    if (name !== undefined) updateData.name = name;
     if (apiKey !== undefined) updateData.api_key = apiKey;
     if (apiUrl !== undefined) updateData.api_url = apiUrl;
+    if (httpMethod !== undefined) updateData.http_method = httpMethod;
     if (username !== undefined) updateData.login_user = username || null;
     if (password !== undefined) updateData.login_pass = password || null;
 
@@ -316,6 +448,13 @@ export async function PUT(req: NextRequest) {
     const updatedProvider = await db.api_providers.update({
       where: { id: parseInt(id) },
       data: updateData
+    });
+
+    console.log('Provider updated successfully:', {
+      id: updatedProvider.id,
+      name: updatedProvider.name,
+      api_key: updatedProvider.api_key ? '[REDACTED]' : 'null',
+      api_url: updatedProvider.api_url
     });
 
     return NextResponse.json({
@@ -393,30 +532,111 @@ export async function DELETE(req: NextRequest) {
       await db.api_providers.update({
         where: { id: providerId },
         data: { 
-          status: 'inactive',
-          updated_at: new Date()
+          status: 'trash',
+          updatedAt: new Date()
         }
       });
 
-      // Delete all services associated with this provider
-      await db.services.deleteMany({
-        where: { provider_id: providerId }
+      // Get all services associated with this provider
+      const providerServices = await db.Service.findMany({
+        where: { providerId: providerId },
+        select: { id: true }
       });
 
-      message = 'Provider moved to trash and all services deleted successfully';
+      const serviceIds = providerServices.map(service => service.id);
+
+      if (serviceIds.length > 0) {
+        // Delete dependent records first to avoid foreign key constraint violations
+        
+        // Delete favorite services
+        await db.FavoriteService.deleteMany({
+          where: { serviceId: { in: serviceIds } }
+        });
+
+        // Delete cancel requests for orders related to these services
+        await db.CancelRequest.deleteMany({
+          where: { 
+            order: { 
+              serviceId: { in: serviceIds } 
+            } 
+          }
+        });
+
+        // Delete refill requests for orders related to these services
+        await db.RefillRequest.deleteMany({
+          where: { 
+            order: { 
+              serviceId: { in: serviceIds } 
+            } 
+          }
+        });
+
+        // Delete orders related to these services
+        await db.NewOrder.deleteMany({
+          where: { serviceId: { in: serviceIds } }
+        });
+
+        // Finally delete the services
+        await db.Service.deleteMany({
+          where: { providerId: providerId }
+        });
+      }
+
+      message = 'Provider moved to trash and all associated imported services & categories are moved to trash';
     } else {
       // Permanent delete - remove provider and its services
-      // First delete associated services
-      await db.services.deleteMany({
-        where: { provider_id: providerId }
+      
+      // Get all services associated with this provider
+      const providerServices = await db.Service.findMany({
+        where: { providerId: providerId },
+        select: { id: true }
       });
 
-      // Then delete the provider
+      const serviceIds = providerServices.map(service => service.id);
+
+      if (serviceIds.length > 0) {
+        // Delete dependent records first to avoid foreign key constraint violations
+        
+        // Delete favorite services
+        await db.FavoriteService.deleteMany({
+          where: { serviceId: { in: serviceIds } }
+        });
+
+        // Delete cancel requests for orders related to these services
+        await db.CancelRequest.deleteMany({
+          where: { 
+            order: { 
+              serviceId: { in: serviceIds } 
+            } 
+          }
+        });
+
+        // Delete refill requests for orders related to these services
+        await db.RefillRequest.deleteMany({
+          where: { 
+            order: { 
+              serviceId: { in: serviceIds } 
+            } 
+          }
+        });
+
+        // Delete orders related to these services
+        await db.NewOrder.deleteMany({
+          where: { serviceId: { in: serviceIds } }
+        });
+
+        // Delete the services
+        await db.Service.deleteMany({
+          where: { providerId: providerId }
+        });
+      }
+
+      // Finally delete the provider
       await db.api_providers.delete({
         where: { id: providerId }
       });
 
-      message = 'Provider and all associated services permanently deleted successfully';
+      message = 'Provider and all associated imported services & categories permanently deleted successfully';
     }
 
     return NextResponse.json({

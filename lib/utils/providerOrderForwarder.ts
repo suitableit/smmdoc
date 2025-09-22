@@ -1,5 +1,6 @@
 import { Provider } from '@/types/provider';
 import { Order } from '@/types/order';
+import { ApiRequestBuilder, ApiResponseParser } from '@/lib/provider-api-specification';
 
 export interface ProviderOrderRequest {
   service: string;
@@ -44,22 +45,20 @@ export class ProviderOrderForwarder {
     orderData: ProviderOrderRequest
   ): Promise<ProviderOrderResponse> {
     try {
-      const requestBody: Record<string, string> = {
-        key: provider.api_key,
-        action: 'add',
-        service: orderData.service,
-        link: orderData.link,
-        quantity: orderData.quantity.toString(),
-        ...(orderData.runs && { runs: orderData.runs.toString() }),
-        ...(orderData.interval && { interval: orderData.interval.toString() })
-      };
+      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      
+      const orderRequest = requestBuilder.buildAddOrderRequest(
+        orderData.service,
+        orderData.link,
+        orderData.quantity,
+        orderData.runs,
+        orderData.interval
+      );
 
-      const response = await fetch(provider.api_url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams(requestBody).toString(),
+      const response = await fetch(orderRequest.url, {
+        method: orderRequest.method,
+        headers: orderRequest.headers,
+        body: orderRequest.body,
       });
 
       if (!response.ok) {
@@ -72,13 +71,16 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
+      const responseParser = new ApiResponseParser();
+      const parsedOrder = responseParser.parseAddOrderResponse(result);
+
       return {
-        order: result.order,
-        charge: parseFloat(result.charge),
-        start_count: result.start_count ? parseInt(result.start_count) : undefined,
-        status: this.mapProviderStatus(result.status || 'Pending'),
-        remains: result.remains ? parseInt(result.remains) : undefined,
-        currency: result.currency || 'USD'
+        order: parsedOrder.orderId,
+        charge: parsedOrder.charge,
+        start_count: parsedOrder.startCount,
+        status: this.mapProviderStatus(parsedOrder.status || 'Pending'),
+        remains: parsedOrder.remains,
+        currency: parsedOrder.currency || 'USD'
       };
     } catch (error) {
       console.error('Error forwarding order to provider:', error);
@@ -94,18 +96,14 @@ export class ProviderOrderForwarder {
     providerOrderId: string
   ): Promise<ProviderStatusResponse> {
     try {
-      const requestBody = {
-        key: provider.api_key,
-        action: 'status',
-        order: providerOrderId
-      };
+      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      
+      const statusRequest = requestBuilder.buildOrderStatusRequest(providerOrderId);
 
-      const response = await fetch(provider.api_url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams(requestBody).toString(),
+      const response = await fetch(statusRequest.url, {
+        method: statusRequest.method,
+        headers: statusRequest.headers,
+        body: statusRequest.body,
       });
 
       if (!response.ok) {
@@ -118,12 +116,15 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
+      const responseParser = new ApiResponseParser();
+      const parsedStatus = responseParser.parseOrderStatusResponse(result);
+
       return {
-        charge: parseFloat(result.charge),
-        start_count: parseInt(result.start_count),
-        status: this.mapProviderStatus(result.status),
-        remains: parseInt(result.remains),
-        currency: result.currency || 'USD'
+        charge: parsedStatus.charge,
+        start_count: parsedStatus.startCount,
+        status: this.mapProviderStatus(parsedStatus.status),
+        remains: parsedStatus.remains,
+        currency: parsedStatus.currency || 'USD'
       };
     } catch (error) {
       console.error('Error checking provider order status:', error);
@@ -136,17 +137,14 @@ export class ProviderOrderForwarder {
    */
   async getProviderServices(provider: Provider): Promise<any[]> {
     try {
-      const requestBody = {
-        key: provider.api_key,
-        action: 'services'
-      };
+      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      
+      const servicesRequest = requestBuilder.buildServicesRequest();
 
-      const response = await fetch(provider.api_url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams(requestBody).toString(),
+      const response = await fetch(servicesRequest.url, {
+        method: servicesRequest.method,
+        headers: servicesRequest.headers,
+        body: servicesRequest.body,
       });
 
       if (!response.ok) {
@@ -159,7 +157,10 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
-      return result;
+      const responseParser = new ApiResponseParser();
+      const parsedServices = responseParser.parseServicesResponse(result);
+
+      return parsedServices;
     } catch (error) {
       console.error('Error fetching provider services:', error);
       throw error;
@@ -171,17 +172,14 @@ export class ProviderOrderForwarder {
    */
   async getProviderBalance(provider: Provider): Promise<number> {
     try {
-      const requestBody = {
-        key: provider.api_key,
-        action: 'balance'
-      };
+      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      
+      const balanceRequest = requestBuilder.buildBalanceRequest();
 
-      const response = await fetch(provider.api_url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams(requestBody).toString(),
+      const response = await fetch(balanceRequest.url, {
+        method: balanceRequest.method,
+        headers: balanceRequest.headers,
+        body: balanceRequest.body,
       });
 
       if (!response.ok) {
@@ -194,7 +192,10 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
-      return parseFloat(result.balance);
+      const responseParser = new ApiResponseParser();
+      const parsedBalance = responseParser.parseBalanceResponse(result);
+
+      return parsedBalance.balance;
     } catch (error) {
       console.error('Error fetching provider balance:', error);
       throw error;

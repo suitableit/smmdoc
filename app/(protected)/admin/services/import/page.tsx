@@ -157,6 +157,9 @@ interface Service {
   type: string;
   percent?: number;
   providerPrice?: number; // Original price from provider
+  refill?: boolean; // Whether refill is available
+  cancel?: boolean; // Whether cancel is available
+  currency?: string; // Service currency
 }
 
 const ImportServicesPage = () => {
@@ -181,13 +184,13 @@ const ImportServicesPage = () => {
 
         if (result.success) {
           const formattedProviders = result.data.providers
-            .filter((p: any) => p.configured) // Show both active and inactive configured providers
+            .filter((p: any) => p.configured && p.status === 'active') // Show only active configured providers
             .map((p: any) => ({
               id: p.id?.toString() || '',
               name: p.label,
               url: p.apiUrl,
               status: p.status,
-              description: `${p.label} - ${p.status === 'active' ? 'Ready for service import' : 'Provider is inactive'}`
+              description: `${p.label} - Ready for service import`
             }));
           setRealProviders(formattedProviders);
         }
@@ -452,7 +455,7 @@ const ImportServicesPage = () => {
     const filteredServices = services.filter(
       (service) =>
         service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (service.id?.toString() || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -508,13 +511,22 @@ const ImportServicesPage = () => {
     setIsLoading(true);
 
     try {
-      // Real API call to fetch categories
-      const response = await fetch(`/api/admin/services/import?action=categories&providerId=${selectedProvider}`);
+      // Real API call to fetch categories with credentials
+      const response = await fetch(`/api/admin/services/import?action=categories&providerId=${selectedProvider}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       const result = await response.json();
+
+      console.log('Categories API response:', result); // Debug log
 
       if (result.success) {
         const categories = result.data.categories.map((cat: any) => ({
           ...cat,
+          servicesCount: cat.servicesCount || 0,
           selected: false
         }));
 
@@ -1166,7 +1178,7 @@ const ImportServicesPage = () => {
                             <strong>Total Services:</strong>{' '}
                             {apiCategories
                               .filter((cat) => cat.selected)
-                              .reduce((sum, cat) => sum + cat.servicesCount, 0)
+                              .reduce((sum, cat) => sum + (cat.servicesCount || 0), 0)
                               .toString()}
                           </p>
                         </div>
@@ -1351,6 +1363,12 @@ const ImportServicesPage = () => {
                                 className="text-left p-3 font-semibold"
                                 style={{ color: 'var(--text-primary)' }}
                               >
+                                Type
+                              </th>
+                              <th
+                                className="text-left p-3 font-semibold"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
                                 Price (USD)
                               </th>
                               <th
@@ -1358,6 +1376,12 @@ const ImportServicesPage = () => {
                                 style={{ color: 'var(--text-primary)' }}
                               >
                                 Percent
+                              </th>
+                              <th
+                                className="text-left p-3 font-semibold"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                Features
                               </th>
                               <th
                                 className="text-left p-3 font-semibold"
@@ -1373,7 +1397,7 @@ const ImportServicesPage = () => {
                                 <React.Fragment key={category}>
                                   {/* Category Header Row */}
                                   <tr className="bg-gray-50 border-t-2 border-gray-200">
-                                    <td colSpan={5} className="p-3">
+                                    <td colSpan={7} className="p-3">
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                           <button
@@ -1459,6 +1483,13 @@ const ImportServicesPage = () => {
                                             />
                                           </td>
                                           <td className="p-3">
+                                            <div className="text-sm">
+                                              <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                                                {service.type || 'Default'}
+                                              </span>
+                                            </div>
+                                          </td>
+                                          <td className="p-3">
                                             <div className="text-left">
                                               <div
                                                 className="font-semibold text-sm"
@@ -1498,6 +1529,25 @@ const ImportServicesPage = () => {
                                             />
                                           </td>
                                           <td className="p-3">
+                                            <div className="flex gap-2">
+                                              {service.refill && (
+                                                <span className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                                                  Refill
+                                                </span>
+                                              )}
+                                              {service.cancel && (
+                                                <span className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                                                  Cancel
+                                                </span>
+                                              )}
+                                              {!service.refill && !service.cancel && (
+                                                <span className="inline-block px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs">
+                                                  None
+                                                </span>
+                                              )}
+                                            </div>
+                                          </td>
+                                          <td className="p-3">
                                             <textarea
                                               value={
                                                 getCurrentValue(
@@ -1521,7 +1571,7 @@ const ImportServicesPage = () => {
                                     ) : (
                                       <tr className="border-t">
                                         <td
-                                          colSpan={5}
+                                          colSpan={7}
                                           className="p-8 text-center"
                                         >
                                           <div className="flex flex-col items-center justify-center text-gray-500">

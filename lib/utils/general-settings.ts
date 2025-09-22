@@ -1,8 +1,9 @@
-import { db } from '@/lib/db';
+// Remove direct database import since we're now using API endpoints
 
 // Interface for general settings
 export interface GeneralSettings {
   siteTitle: string;
+  tagline: string;
   siteDescription: string;
   siteIcon: string;
   siteLogo: string;
@@ -10,6 +11,9 @@ export interface GeneralSettings {
   adminEmail: string;
   siteUrl: string;
   metaKeywords: string;
+  metaSiteTitle: string;
+  googleTitle: string;
+  thumbnail: string;
   footerText: string;
 }
 
@@ -18,9 +22,10 @@ let cachedSettings: GeneralSettings | null = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-// Default fallback settings
-const DEFAULT_SETTINGS: GeneralSettings = {
-  siteTitle: 'SMM Panel',
+// Minimal fallback settings (only for critical failures)
+const MINIMAL_FALLBACK: GeneralSettings = {
+  siteTitle: process.env.NEXT_PUBLIC_APP_NAME || 'SMM Panel',
+  tagline: 'Best SMM Services Provider',
   siteDescription: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Professional Social Media Marketing Panel',
   siteIcon: '/favicon.png',
   siteLogo: '/logo.png',
@@ -28,12 +33,16 @@ const DEFAULT_SETTINGS: GeneralSettings = {
   adminEmail: process.env.ADMIN_EMAIL || 'admin@example.com',
   siteUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   metaKeywords: 'SMM, Social Media Marketing, Panel',
-  footerText: '© 2024 SMM Panel. All rights reserved.'
+  metaSiteTitle: process.env.NEXT_PUBLIC_APP_NAME || 'SMM Panel',
+  googleTitle: 'SMM Panel - Social Media Marketing Services',
+  thumbnail: '/general/og-image.jpg',
+  footerText: '© 2025 SMM Panel. All rights reserved.'
 };
 
 /**
- * Get all general settings from database
- * Falls back to environment variables and defaults if database is unavailable
+ * Get all general settings dynamically from admin settings API
+ * This function fetches data from both general-settings and meta-settings endpoints
+ * Falls back to minimal settings only in case of critical failures
  */
 export async function getGeneralSettings(): Promise<GeneralSettings> {
   const now = Date.now();
@@ -44,29 +53,94 @@ export async function getGeneralSettings(): Promise<GeneralSettings> {
   }
 
   try {
-    // Try to get from database first
-    const settings = await db.generalSettings.findFirst();
-    if (settings) {
-      cachedSettings = {
-        siteTitle: settings.siteTitle || DEFAULT_SETTINGS.siteTitle,
-        siteDescription: settings.siteDescription || DEFAULT_SETTINGS.siteDescription,
-        siteIcon: settings.siteIcon || DEFAULT_SETTINGS.siteIcon,
-        siteLogo: settings.siteLogo || DEFAULT_SETTINGS.siteLogo,
-        siteDarkLogo: settings.siteDarkLogo || DEFAULT_SETTINGS.siteDarkLogo,
-        adminEmail: settings.adminEmail || DEFAULT_SETTINGS.adminEmail,
-        metaKeywords: settings.metaKeywords || DEFAULT_SETTINGS.metaKeywords,
-        footerText: DEFAULT_SETTINGS.footerText,
-        siteUrl: DEFAULT_SETTINGS.siteUrl
-      };
-      lastFetchTime = now;
-      return cachedSettings;
+    // Check if we're in a browser environment and can make API calls
+    if (typeof window !== 'undefined') {
+      // Client-side: Fetch from API endpoints
+      const [generalResponse, metaResponse] = await Promise.all([
+        fetch('/api/admin/general-settings', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }),
+        fetch('/api/admin/meta-settings', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      ]);
+
+      let generalData = null;
+      let metaData = null;
+
+      // Parse general settings response
+      if (generalResponse.ok) {
+        const generalResult = await generalResponse.json();
+        if (generalResult.success && generalResult.generalSettings) {
+          generalData = generalResult.generalSettings;
+        }
+      }
+
+      // Parse meta settings response
+      if (metaResponse.ok) {
+        const metaResult = await metaResponse.json();
+        if (metaResult.success && metaResult.metaSettings) {
+          metaData = metaResult.metaSettings;
+        }
+      }
+
+      // If we have at least general settings, construct the complete settings object
+      if (generalData) {
+        cachedSettings = {
+          siteTitle: generalData.siteTitle || MINIMAL_FALLBACK.siteTitle,
+          tagline: generalData.tagline || MINIMAL_FALLBACK.tagline,
+          siteDescription: metaData?.siteDescription || MINIMAL_FALLBACK.siteDescription,
+          siteIcon: generalData.siteIcon || MINIMAL_FALLBACK.siteIcon,
+          siteLogo: generalData.siteLogo || MINIMAL_FALLBACK.siteLogo,
+          siteDarkLogo: generalData.siteDarkLogo || MINIMAL_FALLBACK.siteDarkLogo,
+          adminEmail: generalData.adminEmail || MINIMAL_FALLBACK.adminEmail,
+          siteUrl: MINIMAL_FALLBACK.siteUrl, // Keep from environment
+          metaKeywords: metaData?.keywords || MINIMAL_FALLBACK.metaKeywords,
+          metaSiteTitle: metaData?.siteTitle || generalData.siteTitle || MINIMAL_FALLBACK.metaSiteTitle,
+          googleTitle: metaData?.googleTitle || MINIMAL_FALLBACK.googleTitle,
+          thumbnail: metaData?.thumbnail || MINIMAL_FALLBACK.thumbnail,
+          footerText: MINIMAL_FALLBACK.footerText // Keep static for now
+        };
+        lastFetchTime = now;
+        return cachedSettings;
+      }
+    } else {
+      // Server-side: Use direct database access for build-time and SSR
+      const { db } = await import('@/lib/db');
+      
+      const settings = await db.generalSettings.findFirst();
+      if (settings) {
+        cachedSettings = {
+          siteTitle: settings.siteTitle || MINIMAL_FALLBACK.siteTitle,
+          tagline: settings.tagline || MINIMAL_FALLBACK.tagline,
+          siteDescription: settings.siteDescription || MINIMAL_FALLBACK.siteDescription,
+          siteIcon: settings.siteIcon || MINIMAL_FALLBACK.siteIcon,
+          siteLogo: settings.siteLogo || MINIMAL_FALLBACK.siteLogo,
+          siteDarkLogo: settings.siteDarkLogo || MINIMAL_FALLBACK.siteDarkLogo,
+          adminEmail: settings.adminEmail || MINIMAL_FALLBACK.adminEmail,
+          siteUrl: MINIMAL_FALLBACK.siteUrl,
+          metaKeywords: settings.metaKeywords || MINIMAL_FALLBACK.metaKeywords,
+          metaSiteTitle: settings.metaSiteTitle || settings.siteTitle || MINIMAL_FALLBACK.metaSiteTitle,
+          googleTitle: settings.googleTitle || MINIMAL_FALLBACK.googleTitle,
+          thumbnail: settings.thumbnail || MINIMAL_FALLBACK.thumbnail,
+          footerText: MINIMAL_FALLBACK.footerText
+        };
+        lastFetchTime = now;
+        return cachedSettings;
+      }
     }
   } catch (error) {
-    console.warn('Failed to fetch general settings from database:', error);
+    console.warn('Failed to fetch general settings:', error);
   }
 
-  // Fallback to default settings
-  cachedSettings = { ...DEFAULT_SETTINGS };
+  // Fallback to minimal settings only in case of critical failure
+  cachedSettings = { ...MINIMAL_FALLBACK };
   lastFetchTime = now;
   return cachedSettings;
 }
@@ -97,11 +171,43 @@ export async function getAdminEmail(): Promise<string> {
 }
 
 /**
- * Get the site URL from General Settings
+ * Get the tagline from General Settings
  */
-export async function getSiteUrl(): Promise<string> {
+export async function getTagline(): Promise<string> {
   const settings = await getGeneralSettings();
-  return settings.siteUrl;
+  return settings.tagline;
+}
+
+/**
+ * Get the meta site title from General Settings
+ */
+export async function getMetaSiteTitle(): Promise<string> {
+  const settings = await getGeneralSettings();
+  return settings.metaSiteTitle;
+}
+
+/**
+ * Get the Google title from General Settings
+ */
+export async function getGoogleTitle(): Promise<string> {
+  const settings = await getGeneralSettings();
+  return settings.googleTitle;
+}
+
+/**
+ * Get the thumbnail from General Settings
+ */
+export async function getThumbnail(): Promise<string> {
+  const settings = await getGeneralSettings();
+  return settings.thumbnail;
+}
+
+/**
+ * Get the footer text from General Settings
+ */
+export async function getFooterText(): Promise<string> {
+  const settings = await getGeneralSettings();
+  return settings.footerText;
 }
 
 /**
@@ -125,7 +231,7 @@ export async function getSiteIcon(): Promise<string> {
  * This should be used after the settings have been fetched server-side
  */
 export function getGeneralSettingsSync(): GeneralSettings {
-  return cachedSettings || { ...DEFAULT_SETTINGS };
+  return cachedSettings || { ...MINIMAL_FALLBACK };
 }
 
 /**
@@ -135,6 +241,14 @@ export function getGeneralSettingsSync(): GeneralSettings {
 export function getAppNameSync(): string {
   const settings = getGeneralSettingsSync();
   return settings.siteTitle;
+}
+
+/**
+ * Get the tagline synchronously
+ */
+export function getTaglineSync(): string {
+  const settings = getGeneralSettingsSync();
+  return settings.tagline;
 }
 
 /**
@@ -151,6 +265,38 @@ export function getSiteDescriptionSync(): string {
 export function getAdminEmailSync(): string {
   const settings = getGeneralSettingsSync();
   return settings.adminEmail;
+}
+
+/**
+ * Get the meta site title synchronously
+ */
+export function getMetaSiteTitleSync(): string {
+  const settings = getGeneralSettingsSync();
+  return settings.metaSiteTitle;
+}
+
+/**
+ * Get the Google title synchronously
+ */
+export function getGoogleTitleSync(): string {
+  const settings = getGeneralSettingsSync();
+  return settings.googleTitle;
+}
+
+/**
+ * Get the thumbnail synchronously
+ */
+export function getThumbnailSync(): string {
+  const settings = getGeneralSettingsSync();
+  return settings.thumbnail;
+}
+
+/**
+ * Get the footer text synchronously
+ */
+export function getFooterTextSync(): string {
+  const settings = getGeneralSettingsSync();
+  return settings.footerText;
 }
 
 /**
@@ -171,5 +317,15 @@ export function clearAppNameCache(): void {
 // Export individual setting getters for convenience
 export {
   getAppName as getSiteTitle,
-  getAppNameSync as getSiteTitleSync
+  getAppNameSync as getSiteTitleSync,
+  getTagline,
+  getTaglineSync,
+  getMetaSiteTitle,
+  getMetaSiteTitleSync,
+  getGoogleTitle,
+  getGoogleTitleSync,
+  getThumbnail,
+  getThumbnailSync,
+  getFooterText,
+  getFooterTextSync
 };

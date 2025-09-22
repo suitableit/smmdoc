@@ -2,31 +2,8 @@ import { auth } from '@/auth';
 import { convertToUSD } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-
-// Validate provider function
-const validateProvider = async (providerId: string) => {
-  try {
-    const provider = await db.api_providers.findUnique({
-      where: { id: parseInt(providerId) }
-    });
-    
-    if (!provider) {
-      return { isValid: false, provider: null, error: 'Provider not found' };
-    }
-    
-    if (provider.status !== 'active') {
-      return { isValid: false, provider: null, error: 'Provider is not active' };
-    }
-    
-    if (!provider.api_key || !provider.api_url) {
-      return { isValid: false, provider: null, error: 'Provider missing API key or URL' };
-    }
-    
-    return { isValid: true, provider, error: null };
-  } catch (error) {
-    return { isValid: false, provider: null, error: 'Database error' };
-  }
-};
+import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
+import { validateProvider } from '@/lib/utils/providerValidator';
 
 // Get valid providers function
 const getValidProviders = async () => {
@@ -69,12 +46,12 @@ export async function POST(req: NextRequest) {
 
     if (providerId) {
       // Sync specific provider with validation
-      const validation = await validateProvider(providerId);
+      const validation = await validateProvider(parseInt(providerId));
       if (validation.isValid && validation.provider) {
         providersToSync.push(validation.provider);
       } else {
         return NextResponse.json(
-          { error: `Provider validation failed: ${validation.error}`, success: false, data: null },
+          { error: `Cannot sync: ${validation.error}. Please check your API configuration.`, success: false, data: null },
           { status: 400 }
         );
       }
@@ -107,22 +84,40 @@ export async function POST(req: NextRequest) {
       try {
         console.log(`Starting sync for provider: ${provider.name}`);
         
-        // Use default endpoints for all custom providers
-        const servicesUrl = `${provider.api_url}${DEFAULT_ENDPOINTS.services}?key=${(provider as any).api_key}`;
+        // Create API specification from provider configuration
+        const apiSpec = createApiSpecFromProvider(provider);
         
-        const response = await fetch(servicesUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
+        // Create API request builder with provider's API specification
+        const apiBuilder = new ApiRequestBuilder(
+          apiSpec,
+          provider.api_url,
+          provider.api_key,
+          provider.http_method || 'POST'
+        );
+
+        // Build services request using API specification
+        const servicesRequest = apiBuilder.buildServicesRequest();
+        
+        const response = await fetch(servicesRequest.url, {
+          method: servicesRequest.method,
+          headers: servicesRequest.headers,
+          body: servicesRequest.data,
+          timeout: (provider.timeout_seconds || 30) * 1000
         });
 
         if (!response.ok) {
           throw new Error(`Provider API error: ${response.status} ${response.statusText}`);
         }
 
-        const providerServices = await response.json();
+        const responseData = await response.json();
+        
+        // Parse response using API specification
+        const responseParser = new ApiResponseParser({
+          responseMapping: provider.response_mapping || '',
+          responseFormat: (provider.response_format as 'json' | 'xml') || 'json'
+        });
+        
+        const providerServices = responseParser.parseServicesResponse(responseData);
 
         if (!Array.isArray(providerServices)) {
           throw new Error('Invalid response format from provider');
