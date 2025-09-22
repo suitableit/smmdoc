@@ -258,7 +258,7 @@ export async function POST(req: NextRequest) {
             serviceId: service.service || service.id,
             name: service.name,
             type: service.type || 'Default',
-            category: service.category || 'Unknown',
+            category: service.category || 'Uncategorized',
             rate: parseFloat(service.rate || service.price || '0'),
             min: parseInt(service.min || '1'),
             max: parseInt(service.max || '10000'),
@@ -1027,19 +1027,24 @@ export async function PUT(req: NextRequest) {
             serviceTypeId = serviceType.id;
           }
 
-          // Find or create category
+          // Find or create category - use the actual service category
+          const categoryName = service.category && service.category.trim() !== '' 
+            ? service.category.trim() 
+            : 'Uncategorized';
+            
           let category = await db.category.findFirst({
-            where: { category_name: service.category || 'Imported Services' }
+            where: { category_name: categoryName }
           });
 
           if (!category) {
             category = await db.category.create({
               data: {
-                category_name: service.category || 'Imported Services',
+                category_name: categoryName,
                 status: 'active',
                 userId: session.user.id
               }
             });
+            console.log(`📝 Created new category: ${categoryName}`);
           }
 
           // Create service in database

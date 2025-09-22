@@ -26,6 +26,33 @@ export default auth(async (req) => {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-client-ip', clientIP);
 
+  // Skip database check for database error page and test-db API
+  const isDatabaseErrorPage = nextUrl.pathname === '/database-error';
+  const isTestDbApi = nextUrl.pathname === '/api/test-db';
+  
+  // Check database connection for all routes except database error page and test-db API
+  if (!isDatabaseErrorPage && !isTestDbApi) {
+    try {
+      const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:3000`;
+      const response = await fetch(`${baseUrl}/api/test-db`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Add timeout to prevent hanging
+        signal: AbortSignal.timeout(5000), // 5 second timeout
+      });
+      
+      if (!response.ok) {
+        console.log('Database connection failed, redirecting to error page');
+        return NextResponse.redirect(new URL('/database-error', nextUrl));
+      }
+    } catch (error) {
+      console.error('Database connection check failed:', error);
+      return NextResponse.redirect(new URL('/database-error', nextUrl));
+    }
+  }
+
   // Check for impersonation cookies as fallback since middleware may have stale session
   const impersonatedUserId = req.cookies.get('impersonated-user-id')?.value;
   const originalAdminId = req.cookies.get('original-admin-id')?.value;

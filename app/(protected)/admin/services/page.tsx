@@ -2314,37 +2314,7 @@ function AdminServicesPage() {
     }
   );
 
-  // Global refresh function for live updates - will be updated after refreshServices is defined
-  const refreshAllData = useCallback(async () => {
-    try {
-      // Use Promise.allSettled to ensure all requests complete even if one fails
-      const results = await Promise.allSettled([
-        refreshCategories(),
-        // Refresh stats
-        fetch('/api/admin/services/stats')
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.data) {
-              setStats((prev) => ({
-                ...prev,
-                ...data.data,
-                totalCategories:
-                  categoriesData?.data?.length || prev.totalCategories,
-              }));
-            }
-          }),
-      ]);
-
-      // Log any failed requests for debugging
-      results.forEach((result, index) => {
-        if (result.status === 'rejected') {
-          console.error(`Refresh operation ${index} failed:`, result.reason);
-        }
-      });
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
-  }, [refreshCategories, categoriesData?.data?.length]);
+  // Placeholder for refreshAllData - will be defined after refreshServices
 
   // State declarations
   const [stats, setStats] = useState({
@@ -2359,7 +2329,7 @@ function AdminServicesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [providerFilter, setProviderFilter] = useState('All');
-  const [pageSize, setPageSize] = useState('10'); // Default to 10 categories per page
+  const [pageSize, setPageSize] = useState('25'); // Default to 25 categories per page
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalServices, setTotalServices] = useState(0);
@@ -2521,7 +2491,7 @@ function AdminServicesPage() {
   }, [data]);
 
   // Update refreshAllData to include refreshServices
-  const refreshAllDataWithServices = useCallback(async () => {
+  const refreshAllData = useCallback(async () => {
     try {
       // Use Promise.allSettled to ensure all requests complete even if one fails
       const results = await Promise.allSettled([
@@ -2600,7 +2570,11 @@ function AdminServicesPage() {
         matchesStatus = service.status === 'active' || (service.status === 'inactive' && (!service.provider || service.provider.trim() === ''));
       }
 
-      return matchesSearch && matchesProvider && matchesStatus;
+      // Category filter - exclude services from disabled categories
+      // If category has hideCategory === 'yes', it's disabled and should be excluded from bulk operations
+      const categoryEnabled = service.category?.hideCategory !== 'yes';
+
+      return matchesSearch && matchesProvider && matchesStatus && categoryEnabled;
     });
   }, [data?.data, searchTerm, statusFilter, providerFilter]);
 
@@ -3080,6 +3054,22 @@ function AdminServicesPage() {
   // API functions
   const toggleServiceStatus = async (service: any) => {
     try {
+      // Find the category this service belongs to
+      const serviceCategory = Object.entries(groupedServices).find(([categoryName, services]) => 
+        (services as any[]).some(s => s.id === service.id)
+      );
+      
+      if (serviceCategory) {
+        const [categoryName] = serviceCategory;
+        const isCategoryInactive = !activeCategoryToggles[categoryName];
+        
+        // Prevent activating service if category is inactive
+        if (service.status === 'inactive' && isCategoryInactive) {
+          showToast('Cannot activate service while category is inactive. Please activate the category first.', 'error');
+          return;
+        }
+      }
+
       setIsUpdating(true);
       const response = await axiosInstance.post(
         '/api/admin/services/toggle-status',
@@ -3211,12 +3201,24 @@ function AdminServicesPage() {
       }));
 
       // Main feature: Toggle all services in category
-      const promises = services.map((service) =>
-        axiosInstance.post('/api/admin/services/toggle-status', {
+      // When deactivating category, force all services to inactive
+      // When activating category, toggle services to their opposite state
+      const promises = services.map((service) => {
+        let targetStatus = service.status;
+        
+        if (!newToggleState) {
+          // Category being deactivated - force all services to inactive
+          targetStatus = 'active'; // This will be toggled to inactive by the API
+        } else {
+          // Category being activated - toggle services normally
+          targetStatus = service.status;
+        }
+        
+        return axiosInstance.post('/api/admin/services/toggle-status', {
           id: service.id,
-          status: service.status,
-        })
-      );
+          status: targetStatus,
+        });
+      });
 
       await Promise.all(promises);
 
@@ -4339,6 +4341,28 @@ function AdminServicesPage() {
                     </thead>
                     <tbody>
                       {(Object.entries(groupedServices) as [string, any[]][])
+                        .filter(([categoryName, services]) => {
+                          // If inactive filter is active, only show categories that:
+                          // 1. Are inactive themselves, OR
+                          // 2. Have at least one inactive service
+                          if (statusFilter === 'inactive') {
+                            const actualCategoryName = getActualCategoryName(categoryName);
+                            const categoryData = categoriesData?.data?.find(
+                              (cat: any) => cat.category_name === actualCategoryName
+                            );
+                            
+                            // Check if category is inactive
+                            const isCategoryInactive = !activeCategoryToggles[categoryName];
+                            
+                            // Check if category has any inactive services
+                            const hasInactiveServices = services.some((service: any) => service.status === 'inactive');
+                            
+                            return isCategoryInactive || hasInactiveServices;
+                          }
+                          
+                          // For other filters, show all categories
+                          return true;
+                        })
                         .sort(([categoryNameA], [categoryNameB]) => {
                           // Extract actual category names and find category data
                           const actualCategoryNameA =
@@ -4399,6 +4423,10 @@ function AdminServicesPage() {
                               className={`bg-gray-50 border-t-2 border-gray-200 ${
                                 draggedCategory === categoryName
                                   ? 'opacity-50'
+                                  : ''
+                              } ${
+                                !activeCategoryToggles[categoryName]
+                                  ? 'bg-gray-300/90 border-l-4 border-l-gray-600'
                                   : ''
                               }`}
                               onDragOver={(e) =>
@@ -4599,6 +4627,10 @@ function AdminServicesPage() {
                                         draggedService === service.id
                                           ? 'opacity-50'
                                           : ''
+                                      } ${
+                                        service.status === 'inactive'
+                                          ? 'bg-gray-200/70 border-l-4 border-l-gray-500'
+                                          : ''
                                       }`}
                                       style={{ animationDelay: `${i * 50}ms` }}
                                       onDragOver={(e) =>
@@ -4655,21 +4687,12 @@ function AdminServicesPage() {
                                       <td className="p-3">
                                         <div>
                                           <div
-                                            className="font-medium text-sm truncate max-w-44"
+                                            className="font-medium text-sm max-w-44"
                                             style={{
                                               color: 'var(--text-primary)',
                                             }}
                                           >
                                             {service?.name || 'null'}
-                                          </div>
-                                          <div
-                                            className="text-xs truncate max-w-44"
-                                            style={{
-                                              color: 'var(--text-muted)',
-                                            }}
-                                          >
-                                            {service.category?.category_name ||
-                                              'null'}
                                           </div>
                                         </div>
                                       </td>
@@ -4877,27 +4900,30 @@ function AdminServicesPage() {
                                                     Restore Service
                                                   </button>
                                                 )}
-                                                <button
-                                                  onClick={() => {
-                                                    toggleServiceStatus(
-                                                      service
-                                                    );
-                                                    const dropdown =
-                                                      document.querySelector(
-                                                        '.absolute.right-0'
-                                                      ) as HTMLElement;
-                                                    dropdown?.classList.add(
-                                                      'hidden'
-                                                    );
-                                                  }}
-                                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                                >
-                                                  <FaSync className="h-3 w-3" />
-                                                  {service.status === 'active'
-                                                    ? 'Deactivate'
-                                                    : 'Activate'}{' '}
-                                                  Service
-                                                </button>
+                                                {/* Show activate/deactivate option only if category is active */}
+                                                {activeCategoryToggles[categoryName] && (
+                                                  <button
+                                                    onClick={() => {
+                                                      toggleServiceStatus(
+                                                        service
+                                                      );
+                                                      const dropdown =
+                                                        document.querySelector(
+                                                          '.absolute.right-0'
+                                                        ) as HTMLElement;
+                                                      dropdown?.classList.add(
+                                                        'hidden'
+                                                      );
+                                                    }}
+                                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                                  >
+                                                    <FaSync className="h-3 w-3" />
+                                                    {service.status === 'active'
+                                                      ? 'Deactivate'
+                                                      : 'Activate'}{' '}
+                                                    Service
+                                                  </button>
+                                                )}
                                                 <button
                                                   onClick={() => {
                                                     deleteService(service?.id);
