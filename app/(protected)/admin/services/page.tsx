@@ -35,6 +35,7 @@ import {
   FaToggleOff,
   FaToggleOn,
   FaTrash,
+  FaUndo,
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
@@ -3101,6 +3102,29 @@ function AdminServicesPage() {
     }
   };
 
+  const restoreService = async (service: any) => {
+    try {
+      setIsUpdating(true);
+      const response = await axiosInstance.post(
+        '/api/admin/services/restore',
+        {
+          id: service.id,
+        }
+      );
+
+      if (response.data.success) {
+        showToast(response.data.message, 'success');
+        await refreshAllData();
+      } else {
+        showToast('Failed to restore service', 'error');
+      }
+    } catch (error: any) {
+      showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const toggleRefill = async (service: any) => {
     try {
       const response = await axiosInstance.post(
@@ -4834,6 +4858,25 @@ function AdminServicesPage() {
                                             {/* Dropdown Menu */}
                                             <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                                               <div className="py-1">
+                                                {/* Show restore option only for trash services */}
+                                                {statusFilter === 'trash' && service.status === 'inactive' && service.provider && service.provider.trim() !== '' && (
+                                                  <button
+                                                    onClick={() => {
+                                                      restoreService(service);
+                                                      const dropdown =
+                                                        document.querySelector(
+                                                          '.absolute.right-0'
+                                                        ) as HTMLElement;
+                                                      dropdown?.classList.add(
+                                                        'hidden'
+                                                      );
+                                                    }}
+                                                    className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-100 flex items-center gap-2"
+                                                  >
+                                                    <FaUndo className="h-3 w-3" />
+                                                    Restore Service
+                                                  </button>
+                                                )}
                                                 <button
                                                   onClick={() => {
                                                     toggleServiceStatus(

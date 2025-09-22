@@ -814,16 +814,70 @@ model GeneralSettings {
 }
 
 model api_providers {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  api_key    String
-  login_user String?
-  login_pass String?
-  status     String   @default("active")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  api_url    String   @default("")
-  is_custom  Boolean  @default(false)
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  api_key     String
+  login_user  String?
+  login_pass  String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  api_url     String   @default("")
+  http_method String   @default("POST") // HTTP method for API requests (POST/GET)
+  is_custom   Boolean  @default(false)
+  endpoints   String?  @db.Text // JSON string for API endpoints configuration
+  headers     String?  @db.Text // JSON string for custom headers
+  
+  // API Specification Fields for SMM Panel Integration
+  api_key_param       String   @default("key") // Parameter name for API key (default: "key")
+  action_param        String   @default("action") // Parameter name for action (default: "action")
+  
+  // Service List API Configuration
+  services_action     String   @default("services") // Action value for getting services
+  services_endpoint   String?  // Custom endpoint for services (if different from main api_url)
+  
+  // Add Order API Configuration  
+  add_order_action    String   @default("add") // Action value for adding orders
+  add_order_endpoint  String?  // Custom endpoint for adding orders
+  service_id_param    String   @default("service") // Parameter name for service ID
+  link_param          String   @default("link") // Parameter name for target link
+  quantity_param      String   @default("quantity") // Parameter name for quantity
+  runs_param          String   @default("runs") // Parameter name for runs (optional)
+  interval_param      String   @default("interval") // Parameter name for interval (optional)
+  
+  // Order Status API Configuration
+  status_action       String   @default("status") // Action value for order status
+  status_endpoint     String?  // Custom endpoint for order status
+  order_id_param      String   @default("order") // Parameter name for single order ID
+  orders_param        String   @default("orders") // Parameter name for multiple order IDs
+  
+  // Refill API Configuration
+  refill_action       String   @default("refill") // Action value for refill
+  refill_endpoint     String?  // Custom endpoint for refill
+  refill_status_action String  @default("refill_status") // Action value for refill status
+  refill_id_param     String   @default("refill") // Parameter name for refill ID
+  refills_param       String   @default("refills") // Parameter name for multiple refill IDs
+  
+  // Cancel API Configuration
+  cancel_action       String   @default("cancel") // Action value for cancel
+  cancel_endpoint     String?  // Custom endpoint for cancel
+  
+  // Balance API Configuration
+  balance_action      String   @default("balance") // Action value for balance
+  balance_endpoint    String?  // Custom endpoint for balance
+  
+  // Response Field Mapping (JSON paths for parsing responses)
+  response_mapping    String?  @db.Text // JSON string for response field mapping
+  
+  // Additional API Settings
+  request_format      String   @default("form") // Request format: form, json, query
+  response_format     String   @default("json") // Expected response format: json, xml
+  rate_limit_per_min  Int?     // Rate limit per minute (optional)
+  timeout_seconds     Int      @default(30) // Request timeout in seconds
+  
+  // Balance Storage
+  current_balance     Float?   // Cached balance from last API call
+  balance_last_updated DateTime? // When balance was last fetched
   
   // Relations
   providerOrderLogs ProviderOrderLog[]

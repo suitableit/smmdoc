@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import BlogPostDetailClient from './BlogPostDetailClient';
-import { getAppName, getSiteDescription, getSiteUrl } from '@/lib/utils/general-settings';
+import { getAppName, getSiteDescription, getGeneralSettings } from '@/lib/utils/general-settings';
 
 interface BlogPostPageProps {
   params: {
@@ -13,11 +13,13 @@ interface BlogPostPageProps {
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   try {
     // Get dynamic settings and meta keywords
-    const [appName, siteDescription, siteUrl] = await Promise.all([
+    const [appName, siteDescription, generalSettings] = await Promise.all([
       getAppName(),
       getSiteDescription(),
-      getSiteUrl()
+      getGeneralSettings()
     ]);
+
+    const siteUrl = generalSettings.siteUrl;
 
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
     

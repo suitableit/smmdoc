@@ -27,7 +27,7 @@ import {
   FaUndo
 } from 'react-icons/fa';
 
-import { APP_NAME } from '@/lib/constants';
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -108,6 +108,7 @@ interface Provider {
   name: string;
   apiUrl: string;
   apiKey: string;
+  httpMethod?: string;
   status: 'active' | 'inactive' | 'trash';
   services: number;
   orders: number;
@@ -121,17 +122,52 @@ interface Provider {
   description?: string;
   username?: string;
   password?: string;
+  connectionStatus?: 'connected' | 'disconnected' | 'testing' | 'unknown';
+  
+  // API Specification Fields
+  apiKeyParam?: string;
+  actionParam?: string;
+  servicesAction?: string;
+  servicesEndpoint?: string;
+  addOrderAction?: string;
+  addOrderEndpoint?: string;
+  serviceIdParam?: string;
+  linkParam?: string;
+  quantityParam?: string;
+  runsParam?: string;
+  intervalParam?: string;
+  statusAction?: string;
+  statusEndpoint?: string;
+  orderIdParam?: string;
+  ordersParam?: string;
+  refillAction?: string;
+  refillEndpoint?: string;
+  refillStatusAction?: string;
+  refillIdParam?: string;
+  refillsParam?: string;
+  cancelAction?: string;
+  cancelEndpoint?: string;
+  balanceAction?: string;
+  balanceEndpoint?: string;
+  responseMapping?: string;
+  requestFormat?: string;
+  responseFormat?: string;
+  rateLimitPerMin?: number;
+  timeoutSeconds?: number;
 }
 
 const APIProvidersPage = () => {
+  const { appName } = useAppNameWithFallback();
+  
   // Set document title using useEffect for client-side
   useEffect(() => {
-    document.title = `API Providers — ${APP_NAME}`;
-  }, []);
+    document.title = `API Providers — ${appName}`;
+  }, [appName]);
 
   // Real providers data from API
   const [providers, setProviders] = useState<Provider[]>([]);
   const [availableProviders, setAvailableProviders] = useState<any[]>([]);
+  const [connectionStatuses, setConnectionStatuses] = useState<{[key: number]: 'connected' | 'disconnected' | 'testing' | 'unknown'}>({});
 
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
@@ -157,18 +193,80 @@ const APIProvidersPage = () => {
     customProviderName: '',
     apiKey: '',
     apiUrl: '',
+    httpMethod: 'POST',
     syncEnabled: true,
     username: '',
     password: '',
+    // API Specification Fields with defaults
+    apiKeyParam: 'key',
+    actionParam: 'action',
+    servicesAction: 'services',
+    servicesEndpoint: '',
+    addOrderAction: 'add',
+    addOrderEndpoint: '',
+    serviceIdParam: 'service',
+    linkParam: 'link',
+    quantityParam: 'quantity',
+    runsParam: 'runs',
+    intervalParam: 'interval',
+    statusAction: 'status',
+    statusEndpoint: '',
+    orderIdParam: 'order',
+    ordersParam: 'orders',
+    refillAction: 'refill',
+    refillEndpoint: '',
+    refillStatusAction: 'refill_status',
+    refillIdParam: 'refill',
+    refillsParam: 'refills',
+    cancelAction: 'cancel',
+    cancelEndpoint: '',
+    balanceAction: 'balance',
+    balanceEndpoint: '',
+    responseMapping: '',
+    requestFormat: 'form',
+    responseFormat: 'json',
+    rateLimitPerMin: '',
+    timeoutSeconds: 30,
   });
 
   const [editFormData, setEditFormData] = useState({
     name: '',
     apiUrl: '',
     apiKey: '',
+    httpMethod: 'POST',
     syncEnabled: true,
     username: '',
     password: '',
+    // API Specification Fields with defaults
+    apiKeyParam: 'key',
+    actionParam: 'action',
+    servicesAction: 'services',
+    servicesEndpoint: '',
+    addOrderAction: 'add',
+    addOrderEndpoint: '',
+    serviceIdParam: 'service',
+    linkParam: 'link',
+    quantityParam: 'quantity',
+    runsParam: 'runs',
+    intervalParam: 'interval',
+    statusAction: 'status',
+    statusEndpoint: '',
+    orderIdParam: 'order',
+    ordersParam: 'orders',
+    refillAction: 'refill',
+    refillEndpoint: '',
+    refillStatusAction: 'refill_status',
+    refillIdParam: 'refill',
+    refillsParam: 'refills',
+    cancelAction: 'cancel',
+    cancelEndpoint: '',
+    balanceAction: 'balance',
+    balanceEndpoint: '',
+    responseMapping: '',
+    requestFormat: 'form',
+    responseFormat: 'json',
+    rateLimitPerMin: '',
+    timeoutSeconds: 30,
   });
 
   // Fetch providers data
@@ -188,7 +286,7 @@ const APIProvidersPage = () => {
             id: p.id,
             name: p.label,
             apiUrl: p.apiUrl,
-            apiKey: '*********************',
+            apiKey: p.apiKey || '',
             status: p.status,
             services: 0,
             orders: 0,
@@ -202,6 +300,15 @@ const APIProvidersPage = () => {
             description: p.description
           }));
         setProviders(uiProviders);
+        
+        // Test connections for all providers
+        testAllConnections();
+        
+        // Also fetch balances immediately for active providers
+        setTimeout(() => {
+          fetchAllProviderBalances();
+        }, 2000);
+        
         console.log('Available providers for dropdown:', result.data.providers);
       } else {
         console.error('Failed to fetch providers:', result.error);
@@ -210,6 +317,115 @@ const APIProvidersPage = () => {
     } catch (error) {
       console.error('Error fetching providers:', error);
       showToast('Failed to fetch providers', 'error');
+    }
+  };
+
+  // Fetch balance for a single provider
+  const fetchProviderBalance = async (providerId: number) => {
+    try {
+      const response = await fetch(`/api/admin/providers/balance?providerId=${providerId}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Update the provider's balance in state
+          setProviders(prev => prev.map(p => 
+            p.id === providerId 
+              ? { ...p, currentBalance: result.data.balance || 0 }
+              : p
+          ));
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching balance for provider ${providerId}:`, error);
+    }
+  };
+
+  // Fetch balance for all active providers
+  const fetchAllProviderBalances = async () => {
+    try {
+      console.log('🔍 Fetching balances for all active providers...');
+      
+      // Get active providers only
+      const activeProviders = providers.filter(p => p.status === 'active');
+      console.log('Active providers to check balance:', activeProviders.map(p => ({ id: p.id, name: p.name })));
+      
+      for (const provider of activeProviders) {
+        try {
+          console.log(`📊 Fetching balance for provider ${provider.id} (${provider.name})...`);
+          const response = await fetch(`/api/admin/providers/balance?providerId=${provider.id}`);
+          console.log(`Response status for provider ${provider.id}:`, response.status);
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log(`Balance result for provider ${provider.id}:`, result);
+            
+            if (result.success && result.data) {
+              // Update the provider's balance in state
+              setProviders(prev => prev.map(p => 
+                p.id === provider.id 
+                  ? { ...p, currentBalance: result.data.balance || 0 }
+                  : p
+              ));
+              console.log(`✅ Updated balance for ${provider.name}: ${result.data.balance}`);
+            }
+          } else {
+            const errorText = await response.text();
+            console.error(`❌ Failed to fetch balance for provider ${provider.id}:`, errorText);
+          }
+        } catch (error) {
+          console.error(`❌ Error fetching balance for provider ${provider.id}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error fetching provider balances:', error);
+    }
+  };
+
+  // Test all provider connections
+  const testAllConnections = async () => {
+    try {
+      const response = await fetch('/api/admin/providers/test-all-connections', {
+        method: 'POST'
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        const newStatuses: {[key: number]: 'connected' | 'disconnected' | 'testing' | 'unknown'} = {};
+        result.results.forEach((r: any) => {
+          newStatuses[r.id] = r.connected ? 'connected' : 'disconnected';
+        });
+        setConnectionStatuses(newStatuses);
+        
+        // After testing connections, fetch balances for connected providers
+        setTimeout(() => {
+          fetchAllProviderBalances();
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error testing connections:', error);
+    }
+  };
+
+  // Test single provider connection
+  const testProviderConnection = async (providerId: number) => {
+    setConnectionStatuses(prev => ({ ...prev, [providerId]: 'testing' }));
+    
+    try {
+      const response = await fetch(`/api/admin/providers/${providerId}/test-connection`, {
+        method: 'POST'
+      });
+      const result = await response.json();
+
+      setConnectionStatuses(prev => ({ 
+        ...prev, 
+        [providerId]: result.connected ? 'connected' : 'disconnected' 
+      }));
+      
+      return result.connected;
+    } catch (error) {
+      console.error('Error testing connection:', error);
+      setConnectionStatuses(prev => ({ ...prev, [providerId]: 'disconnected' }));
+      return false;
     }
   };
 
@@ -274,8 +490,39 @@ const APIProvidersPage = () => {
           customProviderName: formData.customProviderName,
           apiKey: formData.apiKey,
           apiUrl: formData.apiUrl,
+          httpMethod: formData.httpMethod,
           username: formData.username,
-          password: formData.password
+          password: formData.password,
+          // API Specification Fields
+          apiKeyParam: formData.apiKeyParam,
+          actionParam: formData.actionParam,
+          servicesAction: formData.servicesAction,
+          servicesEndpoint: formData.servicesEndpoint,
+          addOrderAction: formData.addOrderAction,
+          addOrderEndpoint: formData.addOrderEndpoint,
+          serviceIdParam: formData.serviceIdParam,
+          linkParam: formData.linkParam,
+          quantityParam: formData.quantityParam,
+          runsParam: formData.runsParam,
+          intervalParam: formData.intervalParam,
+          statusAction: formData.statusAction,
+          statusEndpoint: formData.statusEndpoint,
+          orderIdParam: formData.orderIdParam,
+          ordersParam: formData.ordersParam,
+          refillAction: formData.refillAction,
+          refillEndpoint: formData.refillEndpoint,
+          refillStatusAction: formData.refillStatusAction,
+          refillIdParam: formData.refillIdParam,
+          refillsParam: formData.refillsParam,
+          cancelAction: formData.cancelAction,
+          cancelEndpoint: formData.cancelEndpoint,
+          balanceAction: formData.balanceAction,
+          balanceEndpoint: formData.balanceEndpoint,
+          responseMapping: formData.responseMapping,
+          requestFormat: formData.requestFormat,
+          responseFormat: formData.responseFormat,
+          rateLimitPerMin: formData.rateLimitPerMin ? parseInt(formData.rateLimitPerMin) : null,
+          timeoutSeconds: formData.timeoutSeconds,
         })
       });
 
@@ -289,9 +536,40 @@ const APIProvidersPage = () => {
           customProviderName: '',
           apiKey: '',
           apiUrl: '',
+          httpMethod: 'POST',
           syncEnabled: true,
           username: '',
-          password: ''
+          password: '',
+          // API Specification Fields with defaults
+          apiKeyParam: 'key',
+          actionParam: 'action',
+          servicesAction: 'services',
+          servicesEndpoint: '',
+          addOrderAction: 'add',
+          addOrderEndpoint: '',
+          serviceIdParam: 'service',
+          linkParam: 'link',
+          quantityParam: 'quantity',
+          runsParam: 'runs',
+          intervalParam: 'interval',
+          statusAction: 'status',
+          statusEndpoint: '',
+          orderIdParam: 'order',
+          ordersParam: 'orders',
+          refillAction: 'refill',
+          refillEndpoint: '',
+          refillStatusAction: 'refill_status',
+          refillIdParam: 'refill',
+          refillsParam: 'refills',
+          cancelAction: 'cancel',
+          cancelEndpoint: '',
+          balanceAction: 'balance',
+          balanceEndpoint: '',
+          responseMapping: '',
+          requestFormat: 'form',
+          responseFormat: 'json',
+          rateLimitPerMin: '',
+          timeoutSeconds: 30,
         });
         setShowAddForm(false);
         showToast(result.message || 'Provider added successfully!', 'success');
@@ -312,9 +590,40 @@ const APIProvidersPage = () => {
       name: provider.name,
       apiUrl: provider.apiUrl || '',
       apiKey: provider.apiKey || '',
+      httpMethod: provider.httpMethod || 'POST',
       syncEnabled: true, // Default or derive from provider data
       username: provider.username || '', // Load from provider data
-      password: '', // Don't pre-fill password for security
+      password: provider.password || '', // Load the actual password from provider data
+      // API Specification Fields
+      apiKeyParam: provider.apiKeyParam || 'key',
+      actionParam: provider.actionParam || 'action',
+      servicesAction: provider.servicesAction || 'services',
+      servicesEndpoint: provider.servicesEndpoint || '',
+      addOrderAction: provider.addOrderAction || 'add',
+      addOrderEndpoint: provider.addOrderEndpoint || '',
+      serviceIdParam: provider.serviceIdParam || 'service',
+      linkParam: provider.linkParam || 'link',
+      quantityParam: provider.quantityParam || 'quantity',
+      runsParam: provider.runsParam || 'runs',
+      intervalParam: provider.intervalParam || 'interval',
+      statusAction: provider.statusAction || 'status',
+      statusEndpoint: provider.statusEndpoint || '',
+      orderIdParam: provider.orderIdParam || 'order',
+      ordersParam: provider.ordersParam || 'orders',
+      refillAction: provider.refillAction || 'refill',
+      refillEndpoint: provider.refillEndpoint || '',
+      refillStatusAction: provider.refillStatusAction || 'refill_status',
+      refillIdParam: provider.refillIdParam || 'refill',
+      refillsParam: provider.refillsParam || 'refills',
+      cancelAction: provider.cancelAction || 'cancel',
+      cancelEndpoint: provider.cancelEndpoint || '',
+      balanceAction: provider.balanceAction || 'balance',
+      balanceEndpoint: provider.balanceEndpoint || '',
+      responseMapping: provider.responseMapping || '',
+      requestFormat: provider.requestFormat || 'form',
+      responseFormat: provider.responseFormat || 'json',
+      rateLimitPerMin: provider.rateLimitPerMin?.toString() || '',
+      timeoutSeconds: provider.timeoutSeconds || 30,
     });
     setShowEditForm(true);
   };
@@ -339,8 +648,10 @@ const APIProvidersPage = () => {
         },
         body: JSON.stringify({
           id: editingProvider.id,
+          name: editFormData.name,
           apiKey: editFormData.apiKey,
           apiUrl: editFormData.apiUrl,
+          httpMethod: editFormData.httpMethod,
           username: editFormData.username || null,
           password: editFormData.password || null
         })
@@ -354,8 +665,12 @@ const APIProvidersPage = () => {
           provider.id === editingProvider.id
             ? {
                 ...provider,
+                name: editFormData.name,
                 apiUrl: editFormData.apiUrl,
                 apiKey: editFormData.apiKey,
+                httpMethod: editFormData.httpMethod,
+                username: editFormData.username,
+                password: editFormData.password,
                 lastSync: new Date(),
               }
             : provider
@@ -426,7 +741,7 @@ const APIProvidersPage = () => {
     }
 
     try {
-      const response = await fetch(`/api/admin/providers?id=${providerId}&deleteType=${deleteType}`, {
+      const response = await fetch(`/api/admin/providers?id=${providerId}&type=${deleteType}`, {
         method: 'DELETE'
       });
 
@@ -496,16 +811,39 @@ const APIProvidersPage = () => {
 
   const handleSyncAllProviders = async () => {
     setSyncingAll(true);
+    let timeoutId: NodeJS.Timeout | null = null;
+    let controller: AbortController | null = null;
 
     try {
+      // Test all connections first
+      await testAllConnections();
+      
+      // Add timeout to sync all request
+      controller = new AbortController();
+      timeoutId = setTimeout(() => {
+        if (controller) {
+          controller.abort();
+        }
+      }, 60000); // 60 second timeout for all providers
+      
       const response = await fetch('/api/admin/providers/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           syncType: 'all',
           profitMargin: 20
-        })
+        }),
+        signal: controller.signal
       });
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
       const result = await response.json();
 
@@ -526,16 +864,70 @@ const APIProvidersPage = () => {
       }
     } catch (error) {
       console.error('Error syncing providers:', error);
-      showToast('Failed to sync providers', 'error');
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          showToast('Sync timeout: Operation took too long to complete', 'error');
+        } else {
+          showToast(`Sync failed: ${error.message}`, 'error');
+        }
+      } else {
+        showToast('Failed to sync providers', 'error');
+      }
     } finally {
+      // Ensure cleanup happens in all cases
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (controller) {
+        controller.abort();
+      }
+      // Always reset the syncing state, even if there were errors
       setSyncingAll(false);
     }
   };
 
   const handleSyncProvider = async (providerId: number) => {
     setSyncingProvider(providerId);
+    const startTime = Date.now();
+    let timeoutId: NodeJS.Timeout | null = null;
+    let controller: AbortController | null = null;
 
     try {
+      // Check if provider is already marked as connected in UI
+      const currentStatus = connectionStatuses[providerId];
+      
+      if (currentStatus === 'disconnected') {
+        showToast('Cannot sync: Provider is not connected. Please test the connection first.', 'error');
+        return;
+      }
+      
+      if (currentStatus === 'unknown' || !currentStatus) {
+        // Test connection first if status is unknown
+        const { testProviderConnection: validateConnection } = await import('@/lib/utils/providerValidator');
+        const connectionPromise = validateConnection(providerId);
+        const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => 
+          setTimeout(() => reject(new Error('Connection test timeout')), 15000)
+        );
+        
+        const isConnected = await Promise.race([connectionPromise, timeoutPromise]);
+        
+        if (!isConnected.success) {
+          showToast(`Cannot sync: ${isConnected.error || 'Provider API is not connected'}. Please check your API configuration.`, 'error');
+          return;
+        }
+        
+        // Update connection status
+        setConnectionStatuses(prev => ({ ...prev, [providerId]: 'connected' }));
+      }
+      
+      // Add timeout to sync request
+      controller = new AbortController();
+      timeoutId = setTimeout(() => {
+        if (controller) {
+          controller.abort();
+        }
+      }, 30000); // 30 second timeout
+      
       const response = await fetch('/api/admin/providers/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -543,8 +935,18 @@ const APIProvidersPage = () => {
           providerId,
           syncType: 'all',
           profitMargin: 20
-        })
+        }),
+        signal: controller.signal
       });
+
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
       const result = await response.json();
 
@@ -564,14 +966,47 @@ const APIProvidersPage = () => {
             ? { ...provider, lastSync: new Date() }
             : provider
         ));
+        
+        // Fetch updated balance after sync
+        setTimeout(() => {
+          fetchProviderBalance(providerId);
+        }, 1000);
       } else {
         showToast(`Sync failed: ${result.error}`, 'error');
       }
     } catch (error) {
       console.error('Error syncing provider:', error);
-      showToast('Failed to sync provider', 'error');
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          showToast('Sync timeout: Operation took too long to complete', 'error');
+        } else if (error.message === 'Connection test timeout') {
+          showToast('Connection test timeout: Provider API is not responding', 'error');
+        } else {
+          showToast(`Sync failed: ${error.message}`, 'error');
+        }
+      } else {
+        showToast('Failed to sync provider', 'error');
+      }
     } finally {
-      setSyncingProvider(null);
+      // Ensure cleanup happens in all cases
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (controller) {
+        controller.abort();
+      }
+      
+      // Ensure minimum spinning duration for visual feedback
+      const elapsedTime = Date.now() - startTime;
+      const minSpinTime = 1000; // 1 second minimum
+      
+      if (elapsedTime < minSpinTime) {
+        setTimeout(() => {
+          setSyncingProvider(null);
+        }, minSpinTime - elapsedTime);
+      } else {
+        setSyncingProvider(null);
+      }
     }
   };
 
@@ -597,15 +1032,17 @@ const APIProvidersPage = () => {
 
     return (
       <div className="flex items-center gap-2 justify-center">
-        {/* Sync Button */}
-        <button
-          onClick={() => handleSyncProvider(provider.id)}
-          disabled={syncingProvider === provider.id}
-          className="btn btn-sm btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Sync Provider"
-        >
-          <FaSync className={`w-3 h-3 ${syncingProvider === provider.id ? 'animate-spin' : ''}`} />
-        </button>
+        {/* Sync Button - Hide for trash providers */}
+        {provider.status !== 'trash' && (
+          <button
+            onClick={() => handleSyncProvider(provider.id)}
+            disabled={syncingProvider === provider.id}
+            className="btn btn-sm btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Sync Provider"
+          >
+            <FaSync className={`w-3 h-3 ${syncingProvider === provider.id ? 'animate-spin' : ''}`} />
+          </button>
+        )}
 
         {/* Actions Dropdown */}
         <div className="relative">
@@ -690,31 +1127,15 @@ const APIProvidersPage = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Loading States */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="card card-padding">
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">
-                      Loading API providers...
-                    </div>
-                  </div>
+          <div className="card card-padding">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center flex flex-col items-center">
+                <GradientSpinner size="w-16 h-16" className="mb-4" />
+                <div className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
+                  Loading API Providers
                 </div>
-              </div>
-            </div>
-
-            {/* Right Column - Loading States */}
-            <div className="space-y-6">
-              <div className="card card-padding">
-                <div className="flex items-center justify-center min-h-[200px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">
-                      Loading statistics...
-                    </div>
-                  </div>
+                <div className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
+                  Please wait while we fetch your provider data...
                 </div>
               </div>
             </div>
@@ -774,6 +1195,7 @@ const APIProvidersPage = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, customProviderName: e.target.value }))}
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       placeholder="Enter provider name"
+                      autoComplete="off"
                       required
                     />
                   </div>
@@ -789,6 +1211,7 @@ const APIProvidersPage = () => {
                         onChange={(e: any) => setFormData(prev => ({ ...prev, apiKey: e.target.value }))}
                         className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         placeholder="Enter your API key"
+                        autoComplete="new-password"
                         disabled={!formData.customProviderName}
                         required
                       />
@@ -805,6 +1228,20 @@ const APIProvidersPage = () => {
                         disabled={!formData.customProviderName}
                         required
                       />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">HTTP Method</label>
+                      <select
+                        value={formData.httpMethod}
+                        onChange={(e) => setFormData(prev => ({ ...prev, httpMethod: e.target.value }))}
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer"
+                        disabled={!formData.customProviderName}
+                        required
+                      >
+                        <option value="POST">POST</option>
+                        <option value="GET">GET</option>
+                      </select>
                     </div>
 
                     <div className="form-group">
@@ -936,15 +1373,28 @@ const APIProvidersPage = () => {
                       type="text"
                       value={editFormData.name}
                       onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="form-field w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 cursor-not-allowed"
+                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       placeholder="Enter provider name"
-                      readOnly
+                      autoComplete="off"
+                      required
                     />
                   </div>
 
                   {/* API Configuration */}
                   <div className="space-y-4">
                     <h4 className="text-lg font-medium text-gray-900 dark:text-white">API Configuration</h4>
+
+                    <div className="form-group">
+                      <label className="form-label">API Key</label>
+                      <PasswordInput
+                        value={editFormData.apiKey}
+                        onChange={(e: any) => setEditFormData(prev => ({ ...prev, apiKey: e.target.value }))}
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                        placeholder="Enter your API key"
+                        autoComplete="new-password"
+                        required
+                      />
+                    </div>
                     
                     <div className="form-group">
                       <label className="form-label">API URL</label>
@@ -959,15 +1409,18 @@ const APIProvidersPage = () => {
                     </div>
 
                     <div className="form-group">
-                      <label className="form-label">API Key</label>
-                      <PasswordInput
-                        value={editFormData.apiKey}
-                        onChange={(e: any) => setEditFormData(prev => ({ ...prev, apiKey: e.target.value }))}
-                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                        placeholder="Enter your API key"
+                      <label className="form-label">HTTP Method</label>
+                      <select
+                        value={editFormData.httpMethod}
+                        onChange={(e) => setEditFormData(prev => ({ ...prev, httpMethod: e.target.value }))}
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                         required
-                      />
+                      >
+                        <option value="POST">POST</option>
+                        <option value="GET">GET</option>
+                      </select>
                     </div>
+
 
                     <div className="form-group">
                       <div className="flex items-center justify-between">
@@ -1099,7 +1552,18 @@ const APIProvidersPage = () => {
           {/* Add Provider Form */}
 
           {/* API Providers Table */}
-          <div className="card card-padding">
+          <div className="card card-padding relative">
+            {/* Loading Overlay */}
+            {isRefreshing && (
+              <div className="absolute inset-0 bg-white dark:bg-gray-800 flex items-center justify-center z-10 rounded-lg">
+                <div className="text-center">
+                  <GradientSpinner size="w-12 h-12" className="mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Refreshing providers...
+                  </p>
+                </div>
+              </div>
+            )}
             {/* Filter Buttons */}
             <div className="mb-6">
               <div className="flex flex-wrap gap-2">
@@ -1183,7 +1647,7 @@ const APIProvidersPage = () => {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden md:block">
               {(() => {
                 const filteredProviders = providers.filter(provider => {
                   // Search filter
@@ -1227,19 +1691,21 @@ const APIProvidersPage = () => {
 
                 return (
                   <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-white border-b z-10">
-                      <tr>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Provider</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Services</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Orders</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Current Balance</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Sync</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>API Status</th>
-                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
-                      </tr>
-                    </thead>
+                    {!isRefreshing && (
+                      <thead className="sticky top-0 bg-white border-b z-10">
+                        <tr>
+                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
+                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Provider</th>
+                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Services</th>
+                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Orders</th>
+                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Current Balance</th>
+                          {statusFilter !== 'trash' && <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Sync</th>}
+                          {statusFilter !== 'trash' && <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>}
+                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>API Status</th>
+                          <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                        </tr>
+                      </thead>
+                    )}
                     <tbody>
                       {filteredProviders
                     .map((provider, index) => (
@@ -1260,7 +1726,12 @@ const APIProvidersPage = () => {
                       <td className="p-3">
                         <div className="text-sm">
                           <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.importedServices || provider.services} Total</div>
-                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{provider.activeServices} Active</div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {provider.status === 'trash' 
+                              ? `${(provider.importedServices || provider.services) - provider.activeServices} Deactive`
+                              : `${provider.activeServices} Active`
+                            }
+                          </div>
                         </div>
                       </td>
                       
@@ -1277,59 +1748,75 @@ const APIProvidersPage = () => {
                       </td>
                       
                       {/* Last Sync Column */}
-                      <td className="p-3">
-                        <div>
-                          <div
-                            className="text-sm"
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {provider.lastSync
-                              ? new Date(provider.lastSync).toLocaleDateString()
-                              : 'null'}
+                      {statusFilter !== 'trash' && (
+                        <td className="p-3">
+                          <div>
+                            <div
+                              className="text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {provider.lastSync
+                                ? new Date(provider.lastSync).toLocaleDateString()
+                                : 'null'}
+                            </div>
+                            <div
+                              className="text-xs"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {provider.lastSync
+                                ? new Date(provider.lastSync).toLocaleTimeString()
+                                : 'null'}
+                            </div>
                           </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {provider.lastSync
-                              ? new Date(provider.lastSync).toLocaleTimeString()
-                              : 'null'}
-                          </div>
-                        </div>
-                      </td>
+                        </td>
+                      )}
                       
                       {/* Status Column */}
-                      <td className="p-3">
-                        <button
-                          onClick={() => handleToggleStatus(provider.id)}
-                          className={`p-1 rounded transition-colors ${
-                            provider.status === 'active'
-                              ? 'text-green-600 hover:bg-green-50'
-                              : 'text-red-600 hover:bg-red-50'
-                          }`}
-                          title={
-                            provider.status === 'active'
-                              ? 'Deactivate Provider'
-                              : 'Activate Provider'
-                          }
-                        >
-                          {provider.status === 'active' ? (
-                            <FaToggleOn className="h-5 w-5" />
-                          ) : (
-                            <FaToggleOff className="h-5 w-5" />
-                          )}
-                        </button>
-                      </td>
+                      {statusFilter !== 'trash' && (
+                        <td className="p-3">
+                          <button
+                            onClick={() => handleToggleStatus(provider.id)}
+                            className={`p-1 rounded transition-colors ${
+                              provider.status === 'active'
+                                ? 'text-green-600 hover:bg-green-50'
+                                : 'text-red-600 hover:bg-red-50'
+                            }`}
+                            title={
+                              provider.status === 'active'
+                                ? 'Deactivate Provider'
+                                : 'Activate Provider'
+                            }
+                          >
+                            {provider.status === 'active' ? (
+                              <FaToggleOn className="h-5 w-5" />
+                            ) : (
+                              <FaToggleOff className="h-5 w-5" />
+                            )}
+                          </button>
+                        </td>
+                      )}
                       
                       {/* API Status Column */}
                       <td className="p-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
-                          provider.apiUrl && provider.apiUrl.trim() !== '' 
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                        }`}>
-                          {provider.apiUrl && provider.apiUrl.trim() !== '' ? 'Connected' : 'Not Connected'}
-                        </span>
+                        {connectionStatuses[provider.id] === 'testing' ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-medium w-fit bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
+                            Testing...
+                          </span>
+                        ) : (
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
+                            connectionStatuses[provider.id] === 'connected'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                              : connectionStatuses[provider.id] === 'disconnected'
+                              ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                              : 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300'
+                          }`}>
+                            {connectionStatuses[provider.id] === 'connected' 
+                              ? 'Connected' 
+                              : connectionStatuses[provider.id] === 'disconnected'
+                              ? 'Not Connected'
+                              : 'Unknown'}
+                          </span>
+                        )}
                       </td>
                       
                       {/* Actions Column */}
