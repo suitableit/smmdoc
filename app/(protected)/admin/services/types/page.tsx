@@ -391,7 +391,7 @@ const ServiceTypes = () => {
             ) : (
               <React.Fragment>
                 {/* Desktop Table View */}
-                <div className="overflow-x-auto">
+                <div>
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
