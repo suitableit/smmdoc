@@ -801,9 +801,11 @@ const RefillOrdersPage = () => {
                                 className="font-medium text-sm truncate max-w-44"
                                 style={{ color: 'var(--text-primary)' }}
                               >
+                                {/* Use direct service name parameter */}
                                 {order.service?.name || 'Unknown Service'}
                               </div>
                               <div className="text-xs truncate max-w-44" style={{ color: 'var(--text-muted)' }}>
+                                {/* Use direct category name parameter */}
                                 {order.category?.category_name || 'Unknown Category'}
                               </div>
                             </div>
@@ -981,9 +983,11 @@ const RefillOrdersPage = () => {
                             className="font-medium text-sm mb-1"
                             style={{ color: 'var(--text-primary)' }}
                           >
+                            {/* Use direct service name parameter */}
                             {order.service?.name || 'Unknown Service'}
                           </div>
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {/* Use direct category name parameter */}
                             {order.category?.category_name || 'Unknown Category'}
                           </div>
                           

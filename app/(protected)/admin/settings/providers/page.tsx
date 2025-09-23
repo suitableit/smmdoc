@@ -120,8 +120,6 @@ interface Provider {
   createdAt: Date;
   lastSync: Date;
   description?: string;
-  username?: string;
-  password?: string;
   connectionStatus?: 'connected' | 'disconnected' | 'testing' | 'unknown';
   
   // API Specification Fields
@@ -196,8 +194,6 @@ const APIProvidersPage = () => {
     apiUrl: '',
     httpMethod: 'POST',
     syncEnabled: true,
-    username: '',
-    password: '',
     // API Specification Fields with defaults
     apiKeyParam: 'key',
     actionParam: 'action',
@@ -236,8 +232,6 @@ const APIProvidersPage = () => {
     apiKey: '',
     httpMethod: 'POST',
     syncEnabled: true,
-    username: '',
-    password: '',
     // API Specification Fields with defaults
     apiKeyParam: 'key',
     actionParam: 'action',
@@ -289,10 +283,10 @@ const APIProvidersPage = () => {
             apiUrl: p.apiUrl,
             apiKey: p.apiKey || '',
             status: p.status,
-            services: 0,
-            orders: 0,
-            importedServices: 0,
-            activeServices: 0,
+            services: p.services || 0,
+            orders: p.orders || 0,
+            importedServices: p.importedServices || 0,
+            activeServices: p.activeServices || 0,
             currentBalance: 0,
             successRate: 0,
             avgResponseTime: 0,
@@ -474,13 +468,6 @@ const APIProvidersPage = () => {
       return;
     }
 
-    // Validate that if username is provided, password is also provided
-    if (formData.username.trim() !== '' && formData.password.trim() === '') {
-      showToast('Password is required when username is provided', 'error');
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const response = await fetch('/api/admin/providers', {
         method: 'POST',
@@ -492,8 +479,6 @@ const APIProvidersPage = () => {
           apiKey: formData.apiKey,
           apiUrl: formData.apiUrl,
           httpMethod: formData.httpMethod,
-          username: formData.username,
-          password: formData.password,
           // API Specification Fields
           apiKeyParam: formData.apiKeyParam,
           actionParam: formData.actionParam,
@@ -539,8 +524,6 @@ const APIProvidersPage = () => {
           apiUrl: '',
           httpMethod: 'POST',
           syncEnabled: true,
-          username: '',
-          password: '',
           // API Specification Fields with defaults
           apiKeyParam: 'key',
           actionParam: 'action',
@@ -593,8 +576,6 @@ const APIProvidersPage = () => {
       apiKey: provider.apiKey || '',
       httpMethod: provider.httpMethod || 'POST',
       syncEnabled: true, // Default or derive from provider data
-      username: provider.username || '', // Load from provider data
-      password: provider.password || '', // Load the actual password from provider data
       // API Specification Fields
       apiKeyParam: provider.apiKeyParam || 'key',
       actionParam: provider.actionParam || 'action',
@@ -633,12 +614,6 @@ const APIProvidersPage = () => {
     e.preventDefault();
     if (!editingProvider) return;
 
-    // Validate that if username is provided, password is also provided
-    if (editFormData.username.trim() !== '' && editFormData.password.trim() === '') {
-      showToast('Password is required when username is provided', 'error');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -653,8 +628,6 @@ const APIProvidersPage = () => {
           apiKey: editFormData.apiKey,
           apiUrl: editFormData.apiUrl,
           httpMethod: editFormData.httpMethod,
-          username: editFormData.username || null,
-          password: editFormData.password || null
         })
       });
 
@@ -670,8 +643,6 @@ const APIProvidersPage = () => {
                 apiUrl: editFormData.apiUrl,
                 apiKey: editFormData.apiKey,
                 httpMethod: editFormData.httpMethod,
-                username: editFormData.username,
-                password: editFormData.password,
                 lastSync: new Date(),
               }
             : provider
@@ -682,8 +653,6 @@ const APIProvidersPage = () => {
           apiUrl: '',
           apiKey: '',
           syncEnabled: true,
-          username: '',
-          password: '',
         });
         setShowEditForm(false);
         setEditingProvider(null);
@@ -1209,8 +1178,6 @@ const APIProvidersPage = () => {
                   apiKey: '',
                   apiUrl: '',
                   syncEnabled: true,
-                  username: '',
-                  password: ''
                 });
               }
             }}
@@ -1301,46 +1268,7 @@ const APIProvidersPage = () => {
                     </div>
                   </div>
 
-                  {/* Login Credentials */}
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-medium text-gray-900 dark:text-white">Login Credentials</h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="form-group">
-                        <label className="form-label">Username</label>
-                        <input
-                          type="text"
-                          value={formData.username}
-                          onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                          placeholder="Enter username"
-                          disabled={!formData.customProviderName}
-                        />
-                      </div>
 
-                      <div className="form-group">
-                        <label className="form-label">
-                          Password
-                          {formData.username.trim() !== '' && (
-                            <span className="text-red-500 ml-1">*</span>
-                          )}
-                        </label>
-                        <PasswordInput
-                          value={formData.password}
-                          onChange={(e: any) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                          placeholder="Enter password"
-                          disabled={!formData.customProviderName}
-                          required={formData.username.trim() !== ''}
-                        />
-                        {formData.username.trim() !== '' && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Password is required when username is provided
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
 
                   <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 justify-end">
                     <button
@@ -1354,8 +1282,6 @@ const APIProvidersPage = () => {
                           apiKey: '',
                           apiUrl: '',
                           syncEnabled: true,
-                          username: '',
-                          password: ''
                         });
                       }}
                       className="btn btn-secondary"
@@ -1389,8 +1315,6 @@ const APIProvidersPage = () => {
                   apiUrl: '',
                   apiKey: '',
                   syncEnabled: true,
-                  username: '',
-                  password: '',
                 });
               }
             }}
@@ -1478,45 +1402,6 @@ const APIProvidersPage = () => {
                     </div>
                   </div>
 
-                  {/* Login Credentials */}
-                  <div className="space-y-4">
-                    <h4 className="text-lg font-medium text-gray-900 dark:text-white">Login Credentials</h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="form-group">
-                        <label className="form-label">Username</label>
-                        <input
-                          type="text"
-                          value={editFormData.username}
-                          onChange={(e) => setEditFormData(prev => ({ ...prev, username: e.target.value }))}
-                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                          placeholder="Enter username"
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label className="form-label">
-                          Password
-                          {editFormData.username.trim() !== '' && (
-                            <span className="text-red-500 ml-1">*</span>
-                          )}
-                        </label>
-                        <PasswordInput
-                          value={editFormData.password}
-                          onChange={(e: any) => setEditFormData(prev => ({ ...prev, password: e.target.value }))}
-                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                          placeholder="Enter password"
-                          required={editFormData.username.trim() !== ''}
-                        />
-                        {editFormData.username.trim() !== '' && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Password is required when username is provided
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 justify-end">
                     <button
                       type="button"
@@ -1528,8 +1413,6 @@ const APIProvidersPage = () => {
                           apiUrl: '',
                           apiKey: '',
                           syncEnabled: true,
-                          username: '',
-                          password: '',
                         });
                       }}
                       className="btn btn-secondary"

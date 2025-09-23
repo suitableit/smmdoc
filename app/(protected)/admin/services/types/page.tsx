@@ -158,7 +158,7 @@ const ServiceTypes = () => {
     return String(index + 1).padStart(3, '0');
   };
 
-  // Filter service types based on search term
+  // Filter service types based on search term - using direct parameters
   const filteredServiceTypes = serviceTypes.filter(
     (serviceType) =>
       serviceType.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -441,6 +441,7 @@ const ServiceTypes = () => {
                         >
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              {/* Use direct service type ID parameter */}
                               {formatID(serviceType.id, (pagination.page - 1) * pagination.limit + index)}
                             </div>
                           </td>
@@ -449,6 +450,7 @@ const ServiceTypes = () => {
                               className="font-medium text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
+                              {/* Use direct service type name parameter */}
                               {serviceType.name}
                             </div>
                           </td>

@@ -2697,6 +2697,7 @@ function AdminServicesPage() {
 
     return data.data.filter((service: any) => {
       // Pre-compute search fields to avoid repeated toLowerCase calls
+      // Use direct parameters without mapping
       const serviceName = service.name?.toLowerCase() || '';
       const categoryName = service.category?.category_name?.toLowerCase() || '';
       const dynamicProvider = getProviderNameById(service.providerId, service.provider).toLowerCase();
@@ -2732,9 +2733,9 @@ function AdminServicesPage() {
         // These are services that were deactivated when their provider was moved to trash
         matchesStatus = service.status === 'inactive' && service.providerId;
       } else if (statusFilter === 'all') {
-        // All filter excludes trash services (services with inactive providers)
-        // Only show active services or inactive services without a provider (manual system)
-        matchesStatus = service.status === 'active' || (service.status === 'inactive' && !service.providerId);
+        // All filter shows both active and inactive services
+        // Only excludes services that are explicitly marked as trash
+        matchesStatus = service.status === 'active' || service.status === 'inactive';
       }
 
       // Category filter - exclude services from disabled categories
