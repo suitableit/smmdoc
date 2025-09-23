@@ -1369,7 +1369,6 @@ const CreateServiceForm: React.FC<{
             >
               {isPending ? (
                 <>
-                  <GradientSpinner size="w-4 h-4" />
                   Creating Service...
                 </>
               ) : (
@@ -1527,7 +1526,6 @@ const CreateCategoryForm = ({
             >
               {isPending ? (
                 <>
-                  <GradientSpinner size="w-4 h-4" />
                   Creating...
                 </>
               ) : (
@@ -1716,7 +1714,6 @@ const EditCategoryForm = ({
             >
               {isPending ? (
                 <>
-                  <GradientSpinner size="w-4 h-4" />
                   Updating...
                 </>
               ) : (
@@ -2343,7 +2340,6 @@ const EditServiceForm = ({
             >
               {isPending ? (
                 <>
-                  <GradientSpinner size="w-4 h-4" />
                   Updating...
                 </>
               ) : (
@@ -4613,7 +4609,6 @@ function AdminServicesPage() {
                       >
                         {isUpdating ? (
                           <>
-                            <GradientSpinner size="w-4 h-4" />
                             Saving...
                           </>
                         ) : (

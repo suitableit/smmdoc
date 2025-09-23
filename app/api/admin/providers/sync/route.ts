@@ -125,14 +125,49 @@ export async function POST(req: NextRequest) {
 
         console.log(`Fetched ${providerServices.length} services from ${provider.name}`);
 
-        // Get existing services for this provider
-        const existingServices = await db.service.findMany({
+        // Get existing services for this provider - try multiple approaches
+        let existingServices = await db.service.findMany({
           where: {
             updateText: {
               contains: `"providerId":${provider.id}`
             }
           }
         });
+
+        // If no services found with exact providerId match, try broader search
+        if (existingServices.length === 0) {
+          console.log(`No services found with exact providerId:${provider.id}, trying broader search...`);
+          
+          // Try searching for provider name in updateText
+          const servicesByProviderName = await db.service.findMany({
+            where: {
+              updateText: {
+                contains: `"provider":"${provider.name}"`
+              }
+            }
+          });
+
+          // Also get all services to check their updateText structure
+          const allServices = await db.service.findMany({
+            where: {
+              updateText: {
+                not: null
+              }
+            },
+            take: 10 // Just a sample to debug
+          });
+
+          console.log(`Found ${servicesByProviderName.length} services by provider name`);
+          console.log(`Sample updateText structures:`, allServices.map(s => ({
+            id: s.id,
+            name: s.name,
+            updateText: s.updateText
+          })));
+
+          existingServices = servicesByProviderName;
+        }
+
+        console.log(`Found ${existingServices.length} existing services for provider ${provider.name}`);
 
         let syncStats = {
           provider: provider.name,
@@ -151,19 +186,32 @@ export async function POST(req: NextRequest) {
         existingServices.forEach(service => {
           try {
             const providerInfo = JSON.parse(service.updateText || '{}');
-            if (providerInfo.providerServiceId) {
-              existingServiceMap.set(providerInfo.providerServiceId, service);
+            console.log(`Service ${service.id} (${service.name}) updateText:`, providerInfo);
+            
+            // Try multiple ways to match services
+            const serviceId = providerInfo.providerServiceId || providerInfo.id || providerInfo.serviceId;
+            if (serviceId) {
+              existingServiceMap.set(serviceId.toString(), service);
+              // Also add numeric version if it's a string
+              if (typeof serviceId === 'string' && !isNaN(parseInt(serviceId))) {
+                existingServiceMap.set(parseInt(serviceId).toString(), service);
+              }
             }
           } catch (error) {
             console.error('Error parsing service provider info:', error);
           }
         });
 
+        console.log(`Created service map with ${existingServiceMap.size} entries`);
+
         // Process each provider service
         for (const providerService of providerServices) {
           try {
             const providerServiceId = providerService.service || providerService.id;
-            const existingService = existingServiceMap.get(providerServiceId);
+            console.log(`Processing provider service: ${providerService.name} (ID: ${providerServiceId})`);
+            
+            const existingService = existingServiceMap.get(providerServiceId?.toString());
+            console.log(`Found existing service:`, existingService ? `${existingService.id} (${existingService.name})` : 'None');
 
             const providerRate = parseFloat(providerService.rate) || 0;
             const markupRate = providerRate * (1 + profitMargin / 100);
@@ -178,14 +226,16 @@ export async function POST(req: NextRequest) {
               const existingProviderInfo = JSON.parse(existingService.updateText || '{}');
               const existingProviderRate = existingProviderInfo.originalRate || 0;
 
-              // Check for price changes
+              // Check for price changes - only update provider pricing info, not website service pricing
               if (syncType === 'all' || syncType === 'prices') {
                 if (Math.abs(providerRate - existingProviderRate) > 0.01) {
-                  updates.rate = markupRate;
-                  updates.rateUSD = rateUSD;
+                  // Only update provider pricing information in updateText
+                  // Do NOT update rate and rateUSD as these are website service pricing
                   updates.updateText = JSON.stringify({
                     ...existingProviderInfo,
                     originalRate: providerRate,
+                    providerMarkupRate: markupRate,
+                    providerRateUSD: rateUSD,
                     lastSynced: new Date().toISOString()
                   });
                   hasChanges = true;
@@ -210,17 +260,20 @@ export async function POST(req: NextRequest) {
                   hasChanges = true;
                 }
 
-                // Update cached provider name if it has changed
-                if (provider.name !== existingService.providerName) {
-                  updates.providerName = provider.name;
-                  hasChanges = true;
-                }
+                // Update provider information in updateText
+                const currentProviderInfo = JSON.parse(existingService.updateText || '{}');
+                const updatedProviderInfo = {
+                  ...currentProviderInfo,
+                  provider: provider.name,
+                  providerId: provider.id,
+                  providerServiceId: providerServiceId,
+                  originalRate: providerRate,
+                  lastSynced: new Date().toISOString()
+                };
 
-                // Update provider ID if it's missing or different
-                if (provider.id !== existingService.providerId) {
-                  updates.providerId = provider.id;
-                  hasChanges = true;
-                }
+                // Always update provider info to ensure it's current
+                updates.updateText = JSON.stringify(updatedProviderInfo);
+                hasChanges = true;
               }
 
               if (hasChanges) {
@@ -247,28 +300,48 @@ export async function POST(req: NextRequest) {
         }
 
         // Check for services that are no longer available from provider
-        if (syncType === 'all' || syncType === 'status') {
-          const providerServiceIds = new Set(
-            providerServices.map(s => s.service || s.id)
-          );
-
-          for (const [providerServiceId, existingService] of existingServiceMap) {
-            if (!providerServiceIds.has(providerServiceId) && existingService.status === 'active') {
-              // Service no longer available from provider, disable it
-              await db.service.update({
-                where: { id: existingService.id },
-                data: { 
-                  status: 'inactive',
-                  updateText: JSON.stringify({
-                    ...JSON.parse(existingService.updateText || '{}'),
-                    disabledReason: 'Service no longer available from provider',
-                    disabledAt: new Date().toISOString()
-                  })
-                }
-              });
-              syncStats.disabled++;
-              syncStats.statusChanges++;
+        // Only disable services if we have a substantial response and the service is clearly missing
+        if ((syncType === 'all' || syncType === 'status') && providerServices.length > 0) {
+          const providerServiceIds = new Set();
+          
+          // Create a comprehensive set of provider service identifiers
+          providerServices.forEach(s => {
+            const serviceId = s.service || s.id;
+            if (serviceId) {
+              providerServiceIds.add(serviceId.toString());
+              providerServiceIds.add(parseInt(serviceId).toString()); // Handle string/number conversion
             }
+          });
+
+          // Only disable services if we have a reasonable number of services from provider
+          // This prevents mass disabling due to API errors or temporary issues
+          if (providerServices.length >= 10) {
+            for (const [providerServiceId, existingService] of existingServiceMap) {
+              if (!providerServiceIds.has(providerServiceId.toString()) && 
+                  !providerServiceIds.has(parseInt(providerServiceId).toString()) && 
+                  existingService.status === 'active') {
+                
+                console.log(`Service ${existingService.name} (ID: ${providerServiceId}) not found in provider response, marking as inactive`);
+                
+                // Service no longer available from provider, disable it
+                await db.service.update({
+                  where: { id: existingService.id },
+                  data: { 
+                    status: 'inactive',
+                    updateText: JSON.stringify({
+                      ...JSON.parse(existingService.updateText || '{}'),
+                      disabledReason: 'Service no longer available from provider',
+                      disabledAt: new Date().toISOString(),
+                      lastSynced: new Date().toISOString()
+                    })
+                  }
+                });
+                syncStats.disabled++;
+                syncStats.statusChanges++;
+              }
+            }
+          } else {
+            console.log(`Skipping service status check - only ${providerServices.length} services returned from provider (minimum 10 required)`);
           }
         }
 

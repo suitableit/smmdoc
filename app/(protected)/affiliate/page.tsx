@@ -234,7 +234,6 @@ function AffiliateStatsCards() {
               <h3 className="card-title">Username</h3>
               {userInfoLoading ? (
                 <div className="flex items-center gap-2">
-                  <GradientSpinner size="w-4 h-4" />
                   <span className="text-xs text-gray-400">Loading...</span>
                 </div>
               ) : (
@@ -256,7 +255,6 @@ function AffiliateStatsCards() {
               <h3 className="card-title">Referral Link</h3>
               {userInfoLoading ? (
                 <div className="flex items-center gap-2">
-                  <GradientSpinner size="w-4 h-4" />
                   <span className="text-xs text-gray-400">Loading...</span>
                 </div>
               ) : (
@@ -294,7 +292,6 @@ function AffiliateStatsCards() {
               <h3 className="card-title">Commission Rate</h3>
               {userInfoLoading ? (
                 <div className="flex items-center gap-2">
-                  <GradientSpinner size="w-4 h-4" />
                   <span className="text-xs text-gray-400">Loading...</span>
                 </div>
               ) : (
@@ -316,7 +313,6 @@ function AffiliateStatsCards() {
               <h3 className="card-title">Minimum Payout</h3>
               {userInfoLoading ? (
                 <div className="flex items-center gap-2">
-                  <GradientSpinner size="w-4 h-4" />
                   <span className="text-xs text-gray-400">Loading...</span>
                 </div>
               ) : (

@@ -57,6 +57,7 @@ export async function GET(request: Request) {
     const searchRaw = searchParams.get('search') || '';
     const search = searchRaw ? decodeURIComponent(searchRaw).trim() : '';
     const currency = searchParams.get('currency') || 'USD'; // Get user's preferred currency
+    const provider = searchParams.get('provider') || '';
 
     // Categories pagination - limit categories, not services
     const categoryLimit = parseInt(limitParam);
@@ -80,29 +81,41 @@ export async function GET(request: Request) {
           category: {
             hideCategory: 'no', // Only include services from visible categories
           },
-          OR: [
-            // If search is numeric, prioritize exact ID match
-            ...(isNumericSearch 
-              ? [{
-                  id: {
-                    equals: Number(search)
-                  }
-                }] 
-              : []
-            ),
-            // Search by service name (partial match)
+          AND: [
+            // Provider filter
+            ...(provider && provider !== 'All' ? [{
+              OR: [
+                { providerName: { contains: provider } },
+                { providerId: provider === 'Self' ? null : parseInt(provider) || undefined }
+              ]
+            }] : []),
+            // Search filters
             {
-              name: {
-                contains: search,
-              },
-            },
-            // Search by category name (partial match)
-            {
-              category: {
-                category_name: {
-                  contains: search,
+              OR: [
+                // If search is numeric, prioritize exact ID match
+                ...(isNumericSearch 
+                  ? [{
+                      id: {
+                        equals: Number(search)
+                      }
+                    }] 
+                  : []
+                ),
+                // Search by service name (partial match)
+                {
+                  name: {
+                    contains: search,
+                  },
                 },
-              },
+                // Search by category name (partial match)
+                {
+                  category: {
+                    category_name: {
+                      contains: search,
+                    },
+                  },
+                },
+              ].filter(Boolean),
             },
           ].filter(Boolean),
         },
@@ -174,9 +187,27 @@ export async function GET(request: Request) {
         services = await db.service.findMany({
           where: {
             status: 'active',
-            category: {
-              hideCategory: 'no', // Only include services from visible categories
-            },
+            AND: [
+              // Provider filter
+              ...(provider && provider !== 'All' ? [{
+                ...(provider === 'Self' ? {
+                  AND: [
+                    { providerId: null },
+                    { providerName: null }
+                  ]
+                } : {
+                  OR: [
+                    { providerName: { contains: provider } },
+                    { providerId: parseInt(provider) || undefined }
+                  ]
+                })
+              }] : []),
+              {
+                category: {
+                  hideCategory: 'no', // Only include services from visible categories
+                },
+              },
+            ].filter(Boolean),
           },
           orderBy: {
             createdAt: 'desc' as any,
@@ -191,6 +222,8 @@ export async function GET(request: Request) {
             avg_time: true,
             description: true,
             status: true,
+            providerId: true,
+            providerName: true,
             createdAt: true,
             updatedAt: true,
             category: {
@@ -235,9 +268,27 @@ export async function GET(request: Request) {
         services = await db.service.findMany({
           where: {
             status: 'active',
-            categoryId: {
-              in: categoryIds,
-            },
+            AND: [
+              // Provider filter
+              ...(provider && provider !== 'All' ? [{
+                ...(provider === 'Self' ? {
+                  AND: [
+                    { providerId: null },
+                    { providerName: null }
+                  ]
+                } : {
+                  OR: [
+                    { providerName: { contains: provider } },
+                    { providerId: parseInt(provider) || undefined }
+                  ]
+                })
+              }] : []),
+              {
+                categoryId: {
+                  in: categoryIds,
+                },
+              },
+            ].filter(Boolean),
           },
           orderBy: {
             createdAt: 'desc' as any,
@@ -252,6 +303,8 @@ export async function GET(request: Request) {
             avg_time: true,
             description: true,
             status: true,
+            providerId: true,
+            providerName: true,
             createdAt: true,
             updatedAt: true,
             category: {
@@ -287,6 +340,34 @@ export async function GET(request: Request) {
       };
     });
 
+    // Get unique providers for dropdown filter
+    const uniqueProviders = await db.service.findMany({
+      where: {
+        status: 'active',
+        category: {
+          hideCategory: 'no',
+        },
+      },
+      select: {
+        providerId: true,
+        providerName: true,
+      },
+      distinct: ['providerId', 'providerName'],
+    });
+
+    // Format providers for dropdown
+    const providerOptions = [
+      { id: 'All', name: 'All Providers' },
+      { id: 'Self', name: 'Self' },
+      ...uniqueProviders
+        .filter(p => p.providerName && p.providerName !== 'All' && p.providerName !== 'Self')
+        .map(p => ({
+          id: p.providerId?.toString() || p.providerName || '',
+          name: p.providerName || 'Unknown Provider'
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    ];
+
     return NextResponse.json(
       {
         data: servicesWithConvertedPrices || [],
@@ -298,6 +379,7 @@ export async function GET(request: Request) {
         limit: limitParam,
         allCategories: paginatedCategories || [], // Include paginated categories (empty for search)
         isSearch: !!search, // Flag to indicate if this is a search result
+        providers: providerOptions, // Include provider options for dropdown
       },
       { status: 200 }
     );
