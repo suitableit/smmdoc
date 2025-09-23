@@ -1,3 +1,0 @@
-Test file for Git sync functionality
-Created at: 2024-01-24
-Purpose: Testing push/pull operations
