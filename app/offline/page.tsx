@@ -37,17 +37,19 @@ interface ConnectionInfo {
 export default function OfflinePage() {
   const searchParams = useSearchParams();
   const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo>({
+    ip: 'Unavailable',
     browser: 'Unknown',
     platform: 'Unknown',
-    ipAddress: 'Unknown',
-    lastAttempt: 'Never'
+    errorCode: 'ERR_NETWORK_OFFLINE',
+    lastAttempt: new Date().toLocaleString()
   });
   
   const [currentPageState, setCurrentPageState] = useState<PageState | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(false);
   const [connectionType, setConnectionType] = useState<string>('unknown');
   const [isDetectingIP, setIsDetectingIP] = useState(true);
+
 
   const handleRetryConnection = async () => {
     setIsRetrying(true);
@@ -104,6 +106,8 @@ export default function OfflinePage() {
     // Get current page information from URL parameters or referrer
     const getCurrentPageState = () => {
       const fromParam = searchParams.get('from');
+      const titleParam = searchParams.get('title');
+      const errorParam = searchParams.get('error');
       const currentPath = fromParam || document.referrer || '/';
       
       // Extract path from referrer if it's a full URL
@@ -117,12 +121,14 @@ export default function OfflinePage() {
         }
       }
       
-      // Get page title from document or generate from path
-      let pageTitle = document.title || 'SMM Doc';
-      if (pageTitle === 'SMM Doc' || pageTitle.includes('Offline')) {
+      // Use title from URL parameter if available, otherwise generate from path
+      let pageTitle = titleParam || document.title || 'SMM Doc';
+      if (!titleParam && (pageTitle === 'SMM Doc' || pageTitle.includes('Offline'))) {
         // Generate title from path
         if (pagePath === '/') {
           pageTitle = 'Homepage';
+        } else if (pagePath === '/services') {
+          pageTitle = 'Services';
         } else {
           pageTitle = pagePath.split('/').filter(Boolean).map(segment => 
             segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ')
@@ -133,7 +139,8 @@ export default function OfflinePage() {
       return {
         path: pagePath,
         title: pageTitle,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        error: errorParam || 'unknown'
       };
     };
 
@@ -323,12 +330,20 @@ export default function OfflinePage() {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               {isOnline ? "Connection Available" : "You're Offline"}
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300">
+            <p className="text-lg text-gray-600 dark:text-gray-300 mb-2">
               {isOnline 
                 ? "Your internet connection is working. You can navigate back to the application."
                 : "No internet connection detected. Please check your network settings."
               }
             </p>
+            {currentPageState && !isOnline && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                You were viewing: <span className="font-semibold text-gray-700 dark:text-gray-300">{currentPageState.title}</span>
+                {currentPageState.path !== '/' && (
+                  <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">({currentPageState.path})</span>
+                )}
+              </p>
+            )}
           </div>
 
           {/* Action Buttons */}
