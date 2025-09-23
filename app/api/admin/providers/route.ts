@@ -34,8 +34,6 @@ export async function GET() {
           \`name\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
           \`api_key\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
           \`api_url\` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-          \`login_user\` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-          \`login_pass\` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
           \`status\` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'inactive',
           \`is_custom\` boolean DEFAULT FALSE,
           \`createdAt\` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -57,8 +55,6 @@ export async function GET() {
           name: true,
           api_key: true,
           api_url: true,
-          login_user: true,
-          login_pass: true,
           http_method: true,
           status: true,
           is_custom: true,
@@ -136,8 +132,6 @@ export async function GET() {
         id: cp.id,
         apiKey: cp.api_key || '',
         apiUrl: cp.api_url || '',
-        username: cp.login_user || '',
-        password: cp.login_pass || '',
         httpMethod: cp.http_method || 'POST',
         isCustom: true,
         createdAt: cp.createdAt,
@@ -199,8 +193,6 @@ export async function POST(req: NextRequest) {
       apiKey, 
       apiUrl, 
       httpMethod, 
-      username, 
-      password,
       // API Specification Fields
       apiKeyParam,
       actionParam,
@@ -237,9 +229,7 @@ export async function POST(req: NextRequest) {
       customProviderName,
       apiKey: apiKey ? '[REDACTED]' : 'undefined/null',
       apiUrl,
-      httpMethod,
-      username,
-      password: password ? '[REDACTED]' : 'undefined/null'
+      httpMethod
     });
 
     // All providers are custom providers
@@ -309,8 +299,6 @@ export async function POST(req: NextRequest) {
           api_key: apiKey,
           api_url: apiUrl || '',
           http_method: httpMethod || 'POST',
-          login_user: username || null,
-          login_pass: password || null,
           status: 'inactive',
           is_custom: true,
           // API Specification Fields
@@ -439,8 +427,6 @@ export async function PUT(req: NextRequest) {
     if (apiKey !== undefined) updateData.api_key = apiKey;
     if (apiUrl !== undefined) updateData.api_url = apiUrl;
     if (httpMethod !== undefined) updateData.http_method = httpMethod;
-    if (username !== undefined) updateData.login_user = username || null;
-    if (password !== undefined) updateData.login_pass = password || null;
 
     // If activating provider, validate required fields first
     if (status === 'active') {

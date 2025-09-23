@@ -883,6 +883,7 @@ const CancelRequestsPage = () => {
                           </td>
                           <td className="p-3">
                             <div>
+                              {/* Use direct service name parameter */}
                               <div
                                 className="font-medium text-sm truncate max-w-44"
                                 style={{ color: 'var(--text-primary)' }}
@@ -890,6 +891,7 @@ const CancelRequestsPage = () => {
                                 {request.order?.service?.name ||
                                   'Unknown Service'}
                               </div>
+                              {/* Use direct category name parameter */}
                               <div
                                 className="text-xs truncate max-w-44"
                                 style={{ color: 'var(--text-muted)' }}
@@ -1067,12 +1069,14 @@ const CancelRequestsPage = () => {
 
                         {/* Service Info */}
                         <div className="mb-4">
+                          {/* Use direct service name parameter */}
                           <div
                             className="font-medium text-sm mb-1"
                             style={{ color: 'var(--text-primary)' }}
                           >
                             {request.order?.service?.name || 'Unknown Service'}
                           </div>
+                          {/* Use direct category name parameter */}
                           <div
                             className="text-xs"
                             style={{ color: 'var(--text-muted)' }}

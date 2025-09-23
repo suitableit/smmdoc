@@ -1258,6 +1258,7 @@ const AdminOrdersPage = () => {
                                 className="font-mono text-xs"
                                 style={{ color: 'var(--text-muted)' }}
                               >
+                                {/* Use direct service ID parameter */}
                                 {order.service?.id
                                   ? formatID(order.service.id)
                                   : 'null'}
@@ -1266,12 +1267,14 @@ const AdminOrdersPage = () => {
                                 className="font-medium text-sm truncate max-w-44"
                                 style={{ color: 'var(--text-primary)' }}
                               >
+                                {/* Use direct service name parameter */}
                                 {order.service?.name || 'null'}
                               </div>
                               <div
                                 className="text-xs truncate max-w-44"
                                 style={{ color: 'var(--text-muted)' }}
                               >
+                                {/* Use direct category name parameter */}
                                 {order.category?.category_name || 'null'}
                               </div>
                             </div>
@@ -1573,6 +1576,7 @@ const AdminOrdersPage = () => {
                             className="font-mono text-xs mb-1"
                             style={{ color: 'var(--text-muted)' }}
                           >
+                            {/* Use direct service ID parameter */}
                             {order.service?.id
                               ? formatID(order.service.id)
                               : 'null'}
@@ -1581,12 +1585,14 @@ const AdminOrdersPage = () => {
                             className="font-medium text-sm mb-1"
                             style={{ color: 'var(--text-primary)' }}
                           >
+                            {/* Use direct service name parameter */}
                             {order.service?.name || 'null'}
                           </div>
                           <div
                             className="text-xs"
                             style={{ color: 'var(--text-muted)' }}
                           >
+                            {/* Use direct category name parameter */}
                             {order.category?.category_name || 'null'} •
                             Provider: {order.seller || 'null'}
                           </div>
