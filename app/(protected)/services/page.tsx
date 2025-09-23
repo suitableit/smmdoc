@@ -113,6 +113,8 @@ const UserServiceTable: React.FC = () => {
 
   const [totalServices, setTotalServices] = useState(0);
   const [displayLimit] = useState(50); // Services to show in favorites section
+  const [selectedProvider, setSelectedProvider] = useState('All');
+  const [providers, setProviders] = useState<Array<{id: string, name: string}>>([]);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -144,6 +146,11 @@ const UserServiceTable: React.FC = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // Reset page when provider changes
+  useEffect(() => {
+    setPage(1);
+  }, [selectedProvider]);
+
   // Optimized fetch function with pagination for better performance
   const fetchServices = React.useCallback(async () => {
     // Only show full loading on initial load, not during search
@@ -157,7 +164,8 @@ const UserServiceTable: React.FC = () => {
       const searchParams = new URLSearchParams({
         page: page.toString(),
         limit: currentLimit,
-        ...(debouncedSearch.trim() && { search: encodeURIComponent(debouncedSearch.trim()) })
+        ...(debouncedSearch.trim() && { search: encodeURIComponent(debouncedSearch.trim()) }),
+        ...(selectedProvider !== 'All' && { provider: selectedProvider })
       });
 
       const response = await fetch(
@@ -176,6 +184,11 @@ const UserServiceTable: React.FC = () => {
       }
 
         const data = await response.json();
+
+        // Set providers list from API response
+        if (data.providers && Array.isArray(data.providers)) {
+          setProviders(data.providers);
+        }
 
 
 
@@ -330,7 +343,7 @@ const UserServiceTable: React.FC = () => {
   // Initial load and search changes
   useEffect(() => {
     fetchServices();
-  }, [fetchServices, debouncedSearch, page, limit]);
+  }, [fetchServices, debouncedSearch, page, limit, selectedProvider]);
 
 
 
@@ -479,8 +492,8 @@ const UserServiceTable: React.FC = () => {
           {/* Search Bar and Controls */}
           <div className="mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              {/* Show Per Page Dropdown - Left side */}
-              <div className="flex items-center gap-2 h-12">
+              {/* Show Per Page Dropdown and Provider Filter - Left side */}
+              <div className="flex items-center gap-4 h-12">
                 <div className="relative">
                   <select
                     value={limit}
@@ -501,6 +514,21 @@ const UserServiceTable: React.FC = () => {
                     {totalServices === 0 && (
                       <option value="50">No services found</option>
                     )}
+                  </select>
+                </div>
+                
+                {/* Provider Filter Dropdown */}
+                <div className="relative">
+                  <select
+                    value={selectedProvider}
+                    onChange={(e) => setSelectedProvider(e.target.value)}
+                    className="form-field pl-4 pr-8 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm min-w-[160px] h-12"
+                  >
+                    {providers.map((provider) => (
+                      <option key={provider.id} value={provider.id}>
+                        {provider.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

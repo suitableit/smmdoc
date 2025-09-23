@@ -76,25 +76,81 @@ export async function GET() {
       configuredProviders = [];
     }
 
-    // Map all providers as custom providers
-    const allProviders = configuredProviders.map((cp: any) => ({
-      value: cp.name,
-      label: cp.name,
-      description: `Custom provider: ${cp.name}`,
-      configured: true,
-      status: cp.status,
-      id: cp.id,
-      apiKey: cp.api_key || '',
-      apiUrl: cp.api_url || '',
-      username: cp.login_user || '',
-      password: cp.login_pass || '',
-      httpMethod: cp.http_method || 'POST',
-      isCustom: true,
-      createdAt: cp.createdAt,
-      updatedAt: cp.updatedAt,
-      currentBalance: cp.current_balance || 0,
-      balanceLastUpdated: cp.balance_last_updated
-    }));
+    // Get service and order counts for each provider
+    const providerStats = await Promise.all(
+      configuredProviders.map(async (cp: any) => {
+        try {
+          // Count total services for this provider
+          const totalServices = await db.service.count({
+            where: { providerId: cp.id }
+          });
+
+          // Count active services for this provider
+          const activeServices = await db.service.count({
+            where: { 
+              providerId: cp.id,
+              status: 'active'
+            }
+          });
+
+          // Count orders for services from this provider
+          const orderCount = await db.newOrder.count({
+            where: {
+              service: {
+                providerId: cp.id
+              }
+            }
+          });
+
+          return {
+            providerId: cp.id,
+            totalServices,
+            activeServices,
+            orderCount
+          };
+        } catch (error) {
+          console.error(`Error getting stats for provider ${cp.id}:`, error);
+          return {
+            providerId: cp.id,
+            totalServices: 0,
+            activeServices: 0,
+            orderCount: 0
+          };
+        }
+      })
+    );
+
+    // Create a map for quick lookup
+    const statsMap = new Map(providerStats.map(stat => [stat.providerId, stat]));
+
+    // Map all providers as custom providers with dynamic stats
+    const allProviders = configuredProviders.map((cp: any) => {
+      const stats = statsMap.get(cp.id) || { totalServices: 0, activeServices: 0, orderCount: 0 };
+      
+      return {
+        value: cp.name,
+        label: cp.name,
+        description: `Custom provider: ${cp.name}`,
+        configured: true,
+        status: cp.status,
+        id: cp.id,
+        apiKey: cp.api_key || '',
+        apiUrl: cp.api_url || '',
+        username: cp.login_user || '',
+        password: cp.login_pass || '',
+        httpMethod: cp.http_method || 'POST',
+        isCustom: true,
+        createdAt: cp.createdAt,
+        updatedAt: cp.updatedAt,
+        currentBalance: cp.current_balance || 0,
+        balanceLastUpdated: cp.balance_last_updated,
+        // Add dynamic stats
+        services: stats.totalServices,
+        importedServices: stats.totalServices,
+        activeServices: stats.activeServices,
+        orders: stats.orderCount
+      };
+    });
 
     return NextResponse.json({
       success: true,

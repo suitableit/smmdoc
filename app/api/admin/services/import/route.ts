@@ -1059,16 +1059,21 @@ export async function PUT(req: NextRequest) {
               avg_time: '0-1 Hours',
               status: 'active',
               perqty: 1000,
+              mode: 'auto', // Set imported services to auto mode
               userId: session.user.id,
               categoryId: category.id,
               serviceTypeId: serviceTypeId,
+              providerId: provider.id, // Store provider ID in dedicated column
+              providerName: provider.name, // Store provider name
+              providerServiceId: service.id?.toString(), // Store provider service ID
               updateText: JSON.stringify({
                 provider: provider.name,
                 providerId: provider.id,
                 providerServiceId: service.id?.toString(),
                 originalRate: service.rate || service.price || 0,
                 importedAt: new Date().toISOString(),
-                type: service.type
+                type: service.type,
+                mode: 'auto' // Also keep in updateText for reference
               })
             }
           });

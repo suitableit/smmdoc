@@ -847,7 +847,7 @@ const APIProvidersPage = () => {
       }, 120000); // Increased to 120 seconds for bulk operations
       
       // Show progress toast
-      showToast('Starting sync for all providers (updating existing services only)...', 'info');
+      showToast('Starting sync for all providers (updating existing services only)...', 'pending');
       
       const response = await fetch('/api/admin/providers/sync', {
         method: 'POST',
@@ -1541,7 +1541,7 @@ const APIProvidersPage = () => {
                       disabled={isLoading}
                       className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isLoading ? <ButtonLoader /> : 'Update Provider'}
+                      {isLoading ? 'Updating...' : 'Update Provider'}
                     </button>
                   </div>
                 </form>

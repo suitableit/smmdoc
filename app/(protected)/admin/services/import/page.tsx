@@ -1680,7 +1680,6 @@ const ImportServicesPage = () => {
                         >
                           {loadingMore ? (
                             <>
-                              <GradientSpinner size="w-4 h-4" />
                               Loading More...
                             </>
                           ) : (

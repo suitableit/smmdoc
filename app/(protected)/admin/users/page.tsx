@@ -2071,7 +2071,6 @@ const Pagination: React.FC<PaginationProps> = ({
     <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
       {isLoading ? (
         <div className="flex items-center gap-2">
-          <GradientSpinner size="w-4 h-4" />
           <span>Loading pagination...</span>
         </div>
       ) : (

@@ -1168,7 +1168,6 @@ const CancelRequestsPage = () => {
                   >
                     {requestsLoading ? (
                       <div className="flex items-center gap-2">
-                        <GradientSpinner size="w-4 h-4" />
                         <span>Loading pagination...</span>
                       </div>
                     ) : (
