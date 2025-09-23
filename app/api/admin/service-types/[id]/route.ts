@@ -93,7 +93,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, description, status } = body;
+    const { name, providerId, providerName, status } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json(
@@ -145,7 +145,8 @@ export async function PUT(
       where: { id: Number((await params).id) },
       data: {
         name: name.trim(),
-        description: description?.trim() || null,
+        providerId: providerId?.trim() || null,
+        providerName: providerName?.trim() || 'Self',
         status: status || 'active'
       }
     });
@@ -209,6 +210,18 @@ export async function DELETE(
           data: null
         },
         { status: 404 }
+      );
+    }
+
+    // Protect the Default service type from deletion
+    if (serviceType.name === 'Default') {
+      return NextResponse.json(
+        {
+          error: 'Cannot delete the Default service type. This is a protected system service type.',
+          success: false,
+          data: null
+        },
+        { status: 400 }
       );
     }
 

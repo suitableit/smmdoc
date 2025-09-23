@@ -5,6 +5,7 @@ model Category {
   userId        Int
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
   hideCategory  String           @default("no")
   position      CategoryPosition @default(bottom)
   user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)

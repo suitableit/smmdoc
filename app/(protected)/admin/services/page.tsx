@@ -752,6 +752,7 @@ const CreateServiceForm: React.FC<{
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CreateServiceSchema>({
     mode: 'onChange',
@@ -761,6 +762,18 @@ const CreateServiceForm: React.FC<{
       mode: 'manual', // Set default mode to manual
     },
   });
+
+  // Auto-select Default service type when service types are loaded
+  useEffect(() => {
+    if (serviceTypesData?.data && !watch('serviceTypeId')) {
+      const defaultServiceType = serviceTypesData.data.find(
+        (serviceType: any) => serviceType.name === 'Default'
+      );
+      if (defaultServiceType) {
+        setValue('serviceTypeId', defaultServiceType.id.toString());
+      }
+    }
+  }, [serviceTypesData, setValue, watch]);
 
   // Watch refill field to control readonly state of refill days and display
   const refillValue = watch('refill');
@@ -952,7 +965,6 @@ const CreateServiceForm: React.FC<{
                   disabled={isPending || serviceTypesLoading}
                   required
                 >
-                  <option value="">Select Service Type</option>
                   {serviceTypesData?.data?.map((serviceType: any) => (
                     <option key={serviceType.id} value={serviceType.id}>
                       {serviceType.name}
@@ -2415,6 +2427,7 @@ function AdminServicesPage() {
     totalCategories: 0,
     activeServices: 0,
     inactiveServices: 0,
+    trashServices: 0,
   });
 
   const [statsLoading, setStatsLoading] = useState(true);
@@ -2560,6 +2573,20 @@ function AdminServicesPage() {
     setCurrentPage(1); // Reset to first page when changing page size
   };
 
+  // Separate API call to get all services for counting purposes
+  const { data: allServicesData } = useSWR(
+    `/api/admin/services?page=1&limit=999999&search=&filter=all_with_trash`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 0,
+      dedupingInterval: 60000, // Cache for 1 minute
+      keepPreviousData: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 1000,
+    }
+  );
+
   // Services data fetching with pagination and optimized caching
   const {
     data,
@@ -2569,7 +2596,7 @@ function AdminServicesPage() {
   } = useSWR(
     `/api/admin/services?page=${currentPage}&limit=${
       pageSize === 'all' ? '999999' : pageSize
-    }&search=${searchTerm}`,
+    }&search=${searchTerm}&filter=${statusFilter}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -2584,7 +2611,8 @@ function AdminServicesPage() {
   // Debug logging
   console.log('=== DEBUG INFO ===');
   console.log('pageSize:', pageSize);
-  console.log('API URL:', `/api/admin/services?page=${currentPage}&limit=${pageSize === 'all' ? '999999' : pageSize}&search=${searchTerm}`);
+  console.log('statusFilter:', statusFilter);
+  console.log('API URL:', `/api/admin/services?page=${currentPage}&limit=${pageSize === 'all' ? '999999' : pageSize}&search=${searchTerm}&filter=${statusFilter}`);
   console.log('API Response data:', data);
   console.log('allCategories:', data?.allCategories);
   console.log('services data:', data?.data);
@@ -2675,6 +2703,40 @@ function AdminServicesPage() {
     }
   }, [refreshServices, refreshCategories, refreshProviders, categoriesData?.data?.length]);
 
+  // Enhanced refresh function that includes services data refresh
+  const refreshAllDataWithServices = useCallback(async () => {
+    try {
+      // Use Promise.allSettled to ensure all requests complete even if one fails
+      const results = await Promise.allSettled([
+        refreshServices(),
+        refreshCategories(),
+        refreshProviders(),
+        // Refresh stats
+        fetch('/api/admin/services/stats')
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.data) {
+              setStats((prev) => ({
+                ...prev,
+                ...data.data,
+                totalCategories:
+                  categoriesData?.data?.length || prev.totalCategories,
+              }));
+            }
+          }),
+      ]);
+
+      // Log any failed requests for debugging
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Refresh operation ${index} failed:`, result.reason);
+        }
+      });
+    } catch (error) {
+      console.error('Error refreshing data with services:', error);
+    }
+  }, [refreshServices, refreshCategories, refreshProviders, categoriesData?.data?.length]);
+
   // Listen for provider updates from other pages
   useEffect(() => {
     const handleProviderUpdate = (event: CustomEvent) => {
@@ -2725,17 +2787,21 @@ function AdminServicesPage() {
       // Status filter
       let matchesStatus = true;
       if (statusFilter === 'active') {
-        matchesStatus = service.status === 'active';
+        // Active filter: only active services that are not trashed (for display)
+        matchesStatus = service.status === 'active' && 
+                       (service.deletedAt === null || service.deletedAt === undefined);
       } else if (statusFilter === 'inactive') {
-        matchesStatus = service.status === 'inactive';
+        // Inactive filter: only inactive services that are not trashed (for display)
+        matchesStatus = service.status === 'inactive' && 
+                       (service.deletedAt === null || service.deletedAt === undefined);
       } else if (statusFilter === 'trash') {
-        // Show services associated with trash providers (inactive providers)
-        // These are services that were deactivated when their provider was moved to trash
-        matchesStatus = service.status === 'inactive' && service.providerId;
+        // Show services that are soft-deleted (have deletedAt field)
+        matchesStatus = service.deletedAt !== null && service.deletedAt !== undefined;
       } else if (statusFilter === 'all') {
         // All filter shows both active and inactive services
-        // Only excludes services that are explicitly marked as trash
-        matchesStatus = service.status === 'active' || service.status === 'inactive';
+        // Only excludes services that are explicitly marked as trash (soft-deleted) for display
+        matchesStatus = (service.status === 'active' || service.status === 'inactive') && 
+                       (service.deletedAt === null || service.deletedAt === undefined);
       }
 
       // Category filter - exclude services from disabled categories
@@ -2745,6 +2811,57 @@ function AdminServicesPage() {
       return matchesSearch && matchesProvider && matchesStatus && categoryEnabled;
     });
   }, [data?.data, searchTerm, statusFilter, providerFilter]);
+
+  // Calculate counts excluding trash services for All/Active/Inactive filters
+  const countsWithoutTrash = useMemo(() => {
+    if (!allServicesData?.data) return { all: 0, active: 0, inactive: 0 };
+    
+    const allServices = allServicesData.data;
+    console.log('=== COUNTS DEBUG ===');
+    console.log('Total services:', allServices.length);
+    
+    // Only count services that are NOT trashed (deletedAt is null or undefined)
+    const nonTrashedServices = allServices.filter((service: any) => 
+      service.deletedAt === null || service.deletedAt === undefined
+    );
+    console.log('Non-trashed services:', nonTrashedServices.length);
+    
+    const trashedServices = allServices.filter((service: any) => 
+      service.deletedAt !== null && service.deletedAt !== undefined
+    );
+    console.log('Trashed services:', trashedServices.length);
+    
+    const activeCount = nonTrashedServices.filter((service: any) => service.status === 'active').length;
+    const inactiveCount = nonTrashedServices.filter((service: any) => service.status === 'inactive').length;
+    const allCount = activeCount + inactiveCount;
+    
+    console.log('Active (non-trashed):', activeCount);
+    console.log('Inactive (non-trashed):', inactiveCount);
+    console.log('All (non-trashed):', allCount);
+    
+    return {
+      all: allCount,
+      active: activeCount,
+      inactive: inactiveCount
+    };
+  }, [allServicesData?.data]);
+
+  // Calculate trashServices count using all services data
+  const trashServicesCount = useMemo(() => {
+    if (!allServicesData?.data) return 0;
+    const count = allServicesData.data.filter((service: any) => 
+      service.deletedAt !== null && service.deletedAt !== undefined
+    ).length;
+    return count;
+  }, [allServicesData?.data]);
+
+  // Update stats when trashServicesCount changes
+  useEffect(() => {
+    setStats(prev => ({
+      ...prev,
+      trashServices: trashServicesCount
+    }));
+  }, [trashServicesCount]);
 
   // Get unique providers for filter dropdown - now using API data
   const uniqueProviders = useMemo(() => {
@@ -2907,7 +3024,10 @@ function AdminServicesPage() {
     pageSize,
   ]);
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string, deletedAt?: string | null) => {
+    if (deletedAt) {
+      return <FaTrash className="h-3 w-3 text-red-500" />;
+    }
     if (status === 'inactive') {
       return <FaTimesCircle className="h-3 w-3 text-red-500" />;
     }
@@ -4252,7 +4372,7 @@ function AdminServicesPage() {
   const serviceStats = [
     {
       title: 'Total Services',
-      value: stats.totalServices,
+      value: countsWithoutTrash.all,
       icon: <FaBriefcase className="h-6 w-6" />,
       textColor: 'text-blue-600',
     },
@@ -4264,13 +4384,13 @@ function AdminServicesPage() {
     },
     {
       title: 'Active Services',
-      value: stats.activeServices,
+      value: countsWithoutTrash.active,
       icon: <FaCheckCircle className="h-6 w-6" />,
       textColor: 'text-green-600',
     },
     {
       title: 'Inactive Services',
-      value: stats.inactiveServices,
+      value: countsWithoutTrash.inactive,
       icon: <FaShieldAlt className="h-6 w-6" />,
       textColor: 'text-red-600',
     },
@@ -4430,7 +4550,7 @@ function AdminServicesPage() {
                         : 'bg-purple-100 text-purple-700'
                     }`}
                   >
-                    {stats.totalServices.toString()}
+                    {countsWithoutTrash.all.toString()}
                   </span>
                 </button>
                 <button
@@ -4449,7 +4569,7 @@ function AdminServicesPage() {
                         : 'bg-green-100 text-green-700'
                     }`}
                   >
-                    {stats.activeServices.toString()}
+                    {countsWithoutTrash.active.toString()}
                   </span>
                 </button>
                 <button
@@ -4468,7 +4588,7 @@ function AdminServicesPage() {
                         : 'bg-red-100 text-red-700'
                     }`}
                   >
-                    {stats.inactiveServices.toString()}
+                    {countsWithoutTrash.inactive.toString()}
                   </span>
                 </button>
                 <button
@@ -4487,7 +4607,7 @@ function AdminServicesPage() {
                         : 'bg-orange-100 text-orange-700'
                     }`}
                   >
-                    {stats.trashServices?.toString() || '0'}
+                    {trashServicesCount.toString()}
                   </span>
                 </button>
               </div>
@@ -4688,12 +4808,15 @@ function AdminServicesPage() {
                         >
                           Cancel
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Status
-                        </th>
+                        {/* Only show Status column when not in Trash filter */}
+                        {statusFilter !== 'trash' && (
+                          <th
+                            className="text-left p-3 font-semibold"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            Status
+                          </th>
+                        )}
                         <th
                           className="text-left p-3 font-semibold relative"
                           style={{ color: 'var(--text-primary)' }}
@@ -5015,7 +5138,7 @@ function AdminServicesPage() {
                                           ? 'opacity-50'
                                           : ''
                                       } ${
-                                        service.status === 'inactive'
+                                        service.status === 'inactive' && statusFilter !== 'trash'
                                           ? 'bg-gray-200/70 border-l-4 border-l-gray-500'
                                           : ''
                                       }`}
@@ -5228,108 +5351,73 @@ function AdminServicesPage() {
                                           )}
                                         </button>
                                       </td>
-                                      <td className="p-3">
-                                        <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
-                                          {getStatusIcon(service.status)}
-                                          <span className="text-xs font-medium capitalize">
-                                            {service.status || 'null'}
-                                          </span>
-                                        </div>
-                                      </td>
+                                      {/* Only show Status column when not in Trash filter */}
+                                      {statusFilter !== 'trash' && (
+                                        <td className="p-3">
+                                          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
+                                            {getStatusIcon(service.status, service.deletedAt)}
+                                            <span className="text-xs font-medium capitalize">
+                                              {service.deletedAt ? 'trash' : (service.status || 'null')}
+                                            </span>
+                                          </div>
+                                        </td>
+                                      )}
                                       <td className="p-3">
                                         <div className="flex items-center gap-1">
-                                          <button
-                                            onClick={() =>
-                                              handleEditService(service.id)
-                                            }
-                                            className="btn btn-secondary p-2"
-                                            title="Edit Service"
-                                          >
-                                            <FaEdit className="h-3 w-3" />
-                                          </button>
-
-                                          {/* 3 Dot Menu */}
-                                          <div className="relative">
+                                          {/* Show only Delete button for Trash filter */}
+                                          {statusFilter === 'trash' ? (
                                             <button
-                                              className="btn btn-secondary p-2"
-                                              title="More Actions"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                const dropdown = e.currentTarget
-                                                  .nextElementSibling as HTMLElement;
-                                                dropdown.classList.toggle(
-                                                  'hidden'
-                                                );
-                                              }}
+                                              onClick={() => deleteService(service?.id)}
+                                              className="btn btn-secondary p-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200"
+                                              title="Delete Service"
                                             >
-                                              <FaEllipsisH className="h-3 w-3" />
+                                              <FaTrash className="h-3 w-3 text-red-600" />
                                             </button>
+                                          ) : (
+                                            <>
+                                              {/* Edit button - only show for non-trash filters */}
+                                              <button
+                                                onClick={() =>
+                                                  handleEditService(service.id)
+                                                }
+                                                className="btn btn-secondary p-2"
+                                                title="Edit Service"
+                                              >
+                                                <FaEdit className="h-3 w-3" />
+                                              </button>
 
-                                            {/* Dropdown Menu */}
-                                            <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                                              <div className="py-1">
-                                                {/* Show restore option only for trash services */}
-                                                {statusFilter === 'trash' && service.status === 'inactive' && service.provider && service.provider.trim() !== '' && (
-                                                  <button
-                                                    onClick={() => {
-                                                      restoreService(service);
-                                                      const dropdown =
-                                                        document.querySelector(
-                                                          '.absolute.right-0'
-                                                        ) as HTMLElement;
-                                                      dropdown?.classList.add(
-                                                        'hidden'
-                                                      );
-                                                    }}
-                                                    className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-100 flex items-center gap-2"
-                                                  >
-                                                    <FaUndo className="h-3 w-3" />
-                                                    Restore Service
-                                                  </button>
-                                                )}
-                                                {/* Show activate/deactivate option only if category is active */}
-                                                {activeCategoryToggles[categoryName] && (
-                                                  <button
-                                                    onClick={() => {
-                                                      toggleServiceStatus(
-                                                        service
-                                                      );
-                                                      const dropdown =
-                                                        document.querySelector(
-                                                          '.absolute.right-0'
-                                                        ) as HTMLElement;
-                                                      dropdown?.classList.add(
-                                                        'hidden'
-                                                      );
-                                                    }}
-                                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                                  >
-                                                    <FaSync className="h-3 w-3" />
-                                                    {service.status === 'active'
-                                                      ? 'Deactivate'
-                                                      : 'Activate'}{' '}
-                                                    Service
-                                                  </button>
-                                                )}
+                                              {/* Show restore button for trash services */}
+                                              {service.status === 'inactive' && service.provider && service.provider.trim() !== '' && (
                                                 <button
-                                                  onClick={() => {
-                                                    deleteService(service?.id);
-                                                    const dropdown =
-                                                      document.querySelector(
-                                                        '.absolute.right-0'
-                                                      ) as HTMLElement;
-                                                    dropdown?.classList.add(
-                                                      'hidden'
-                                                    );
-                                                  }}
-                                                  className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-100 flex items-center gap-2"
+                                                  onClick={() => restoreService(service)}
+                                                  className="btn btn-secondary p-2 text-green-600 hover:text-green-700"
+                                                  title="Restore Service"
                                                 >
-                                                  <FaTrash className="h-3 w-3" />
-                                                  Delete Service
+                                                  <FaUndo className="h-3 w-3" />
                                                 </button>
-                                              </div>
-                                            </div>
-                                          </div>
+                                              )}
+
+                                              {/* Show activate/deactivate button only if category is active */}
+                                              {activeCategoryToggles[categoryName] && (
+                                                <button
+                                                  onClick={() => toggleServiceStatus(service)}
+                                                  className="btn btn-secondary p-2"
+                                                  title={service.status === 'active' ? 'Deactivate Service' : 'Activate Service'}
+                                                >
+                                                  <FaSync className="h-3 w-3" />
+                                                </button>
+                                              )}
+
+                                              {/* Delete button */}
+                                              <button
+                                                onClick={() => deleteService(service?.id)}
+                                                className="btn btn-secondary p-2 text-red-600 hover:text-red-700"
+                                                title="Delete Service"
+                                              >
+                                                <FaTrash className="h-3 w-3" />
+                                              </button>
+                                            </>
+                                          )}
                                         </div>
                                       </td>
                                     </tr>

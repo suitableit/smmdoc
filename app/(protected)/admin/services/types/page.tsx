@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
     FaBox,
     FaCheckCircle,
@@ -12,6 +12,7 @@ import {
     FaTimes,
     FaTrash,
 } from 'react-icons/fa';
+import useSWR from 'swr';
 
 // Import APP_NAME constant
 import axiosInstance from '@/lib/axiosInstance';
@@ -54,6 +55,8 @@ interface ServiceType {
   description?: string;
   status: string;
   serviceCount: number;
+  providerId?: string;
+  providerName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -104,6 +107,85 @@ const ServiceTypes = () => {
     }
   }, []);
 
+  // Fetch providers using SWR (same as services page)
+  const { data: providersData, error: providersError } = useSWR(
+    '/api/admin/providers',
+    async (url) => {
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error fetching providers:', error);
+        throw error;
+      }
+    },
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      refreshInterval: 30000, // Refresh every 30 seconds
+      dedupingInterval: 5000, // Allow refetch after 5 seconds
+      errorRetryCount: 3,
+      errorRetryInterval: 5000,
+    }
+  );
+
+  // Get unique providers for filter dropdown - now using API data (same as services page)
+  const uniqueProviders = useMemo(() => {
+    if (!providersData?.data?.providers) return ['All', 'Self'];
+    
+    // Get active providers from API, excluding reserved names
+    const reservedNames = ['All', 'Self'];
+    const activeProviders = providersData.data.providers
+      .filter((provider: any) => provider.status === 'active')
+      .map((provider: any) => provider.label || provider.value)
+      .filter((providerName: string) => !reservedNames.includes(providerName))
+      .sort();
+    
+    return ['All', 'Self', ...activeProviders];
+  }, [providersData?.data?.providers]);
+
+  // Helper function to get provider name by ID (same as services page)
+  const getProviderNameById = useCallback((providerId: number | string | null, providerName?: string) => {
+    // If service is self-created (no provider ID), return "Self"
+    if (!providerId) {
+      return 'Self';
+    }
+
+    // If we have providers data, find the provider by ID
+    if (providersData?.data?.providers) {
+      const provider = providersData.data.providers.find((p: any) => {
+        return p.id === parseInt(providerId.toString());
+      });
+      if (provider) {
+        const resolvedName = provider.label || provider.name || 'Unknown Provider';
+        return resolvedName;
+      }
+    }
+
+    // If there's an error fetching providers, show error state
+    if (providersError) {
+      return providerName || 'Provider (Error)';
+    }
+
+    // Fallback to static provider name if dynamic resolution fails
+    if (providerName && providerName.trim() !== '') {
+      return providerName;
+    }
+
+    return 'N/A';
+  }, [providersData?.data?.providers, providersError]);
+
   // Set document title using useEffect for client-side
   useEffect(() => {
     setPageTitle('Service Types', appName);
@@ -114,8 +196,12 @@ const ServiceTypes = () => {
     fetchServiceTypes();
   }, [fetchServiceTypes]);
 
+
+
   // State management
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'trash'>('all');
+  const [providerFilter, setProviderFilter] = useState('All');
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
@@ -143,27 +229,49 @@ const ServiceTypes = () => {
   const [editingServiceType, setEditingServiceType] =
     useState<ServiceType | null>(null);
   const [editName, setEditName] = useState('');
-  const [editDescription, setEditDescription] = useState('');
 
   // Add dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newServiceTypeName, setNewServiceTypeName] = useState('');
-  const [newServiceTypeDescription, setNewServiceTypeDescription] = useState('');
+
+
 
 
 
   // Utility functions
   const formatID = (id: string, index: number) => {
-    // Generate a numeric ID based on the index
-    return String(index + 1).padStart(3, '0');
+    // Return the real database ID
+    return String(id);
   };
 
-  // Filter service types based on search term - using direct parameters
-  const filteredServiceTypes = serviceTypes.filter(
-    (serviceType) =>
-      serviceType.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      serviceType.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter service types based on search term, status filter, and provider filter
+  const filteredServiceTypes = useMemo(() => {
+    return serviceTypes.filter((serviceType) => {
+      const matchesSearch = serviceType.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           serviceType.id.toString().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || serviceType.status === statusFilter;
+      
+      // Provider filter logic (same as services page)
+      let matchesProvider = true;
+      if (providerFilter === 'All') {
+        matchesProvider = true;
+      } else if (providerFilter === 'Self') {
+        // Show service types with no provider ID (self-created)
+        matchesProvider = !serviceType.providerId;
+      } else {
+        // Get dynamic provider name and compare
+        const dynamicProviderName = getProviderNameById(serviceType.providerId, serviceType.providerName);
+        matchesProvider = dynamicProviderName === providerFilter;
+      }
+
+      return matchesSearch && matchesStatus && matchesProvider;
+    });
+  }, [serviceTypes, searchTerm, statusFilter, providerFilter]);
+
+  // Calculate counts for filter buttons
+  const allServiceTypesCount = serviceTypes.filter(st => st.status !== 'deleted').length;
+  const trashServiceTypesCount = serviceTypes.filter(st => st.status === 'deleted').length;
 
   // Update pagination when filtered data changes
   useEffect(() => {
@@ -218,7 +326,6 @@ const ServiceTypes = () => {
     try {
       const response = await axiosInstance.put(`/api/admin/service-types/${editingServiceType.id}`, {
         name: editName.trim(),
-        description: editDescription.trim() || null,
         status: editingServiceType.status
       });
 
@@ -226,7 +333,7 @@ const ServiceTypes = () => {
         setServiceTypes((prev) =>
           prev.map((st) =>
             st.id === editingServiceType.id
-              ? { ...st, name: editName.trim(), description: editDescription.trim() || undefined }
+              ? { ...st, name: editName.trim() }
               : st
           )
         );
@@ -235,7 +342,6 @@ const ServiceTypes = () => {
         setEditDialogOpen(false);
         setEditingServiceType(null);
         setEditName('');
-        setEditDescription('');
       } else {
         showToast(response.data.error || 'Failed to update service type', 'error');
       }
@@ -251,8 +357,7 @@ const ServiceTypes = () => {
 
     try {
       const response = await axiosInstance.post('/api/admin/service-types', {
-        name: newServiceTypeName.trim(),
-        description: newServiceTypeDescription.trim() || null
+        name: newServiceTypeName.trim()
       });
 
       if (response.data.success) {
@@ -264,7 +369,6 @@ const ServiceTypes = () => {
         showToast('Service type added successfully', 'success');
         setAddDialogOpen(false);
         setNewServiceTypeName('');
-        setNewServiceTypeDescription('');
       } else {
         showToast(response.data.error || 'Failed to add service type', 'error');
       }
@@ -278,7 +382,6 @@ const ServiceTypes = () => {
   const openEditDialog = (serviceType: ServiceType) => {
     setEditingServiceType(serviceType);
     setEditName(serviceType.name);
-    setEditDescription(serviceType.description || '');
     setEditDialogOpen(true);
   };
 
@@ -322,6 +425,19 @@ const ServiceTypes = () => {
                 <option value="all">All</option>
               </select>
 
+              {/* Provider Filter Dropdown */}
+              <select 
+                value={providerFilter}
+                onChange={(e) => setProviderFilter(e.target.value)}
+                className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
+              >
+                {uniqueProviders.map((provider) => (
+                  <option key={provider} value={provider}>
+                    {provider}
+                  </option>
+                ))}
+              </select>
+
               <button
                 onClick={handleRefresh}
                 disabled={serviceTypesLoading}
@@ -359,9 +475,55 @@ const ServiceTypes = () => {
           </div>
         </div>
 
-        {/* Service Types Table */}
-        <div className="card">
-          <div style={{ padding: '24px 24px 0px 24px' }}>
+        {/* Service Types Table with Filter */}
+        <div className="card animate-in fade-in duration-500">
+          <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
+            {/* Filter Buttons - Inside table header */}
+            <div className="mb-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'all'
+                      ? 'bg-gradient-to-r from-purple-600 to-purple-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  All
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'all'
+                        ? 'bg-white/20'
+                        : 'bg-purple-100 text-purple-700'
+                    }`}
+                  >
+                    {allServiceTypesCount.toString()}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('trash')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'trash'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Trash
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'trash'
+                        ? 'bg-white/20'
+                        : 'bg-orange-100 text-orange-700'
+                    }`}
+                  >
+                    {trashServiceTypesCount.toString()}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ padding: '0 24px' }}>
             {serviceTypesLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
@@ -411,7 +573,7 @@ const ServiceTypes = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
-                          Description
+                          Provider
                         </th>
                         <th
                           className="text-left p-3 font-semibold"
@@ -446,20 +608,31 @@ const ServiceTypes = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {/* Use direct service type name parameter */}
-                              {serviceType.name}
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="font-medium text-sm"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {/* Use direct service type name parameter */}
+                                {serviceType.name}
+                              </div>
+                              {/* Show protection badge for Default service type */}
+                              {serviceType.name === 'Default' && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                  </svg>
+                                  Default
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
-                              className="text-sm text-gray-600"
-                              style={{ color: 'var(--text-secondary)' }}
+                              className="font-medium text-sm"
+                              style={{ color: 'var(--text-primary)' }}
                             >
-                              {serviceType.description || 'No description'}
+                              {getProviderNameById(serviceType.providerId, serviceType.providerName)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -524,21 +697,24 @@ const ServiceTypes = () => {
                                     <FaEdit className="h-3 w-3" />
                                     Edit Service Type
                                   </button>
-                                  <button
-                                    onClick={() => {
-                                      setServiceTypeToDelete(serviceType.id);
-                                      setDeleteDialogOpen(true);
-                                      document
-                                        .querySelector(
-                                          '.dropdown-menu:not(.hidden)'
-                                        )
-                                        ?.classList.add('hidden');
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
-                                  >
-                                    <FaTrash className="h-3 w-3" />
-                                    Delete
-                                  </button>
+                                  {/* Only show delete option for non-Default service types */}
+                                  {serviceType.name !== 'Default' && (
+                                    <button
+                                      onClick={() => {
+                                        setServiceTypeToDelete(serviceType.id);
+                                        setDeleteDialogOpen(true);
+                                        document
+                                          .querySelector(
+                                            '.dropdown-menu:not(.hidden)'
+                                          )
+                                          ?.classList.add('hidden');
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
+                                    >
+                                      <FaTrash className="h-3 w-3" />
+                                      Delete
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -666,23 +842,13 @@ const ServiceTypes = () => {
                   placeholder="Enter service type name"
                 />
               </div>
-              <div className="mb-4">
-                <label className="form-label mb-2">Description (Optional)</label>
-                <textarea
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                  placeholder="Enter service type description"
-                  rows={3}
-                />
-              </div>
+
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => {
                     setEditDialogOpen(false);
                     setEditingServiceType(null);
                     setEditName('');
-                    setEditDescription('');
                   }}
                   className="btn btn-secondary"
                 >
@@ -716,22 +882,12 @@ const ServiceTypes = () => {
                   placeholder="Enter service type name"
                 />
               </div>
-              <div className="mb-4">
-                <label className="form-label mb-2">Description (Optional)</label>
-                <textarea
-                  value={newServiceTypeDescription}
-                  onChange={(e) => setNewServiceTypeDescription(e.target.value)}
-                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                  placeholder="Enter service type description"
-                  rows={3}
-                />
-              </div>
+
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => {
                     setAddDialogOpen(false);
                     setNewServiceTypeName('');
-                    setNewServiceTypeDescription('');
                   }}
                   className="btn btn-secondary"
                 >

@@ -14,6 +14,7 @@ model Category {
   userId        Int
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?        // Soft delete field
   hideCategory  String           @default("no")
   position      CategoryPosition @default(bottom)
   user          user             @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -40,6 +41,7 @@ model Service {
   status              String            @default("active")
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
+  deletedAt           DateTime?         // Soft delete field
   perqty              Int               @default(1000)
   serviceTypeId       Int?
   cancel              Boolean           @default(false)
@@ -609,13 +611,14 @@ model service_update_logs {
 }
 
 model servicetype {
-  id          Int       @id @default(autoincrement())
-  name        String    @unique(map: "ServiceType_name_key")
-  description String?
-  status      String    @default("active")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  services    Service[]
+  id           Int       @id @default(autoincrement())
+  name         String    @unique(map: "ServiceType_name_key")
+  providerId   String?
+  providerName String?
+  status       String    @default("active")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  services     Service[]
 }
 
 model ticket_settings {
@@ -820,6 +823,7 @@ model api_providers {
   status      String   @default("active")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft delete field
   api_url     String   @default("")
   http_method String   @default("POST") // HTTP method for API requests (POST/GET)
   is_custom   Boolean  @default(false)

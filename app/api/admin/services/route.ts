@@ -22,11 +22,23 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limitParam = searchParams.get('limit') || '10';
     const search = searchParams.get('search') || '';
+    const filter = searchParams.get('filter') || 'all'; // Add filter parameter
     const limit = parseInt(limitParam);
+
+    // Determine deletedAt filter based on filter parameter
+    let deletedAtFilter;
+    if (filter === 'trash') {
+      deletedAtFilter = { not: null }; // Show only soft-deleted services
+    } else if (filter === 'all_with_trash') {
+      deletedAtFilter = undefined; // Show all services including trash
+    } else {
+      deletedAtFilter = null; // Show only non-deleted services
+    }
 
     // If limit is high (>=500), return all services (for bulk modify or "All" view)
     if (limit >= 500) {
       const whereClause = {
+        ...(deletedAtFilter !== undefined && { deletedAt: deletedAtFilter }), // Use dynamic filter based on request
         ...(search && search.trim()
           ? {
               OR: [
@@ -132,6 +144,7 @@ export async function GET(request: Request) {
     const categoryIds = paginatedCategories.map(cat => cat.id);
 
     const whereClause = {
+      ...(deletedAtFilter !== undefined && { deletedAt: deletedAtFilter }), // Use dynamic filter based on request
       categoryId: {
         in: categoryIds,
       },
@@ -330,10 +343,19 @@ export async function POST(request: Request) {
       createData.categoryId = categoryIdInt;
     }
 
-    // Add serviceTypeId if provided and valid
+    // Add serviceTypeId if provided and valid, otherwise use Default service type
     const serviceTypeIdInt = toInt(serviceTypeId);
     if (serviceTypeIdInt !== undefined) {
       createData.serviceTypeId = serviceTypeIdInt;
+    } else {
+      // If no service type is specified, assign the Default service type
+      const defaultServiceType = await db.servicetype.findFirst({
+        where: { name: 'Default' }
+      });
+      
+      if (defaultServiceType) {
+        createData.serviceTypeId = defaultServiceType.id;
+      }
     }
 
     // Create the service in the database with proper type conversion

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Custom providers only - no predefined providers
 
 // GET - Get all available providers
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     console.log('API /admin/providers called');
     const session = await getCurrentUser();
@@ -23,6 +23,9 @@ export async function GET() {
         { status: 401 }
       );
     }
+
+    const { searchParams } = new URL(req.url);
+    const filter = searchParams.get('filter') || 'active'; // 'active', 'trash', 'all'
 
     // Get configured providers from database
     let configuredProviders: any[] = [];
@@ -47,9 +50,29 @@ export async function GET() {
       
       // Columns api_url and is_custom already exist in schema, no need to add them
 
-
+      // Build where clause based on filter
+      let whereClause: any = {};
+      
+      if (filter === 'active') {
+        whereClause = {
+          deletedAt: null,
+          status: 'active'
+        };
+      } else if (filter === 'inactive') {
+        whereClause = {
+          deletedAt: null,
+          status: 'inactive'
+        };
+      } else if (filter === 'trash') {
+        whereClause.deletedAt = { not: null };
+      } else if (filter === 'all') {
+        // Include all providers regardless of deletedAt status
+        whereClause = {};
+      }
+      // For no filter, return everything
 
       configuredProviders = await db.api_providers.findMany({
+        where: whereClause,
         select: {
           id: true,
           name: true,
@@ -60,6 +83,7 @@ export async function GET() {
           is_custom: true,
           createdAt: true,
           updatedAt: true,
+          deletedAt: true,
           current_balance: true,
           balance_last_updated: true
         },
@@ -67,6 +91,9 @@ export async function GET() {
           createdAt: 'desc'  // Order by newest first (new to old)
         }
       });
+
+      console.log(`Filter: ${filter}, Where clause:`, whereClause);
+      console.log(`Found ${configuredProviders.length} providers from database:`, configuredProviders.map(p => ({ id: p.id, name: p.name, status: p.status, deletedAt: p.deletedAt })));
     } catch (error) {
       console.log('Provider table error:', error);
       configuredProviders = [];
@@ -76,16 +103,32 @@ export async function GET() {
     const providerStats = await Promise.all(
       configuredProviders.map(async (cp: any) => {
         try {
-          // Count total services for this provider
+          // Count total services for this provider (including soft-deleted for trash providers)
           const totalServices = await db.service.count({
-            where: { providerId: cp.id }
+            where: { 
+              providerId: cp.id,
+              // For trash providers, include all services; for others, exclude soft-deleted
+              ...(cp.deletedAt ? {} : { deletedAt: null })
+            }
           });
 
           // Count active services for this provider
           const activeServices = await db.service.count({
             where: { 
               providerId: cp.id,
-              status: 'active'
+              status: 'active',
+              // For trash providers, include all services; for others, exclude soft-deleted
+              ...(cp.deletedAt ? {} : { deletedAt: null })
+            }
+          });
+
+          // Count inactive/deactive services for this provider
+          const inactiveServices = await db.service.count({
+            where: { 
+              providerId: cp.id,
+              status: 'inactive',
+              // For trash providers, include all services; for others, exclude soft-deleted
+              ...(cp.deletedAt ? {} : { deletedAt: null })
             }
           });
 
@@ -102,6 +145,7 @@ export async function GET() {
             providerId: cp.id,
             totalServices,
             activeServices,
+            inactiveServices,
             orderCount
           };
         } catch (error) {
@@ -110,6 +154,7 @@ export async function GET() {
             providerId: cp.id,
             totalServices: 0,
             activeServices: 0,
+            inactiveServices: 0,
             orderCount: 0
           };
         }
@@ -121,7 +166,7 @@ export async function GET() {
 
     // Map all providers as custom providers with dynamic stats
     const allProviders = configuredProviders.map((cp: any) => {
-      const stats = statsMap.get(cp.id) || { totalServices: 0, activeServices: 0, orderCount: 0 };
+      const stats = statsMap.get(cp.id) || { totalServices: 0, activeServices: 0, inactiveServices: 0, orderCount: 0 };
       
       return {
         value: cp.name,
@@ -136,12 +181,14 @@ export async function GET() {
         isCustom: true,
         createdAt: cp.createdAt,
         updatedAt: cp.updatedAt,
+        deletedAt: cp.deletedAt, // Include deletedAt field in response
         currentBalance: cp.current_balance || 0,
         balanceLastUpdated: cp.balance_last_updated,
         // Add dynamic stats
         services: stats.totalServices,
         importedServices: stats.totalServices,
         activeServices: stats.activeServices,
+        inactiveServices: stats.inactiveServices,
         orders: stats.orderCount
       };
     });
@@ -163,6 +210,152 @@ export async function GET() {
     return NextResponse.json(
       {
         error: 'Failed to get providers: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        success: false,
+        data: null
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH - Restore provider from trash
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = await getCurrentUser();
+
+    // Check if user is authenticated and is an admin
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized access. Admin privileges required.',
+          success: false,
+          data: null
+        },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    const action = searchParams.get('action');
+
+    // Validate parameters
+    if (!id || !action || action !== 'restore') {
+      return NextResponse.json(
+        {
+          error: 'Valid Provider ID and action=restore are required.',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
+    // Parse and validate numeric ID
+    const providerId = parseInt(id);
+    if (isNaN(providerId) || providerId <= 0) {
+      return NextResponse.json(
+        {
+          error: 'Invalid Provider ID format. ID must be a positive number.',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if provider exists and is in trash
+    const provider = await db.api_providers.findUnique({
+      where: { id: providerId }
+    });
+
+    if (!provider || !provider.deletedAt) {
+      return NextResponse.json(
+        {
+          error: 'Provider not found in trash.',
+          success: false,
+          data: null
+        },
+        { status: 404 }
+      );
+    }
+
+    // Restore provider
+    await db.api_providers.update({
+      where: { id: providerId },
+      data: { 
+        deletedAt: null,
+        updatedAt: new Date()
+      }
+    });
+
+    // Get all soft-deleted services associated with this provider
+    const providerServices = await db.service.findMany({
+      where: { 
+        providerId: providerId,
+        deletedAt: { not: null }
+      },
+      select: { id: true, categoryId: true, serviceTypeId: true }
+    });
+
+    const serviceIds = providerServices.map(service => service.id);
+    const categoryIds = [...new Set(providerServices.map(service => service.categoryId))];
+    const serviceTypeIds = [...new Set(providerServices.map(service => service.serviceTypeId).filter(id => id !== null))];
+
+    if (serviceIds.length > 0) {
+      // Restore the services
+      await db.service.updateMany({
+        where: { 
+          providerId: providerId,
+          deletedAt: { not: null }
+        },
+        data: { deletedAt: null }
+      });
+
+      // Restore categories that were soft-deleted due to having no own services
+      for (const categoryId of categoryIds) {
+        const category = await db.category.findUnique({
+          where: { id: categoryId }
+        });
+
+        if (category && category.deletedAt) {
+          await db.category.update({
+            where: { id: categoryId },
+            data: { deletedAt: null }
+          });
+        }
+      }
+
+      // Restore service types that were marked as deleted due to having no own services
+      for (const serviceTypeId of serviceTypeIds) {
+        const serviceType = await db.servicetype.findUnique({
+          where: { id: serviceTypeId }
+        });
+
+        if (serviceType && serviceType.status === 'deleted') {
+          await db.servicetype.update({
+            where: { id: serviceTypeId },
+            data: { 
+              status: 'active',
+              updatedAt: new Date()
+            }
+          });
+        }
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Provider and all associated services, categories & service types restored successfully',
+      data: null,
+      error: null
+    });
+
+  } catch (error) {
+    console.error('Error restoring provider:', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to restore provider: ' + (error instanceof Error ? error.message : 'Unknown error'),
         success: false,
         data: null
       },
@@ -570,82 +763,118 @@ export async function DELETE(req: NextRequest) {
     let message = '';
     
     if (deleteType === 'trash') {
-    // Move to trash - delete provider and its services
+      // Move to trash - soft delete provider and its services
       await db.api_providers.update({
         where: { id: providerId },
         data: { 
-          status: 'trash',
+          deletedAt: new Date(),
           updatedAt: new Date()
         }
       });
 
       // Get all services associated with this provider
-      const providerServices = await db.Service.findMany({
+      const providerServices = await db.service.findMany({
         where: { providerId: providerId },
-        select: { id: true }
+        select: { id: true, categoryId: true, serviceTypeId: true }
       });
 
       const serviceIds = providerServices.map(service => service.id);
+      const categoryIds = [...new Set(providerServices.map(service => service.categoryId))];
+      const serviceTypeIds = [...new Set(providerServices.map(service => service.serviceTypeId).filter(id => id !== null))];
 
       if (serviceIds.length > 0) {
-        // Delete dependent records first to avoid foreign key constraint violations
-        
-        // Delete favorite services
-        await db.FavoriteService.deleteMany({
-          where: { serviceId: { in: serviceIds } }
+        // Soft delete the provider services
+        await db.service.updateMany({
+          where: { providerId: providerId },
+          data: { deletedAt: new Date() }
         });
 
-        // Delete cancel requests for orders related to these services
-        await db.CancelRequest.deleteMany({
-          where: { 
-            order: { 
-              serviceId: { in: serviceIds } 
-            } 
+        // Handle categories - check if they have self-created services
+        for (const categoryId of categoryIds) {
+          const selfCreatedServices = await db.service.count({
+            where: { 
+              categoryId: categoryId,
+              providerId: null, // Self-created services have null providerId
+              deletedAt: null
+            }
+          });
+
+          if (selfCreatedServices === 0) {
+            // No self-created services, move category to trash
+            await db.category.update({
+              where: { id: categoryId },
+              data: { deletedAt: new Date() }
+            });
+          } else {
+            // Has self-created services, change provider to "Self"
+            await db.category.update({
+              where: { id: categoryId },
+              data: { 
+                providerId: null,
+                providerName: "Self",
+                updatedAt: new Date()
+              }
+            });
           }
-        });
+        }
 
-        // Delete refill requests for orders related to these services
-        await db.RefillRequest.deleteMany({
-          where: { 
-            order: { 
-              serviceId: { in: serviceIds } 
-            } 
+        // Handle service types - check if they have self-created services
+        for (const serviceTypeId of serviceTypeIds) {
+          const selfCreatedServicesInType = await db.service.count({
+            where: { 
+              serviceTypeId: serviceTypeId,
+              providerId: null, // Self-created services have null providerId
+              deletedAt: null
+            }
+          });
+
+          if (selfCreatedServicesInType === 0) {
+            // No self-created services, move service type to trash
+            await db.servicetype.update({
+              where: { id: serviceTypeId },
+              data: { 
+                status: 'deleted',
+                updatedAt: new Date()
+              }
+            });
+          } else {
+            // Has self-created services, change provider to "Self"
+            await db.servicetype.update({
+              where: { id: serviceTypeId },
+              data: { 
+                providerId: null,
+                providerName: "Self",
+                updatedAt: new Date()
+              }
+            });
           }
-        });
-
-        // Delete orders related to these services
-        await db.NewOrder.deleteMany({
-          where: { serviceId: { in: serviceIds } }
-        });
-
-        // Finally delete the services
-        await db.Service.deleteMany({
-          where: { providerId: providerId }
-        });
+        }
       }
 
-      message = 'Provider moved to trash and all associated imported services & categories are moved to trash';
+      message = 'Provider moved to trash. Categories and service types with self-created services preserved and changed to "Self" provider';
     } else {
       // Permanent delete - remove provider and its services
       
       // Get all services associated with this provider
-      const providerServices = await db.Service.findMany({
+      const providerServices = await db.service.findMany({
         where: { providerId: providerId },
-        select: { id: true }
+        select: { id: true, categoryId: true, serviceTypeId: true }
       });
 
       const serviceIds = providerServices.map(service => service.id);
+      const categoryIds = [...new Set(providerServices.map(service => service.categoryId))];
+      const serviceTypeIds = [...new Set(providerServices.map(service => service.serviceTypeId).filter(id => id !== null))];
 
       if (serviceIds.length > 0) {
         // Delete dependent records first to avoid foreign key constraint violations
         
         // Delete favorite services
-        await db.FavoriteService.deleteMany({
+        await db.favoriteService.deleteMany({
           where: { serviceId: { in: serviceIds } }
         });
 
         // Delete cancel requests for orders related to these services
-        await db.CancelRequest.deleteMany({
+        await db.cancelRequest.deleteMany({
           where: { 
             order: { 
               serviceId: { in: serviceIds } 
@@ -654,7 +883,7 @@ export async function DELETE(req: NextRequest) {
         });
 
         // Delete refill requests for orders related to these services
-        await db.RefillRequest.deleteMany({
+        await db.refillRequest.deleteMany({
           where: { 
             order: { 
               serviceId: { in: serviceIds } 
@@ -663,14 +892,70 @@ export async function DELETE(req: NextRequest) {
         });
 
         // Delete orders related to these services
-        await db.NewOrder.deleteMany({
+        await db.newOrder.deleteMany({
           where: { serviceId: { in: serviceIds } }
         });
 
-        // Delete the services
-        await db.Service.deleteMany({
+        // Delete the provider services
+        await db.service.deleteMany({
           where: { providerId: providerId }
         });
+
+        // Handle categories - check if they have self-created services
+        for (const categoryId of categoryIds) {
+          const selfCreatedServices = await db.service.count({
+            where: { 
+              categoryId: categoryId,
+              providerId: null, // Self-created services have null providerId
+              deletedAt: null
+            }
+          });
+
+          if (selfCreatedServices === 0) {
+            // No self-created services, permanently delete category
+            await db.category.delete({
+              where: { id: categoryId }
+            });
+          } else {
+            // Has self-created services, change provider to "Self"
+            await db.category.update({
+              where: { id: categoryId },
+              data: { 
+                providerId: null,
+                providerName: "Self",
+                updatedAt: new Date()
+              }
+            });
+          }
+        }
+
+        // Handle service types - check if they have self-created services
+        for (const serviceTypeId of serviceTypeIds) {
+          const selfCreatedServicesInType = await db.service.count({
+            where: { 
+              serviceTypeId: serviceTypeId,
+              providerId: null, // Self-created services have null providerId
+              deletedAt: null
+            }
+          });
+
+          if (selfCreatedServicesInType === 0) {
+            // No self-created services, permanently delete service type
+            await db.servicetype.delete({
+              where: { id: serviceTypeId }
+            });
+          } else {
+            // Has self-created services, change provider to "Self"
+            await db.servicetype.update({
+              where: { id: serviceTypeId },
+              data: { 
+                providerId: null,
+                providerName: "Self",
+                updatedAt: new Date()
+              }
+            });
+          }
+        }
       }
 
       // Finally delete the provider
@@ -678,7 +963,7 @@ export async function DELETE(req: NextRequest) {
         where: { id: providerId }
       });
 
-      message = 'Provider and all associated imported services & categories permanently deleted successfully';
+      message = 'Provider permanently deleted. Categories and service types with self-created services preserved and changed to "Self" provider';
     }
 
     return NextResponse.json({
