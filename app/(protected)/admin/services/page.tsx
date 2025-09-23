@@ -177,7 +177,11 @@ const MemoizedServiceRow = memo(
           </span>
         </td>
         <td className="p-3 text-sm" style={{ color: 'var(--text-muted)' }}>
-          {service.provider || 'N/A'}
+          {(() => {
+            const providerName = getProviderNameById(service.providerId, service.provider);
+            console.log('Rendering provider name for service:', service.id, 'providerId:', service.providerId, 'result:', providerName);
+            return providerName;
+          })()}
         </td>
         <td className="p-3">
           <PriceDisplay
@@ -448,6 +452,71 @@ const DeleteConfirmationModal = ({
   );
 };
 
+const DeleteServicesAndCategoriesModal = ({
+  onClose,
+  onConfirm,
+  selectedServiceCount,
+  selectedCategoryCount,
+}: {
+  onClose: () => void;
+  onConfirm: () => void;
+  selectedServiceCount: number;
+  selectedCategoryCount: number;
+}) => {
+  return (
+    <div className="w-full max-w-md">
+      {/* Modal Header */}
+      <div className="flex items-center justify-between p-6">
+        <h3
+          className="text-lg font-semibold"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          Confirm Deletion
+        </h3>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+          title="Close"
+        >
+          <FaTimes className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="px-6 pb-6">
+        <div className="space-y-4">
+          {/* Warning Icon and Message */}
+          <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
+            <FaExclamationTriangle className="h-6 w-6 text-red-500 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-red-800">
+                Delete {selectedServiceCount} Service{selectedServiceCount !== 1 ? 's' : ''} and {selectedCategoryCount} Categor{selectedCategoryCount !== 1 ? 'ies' : 'y'}?
+              </p>
+              <p className="text-sm text-red-600 mt-1">
+                This action cannot be undone. All selected services and categories will be
+                permanently removed.
+              </p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 justify-end">
+            <button onClick={onClose} className="btn btn-secondary px-6 py-2">
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className="btn bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-6 py-2"
+            >
+              <FaTrash className="h-4 w-4" />
+              Delete All
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Delete Category Confirmation Modal Component
 const DeleteCategoryModal = ({
   onClose,
@@ -636,7 +705,6 @@ const DeleteCategoryModal = ({
             >
               {isUpdating ? (
                 <>
-                  <GradientSpinner size="w-4 h-4" />
                   {deleteAction === 'delete'
                     ? 'Deleting...'
                     : 'Moving & Deleting...'}
@@ -2304,13 +2372,42 @@ function AdminServicesPage() {
   const { data: categoriesData, mutate: refreshCategories } =
     useGetCategories();
 
-  // Fetch active providers from API
-  const { data: providersData, mutate: refreshProviders } = useSWR(
+  // Fetch active providers from API with error handling
+  const { data: providersData, mutate: refreshProviders, error: providersError } = useSWR(
     '/api/admin/providers',
-    fetcher,
+    async (url) => {
+      try {
+        console.log('Fetching providers data...');
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Add a longer timeout for this specific request
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Providers data fetched successfully:', data);
+        return data;
+      } catch (error) {
+        console.error('Error fetching providers:', error);
+        throw error;
+      }
+    },
     {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      refreshInterval: 30000, // Refresh every 30 seconds
+      dedupingInterval: 5000, // Allow refetch after 5 seconds
+      errorRetryCount: 3,
+      errorRetryInterval: 5000,
+      onError: (error) => {
+        console.error('SWR providers fetch error:', error);
+      }
     }
   );
 
@@ -2345,6 +2442,7 @@ function AdminServicesPage() {
   const [sortOrder, setSortOrder] = useState('asc');
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
   const [allCategoriesCollapsed, setAllCategoriesCollapsed] = useState(false);
   const [activeCategoryToggles, setActiveCategoryToggles] = useState<{
@@ -2412,6 +2510,11 @@ function AdminServicesPage() {
   const [deleteConfirmationModalClosing, setDeleteConfirmationModalClosing] =
     useState(false);
 
+  // Delete services and categories confirmation modal state
+  const [deleteServicesAndCategoriesModal, setDeleteServicesAndCategoriesModal] = useState(false);
+  const [deleteServicesAndCategoriesModalClosing, setDeleteServicesAndCategoriesModalClosing] =
+    useState(false);
+
   // Delete category modal state
   const [deleteCategoryModal, setDeleteCategoryModal] = useState<{
     open: boolean;
@@ -2428,7 +2531,7 @@ function AdminServicesPage() {
   });
 
   // NEW: Add state for selected bulk operation
-  type BulkOperation = 'enable' | 'disable' | 'make-secret' | 'remove-secret' | 'delete-pricing' | 'refill-enable' | 'refill-disable' | 'cancel-enable' | 'cancel-disable' | 'delete' | '';
+  type BulkOperation = 'enable' | 'disable' | 'make-secret' | 'remove-secret' | 'delete-pricing' | 'refill-enable' | 'refill-disable' | 'cancel-enable' | 'cancel-disable' | 'delete' | 'delete-services-categories' | '';
   const [selectedBulkOperation, setSelectedBulkOperation] = useState<BulkOperation>('');
 
   // Show toast notification - defined early
@@ -2482,6 +2585,14 @@ function AdminServicesPage() {
     }
   );
 
+  // Debug logging
+  console.log('=== DEBUG INFO ===');
+  console.log('pageSize:', pageSize);
+  console.log('API URL:', `/api/admin/services?page=${currentPage}&limit=${pageSize === 'all' ? '999999' : pageSize}&search=${searchTerm}`);
+  console.log('API Response data:', data);
+  console.log('allCategories:', data?.allCategories);
+  console.log('services data:', data?.data);
+
   // Update pagination info when data changes
   useEffect(() => {
     if (data) {
@@ -2489,6 +2600,50 @@ function AdminServicesPage() {
       setTotalServices(data.total || 0);
     }
   }, [data]);
+
+  // Helper function to get provider name by ID
+  const getProviderNameById = useCallback((providerId: number | string | null, providerName?: string) => {
+    // Debug logging
+    console.log('getProviderNameById called with:', { providerId, providerName });
+    console.log('providersData:', providersData);
+    console.log('providersError:', providersError);
+    
+    // If service is self-created (no provider ID), return "Self"
+    if (!providerId) {
+      console.log('No providerId, returning Self');
+      return 'Self';
+    }
+
+    // If we have providers data, find the provider by ID
+    if (providersData?.data?.providers) {
+      console.log('Available providers:', providersData.data.providers);
+      const provider = providersData.data.providers.find((p: any) => {
+        console.log('Comparing provider:', p.id, 'with providerId:', parseInt(providerId.toString()));
+        return p.id === parseInt(providerId.toString());
+      });
+      console.log('Found provider:', provider);
+      if (provider) {
+        const resolvedName = provider.label || provider.name || 'Unknown Provider';
+        console.log('Resolved provider name:', resolvedName);
+        return resolvedName;
+      }
+    }
+
+    // If there's an error fetching providers, show error state
+    if (providersError) {
+      console.log('Providers fetch error, using fallback');
+      return providerName || 'Provider (Error)';
+    }
+
+    // Fallback to static provider name if dynamic resolution fails
+    if (providerName && providerName.trim() !== '') {
+      console.log('Using fallback provider name:', providerName);
+      return providerName;
+    }
+
+    console.log('Returning N/A');
+    return 'N/A';
+  }, [providersData?.data?.providers, providersError]);
 
   // Update refreshAllData to include refreshServices
   const refreshAllData = useCallback(async () => {
@@ -2524,6 +2679,20 @@ function AdminServicesPage() {
     }
   }, [refreshServices, refreshCategories, refreshProviders, categoriesData?.data?.length]);
 
+  // Listen for provider updates from other pages
+  useEffect(() => {
+    const handleProviderUpdate = (event: CustomEvent) => {
+      console.log('Provider updated, refreshing providers data:', event.detail);
+      refreshProviders();
+    };
+
+    window.addEventListener('providerUpdated', handleProviderUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('providerUpdated', handleProviderUpdate as EventListener);
+    };
+  }, [refreshProviders]);
+
   // Memoized filter function for better performance
   const filteredServices = useMemo(() => {
     if (!data?.data) return [];
@@ -2534,13 +2703,13 @@ function AdminServicesPage() {
       // Pre-compute search fields to avoid repeated toLowerCase calls
       const serviceName = service.name?.toLowerCase() || '';
       const categoryName = service.category?.category_name?.toLowerCase() || '';
-      const provider = service.provider?.toLowerCase() || '';
+      const dynamicProvider = getProviderNameById(service.providerId, service.provider).toLowerCase();
       const serviceId = service.id?.toString() || '';
 
       const matchesSearch =
         serviceName.includes(searchLower) ||
         categoryName.includes(searchLower) ||
-        provider.includes(searchLower) ||
+        dynamicProvider.includes(searchLower) ||
         serviceId.includes(searchLower);
 
       // Provider filter
@@ -2548,10 +2717,12 @@ function AdminServicesPage() {
       if (providerFilter === 'All') {
         matchesProvider = true;
       } else if (providerFilter === 'Self') {
-        // Show services with no provider or empty provider (manual system)
-        matchesProvider = !provider || provider.trim() === '';
+        // Show services with no provider ID (self-created services)
+        matchesProvider = !service.providerId;
       } else {
-        matchesProvider = provider === providerFilter.toLowerCase();
+        // Get dynamic provider name and compare
+        const dynamicProviderName = getProviderNameById(service.providerId, service.provider);
+        matchesProvider = dynamicProviderName === providerFilter;
       }
 
       // Status filter
@@ -2563,11 +2734,11 @@ function AdminServicesPage() {
       } else if (statusFilter === 'trash') {
         // Show services associated with trash providers (inactive providers)
         // These are services that were deactivated when their provider was moved to trash
-        matchesStatus = service.status === 'inactive' && service.provider && service.provider.trim() !== '';
+        matchesStatus = service.status === 'inactive' && service.providerId;
       } else if (statusFilter === 'all') {
         // All filter excludes trash services (services with inactive providers)
         // Only show active services or inactive services without a provider (manual system)
-        matchesStatus = service.status === 'active' || (service.status === 'inactive' && (!service.provider || service.provider.trim() === ''));
+        matchesStatus = service.status === 'active' || (service.status === 'inactive' && !service.providerId);
       }
 
       // Category filter - exclude services from disabled categories
@@ -2595,21 +2766,42 @@ function AdminServicesPage() {
 
   // Optimized grouping with better performance for large datasets
   const groupedServices = useMemo(() => {
-    if (!filteredServices.length && !data?.allCategories)
-      return {} as Record<string, any[]>;
-
+    console.log('=== GROUPED SERVICES DEBUG ===');
+    console.log('statusFilter in groupedServices:', statusFilter);
+    console.log('pageSize in groupedServices:', pageSize);
+    console.log('data?.allCategories:', data?.allCategories);
+    console.log('filteredServices.length:', filteredServices.length);
+    console.log('data:', data);
+    console.log('error:', error);
+    console.log('isLoading:', isLoading);
+    
     // Use Map for better performance with large datasets
     const groupedById = new Map<string, { category: any; services: any[] }>();
 
-    // Initialize with all categories
-    if (data?.allCategories) {
+    // Always initialize with all categories when statusFilter is 'all', regardless of other conditions
+    // This ensures empty categories are shown only when "All" filter is selected
+    if (statusFilter === 'all' && data?.allCategories) {
+      console.log('Initializing all categories for statusFilter=all');
       data.allCategories.forEach((category: any) => {
         const categoryKey = `${category.category_name}_${category.id}`;
+        console.log('Adding category:', categoryKey, category);
         groupedById.set(categoryKey, {
           category: category,
           services: [],
         });
       });
+    }
+
+    // If no data available, return empty for error handling
+    if (!data) {
+      console.log('No data available - API might have failed');
+      return {} as Record<string, any[]>;
+    }
+
+    // For non-'all' statusFilter, only show categories if there are services
+    if (statusFilter !== 'all' && !filteredServices.length) {
+      console.log('No services for non-all statusFilter, returning empty');
+      return {} as Record<string, any[]>;
     }
 
     // Group filtered services by category
@@ -2714,6 +2906,8 @@ function AdminServicesPage() {
     sortOrder,
     categoryOrder,
     serviceOrder,
+    statusFilter,
+    pageSize,
   ]);
 
   const getStatusIcon = (status: string) => {
@@ -2747,34 +2941,91 @@ function AdminServicesPage() {
 
   const handleSelectAll = () => {
     const allServices = Object.values(groupedServices).flat();
-    if (selectedServices.length === allServices.length) {
+    const allCategories = Object.keys(groupedServices);
+    
+    if (selectedServices.length === allServices.length && selectedCategories.length === allCategories.length) {
       setSelectedServices([]);
+      setSelectedCategories([]);
     } else {
       setSelectedServices(allServices.map((service: any) => service.id));
+      setSelectedCategories(allCategories);
     }
   };
 
-  const handleSelectCategory = (categoryServices: any[]) => {
+  const handleSelectCategory = (categoryName: string, categoryServices: any[]) => {
     const categoryIds = categoryServices.map((service) => service.id);
     const allSelected = categoryIds.every((id) =>
       selectedServices.includes(id)
     );
+    const categorySelected = selectedCategories.includes(categoryName);
 
-    if (allSelected) {
+    if (allSelected && categorySelected) {
+      // Deselect category and its services
       setSelectedServices((prev) =>
         prev.filter((id) => !categoryIds.includes(id))
       );
+      setSelectedCategories((prev) =>
+        prev.filter((cat) => cat !== categoryName)
+      );
     } else {
+      // Select category and its services
       setSelectedServices((prev) => [...new Set([...prev, ...categoryIds])]);
+      setSelectedCategories((prev) => [...new Set([...prev, categoryName])]);
     }
   };
 
+  const handleCategoryCheckboxChange = (categoryName: string) => {
+    const categoryServices = groupedServices[categoryName] || [];
+    handleSelectCategory(categoryName, categoryServices);
+  };
+
   const handleSelectService = (serviceId: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(serviceId)
+    setSelectedServices((prev) => {
+      const newSelectedServices = prev.includes(serviceId)
         ? prev.filter((id) => id !== serviceId)
-        : [...prev, serviceId]
-    );
+        : [...prev, serviceId];
+      
+      // Update category selection based on service selection
+      updateCategorySelectionBasedOnServices(newSelectedServices);
+      
+      return newSelectedServices;
+    });
+  };
+
+  // Helper function to update category selection based on service selection
+  const updateCategorySelectionBasedOnServices = (currentSelectedServices: string[]) => {
+    setSelectedCategories((prevSelectedCategories) => {
+      const newSelectedCategories = [...prevSelectedCategories];
+      
+      // Check each category to see if it should be selected or deselected
+      Object.keys(groupedServices).forEach((categoryName) => {
+        const categoryServices = groupedServices[categoryName] || [];
+        const categoryServiceIds = categoryServices.map((service: any) => service.id);
+        
+        // Check if all services in this category are selected
+        const allServicesSelected = categoryServiceIds.length > 0 && 
+          categoryServiceIds.every((id: string) => currentSelectedServices.includes(id));
+        
+        // Check if any services in this category are selected
+        const anyServiceSelected = categoryServiceIds.some((id: string) => 
+          currentSelectedServices.includes(id));
+        
+        const categoryCurrentlySelected = newSelectedCategories.includes(categoryName);
+        
+        if (allServicesSelected && !categoryCurrentlySelected) {
+          // All services selected, add category to selection
+          newSelectedCategories.push(categoryName);
+        } else if (!allServicesSelected && categoryCurrentlySelected) {
+          // Not all services selected, remove category from selection
+          const index = newSelectedCategories.indexOf(categoryName);
+          if (index > -1) {
+            newSelectedCategories.splice(index, 1);
+          }
+        }
+      });
+      
+      return newSelectedCategories;
+    });
   };
 
   const handleEditService = (serviceId: number) => {
@@ -2844,6 +3095,23 @@ function AdminServicesPage() {
     setTimeout(() => {
       setDeleteConfirmationModal(false);
       setDeleteConfirmationModalClosing(false);
+    }, 300); // Match animation duration
+  };
+
+  const handleOpenDeleteServicesAndCategoriesConfirmation = () => {
+    if (selectedServices.length === 0 && selectedCategories.length === 0) {
+      showToast('No services or categories selected', 'error');
+      return;
+    }
+    setDeleteServicesAndCategoriesModal(true);
+    setDeleteServicesAndCategoriesModalClosing(false);
+  };
+
+  const handleCloseDeleteServicesAndCategoriesConfirmation = () => {
+    setDeleteServicesAndCategoriesModalClosing(true);
+    setTimeout(() => {
+      setDeleteServicesAndCategoriesModal(false);
+      setDeleteServicesAndCategoriesModalClosing(false);
     }, 300); // Match animation duration
   };
 
@@ -3352,7 +3620,7 @@ function AdminServicesPage() {
           }`,
           'error'
         );
-        // Revalidate to restore failed deletions
+        // Revalidate to ensure data consistency
         await refreshAllData();
       } else {
         showToast(
@@ -3373,6 +3641,111 @@ function AdminServicesPage() {
       const errorMessage =
         error.response?.data?.error || error.message || 'Something went wrong';
       showToast(`Error deleting services: ${errorMessage}`, 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const deleteSelectedServicesAndCategories = async () => {
+    if (selectedServices.length === 0 && selectedCategories.length === 0) return;
+
+    try {
+      setIsUpdating(true);
+      const serviceCount = selectedServices.length;
+      const categoryCount = selectedCategories.length;
+      
+      showToast(
+        `Deleting ${serviceCount} service${serviceCount !== 1 ? 's' : ''} and ${categoryCount} categor${categoryCount !== 1 ? 'ies' : 'y'}...`,
+        'pending'
+      );
+
+      console.log('Deleting services:', selectedServices);
+      console.log('Deleting categories:', selectedCategories);
+      console.log('Selected categories raw data:', selectedCategories);
+
+      // Extract category IDs from category names
+      const categoryIds = selectedCategories.map((categoryName) => {
+        console.log('Processing category name:', categoryName, 'Type:', typeof categoryName);
+        
+        // Check if the category name has the format "CategoryName (ID: 123)"
+        const idMatch = categoryName.match(/\(ID:\s*(\d+)\)/);
+        if (idMatch) {
+          const categoryId = idMatch[1];
+          console.log('Extracted category ID from (ID: X) format:', categoryId, 'from:', categoryName);
+          return categoryId;
+        }
+        
+        // Check if the category name has the format "CategoryName_ID"
+        const lastUnderscoreIndex = categoryName.lastIndexOf('_');
+        if (lastUnderscoreIndex === -1) {
+          console.error('Invalid category name format (no underscore or ID format):', categoryName);
+          return null;
+        }
+        
+        const categoryId = categoryName.substring(lastUnderscoreIndex + 1);
+        console.log('Extracting category ID from underscore format:', categoryName, '-> ID:', categoryId, 'Length:', categoryId.length);
+        
+        // Trim any whitespace and validate that the extracted ID is a number
+        const trimmedCategoryId = categoryId.trim();
+        console.log('Trimmed category ID:', trimmedCategoryId);
+        
+        if (!/^\d+$/.test(trimmedCategoryId)) {
+          console.error('Extracted category ID is not a valid number:', trimmedCategoryId, 'from:', categoryName);
+          console.error('Character codes:', Array.from(trimmedCategoryId).map(c => c.charCodeAt(0)));
+          return null;
+        }
+        
+        return trimmedCategoryId;
+      }).filter(id => id !== null); // Remove any null values
+
+      console.log('Category IDs to delete:', categoryIds);
+
+      // Check if we have valid category IDs to delete
+      if (selectedCategories.length > 0 && categoryIds.length === 0) {
+        showToast('Error: No valid category IDs found for deletion', 'error');
+        return;
+      }
+
+      // Delete services and categories in parallel
+      const deletePromises = [
+        ...selectedServices.map((serviceId) =>
+          axiosInstance.delete(`/api/admin/services/delete-services?id=${serviceId}`)
+        ),
+        ...categoryIds.map((categoryId) =>
+          axiosInstance.delete(`/api/admin/categories/delete-categories?id=${categoryId}`)
+        )
+      ];
+
+      const results = await Promise.all(deletePromises);
+      console.log('Delete results:', results);
+
+      // Check if all deletions were successful
+      const failedDeletions = results.filter((result) => !result.data.success);
+
+      if (failedDeletions.length > 0) {
+        showToast(
+          `Failed to delete ${failedDeletions.length} item${failedDeletions.length !== 1 ? 's' : ''}`,
+          'error'
+        );
+      } else {
+        showToast(
+          `Successfully deleted ${serviceCount} service${serviceCount !== 1 ? 's' : ''} and ${categoryCount} categor${categoryCount !== 1 ? 'ies' : 'y'}`,
+          'success'
+        );
+      }
+
+      // Clear selections and refresh data
+      setSelectedServices([]);
+      setSelectedCategories([]);
+      await refreshAllData();
+
+      handleCloseDeleteServicesAndCategoriesConfirmation();
+    } catch (error: any) {
+      console.error('Bulk delete error:', error);
+      await refreshAllData();
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Something went wrong';
+      showToast(`Error deleting services and categories: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -3467,6 +3840,10 @@ function AdminServicesPage() {
 
         case 'delete':
           handleOpenDeleteConfirmation();
+          return; // Exit early, don't clear selection or refresh data yet
+
+        case 'delete-services-categories':
+          handleOpenDeleteServicesAndCategoriesConfirmation();
           return; // Exit early, don't clear selection or refresh data yet
 
         case 'refill-enable':
@@ -4157,7 +4534,7 @@ function AdminServicesPage() {
                   {error}
                 </p>
               </div>
-            ) : !data || Object.keys(groupedServices).length === 0 || Object.values(groupedServices).every(services => services.length === 0) ? (
+            ) : !data || (statusFilter !== 'all' && Object.keys(groupedServices).length === 0) || (statusFilter !== 'all' && Object.values(groupedServices).every(services => services.length === 0)) || (statusFilter === 'all' && Object.keys(groupedServices).length === 0) ? (
               <div className="p-12 text-center">
                 <FaGlobe
                   className="h-16 w-16 mx-auto mb-4"
@@ -4224,6 +4601,7 @@ function AdminServicesPage() {
                         Cancel Disable Selected Services
                       </option>
                       <option value="delete">Delete Selected Services</option>
+                      <option value="delete-services-categories">Delete Selected Services & Categories</option>
                     </select>
 
                     {/* NEW: Save Changes Button */}
@@ -4247,7 +4625,7 @@ function AdminServicesPage() {
                 )}
 
                 {/* Servicees Table View */}
-                <div className="lg:block overflow-x-auto">
+                <div className="lg:block">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
@@ -4258,6 +4636,11 @@ function AdminServicesPage() {
                           <input
                             type="checkbox"
                             onChange={handleSelectAll}
+                            checked={
+                              Object.values(groupedServices).flat().length > 0 &&
+                              selectedServices.length === Object.values(groupedServices).flat().length &&
+                              selectedCategories.length === Object.keys(groupedServices).length
+                            }
                             className="rounded border-gray-300 w-4 h-4"
                           />
                         </th>
@@ -4438,6 +4821,14 @@ function AdminServicesPage() {
                               <td colSpan={11} className="p-3">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
+                                    {/* Category Checkbox */}
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedCategories.includes(categoryName)}
+                                      onChange={() => handleCategoryCheckboxChange(categoryName)}
+                                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                      title={`Select ${categoryName} category`}
+                                    />
                                     <div
                                       className="cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
                                       title="Drag to reorder category"
@@ -4572,7 +4963,7 @@ function AdminServicesPage() {
                                         selectedServices.includes(service.id)
                                       )}
                                       onChange={() =>
-                                        handleSelectCategory(services)
+                                        handleSelectCategory(categoryName, services)
                                       }
                                       className="rounded border-gray-300 w-4 h-4"
                                       title="Select all services in this category"
@@ -5217,6 +5608,34 @@ function AdminServicesPage() {
                 onClose={handleCloseDeleteConfirmation}
                 onConfirm={deleteSelectedServices}
                 selectedCount={selectedServices.length}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Delete Services and Categories Confirmation Modal */}
+        {deleteServicesAndCategoriesModal && (
+          <div
+            className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
+              deleteServicesAndCategoriesModalClosing
+                ? 'modal-backdrop-exit'
+                : 'modal-backdrop-enter'
+            }`}
+            onClick={handleCloseDeleteServicesAndCategoriesConfirmation}
+          >
+            <div
+              className={`bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
+                deleteServicesAndCategoriesModalClosing
+                  ? 'modal-content-exit'
+                  : 'modal-content-enter'
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DeleteServicesAndCategoriesModal
+                onClose={handleCloseDeleteServicesAndCategoriesConfirmation}
+                onConfirm={deleteSelectedServicesAndCategories}
+                selectedServiceCount={selectedServices.length}
+                selectedCategoryCount={selectedCategories.length}
               />
             </div>
           </div>

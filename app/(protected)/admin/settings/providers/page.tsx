@@ -188,6 +188,7 @@ const APIProvidersPage = () => {
   // Delete confirmation popup state
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [providerToDelete, setProviderToDelete] = useState<Provider | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     customProviderName: '',
@@ -686,6 +687,23 @@ const APIProvidersPage = () => {
         });
         setShowEditForm(false);
         setEditingProvider(null);
+        
+        // Invalidate SWR cache for providers to ensure other pages get updated data
+        if (typeof window !== 'undefined' && window.localStorage) {
+          // Clear SWR cache for providers endpoint
+          const cacheKey = '/api/admin/providers';
+          const swrCache = JSON.parse(localStorage.getItem('swr-cache') || '{}');
+          if (swrCache[cacheKey]) {
+            delete swrCache[cacheKey];
+            localStorage.setItem('swr-cache', JSON.stringify(swrCache));
+          }
+        }
+        
+        // Also trigger a custom event that other pages can listen to
+        window.dispatchEvent(new CustomEvent('providerUpdated', { 
+          detail: { providerId: editingProvider.id, providerName: editFormData.name } 
+        }));
+        
         showToast('Provider updated successfully!', 'success');
       } else {
         showToast(result.error || 'Failed to update provider', 'error');
@@ -740,6 +758,7 @@ const APIProvidersPage = () => {
       return;
     }
 
+    setDeleteLoading(true);
     try {
       const response = await fetch(`/api/admin/providers?id=${providerId}&type=${deleteType}`, {
         method: 'DELETE'
@@ -772,6 +791,7 @@ const APIProvidersPage = () => {
       console.error('Error deleting provider:', error);
       showToast('Failed to delete provider', 'error');
     } finally {
+      setDeleteLoading(false);
       setShowDeletePopup(false);
       setProviderToDelete(null);
     }
@@ -824,7 +844,10 @@ const APIProvidersPage = () => {
         if (controller) {
           controller.abort();
         }
-      }, 60000); // 60 second timeout for all providers
+      }, 120000); // Increased to 120 seconds for bulk operations
+      
+      // Show progress toast
+      showToast('Starting sync for all providers (updating existing services only)...', 'info');
       
       const response = await fetch('/api/admin/providers/sync', {
         method: 'POST',
@@ -849,29 +872,36 @@ const APIProvidersPage = () => {
 
       if (result.success) {
         const totals = result.data.totals;
+        const providersCount = result.data.providersProcessed;
+        
         showToast(
-          `All providers synchronized! Updated: ${totals.updated}, Created: ${totals.created}, Price changes: ${totals.priceChanges}`,
+          `All ${providersCount} providers synchronized successfully! ` +
+          `Updated: ${totals.updated} existing services, ` +
+          `Price changes: ${totals.priceChanges}, Status changes: ${totals.statusChanges}`,
           'success'
         );
 
-        // Update last sync time
+        // Update last sync time for all providers
         setProviders(prev => prev.map(provider => ({
           ...provider,
           lastSync: new Date()
         })));
+        
+        // Refresh provider data to show updated names
+        await fetchProviders();
       } else {
-        showToast(`Sync failed: ${result.error}`, 'error');
+        showToast(`Bulk sync failed: ${result.error}`, 'error');
       }
     } catch (error) {
       console.error('Error syncing providers:', error);
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          showToast('Sync timeout: Operation took too long to complete', 'error');
+          showToast('Bulk sync timeout: Operation took too long to complete', 'error');
         } else {
-          showToast(`Sync failed: ${error.message}`, 'error');
+          showToast(`Bulk sync failed: ${error.message}`, 'error');
         }
       } else {
-        showToast('Failed to sync providers', 'error');
+        showToast('Failed to sync all providers', 'error');
       }
     } finally {
       // Ensure cleanup happens in all cases
@@ -954,25 +984,31 @@ const APIProvidersPage = () => {
         const providerResult = result.data.results[0];
         if (providerResult) {
           showToast(
-            `${providerResult.provider} synchronized! Updated: ${providerResult.updated}, Created: ${providerResult.created}`,
+            `${providerResult.provider} synchronized successfully! ` +
+            `Updated: ${providerResult.updated} existing services, ` +
+            `Price changes: ${providerResult.priceChanges || 0}`,
             'success'
           );
         } else {
           showToast('Provider synchronized successfully!', 'success');
         }
 
+        // Update provider last sync time
         setProviders(prev => prev.map(provider =>
           provider.id === providerId
             ? { ...provider, lastSync: new Date() }
             : provider
         ));
         
+        // Refresh provider data to show updated names
+        await fetchProviders();
+        
         // Fetch updated balance after sync
         setTimeout(() => {
           fetchProviderBalance(providerId);
         }, 1000);
       } else {
-        showToast(`Sync failed: ${result.error}`, 'error');
+        showToast(`Provider sync failed: ${result.error}`, 'error');
       }
     } catch (error) {
       console.error('Error syncing provider:', error);
@@ -1038,7 +1074,7 @@ const APIProvidersPage = () => {
             onClick={() => handleSyncProvider(provider.id)}
             disabled={syncingProvider === provider.id}
             className="btn btn-sm btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Sync Provider"
+            title="Sync Provider Data"
           >
             <FaSync className={`w-3 h-3 ${syncingProvider === provider.id ? 'animate-spin' : ''}`} />
           </button>
@@ -1983,7 +2019,7 @@ const APIProvidersPage = () => {
                   className="btn btn-secondary w-full justify-start disabled:opacity-50"
                 >
                   <FaSync className={`w-4 h-4 mr-2 ${syncingAll ? 'animate-spin' : ''}`} />
-                  Sync All Providers
+                  Sync All Provider Data
                 </button>
                 <button 
                   onClick={() => {
@@ -2219,6 +2255,7 @@ const APIProvidersPage = () => {
                   <div className="flex gap-2 justify-end pt-2">
                     <button
                       onClick={() => setShowDeletePopup(false)}
+                      disabled={deleteLoading}
                       className="btn btn-secondary px-6 py-2"
                     >
                       Cancel
@@ -2231,10 +2268,22 @@ const APIProvidersPage = () => {
                           : (selectedOption?.value as 'trash' | 'permanent' || 'trash');
                         handleDeleteProvider(providerToDelete.id, deleteType);
                       }}
-                      className="btn bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-6 py-2"
+                      disabled={deleteLoading}
+                      className={`btn ${
+                        deleteLoading 
+                          ? 'bg-red-400 cursor-not-allowed' 
+                          : 'bg-red-600 hover:bg-red-700'
+                      } text-white flex items-center gap-2 px-6 py-2`}
                     >
-                      <FaTrash className="h-4 w-4" />
-                      {providerToDelete.status === 'trash' ? 'Permanently Delete' : 'Confirm Delete'}
+                      {deleteLoading ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <FaTrash className="h-4 w-4" />
+                      )}
+                      {deleteLoading 
+                        ? 'Deleting...' 
+                        : (providerToDelete.status === 'trash' ? 'Permanently Delete' : 'Confirm Delete')
+                      }
                     </button>
                   </div>
                 </div>

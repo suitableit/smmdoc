@@ -5,7 +5,11 @@ export async function DELETE(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
-    if (!id) {
+    
+    console.log('Delete category request - ID parameter:', id);
+    
+    if (!id || id.trim() === '') {
+      console.log('Category ID is missing or empty');
       return NextResponse.json(
         {
           error: 'Category ID is required',
@@ -16,10 +20,26 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Parse and validate the ID
+    const categoryId = parseInt(id);
+    if (isNaN(categoryId)) {
+      console.log('Category ID is not a valid number:', id);
+      return NextResponse.json(
+        {
+          error: 'Category ID must be a valid number',
+          data: null,
+          success: false,
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log('Parsed category ID:', categoryId);
+
     // Get category before deletion for response
     const category = await db.category.findUnique({
       where: {
-        id: parseInt(id),
+        id: categoryId,
       },
       include: {
         user: {
@@ -32,6 +52,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!category) {
+      console.log('Category not found with ID:', categoryId);
       return NextResponse.json(
         {
           error: 'Category not found',
@@ -42,12 +63,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    console.log('Found category to delete:', category.category_name);
+
     // Delete the category
     await db.category.delete({
       where: {
-        id: parseInt(id),
+        id: categoryId,
       },
     });
+
+    console.log('Category deleted successfully:', category.category_name);
 
     return NextResponse.json(
       {

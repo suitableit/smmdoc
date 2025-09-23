@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     const search = searchParams.get('search') || '';
     const limit = parseInt(limitParam);
 
-    // If limit is high (>=500), return all services (for bulk modify)
+    // If limit is high (>=500), return all services (for bulk modify or "All" view)
     if (limit >= 500) {
       const whereClause = {
         ...(search && search.trim()
@@ -70,6 +70,7 @@ export async function GET(request: Request) {
           : {})
       };
 
+      // Get all services
       const services = await db.service.findMany({
         where: whereClause,
         orderBy: {
@@ -81,6 +82,18 @@ export async function GET(request: Request) {
         },
       });
 
+      // Get all categories (including empty ones) for "All" view
+      const allCategories = await db.category.findMany({
+        where: {
+          hideCategory: 'no', // Only show categories that are not hidden
+        },
+        orderBy: [
+          { id: 'asc' }, // Order by ID first (1, 2, 3...)
+          { position: 'asc' },
+          { createdAt: 'asc' },
+        ],
+      });
+
       return NextResponse.json(
         {
           data: services || [],
@@ -88,6 +101,8 @@ export async function GET(request: Request) {
           page: 1,
           limit: services.length,
           totalPages: 1,
+          totalCategories: allCategories.length,
+          allCategories: allCategories, // Include all categories (including empty ones)
           hasNext: false,
           hasPrev: false,
           success: true,

@@ -228,6 +228,7 @@ const ContactMessagesPage = () => {
   // Loading states
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Fallback mode state
   const [fallbackMode, setFallbackMode] = useState(false);
@@ -443,6 +444,7 @@ const ContactMessagesPage = () => {
 
   // Handle message deletion
   const handleDeleteMessage = async (messageId: string) => {
+    setDeleteLoading(true);
     try {
       const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
         method: 'DELETE',
@@ -464,6 +466,8 @@ const ContactMessagesPage = () => {
     } catch (error) {
       console.error('Error deleting message:', error);
       showToast('Error deleting message', 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -1075,6 +1079,7 @@ const ContactMessagesPage = () => {
                     setMessageToDelete(null);
                   }}
                   className="btn btn-secondary"
+                  disabled={deleteLoading}
                 >
                   Cancel
                 </button>
@@ -1082,9 +1087,17 @@ const ContactMessagesPage = () => {
                   onClick={() =>
                     messageToDelete && handleDeleteMessage(messageToDelete)
                   }
-                  className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm"
+                  className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={deleteLoading}
                 >
-                  Delete
+                  {deleteLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Deleting...
+                    </div>
+                  ) : (
+                    'Delete'
+                  )}
                 </button>
               </div>
             </div>

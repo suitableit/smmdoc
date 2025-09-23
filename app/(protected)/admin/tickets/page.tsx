@@ -104,6 +104,7 @@ const SupportTicketsPage = () => {
   const [ticketsLoading, setTicketsLoading] = useState(true);
   const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
   const [closingTicketId, setClosingTicketId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Bulk operations state
   const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
@@ -265,6 +266,7 @@ const SupportTicketsPage = () => {
 
   // Handle ticket deletion
   const handleDeleteTicket = async (ticketId: string) => {
+    setDeleteLoading(true);
     try {
       const response = await fetch(`/api/admin/tickets/${ticketId}`, {
         method: 'DELETE',
@@ -282,6 +284,8 @@ const SupportTicketsPage = () => {
     } catch (error) {
       console.error('Error deleting ticket:', error);
       showToast('Error deleting ticket', 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -1006,6 +1010,7 @@ const SupportTicketsPage = () => {
                     setDeleteDialogOpen(false);
                     setTicketToDelete(null);
                   }}
+                  disabled={deleteLoading}
                   className="btn btn-secondary"
                 >
                   Cancel
@@ -1014,9 +1019,17 @@ const SupportTicketsPage = () => {
                   onClick={() =>
                     ticketToDelete && handleDeleteTicket(ticketToDelete)
                   }
-                  className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm"
+                  disabled={deleteLoading}
+                  className={`px-4 py-2 text-sm ${
+                    deleteLoading 
+                      ? 'bg-red-400 cursor-not-allowed' 
+                      : 'bg-red-600 hover:bg-red-700'
+                  } text-white rounded-lg font-medium transition-all duration-200 shadow-sm flex items-center gap-2`}
                 >
-                  Delete
+                  {deleteLoading && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  {deleteLoading ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>

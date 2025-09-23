@@ -239,6 +239,7 @@ const PostCategoriesPage = () => {
 
   // Loading states (using the loading state from API fetch)
   const postCategoriesLoading = loading;
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -298,6 +299,7 @@ const PostCategoriesPage = () => {
 
   // Handle post category deletion
   const handleDeletePostCategory = async (postCategoryId: number) => {
+    setDeleteLoading(true);
     try {
       const response = await fetch(`/api/blogs/categories/${postCategoryId}`, {
         method: 'DELETE',
@@ -314,6 +316,7 @@ const PostCategoriesPage = () => {
       console.error('Error deleting post category:', error);
       showToast('Error deleting post category', 'error');
     } finally {
+      setDeleteLoading(false);
       setDeleteDialogOpen(false);
       setPostCategoryToDelete(null);
     }
@@ -724,6 +727,7 @@ const PostCategoriesPage = () => {
                     setDeleteDialogOpen(false);
                     setPostCategoryToDelete(null);
                   }}
+                  disabled={deleteLoading}
                   className="btn btn-secondary"
                 >
                   Cancel
@@ -733,9 +737,17 @@ const PostCategoriesPage = () => {
                     postCategoryToDelete &&
                     handleDeletePostCategory(postCategoryToDelete)
                   }
-                  className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm"
+                  disabled={deleteLoading}
+                  className={`px-4 py-2 text-sm ${
+                    deleteLoading 
+                      ? 'bg-red-400 cursor-not-allowed' 
+                      : 'bg-red-600 hover:bg-red-700'
+                  } text-white rounded-lg font-medium transition-all duration-200 shadow-sm flex items-center gap-2`}
                 >
-                  Delete
+                  {deleteLoading && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  {deleteLoading ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>
