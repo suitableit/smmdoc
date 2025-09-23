@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { CustomCodesInjector } from '@/components/CustomCodesInjector';
 import AnalyticsInjector from '@/components/analytics-injector';
 import { ThemeProvider } from '@/components/theme-provider';
+import OfflineDetector from '@/components/OfflineDetector';
 import { APP_DESCRIPTION, APP_URL } from '@/lib/constants';
 import { getAppName } from '@/lib/utils/general-settings';
 import type { Metadata } from 'next';
@@ -73,10 +74,12 @@ export default async function RootLayout({
               <AnalyticsInjector />
               <AppNameProvider initialAppName={appName}>
                 <CurrencyProvider serverCurrency={serverCurrency}>
-                  <div className="non-sidebar-content font-nunito text-black">
-                    {children}
-                    <UserSwitchWrapper />
-                  </div>
+                  <OfflineDetector>
+                    <div className="non-sidebar-content font-nunito text-black">
+                      {children}
+                      <UserSwitchWrapper />
+                    </div>
+                  </OfflineDetector>
                 </CurrencyProvider>
               </AppNameProvider>
             </ThemeProvider>
