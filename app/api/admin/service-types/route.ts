@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, description } = body;
+    const { name, providerId, providerName } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json(
@@ -105,7 +105,8 @@ export async function POST(req: NextRequest) {
     const serviceType = await db.servicetype.create({
       data: {
         name: name.trim(),
-        description: description?.trim() || null
+        providerId: providerId?.trim() || null,
+        providerName: providerName?.trim() || 'Self'
       }
     });
 

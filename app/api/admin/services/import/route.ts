@@ -1013,15 +1013,16 @@ export async function PUT(req: NextRequest) {
             });
 
             if (!serviceType) {
-              // Create new service type
+              // Create new service type with provider data
               serviceType = await db.servicetype.create({
                 data: {
                   name: service.type,
-                  description: `Auto-created from imported service: ${service.type}`,
+                  providerId: provider.id.toString(),
+                  providerName: provider.name,
                   status: 'active'
                 }
               });
-              console.log(`📝 Created new service type: ${service.type}`);
+              console.log(`📝 Created new service type: ${service.type} with provider: ${provider.name}`);
             }
             
             serviceTypeId = serviceType.id;

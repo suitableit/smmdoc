@@ -114,6 +114,7 @@ interface Provider {
   orders: number;
   importedServices: number;
   activeServices: number;
+  inactiveServices: number; // Add inactive services count
   currentBalance: number;
   successRate: number;
   avgResponseTime: number;
@@ -187,6 +188,7 @@ const APIProvidersPage = () => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [providerToDelete, setProviderToDelete] = useState<Provider | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [selectedDeleteOption, setSelectedDeleteOption] = useState<'trash' | 'permanent'>('trash');
 
   const [formData, setFormData] = useState({
     customProviderName: '',
@@ -265,9 +267,9 @@ const APIProvidersPage = () => {
   });
 
   // Fetch providers data
-  const fetchProviders = async () => {
+  const fetchProviders = async (filter: string = 'all') => {
     try {
-      const response = await fetch('/api/admin/providers');
+      const response = await fetch(`/api/admin/providers?filter=${filter}`);
       const result = await response.json();
 
       if (result.success) {
@@ -282,27 +284,31 @@ const APIProvidersPage = () => {
             name: p.label,
             apiUrl: p.apiUrl,
             apiKey: p.apiKey || '',
-            status: p.status,
+            status: p.deletedAt ? 'trash' : p.status, // Set status to 'trash' if deletedAt exists
             services: p.services || 0,
             orders: p.orders || 0,
             importedServices: p.importedServices || 0,
             activeServices: p.activeServices || 0,
+            inactiveServices: p.inactiveServices || 0, // Add inactive services count
             currentBalance: 0,
             successRate: 0,
             avgResponseTime: 0,
             createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
             lastSync: p.updatedAt ? new Date(p.updatedAt) : new Date(),
+            deletedAt: p.deletedAt || null,
             description: p.description
           }));
         setProviders(uiProviders);
         
-        // Test connections for all providers
-        testAllConnections();
-        
-        // Also fetch balances immediately for active providers
-        setTimeout(() => {
-          fetchAllProviderBalances();
-        }, 2000);
+        // Test connections for all providers (except trash)
+        if (filter !== 'trash') {
+          testAllConnections();
+          
+          // Also fetch balances immediately for active providers
+          setTimeout(() => {
+            fetchAllProviderBalances();
+          }, 2000);
+        }
         
         console.log('Available providers for dropdown:', result.data.providers);
       } else {
@@ -427,7 +433,7 @@ const APIProvidersPage = () => {
   // Initial loading
   useEffect(() => {
     const loadData = async () => {
-      await fetchProviders();
+      await fetchProviders('all');
       setIsPageLoading(false);
     };
 
@@ -448,7 +454,7 @@ const APIProvidersPage = () => {
     showToast('Refreshing providers data...', 'pending');
 
     try {
-      await fetchProviders();
+      await fetchProviders(statusFilter);
       showToast('Providers data refreshed successfully!', 'success');
     } catch (error) {
       showToast('Failed to refresh providers data', 'error');
@@ -516,7 +522,7 @@ const APIProvidersPage = () => {
 
       if (result.success) {
         // Refresh providers list
-        await fetchProviders();
+        await fetchProviders(statusFilter);
 
         setFormData({
           customProviderName: '',
@@ -738,12 +744,21 @@ const APIProvidersPage = () => {
       if (result.success) {
         // Update local state based on delete type
         if (deleteType === 'trash') {
-          // For trash, update the provider status to 'trash'
+          // For trash, update the provider status to 'trash' and set deletedAt
           setProviders(prev => prev.map(provider => 
             provider.id === providerId 
-              ? { ...provider, status: 'trash' as 'active' | 'inactive' | 'trash' }
+              ? { 
+                  ...provider, 
+                  status: 'trash' as 'active' | 'inactive' | 'trash',
+                  deletedAt: new Date().toISOString()
+                }
               : provider
           ));
+          
+          // If currently viewing trash filter, refresh the data to show the newly trashed item
+          if (statusFilter === 'trash') {
+            setTimeout(() => fetchProviders('trash'), 500);
+          }
         } else {
           // For permanent delete, remove from list
           setProviders(prev => prev.filter(provider => provider.id !== providerId));
@@ -768,27 +783,30 @@ const APIProvidersPage = () => {
 
   const openDeletePopup = (provider: Provider) => {
     setProviderToDelete(provider);
+    setSelectedDeleteOption('trash'); // Reset to default option
     setShowDeletePopup(true);
   };
 
   const handleRestoreProvider = async (provider: Provider) => {
     try {
-      const response = await fetch('/api/admin/providers/restore', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ providerId: provider.id })
+      const response = await fetch(`/api/admin/providers?id=${provider.id}&action=restore`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
       });
 
       const result = await response.json();
 
       if (result.success) {
-        // Update local state
+        // Update local state - remove from trash and set status to active
         setProviders(prevProviders =>
           prevProviders.map(p =>
-            p.id === provider.id ? { ...p, status: 'active' } : p
+            p.id === provider.id ? { ...p, status: 'active', deletedAt: null } : p
           )
         );
         showToast(result.message || 'Provider restored successfully!', 'success');
+        
+        // Refresh the providers list to get updated data
+        await fetchProviders(statusFilter);
       } else {
         showToast(result.error || 'Failed to restore provider', 'error');
       }
@@ -857,7 +875,7 @@ const APIProvidersPage = () => {
         })));
         
         // Refresh provider data to show updated names
-        await fetchProviders();
+        await fetchProviders(statusFilter);
       } else {
         showToast(`Bulk sync failed: ${result.error}`, 'error');
       }
@@ -970,7 +988,7 @@ const APIProvidersPage = () => {
         ));
         
         // Refresh provider data to show updated names
-        await fetchProviders();
+        await fetchProviders(statusFilter);
         
         // Fetch updated balance after sync
         setTimeout(() => {
@@ -1487,7 +1505,10 @@ const APIProvidersPage = () => {
             <div className="mb-6">
               <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={() => setStatusFilter('all')}
+                  onClick={() => {
+                    setStatusFilter('all');
+                    fetchProviders('all');
+                  }}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
@@ -1506,7 +1527,10 @@ const APIProvidersPage = () => {
                   </span>
                 </button>
                 <button
-                  onClick={() => setStatusFilter('active')}
+                  onClick={() => {
+                    setStatusFilter('active');
+                    fetchProviders('active');
+                  }}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
                     statusFilter === 'active'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
@@ -1525,7 +1549,10 @@ const APIProvidersPage = () => {
                   </span>
                 </button>
                 <button
-                  onClick={() => setStatusFilter('inactive')}
+                  onClick={() => {
+                    setStatusFilter('inactive');
+                    fetchProviders('inactive');
+                  }}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
                     statusFilter === 'inactive'
                       ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
@@ -1544,7 +1571,10 @@ const APIProvidersPage = () => {
                   </span>
                 </button>
                 <button
-                  onClick={() => setStatusFilter('trash')}
+                  onClick={() => {
+                    setStatusFilter('trash');
+                    fetchProviders('trash');
+                  }}
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
                     statusFilter === 'trash'
                       ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
@@ -1644,10 +1674,12 @@ const APIProvidersPage = () => {
                       {/* Services Column */}
                       <td className="p-3">
                         <div className="text-sm">
-                          <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.importedServices || provider.services} Total</div>
+                          <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                            {provider.importedServices || provider.services} Total
+                          </div>
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                             {provider.status === 'trash' 
-                              ? `${(provider.importedServices || provider.services) - provider.activeServices} Deactive`
+                              ? `${provider.inactiveServices || 0} Deactive`
                               : `${provider.activeServices} Active`
                             }
                           </div>
@@ -1846,8 +1878,15 @@ const APIProvidersPage = () => {
                   <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
                     <div>
                       <div className="text-gray-500 dark:text-gray-400">Services</div>
-                      <div className="font-medium text-gray-900 dark:text-gray-100">{provider.importedServices || provider.services} Total Imported</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">{provider.activeServices} Active Services</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                        {provider.importedServices || provider.services} Total
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {provider.status === 'trash' 
+                          ? `${provider.inactiveServices || 0} Deactive`
+                          : `${provider.activeServices} Active`
+                        }
+                      </div>
                     </div>
                     <div>
                       <div className="text-gray-500 dark:text-gray-400">Orders</div>
@@ -2086,7 +2125,8 @@ const APIProvidersPage = () => {
                             type="radio"
                             name="deleteOption"
                             value="trash"
-                            defaultChecked
+                            checked={selectedDeleteOption === 'trash'}
+                            onChange={(e) => setSelectedDeleteOption(e.target.value as 'trash' | 'permanent')}
                             className="mt-0.5"
                           />
                           <div>
@@ -2105,6 +2145,8 @@ const APIProvidersPage = () => {
                             type="radio"
                             name="deleteOption"
                             value="permanent"
+                            checked={selectedDeleteOption === 'permanent'}
+                            onChange={(e) => setSelectedDeleteOption(e.target.value as 'trash' | 'permanent')}
                             className="mt-0.5"
                           />
                           <div>
@@ -2145,10 +2187,9 @@ const APIProvidersPage = () => {
                     </button>
                     <button
                       onClick={() => {
-                        const selectedOption = document.querySelector('input[name="deleteOption"]:checked') as HTMLInputElement;
                         const deleteType = providerToDelete.status === 'trash' 
                           ? 'permanent' 
-                          : (selectedOption?.value as 'trash' | 'permanent' || 'trash');
+                          : selectedDeleteOption;
                         handleDeleteProvider(providerToDelete.id, deleteType);
                       }}
                       disabled={deleteLoading}
@@ -2158,14 +2199,21 @@ const APIProvidersPage = () => {
                           : 'bg-red-600 hover:bg-red-700'
                       } text-white flex items-center gap-2 px-6 py-2`}
                     >
-                      {deleteLoading ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <FaTrash className="h-4 w-4" />
-                      )}
+                      <FaTrash className="h-4 w-4" />
                       {deleteLoading 
-                        ? 'Deleting...' 
-                        : (providerToDelete.status === 'trash' ? 'Permanently Delete' : 'Confirm Delete')
+                        ? (() => {
+                            const deleteType = providerToDelete.status === 'trash' 
+                              ? 'permanent' 
+                              : selectedDeleteOption;
+                            return deleteType === 'trash' ? 'Updating...' : 'Deleting...';
+                          })()
+                        : (() => {
+                            if (providerToDelete.status === 'trash') {
+                              return 'Permanently Delete';
+                            } else {
+                              return selectedDeleteOption === 'trash' ? 'Move to Trash' : 'Permanently Delete';
+                            }
+                          })()
                       }
                     </button>
                   </div>

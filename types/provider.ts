@@ -3,7 +3,7 @@ export interface Provider {
   name: string;
   api_url: string;
   api_key: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'trash';
   services: number;
   orders: number;
   importedServices: number;
@@ -13,6 +13,7 @@ export interface Provider {
   avgResponseTime: number;
   createdAt: Date;
   lastSync: Date;
+  deletedAt?: string | null;
   description?: string;
   username?: string;
   password?: string;
