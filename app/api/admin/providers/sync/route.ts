@@ -209,6 +209,18 @@ export async function POST(req: NextRequest) {
                   updates.max_order = parseInt(providerService.max) || 10000;
                   hasChanges = true;
                 }
+
+                // Update cached provider name if it has changed
+                if (provider.name !== existingService.providerName) {
+                  updates.providerName = provider.name;
+                  hasChanges = true;
+                }
+
+                // Update provider ID if it's missing or different
+                if (provider.id !== existingService.providerId) {
+                  updates.providerId = provider.id;
+                  hasChanges = true;
+                }
               }
 
               if (hasChanges) {
@@ -219,41 +231,10 @@ export async function POST(req: NextRequest) {
                 syncStats.updated++;
               }
 
-            } else if (syncType === 'all' || syncType === 'new_services') {
-              // Create new service
-              const defaultCategory = await db.category.findFirst({
-                where: { category_name: 'Imported Services' }
-              }) || await db.category.create({
-                data: {
-                  category_name: 'Imported Services',
-                  status: 'active',
-                  userId: session.user.id
-                }
-              });
-
-              await db.service.create({
-                data: {
-                  name: providerService.name,
-                  description: `${providerService.description || providerService.name}`,
-                  rate: markupRate,
-                  rateUSD: rateUSD,
-                  min_order: parseInt(providerService.min) || 100,
-                  max_order: parseInt(providerService.max) || 10000,
-                  avg_time: '0-1 Hours',
-                  userId: session.user.id,
-                  categoryId: defaultCategory.id,
-                  status: 'active',
-                  perqty: 1000,
-                  updateText: JSON.stringify({
-                    provider: provider.name,
-                    providerId: provider.id,
-                    providerServiceId: providerServiceId,
-                    originalRate: providerRate,
-                    lastSynced: new Date().toISOString()
-                  })
-                }
-              });
-              syncStats.created++;
+            } else {
+              // Service doesn't exist - skip creation during sync
+              // Services should only be imported through the Import page
+              console.log(`Skipping service ${providerService.name} - not found in database. Use Import page to add new services.`);
             }
 
           } catch (serviceError) {

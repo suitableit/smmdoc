@@ -269,6 +269,7 @@ const PostTagsPage = () => {
 
   // Loading states (using the loading state from API fetch)
   // const [postTagsLoading, setPostTagsLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -328,6 +329,7 @@ const PostTagsPage = () => {
 
   // Handle post tag deletion
   const handleDeletePostTag = async (postTagId: number) => {
+    setDeleteLoading(true);
     try {
       const response = await fetch(`/api/blogs/tags/${postTagId}`, {
         method: 'DELETE',
@@ -345,6 +347,8 @@ const PostTagsPage = () => {
     } catch (error) {
       console.error('Error deleting post tag:', error);
       showToast('Error deleting post tag', 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -770,6 +774,7 @@ const PostTagsPage = () => {
                     setDeleteDialogOpen(false);
                     setPostTagToDelete(null);
                   }}
+                  disabled={deleteLoading}
                   className="btn btn-secondary"
                 >
                   Cancel
@@ -779,9 +784,17 @@ const PostTagsPage = () => {
                     postTagToDelete &&
                     handleDeletePostTag(postTagToDelete)
                   }
-                  className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm"
+                  disabled={deleteLoading}
+                  className={`px-4 py-2 text-sm ${
+                    deleteLoading 
+                      ? 'bg-red-400 cursor-not-allowed' 
+                      : 'bg-red-600 hover:bg-red-700'
+                  } text-white rounded-lg font-medium transition-all duration-200 shadow-sm flex items-center gap-2`}
                 >
-                  Delete
+                  {deleteLoading && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  {deleteLoading ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>

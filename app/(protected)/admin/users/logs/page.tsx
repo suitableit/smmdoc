@@ -94,6 +94,7 @@ const UserActivityLogsPage = () => {
 
   // Loading states
   const [logsLoading, setLogsLoading] = useState(true);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Fetch activity logs from API
   const fetchActivityLogs = async (page = 1, search = '', searchBy = 'all') => {
@@ -197,6 +198,7 @@ const UserActivityLogsPage = () => {
 
   // Handle log deletion
   const handleDeleteLog = async (logId: string) => {
+    setDeleteLoading(true);
     try {
       const response = await fetch(`/api/admin/activity-logs/${logId}`, {
         method: 'DELETE',
@@ -218,6 +220,8 @@ const UserActivityLogsPage = () => {
     } catch (error) {
       console.error('Error deleting activity log:', error);
       showToast('Error deleting activity log', 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -675,15 +679,28 @@ const UserActivityLogsPage = () => {
                     setDeleteDialogOpen(false);
                     setLogToDelete(null);
                   }}
+                  disabled={deleteLoading}
                   className="btn btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => logToDelete && handleDeleteLog(logToDelete)}
-                  className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm"
+                  disabled={deleteLoading}
+                  className={`px-4 py-2 text-sm rounded-lg font-medium transition-all duration-200 shadow-sm text-white ${
+                    deleteLoading 
+                      ? 'bg-red-400 cursor-not-allowed' 
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
                 >
-                  Delete
+                  {deleteLoading ? (
+                    <>
+                      <div className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
                 </button>
               </div>
             </div>

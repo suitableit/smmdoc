@@ -152,6 +152,7 @@ const BlogsPage = () => {
   // Loading states
   const [statsLoading, setStatsLoading] = useState(false);
   const [blogsLoading, setBlogsLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // New state for action modals
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -474,6 +475,7 @@ const BlogsPage = () => {
 
   // Handle blog deletion
   const handleDeleteBlog = async (blogId: number) => {
+    setDeleteLoading(true);
     try {
       const response = await fetch(`/api/admin/blogs/${blogId}`, {
         method: 'DELETE',
@@ -498,6 +500,8 @@ const BlogsPage = () => {
         error instanceof Error ? error.message : 'Error deleting blog',
         'error'
       );
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -1172,15 +1176,28 @@ const BlogsPage = () => {
                               blogTitle: '',
                             });
                           }}
+                          disabled={deleteLoading}
                           className="btn btn-secondary"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={() => handleDeleteBlog(deleteDialog.blogId)}
-                          className="btn bg-red-600 hover:bg-red-700 text-white"
+                          disabled={deleteLoading}
+                          className={`btn text-white ${
+                            deleteLoading 
+                              ? 'bg-red-400 cursor-not-allowed' 
+                              : 'bg-red-600 hover:bg-red-700'
+                          }`}
                         >
-                          Delete Blog
+                          {deleteLoading ? (
+                            <>
+                              <Spinner size="sm" className="mr-2" />
+                              Deleting...
+                            </>
+                          ) : (
+                            'Delete Blog'
+                          )}
                         </button>
                       </div>
                     </div>
