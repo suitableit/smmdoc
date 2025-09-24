@@ -58,7 +58,7 @@ export class ProviderOrderForwarder {
       const response = await fetch(orderRequest.url, {
         method: orderRequest.method,
         headers: orderRequest.headers,
-        body: orderRequest.body,
+        body: orderRequest.data,
       });
 
       if (!response.ok) {
@@ -103,7 +103,7 @@ export class ProviderOrderForwarder {
       const response = await fetch(statusRequest.url, {
         method: statusRequest.method,
         headers: statusRequest.headers,
-        body: statusRequest.body,
+        body: statusRequest.data,
       });
 
       if (!response.ok) {
@@ -144,7 +144,7 @@ export class ProviderOrderForwarder {
       const response = await fetch(servicesRequest.url, {
         method: servicesRequest.method,
         headers: servicesRequest.headers,
-        body: servicesRequest.body,
+        body: servicesRequest.data,
       });
 
       if (!response.ok) {
@@ -179,7 +179,7 @@ export class ProviderOrderForwarder {
       const response = await fetch(balanceRequest.url, {
         method: balanceRequest.method,
         headers: balanceRequest.headers,
-        body: balanceRequest.body,
+        body: balanceRequest.data,
       });
 
       if (!response.ok) {

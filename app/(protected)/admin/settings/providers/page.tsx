@@ -156,6 +156,13 @@ interface Provider {
 }
 
 const APIProvidersPage = () => {
+  console.log('🚀 APIProvidersPage component loaded');
+  
+  // Test if component is loading
+  if (typeof window !== 'undefined') {
+    console.log('🌐 Window object available, component is in browser');
+  }
+  
   const { appName } = useAppNameWithFallback();
   
   // Set document title using useEffect for client-side
@@ -269,7 +276,10 @@ const APIProvidersPage = () => {
   // Fetch providers data
   const fetchProviders = async (filter: string = 'all') => {
     try {
+      console.log('🔄 fetchProviders called with filter:', filter);
+      console.log('🌐 Making API call to:', `/api/admin/providers?filter=${filter}`);
       const response = await fetch(`/api/admin/providers?filter=${filter}`);
+      console.log('📡 API response status:', response.status);
       const result = await response.json();
 
       if (result.success) {
@@ -345,6 +355,8 @@ const APIProvidersPage = () => {
   const fetchAllProviderBalances = async () => {
     try {
       console.log('🔍 Fetching balances for all active providers...');
+      console.log('📋 Total providers in state:', providers.length);
+      console.log('📋 All providers:', providers.map(p => ({ id: p.id, name: p.name, status: p.status })));
       
       // Get active providers only
       const activeProviders = providers.filter(p => p.status === 'active');
@@ -433,10 +445,12 @@ const APIProvidersPage = () => {
   // Initial loading
   useEffect(() => {
     const loadData = async () => {
+      console.log('🔄 loadData called in useEffect');
       await fetchProviders('all');
       setIsPageLoading(false);
     };
 
+    console.log('🚀 useEffect triggered for initial loading');
     loadData();
   }, []);
 
@@ -450,6 +464,7 @@ const APIProvidersPage = () => {
   };
 
   const handleRefresh = async () => {
+    console.log('🔄 handleRefresh called with statusFilter:', statusFilter);
     setIsRefreshing(true);
     showToast('Refreshing providers data...', 'pending');
 
@@ -457,6 +472,7 @@ const APIProvidersPage = () => {
       await fetchProviders(statusFilter);
       showToast('Providers data refreshed successfully!', 'success');
     } catch (error) {
+      console.error('❌ Error in handleRefresh:', error);
       showToast('Failed to refresh providers data', 'error');
     } finally {
       setIsRefreshing(false);

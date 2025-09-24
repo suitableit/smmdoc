@@ -202,7 +202,7 @@ async function syncSingleOrder(order: any, provider: any) {
     const response = await axios({
       method: statusRequest.method,
       url: statusRequest.url,
-      data: statusRequest.body,
+      data: statusRequest.data,
       headers: statusRequest.headers,
       timeout: (provider.timeout_seconds || 30) * 1000
     });
