@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       const response = await axios({
         method: orderRequest.method,
         url: orderRequest.url,
-        data: orderRequest.body,
+        data: orderRequest.data,
         headers: orderRequest.headers,
         timeout: 30000, // 30 seconds timeout
       });

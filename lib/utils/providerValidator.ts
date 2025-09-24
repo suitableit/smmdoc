@@ -209,7 +209,7 @@ export async function testProviderConnection(providerId: number): Promise<{succe
       const response = await fetch(servicesRequest.url, {
         method: servicesRequest.method,
         headers: servicesRequest.headers,
-        body: servicesRequest.body,
+        body: servicesRequest.data,
         signal: AbortSignal.timeout(10000) // 10 second timeout
       });
 

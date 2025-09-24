@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider Toggle Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .provider {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .toggle-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .toggle-btn:hover {
+            background: #0056b3;
+        }
+        .status {
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .active { color: green; }
+        .inactive { color: red; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Provider Toggle Test</h1>
+    <div id="providers"></div>
+    <div id="logs" class="log"></div>
+
+    <script>
+        let providers = [];
+        let logs = [];
+
+        function log(message) {
+            logs.push(new Date().toLocaleTimeString() + ': ' + message);
+            document.getElementById('logs').textContent = logs.join('\n');
+            console.log(message);
+        }
+
+        async function fetchProviders() {
+            try {
+                log('Fetching providers...');
+                const response = await fetch('/api/admin/providers?filter=all');
+                const result = await response.json();
+                
+                if (result.success) {
+                    providers = result.data.providers.filter(p => !p.deletedAt);
+                    log(`Fetched ${providers.length} providers`);
+                    renderProviders();
+                } else {
+                    log('Error fetching providers: ' + result.error);
+                }
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+
+        async function toggleProvider(providerId) {
+            try {
+                const provider = providers.find(p => p.id === providerId);
+                const newStatus = provider.status === 'active' ? 'inactive' : 'active';
+                
+                log(`Toggling provider ${provider.label} from ${provider.status} to ${newStatus}`);
+                
+                const response = await fetch('/api/admin/providers', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: providerId,
+                        status: newStatus
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('✅ Success: ' + result.message);
+                    // Update local state
+                    provider.status = newStatus;
+                    renderProviders();
+                } else {
+                    log('❌ Error: ' + result.error);
+                }
+            } catch (error) {
+                log('❌ Exception: ' + error.message);
+            }
+        }
+
+        function renderProviders() {
+            const container = document.getElementById('providers');
+            container.innerHTML = providers.map(provider => `
+                <div class="provider">
+                    <h3>${provider.label} (ID: ${provider.id})</h3>
+                    <div class="status ${provider.status}">${provider.status.toUpperCase()}</div>
+                    <div>API URL: ${provider.apiUrl || 'Not set'}</div>
+                    <div>API Key: ${provider.apiKey ? 'Set' : 'Not set'}</div>
+                    <button class="toggle-btn" onclick="toggleProvider(${provider.id})">
+                        Toggle to ${provider.status === 'active' ? 'Inactive' : 'Active'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Load providers on page load
+        fetchProviders();
+    </script>
+</body>
+</html>
