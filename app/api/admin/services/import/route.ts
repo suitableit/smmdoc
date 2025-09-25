@@ -1048,6 +1048,9 @@ export async function PUT(req: NextRequest) {
             console.log(`📝 Created new category: ${categoryName}`);
           }
 
+          // Store original provider price (without profit margin)
+          const originalProviderPrice = service.rate || service.price || 0;
+          
           // Create service in database
           const newService = await db.service.create({
             data: {
@@ -1055,6 +1058,7 @@ export async function PUT(req: NextRequest) {
               description: service.desc || service.description || `${service.name} - Imported from ${provider.name}`,
               rate: priceInUSD,
               rateUSD: priceInUSD,
+              provider_price: originalProviderPrice, // Store original provider cost
               min_order: service.min || 100,
               max_order: service.max || 10000,
               avg_time: '0-1 Hours',
@@ -1071,7 +1075,7 @@ export async function PUT(req: NextRequest) {
                 provider: provider.name,
                 providerId: provider.id,
                 providerServiceId: service.id?.toString(),
-                originalRate: service.rate || service.price || 0,
+                originalRate: originalProviderPrice,
                 importedAt: new Date().toISOString(),
                 type: service.type,
                 mode: 'auto' // Also keep in updateText for reference
