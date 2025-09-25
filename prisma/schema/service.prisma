@@ -24,6 +24,7 @@ model Service {
   personalizedService Boolean?          @default(false)
   refillDisplay       Int?              @default(24)
   rateUSD             Float             @default(0)
+  provider_price      Float?            @default(0)
   providerId          Int?
   providerName        String?
   favoriteServices    FavoriteService[]
