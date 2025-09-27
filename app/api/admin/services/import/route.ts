@@ -994,17 +994,30 @@ export async function PUT(req: NextRequest) {
           }
 
           // Convert price to USD if needed
-          let priceInUSD = service.rate || service.price || 0;
-          const originalProviderPrice = service.providerPrice || service.rate || service.price || 0; // Use providerPrice from frontend first
+          // Use providerPrice (original price) as the base for calculation
+          let baseProviderPrice = service.providerPrice || service.rate || service.price || 0;
+          const originalProviderPrice = service.providerPrice || service.rate || service.price || 0;
+          
+          // If service.rate exists and providerPrice exists, use providerPrice as base
+          if (service.providerPrice && service.rate) {
+            baseProviderPrice = service.providerPrice;
+          }
+          
           if (service.currency && service.currency !== 'USD') {
             try {
-              priceInUSD = await convertToUSD(priceInUSD, service.currency);
-              console.log(`💱 Converted ${originalProviderPrice} ${service.currency} to ${priceInUSD} USD`);
+              baseProviderPrice = await convertToUSD(baseProviderPrice, service.currency);
+              console.log(`💱 Converted ${originalProviderPrice} ${service.currency} to ${baseProviderPrice} USD`);
             } catch (conversionError) {
               console.warn(`⚠️ Currency conversion failed for ${service.name}:`, conversionError);
               // Use original price if conversion fails
             }
           }
+
+          // Calculate final rate using individual service percentage or fallback to profitMargin
+          // Always use the base provider price and apply percentage to avoid double calculation
+          const servicePercentage = service.percent || profitMargin || 0;
+          const finalRate = parseFloat((baseProviderPrice * (1 + servicePercentage / 100)).toFixed(2));
+          console.log(`💰 Calculating rate: Base Provider $${baseProviderPrice} + ${servicePercentage}% = $${finalRate}`);
 
           // Find or create service type based on service.type
           let serviceTypeId = null;
@@ -1054,7 +1067,7 @@ export async function PUT(req: NextRequest) {
             data: {
               name: service.name,
               description: service.desc || service.description || `${service.name} - Imported from ${provider.name}`,
-              rate: priceInUSD,
+              rate: finalRate,
               min_order: service.min || 100,
               max_order: service.max || 10000,
               avg_time: '0-1 Hours',

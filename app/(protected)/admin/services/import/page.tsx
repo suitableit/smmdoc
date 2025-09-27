@@ -242,6 +242,47 @@ const ImportServicesPage = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
+  // Duplicate services state
+  const [duplicateServices, setDuplicateServices] = useState<Set<string>>(new Set());
+
+  // Check for duplicate services
+  const checkDuplicateServices = async (servicesToCheck: Service[]) => {
+    try {
+      console.log('🔍 Checking duplicates for services:', servicesToCheck.length);
+      console.log('Selected provider:', selectedProvider);
+      console.log('Sample service IDs:', servicesToCheck.slice(0, 3).map(s => s.id));
+      
+      const response = await fetch('/api/admin/services/check-duplicates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          services: servicesToCheck,
+          providerId: selectedProvider 
+        })
+      });
+
+      console.log('API response status:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Duplicate check result:', result);
+        if (result.success && result.data && result.data.duplicateIds) {
+          console.log('Setting duplicate services:', result.data.duplicateIds);
+          setDuplicateServices(new Set(result.data.duplicateIds));
+        } else {
+          console.log('No duplicates found or invalid response structure');
+          setDuplicateServices(new Set());
+        }
+      } else {
+        console.error('API response not ok:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Error checking duplicates:', error);
+    }
+  };
+
   // Group services by category and filter by search term
   const groupedServices = useMemo(() => {
     const filteredServices = services.filter(
@@ -453,6 +494,9 @@ const ImportServicesPage = () => {
           setServices(servicesWithProfit);
           showToast(`Loaded ${servicesWithProfit.length} services from selected categories (${pagination.total || servicesWithProfit.length} total available)`, 'success');
         }
+
+        // Check for duplicates after setting services
+        await checkDuplicateServices(servicesWithProfit);
       } else {
         showToast(`Failed to load services: ${result.error}`, 'error');
         if (!append) {
@@ -1256,7 +1300,9 @@ const ImportServicesPage = () => {
                                         <tr
                                           key={`${category}-${service.id}-${index}`}
                                           className={`border-t hover:bg-gray-50 transition-colors duration-200 animate-in fade-in slide-in-from-left-1 ${
-                                            editedServices[service.id]
+                                            duplicateServices.has(service.id.toString())
+                                              ? 'bg-red-50/70'
+                                              : editedServices[service.id]
                                               ? 'bg-yellow-50'
                                               : ''
                                           }`}
@@ -1270,131 +1316,147 @@ const ImportServicesPage = () => {
                                             </div>
                                           </td>
                                           <td className="p-3">
-                                            <input
-                                              type="text"
-                                              value={
-                                                getCurrentValue(
-                                                  service,
-                                                  'name'
-                                                ) as string
-                                              }
-                                              onChange={(e) =>
-                                                handleFieldChange(
-                                                  service.id,
-                                                  'name',
-                                                  e.target.value
-                                                )
-                                              }
-                                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                                            />
-                                          </td>
-                                          <td className="p-3">
-                                            <div className="text-sm">
-                                              <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                                                {service.type || 'Default'}
-                                              </span>
-                                            </div>
-                                          </td>
-                                          <td className="p-3">
-                                            <div className="text-left">
-                                              <div
-                                                className="font-semibold text-sm"
-                                                style={{
-                                                  color: 'var(--text-primary)',
-                                                }}
-                                              >
-                                                ${getCurrentSalePrice(service)}
+                                            {duplicateServices.has(service.id.toString()) ? (
+                                              <div className="px-4 py-3 text-gray-900 dark:text-white font-medium">
+                                                {getCurrentValue(service, 'name') as string}
                                               </div>
-                                              <div className="text-xs text-gray-500">
-                                                Provider: $
-                                                {service.providerPrice ? parseFloat(service.providerPrice.toString()).toFixed(2) : '0.00'}
+                                            ) : (
+                                              <input
+                                                type="text"
+                                                value={
+                                                  getCurrentValue(
+                                                    service,
+                                                    'name'
+                                                  ) as string
+                                                }
+                                                onChange={(e) =>
+                                                  handleFieldChange(
+                                                    service.id,
+                                                    'name',
+                                                    e.target.value
+                                                  )
+                                                }
+                                                className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                                              />
+                                            )}
+                                          </td>
+                                          {duplicateServices.has(service.id.toString()) ? (
+                                            <td colSpan={6} className="p-3 text-center">
+                                              <div className="text-red-600 font-medium text-sm flex items-center justify-center gap-1">
+                                                Already imported!
                                               </div>
-                                            </div>
-                                          </td>
-                                          <td className="p-3">
-                                            <input
-                                              type="number"
-                                              value={
-                                                getCurrentValue(
-                                                  service,
-                                                  'percent'
-                                                ) as number
-                                              }
-                                              onChange={(e) =>
-                                                handleFieldChange(
-                                                  service.id,
-                                                  'percent',
-                                                  parseFloat(e.target.value) ||
-                                                    0
-                                                )
-                                              }
-                                              className="form-field w-20 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                              min="0"
-                                              max="1000"
-                                              step="0.1"
-                                            />
-                                          </td>
-                                          <td className="p-3">
-                                            <div className="text-center">
-                                              <button
-                                                className={`p-1 rounded transition-colors duration-200 ${
-                                                  service.refill
-                                                    ? 'text-green-600 hover:bg-green-50'
-                                                    : 'text-gray-400 hover:bg-gray-50'
-                                                }`}
-                                                title={
-                                                  service.refill ? 'Refill Enabled' : 'Refill Disabled'
-                                                }
-                                                onClick={() => toggleRefill(service)}
-                                              >
-                                                {service.refill ? (
-                                                  <FaToggleOn className="h-5 w-5" />
-                                                ) : (
-                                                  <FaToggleOff className="h-5 w-5" />
-                                                )}
-                                              </button>
-                                            </div>
-                                          </td>
-                                          <td className="p-3">
-                                            <div className="text-center">
-                                              <button
-                                                className={`p-1 rounded transition-colors duration-200 ${
-                                                  service.cancel
-                                                    ? 'text-green-600 hover:bg-green-50'
-                                                    : 'text-gray-400 hover:bg-gray-50'
-                                                }`}
-                                                title={
-                                                  service.cancel ? 'Cancel Enabled' : 'Cancel Disabled'
-                                                }
-                                                onClick={() => toggleCancel(service)}
-                                              >
-                                                {service.cancel ? (
-                                                  <FaToggleOn className="h-5 w-5" />
-                                                ) : (
-                                                  <FaToggleOff className="h-5 w-5" />
-                                                )}
-                                              </button>
-                                            </div>
-                                          </td>
-                                          <td className="p-3">
-                                            <textarea
-                                              value={
-                                                getCurrentValue(
-                                                  service,
-                                                  'description'
-                                                ) as string
-                                              }
-                                              onChange={(e) =>
-                                                handleFieldChange(
-                                                  service.id,
-                                                  'description',
-                                                  e.target.value
-                                                )
-                                              }
-                                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 resize-y"
-                                              rows={2}
-                                            />
-                                          </td>
+                                            </td>
+                                          ) : (
+                                            <>
+                                              <td className="p-3">
+                                                <div className="text-sm">
+                                                  <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                                                    {service.type || 'Default'}
+                                                  </span>
+                                                </div>
+                                              </td>
+                                              <td className="p-3">
+                                                <div className="text-left">
+                                                  <div
+                                                    className="font-semibold text-sm"
+                                                    style={{
+                                                      color: 'var(--text-primary)',
+                                                    }}
+                                                  >
+                                                    ${getCurrentSalePrice(service)}
+                                                  </div>
+                                                  <div className="text-xs text-gray-500">
+                                                    Provider: $
+                                                    {service.providerPrice ? parseFloat(service.providerPrice.toString()).toFixed(2) : '0.00'}
+                                                  </div>
+                                                </div>
+                                              </td>
+                                              <td className="p-3">
+                                                <input
+                                                  type="number"
+                                                  value={
+                                                    getCurrentValue(
+                                                      service,
+                                                      'percent'
+                                                    ) as number
+                                                  }
+                                                  onChange={(e) =>
+                                                    handleFieldChange(
+                                                      service.id,
+                                                      'percent',
+                                                      parseFloat(e.target.value) ||
+                                                        0
+                                                    )
+                                                  }
+                                                  className="form-field w-20 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                  min="0"
+                                                  max="1000"
+                                                  step="0.1"
+                                                />
+                                              </td>
+                                              <td className="p-3">
+                                                <div className="text-center">
+                                                  <button
+                                                    className={`p-1 rounded transition-colors duration-200 ${
+                                                      service.refill
+                                                        ? 'text-green-600 hover:bg-green-50'
+                                                        : 'text-gray-400 hover:bg-gray-50'
+                                                    }`}
+                                                    title={
+                                                      service.refill ? 'Refill Enabled' : 'Refill Disabled'
+                                                    }
+                                                    onClick={() => toggleRefill(service)}
+                                                  >
+                                                    {service.refill ? (
+                                                      <FaToggleOn className="h-5 w-5" />
+                                                    ) : (
+                                                      <FaToggleOff className="h-5 w-5" />
+                                                    )}
+                                                  </button>
+                                                </div>
+                                              </td>
+                                              <td className="p-3">
+                                                <div className="text-center">
+                                                  <button
+                                                    className={`p-1 rounded transition-colors duration-200 ${
+                                                      service.cancel
+                                                        ? 'text-green-600 hover:bg-green-50'
+                                                        : 'text-gray-400 hover:bg-gray-50'
+                                                    }`}
+                                                    title={
+                                                      service.cancel ? 'Cancel Enabled' : 'Cancel Disabled'
+                                                    }
+                                                    onClick={() => toggleCancel(service)}
+                                                  >
+                                                    {service.cancel ? (
+                                                      <FaToggleOn className="h-5 w-5" />
+                                                    ) : (
+                                                      <FaToggleOff className="h-5 w-5" />
+                                                    )}
+                                                  </button>
+                                                </div>
+                                              </td>
+                                              <td className="p-3">
+                                                <textarea
+                                                  value={
+                                                    getCurrentValue(
+                                                      service,
+                                                      'description'
+                                                    ) as string
+                                                  }
+                                                  onChange={(e) =>
+                                                    handleFieldChange(
+                                                      service.id,
+                                                      'description',
+                                                      e.target.value
+                                                    )
+                                                  }
+                                                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 resize-y"
+                                                  rows={2}
+                                                />
+                                              </td>
+                                            </>
+                                          )}
                                         </tr>
                                       ))
                                     ) : (
