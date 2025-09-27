@@ -7,7 +7,7 @@
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   FaCheck,
   FaDollarSign,
@@ -48,6 +48,9 @@ const Toast = ({
 interface Provider {
   id: string;
   name: string;
+  label: string;
+  value: string;
+  status: string;
 }
 
 interface PriceUpdateSettings {
@@ -74,6 +77,9 @@ const UpdatePricePage = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
+  // Ref to track if data has been loaded to prevent multiple API calls
+  const hasLoadedData = useRef(false);
+
   // Price update settings state
   const [priceSettings, setPriceSettings] = useState<PriceUpdateSettings>({
     serviceType: 'all-services',
@@ -88,7 +94,19 @@ const UpdatePricePage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Wait for user authentication before making API calls
+        if (!currentUser) {
+          console.log('User not authenticated yet, waiting...');
+          return;
+        }
+
+        // Prevent multiple API calls if data has already been loaded
+        if (hasLoadedData.current) {
+          return;
+        }
+
         setIsPageLoading(true);
+        hasLoadedData.current = true;
 
         // Load existing price settings
         const settingsResponse = await fetch('/api/admin/price-settings');
@@ -99,26 +117,33 @@ const UpdatePricePage = () => {
           }
         }
 
-        // Load providers list
-        const providersResponse = await fetch('/api/admin/providers');
+        // Load providers with imported services only
+        const providersResponse = await fetch('/api/admin/providers?filter=with-services');
         if (providersResponse.ok) {
           const providersData = await providersResponse.json();
-          if (providersData.providers) {
-            setProviders(providersData.providers);
+          console.log('Providers API Response:', providersData);
+          if (providersData.success && providersData.data && providersData.data.providers) {
+            console.log('Providers data:', providersData.data.providers);
+            setProviders(providersData.data.providers);
+          } else {
+            console.log('No providers found or invalid response structure');
           }
         } else {
+          console.log('Failed to fetch providers, status:', providersResponse.status);
           showToast('Failed to load providers', 'error');
         }
       } catch (error) {
         console.error('Error loading data:', error);
         showToast('Error loading data', 'error');
+        // Reset the flag on error so user can retry
+        hasLoadedData.current = false;
       } finally {
         setIsPageLoading(false);
       }
     };
 
     loadData();
-  }, []);
+  }, [currentUser]);
 
   // Show toast notification
   const showToast = (
@@ -141,7 +166,9 @@ const UpdatePricePage = () => {
 
       if (response.ok) {
         const result = await response.json();
-        showToast(`Prices updated successfully! ${result.updatedCount || 0} services updated.`, 'success');
+        console.log('API Response:', result); // Debug log
+        const updatedCount = result.data?.updatedCount || 0;
+        showToast(`Prices updated successfully!`, 'success');
       } else {
         const errorData = await response.json();
         showToast(errorData.message || 'Failed to update prices', 'error');
@@ -247,7 +274,7 @@ const UpdatePricePage = () => {
                       <option value="">Select Provider</option>
                       {providers.map((provider) => (
                         <option key={provider.id} value={provider.id}>
-                          {provider.name}
+                          {provider.label || provider.name || provider.value}
                         </option>
                       ))}
                     </select>
@@ -286,7 +313,7 @@ const UpdatePricePage = () => {
                   }
                   className="btn btn-primary w-full"
                 >
-                  {isLoading ? <ButtonLoader /> : 'Update Prices'}
+                  {isLoading ? 'Updating...' : 'Update Prices'}
                 </button>
 
                 {priceSettings.serviceType === 'provider-services' && !priceSettings.providerId && (
