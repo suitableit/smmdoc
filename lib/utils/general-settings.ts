@@ -317,15 +317,5 @@ export function clearAppNameCache(): void {
 // Export individual setting getters for convenience
 export {
   getAppName as getSiteTitle,
-  getAppNameSync as getSiteTitleSync,
-  getTagline,
-  getTaglineSync,
-  getMetaSiteTitle,
-  getMetaSiteTitleSync,
-  getGoogleTitle,
-  getGoogleTitleSync,
-  getThumbnail,
-  getThumbnailSync,
-  getFooterText,
-  getFooterTextSync
+  getAppNameSync as getSiteTitleSync
 };

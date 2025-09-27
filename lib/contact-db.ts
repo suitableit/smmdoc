@@ -216,9 +216,9 @@ class ContactDB {
           cc.name as categoryName,
           ru.username as repliedByUsername
         FROM contact_messages cm
-        LEFT JOIN user u ON cm.userId = u.id
+        LEFT JOIN users u ON cm.userId = u.id
         LEFT JOIN contact_categories cc ON cm.categoryId = cc.id
-        LEFT JOIN user ru ON cm.repliedBy = ru.id
+        LEFT JOIN users ru ON cm.repliedBy = ru.id
         ${whereClause}
         ORDER BY cm.createdAt DESC
         ${limitClause}
@@ -271,9 +271,9 @@ class ContactDB {
           cc.name as categoryName,
           ru.username as repliedByUsername
         FROM contact_messages cm
-        LEFT JOIN user u ON cm.userId = u.id
+        LEFT JOIN users u ON cm.userId = u.id
         LEFT JOIN contact_categories cc ON cm.categoryId = cc.id
-        LEFT JOIN user ru ON cm.repliedBy = ru.id
+        LEFT JOIN users ru ON cm.repliedBy = ru.id
         WHERE cm.id = ?
       `;
 
@@ -291,7 +291,7 @@ class ContactDB {
             u.username as admin_username,
             u.name as admin_name
           FROM contact_notes cn
-          LEFT JOIN user u ON cn.userId = u.id
+          LEFT JOIN users u ON cn.userId = u.id
           WHERE cn.messageId = ?
           ORDER BY cn.createdAt DESC
         `;

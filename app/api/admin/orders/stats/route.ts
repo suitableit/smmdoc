@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
               COUNT(*) as orders,
               SUM(price) as revenue,
               COUNT(DISTINCT userId) as unique_users
-            FROM neworder
+            FROM new_orders
             WHERE userId = ${userId}
             GROUP BY DATE(createdAt)
             ORDER BY date DESC
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
               COUNT(*) as orders,
               SUM(price) as revenue,
               COUNT(DISTINCT userId) as unique_users
-            FROM neworder
+            FROM new_orders
             GROUP BY DATE(createdAt)
             ORDER BY date DESC
             LIMIT 30
@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
               COUNT(*) as orders,
               SUM(price) as revenue,
               COUNT(DISTINCT userId) as unique_users
-            FROM neworder
+            FROM new_orders
             WHERE createdAt >= ${new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000)}
             AND userId = ${userId}
             GROUP BY DATE(createdAt)
@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
               COUNT(*) as orders,
               SUM(price) as revenue,
               COUNT(DISTINCT userId) as unique_users
-            FROM neworder
+            FROM new_orders
             WHERE createdAt >= ${new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000)}
             GROUP BY DATE(createdAt)
             ORDER BY date DESC

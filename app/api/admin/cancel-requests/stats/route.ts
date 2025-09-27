@@ -23,14 +23,14 @@ export async function GET(req: NextRequest) {
 
     // Get total requests count using raw SQL since Prisma model might not be available
     const totalRequestsResult = await db.$queryRaw`
-      SELECT COUNT(*) as count FROM CancelRequest
+      SELECT COUNT(*) as count FROM cancel_requests
     ` as any[];
     const totalRequests = Number(totalRequestsResult[0]?.count || 0);
 
     // Get status breakdown using raw SQL
     const statusBreakdownResult = await db.$queryRaw`
       SELECT status, COUNT(*) as count
-      FROM CancelRequest
+      FROM cancel_requests
       GROUP BY status
     ` as any[];
 
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     // Get total refund amount (approved requests only) using raw SQL
     const totalRefundResult = await db.$queryRaw`
       SELECT SUM(refundAmount) as total
-      FROM CancelRequest
+      FROM cancel_requests
       WHERE status = 'approved' AND refundAmount IS NOT NULL
     ` as any[];
     const totalRefundAmount = Number(totalRefundResult[0]?.total || 0);
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
 
     const todayRequestsResult = await db.$queryRaw`
       SELECT COUNT(*) as count
-      FROM CancelRequest
+      FROM cancel_requests
       WHERE createdAt >= ${today} AND createdAt < ${tomorrow}
     ` as any[];
     const todayRequests = Number(todayRequestsResult[0]?.count || 0);
