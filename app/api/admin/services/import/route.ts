@@ -995,10 +995,11 @@ export async function PUT(req: NextRequest) {
 
           // Convert price to USD if needed
           let priceInUSD = service.rate || service.price || 0;
+          const originalProviderPrice = service.providerPrice || service.rate || service.price || 0; // Use providerPrice from frontend first
           if (service.currency && service.currency !== 'USD') {
             try {
               priceInUSD = await convertToUSD(priceInUSD, service.currency);
-              console.log(`💱 Converted ${priceInUSD} ${service.currency} to ${priceInUSD} USD`);
+              console.log(`💱 Converted ${originalProviderPrice} ${service.currency} to ${priceInUSD} USD`);
             } catch (conversionError) {
               console.warn(`⚠️ Currency conversion failed for ${service.name}:`, conversionError);
               // Use original price if conversion fails
@@ -1048,9 +1049,6 @@ export async function PUT(req: NextRequest) {
             console.log(`📝 Created new category: ${categoryName}`);
           }
 
-          // Store original provider price (without profit margin)
-          const originalProviderPrice = service.rate || service.price || 0;
-          
           // Create service in database
           const newService = await db.service.create({
             data: {
@@ -1058,7 +1056,6 @@ export async function PUT(req: NextRequest) {
               description: service.desc || service.description || `${service.name} - Imported from ${provider.name}`,
               rate: priceInUSD,
               rateUSD: priceInUSD,
-              provider_price: originalProviderPrice, // Store original provider cost
               min_order: service.min || 100,
               max_order: service.max || 10000,
               avg_time: '0-1 Hours',
@@ -1071,14 +1068,17 @@ export async function PUT(req: NextRequest) {
               providerId: provider.id, // Store provider ID in dedicated column
               providerName: provider.name, // Store provider name
               providerServiceId: service.id?.toString(), // Store provider service ID
+              providerPrice: originalProviderPrice, // Store actual original provider price from API
+              percentage: service.percent || profitMargin || 0, // Store percentage from step 3 or fallback to profitMargin
               updateText: JSON.stringify({
                 provider: provider.name,
                 providerId: provider.id,
                 providerServiceId: service.id?.toString(),
-                originalRate: originalProviderPrice,
+                originalRate: originalProviderPrice, // Store original provider price in updateText too
                 importedAt: new Date().toISOString(),
                 type: service.type,
-                mode: 'auto' // Also keep in updateText for reference
+                mode: 'auto', // Also keep in updateText for reference
+                percentage: service.percent || profitMargin || 0 // Also store in updateText for reference
               })
             }
           });

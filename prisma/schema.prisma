@@ -14,9 +14,9 @@ model Category {
   userId        Int
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
-  deletedAt     DateTime?        // Soft delete field
   hideCategory  String           @default("no")
   position      CategoryPosition @default(bottom)
+  deletedAt     DateTime?
   user          user             @relation(fields: [userId], references: [id], onDelete: Cascade)
   newOrders     NewOrder[]
   services      Service[]
@@ -41,7 +41,6 @@ model Service {
   status              String            @default("active")
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
-  deletedAt           DateTime?         // Soft delete field
   perqty              Int               @default(1000)
   serviceTypeId       Int?
   cancel              Boolean           @default(false)
@@ -52,10 +51,12 @@ model Service {
   personalizedService Boolean?          @default(false)
   refillDisplay       Int?              @default(24)
   rateUSD             Float             @default(0)
-  provider_price      Float?            @default(0)
   providerId          Int?
   providerName        String?
   providerServiceId   String?
+  deletedAt           DateTime?
+  providerPrice       Float?            @default(0)
+  percentage          Float?            @default(0) // Profit percentage for price calculation
   favoriteServices    FavoriteService[]
   newOrders           NewOrder[]
   category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -72,33 +73,33 @@ model Service {
 }
 
 model NewOrder {
-  id             Int             @id @default(autoincrement())
-  categoryId     Int
-  serviceId      Int
-  userId         Int
-  link           String
-  qty            Int
-  price          Float
-  avg_time       String
-  status         String          @default("pending")
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  remains        Int             @default(0)
-  startCount     Int             @default(0)
-  bdtPrice       Float
-  currency       String
-  usdPrice       Float
-  charge         Float           @default(0)
-  profit         Float           @default(0)
-  providerOrderId String?        // Provider থেকে আসা order ID
-  providerStatus String?         // Provider এর status
-  lastSyncAt     DateTime?       // শেষ sync এর সময়
-  cancelRequests CancelRequest[]
-  category       Category        @relation(fields: [categoryId], references: [id])
-  service        Service         @relation(fields: [serviceId], references: [id])
-  user           user            @relation(fields: [userId], references: [id])
-  refillRequests RefillRequest[]
+  id                Int                @id @default(autoincrement())
+  categoryId        Int
+  serviceId         Int
+  userId            Int
+  link              String
+  qty               Int
+  price             Float
+  avg_time          String
+  status            String             @default("pending")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  remains           Int                @default(0)
+  startCount        Int                @default(0)
+  bdtPrice          Float
+  currency          String
+  usdPrice          Float
+  charge            Float              @default(0)
+  profit            Float              @default(0)
+  lastSyncAt        DateTime?
+  providerOrderId   String?
+  providerStatus    String?
+  cancelRequests    CancelRequest[]
+  category          Category           @relation(fields: [categoryId], references: [id])
+  service           Service            @relation(fields: [serviceId], references: [id])
+  user              user               @relation(fields: [userId], references: [id])
   providerOrderLogs ProviderOrderLog[]
+  refillRequests    RefillRequest[]
 
   @@index([categoryId], map: "NewOrder_categoryId_fkey")
   @@index([serviceId], map: "NewOrder_serviceId_fkey")
@@ -315,7 +316,7 @@ model TicketMessage {
   isFromAdmin Boolean       @default(false)
   attachments String?       @db.Text
   createdAt   DateTime      @default(now())
-  updatedAt   DateTime  @updatedAt
+  updatedAt   DateTime      @updatedAt
   ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   user        user          @relation("TicketMessages", fields: [userId], references: [id], onDelete: Cascade)
 
@@ -366,18 +367,18 @@ model ContactCategory {
 }
 
 model ContactMessage {
-  id          Int       @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   userId      Int
   subject     String
-  message     String    @db.Text
-  status      String    @default("Unread")
+  message     String        @db.Text
+  status      String        @default("Unread")
   categoryId  Int
-  attachments String?   @db.Text
-  adminReply  String?   @db.Text
+  attachments String?       @db.Text
+  adminReply  String?       @db.Text
   repliedAt   DateTime?
   repliedBy   Int?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @default(now()) @updatedAt
   notes       ContactNote[]
 
   @@index([userId])
@@ -614,18 +615,18 @@ model service_update_logs {
 model servicetype {
   id           Int       @id @default(autoincrement())
   name         String    @unique(map: "ServiceType_name_key")
-  providerId   String?
-  providerName String?
   status       String    @default("active")
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  providerId   String?
+  providerName String?
   services     Service[]
 }
 
 model ticket_settings {
   id                  Int               @id @default(autoincrement())
-  maxPendingTickets   String            @default("3")
   ticketSystemEnabled Boolean           @default(true)
+  maxPendingTickets   String            @default("3")
   createdAt           DateTime          @default(now())
   updatedAt           DateTime
   ticket_subjects     ticket_subjects[]
@@ -673,8 +674,10 @@ model user {
   activitylog                                   activitylog[]
   addFund                                       addFund[]
   apiKeys                                       ApiKey[]
+  blogPosts                                     BlogPost[]
   cancelRequests                                CancelRequest[]
   Category                                      Category[]
+  contactNotes                                  ContactNote[]
   favoriteServices                              FavoriteService[]
   favouriteCat                                  FavrouteCat[]
   newOrders                                     NewOrder[]
@@ -686,8 +689,6 @@ model user {
   supportTickets                                SupportTicket[]
   ticketMessages                                TicketMessage[]        @relation("TicketMessages")
   ticketNotes                                   TicketNote[]           @relation("TicketNotes")
-  contactNotes                                  ContactNote[]
-  blogPosts                                     BlogPost[]
   twoFactorConfirmation                         TwoFactorConfirmation?
 }
 
@@ -818,75 +819,102 @@ model GeneralSettings {
 }
 
 model api_providers {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  api_key     String
-  status      String   @default("active")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime? // Soft delete field
-  api_url     String   @default("")
-  http_method String   @default("POST") // HTTP method for API requests (POST/GET)
-  is_custom   Boolean  @default(false)
-  endpoints   String?  @db.Text // JSON string for API endpoints configuration
-  headers     String?  @db.Text // JSON string for custom headers
-  
-  // API Specification Fields for SMM Panel Integration
-  api_key_param       String   @default("key") // Parameter name for API key (default: "key")
-  action_param        String   @default("action") // Parameter name for action (default: "action")
-  
-  // Service List API Configuration
-  services_action     String   @default("services") // Action value for getting services
-  services_endpoint   String?  // Custom endpoint for services (if different from main api_url)
-  
-  // Add Order API Configuration  
-  add_order_action    String   @default("add") // Action value for adding orders
-  add_order_endpoint  String?  // Custom endpoint for adding orders
-  service_id_param    String   @default("service") // Parameter name for service ID
-  link_param          String   @default("link") // Parameter name for target link
-  quantity_param      String   @default("quantity") // Parameter name for quantity
-  runs_param          String   @default("runs") // Parameter name for runs (optional)
-  interval_param      String   @default("interval") // Parameter name for interval (optional)
-  
-  // Order Status API Configuration
-  status_action       String   @default("status") // Action value for order status
-  status_endpoint     String?  // Custom endpoint for order status
-  order_id_param      String   @default("order") // Parameter name for single order ID
-  orders_param        String   @default("orders") // Parameter name for multiple order IDs
-  
-  // Refill API Configuration
-  refill_action       String   @default("refill") // Action value for refill
-  refill_endpoint     String?  // Custom endpoint for refill
-  refill_status_action String  @default("refill_status") // Action value for refill status
-  refill_id_param     String   @default("refill") // Parameter name for refill ID
-  refills_param       String   @default("refills") // Parameter name for multiple refill IDs
-  
-  // Cancel API Configuration
-  cancel_action       String   @default("cancel") // Action value for cancel
-  cancel_endpoint     String?  // Custom endpoint for cancel
-  
-  // Balance API Configuration
-  balance_action      String   @default("balance") // Action value for balance
-  balance_endpoint    String?  // Custom endpoint for balance
-  
-  // Response Field Mapping (JSON paths for parsing responses)
-  response_mapping    String?  @db.Text // JSON string for response field mapping
-  
-  // Additional API Settings
-  request_format      String   @default("form") // Request format: form, json, query
-  response_format     String   @default("json") // Expected response format: json, xml
-  rate_limit_per_min  Int?     // Rate limit per minute (optional)
-  timeout_seconds     Int      @default(30) // Request timeout in seconds
-  
-  // Balance Storage
-  current_balance     Float?   // Cached balance from last API call
-  balance_last_updated DateTime? // When balance was last fetched
-  
-  // Relations
-  providerOrderLogs ProviderOrderLog[]
+  id                   Int                @id @default(autoincrement())
+  name                 String             @unique
+  api_key              String
+  status               String             @default("active")
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  api_url              String             @default("")
+  is_custom            Boolean            @default(false)
+  endpoints            String?            @db.Text
+  headers              String?            @db.Text
+  http_method          String             @default("POST")
+  action_param         String             @default("action")
+  add_order_action     String             @default("add")
+  add_order_endpoint   String?
+  api_key_param        String             @default("key")
+  balance_action       String             @default("balance")
+  balance_endpoint     String?
+  cancel_action        String             @default("cancel")
+  cancel_endpoint      String?
+  interval_param       String             @default("interval")
+  link_param           String             @default("link")
+  order_id_param       String             @default("order")
+  orders_param         String             @default("orders")
+  quantity_param       String             @default("quantity")
+  rate_limit_per_min   Int?
+  refill_action        String             @default("refill")
+  refill_endpoint      String?
+  refill_id_param      String             @default("refill")
+  refill_status_action String             @default("refill_status")
+  refills_param        String             @default("refills")
+  request_format       String             @default("form")
+  response_format      String             @default("json")
+  response_mapping     String?            @db.Text
+  runs_param           String             @default("runs")
+  service_id_param     String             @default("service")
+  services_action      String             @default("services")
+  services_endpoint    String?
+  status_action        String             @default("status")
+  status_endpoint      String?
+  timeout_seconds      Int                @default(30)
+  balance_last_updated DateTime?
+  current_balance      Float?
+  deletedAt            DateTime?
+  providerOrderLogs    ProviderOrderLog[]
 
   @@index([name])
   @@index([status])
+}
+
+model ProviderOrderLog {
+  id               Int            @id @default(autoincrement())
+  orderId          Int
+  providerId       Int?
+  action           String
+  providerResponse String?        @db.Text
+  response         String?        @db.Text
+  status           String?
+  errorMessage     String?        @db.Text
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  order            NewOrder       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider         api_providers? @relation(fields: [providerId], references: [id])
+
+  @@index([orderId], map: "ProviderOrderLog_orderId_idx")
+  @@index([action], map: "ProviderOrderLog_action_idx")
+  @@index([createdAt], map: "ProviderOrderLog_createdAt_idx")
+  @@index([providerId], map: "provider_order_log_providerId_fkey")
+  @@map("provider_order_log")
+}
+
+model BlogPost {
+  id             Int       @id @default(autoincrement())
+  title          String
+  slug           String    @unique
+  excerpt        String?   @db.Text
+  content        String    @db.LongText
+  featuredImage  String?
+  status         String    @default("draft")
+  publishedAt    DateTime?
+  scheduledAt    DateTime?
+  views          Int       @default(0)
+  readingTime    Int?
+  seoTitle       String?
+  seoDescription String?   @db.Text
+  seoKeywords    String?   @db.Text
+  authorId       Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  author         user      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([authorId])
+  @@index([views])
+  @@map("blog_posts")
 }
 
 enum CategoryPosition {
@@ -905,57 +933,4 @@ enum addfund_transaction_type {
   withdrawal
   purchase
   refund
-}
-
-model ProviderOrderLog {
-  id               Int      @id @default(autoincrement())
-  orderId          Int      // NewOrder এর reference
-  providerId       Int?     // API Provider reference
-  action           String   // created, status_check, completed, failed
-  providerResponse String?  @db.Text // Provider এর response data
-  response         String?  @db.Text // Response data
-  status           String?  // Provider status
-  errorMessage     String?  @db.Text // Error message if any
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  // Relations
-  order            NewOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  provider         api_providers? @relation(fields: [providerId], references: [id], onDelete: SetNull)
-
-  @@index([orderId], map: "ProviderOrderLog_orderId_idx")
-  @@index([action], map: "ProviderOrderLog_action_idx")
-  @@index([createdAt], map: "ProviderOrderLog_createdAt_idx")
-  @@map("provider_order_log")
-}
-
-// Blog Models
-model BlogPost {
-  id              Int           @id @default(autoincrement())
-  title           String
-  slug            String        @unique
-  excerpt         String?       @db.Text
-  content         String        @db.LongText
-  featuredImage   String?
-  status          String        @default("draft") // draft, published, scheduled, archived
-  publishedAt     DateTime?
-  scheduledAt     DateTime?
-  views           Int           @default(0)
-  readingTime     Int?          // in minutes
-  seoTitle        String?
-  seoDescription  String?       @db.Text
-  seoKeywords     String?       @db.Text
-  authorId        Int
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  // Relations
-  author          user          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
-  @@index([slug])
-  @@index([status])
-  @@index([publishedAt])
-  @@index([authorId])
-  @@index([views])
-  @@map("blog_posts")
 }
