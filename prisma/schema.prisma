@@ -50,7 +50,6 @@ model Service {
   serviceSpeed        String?           @default("medium")
   personalizedService Boolean?          @default(false)
   refillDisplay       Int?              @default(24)
-  rateUSD             Float             @default(0)
   providerId          Int?
   providerName        String?
   providerServiceId   String?

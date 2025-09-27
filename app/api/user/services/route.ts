@@ -131,7 +131,6 @@ export async function GET(request: Request) {
           id: true,
           name: true,
           rate: true,
-          rateUSD: true,
           min_order: true,
           max_order: true,
           avg_time: true,
@@ -216,7 +215,6 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             rate: true,
-            rateUSD: true,
             min_order: true,
             max_order: true,
             avg_time: true,
@@ -297,7 +295,6 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             rate: true,
-            rateUSD: true,
             min_order: true,
             max_order: true,
             avg_time: true,
@@ -328,14 +325,13 @@ export async function GET(request: Request) {
 
     // Convert service prices to user's preferred currency
     const servicesWithConvertedPrices = services.map(service => {
-      // Assume service.rate is stored in USD (or use rateUSD if available)
-      const priceUSD = service.rateUSD || service.rate;
+      // Use service.rate as the base USD price
+      const priceUSD = service.rate;
       const convertedPrice = convertFromUSD(priceUSD, currency, currencies);
 
       return {
         ...service,
         rate: convertedPrice, // Converted price in user's currency
-        rateUSD: priceUSD, // Original USD price
         displayCurrency: currency, // Currency being displayed
       };
     });

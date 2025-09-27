@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     // Debug: Log the where clause
     console.log('Where clause for service query:', JSON.stringify(whereClause, null, 2));
 
-    // First, get all services that match the criteria to calculate new rateUSD
+    // First, get all services that match the criteria to calculate new rate
     const servicesToUpdate = await db.service.findMany({
       where: whereClause,
       select: {
@@ -107,24 +107,23 @@ export async function POST(req: NextRequest) {
     console.log(`Found ${servicesToUpdate.length} services matching criteria`);
     console.log('Sample services:', servicesToUpdate.slice(0, 3));
 
-    // Update each service individually to calculate rateUSD based on providerPrice and percentage
+    // Update each service individually to calculate new rate based on providerPrice and percentage
     let updateCount = 0;
     for (const service of servicesToUpdate) {
       const providerPrice = service.providerPrice || 0;
-      const newRateUSD = providerPrice + (providerPrice * profitPercentage / 100);
+      const newRate = providerPrice + (providerPrice * profitPercentage / 100);
       
       await db.service.update({
         where: { id: service.id },
         data: {
           percentage: profitPercentage,
-          rateUSD: newRateUSD,
-          rate: newRateUSD, // Also update the rate field to maintain consistency
+          rate: newRate,
           updatedAt: new Date()
         }
       });
       
       updateCount++;
-      console.log(`Updated service "${service.name}": providerPrice=${providerPrice}, percentage=${profitPercentage}%, newRateUSD=${newRateUSD}`);
+      console.log(`Updated service "${service.name}": providerPrice=${providerPrice}, percentage=${profitPercentage}%, newRate=${newRate}`);
     }
 
     const updateResult = { count: updateCount };

@@ -1055,7 +1055,6 @@ export async function PUT(req: NextRequest) {
               name: service.name,
               description: service.desc || service.description || `${service.name} - Imported from ${provider.name}`,
               rate: priceInUSD,
-              rateUSD: priceInUSD,
               min_order: service.min || 100,
               max_order: service.max || 10000,
               avg_time: '0-1 Hours',
