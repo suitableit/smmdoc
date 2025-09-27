@@ -17,8 +17,8 @@ model Category {
   hideCategory  String           @default("no")
   position      CategoryPosition @default(bottom)
   deletedAt     DateTime?
-  user          user             @relation(fields: [userId], references: [id], onDelete: Cascade)
   newOrders     NewOrder[]
+  user          user             @relation(fields: [userId], references: [id], onDelete: Cascade)
   services      Service[]
 
   @@index([position, createdAt], map: "Category_position_createdAt_idx")
@@ -54,8 +54,8 @@ model Service {
   providerName        String?
   providerServiceId   String?
   deletedAt           DateTime?
+  percentage          Float?            @default(0)
   providerPrice       Float?            @default(0)
-  percentage          Float?            @default(0) // Profit percentage for price calculation
   favoriteServices    FavoriteService[]
   newOrders           NewOrder[]
   category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -258,18 +258,6 @@ model TwoFactorConfirmation {
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("two_factor_confirmations")
-}
-
-model ApiKey {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  key       String   @unique(map: "ApiKey_key_key")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      user     @relation(fields: [userId], references: [id])
-
-  @@index([userId], map: "ApiKey_userId_fkey")
-  @@map("apikey")
 }
 
 model SupportTicket {
@@ -675,16 +663,15 @@ model user {
   accounts                                      Account?
   activitylog                                   activitylog[]
   addFund                                       addFund[]
-  apiKeys                                       ApiKey[]
   blogPosts                                     BlogPost[]
   cancelRequests                                CancelRequest[]
-  Category                                      Category[]
   contactNotes                                  ContactNote[]
-  favoriteServices                              FavoriteService[]
   favouriteCat                                  FavrouteCat[]
+  favoriteServices                              FavoriteService[]
   newOrders                                     NewOrder[]
   refillrequest_refillrequest_processedByTouser RefillRequest[]        @relation("refillrequest_processedByTouser")
   refillRequests                                RefillRequest[]
+  Category                                      Category[]
   services                                      Service[]
   sessions                                      Session[]
   repliedSupportTickets                         SupportTicket[]        @relation("RepliedByUser")
