@@ -116,15 +116,6 @@ export async function DELETE(
         where: { userId: userId }
       });
 
-      // Delete user API keys for security (optional cleanup)
-      try {
-        await db.apiKey.deleteMany({
-          where: { userId: userId }
-        });
-      } catch (error) {
-        console.warn('Could not delete API keys:', error);
-      }
-
       // Delete OAuth accounts (optional cleanup)
       try {
         await db.account.deleteMany({

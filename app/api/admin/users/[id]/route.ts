@@ -454,10 +454,6 @@ export async function DELETE(
           where: { userId: userId }
         });
         
-        await tx.apiKey.deleteMany({
-          where: { userId: userId }
-        });
-        
         await tx.account.deleteMany({
           where: { userId: userId }
         });
