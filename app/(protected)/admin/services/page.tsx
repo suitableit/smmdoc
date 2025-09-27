@@ -20,7 +20,6 @@ import {
   FaChevronUp,
   FaEdit,
   FaEllipsisH,
-  FaEllipsisV,
   FaExclamationTriangle,
   FaFileImport,
   FaGlobe,
@@ -105,96 +104,6 @@ const FormMessage = ({
     <div className={`text-xs text-red-500 mt-1 ${className}`}>{children}</div>
   ) : null;
 
-// ActionDropdown কম্পোনেন্ট - তিনটি ডট মেনু
-const ActionDropdown = memo(({ 
-  service, 
-  onEdit, 
-  onToggleSecret,
-  onDelete,
-  isUpdating 
-}: {
-  service: any;
-  onEdit: (serviceId: number) => void;
-  onToggleSecret: (serviceId: number) => void;
-  onDelete: (serviceId: number) => void;
-  isUpdating: boolean;
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  // বাইরে ক্লিক করলে ড্রপডাউন বন্ধ করার জন্য
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest(`[data-dropdown-id="${service.id}"]`)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('click', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [isOpen, service.id]);
-
-  const handleAction = (action: () => void) => {
-    action();
-    setIsOpen(false);
-  };
-
-  return (
-    <div className="relative" data-dropdown-id={service.id}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-gray-600 hover:bg-gray-100 rounded transition-colors duration-200"
-        title="Actions"
-        disabled={isUpdating}
-      >
-        <FaEllipsisV className="h-4 w-4" />
-      </button>
-      
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-          <div className="py-1">
-            <button
-              onClick={() => handleAction(() => onEdit(service.id))}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-              disabled={isUpdating}
-            >
-              <FaEdit className="h-3 w-3" />
-              Edit Service
-            </button>
-            
-            <button
-              onClick={() => handleAction(() => onToggleSecret(service.id))}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-              disabled={isUpdating}
-            >
-              <FaShieldAlt className="h-3 w-3" />
-              {service.is_secret ? 'Remove from Secret' : 'Make Secret'}
-            </button>
-            
-            <div className="border-t border-gray-100 my-1"></div>
-            
-            <button
-              onClick={() => handleAction(() => onDelete(service.id))}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-              disabled={isUpdating}
-            >
-              <FaTrash className="h-3 w-3" />
-              Delete Service
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-});
-
-ActionDropdown.displayName = 'ActionDropdown';
-
 // Optimized memoized components for better performance
 const MemoizedServiceRow = memo(
   ({
@@ -206,7 +115,6 @@ const MemoizedServiceRow = memo(
     onToggleRefill,
     onToggleCancel,
     onToggleSecret,
-    onDelete,
     isUpdating,
   }: {
     service: any;
@@ -217,7 +125,6 @@ const MemoizedServiceRow = memo(
     onToggleRefill: (serviceId: number) => void;
     onToggleCancel: (serviceId: number) => void;
     onToggleSecret: (serviceId: number) => void;
-    onDelete: (serviceId: number) => void;
     isUpdating: boolean;
   }) => {
     return (
@@ -288,25 +195,22 @@ const MemoizedServiceRow = memo(
           {service.max_order?.toLocaleString()}
         </td>
         <td className="p-3">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-            service.status === 'active'
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
-          }`}>
-            {service.status === 'active' ? 'Active' : 'Inactive'}
-          </span>
-        </td>
-        <td className="p-3">
           <button
             onClick={() => onToggleRefill(service.id)}
             disabled={isUpdating}
-            className="p-2 rounded transition-colors duration-200 disabled:opacity-50"
-            title={service.refill_enabled ? 'Disable Refill' : 'Enable Refill'}
+            className={`p-1 rounded transition-colors duration-200 ${
+              service.refill_enabled
+                ? 'text-green-600 hover:bg-green-50'
+                : 'text-gray-400 hover:bg-gray-50'
+            }`}
+            title={
+              service.refill_enabled ? 'Refill Enabled' : 'Refill Disabled'
+            }
           >
             {service.refill_enabled ? (
-              <FaToggleOn className="h-5 w-5 text-green-600" />
+              <FaToggleOn className="h-5 w-5" />
             ) : (
-              <FaToggleOff className="h-5 w-5 text-gray-400" />
+              <FaToggleOff className="h-5 w-5" />
             )}
           </button>
         </td>
@@ -314,24 +218,57 @@ const MemoizedServiceRow = memo(
           <button
             onClick={() => onToggleCancel(service.id)}
             disabled={isUpdating}
-            className="p-2 rounded transition-colors duration-200 disabled:opacity-50"
-            title={service.cancel_enabled ? 'Disable Cancel' : 'Enable Cancel'}
+            className={`p-1 rounded transition-colors duration-200 ${
+              service.cancel_enabled
+                ? 'text-green-600 hover:bg-green-50'
+                : 'text-gray-400 hover:bg-gray-50'
+            }`}
+            title={
+              service.cancel_enabled ? 'Cancel Enabled' : 'Cancel Disabled'
+            }
           >
             {service.cancel_enabled ? (
-              <FaToggleOn className="h-5 w-5 text-green-600" />
+              <FaToggleOn className="h-5 w-5" />
             ) : (
-              <FaToggleOff className="h-5 w-5 text-gray-400" />
+              <FaToggleOff className="h-5 w-5" />
             )}
           </button>
         </td>
         <td className="p-3">
-          <ActionDropdown
-            service={service}
-            onEdit={onEdit}
-            onToggleSecret={onToggleSecret}
-            onDelete={onDelete}
-            isUpdating={isUpdating}
-          />
+          <button
+            onClick={() => onToggleStatus(service.id)}
+            disabled={isUpdating}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+              service.status === 'active'
+                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                : 'bg-red-100 text-red-700 hover:bg-red-200'
+            }`}
+          >
+            {service.status === 'active' ? 'Active' : 'Inactive'}
+          </button>
+        </td>
+        <td className="p-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onEdit(service.id)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors duration-200"
+              title="Edit Service"
+            >
+              <FaEdit className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => onToggleSecret(service.id)}
+              disabled={isUpdating}
+              className={`p-2 rounded transition-colors duration-200 ${
+                service.is_secret
+                  ? 'text-yellow-600 hover:bg-yellow-50'
+                  : 'text-gray-400 hover:bg-gray-50'
+              }`}
+              title={service.is_secret ? 'Remove from Secret' : 'Make Secret'}
+            >
+              <FaShieldAlt className="h-4 w-4" />
+            </button>
+          </div>
         </td>
       </tr>
     );
@@ -2605,32 +2542,6 @@ function AdminServicesPage() {
   // NEW: Add state for selected bulk operation
   type BulkOperation = 'enable' | 'disable' | 'make-secret' | 'remove-secret' | 'delete-pricing' | 'refill-enable' | 'refill-disable' | 'cancel-enable' | 'cancel-disable' | 'delete' | 'delete-services-categories' | '';
   const [selectedBulkOperation, setSelectedBulkOperation] = useState<BulkOperation>('');
-
-  // ড্রপডাউন স্টেট - প্রতিটি সার্ভিসের জন্য আলাদা ড্রপডাউন স্টেট
-  const [dropdownStates, setDropdownStates] = useState<{[key: string]: boolean}>({});
-
-  // বাইরে ক্লিক করলে ড্রপডাউন বন্ধ করার জন্য useEffect
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest('[data-dropdown]')) {
-        setDropdownStates({});
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, []);
-
-  // ড্রপডাউন টগল ফাংশন
-  const toggleDropdown = (serviceId: string) => {
-    setDropdownStates(prev => ({
-      ...prev,
-      [serviceId]: !prev[serviceId]
-    }));
-  };
 
   // Show toast notification - defined early
   const showToast = useCallback(
@@ -5347,6 +5258,7 @@ function AdminServicesPage() {
                                             Cost:{' '}
                                             <PriceDisplay
                                               amount={
+                                                service?.providerPrice ||
                                                 service?.provider_price ||
                                                 service?.self_price ||
                                                 service?.cost_price ||
@@ -5452,98 +5364,60 @@ function AdminServicesPage() {
                                         </td>
                                       )}
                                       <td className="p-3">
-                                        <div className="relative" data-dropdown>
-                                          {/* তিনটি ডট মেনু */}
-                                          <button
-                                            onClick={() => {
-                                              const newState = { ...dropdownStates };
-                                              // সব ড্রপডাউন বন্ধ করুন
-                                              Object.keys(newState).forEach(key => {
-                                                newState[key] = false;
-                                              });
-                                              // বর্তমান ড্রপডাউন টগল করুন
-                                              newState[service.id] = !dropdownStates[service.id];
-                                              setDropdownStates(newState);
-                                            }}
-                                            className="btn btn-secondary p-2 hover:bg-gray-100"
-                                            title="Actions"
-                                          >
-                                            <FaEllipsisV className="h-3 w-3" />
-                                          </button>
+                                        <div className="flex items-center gap-1">
+                                          {/* Show only Delete button for Trash filter */}
+                                          {statusFilter === 'trash' ? (
+                                            <button
+                                              onClick={() => deleteService(service?.id)}
+                                              className="btn btn-secondary p-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200"
+                                              title="Delete Service"
+                                            >
+                                              <FaTrash className="h-3 w-3 text-red-600" />
+                                            </button>
+                                          ) : (
+                                            <>
+                                              {/* Edit button - only show for non-trash filters */}
+                                              <button
+                                                onClick={() =>
+                                                  handleEditService(service.id)
+                                                }
+                                                className="btn btn-secondary p-2"
+                                                title="Edit Service"
+                                              >
+                                                <FaEdit className="h-3 w-3" />
+                                              </button>
 
-                                          {/* ড্রপডাউন মেনু */}
-                                          {dropdownStates[service.id] && (
-                                            <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                                              <div className="py-1">
-                                                {/* Trash filter এর জন্য শুধু Delete অপশন */}
-                                                {statusFilter === 'trash' ? (
-                                                  <button
-                                                    onClick={() => {
-                                                      deleteService(service?.id);
-                                                      setDropdownStates(prev => ({ ...prev, [service.id]: false }));
-                                                    }}
-                                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                                  >
-                                                    <FaTrash className="h-3 w-3" />
-                                                    Delete Service
-                                                  </button>
-                                                ) : (
-                                                  <>
-                                                    {/* Edit Service */}
-                                                    <button
-                                                      onClick={() => {
-                                                        handleEditService(service.id);
-                                                        setDropdownStates(prev => ({ ...prev, [service.id]: false }));
-                                                      }}
-                                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                                                    >
-                                                      <FaEdit className="h-3 w-3" />
-                                                      Edit Service
-                                                    </button>
+                                              {/* Show restore button for trash services */}
+                                              {service.status === 'inactive' && service.provider && service.provider.trim() !== '' && (
+                                                <button
+                                                  onClick={() => restoreService(service)}
+                                                  className="btn btn-secondary p-2 text-green-600 hover:text-green-700"
+                                                  title="Restore Service"
+                                                >
+                                                  <FaUndo className="h-3 w-3" />
+                                                </button>
+                                              )}
 
-                                                    {/* Restore Service - শুধু inactive service এর জন্য */}
-                                                    {service.status === 'inactive' && service.provider && service.provider.trim() !== '' && (
-                                                      <button
-                                                        onClick={() => {
-                                                          restoreService(service);
-                                                          setDropdownStates(prev => ({ ...prev, [service.id]: false }));
-                                                        }}
-                                                        className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2"
-                                                      >
-                                                        <FaUndo className="h-3 w-3" />
-                                                        Restore Service
-                                                      </button>
-                                                    )}
+                                              {/* Show activate/deactivate button only if category is active */}
+                                              {activeCategoryToggles[categoryName] && (
+                                                <button
+                                                  onClick={() => toggleServiceStatus(service)}
+                                                  className="btn btn-secondary p-2"
+                                                  title={service.status === 'active' ? 'Deactivate Service' : 'Activate Service'}
+                                                >
+                                                  <FaSync className="h-3 w-3" />
+                                                </button>
+                                              )}
 
-                                                    {/* Toggle Status - শুধু যদি category active থাকে */}
-                                                    {activeCategoryToggles[categoryName] && (
-                                                      <button
-                                                        onClick={() => {
-                                                          toggleServiceStatus(service);
-                                                          setDropdownStates(prev => ({ ...prev, [service.id]: false }));
-                                                        }}
-                                                        className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
-                                                      >
-                                                        <FaSync className="h-3 w-3" />
-                                                        {service.status === 'active' ? 'Deactivate Service' : 'Activate Service'}
-                                                      </button>
-                                                    )}
-
-                                                    {/* Delete Service */}
-                                                    <button
-                                                      onClick={() => {
-                                                        deleteService(service?.id);
-                                                        setDropdownStates(prev => ({ ...prev, [service.id]: false }));
-                                                      }}
-                                                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                                    >
-                                                      <FaTrash className="h-3 w-3" />
-                                                      Delete Service
-                                                    </button>
-                                                  </>
-                                                )}
-                                              </div>
-                                            </div>
+                                              {/* Delete button */}
+                                              <button
+                                                onClick={() => deleteService(service?.id)}
+                                                className="btn btn-secondary p-2 text-red-600 hover:text-red-700"
+                                                title="Delete Service"
+                                              >
+                                                <FaTrash className="h-3 w-3" />
+                                              </button>
+                                            </>
                                           )}
                                         </div>
                                       </td>

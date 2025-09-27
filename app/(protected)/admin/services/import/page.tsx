@@ -1306,11 +1306,8 @@ const ImportServicesPage = () => {
                                                 ${getCurrentSalePrice(service)}
                                               </div>
                                               <div className="text-xs text-gray-500">
-                                                Real Provider: $${parseFloat(service.providerPrice || '0').toFixed(2)}
-                                              </div>
-                                              <div className="text-xs text-gray-500">
-                                                Provider (+10%): $
-                                                {service.providerPrice ? (parseFloat(service.providerPrice.toString()) * 1.1).toFixed(2) : '0.00'}
+                                                Provider: $
+                                                {service.providerPrice ? parseFloat(service.providerPrice.toString()).toFixed(2) : '0.00'}
                                               </div>
                                             </div>
                                           </td>

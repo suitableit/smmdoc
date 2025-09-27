@@ -28,7 +28,7 @@ export function PriceDisplay({
     // Fallback display
     return (
       <span className={className}>
-        {originalCurrency === 'USD' ? '$' : '৳'}{formatPrice(amount, 4)}
+        {originalCurrency === 'USD' ? '$' : '৳'}{formatPrice(amount, 2)}
       </span>
     );
   }
@@ -57,7 +57,7 @@ export function PriceDisplay({
 
   return (
     <span className={className}>
-      {displaySymbol}{formatPrice(displayAmount, 4)}
+      {displaySymbol}{formatPrice(displayAmount, 2)}
     </span>
   );
 }
