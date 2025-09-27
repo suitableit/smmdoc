@@ -230,7 +230,7 @@ export async function POST(req: NextRequest) {
               if (syncType === 'all' || syncType === 'prices') {
                 if (Math.abs(providerRate - existingProviderRate) > 0.01) {
                   // Only update provider pricing information in updateText
-                  // Do NOT update rate and rateUSD as these are website service pricing
+                  // Do NOT update rate as this is website service pricing
                   updates.updateText = JSON.stringify({
                     ...existingProviderInfo,
                     originalRate: providerRate,
