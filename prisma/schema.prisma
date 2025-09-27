@@ -23,7 +23,7 @@ model Category {
 
   @@index([position, createdAt], map: "Category_position_createdAt_idx")
   @@index([userId], map: "Category_userId_fkey")
-  @@map("category")
+  @@map("service_categories")
 }
 
 model Service {
@@ -68,7 +68,7 @@ model Service {
   @@index([serviceTypeId], map: "Service_serviceTypeId_idx")
   @@index([status], map: "Service_status_idx")
   @@index([userId], map: "Service_userId_idx")
-  @@map("service")
+  @@map("services")
 }
 
 model NewOrder {
@@ -103,7 +103,7 @@ model NewOrder {
   @@index([categoryId], map: "NewOrder_categoryId_fkey")
   @@index([serviceId], map: "NewOrder_serviceId_fkey")
   @@index([userId], map: "NewOrder_userId_fkey")
-  @@map("neworder")
+  @@map("new_orders")
 }
 
 model FavrouteCat {
@@ -116,7 +116,7 @@ model FavrouteCat {
   services  Service[]
 
   @@index([userId], map: "FavrouteCat_userId_fkey")
-  @@map("favroutecat")
+  @@map("favorite_categories")
 }
 
 model FavoriteService {
@@ -130,7 +130,7 @@ model FavoriteService {
 
   @@unique([userId, serviceId], map: "FavoriteService_userId_serviceId_key")
   @@index([serviceId], map: "FavoriteService_serviceId_fkey")
-  @@map("favoriteservice")
+  @@map("favorite_services")
 }
 
 model CancelRequest {
@@ -152,7 +152,7 @@ model CancelRequest {
   @@index([orderId], map: "CancelRequest_orderId_fkey")
   @@index([status], map: "CancelRequest_status_idx")
   @@index([userId], map: "CancelRequest_userId_fkey")
-  @@map("cancelrequest")
+  @@map("cancel_requests")
 }
 
 model RefillRequest {
@@ -175,7 +175,7 @@ model RefillRequest {
   @@index([processedBy], map: "RefillRequest_processedBy_fkey")
   @@index([status], map: "RefillRequest_status_idx")
   @@index([userId], map: "RefillRequest_userId_idx")
-  @@map("refillrequest")
+  @@map("refill_requests")
 }
 
 model Account {
@@ -211,7 +211,7 @@ model Session {
   user         user     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "Session_userId_idx")
-  @@map("session")
+  @@map("sessions")
 }
 
 model VerificationToken {
@@ -223,7 +223,7 @@ model VerificationToken {
   updatedAt DateTime @updatedAt
 
   @@unique([email, token], map: "VerificationToken_email_token_key")
-  @@map("verificationtoken")
+  @@map("verification_tokens")
 }
 
 model PasswordResetToken {
@@ -235,7 +235,7 @@ model PasswordResetToken {
   updatedAt DateTime @updatedAt
 
   @@unique([email, token], map: "PasswordResetToken_email_token_key")
-  @@map("passwordresettoken")
+  @@map("password_reset_tokens")
 }
 
 model TwoFactorToken {
@@ -247,7 +247,7 @@ model TwoFactorToken {
   updatedAt DateTime @updatedAt
 
   @@unique([email, token], map: "TwoFactorToken_email_token_key")
-  @@map("twofactortoken")
+  @@map("two_factor_tokens")
 }
 
 model TwoFactorConfirmation {
@@ -257,7 +257,7 @@ model TwoFactorConfirmation {
   updatedAt DateTime @updatedAt
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("twofactorconfirmation")
+  @@map("two_factor_confirmations")
 }
 
 model ApiKey {
@@ -417,6 +417,7 @@ model activitylog {
   @@index([action])
   @@index([createdAt])
   @@index([userId])
+  @@map("activity_logs")
 }
 
 model addFund {
@@ -446,7 +447,7 @@ model addFund {
   user             user                      @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "addfund_userId_fkey")
-  @@map("addfund")
+  @@map("add_funds")
 }
 
 model affiliate_commissions {
@@ -620,6 +621,8 @@ model servicetype {
   providerId   String?
   providerName String?
   services     Service[]
+
+  @@map("service_types")
 }
 
 model ticket_settings {
@@ -689,6 +692,8 @@ model user {
   ticketMessages                                TicketMessage[]        @relation("TicketMessages")
   ticketNotes                                   TicketNote[]           @relation("TicketNotes")
   twoFactorConfirmation                         TwoFactorConfirmation?
+
+  @@map("users")
 }
 
 model userSettings {
