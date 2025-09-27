@@ -107,9 +107,9 @@ const ServiceTypes = () => {
     }
   }, []);
 
-  // Fetch providers using SWR (same as services page)
+  // Fetch providers using SWR (same as services page) - only providers with imported services
   const { data: providersData, error: providersError } = useSWR(
-    '/api/admin/providers',
+    '/api/admin/providers?filter=with-services',
     async (url) => {
       try {
         const response = await fetch(url, {

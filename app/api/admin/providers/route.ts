@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const filter = searchParams.get('filter') || 'active'; // 'active', 'trash', 'all'
+    const filter = searchParams.get('filter') || 'active'; // 'active', 'trash', 'all', 'with-services'
 
     // Get configured providers from database
     let configuredProviders: any[] = [];
@@ -68,6 +68,12 @@ export async function GET(req: NextRequest) {
       } else if (filter === 'all') {
         // Include all providers regardless of deletedAt status
         whereClause = {};
+      } else if (filter === 'with-services') {
+        // For providers with imported services, we'll filter after getting service counts
+        whereClause = {
+          deletedAt: null,
+          status: 'active'
+        };
       }
       // For no filter, return everything
 
@@ -165,7 +171,7 @@ export async function GET(req: NextRequest) {
     const statsMap = new Map(providerStats.map(stat => [stat.providerId, stat]));
 
     // Map all providers as custom providers with dynamic stats
-    const allProviders = configuredProviders.map((cp: any) => {
+    let allProviders = configuredProviders.map((cp: any) => {
       const stats = statsMap.get(cp.id) || { totalServices: 0, activeServices: 0, inactiveServices: 0, orderCount: 0 };
       
       return {
@@ -192,6 +198,11 @@ export async function GET(req: NextRequest) {
         orders: stats.orderCount
       };
     });
+
+    // Filter providers with imported services if requested
+    if (filter === 'with-services') {
+      allProviders = allProviders.filter(provider => provider.importedServices > 0);
+    }
 
     return NextResponse.json({
       success: true,

@@ -2380,9 +2380,9 @@ function AdminServicesPage() {
   const { data: categoriesData, mutate: refreshCategories } =
     useGetCategories();
 
-  // Fetch active providers from API with error handling
+  // Fetch active providers from API with error handling - only providers with imported services
   const { data: providersData, mutate: refreshProviders, error: providersError } = useSWR(
-    '/api/admin/providers',
+    '/api/admin/providers?filter=with-services',
     async (url) => {
       try {
         console.log('Fetching providers data...');
