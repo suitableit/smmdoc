@@ -105,6 +105,114 @@ const FormMessage = ({
   ) : null;
 
 // Optimized memoized components for better performance
+
+// ServiceActionsDropdown component
+const ServiceActionsDropdown = memo(({
+  service,
+  statusFilter,
+  categoryName,
+  activeCategoryToggles,
+  onEdit,
+  onToggleStatus,
+  onRestore,
+  onDelete,
+}: {
+  service: any;
+  statusFilter: string;
+  categoryName: string;
+  activeCategoryToggles: Record<string, boolean>;
+  onEdit: () => void;
+  onToggleStatus: () => void;
+  onRestore: () => void;
+  onDelete: () => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleToggle = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const handleAction = (action: () => void) => {
+    action();
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={handleToggle}
+        className="btn btn-secondary p-2 hover:bg-gray-100"
+        title="Actions"
+      >
+        <FaEllipsisH className="h-3 w-3" />
+      </button>
+      
+      {isOpen && (
+        <>
+          {/* Backdrop to close dropdown */}
+          <div 
+            className="fixed inset-0 z-10" 
+            onClick={() => setIsOpen(false)}
+          />
+          
+          {/* Dropdown menu */}
+          <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+            <div className="py-1">
+              {statusFilter === 'trash' ? (
+                <button
+                  onClick={() => handleAction(onDelete)}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                >
+                  <FaTrash className="h-3 w-3" />
+                  Delete Permanently
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleAction(onEdit)}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <FaEdit className="h-3 w-3" />
+                    Edit Service
+                  </button>
+                  
+                  {service.status === 'inactive' && service.provider && service.provider.trim() !== '' && (
+                    <button
+                      onClick={() => handleAction(onRestore)}
+                      className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2"
+                    >
+                      <FaUndo className="h-3 w-3" />
+                      Restore Service
+                    </button>
+                  )}
+                  
+                  {activeCategoryToggles[categoryName] && (
+                    <button
+                      onClick={() => handleAction(onToggleStatus)}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <FaSync className="h-3 w-3" />
+                      {service.status === 'active' ? 'Deactivate' : 'Activate'} Service
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={() => handleAction(onDelete)}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <FaTrash className="h-3 w-3" />
+                    Delete Service
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+});
+
 const MemoizedServiceRow = memo(
   ({
     service,
@@ -5364,61 +5472,17 @@ function AdminServicesPage() {
                                         </td>
                                       )}
                                       <td className="p-3">
-                                        <div className="flex items-center gap-1">
-                                          {/* Show only Delete button for Trash filter */}
-                                          {statusFilter === 'trash' ? (
-                                            <button
-                                              onClick={() => deleteService(service?.id)}
-                                              className="btn btn-secondary p-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200"
-                                              title="Delete Service"
-                                            >
-                                              <FaTrash className="h-3 w-3 text-red-600" />
-                                            </button>
-                                          ) : (
-                                            <>
-                                              {/* Edit button - only show for non-trash filters */}
-                                              <button
-                                                onClick={() =>
-                                                  handleEditService(service.id)
-                                                }
-                                                className="btn btn-secondary p-2"
-                                                title="Edit Service"
-                                              >
-                                                <FaEdit className="h-3 w-3" />
-                                              </button>
-
-                                              {/* Show restore button for trash services */}
-                                              {service.status === 'inactive' && service.provider && service.provider.trim() !== '' && (
-                                                <button
-                                                  onClick={() => restoreService(service)}
-                                                  className="btn btn-secondary p-2 text-green-600 hover:text-green-700"
-                                                  title="Restore Service"
-                                                >
-                                                  <FaUndo className="h-3 w-3" />
-                                                </button>
-                                              )}
-
-                                              {/* Show activate/deactivate button only if category is active */}
-                                              {activeCategoryToggles[categoryName] && (
-                                                <button
-                                                  onClick={() => toggleServiceStatus(service)}
-                                                  className="btn btn-secondary p-2"
-                                                  title={service.status === 'active' ? 'Deactivate Service' : 'Activate Service'}
-                                                >
-                                                  <FaSync className="h-3 w-3" />
-                                                </button>
-                                              )}
-
-                                              {/* Delete button */}
-                                              <button
-                                                onClick={() => deleteService(service?.id)}
-                                                className="btn btn-secondary p-2 text-red-600 hover:text-red-700"
-                                                title="Delete Service"
-                                              >
-                                                <FaTrash className="h-3 w-3" />
-                                              </button>
-                                            </>
-                                          )}
+                                        <div className="relative">
+                                          <ServiceActionsDropdown
+                                            service={service}
+                                            statusFilter={statusFilter}
+                                            categoryName={categoryName}
+                                            activeCategoryToggles={activeCategoryToggles}
+                                            onEdit={() => handleEditService(service.id)}
+                                            onToggleStatus={() => toggleServiceStatus(service)}
+                                            onRestore={() => restoreService(service)}
+                                            onDelete={() => deleteService(service?.id)}
+                                          />
                                         </div>
                                       </td>
                                     </tr>
