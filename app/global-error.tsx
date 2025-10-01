@@ -32,7 +32,7 @@ export default function GlobalError({ error }: ErrorProps) {
             Occurred
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed transition-colors duration-200">
-            We're sorry, but something unexpected happened. Don't worry though -
+            We&apos;re sorry, but something unexpected happened. Don&apos;t worry though -
             you can try refreshing the page or go back to our homepage to
             continue exploring our services.
           </p>

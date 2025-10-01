@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
       try {
         await mkdir(uploadsDir, { recursive: true });
-      } catch (error) {
+      } catch {
         // Directory might already exist
       }
       
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
 
     // Create contact message
     const messageId = await (async () => {
-      const result = await contactDB.createContactMessage({
+      await contactDB.createContactMessage({
         userId: session.user.id,
         subject: subject.trim(),
         message: message.trim(),
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
           subject: subject.trim(),
           message: message.trim(),
           category: categories.find(cat => cat.id === parseInt(category))?.name || 'Unknown',
-          messageId: messageId,
+          messageId: messageId as number,
           attachments: attachmentsJson ? JSON.parse(attachmentsJson) : undefined
         });
         

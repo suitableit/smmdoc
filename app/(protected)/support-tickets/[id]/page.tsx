@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
     FaArrowLeft,
     FaCheckCircle,
@@ -57,8 +58,7 @@ const Toast = ({
   </div>
 );
 
-// Mock ButtonLoader component
-const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
+
 
 // Interfaces
 interface TicketMessage {
@@ -158,7 +158,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
   }, [ticketId]);
 
   // Real-time polling for message updates
-  const { hasNewMessages, isPolling, markMessagesAsRead } = useTicketPolling(
+  const { hasNewMessages, markMessagesAsRead } = useTicketPolling(
     ticketId,
     ticketDetails,
     setTicketDetails,
@@ -239,7 +239,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
     console.log('Starting reply submission...');
     
     try {
-      let attachmentPaths: string[] = [];
+      const attachmentPaths: string[] = [];
       
       // Upload files first if any
       if (selectedFiles.length > 0) {
@@ -441,7 +441,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
               <div className="text-center">
                 <FaExclamationTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Ticket Not Found</h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">The ticket you're looking for doesn't exist or you don't have permission to view it.</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">The ticket you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.</p>
                 <button 
                   onClick={() => window.history.back()}
                   className="btn btn-primary"
@@ -544,9 +544,11 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                     <div key={message.id} className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
                       {message.userImage && message.type === 'customer' ? (
-                        <img
+                        <Image
                           src={message.userImage}
                           alt={message.author}
+                          width={40}
+                          height={40}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -757,7 +759,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
 
                 <div className="space-y-4">
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>  
-                    If your issue has been resolved, you can close this ticket. Once closed, you won't be able to add more replies.
+                    If your issue has been resolved, you can close this ticket. Once closed, you won&apos;t be able to add more replies.
                   </p>
                   <button
                     onClick={handleCloseTicket}

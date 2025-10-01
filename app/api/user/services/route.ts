@@ -21,7 +21,7 @@ async function fetchCurrencyData() {
 }
 
 // Helper function to convert from USD to target currency
-function convertFromUSD(usdAmount: number, targetCurrency: string, currencies: any[]) {
+function convertFromUSD(usdAmount: number, targetCurrency: string, currencies: Array<{ code: string; rate: number }>) {
   if (targetCurrency === 'USD') {
     return usdAmount;
   }
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
     const { currencies } = await fetchCurrencyData();
 
     let services;
-    let paginatedCategories: any;
+    let paginatedCategories: Array<{ id: number; category_name: string; position?: number; createdAt: Date }>;
     let totalCategories;
 
     if (search) {
@@ -126,7 +126,7 @@ export async function GET(request: Request) {
             : []
           ),
           { createdAt: 'desc' as any },
-        ],
+        ] as any,
         select: {
           id: true,
           name: true,
@@ -164,7 +164,7 @@ export async function GET(request: Request) {
       
       if (showAllCategories) {
         // When showing all, get ALL categories (including empty ones)
-        [paginatedCategories, totalCategories] = await Promise.all([
+        [paginatedCategories, totalCategories] = (await Promise.all([
           db.category.findMany({
             where: {
               hideCategory: 'no', // Only show categories that are not hidden
@@ -173,14 +173,14 @@ export async function GET(request: Request) {
               { id: 'asc' as any }, // Order by ID first (1, 2, 3...)
               { position: 'asc' as any },
               { createdAt: 'asc' as any },
-            ],
+            ] as any,
           }),
           db.category.count({
             where: {
               hideCategory: 'no',
             },
           }),
-        ]);
+        ])) as any;
 
         // Get ALL services (not limited by category pagination)
         services = await db.service.findMany({
@@ -209,7 +209,7 @@ export async function GET(request: Request) {
             ].filter(Boolean),
           },
           orderBy: {
-            createdAt: 'desc' as any,
+            createdAt: 'desc',
           },
           select: {
             id: true,
@@ -240,7 +240,7 @@ export async function GET(request: Request) {
         });
       } else {
         // Normal pagination: First get paginated categories
-        [paginatedCategories, totalCategories] = await Promise.all([
+        [paginatedCategories, totalCategories] = (await Promise.all([
           db.category.findMany({
             where: {
               hideCategory: 'no', // Only show categories that are not hidden
@@ -251,17 +251,17 @@ export async function GET(request: Request) {
               { id: 'asc' as any }, // Order by ID first (1, 2, 3...)
               { position: 'asc' as any },
               { createdAt: 'asc' as any },
-            ],
+            ] as any,
           }),
           db.category.count({
             where: {
               hideCategory: 'no',
             },
           }),
-        ]);
+        ])) as any;
 
         // Get all services for the paginated categories
-        const categoryIds = paginatedCategories.map((cat: any) => cat.id);
+        const categoryIds = paginatedCategories.map((cat) => cat.id);
 
         services = await db.service.findMany({
           where: {
@@ -289,7 +289,7 @@ export async function GET(request: Request) {
             ].filter(Boolean),
           },
           orderBy: {
-            createdAt: 'desc' as any,
+            createdAt: 'desc',
           },
           select: {
             id: true,
@@ -327,7 +327,7 @@ export async function GET(request: Request) {
     const servicesWithConvertedPrices = services.map(service => {
       // Use service.rate as the base USD price
       const priceUSD = service.rate;
-      const convertedPrice = convertFromUSD(priceUSD, currency, currencies);
+      const convertedPrice = convertFromUSD(priceUSD, currency, currencies as any);
 
       return {
         ...service,

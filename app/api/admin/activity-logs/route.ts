@@ -28,7 +28,19 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: {
+      username?: { contains: string; mode: string };
+      details?: { contains: string; mode: string };
+      ipAddress?: { contains: string; mode: string };
+      action?: string;
+      userId?: number;
+      OR?: Array<{
+        username?: { contains: string; mode: string };
+        details?: { contains: string; mode: string };
+        ipAddress?: { contains: string; mode: string };
+        action?: { contains: string; mode: string };
+      }>;
+    } = {};
 
     // Search functionality
     if (search) {

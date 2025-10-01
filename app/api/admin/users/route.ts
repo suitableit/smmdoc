@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { requireAdmin } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
@@ -18,7 +17,7 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get('role') || 'user'; // Default to user role
 
     // Build where clause
-    const whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       // Exclude deleted users by default
       status: { not: 'deleted' }
     };
@@ -134,11 +133,11 @@ export async function GET(request: NextRequest) {
       error: null
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in admin users API:', error);
 
     // Handle authentication errors
-    if (error.message === 'Authentication required') {
+    if (error instanceof Error && error.message === 'Authentication required') {
       return NextResponse.json(
         {
           success: false,
@@ -149,7 +148,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (error.message === 'Admin access required') {
+    if (error instanceof Error && error.message === 'Admin access required') {
       return NextResponse.json(
         {
           success: false,
@@ -164,7 +163,7 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         data: null,
-        error: error.message || 'Failed to fetch users'
+        error: error instanceof Error ? error.message : 'Failed to fetch users'
       },
       { status: 500 }
     );

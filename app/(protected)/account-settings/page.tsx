@@ -1,6 +1,4 @@
 'use client';
-/* eslint-disable @typescript-eslint/no-unused-vars  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
@@ -8,6 +6,7 @@ import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { setUserDetails } from '@/lib/slice/userDetails';
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import {
     FaCamera,
     FaCheck,
@@ -31,6 +30,7 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
     </div>
   </div>
 );
+GradientSpinner.displayName = 'GradientSpinner';
 
 // Mock components and hooks for demonstration
 
@@ -53,8 +53,14 @@ const Toast = ({
     </button>
   </div>
 );
+Toast.displayName = 'Toast';
 
-const Switch = ({ checked, onCheckedChange, onClick, title }: any) => (
+const Switch = ({ checked, onCheckedChange, onClick, title }: {
+  checked: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+  onClick?: () => void;
+  title?: string;
+}) => (
   <button
     onClick={onClick}
     title={title}
@@ -63,8 +69,9 @@ const Switch = ({ checked, onCheckedChange, onClick, title }: any) => (
     <span className="switch-thumb" />
   </button>
 );
+Switch.displayName = 'Switch';
 
-const PasswordInput = React.forwardRef<HTMLInputElement, any>(
+const PasswordInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
 
@@ -91,6 +98,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, any>(
     );
   }
 );
+PasswordInput.displayName = 'PasswordInput';
 
 interface ApiKey {
   key: string;
@@ -105,7 +113,7 @@ const ProfilePage = () => {
 
   const dispatch = useDispatch();
   const currentUser = useCurrentUser();
-  const userDetails = useSelector((state: any) => state.userDetails);
+  const userDetails = useSelector((state: { userDetails: any }) => state.userDetails);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -1157,15 +1165,19 @@ const ProfilePage = () => {
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
                   {avatarPreview ? (
-                    <img
+                    <Image
                       src={avatarPreview}
                       alt="Profile Preview"
+                      width={120}
+                      height={120}
                       className="profile-picture opacity-75"
                     />
                   ) : user?.image ? (
-                    <img
+                    <Image
                       src={user.image}
                       alt="Profile"
+                      width={120}
+                      height={120}
                       className="profile-picture"
                     />
                   ) : (
@@ -1209,7 +1221,7 @@ const ProfilePage = () => {
                   <label className="form-label">Current Password</label>
                   <PasswordInput
                     value={formData.currentPass || ''}
-                    onChange={(e: any) => {
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       const value = e.target.value;
                       setFormData((prev) => ({
                         ...prev,
@@ -1233,7 +1245,7 @@ const ProfilePage = () => {
                   <label className="form-label">New Password</label>
                   <PasswordInput
                     value={formData.newPass || ''}
-                    onChange={(e: any) => {
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       const value = e.target.value;
                       setFormData((prev) => ({
                         ...prev,
@@ -1257,7 +1269,7 @@ const ProfilePage = () => {
                   <label className="form-label">Confirm New Password</label>
                   <PasswordInput
                     value={formData.confirmNewPass || ''}
-                    onChange={(e: any) => {
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                       const value = e.target.value;
                       setFormData((prev) => ({
                         ...prev,
@@ -1306,7 +1318,7 @@ const ProfilePage = () => {
                   </label>
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                     Email-based option to add an extra layer of protection to
-                    your account. When signing in you'll need to enter a code
+                    your account. When signing in you&apos;ll need to enter a code
                     that will be sent to your email address.
                   </p>
                 </div>

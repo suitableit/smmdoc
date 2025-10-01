@@ -475,7 +475,7 @@ export async function POST(request: NextRequest) {
 
     // Process AI tickets automatically
     let systemMessage = '';
-    let ticketStatus = 'Open';
+    const ticketStatus = 'Open';
     
     if (validatedData.ticketType === 'AI' && validatedData.aiSubcategory) {
       if (orderIds.length > 0) {
@@ -619,7 +619,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {
+    const where: Record<string, unknown> = {
       userId: parseInt(session.user.id),
     };
 

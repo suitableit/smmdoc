@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Build where clause based on service type
-    let whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       deletedAt: null, // Only active services
     };
 

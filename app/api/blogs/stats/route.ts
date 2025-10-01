@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get all blog posts for statistics
     const allBlogs = await prisma.blogPost.findMany({
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate status counts
-    const statusCounts = {
+    const statusCounts: { [key: string]: number } = {
       published: 0,
       draft: 0,
       scheduled: 0,

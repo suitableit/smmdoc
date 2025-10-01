@@ -44,7 +44,7 @@ export const getPaginationData = (total: number, page: number, limit: number) =>
 };
 
 // Memory-efficient service queries
-export const getServicesWithPagination = async (prisma: any, page: number = 1, categoryId?: number) => {
+export const getServicesWithPagination = async (prisma: { service: { findMany: (args: Record<string, unknown>) => Promise<unknown[]>; count: (args?: Record<string, unknown>) => Promise<number> } }, page: number = 1, categoryId?: number) => {
   const limit = DB_LIMITS.SERVICES_PER_PAGE;
   const { skip, take } = getOptimizedQueryOptions(page, limit);
   
@@ -90,7 +90,7 @@ export const getServicesWithPagination = async (prisma: any, page: number = 1, c
 };
 
 // Memory-efficient category queries
-export const getCategoriesWithPagination = async (prisma: any, page: number = 1) => {
+export const getCategoriesWithPagination = async (prisma: { category: { findMany: (args: Record<string, unknown>) => Promise<unknown[]>; count: (args?: Record<string, unknown>) => Promise<number> } }, page: number = 1) => {
   const limit = DB_LIMITS.CATEGORIES_PER_PAGE;
   const { skip, take } = getOptimizedQueryOptions(page, limit);
   
@@ -123,7 +123,7 @@ export const getCategoriesWithPagination = async (prisma: any, page: number = 1)
 };
 
 // Batch operations for better performance
-export const batchUpdateServices = async (prisma: any, serviceIds: number[], updateData: any) => {
+export const batchUpdateServices = async (prisma: { service: { updateMany: (args: Record<string, unknown>) => Promise<unknown> } }, serviceIds: number[], updateData: Record<string, unknown>) => {
   const batchSize = 100;
   const results = [];
   
@@ -155,12 +155,12 @@ export const getMemoryUsage = () => {
 };
 
 // Database connection optimization
-export const optimizePrismaConnection = (prisma: any) => {
+export const optimizePrismaConnection = (prisma: { $extends: (args: Record<string, unknown>) => unknown }) => {
   // Set connection pool settings
   return prisma.$extends({
     query: {
       $allModels: {
-        async $allOperations({ model, operation, args, query }: any) {
+        async $allOperations({ model, operation, args, query }: { model: string; operation: string; args: unknown; query: (args: unknown) => Promise<unknown> }) {
           const start = Date.now();
           const result = await query(args);
           const end = Date.now();

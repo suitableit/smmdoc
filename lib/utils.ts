@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -14,12 +13,15 @@ export function formatError(error: unknown): string {
   if (error instanceof Error) {
     if (error.name === 'ZodError' && 'errors' in error) {
       // Handle Zod validation errors
-      const fieldErrors = (error as any).errors.map((err: any) => err.message);
+      const fieldErrors = (error as { errors: { message: string }[] }).errors.map((err) => err.message);
       return fieldErrors.join('. ');
     }
 
     if (error.name === 'PrismaClientKnownRequestError') {
-      const prismaError = error as any;
+      const prismaError = error as unknown as {
+        code: string;
+        meta?: { target?: string | string[]; cause?: string };
+      };
 
       if (prismaError.code === 'P2002') {
         const field = extractFieldName(prismaError.meta?.target);
@@ -60,7 +62,7 @@ export function handleError(error: unknown): string {
 }
 
 // Helper function to clean field names (e.g., "User_email_key" → "Email")
-function extractFieldName(target: any): string {
+function extractFieldName(target: string | string[] | undefined): string {
   if (!target) return 'Field';
   if (Array.isArray(target)) target = target[0];
 

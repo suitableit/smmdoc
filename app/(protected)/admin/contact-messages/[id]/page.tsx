@@ -60,16 +60,7 @@ const Toast = ({
 
 const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
 
-const getFileIcon = (mimetype: string) => {
-  if (!mimetype) return <FaFileAlt className="h-4 w-4" />;
-  if (mimetype.startsWith('image/')) return <FaImage className="h-4 w-4" />;
-  if (mimetype.startsWith('video/')) return <FaVideo className="h-4 w-4" />;
-  if (mimetype.includes('pdf')) return <FaFilePdf className="h-4 w-4" />;
-  if (mimetype.includes('word')) return <FaFileWord className="h-4 w-4" />;
-  if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return <FaFileExcel className="h-4 w-4" />;
-  if (mimetype.includes('zip') || mimetype.includes('rar') || mimetype.includes('archive')) return <FaFileArchive className="h-4 w-4" />;
-  return <FaFileAlt className="h-4 w-4" />;
-};
+
 
 // Interfaces
 interface ContactMessage {
@@ -296,7 +287,7 @@ const ContactDetailsPage = () => {
               if (data.message.attachments) {
                 try {
                   const attachmentData = JSON.parse(data.message.attachments);
-                  singleReplyAttachments = attachmentData.map((attachment: any, index: number) => {
+                  singleReplyAttachments = attachmentData.map((attachment: { encryptedName?: string; encryptedPath?: string; filename?: string; fileUrl?: string; fileSize?: number; mimeType?: string; } | string, index: number) => {
                     let filename, fileUrl, fileSize = 0, mimeType = 'application/octet-stream';
                     
                     if (typeof attachment === 'string') {
@@ -364,7 +355,7 @@ const ContactDetailsPage = () => {
           lastUpdated: data.message.updatedAt,
           status: data.message.status || 'Read', // Use actual status from database
           messages: messages, // Now populated with actual conversation
-          notes: (data.message.notes || []).map((note: any) => ({
+          notes: (data.message.notes || []).map((note: { id: string; content: string; admin_username?: string; author?: string; created_at: string; is_private?: boolean; }) => ({
             id: note.id,
             content: note.content,
             author: note.admin_username || note.author || 'Unknown',
@@ -492,7 +483,7 @@ const ContactDetailsPage = () => {
         // Handle both single and multiple file responses
         if (uploadData.files) {
           // Multiple files
-          attachmentData = uploadData.files.map((file: any) => ({
+          attachmentData = uploadData.files.map((file: { originalName: string; fileUrl: string; fileSize?: number; mimeType?: string; }) => ({
             originalName: file.originalName,
             encryptedPath: file.fileUrl,
             fileSize: file.fileSize,
@@ -577,7 +568,7 @@ const ContactDetailsPage = () => {
       // Update contact details with the new notes
       setContactDetails(prev => prev ? ({
         ...prev,
-        notes: updatedMessage.notes.map((note: any) => ({
+        notes: updatedMessage.notes.map((note: { id: string; content: string; author: string; createdAt: string; isPrivate: boolean; }) => ({
           id: note.id,
           content: note.content,
           author: note.author,
@@ -871,7 +862,7 @@ const ContactDetailsPage = () => {
                       className="form-field w-full min-w-0 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none max-h-48 overflow-y-auto"
                     />
                     <small className="text-xs text-gray-500 mt-1 block">
-                      This reply will be sent to the customer and will update the message status to "Replied". You can only reply once.
+                      This reply will be sent to the customer and will update the message status to &quot;Replied&quot;. You can only reply once.
                     </small>
                   </div>
                   

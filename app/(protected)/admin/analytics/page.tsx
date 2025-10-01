@@ -22,11 +22,7 @@ const TrendingDownIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const ChevronDownIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </svg>
-);
+// ChevronDownIcon removed as it's not used
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -161,7 +157,7 @@ const CustomChart = ({ data, activeTab, maxValue }: {
 };
 
 // Platform Chart Component
-const PlatformChart = ({ data, totalOrders }: { data: AnalyticsData[]; totalOrders: number }) => {
+const PlatformChart = ({ data }: { data: AnalyticsData[] }) => {
   const platforms = [
     { name: 'Instagram', key: 'instagramOrders', color: 'bg-pink-500' },
     { name: 'Facebook', key: 'facebookOrders', color: 'bg-blue-600' },
@@ -553,7 +549,7 @@ export default function AnalyticsPage() {
 
             <div className="mb-4">
               <h4 className="text-md font-semibold text-gray-900 mb-4">Monthly Platform Distribution</h4>
-              <PlatformChart data={analyticsData} totalOrders={metrics.total} />
+              <PlatformChart data={analyticsData} />
             </div>
 
             {/* Legend */}

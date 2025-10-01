@@ -34,7 +34,6 @@ export function PriceDisplay({
   }
 
   let displayAmount = amount;
-  let displayCurrency: 'USD' | 'BDT' = originalCurrency;
   let displaySymbol = originalCurrencyData.symbol;
 
   // Convert if currencies are different
@@ -51,7 +50,7 @@ export function PriceDisplay({
       const usdAmount = amount / Number(originalCurrencyData.rate);
       displayAmount = usdAmount * Number(currentCurrencyData.rate);
     }
-    displayCurrency = currency as 'USD' | 'BDT';
+    // displayCurrency = currency as 'USD' | 'BDT';
     displaySymbol = currentCurrencyData.symbol;
   }
 

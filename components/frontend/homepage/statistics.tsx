@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaShoppingCart, FaServer, FaUsers, FaShareAlt } from 'react-icons/fa';
-import { CounterItem, counterData } from '@/data/frontend/homepage/statistics';
+import { counterData } from '@/data/frontend/homepage/statistics';
 
 // Icon mapping
 const iconMap = {

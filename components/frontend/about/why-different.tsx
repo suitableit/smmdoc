@@ -14,7 +14,6 @@ interface SectionProps {
 const Section: React.FC<SectionProps> = ({
   children,
   className = '',
-  bgColor = 'gray',
 }) => (
   <section
     className={`${className}`}
@@ -43,7 +42,7 @@ export default function WhyDifferent() {
             through unparalleled service quality, innovative solutions, and
             customer-centric approach. Our commitment to excellence is evident
             in every aspect of our service - from the user-friendly interface
-            to the lightning-fast delivery times. We don't just provide
+            to the lightning-fast delivery times. We don&apos;t just provide
             services; we build partnerships that foster long-term success for
             our clients.
           </p>

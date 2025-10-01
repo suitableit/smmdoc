@@ -40,7 +40,7 @@ export default function ExploreServicesPage() {
               value={stat.value}
               description={stat.description}
               icon={stat.icon}
-              iconColor={stat.iconColor as any}
+              iconColor={stat.iconColor as 'blue' | 'green' | 'purple' | 'red' | 'orange' | 'indigo'}
             />
           ))}
         </GridLayout>
@@ -56,7 +56,7 @@ export default function ExploreServicesPage() {
               title={category.title}
               value={category.value}
               icon={category.icon}
-              iconColor={category.iconColor as any}
+              iconColor={category.iconColor as 'blue' | 'green' | 'purple' | 'red' | 'orange' | 'indigo'}
               className="cursor-pointer hover:translate-y-[-5px] transition-transform"
             />
           ))}
@@ -84,7 +84,7 @@ export default function ExploreServicesPage() {
               price={service.price}
               badge={service.badge}
               icon={<i className="ri-shopping-cart-2-line"></i>}
-              bgColor={['purple', 'blue', 'green', 'red', 'orange', 'indigo'][Math.floor(Math.random() * 6)] as any}
+              bgColor={['purple', 'blue', 'green', 'red', 'orange', 'indigo'][Math.floor(Math.random() * 6)] as 'purple' | 'blue' | 'green' | 'red' | 'orange' | 'indigo'}
               href={`/new-order?service=${service.id}`}
             />
           ))}

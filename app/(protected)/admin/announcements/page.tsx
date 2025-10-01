@@ -8,7 +8,6 @@ import {
   FaEye,
   FaEyeSlash,
   FaSearch,
-  FaFilter,
   FaBullhorn,
   FaExclamationTriangle,
   FaInfoCircle,
@@ -18,10 +17,6 @@ import {
   FaUsers,
   FaTimes,
   FaSave,
-  FaChevronDown,
-  FaChevronUp,
-  FaSortAmountDown,
-  FaSortAmountUp,
 } from 'react-icons/fa';
 
 // Import APP_NAME constant
@@ -205,8 +200,8 @@ const AnnouncementsPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [audienceFilter, setAudienceFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'date' | 'views' | 'title'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy] = useState<'date' | 'views' | 'title'>('date');
+  const [sortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -238,7 +233,7 @@ const AnnouncementsPage = () => {
 
   // Filter and search logic
   useEffect(() => {
-    let filtered = announcements.filter(announcement => {
+    const filtered = announcements.filter(announcement => {
       const matchesSearch = announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            announcement.content.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || announcement.status === statusFilter;
@@ -332,7 +327,7 @@ const AnnouncementsPage = () => {
       setShowCreateModal(false);
       resetForm();
       showToast('Announcement created successfully!', 'success');
-    } catch (error) {
+    } catch {
       showToast('Error creating announcement', 'error');
     } finally {
       setIsLoading(false);
@@ -372,7 +367,7 @@ const AnnouncementsPage = () => {
       setEditingAnnouncement(null);
       resetForm();
       showToast('Announcement updated successfully!', 'success');
-    } catch (error) {
+    } catch {
       showToast('Error updating announcement', 'error');
     } finally {
       setIsLoading(false);
@@ -388,7 +383,7 @@ const AnnouncementsPage = () => {
       setAnnouncements(prev => prev.filter(ann => ann.id !== id));
       setShowDeleteConfirm(null);
       showToast('Announcement deleted successfully!', 'success');
-    } catch (error) {
+    } catch {
       showToast('Error deleting announcement', 'error');
     } finally {
       setIsLoading(false);
@@ -402,12 +397,12 @@ const AnnouncementsPage = () => {
     try {
       setAnnouncements(prev => prev.map(ann => 
         ann.id === id 
-          ? { ...ann, status: newStatus as any, updatedAt: new Date().toISOString() }
+          ? { ...ann, status: newStatus as Announcement['status'], updatedAt: new Date().toISOString() }
           : ann
       ));
       
       showToast(`Announcement ${newStatus === 'active' ? 'activated' : 'deactivated'}`, 'success');
-    } catch (error) {
+    } catch {
       showToast('Error updating announcement status', 'error');
     }
   };
@@ -755,7 +750,7 @@ const AnnouncementsPage = () => {
                     <label className="form-label mb-2">Type</label>
                     <select
                       value={formData.type}
-                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as AnnouncementFormData['type'] }))}
                       className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                     >
                       <option value="info">Info</option>
@@ -769,7 +764,7 @@ const AnnouncementsPage = () => {
                     <label className="form-label mb-2">Targeted Audience</label>
                     <select
                       value={formData.targetedAudience}
-                      onChange={(e) => setFormData(prev => ({ ...prev, targetedAudience: e.target.value as any }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, targetedAudience: e.target.value as AnnouncementFormData['targetedAudience'] }))}
                       className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                     >
                       <option value="all">All Users</option>

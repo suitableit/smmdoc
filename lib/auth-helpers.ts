@@ -19,7 +19,7 @@ export const getCurrentUser = async () => {
         const user = await getUserByEmail(session.user.email);
         if (user) {
           // Update session with correct numeric ID
-          (session.user as any).id = user.id;
+          (session.user as { id: number; email?: string; role?: string }).id = user.id;
           return session;
         }
       }
@@ -33,14 +33,14 @@ export const getCurrentUser = async () => {
       if (session.user.email) {
         const user = await getUserByEmail(session.user.email);
         if (user) {
-          (session.user as any).id = user.id;
+          (session.user as { id: number; email?: string; role?: string }).id = user.id;
           return session;
         }
       }
       return null;
     }
 
-    (session.user as any).id = numericId;
+    (session.user as { id: number; email?: string; role?: string }).id = numericId;
     return session;
   } catch (error) {
     console.error('Error getting current user:', error);

@@ -1,9 +1,30 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+
+// Task status/type definitions to allow broader status comparisons in statistics
+type TaskStatus = 'pending' | 'completed' | 'refunded';
+type TaskType = 'refill' | 'cancel';
+type Task = {
+  id: string;
+  originalOrderId: number;
+  originalOrder: any;
+  type: TaskType;
+  status: TaskStatus;
+  reason: string;
+  // Cancel task specific fields
+  refundType?: 'full' | 'partial';
+  customRefundAmount?: number;
+  // Refill task specific fields
+  refillType?: 'full' | 'remaining';
+  customQuantity?: number;
+  processedBy?: any;
+  createdAt: string;
+  updatedAt: string;
+};
 
 // GET /api/admin/orders/refill-cancel - Get all refill and cancel tasks
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
     
@@ -46,6 +67,7 @@ export async function GET(req: NextRequest) {
             id: true,
             name: true,
             rate: true,
+            status: true,
           }
         },
         category: {
@@ -62,17 +84,17 @@ export async function GET(req: NextRequest) {
     });
 
     // Create refill and cancel tasks based on order status
-    const tasks = [];
+    const tasks: Task[] = [];
 
     for (const order of orders) {
       // Create refill tasks for completed/partial orders
-      if (['completed', 'partial'].includes(order.status) && (order.service as any)?.status === 'active') {
+      if (['completed', 'partial'].includes(order.status) && order.service?.status === 'active') {
         tasks.push({
           id: `refill_${order.id}`,
           originalOrderId: order.id,
           originalOrder: order,
           type: 'refill' as const,
-          status: 'pending' as const,
+          status: 'pending' as TaskStatus,
           reason: order.status === 'partial' ? 'Partial delivery - refill remaining quantity' : 'Service delivery completed - refill available',
           refillType: order.status === 'partial' ? 'remaining' : 'full',
           customQuantity: order.status === 'partial' ? order.remains : order.qty,
@@ -101,9 +123,9 @@ export async function GET(req: NextRequest) {
           originalOrderId: order.id,
           originalOrder: order,
           type: 'cancel' as const,
-          status: 'pending' as const,
+          status: 'pending' as TaskStatus,
           reason: `Order cancellation requested - Status: ${order.status}`,
-          refundType,
+          refundType: ((order.status === 'processing' && progress > 0) || order.status === 'in_progress') ? ('partial' as const) : ('full' as const),
           customRefundAmount,
           processedBy: undefined,
           createdAt: new Date(order.createdAt).toISOString(),
@@ -119,11 +141,11 @@ export async function GET(req: NextRequest) {
     const stats = {
       totalCancellations: cancelTasks.length,
       pendingCancellations: cancelTasks.filter(t => t.status === 'pending').length,
-      completedCancellations: cancelTasks.filter(t => (t as any).status === 'completed').length,
+      completedCancellations: cancelTasks.filter(t => t.status === 'completed').length,
       refundProcessed: cancelTasks.filter(t => ['completed', 'refunded'].includes(t.status)).length,
       totalRefillRequests: refillTasks.length,
       pendingRefills: refillTasks.filter(t => t.status === 'pending').length,
-      completedRefills: refillTasks.filter(t => (t as any).status === 'completed').length,
+      completedRefills: refillTasks.filter(t => t.status === 'completed').length,
       totalRefundAmount: cancelTasks
         .filter(t => ['completed', 'refunded'].includes(t.status))
         .reduce((sum, t) => sum + (t.customRefundAmount || t.originalOrder.price), 0),
@@ -152,3 +174,4 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+

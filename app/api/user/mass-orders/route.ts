@@ -72,7 +72,30 @@ export async function POST(request: Request) {
     }
 
     // Validate all orders and calculate total cost
-    const validatedOrders: any[] = [];
+    const validatedOrders: Array<{
+      orderIndex: number;
+      categoryId: string;
+      serviceId: string;
+      userId: string;
+      link: string;
+      qty: number;
+      price: number;
+      charge: number;
+      profit: number;
+      usdPrice: number;
+      bdtPrice: number;
+      currency: string;
+      avg_time: string;
+      status: string;
+      remains: number;
+      startCount: number;
+      isMassOrder: boolean;
+      batchId: string;
+      service: {
+        name: string;
+        rate: number;
+      };
+    }> = [];
     let totalCost = 0;
     const validationErrors = [];
 
@@ -163,7 +186,7 @@ export async function POST(request: Request) {
           remains: quantity,
           startCount: 0,
           isMassOrder: true, // Mark as Mass Orders
-          batchId: batchId || `MO-${Date.now()}-${(session.user.id as any).toString().slice(-4)}`, // Mass Orders batch ID
+          batchId: batchId || `MO-${Date.now()}-${String(session.user.id).slice(-4)}`, // Mass Orders batch ID
           service: {
             name: service.name,
             rate: service.rate,
@@ -238,10 +261,10 @@ export async function POST(request: Request) {
 
       // Create each order
       for (const orderData of validatedOrders) {
-        const { orderIndex, service, ...createData } = orderData;
+        const { orderIndex, ...createData } = orderData;
 
         const order = await prisma.newOrder.create({
-          data: createData,
+          data: createData as any,
           include: {
             service: {
               select: {

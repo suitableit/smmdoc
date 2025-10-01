@@ -55,12 +55,12 @@ export async function POST(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error toggling service cancel:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error.message || 'Failed to toggle cancel status'
+        error: error instanceof Error ? error.message : 'Failed to toggle cancel status'
       },
       { status: 500 }
     );

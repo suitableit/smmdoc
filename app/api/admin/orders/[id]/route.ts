@@ -188,7 +188,14 @@ export async function PUT(
     }
     
     // Prepare update data
-    const updateData: any = {};
+    const updateData: {
+      status?: string;
+      remains?: number;
+      startCount?: number;
+      link?: string;
+      qty?: number;
+      updatedAt?: Date;
+    } = {};
     
     // Allow updating specific fields
     if (body.status !== undefined) {

@@ -69,8 +69,7 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
           return;
         }
 
-        console.log('FormData before register:', formData);
-        console.log('confirmPassword value:', formData.confirmPassword);
+
         
         const result = await register({
           username: formData.username,
@@ -94,7 +93,7 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
           setError('Something went wrong. Please try again.');
         }
       }
-    } catch (error) {
+    } catch {
       setError('Something went wrong. Please try again.');
     }
     

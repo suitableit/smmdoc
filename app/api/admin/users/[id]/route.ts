@@ -3,6 +3,7 @@ import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { requireAdmin } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 
 // GET /api/admin/users/[id] - Get specific user details
 export async function GET(
@@ -182,7 +183,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     if (username !== undefined) updateData.username = username;
     if (name !== undefined) updateData.name = name;
@@ -197,7 +198,6 @@ export async function PUT(
     
     // Handle password update if provided
     if (password && password.trim()) {
-      const bcrypt = require('bcryptjs');
       updateData.password = await bcrypt.hash(password, 12);
     }
 

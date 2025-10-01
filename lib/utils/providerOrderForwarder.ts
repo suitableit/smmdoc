@@ -1,6 +1,5 @@
 import { Provider } from '@/types/provider';
-import { Order } from '@/types/order';
-import { ApiRequestBuilder, ApiResponseParser } from '@/lib/provider-api-specification';
+import { ApiRequestBuilder, ApiResponseParser, DEFAULT_SMM_API_SPEC } from '@/lib/provider-api-specification';
 
 export interface ProviderOrderRequest {
   service: string;
@@ -45,7 +44,7 @@ export class ProviderOrderForwarder {
     orderData: ProviderOrderRequest
   ): Promise<ProviderOrderResponse> {
     try {
-      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      const requestBuilder = new ApiRequestBuilder(DEFAULT_SMM_API_SPEC, provider.api_url, provider.api_key);
       
       const orderRequest = requestBuilder.buildAddOrderRequest(
         orderData.service,
@@ -71,16 +70,19 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
-      const responseParser = new ApiResponseParser();
+      const responseParser = new ApiResponseParser(DEFAULT_SMM_API_SPEC);
       const parsedOrder = responseParser.parseAddOrderResponse(result);
+
+      // Extract additional fields from raw result if available
+      const rawResult = result as any;
 
       return {
         order: parsedOrder.orderId,
-        charge: parsedOrder.charge,
-        start_count: parsedOrder.startCount,
-        status: this.mapProviderStatus(parsedOrder.status || 'Pending'),
-        remains: parsedOrder.remains,
-        currency: parsedOrder.currency || 'USD'
+        charge: parseFloat(String(rawResult.charge || 0)),
+        start_count: parseInt(String(rawResult.start_count || 0)),
+        status: this.mapProviderStatus(String(rawResult.status || 'Pending')),
+        remains: parseInt(String(rawResult.remains || 0)),
+        currency: String(rawResult.currency || 'USD')
       };
     } catch (error) {
       console.error('Error forwarding order to provider:', error);
@@ -96,7 +98,7 @@ export class ProviderOrderForwarder {
     providerOrderId: string
   ): Promise<ProviderStatusResponse> {
     try {
-      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      const requestBuilder = new ApiRequestBuilder(DEFAULT_SMM_API_SPEC, provider.api_url, provider.api_key);
       
       const statusRequest = requestBuilder.buildOrderStatusRequest(providerOrderId);
 
@@ -116,7 +118,7 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
-      const responseParser = new ApiResponseParser();
+      const responseParser = new ApiResponseParser(DEFAULT_SMM_API_SPEC);
       const parsedStatus = responseParser.parseOrderStatusResponse(result);
 
       return {
@@ -135,9 +137,9 @@ export class ProviderOrderForwarder {
   /**
    * Get provider services list
    */
-  async getProviderServices(provider: Provider): Promise<any[]> {
+  async getProviderServices(provider: Provider): Promise<unknown[]> {
     try {
-      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      const requestBuilder = new ApiRequestBuilder(DEFAULT_SMM_API_SPEC, provider.api_url, provider.api_key);
       
       const servicesRequest = requestBuilder.buildServicesRequest();
 
@@ -157,7 +159,7 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
-      const responseParser = new ApiResponseParser();
+      const responseParser = new ApiResponseParser(DEFAULT_SMM_API_SPEC);
       const parsedServices = responseParser.parseServicesResponse(result);
 
       return parsedServices;
@@ -172,7 +174,7 @@ export class ProviderOrderForwarder {
    */
   async getProviderBalance(provider: Provider): Promise<number> {
     try {
-      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      const requestBuilder = new ApiRequestBuilder(DEFAULT_SMM_API_SPEC, provider.api_url, provider.api_key);
       
       const balanceRequest = requestBuilder.buildBalanceRequest();
 
@@ -192,7 +194,7 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
-      const responseParser = new ApiResponseParser();
+      const responseParser = new ApiResponseParser(DEFAULT_SMM_API_SPEC);
       const parsedBalance = responseParser.parseBalanceResponse(result);
 
       return parsedBalance.balance;
@@ -289,13 +291,13 @@ export class ProviderOrderForwarder {
   /**
    * Format provider error message
    */
-  formatProviderError(error: any): string {
+  formatProviderError(error: unknown): string {
     if (typeof error === 'string') {
       return error;
     }
     
-    if (error.message) {
-      return error.message;
+    if (error && typeof error === 'object' && 'message' in error) {
+      return String((error as Error).message);
     }
     
     return 'Unknown provider error occurred';

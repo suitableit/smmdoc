@@ -66,7 +66,11 @@ export async function POST(
       // Use Prisma transaction to ensure both operations succeed or fail together
       await db.$transaction(async (prisma) => {
         // Update the transaction status and transaction ID if provided
-        const updateData: any = {
+        const updateData: {
+          status: string;
+          admin_status: string;
+          transaction_id?: string;
+        } = {
           status: "Success",
           admin_status: "Success",
         };

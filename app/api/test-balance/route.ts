@@ -7,7 +7,7 @@ function serverConvertCurrency(
   amount: number,
   fromCurrency: string,
   toCurrency: string,
-  currencies: any[]
+  currencies: Array<{ code: string; rate: number }>
 ): number {
   if (fromCurrency === toCurrency) {
     return amount;
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Request body:', body);
     
-    const { username, amount, action, notes, adminCurrency } = body;
+    const { username, amount, action, adminCurrency } = body;
 
     // Validation
     if (!username || !amount || !action) {

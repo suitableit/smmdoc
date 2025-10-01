@@ -8,8 +8,6 @@ interface ServiceTileProps {
   title: string;
   description?: string;
   price: string | number;
-  icon?: React.ReactNode;
-  bgColor?: 'purple' | 'blue' | 'green' | 'red' | 'orange' | 'indigo';
   badge?: string;
   href?: string;
   onClick?: () => void;
@@ -17,15 +15,14 @@ interface ServiceTileProps {
   image?: string;
   name?: string;
   discount?: number;
+  icon?: React.ReactNode;
+  bgColor?: string;
 }
 
 export const ServiceTile: React.FC<ServiceTileProps> = ({
-  id,
   title,
   description,
   price,
-  icon,
-  bgColor = 'blue',
   badge,
   href,
   onClick,
@@ -34,14 +31,6 @@ export const ServiceTile: React.FC<ServiceTileProps> = ({
   name,
   discount,
 }) => {
-  const bgColorClasses = {
-    purple: 'bg-gradient-to-br from-purple-500 to-purple-600',
-    blue: 'bg-gradient-to-br from-blue-500 to-blue-600',
-    green: 'bg-gradient-to-br from-green-500 to-green-600',
-    red: 'bg-gradient-to-br from-red-500 to-red-600',
-    orange: 'bg-gradient-to-br from-orange-500 to-orange-600',
-    indigo: 'bg-gradient-to-br from-indigo-500 to-indigo-600',
-  };
 
   const CardContent = () => (
     <>

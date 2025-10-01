@@ -28,7 +28,7 @@ export async function GET() {
             providerCounts[providerName] = (providerCounts[providerName] || 0) + 1;
             importedServices++;
           }
-        } catch (error) {
+        } catch {
           // Skip invalid JSON
         }
       }

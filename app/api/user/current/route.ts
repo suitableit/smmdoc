@@ -59,7 +59,7 @@ export async function GET() {
             role: session.user.role || 'user',
             image: session.user.image || null,
             currency: session.user.currency || 'USD',
-            balance: (session.user as any).balance || 0,
+            balance: (session.user as { balance?: number }).balance || 0,
             total_deposit: 0,
             total_spent: 0,
             createdAt: new Date(),
@@ -72,11 +72,11 @@ export async function GET() {
       );
     }
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in user current API:', error);
 
     // Handle authentication errors
-    if (error.message === 'Authentication required') {
+    if (error instanceof Error && error.message === 'Authentication required') {
       return NextResponse.json(
         { success: false, data: null, error: 'Authentication required' },
         { status: 401 }
@@ -84,7 +84,7 @@ export async function GET() {
     }
 
     return NextResponse.json(
-      { success: false, data: null, error: error.message || 'Internal server error' },
+      { success: false, data: null, error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }

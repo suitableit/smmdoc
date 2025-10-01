@@ -48,7 +48,7 @@ export function TransactionsList({
           <FaSearch className="text-4xl text-gray-400 mb-4" />
           <div className="text-lg font-medium">No transactions found</div>
           <div className="text-sm text-gray-500">
-            You haven't made any transactions yet.
+            You haven&apos;t made any transactions yet.
           </div>
         </div>
       </div>

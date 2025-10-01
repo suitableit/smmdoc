@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { currentUser } from '@/lib/actions/auth';
 import { db } from '@/lib/db';
 import { createCategorySchema } from '@/lib/validators/admin/categories/categories.validator';
@@ -30,11 +29,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    let categoryData: any = {
+    const categoryData = {
       category_name: category_name,
-      position: position || 'bottom',
-      hideCategory: hideCategory || 'no',
-      userId: user?.id ?? '',
+      position: (position as 'top' | 'bottom') || 'bottom',
+      hideCategory: (hideCategory as 'yes' | 'no') || 'no',
+      userId: parseInt(user?.id ?? '0'),
     };
 
     const newCategory = await db.category.create({

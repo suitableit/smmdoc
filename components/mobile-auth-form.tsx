@@ -185,14 +185,14 @@ const MobileAuthForm = ({
       if (form) {
         form.addEventListener('submit', (e) => {
           e.preventDefault();
-          handleSubmit(e as any);
+          handleSubmit(e as unknown as React.FormEvent);
         });
         
         // Add input change listeners
         const inputs = form.querySelectorAll('input');
         inputs.forEach(input => {
           input.addEventListener('input', (e) => {
-            handleInputChange(e as any);
+            handleInputChange(e as unknown as React.ChangeEvent<HTMLInputElement>);
           });
         });
       }

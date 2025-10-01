@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (status && status !== 'all') {
       // Map frontend status to database status
@@ -226,7 +226,7 @@ export async function PATCH(request: NextRequest) {
 
     const ticketIdsAsNumbers = ticketIds.map(id => parseInt(id));
 
-    let updateData: any = {};
+    let updateData: Record<string, unknown> = {};
     let message = '';
 
     switch (operation) {

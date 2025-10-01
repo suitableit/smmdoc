@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Testimonial, testimonialsData } from '@/data/frontend/homepage/testimonials';
+import { testimonialsData } from '@/data/frontend/homepage/testimonials';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const Testimonials: React.FC = () => {
@@ -132,7 +132,7 @@ const Testimonials: React.FC = () => {
                 <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 h-80 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1">
                   <div>
                     <p className="text-gray-600 dark:text-gray-300 mb-4 text-justify text-sm leading-relaxed line-clamp-6 transition-colors duration-200">
-                      "{testimonial.content}"
+                      &quot;{testimonial.content}&quot;
                     </p>
                   </div>
 

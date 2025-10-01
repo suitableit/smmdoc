@@ -338,69 +338,7 @@ const ContactMessagesPage = () => {
     return contactMessages; // API already handles filtering and pagination
   };
 
-  // Load contact messages from API
-  const loadContactMessages = async () => {
-    setMessagesLoading(true);
-    try {
-      const params = new URLSearchParams({
-        status: statusFilter === 'all' ? 'All' : statusFilter,
-        search: searchTerm,
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString()
-      });
 
-      const response = await fetch(`/api/admin/contact-messages?${params}`);
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setContactMessages(data.messages || []);
-
-        // Check if we're in fallback mode
-        if (data.fallbackMode) {
-          setFallbackMode(true);
-          setWarningMessage(data.warning || 'Database connection unavailable. Showing sample data.');
-        } else {
-          setFallbackMode(false);
-          setWarningMessage('');
-        }
-
-        // Update pagination with real data
-        const totalCount = data.messageCounts?.total || 0;
-        setPagination(prev => ({
-          ...prev,
-          total: totalCount,
-          totalPages: Math.ceil(totalCount / prev.limit),
-          hasNext: prev.page < Math.ceil(totalCount / prev.limit),
-          hasPrev: prev.page > 1
-        }));
-
-        // Update message counts for status tabs
-        setMessageCounts({
-          total: data.messageCounts?.total || 0,
-          unread: data.messageCounts?.unread || 0,
-          read: data.messageCounts?.read || 0,
-          replied: data.messageCounts?.replied || 0
-        });
-      } else {
-        showToast(data.error || 'Failed to load contact messages', 'error');
-      }
-    } catch (error) {
-      console.error('Error loading contact messages:', error);
-      // Use dummy data as fallback
-      setContactMessages(dummyContactMessages);
-      setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
-      setFallbackMode(true);
-      setWarningMessage('Database connection failed. Showing sample data.');
-      showToast('Database connection failed. Showing sample data.', 'error');
-    } finally {
-      setMessagesLoading(false);
-    }
-  };
-
-  // Load contact messages from API
-  useEffect(() => {
-    loadContactMessages();
-  }, [statusFilter, searchTerm, pagination.page]);
 
   // Show toast notification
   const showToast = (
@@ -471,41 +409,7 @@ const ContactMessagesPage = () => {
     }
   };
 
-  // Handle mark as read
-  const handleMarkAsRead = async (messageId: string) => {
-    try {
-      const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'updateStatus',
-          status: 'Read',
-        }),
-      });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setContactMessages((prev) =>
-          prev.map((message) =>
-            message.id === messageId
-              ? { ...message, status: 'Read' }
-              : message
-          )
-        );
-        showToast('Message marked as read', 'success');
-        // Refresh data to update counts
-        fetchContactMessages();
-      } else {
-        showToast(data.error || 'Error updating message status', 'error');
-      }
-    } catch (error) {
-      console.error('Error marking message as read:', error);
-      showToast('Error updating message status', 'error');
-    }
-  };
 
   // Handle bulk operations
   const handleBulkOperation = async (operation: string) => {

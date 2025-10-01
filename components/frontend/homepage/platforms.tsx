@@ -17,7 +17,7 @@ import {
   FaGlobe,
   FaSoundcloud,
 } from 'react-icons/fa';
-import { Platform, platformsData } from '@/data/frontend/homepage/platforms';
+import { platformsData } from '@/data/frontend/homepage/platforms';
 
 const Platforms: React.FC = () => {
   const [activeTab, setActiveTab] = useState('facebook');

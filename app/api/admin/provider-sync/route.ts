@@ -25,20 +25,27 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const orderId = searchParams.get('orderId');
     const providerId = searchParams.get('providerId');
+    const orderIdNum = orderId ? Number(orderId) : undefined;
+    const providerIdNum = providerId ? Number(providerId) : undefined;
     const action = searchParams.get('action');
     const status = searchParams.get('status');
     
     const skip = (page - 1) * limit;
     
     // Build where clause for filtering
-    const whereClause: any = {};
+    const whereClause: {
+      orderId?: number;
+      providerId?: number;
+      action?: string;
+      status?: string;
+    } = {};
     
-    if (orderId) {
-      whereClause.orderId = orderId;
+    if (orderIdNum !== undefined && !Number.isNaN(orderIdNum)) {
+      whereClause.orderId = orderIdNum;
     }
     
-    if (providerId) {
-      whereClause.providerId = providerId;
+    if (providerIdNum !== undefined && !Number.isNaN(providerIdNum)) {
+      whereClause.providerId = providerIdNum;
     }
     
     if (action) {
@@ -188,7 +195,12 @@ export async function POST(req: NextRequest) {
 
     if (syncAll) {
       // Get all pending provider orders
-      const whereClause: any = {
+      const whereClause: {
+        isProviderOrder: boolean;
+        providerOrderId: { not: null };
+        providerStatus: { in: string[] };
+        serviceId?: { in: number[] };
+      } = {
         isProviderOrder: true,
         providerOrderId: { not: null },
         providerStatus: { in: ['pending', 'processing', 'in_progress'] }
@@ -348,7 +360,7 @@ export async function POST(req: NextRequest) {
 }
 
 // Helper functions (same as in cron sync)
-async function getProviderIdForOrder(order: any): Promise<string | null> {
+async function getProviderIdForOrder(order: { id: number; serviceId: number }): Promise<string | null> {
   try {
     const service = await db.service.findUnique({
       where: { id: order.serviceId },
@@ -372,7 +384,7 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
   }
 }
 
-async function syncSingleOrder(order: any, provider: any) {
+async function syncSingleOrder(order: { id: number; providerOrderId: string; providerStatus: string }, provider: { id: number; name: string; api_url: string; api_key: string }) {
   try {
     const statusRequest = {
       key: provider.api_key,

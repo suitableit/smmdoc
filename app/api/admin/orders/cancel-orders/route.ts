@@ -28,7 +28,19 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause for cancellation-eligible orders
-    const whereClause: any = {
+    const whereClause: {
+      status: { in: string[] } | string;
+      OR?: Array<{
+        user?: {
+          email?: { contains: string; mode: string };
+          name?: { contains: string; mode: string };
+        };
+        id?: number;
+        service?: {
+          name?: { contains: string; mode: string };
+        };
+      }>;
+    } = {
       status: {
         in: ['pending', 'processing', 'in_progress'] // Only these statuses can be cancelled
       }
@@ -41,7 +53,15 @@ export async function GET(req: NextRequest) {
 
     // Add search filter
     if (search) {
-      whereClause.OR = [
+      const searchNumber = parseInt(search);
+      const orFilters: Array<{
+        user?: {
+          email?: { contains: string; mode: string };
+          name?: { contains: string; mode: string };
+        };
+        id?: number;
+        service?: { name?: { contains: string; mode: string } };
+      }> = [
         {
           user: {
             email: {
@@ -59,12 +79,6 @@ export async function GET(req: NextRequest) {
           }
         },
         {
-          id: {
-            contains: search,
-            mode: 'insensitive'
-          }
-        },
-        {
           service: {
             name: {
               contains: search,
@@ -73,6 +87,13 @@ export async function GET(req: NextRequest) {
           }
         }
       ];
+
+      // If the search string is numeric, allow matching by order id
+      if (!isNaN(searchNumber)) {
+        orFilters.push({ id: searchNumber });
+      }
+
+      whereClause.OR = orFilters;
     }
 
     // Get cancellation-eligible orders

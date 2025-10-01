@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         select: { code: true }
       });
       validCurrencies = enabledCurrencies.map(c => c.code);
-    } catch (error) {
+    } catch {
       console.log('Currency API: Failed to load enabled currencies from DB, using fallback');
     }
 

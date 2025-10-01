@@ -7,7 +7,7 @@ const nextConfig = {
   },
   
   // Webpack configuration for better development experience
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config: any, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
     if (dev && !isServer) {
       // Reduce webpack polling for better performance
       config.watchOptions = {
