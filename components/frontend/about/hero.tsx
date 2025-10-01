@@ -14,7 +14,6 @@ interface SectionProps {
 const Section: React.FC<SectionProps> = ({
   children,
   className = '',
-  bgColor = 'gray',
 }) => (
   <section
     className={`${className}`}

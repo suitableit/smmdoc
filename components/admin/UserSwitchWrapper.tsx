@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { FaCheckCircle, FaTimes } from 'react-icons/fa';
 import UserSwitchIcon from './UserSwitchIcon';
 
@@ -30,7 +29,6 @@ const UserSwitchWrapper = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-  const router = useRouter();
 
   // Show toast notification
   const showToast = (

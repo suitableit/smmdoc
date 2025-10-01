@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
@@ -21,9 +20,10 @@ export async function GET() {
       { success: true, data: result, error: null },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json(
-      { success: false, data: null, error: error.message },
+      { success: false, data: null, error: errorMessage },
       { status: 500 }
     );
   }

@@ -62,7 +62,7 @@ function Button({
   const Comp = asChild ? Slot : "button"
 
   // If gradientColor is specified, use the gradient variant
-  const actualVariant = gradientColor ? `gradient.${gradientColor}` as any : variant
+  const actualVariant = gradientColor ? (`gradient.${gradientColor}` as any) : variant
 
   return (
     <Comp

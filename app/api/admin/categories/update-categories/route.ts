@@ -16,18 +16,22 @@ export async function PUT(request: Request) {
     }
 
     // Prepare update data
-    let updateData: any = {
+    const updateData: {
+      category_name: string;
+      position?: 'top' | 'bottom';
+      hideCategory?: 'yes' | 'no';
+    } = {
       category_name: category_name,
     };
 
     // Add position if provided
-    if (position) {
-      updateData.position = position;
+    if (position && (position === 'top' || position === 'bottom')) {
+      updateData.position = position as 'top' | 'bottom';
     }
 
     // Add hideCategory if provided
-    if (hideCategory !== undefined) {
-      updateData.hideCategory = hideCategory;
+    if (hideCategory !== undefined && (hideCategory === 'yes' || hideCategory === 'no')) {
+      updateData.hideCategory = hideCategory as 'yes' | 'no';
     }
 
     // Update the category in the database

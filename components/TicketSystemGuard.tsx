@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { FaTicketAlt, FaExclamationTriangle } from 'react-icons/fa';
+// import { FaTicketAlt, FaExclamationTriangle } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -20,11 +20,10 @@ interface TicketSystemGuardProps {
 }
 
 const TicketSystemGuard: React.FC<TicketSystemGuardProps> = ({ 
-  children, 
-  redirectTo = '/dashboard' 
+  children
 }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [, setIsEnabled] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -65,7 +64,7 @@ const TicketSystemGuard: React.FC<TicketSystemGuardProps> = ({
     };
 
     checkTicketSystem();
-  }, []);
+  }, [router, session?.user?.role]);
 
   // Show loading spinner while checking
   if (isLoading) {

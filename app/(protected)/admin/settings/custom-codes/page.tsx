@@ -1,9 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
@@ -270,7 +266,7 @@ const CustomCodesPage = () => {
             </h3>
             <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
               <li>• <strong>Header codes</strong> are loaded in the &lt;head&gt; section and execute before page content loads</li>
-              <li>• <strong>Footer codes</strong> are loaded before &lt;/body&gt; and execute after page content loads</li>
+                <li>• <strong>Footer codes</strong> are loaded before &lt;/body&gt; and execute after page content loads</li>
               <li>• Always test your custom codes thoroughly before saving to avoid breaking your website</li>
               <li>• Use proper HTML, CSS, and JavaScript syntax to prevent errors</li>
               <li>• These codes will be applied to all pages of your website</li>

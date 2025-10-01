@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import authConfig from '@/auth.config';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import NextAuth from 'next-auth';
@@ -33,7 +32,11 @@ export const {
         const emailConfirmationEnabled = userSettings?.emailConfirmationEnabled ?? true;
 
         // Update user with email verification and free balance if applicable
-        const updateData: any = {};
+        const updateData: {
+          emailVerified?: Date;
+          balance?: number;
+          total_deposit?: number;
+        } = {};
 
         // Only set emailVerified if email confirmation is enabled (OAuth users are auto-verified)
         if (emailConfirmationEnabled) {

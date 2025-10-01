@@ -150,7 +150,7 @@ const ChildPanel: React.FC = () => {
     {
       question: 'How can i collect money from our customer?',
       answer:
-        "You customer will pay to your own payment gateway account, they are not paying to us. So, you don't have to worry about payment. Setup your own payment gateway, and collect payment from your customers",
+        "You customer will pay to your own payment gateway account, they are not paying to us. So, you don&apos;t have to worry about payment. Setup your own payment gateway, and collect payment from your customers",
     },
     {
       question:

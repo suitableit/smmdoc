@@ -1,10 +1,10 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
-import { ApiRequestBuilder, ApiResponseParser } from '@/lib/provider-api-specification';
+import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
 
 // GET /api/cron/sync-provider-orders - Sync provider order statuses
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     console.log('Starting provider order sync...');
 
@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
           } catch (error) {
             console.error(`Failed to sync order ${order.id}:`, error);
             syncResults.push({
-              orderId: order.id,
+              orderId: order.id as number,
               updated: false,
               error: error instanceof Error ? error.message : 'Unknown error'
             });
@@ -131,11 +131,11 @@ export async function GET(req: NextRequest) {
 }
 
 // Helper function to get provider ID for an order
-async function getProviderIdForOrder(order: any): Promise<string | null> {
+async function getProviderIdForOrder(order: Record<string, unknown>): Promise<string | null> {
   try {
     // First, try to get provider from service
     const service = await db.service.findUnique({
-      where: { id: order.serviceId },
+      where: { id: order.serviceId as number },
       select: { providerId: true }
     });
 
@@ -145,7 +145,7 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
 
     // If no provider in service, try to get from provider order logs
     const lastLog = await db.providerOrderLog.findFirst({
-      where: { orderId: order.id },
+      where: { orderId: order.id as number },
       orderBy: { createdAt: 'desc' },
       select: { providerId: true }
     });
@@ -158,43 +158,21 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
 }
 
 // Helper function to sync a single order with provider
-async function syncSingleOrder(order: any, provider: any) {
+async function syncSingleOrder(order: Record<string, unknown>, provider: Record<string, unknown>) {
   try {
+    // Create API specification from provider
+    const apiSpec = createApiSpecFromProvider(provider);
+    
     // Create API request builder with provider's API specification
-    const apiBuilder = new ApiRequestBuilder({
-      apiKeyParam: provider.api_key_param || 'key',
-      actionParam: provider.action_param || 'action',
-      servicesAction: provider.services_action || 'services',
-      servicesEndpoint: provider.services_endpoint || '',
-      addOrderAction: provider.add_order_action || 'add',
-      addOrderEndpoint: provider.add_order_endpoint || '',
-      serviceIdParam: provider.service_id_param || 'service',
-      linkParam: provider.link_param || 'link',
-      quantityParam: provider.quantity_param || 'quantity',
-      runsParam: provider.runs_param || 'runs',
-      intervalParam: provider.interval_param || 'interval',
-      statusAction: provider.status_action || 'status',
-      statusEndpoint: provider.status_endpoint || '',
-      orderIdParam: provider.order_id_param || 'order',
-      ordersParam: provider.orders_param || 'orders',
-      refillAction: provider.refill_action || 'refill',
-      refillEndpoint: provider.refill_endpoint || '',
-      refillStatusAction: provider.refill_status_action || 'refill_status',
-      refillIdParam: provider.refill_id_param || 'refill',
-      refillsParam: provider.refills_param || 'refills',
-      cancelAction: provider.cancel_action || 'cancel',
-      cancelEndpoint: provider.cancel_endpoint || '',
-      balanceAction: provider.balance_action || 'balance',
-      balanceEndpoint: provider.balance_endpoint || '',
-      responseMapping: provider.response_mapping || '',
-      requestFormat: (provider.request_format as 'form' | 'json') || 'form',
-      responseFormat: (provider.response_format as 'json' | 'xml') || 'json',
-      rateLimitPerMin: provider.rate_limit_per_min || undefined,
-      timeoutSeconds: provider.timeout_seconds || 30
-    });
+    const apiBuilder = new ApiRequestBuilder(
+      apiSpec,
+      provider.api_url as string,
+      provider.api_key as string,
+      'POST'
+    );
 
     // Build status check request using API specification
-    const statusRequest = apiBuilder.buildStatusRequest(provider.api_key, order.providerOrderId);
+    const statusRequest = apiBuilder.buildOrderStatusRequest(order.providerOrderId as string);
 
     console.log(`Checking status for order ${order.id} (provider order: ${order.providerOrderId})`);
 
@@ -204,7 +182,7 @@ async function syncSingleOrder(order: any, provider: any) {
       url: statusRequest.url,
       data: statusRequest.data,
       headers: statusRequest.headers,
-      timeout: (provider.timeout_seconds || 30) * 1000
+      timeout: ((provider.timeout_seconds as number) || 30) * 1000
     });
 
     const responseData = response.data;
@@ -214,12 +192,9 @@ async function syncSingleOrder(order: any, provider: any) {
     }
 
     // Parse response using API specification
-    const responseParser = new ApiResponseParser({
-      responseMapping: provider.response_mapping || '',
-      responseFormat: (provider.response_format as 'json' | 'xml') || 'json'
-    });
+    const responseParser = new ApiResponseParser(apiSpec);
     
-    const parsedStatus = responseParser.parseStatusResponse(responseData);
+    const parsedStatus = responseParser.parseOrderStatusResponse(responseData);
     
     // Map provider status to our system status
     const mappedStatus = mapProviderStatus(parsedStatus.status);
@@ -231,23 +206,23 @@ async function syncSingleOrder(order: any, provider: any) {
 
       // Update order in database
       await db.newOrder.update({
-        where: { id: order.id },
+        where: { id: order.id as number },
         data: {
           providerStatus: mappedStatus,
           status: mappedStatus, // Also update main status
-          providerResponse: JSON.stringify(responseData),
+
           lastSyncAt: new Date(),
           // Update additional fields based on parsed response
-          ...(parsedStatus.startCount && { startCount: parseInt(parsedStatus.startCount) }),
-          ...(parsedStatus.remains && { remains: parseInt(parsedStatus.remains) })
+          ...(parsedStatus.startCount && { startCount: parsedStatus.startCount }),
+          ...(parsedStatus.remains && { remains: parsedStatus.remains })
         }
       });
 
       // Log the status update
       await db.providerOrderLog.create({
         data: {
-          orderId: order.id,
-          providerId: provider.id,
+          orderId: order.id as number,
+          providerId: parseInt(provider.id as string),
           action: 'status_sync',
           status: 'success',
           response: JSON.stringify(responseData),
@@ -260,12 +235,12 @@ async function syncSingleOrder(order: any, provider: any) {
         updated: true,
         oldStatus: currentStatus,
         newStatus: mappedStatus,
-        providerData
+        providerData: responseData
       };
     } else {
       // Status unchanged, just update sync time
       await db.newOrder.update({
-        where: { id: order.id },
+        where: { id: order.id as number },
         data: {
           lastSyncAt: new Date()
         }
@@ -285,8 +260,8 @@ async function syncSingleOrder(order: any, provider: any) {
     // Log the failed sync attempt
     await db.providerOrderLog.create({
       data: {
-        orderId: order.id,
-        providerId: provider.id,
+        orderId: order.id as number,
+        providerId: parseInt(provider.id as string),
         action: 'status_sync',
         status: 'failed',
         response: JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' })

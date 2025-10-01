@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const session = await requireAdmin();
+    await requireAdmin();
     
     // Get total orders
     const totalOrders = await db.newOrder.count();

@@ -1,9 +1,9 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // GET /api/admin/refill-requests/stats - Get refill request statistics
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
     

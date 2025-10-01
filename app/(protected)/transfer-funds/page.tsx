@@ -49,9 +49,8 @@ const Toast = ({
 export default function TransferFund() {
   const { appName } = useAppNameWithFallback();
 
-  const className = '';
-  const { currency: globalCurrency, rate: globalRate } = useCurrency();
-  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
+  const { rate: globalRate } = useCurrency();
+  const { settings: userSettings } = useUserSettings();
   const [username, setUsername] = useState('');
   const [amountUSD, setAmountUSD] = useState('');
   const [amountBDT, setAmountBDT] = useState('');
@@ -218,7 +217,6 @@ export default function TransferFund() {
 
         // Calculate fee based on admin settings (use same calculation as display)
         const calculatedFee = (transferAmount * feePercentage) / 100;
-        const calculatedTotal = transferAmount + calculatedFee;
 
         showToast(
           `Successfully transferred ${transferAmount} ${activeCurrency} to ${username} (Fee: ${calculatedFee.toFixed(
@@ -230,7 +228,7 @@ export default function TransferFund() {
         setAmountUSD('');
         setAmountBDT('');
         setAmountBDTConverted('');
-      } catch (error) {
+      } catch {
         showToast('Transfer failed. Please try again.', 'error');
       }
     });
@@ -248,7 +246,7 @@ export default function TransferFund() {
 
   if (isLoading) {
     return (
-      <div className={`page-container ${className}`}>
+      <div className="page-container">
         <div className="page-content">
           <div className="max-w-2xl mx-auto">
             {/* Transfer Form Card - Loading State */}
@@ -269,7 +267,7 @@ export default function TransferFund() {
   }
 
   return (
-    <div className={`page-container ${className}`}>
+    <div className="page-container">
       {/* Toast Container */}
       <div className="toast-container">
         {toastMessage && (

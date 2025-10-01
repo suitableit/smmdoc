@@ -1,7 +1,4 @@
 'use client';
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
  
 
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -417,7 +414,7 @@ const PaymentCurrencyPage = () => {
     // Check if it's a core currency that shouldn't be deleted
     const coreCurrencies = ['USD', 'BDT'];
     if (coreCurrencies.includes(currencyToDelete.code)) {
-      showToast(`Cannot delete ${currencyToDelete.code} - it's a core currency`, 'error');
+      showToast(`Cannot delete ${currencyToDelete.code} - it&apos;s a core currency`, 'error');
       return;
     }
 

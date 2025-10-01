@@ -104,8 +104,8 @@ export async function POST(request: NextRequest) {
 
     // Delete removed categories
     const newCategoryIds = contactSettings.categories
-      .filter((cat: any) => cat.id)
-      .map((cat: any) => cat.id);
+      .filter((cat: { id?: number; name: string }) => cat.id)
+      .map((cat: { id?: number; name: string }) => cat.id);
 
     for (const [existingId] of existingCategoryMap) {
       if (!newCategoryIds.includes(existingId)) {

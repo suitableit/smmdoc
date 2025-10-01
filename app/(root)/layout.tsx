@@ -90,7 +90,7 @@ export default function RootLayout({
       if (liveChatSettings.visibility === 'all') {
         shouldShow = true;
       } else if (liveChatSettings.visibility === 'signed-in') {
-        shouldShow = isAuthenticated;
+        shouldShow = !!isAuthenticated;
       } else if (liveChatSettings.visibility === 'not-logged-in') {
         shouldShow = !isAuthenticated && !isLoading;
       } else if (liveChatSettings.visibility === 'homepage' && window.location.pathname === '/') {
@@ -133,9 +133,9 @@ export default function RootLayout({
       script.setAttribute('crossorigin', '*');
       
       // Initialize Tawk_API
-      if (!(window as any).Tawk_API) {
-        (window as any).Tawk_API = {};
-        (window as any).Tawk_LoadStart = new Date();
+      if (!(window as { Tawk_API?: object; Tawk_LoadStart?: Date }).Tawk_API) {
+        (window as { Tawk_API?: object; Tawk_LoadStart?: Date }).Tawk_API = {};
+        (window as { Tawk_API?: object; Tawk_LoadStart?: Date }).Tawk_LoadStart = new Date();
       }
       
       // Append script to head
@@ -206,34 +206,31 @@ export default function RootLayout({
     window.open(messengerUrl, '_blank');
   };
 
-  return (
-    <div className="flex flex-col h-screen">
-      <Header />
-      <main className="flex-1">{children}</main>
-      <Footer />
+  const renderChatMenu = (): React.ReactNode => {
+    if (!isSettingsLoaded || (!liveChatSettings.enabled && !liveChatSettings.socialMediaEnabled)) {
+      return null;
+    }
 
-      {/* Chat Support Menu */}
-      {isSettingsLoaded && (liveChatSettings.enabled || liveChatSettings.socialMediaEnabled) && (() => {
-        const isAuthenticated = status === 'authenticated' && session?.user;
-        const isLoading = status === 'loading';
-        
-        let shouldShowChatMenu = false;
-        
-        if (liveChatSettings.visibility === 'all') {
-          shouldShowChatMenu = true;
-        } else if (liveChatSettings.visibility === 'signed-in') {
-          shouldShowChatMenu = isAuthenticated;
-        } else if (liveChatSettings.visibility === 'not-logged-in') {
-          shouldShowChatMenu = !isAuthenticated && !isLoading;
-        } else if (liveChatSettings.visibility === 'homepage' && window.location.pathname === '/') {
-          shouldShowChatMenu = true;
-        } else if (liveChatSettings.visibility === 'specific' && window.location.pathname.includes('/specific')) {
-          shouldShowChatMenu = true;
-        }
-        
-        if (!shouldShowChatMenu) {
-          return null;
-        }
+    const isAuthenticated = status === 'authenticated' && session?.user;
+    const isLoading = status === 'loading';
+    
+    let shouldShowChatMenu = false;
+    
+    if (liveChatSettings.visibility === 'all') {
+      shouldShowChatMenu = true;
+    } else if (liveChatSettings.visibility === 'signed-in') {
+      shouldShowChatMenu = !!isAuthenticated;
+    } else if (liveChatSettings.visibility === 'not-logged-in') {
+      shouldShowChatMenu = !isAuthenticated && !isLoading;
+    } else if (liveChatSettings.visibility === 'homepage' && typeof window !== 'undefined' && window.location.pathname === '/') {
+      shouldShowChatMenu = true;
+    } else if (liveChatSettings.visibility === 'specific' && typeof window !== 'undefined' && window.location.pathname.includes('/specific')) {
+      shouldShowChatMenu = true;
+    }
+    
+    if (!shouldShowChatMenu) {
+      return null;
+    }
         
         return (
           <div className="fixed bottom-6 left-6 z-50">
@@ -340,9 +337,15 @@ export default function RootLayout({
             </div>
           </div>
         );
-      })()}
+  };
 
-      {/* Back to Top Button */}
+  return (
+    <div className="flex flex-col h-screen">
+      <Header />
+      <main className="flex-1">{children}</main>
+      <Footer />
+
+      {renderChatMenu() as React.ReactNode}
       <div
         className={`fixed bottom-6 right-6 z-50 transition-all duration-500 ${
           isVisible
@@ -359,35 +362,7 @@ export default function RootLayout({
         </button>
       </div>
 
-      {/* Debug: Always show Tawk.to settings */}
-      {console.log('All live chat settings:', liveChatSettings)}
-      {console.log('Settings loaded:', isSettingsLoaded)}
-      {console.log('Checking render conditions:', {
-        tawkToEnabled: liveChatSettings.tawkToEnabled,
-        hasWidgetCode: !!liveChatSettings.tawkToWidgetCode,
-        widgetCodeLength: liveChatSettings.tawkToWidgetCode?.length || 0,
-        isSettingsLoaded: isSettingsLoaded,
-        shouldRender: isSettingsLoaded && liveChatSettings.tawkToEnabled && liveChatSettings.tawkToWidgetCode
-      })}
-      
-      {/* Tawk.to Widget is now loaded dynamically via useEffect */}
-      {!isSettingsLoaded && (
-        <div>
-          {console.log('⏳ Waiting for settings to load...')}
-        </div>
-      )}
-      
-      {isSettingsLoaded && !liveChatSettings.tawkToEnabled && (
-        <div>
-          {console.log('❌ Tawk.to is disabled in settings')}
-        </div>
-      )}
-      
-      {isSettingsLoaded && liveChatSettings.tawkToEnabled && !liveChatSettings.tawkToWidgetCode && (
-        <div>
-          {console.log('❌ Tawk.to enabled but no widget code provided')}
-        </div>
-      )}
+
     </div>
   );
 }

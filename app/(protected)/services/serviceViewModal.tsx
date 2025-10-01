@@ -14,10 +14,26 @@ import {
     FaTimes
 } from 'react-icons/fa';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 
-export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
+interface ServiceViewModalProps {
+  service: {
+    id: number;
+    name: string;
+    description: string;
+    price: number;
+    min: number;
+    max: number;
+    rate: string;
+    category: string;
+    refill?: boolean;
+    cancel?: boolean;
+  };
+  setIsOpen: (isOpen: boolean) => void;
+  isOpen: boolean;
+}
+
+function ServiceViewModal({ service, setIsOpen, isOpen }: ServiceViewModalProps) {
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
@@ -100,7 +116,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Price Per 1000</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  <PriceDisplay amount={service?.rate || 1.9688} originalCurrency={'USD'} />
+                  <PriceDisplay amount={service?.price || 1.9688} originalCurrency={'USD'} />
                 </span>
               </div>
 
@@ -111,7 +127,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Min Order</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {(service?.min_order || 10).toString()}
+                  {(service?.min || 10).toString()}
                 </span>
               </div>
 
@@ -122,7 +138,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Max order</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {(service?.max_order || 10000000).toString()}
+                  {(service?.max || 10000000).toString()}
                 </span>
               </div>
 
@@ -133,7 +149,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Average Time</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {service?.avg_time || '4 minutes'}
+                  {service?.rate || '4 minutes'}
                 </span>
               </div>
 
@@ -186,7 +202,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Start Time</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {service?.start_time || '0-1 mint'}
+                  {'0-1 mint'}
                 </span>
               </div>
 
@@ -197,7 +213,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Guarantee</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {service?.guarantee || 'No Guarantee'}
+                  {'No Guarantee'}
                 </span>
               </div>
 
@@ -208,7 +224,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Speed</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {service?.speed || '100k/Days'}
+                  {'100k/Days'}
                 </span>
               </div>
 
@@ -219,7 +235,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Link Type</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {service?.link_type || 'Profile link or Username'}
+                  {'Profile link or Username'}
                 </span>
               </div>
             </div>
@@ -257,3 +273,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
     </div>
   );
 }
+
+ServiceViewModal.displayName = 'ServiceViewModal';
+export default ServiceViewModal;

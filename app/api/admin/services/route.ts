@@ -37,49 +37,49 @@ export async function GET(request: Request) {
 
     // If limit is high (>=500), return all services (for bulk modify or "All" view)
     if (limit >= 500) {
-      const whereClause = {
-        ...(deletedAtFilter !== undefined && { deletedAt: deletedAtFilter }), // Use dynamic filter based on request
-        ...(search && search.trim()
-          ? {
-              OR: [
-                // Search by service name
-                {
-                  name: {
+      const whereClause: Record<string, unknown> = {
+      ...(deletedAtFilter !== undefined && { deletedAt: deletedAtFilter }), // Use dynamic filter based on request
+      ...(search && search.trim()
+        ? {
+            OR: [
+              // Search by service name
+              {
+                name: {
+                  contains: search.trim(),
+                  mode: 'insensitive',
+                },
+              },
+              // Search by service description
+              {
+                description: {
+                  contains: search.trim(),
+                  mode: 'insensitive',
+                },
+              },
+              // Search by service ID (if search term is a number)
+              ...(isNaN(Number(search.trim())) ? [] : [{
+                id: {
+                  equals: Number(search.trim()),
+                },
+              }]),
+              // Search by category ID (if search term is a number)
+              ...(isNaN(Number(search.trim())) ? [] : [{
+                categoryId: {
+                  equals: Number(search.trim()),
+                },
+              }]),
+              // Search by category name
+              {
+                category: {
+                  category_name: {
                     contains: search.trim(),
                     mode: 'insensitive',
                   },
                 },
-                // Search by service description
-                {
-                  description: {
-                    contains: search.trim(),
-                    mode: 'insensitive',
-                  },
-                },
-                // Search by service ID (if search term is a number)
-                ...(isNaN(Number(search.trim())) ? [] : [{
-                  id: {
-                    equals: Number(search.trim()),
-                  },
-                }]),
-                // Search by category ID (if search term is a number)
-                ...(isNaN(Number(search.trim())) ? [] : [{
-                  categoryId: {
-                    equals: Number(search.trim()),
-                  },
-                }]),
-                // Search by category name
-                {
-                  category: {
-                    category_name: {
-                      contains: search.trim(),
-                      mode: 'insensitive',
-                    },
-                  },
-                },
-              ],
-            }
-          : {})
+              },
+            ],
+          }
+        : {})
       };
 
       // Get all services
@@ -143,7 +143,7 @@ export async function GET(request: Request) {
     // Get all services for the paginated categories
     const categoryIds = paginatedCategories.map(cat => cat.id);
 
-    const whereClause = {
+    const whereClause: Record<string, unknown> = {
       ...(deletedAtFilter !== undefined && { deletedAt: deletedAtFilter }), // Use dynamic filter based on request
       categoryId: {
         in: categoryIds,

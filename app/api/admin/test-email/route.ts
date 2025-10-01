@@ -1,10 +1,7 @@
 import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { createEmailTransporter, getFromEmailAddress } from '@/lib/email-config';
 import { getAppName } from '@/lib/utils/general-settings';
-
-const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {
@@ -93,10 +90,10 @@ export async function POST(req: NextRequest) {
           sentAt: new Date().toISOString()
         }
       });
-    } catch (emailError: any) {
+    } catch (emailError: unknown) {
       console.error('❌ Error sending test email:', {
-        code: emailError.code || 'UNKNOWN',
-        message: emailError.message || 'Unknown error occurred',
+        code: (emailError as { code?: string }).code || 'UNKNOWN',
+        message: (emailError as Error).message || 'Unknown error occurred',
         to: to,
         subject: subject
       });
@@ -104,14 +101,17 @@ export async function POST(req: NextRequest) {
       // Provide specific error messages based on error type
       let errorMessage = 'Failed to send test email. Please check your SMTP settings.';
       
-      if (emailError.code === 'EAUTH') {
+      const errorCode = (emailError as { code?: string }).code;
+      const errorMsg = (emailError as Error).message;
+      
+      if (errorCode === 'EAUTH') {
         errorMessage = 'SMTP Authentication failed. Please check your username and password.';
-      } else if (emailError.code === 'ECONNECTION') {
+      } else if (errorCode === 'ECONNECTION') {
         errorMessage = 'Cannot connect to SMTP server. Please check your host and port settings.';
-      } else if (emailError.code === 'ETIMEDOUT') {
+      } else if (errorCode === 'ETIMEDOUT') {
         errorMessage = 'Connection timeout. Please check your SMTP server settings.';
-      } else if (emailError.message) {
-        errorMessage = `SMTP Error: ${emailError.message}`;
+      } else if (errorMsg) {
+        errorMessage = `SMTP Error: ${errorMsg}`;
       }
       
       return NextResponse.json(

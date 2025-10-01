@@ -63,7 +63,7 @@ export async function GET(
       select: { role: true }
     });
 
-    const whereClause: any = { id: ticketId };
+    const whereClause = { id: ticketId } as any;
     
     // If not admin, only show user's own tickets
     if (user?.role !== 'admin') {
@@ -127,7 +127,7 @@ export async function GET(
 
     // Transform the ticket data to match frontend expectations
     // For user-facing API, hide admin names and show generic labels
-    let messages = ticket.messages.map((msg: any) => {
+    let messages = ticket.messages.map((msg: Record<string, unknown>) => {
       let authorName;
       if (msg.messageType === 'system') {
         authorName = 'System';
@@ -136,18 +136,18 @@ export async function GET(
         authorName = 'Support Admin';
       } else {
         // Show user's own name
-        authorName = msg.user.name || msg.user.email;
+        authorName = (msg.user as any).name || (msg.user as any).email;
       }
       
       return {
-        id: msg.id.toString(),
+        id: String(msg.id),
         type: msg.messageType,
         author: authorName,
         authorRole: msg.isFromAdmin ? 'admin' : 'user',
         content: msg.message,
-        createdAt: msg.createdAt.toISOString(),
-        attachments: msg.attachments ? JSON.parse(msg.attachments) : [],
-        userImage: msg.isFromAdmin ? null : msg.user.image // Hide admin images too
+        createdAt: (msg.createdAt as Date).toISOString(),
+        attachments: msg.attachments ? JSON.parse(msg.attachments as string) : [],
+        userImage: msg.isFromAdmin ? null : (msg.user as any).image // Hide admin images too
       };
     });
 
@@ -176,21 +176,21 @@ export async function GET(
       systemMessage: ticket.systemMessage,
       orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : [],
       messages: messages,
-      notes: ticket.notes.map((note: any) => {
+      notes: ticket.notes.map((note: Record<string, unknown>) => {
         let authorName;
-       if (note.user.role === 'admin') {
+       if ((note.user as any).role === 'admin') {
          // Hide admin names for users - show generic 'Support Admin' label
          authorName = 'Support Admin';
        } else {
          // Show user's own name
-         authorName = note.user.name || note.user.email;
+         authorName = (note.user as any).name || (note.user as any).email;
        }
         
         return {
-          id: note.id.toString(),
+          id: String(note.id),
           content: note.content,
           author: authorName,
-          createdAt: note.createdAt.toISOString(),
+          createdAt: (note.createdAt as Date).toISOString(),
           isPrivate: note.isPrivate
         };
       }),
@@ -224,7 +224,6 @@ export async function PUT(
     }
 
     // Ticket system is always enabled
-    const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);
@@ -291,7 +290,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (parsedData.status) {
       updateData.status = parsedData.status;
@@ -393,7 +392,6 @@ export async function DELETE(
     }
 
     // Ticket system is always enabled
-    const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);

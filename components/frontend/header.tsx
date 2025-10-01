@@ -5,41 +5,16 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { FaChevronDown, FaDesktop, FaHome, FaMoon, FaSignOutAlt, FaSun, FaTachometerAlt, FaUserCog, FaWallet } from 'react-icons/fa';
 
-// Custom hook to safely use NextAuth session
-const useSafeSession = () => {
-  const [sessionData, setSessionData] = useState({
-    data: null,
-    status: 'loading'
-  });
-
-  useEffect(() => {
-    try {
-      // Dynamically import and use NextAuth
-      import('next-auth/react').then(({ useSession }) => {
-        // This won't work as intended, we need a different approach
-        // Let's just set a timeout and assume no auth for now
-        setTimeout(() => {
-          setSessionData({
-            data: null,
-            status: 'unauthenticated'
-          });
-        }, 1000);
-      });
-    } catch (error) {
-      console.warn('NextAuth not available, continuing without authentication');
-      setSessionData({
-        data: null,
-        status: 'unauthenticated'
-      });
-    }
-  }, []);
-
-  return sessionData;
-};
-
 // Alternative: Create a version that accepts session as props
 interface HeaderProps {
-  session?: any;
+  session?: {
+    user?: {
+      name?: string;
+      email?: string;
+      image?: string;
+      role?: string;
+    };
+  };
   status?: 'loading' | 'authenticated' | 'unauthenticated';
   enableAuth?: boolean;
 }
@@ -50,20 +25,20 @@ const Header: React.FC<HeaderProps> = ({
   enableAuth = true 
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Use props if provided, otherwise try to get session safely
-  let session = propSession;
+  const session = propSession;
   let status = propStatus;
   
   if (enableAuth && !propSession) {
     try {
-      const { useSession } = require('next-auth/react');
-      const sessionData = useSession();
-      session = sessionData.data;
-      status = sessionData.status;
-    } catch (error) {
+      // This should be handled at the component level, not here
+      console.warn('Session should be passed as props when enableAuth is true');
+      status = 'unauthenticated';
+    } catch {
       console.warn('NextAuth not available, using fallback');
       status = 'unauthenticated';
     }
@@ -92,8 +67,8 @@ const Header: React.FC<HeaderProps> = ({
         // Custom logout logic
         window.location.href = '/';
       }
-    } catch (error) {
-      console.error('Logout failed:', error);
+    } catch {
+      console.error('Logout failed');
       setIsLoggingOut(false);
       window.location.href = '/';
     }
@@ -120,10 +95,11 @@ const Header: React.FC<HeaderProps> = ({
     }
     
     return (
-      <img
+      <Image
         src={src}
         alt={alt}
-        className="w-full h-full object-cover"
+        fill
+        className="object-cover"
         onError={() => {
           setHasError(true);
         }}
@@ -254,7 +230,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   // Enhanced User Menu (only if authenticated)
-  const UserMenu = ({ user }: { user: any }) => {
+  const UserMenu = ({ user }: { user: { name?: string; email?: string; image?: string; photo?: string; username?: string; role?: string } }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     
@@ -280,7 +256,7 @@ const Header: React.FC<HeaderProps> = ({
           disabled={isLoggingOut}
         >
           <Avatar className="h-12 w-12">
-            <AvatarImage src={user?.photo || user?.image} alt={user?.name || 'User'} />
+            <AvatarImage src={user?.photo || user?.image || ''} alt={user?.name || 'User'} />
             {!(user?.photo || user?.image) && <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>}
           </Avatar>
         </button>
@@ -292,7 +268,7 @@ const Header: React.FC<HeaderProps> = ({
               <div className="p-3 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-t-lg">
                 <div className="flex items-center space-x-2 sm:space-x-4 mb-3 sm:mb-4">
                   <Avatar className="h-10 w-10 sm:h-14 sm:w-14 ring-2 sm:ring-3 ring-[var(--primary)]/20">
-                    <AvatarImage src={user?.photo || user?.image} alt={user?.name || 'User'} />
+                    <AvatarImage src={user?.photo || user?.image || ''} alt={user?.name || 'User'} />
                     {!(user?.photo || user?.image) && <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>}
                   </Avatar>
                   <div className="flex-1 min-w-0">
@@ -365,7 +341,7 @@ const Header: React.FC<HeaderProps> = ({
     );
   };
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
 
   useEffect(() => {
     setMounted(true);
@@ -402,7 +378,7 @@ const Header: React.FC<HeaderProps> = ({
                   <Link href={dashboardRoute} className="inline-flex items-center bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:from-[#4F0FD8] hover:to-[#A121E8]">
                     <span>{isAdmin ? 'Admin Panel' : 'Dashboard'}</span>
                   </Link>
-                  <UserMenu user={session.user} />
+                  <UserMenu user={session.user as any} />
                 </>
               )}
 
@@ -438,7 +414,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className={`relative w-[80%] h-full bg-white dark:bg-[var(--header-bg)] shadow-lg transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <Link href="/" className="flex items-center">
-                <Image src="/logo.png" alt="SMMDOC" width={200} height={25} className="h-12 w-auto" />
+                <Image src="/logo.png" alt="SMMDOC Logo" width={200} height={25} className="h-12 w-auto" />
               </Link>
               <button
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
@@ -457,11 +433,11 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="px-4 py-3">
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={session.user?.photo || session.user?.image} alt={session.user?.name || 'User'} />
-                      {!(session.user?.photo || session.user?.image) && <AvatarFallback>{(session.user?.username || session.user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}</AvatarFallback>}
+                      <AvatarImage src={(session.user as any)?.photo || session.user?.image || ''} alt={session.user?.name || 'User'} />
+                      {!((session.user as any)?.photo || session.user?.image) && <AvatarFallback>{((session.user as any)?.username || session.user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}</AvatarFallback>}
                     </Avatar>
                     <div>
-                      <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{session.user?.username || session.user?.name}</h3>
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{(session.user as any)?.username || session.user?.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{session.user?.email}</p>
                     </div>
                   </div>

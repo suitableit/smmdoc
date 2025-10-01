@@ -154,7 +154,7 @@ class ContactDB {
     status?: string | string[];
   }) {
     try {
-      const where: any = {};
+      const where: Record<string, unknown> = {};
 
       if (filters.userId) {
         where.userId = filters.userId;
@@ -185,7 +185,7 @@ class ContactDB {
     try {
       // Build WHERE clause for raw SQL
       let whereClause = 'WHERE 1=1';
-      const params: any[] = [];
+      const params: unknown[] = [];
 
       if (filters?.status && filters.status !== 'All') {
         whereClause += ' AND cm.status = ?';
@@ -224,10 +224,10 @@ class ContactDB {
         ${limitClause}
       `;
 
-      const messages = await this.prisma.$queryRawUnsafe(query, ...params) as any[];
+      const messages = await this.prisma.$queryRawUnsafe(query, ...params) as Record<string, unknown>[];
 
       // Format the response to match expected structure
-      const formattedMessages = messages.map((msg: any) => ({
+      const formattedMessages = messages.map((msg: Record<string, unknown>) => ({
         id: msg.id,
         userId: msg.userId,
         subject: msg.subject,
@@ -277,13 +277,13 @@ class ContactDB {
         WHERE cm.id = ?
       `;
 
-      const messages = await this.prisma.$queryRawUnsafe(query, id) as any[];
+      const messages = await this.prisma.$queryRawUnsafe(query, id) as Record<string, unknown>[];
       const message = messages[0];
 
       if (!message) return null;
 
       // Get notes if requested
-      let notes = [];
+      let notes: any[] = [];
       if (includeNotes) {
         const notesQuery = `
           SELECT
@@ -295,7 +295,7 @@ class ContactDB {
           WHERE cn.messageId = ?
           ORDER BY cn.createdAt DESC
         `;
-        notes = await this.prisma.$queryRawUnsafe(notesQuery, id) as any[];
+        notes = await this.prisma.$queryRawUnsafe(notesQuery, id) as Record<string, unknown>[];
       }
 
       // Get user statistics
@@ -306,7 +306,7 @@ class ContactDB {
         FROM contact_messages 
         WHERE userId = ?
       `;
-      const userStats = await this.prisma.$queryRawUnsafe(userStatsQuery, message.userId) as any[];
+      const userStats = await this.prisma.$queryRawUnsafe(userStatsQuery, message.userId) as Record<string, unknown>[];
       const stats = userStats[0] || { total_messages: 0, open_messages: 0 };
 
       // Format the response to match expected structure
@@ -323,7 +323,7 @@ class ContactDB {
         repliedBy: message.repliedBy,
         createdAt: message.createdAt,
         updatedAt: message.updatedAt,
-        notes: notes.map((note: any) => ({
+        notes: notes.map((note: Record<string, unknown>) => ({
           id: note.id,
           content: note.content,
           admin_username: note.admin_name || note.admin_username || 'Admin',

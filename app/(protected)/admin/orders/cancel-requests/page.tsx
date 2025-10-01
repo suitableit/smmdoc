@@ -103,111 +103,7 @@ interface PaginationInfo {
   hasPrev: boolean;
 }
 
-// Dummy data generator
-const generateDummyData = (): CancelRequest[] => {
-  const services = [
-    'Instagram Followers',
-    'YouTube Views',
-    'TikTok Likes',
-    'Facebook Page Likes',
-    'Twitter Followers',
-    'Instagram Likes',
-    'YouTube Subscribers',
-    'TikTok Followers',
-    'LinkedIn Connections',
-    'Pinterest Followers'
-  ];
 
-  const categories = [
-    'Social Media',
-    'Video Marketing',
-    'Content Boost',
-    'Engagement',
-    'Growth Services'
-  ];
-
-  const sellers = ['Self', 'Auto', 'Manual'];
-  const statuses = ['pending', 'approved', 'declined'];
-  const users = [
-    { name: 'John Doe', username: 'johndoe', email: 'john@example.com' },
-    { name: 'Sarah Smith', username: 'sarahsmith', email: 'sarah@example.com' },
-    { name: 'Mike Johnson', username: 'mikej', email: 'mike@example.com' },
-    { name: 'Emily Davis', username: 'emilyd', email: 'emily@example.com' },
-    { name: 'Alex Brown', username: 'alexb', email: 'alex@example.com' },
-    { name: 'Lisa Wilson', username: 'lisaw', email: 'lisa@example.com' },
-    { name: 'David Chen', username: 'davidc', email: 'david@example.com' },
-    { name: 'Jessica Lee', username: 'jessical', email: 'jessica@example.com' }
-  ];
-
-  const sampleLinks = [
-    'https://instagram.com/p/ABC123xyz',
-    'https://youtube.com/watch?v=dQw4w9WgXcQ',
-    'https://tiktok.com/@user/video/123456789',
-    'https://facebook.com/page/posts/123456',
-    'https://twitter.com/user/status/123456789',
-    'https://linkedin.com/in/user/posts/123456',
-    'https://pinterest.com/pin/123456789'
-  ];
-
-  const cancelReasons = [
-    'Changed my mind about the order',
-    'Found a better price elsewhere',
-    'Order taking too long to process',
-    'No longer need this service',
-    'Made duplicate order by mistake',
-    'Quality not as expected',
-    'Service not working properly'
-  ];
-
-  return Array.from({ length: 25 }, (_, index) => {
-    const user = users[Math.floor(Math.random() * users.length)];
-    const service = services[Math.floor(Math.random() * services.length)];
-    const category = categories[Math.floor(Math.random() * categories.length)];
-    const seller = sellers[Math.floor(Math.random() * sellers.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const qty = Math.floor(Math.random() * 10000) + 100;
-    const charge = parseFloat((Math.random() * 500 + 5).toFixed(2));
-    const link = sampleLinks[Math.floor(Math.random() * sampleLinks.length)];
-    const reason = cancelReasons[Math.floor(Math.random() * cancelReasons.length)];
-
-    return {
-      id: 1000 + index,
-      order: {
-        id: 50000 + index,
-        service: {
-          id: index + 1,
-          name: service,
-          rate: parseFloat((Math.random() * 0.01).toFixed(4))
-        },
-        category: {
-          id: Math.floor(Math.random() * 5) + 1,
-          category_name: category
-        },
-        qty,
-        price: charge,
-        charge,
-        link,
-        status: ['Completed', 'Processing', 'Pending', 'Cancelled'][Math.floor(Math.random() * 4)],
-        createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        seller
-      },
-      user: {
-        id: index + 1,
-        email: user.email,
-        name: user.name,
-        username: user.username,
-        currency: 'USD'
-      },
-      reason,
-      status: status as 'pending' | 'approved' | 'declined',
-      requestedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-      processedAt: status !== 'pending' ? new Date(Date.now() - Math.random() * 3 * 24 * 60 * 60 * 1000).toISOString() : undefined,
-      processedBy: status !== 'pending' ? 'Admin' : undefined,
-      refundAmount: status === 'approved' ? charge : undefined,
-      adminNotes: status !== 'pending' ? (status === 'approved' ? 'Refund processed successfully' : 'Request denied - order already completed') : undefined
-    };
-  });
-};
 
 const CancelRequestsPage = () => {
   const { appName } = useAppNameWithFallback();
@@ -346,7 +242,7 @@ const CancelRequestsPage = () => {
   // Initialize with real data
   useEffect(() => {
     fetchCancelRequests();
-  }, []);
+  }, [fetchCancelRequests]);
 
   // Fetch data when search term or status filter changes
   useEffect(() => {
@@ -355,7 +251,7 @@ const CancelRequestsPage = () => {
     }, 500); // Debounce search
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, fetchCancelRequests]);
 
   // Handle pagination
   const handlePageChange = (newPage: number) => {

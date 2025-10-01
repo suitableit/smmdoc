@@ -21,8 +21,8 @@ const NotFoundPage = () => {
             </span>
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed transition-colors duration-200">
-            We're sorry, but the page you're looking for doesn't exist. It might
-            have been moved, deleted, or the URL might be incorrect. Don't worry
+            We&apos;re sorry, but the page you&apos;re looking for doesn&apos;t exist. It might
+            have been moved, deleted, or the URL might be incorrect. Don&apos;t worry
             though - you can easily navigate back to our homepage to continue
             exploring our services.
           </p>

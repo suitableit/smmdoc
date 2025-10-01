@@ -347,14 +347,14 @@ export async function GET(
     
     // Check eligibility
     const eligibleStatuses = ['completed', 'partial'];
-    const isEligible = eligibleStatuses.includes(order.status) && (order as any).service?.status === 'active';
+    const isEligible = eligibleStatuses.includes(order.status) && order.service.status === 'active';
     
     // Calculate refill costs
-    const refillRate = (order as any).service?.rate || 0;
+    const refillRate = order.service.rate;
     const fullRefillUsd = (refillRate * order.qty) / 1000;
     const remainingRefillUsd = (refillRate * order.remains) / 1000;
     
-    const dollarRate = (order as any).user?.dollarRate || 121.52;
+    const dollarRate = order.user.dollarRate || 121.52;
     const fullRefillBdt = fullRefillUsd * dollarRate;
     const remainingRefillBdt = remainingRefillUsd * dollarRate;
     
@@ -373,12 +373,12 @@ export async function GET(
         deliveredQuantity: order.qty - order.remains
       },
       service: {
-        id: (order as any).service?.id,
-        name: (order as any).service?.name,
-        rate: (order as any).service?.rate,
-        status: (order as any).service?.status,
-        minOrder: (order as any).service?.min_order,
-        maxOrder: (order as any).service?.max_order
+        id: order.service.id,
+        name: order.service.name,
+        rate: order.service.rate,
+        status: order.service.status,
+        minOrder: order.service.min_order,
+        maxOrder: order.service.max_order
       },
       user: {
         balance: order.user.balance,

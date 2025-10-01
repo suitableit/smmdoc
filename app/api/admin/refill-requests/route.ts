@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Get refill requests with pagination - safe approach without relations
-    let refillRequests: any[] = [];
+    let refillRequests: Array<Record<string, unknown>> = [];
 
     try {
       refillRequests = await db.refillRequest.findMany({
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
         if (request.orderId) {
           try {
             const order = await db.newOrder.findUnique({
-              where: { id: request.orderId },
+              where: { id: request.orderId as number },
               select: {
                 id: true,
                 qty: true,
@@ -91,17 +91,17 @@ export async function GET(req: NextRequest) {
                     refill: true,
                   }
                 });
-                (order as any).service = service;
-              } catch (error) {
+                (order as Record<string, unknown>).service = service;
+              } catch {
                 console.warn(`Service not found for order ${order.id}`);
-                (order as any).service = null;
+                (order as Record<string, unknown>).service = null;
               }
             }
 
-            (request as any).order = order;
-          } catch (error) {
+            (request as Record<string, unknown>).order = order;
+          } catch {
             console.warn(`Order not found for refill request ${request.id}`);
-            (request as any).order = null;
+            (request as Record<string, unknown>).order = null;
           }
         }
 
@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
         if (request.userId) {
           try {
             const user = await db.user.findUnique({
-              where: { id: request.userId },
+              where: { id: request.userId as number },
               select: {
                 id: true,
                 name: true,
@@ -117,10 +117,10 @@ export async function GET(req: NextRequest) {
                 currency: true,
               }
             });
-            (request as any).user = user;
-          } catch (error) {
+            (request as Record<string, unknown>).user = user;
+          } catch {
             console.warn(`User not found for refill request ${request.id}`);
-            (request as any).user = null;
+            (request as Record<string, unknown>).user = null;
           }
         }
 
@@ -128,17 +128,17 @@ export async function GET(req: NextRequest) {
         if (request.processedBy) {
           try {
             const processedByUser = await db.user.findUnique({
-              where: { id: request.processedBy },
+              where: { id: request.processedBy as number },
               select: {
                 id: true,
                 name: true,
                 email: true,
               }
             });
-            (request as any).processedByUser = processedByUser;
-          } catch (error) {
+            (request as Record<string, unknown>).processedByUser = processedByUser;
+          } catch {
             console.warn(`Processed by user not found for refill request ${request.id}`);
-            (request as any).processedByUser = null;
+            (request as Record<string, unknown>).processedByUser = null;
           }
         }
       }

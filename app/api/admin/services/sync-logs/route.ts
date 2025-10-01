@@ -1,5 +1,4 @@
 import { auth } from '@/auth';
-import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -28,7 +27,15 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
     
     // Build where clause for filtering
-    const whereClause: any = {};
+    const whereClause: {
+      status?: string;
+      provider?: string;
+      OR?: Array<{
+        provider?: { contains: string; mode: string };
+        action?: { contains: string; mode: string };
+        message?: { contains: string; mode: string };
+      }>;
+    } = {};
     
     if (status && status !== 'all') {
       whereClause.status = status;
@@ -240,7 +247,7 @@ export async function POST(req: NextRequest) {
 }
 
 // GET sync statistics
-export async function PUT(req: NextRequest) {
+export async function PUT() {
   try {
     const session = await auth();
     

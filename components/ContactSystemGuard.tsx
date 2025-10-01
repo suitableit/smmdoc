@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { FaEnvelope, FaExclamationTriangle } from 'react-icons/fa';
+
 
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -20,11 +20,9 @@ interface ContactSystemGuardProps {
 }
 
 const ContactSystemGuard: React.FC<ContactSystemGuardProps> = ({ 
-  children, 
-  redirectTo = '/dashboard' 
+  children
 }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [isEnabled, setIsEnabled] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -35,7 +33,6 @@ const ContactSystemGuard: React.FC<ContactSystemGuardProps> = ({
         if (response.ok) {
           const data = await response.json();
           const enabled = data.contactSystemEnabled || false;
-          setIsEnabled(enabled);
           
           // If disabled, redirect to appropriate dashboard
           if (!enabled) {
@@ -65,7 +62,7 @@ const ContactSystemGuard: React.FC<ContactSystemGuardProps> = ({
     };
 
     checkContactSystem();
-  }, []);
+  }, [router, session]);
 
   // Show loading spinner while checking
   if (isLoading) {

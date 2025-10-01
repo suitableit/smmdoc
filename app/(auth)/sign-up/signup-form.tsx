@@ -15,9 +15,9 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { FaCheck, FaEnvelope, FaEye, FaEyeSlash, FaLock, FaSpinner, FaTimes, FaUser } from 'react-icons/fa';
+import { FaEnvelope, FaEye, FaEyeSlash, FaLock, FaSpinner, FaTimes, FaUser } from 'react-icons/fa';
 
 export default function SignUpForm() {
   const [isPending, startTransition] = useTransition();
@@ -96,107 +96,7 @@ export default function SignUpForm() {
     defaultValues: signUpDefaultValues,
   });
 
-  // Function to check username availability
-  const checkUsernameAvailability = useCallback(async (username: string) => {
-    if (!username || username.length < 3) {
-      setUsernameStatus({
-        checking: false,
-        available: null,
-        message: ''
-      });
-      return;
-    }
 
-    setUsernameStatus({
-      checking: true,
-      available: null,
-      message: 'Checking username availability...'
-    });
-
-    try {
-      const response = await fetch('/api/auth/check-username', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username }),
-      });
-
-      const result = await response.json();
-
-      if (result.available) {
-        setUsernameStatus({
-          checking: false,
-          available: true,
-          message: 'Username is available'
-        });
-      } else {
-        setUsernameStatus({
-          checking: false,
-          available: false,
-          message: result.error || 'Username is not available'
-        });
-      }
-    } catch (error) {
-      console.error('Error checking username:', error);
-      setUsernameStatus({
-        checking: false,
-        available: null,
-        message: 'Error checking username availability'
-      });
-    }
-  }, []);
-
-  // Function to check email availability
-  const checkEmailAvailability = useCallback(async (email: string) => {
-    if (!email || !email.includes('@')) {
-      setEmailStatus({
-        checking: false,
-        available: null,
-        message: ''
-      });
-      return;
-    }
-
-    setEmailStatus({
-      checking: true,
-      available: null,
-      message: 'Checking email availability...'
-    });
-
-    try {
-      const response = await fetch('/api/auth/check-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const result = await response.json();
-
-      if (result.available) {
-        setEmailStatus({
-          checking: false,
-          available: true,
-          message: 'Email is available'
-        });
-      } else {
-        setEmailStatus({
-          checking: false,
-          available: false,
-          message: result.error || 'Email is not available'
-        });
-      }
-    } catch (error) {
-      console.error('Error checking email:', error);
-      setEmailStatus({
-        checking: false,
-        available: null,
-        message: 'Error checking email availability'
-      });
-    }
-  }, []);
 
   // Handle username input transformation
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,9 +135,14 @@ export default function SignUpForm() {
     }
 
     // Handle optional name field based on admin settings
-    const submitData = { ...values } as any;
+    const submitData: DynamicSignUpSchema & { recaptchaToken?: string } = { ...values };
     if (!userSettings?.nameFieldEnabled && submitData.name === '') {
       delete submitData.name; // Remove empty name field if not required
+    }
+    
+    // Ensure name is not undefined if it's required
+    if (userSettings?.nameFieldEnabled && !submitData.name) {
+      submitData.name = '';
     }
 
     // Add reCAPTCHA token if available
@@ -340,7 +245,7 @@ export default function SignUpForm() {
     }
 
     startTransition(() => {
-      register(submitData)
+      register(submitData as any)
         .then((data) => {
           if (data?.error) {
             setError(data.error);

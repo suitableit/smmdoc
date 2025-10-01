@@ -1,5 +1,4 @@
 import { auth } from '@/auth';
-import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Auto-sync configuration

@@ -28,7 +28,16 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause for filtering
-    const whereClause: any = {};
+    const whereClause: {
+      status?: string;
+      OR?: Array<{
+        user?: {
+          email?: { contains: string; mode: string };
+          name?: { contains: string; mode: string };
+        };
+        id?: { contains: string; mode: string };
+      }>;
+    } = {};
 
     if (status && status !== 'all') {
       whereClause.status = status;
@@ -127,11 +136,22 @@ export async function GET(req: NextRequest) {
       ) as mass_orders
     `;
 
-    const totalCount = Number((totalCountRaw as any)[0]?.total || 0);
+    const totalCount = Number((totalCountRaw as { total: bigint }[])[0]?.total || 0);
     const totalPages = Math.ceil(totalCount / limit);
 
     // Format the Mass Orderss data
-    const massOrders = (massOrdersRaw as any[]).map((row) => ({
+    const massOrders = (massOrdersRaw as {
+      userid: string;
+      username: string;
+      useremail: string;
+      orderbatch: Date;
+      totalorders: bigint;
+      totalcost: number;
+      currency: string;
+      createdat: Date;
+      status: string;
+      orderids: string[];
+    }[]).map((row) => ({
       id: `${row.userid}-${new Date(row.orderbatch).getTime()}`,
       userId: row.userid,
       user: {
@@ -170,7 +190,12 @@ export async function GET(req: NextRequest) {
       ) as grouped_orders
     `;
 
-    const statsData = (stats as any)[0] || {};
+    const statsData = (stats as {
+      totalmassorders: bigint;
+      totalordersinmass: bigint;
+      totalrevenue: number;
+      pendingmassorders: bigint;
+    }[])[0] || {};
 
     return NextResponse.json({
       success: true,

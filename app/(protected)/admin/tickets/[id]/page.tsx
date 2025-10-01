@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
     FaArrowLeft,
     FaCheckCircle,
@@ -179,7 +180,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
   // Real-time polling for message updates
   const { hasNewMessages, markMessagesAsRead, isPolling } = useTicketPolling(
     ticketId,
-    ticketDetails,
+    ticketDetails as any,
     setTicketDetails,
     3000 // Poll every 3 seconds
   );
@@ -376,7 +377,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     setIsReplying(true);
     
     try {
-      let attachmentPaths: string[] = [];
+      const attachmentPaths: string[] = [];
       
       // Upload files first if any
       if (selectedFiles.length > 0) {
@@ -533,7 +534,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
           <div className="text-center">
             <FaExclamationTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Ticket Not Found</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">The ticket you're looking for doesn't exist or has been deleted.</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">The ticket you&apos;re looking for doesn&apos;t exist or has been deleted.</p>
             <button 
               onClick={() => window.history.back()}
               className="btn btn-primary"
@@ -724,9 +725,11 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                            <FaExclamationTriangle className="h-4 w-4" />
                          </div>
                       ) : message.userImage ? (
-                        <img
+                        <Image
                           src={message.userImage}
                           alt={message.author}
+                          width={40}
+                          height={40}
                           className="w-full h-full object-cover"
                         />
                       ) : (

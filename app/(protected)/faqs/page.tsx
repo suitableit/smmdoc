@@ -120,7 +120,7 @@ const FAQPage = () => {
       id: 10,
       question: 'What is a child panel?',
       answer:
-        "A child panel is a reseller panel that you can purchase from us. It's a complete SMM panel with your own domain, where you can set your own prices and sell services to your customers.",
+        "A child panel is a reseller panel that you can purchase from us. It&apos;s a complete SMM panel with your own domain, where you can set your own prices and sell services to your customers.",
       category: 'reseller',
     },
     {

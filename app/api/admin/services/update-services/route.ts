@@ -122,7 +122,7 @@ export async function PUT(request: Request) {
     };
 
     // Prepare update data - only include fields that are provided
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     if (categoryId !== undefined && categoryId !== null && categoryId !== '') {
       updateData.categoryId = toInt(categoryId);
@@ -177,10 +177,10 @@ export async function PUT(request: Request) {
     }
 
     // Prepare changes data for updateText
-    const changes: any = {};
+    const changes: Record<string, { from: unknown; to: unknown }> = {};
     Object.keys(updateData).forEach(key => {
-      const oldValue = (currentService as any)[key];
-      const newValue = (updateData as any)[key];
+      const oldValue = (currentService as Record<string, unknown>)[key];
+      const newValue = updateData[key];
       if (oldValue !== newValue) {
         changes[key] = {
           from: oldValue,
@@ -200,7 +200,7 @@ export async function PUT(request: Request) {
     }
 
     // Update the service in the database with proper type conversion
-    const updatedService = await db.service.update({
+    await db.service.update({
       where: {
         id: parseInt(id),
       },
@@ -214,14 +214,14 @@ export async function PUT(request: Request) {
         const userAgent = request.headers.get('user-agent') || 'unknown';
 
         // Prepare changes data
-        const changes: any = {};
-        const oldValues: any = {};
-        const newValues: any = {};
+        const changes: Record<string, { from: unknown; to: unknown }> = {};
+        const oldValues: Record<string, unknown> = {};
+        const newValues: Record<string, unknown> = {};
 
         // Track what changed
         Object.keys(updateData).forEach(key => {
-          const oldValue = (currentService as any)[key];
-          const newValue = (updateData as any)[key];
+          const oldValue = (currentService as Record<string, unknown>)[key];
+          const newValue = updateData[key];
 
           if (oldValue !== newValue) {
             changes[key] = {
@@ -240,9 +240,9 @@ export async function PUT(request: Request) {
             adminId: parseInt(session.user.id),
             adminEmail: session.user.email || 'unknown',
             action: 'updated',
-            changes,
-            oldValues,
-            newValues,
+            changes: JSON.stringify(changes),
+            oldValues: JSON.stringify(oldValues),
+            newValues: JSON.stringify(newValues),
             ipAddress: clientIP,
             userAgent
           }

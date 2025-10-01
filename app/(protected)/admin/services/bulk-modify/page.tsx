@@ -255,7 +255,7 @@ const BulkModifyPage = () => {
       
       // Prepare bulk update data
       const serviceIds = Object.keys(editedServices).map(id => parseInt(id));
-      const updateData: any = {};
+      const updateData: { rate?: number; min_order?: number; max_order?: number; status?: string } = {};
       
       // Check if all services have the same changes for bulk update
       const firstServiceChanges = Object.values(editedServices)[0];
@@ -315,10 +315,10 @@ const BulkModifyPage = () => {
       setHasChanges(false);
       setIsUpdating(false);
       showToast(`Successfully updated ${Object.keys(editedServices).length} services`, 'success');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving changes:', error);
       setIsUpdating(false);
-      showToast(`Error saving changes: ${error.message || 'Unknown error'}`, 'error');
+      showToast(`Error saving changes: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
   };
 
@@ -474,7 +474,7 @@ const BulkModifyPage = () => {
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">
                   <FaEdit className="inline mr-2" />
-                  You have unsaved changes. Click "Save Changes" to apply them.
+                  You have unsaved changes. Click &quot;Save Changes&quot; to apply them.
                 </p>
               </div>
             )}

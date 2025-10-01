@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { WifiOff, RefreshCw } from 'lucide-react';
 
 interface OfflineBannerProps {
   isOnline: boolean;
@@ -19,7 +19,7 @@ export default function OfflineBanner({ isOnline, onRetry, isRetrying = false }:
           <WifiOff className="h-5 w-5 flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium">
-              You're currently offline
+              You&#39;re currently offline
             </p>
             <p className="text-xs opacity-90">
               Some features may not be available. Check your internet connection.

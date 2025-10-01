@@ -46,7 +46,15 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {};
+    const where: {
+      serviceId?: number;
+      adminId?: number;
+      action?: string;
+      createdAt?: {
+        gte?: Date;
+        lte?: Date;
+      };
+    } = {};
 
     if (serviceId) {
       where.serviceId = parseInt(serviceId);

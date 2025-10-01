@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 // GET /api/user/child-panel/status - Get user's child panel status
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const session = await auth();
 

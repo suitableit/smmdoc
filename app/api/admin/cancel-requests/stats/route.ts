@@ -1,9 +1,9 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // GET /api/admin/cancel-requests/stats - Get cancel request statistics
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
 
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     // Get total requests count using raw SQL since Prisma model might not be available
     const totalRequestsResult = await db.$queryRaw`
       SELECT COUNT(*) as count FROM cancel_requests
-    ` as any[];
+    ` as { count: bigint }[];
     const totalRequests = Number(totalRequestsResult[0]?.count || 0);
 
     // Get status breakdown using raw SQL
@@ -32,10 +32,10 @@ export async function GET(req: NextRequest) {
       SELECT status, COUNT(*) as count
       FROM cancel_requests
       GROUP BY status
-    ` as any[];
+    ` as { status: string; count: bigint }[];
 
     // Convert to object format
-    const statusCounts = statusBreakdownResult.reduce((acc: any, item: any) => {
+    const statusCounts = statusBreakdownResult.reduce((acc: Record<string, number>, item) => {
       acc[item.status] = Number(item.count);
       return acc;
     }, {});
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       SELECT SUM(refundAmount) as total
       FROM cancel_requests
       WHERE status = 'approved' AND refundAmount IS NOT NULL
-    ` as any[];
+    ` as { total: number | null }[];
     const totalRefundAmount = Number(totalRefundResult[0]?.total || 0);
 
     // Get today's requests count using raw SQL
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
       SELECT COUNT(*) as count
       FROM cancel_requests
       WHERE createdAt >= ${today} AND createdAt < ${tomorrow}
-    ` as any[];
+    ` as { count: bigint }[];
     const todayRequests = Number(todayRequestsResult[0]?.count || 0);
 
     const stats = {
@@ -79,8 +79,8 @@ export async function GET(req: NextRequest) {
       error: null
     });
 
-  } catch (error) {
-    console.error('Error fetching cancel request stats:', error);
+  } catch (err) {
+    console.error('Error fetching cancel request stats:', err);
 
     // Return default stats if database query fails
     const defaultStats = {

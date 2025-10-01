@@ -324,9 +324,10 @@ export async function GET(req: NextRequest) {
 
       // If POST failed, try GET method
       if (!balanceData) {
+        let getBalanceUrl: string = balanceUrl;
         try {
           const balanceAction = provider.balance_action || 'balance';
-          const getBalanceUrl = `${balanceUrl}?key=${encodeURIComponent(apiKey)}&action=${balanceAction}`;
+          getBalanceUrl = `${balanceUrl}?key=${encodeURIComponent(apiKey)}&action=${balanceAction}`;
           console.log(`🌐 Trying GET method as fallback: ${getBalanceUrl}`);
           
           const response = await retryApiCall(async () => {

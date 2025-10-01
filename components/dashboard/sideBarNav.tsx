@@ -270,10 +270,12 @@ export default function SideBarNav({
 
   // Memoize the icon rendering function to prevent unnecessary re-renders
   const renderIcon = useMemo(() => {
-    return (iconName: string) => {
+    const IconComponent = (iconName: string) => {
       const Icon = (FaIcons as Record<string, React.ComponentType>)[iconName];
       return Icon ? <Icon /> : null;
     };
+    IconComponent.displayName = 'IconComponent';
+    return IconComponent;
   }, []);
 
   const renderNavSection = (title: string, sectionItems: NavItem[]) => {
@@ -363,7 +365,7 @@ export default function SideBarNav({
     return (
       <div className="nav-section mb-4 px-0">
         {title && (
-          <p className="text-xs text-white/50 uppercase tracking-wide mx-4 mt-6 mb-2 ml-6 transition-all duration-300 ease-out whitespace-nowrap">
+          <p className="text-xs text-white/50 uppercase tracking-wide px-4 mt-6 mb-2 transition-all duration-300 ease-out whitespace-nowrap">
             {title}
           </p>
         )}

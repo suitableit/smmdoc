@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const endDate = searchParams.get('endDate');
 
     // Build the where clause
-    let whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       userId: session.user.id,
     };
 
@@ -47,8 +47,6 @@ export async function GET(request: Request) {
 
     // Add search filter if provided
     if (search) {
-      // Convert search to lowercase for case-insensitive matching
-      const searchLower = search.toLowerCase();
       whereClause.OR = [
         { 
           id: {

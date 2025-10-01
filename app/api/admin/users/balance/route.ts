@@ -10,7 +10,7 @@ function serverConvertCurrency(
   amount: number,
   fromCurrency: string,
   toCurrency: string,
-  currencies: any[]
+  currencies: Array<{ code: string; rate: number; symbol?: string }>
 ): number {
   if (fromCurrency === toCurrency) {
     return amount;
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { username, amount, action, notes, adminCurrency } = body;
+    const { username, amount, action, adminCurrency } = body;
 
     // Validation
     if (!username || !amount || !action) {
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Find admin currency info
-    const adminCurrencyInfo = availableCurrencies.find((c: any) => c.code === adminCurrency);
+    const adminCurrencyInfo = availableCurrencies.find((c: { code: string; symbol?: string }) => c.code === adminCurrency);
     const adminCurrencySymbol = adminCurrencyInfo?.symbol || '$';
 
     // Convert admin's amount to BDT (database storage currency)
@@ -153,7 +153,10 @@ export async function POST(request: NextRequest) {
       amountToAdd = amount;
     } else {
       // Convert admin currency to BDT using dynamic rates
-      amountToAdd = serverConvertCurrency(amount, adminCurrency, 'BDT', availableCurrencies);
+      amountToAdd = serverConvertCurrency(amount, adminCurrency, 'BDT', availableCurrencies.map(c => ({
+        ...c,
+        rate: Number(c.rate)
+      })));
       console.log('Converted amount:', { original: amount, converted: amountToAdd });
     }
 

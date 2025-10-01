@@ -204,7 +204,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status') || 'all';
 
     // Build where clause
-    const whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       userId: session.user.id
     };
 

@@ -14,9 +14,7 @@ import {
     FaLinkedinIn,
     FaSearch,
     FaShare,
-    FaTag,
-    FaTwitter,
-    FaUser
+    FaTwitter
 } from 'react-icons/fa';
 
 // Types
@@ -212,13 +210,7 @@ const RecentPosts: React.FC = () => {
   );
 };
 
-const Categories: React.FC = () => {
-  return null; // Component removed as categories are no longer used
-};
 
-const PopularTags: React.FC = () => {
-  return null; // Component removed as tags are no longer used
-};
 
 const TrendingWidget: React.FC = () => {
   const [trendingPosts, setTrendingPosts] = useState<BlogPost[]>([]);

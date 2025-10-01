@@ -156,7 +156,12 @@ export async function PUT(
     }
     
     // Prepare order update data
-    const updateData: any = {
+    const updateData: {
+      status: string;
+      updatedAt: Date;
+      startCount?: number;
+      remains?: number;
+    } = {
       status,
       updatedAt: new Date()
     };

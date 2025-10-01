@@ -3,8 +3,8 @@ import { headers } from 'next/headers';
 import * as z from 'zod';
 
 import { auth, signIn } from '@/auth';
-import { getTwoFactorConfirmationByUserId } from '@/data/two-factor-confirmation';
-import { getTwoFactorTokenByEmail } from '@/data/two-factor-token';
+// import { getTwoFactorConfirmationByUserId } from '@/data/two-factor-confirmation';
+// import { getTwoFactorTokenByEmail } from '@/data/two-factor-token';
 import { getUserByEmail, getUserByUsername } from '@/data/user';
 import bcrypt from 'bcryptjs';
 import { AuthError } from 'next-auth';
@@ -12,7 +12,7 @@ import { ActivityLogger } from '../activity-logger';
 import { db } from '../db';
 import { sendMail } from '../nodemailer';
 import { DEFAULT_SIGN_IN_REDIRECT } from '../routes';
-import { generateTwoFactorToken, generateVerificationToken } from '../tokens';
+import { generateVerificationToken } from '../tokens';
 import { signInSchema } from '../validators/auth.validator';
 import { verifyReCAPTCHA, getReCAPTCHASettings } from '../recaptcha';
 
@@ -51,7 +51,7 @@ export const login = async (
   if (!validedFields.success) {
     return { success: false, error: 'Invalid Fields!' };
   }
-  const { email, password, code } = validedFields.data;
+  const { email, password } = validedFields.data;
 
   // Check if input is email or username
   const isEmail = email.includes('@');

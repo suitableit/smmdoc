@@ -5,10 +5,11 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/blogs/id/[id] - Get single blog post by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const blogId = parseInt(params.id);
+    const resolvedParams = await params;
+    const blogId = parseInt(resolvedParams.id);
 
     if (isNaN(blogId)) {
       return NextResponse.json(
@@ -81,7 +82,7 @@ export async function GET(
 // PUT /api/blogs/id/[id] - Update blog post by ID (Admin only)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -97,7 +98,8 @@ export async function PUT(
       );
     }
 
-    const blogId = parseInt(params.id);
+    const resolvedParams = await params;
+    const blogId = parseInt(resolvedParams.id);
 
     if (isNaN(blogId)) {
       return NextResponse.json(

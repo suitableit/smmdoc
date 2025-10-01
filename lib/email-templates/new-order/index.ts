@@ -189,7 +189,6 @@ export const newOrderTemplates = {
 
   // User notification when order status is updated
   userOrderStatusUpdate: (data: NewOrderEmailData) => {
-    const statusColor = data.orderStatus === 'completed' ? 'green' : data.orderStatus === 'cancelled' ? 'red' : 'orange';
     const statusTitle = data.orderStatus === 'completed' ? 'Completed' : data.orderStatus === 'cancelled' ? 'Cancelled' : 'Updated';
     
     const layoutData: EmailLayoutData = {

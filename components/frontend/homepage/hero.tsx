@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import React, { useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
@@ -34,7 +34,6 @@ const Hero: React.FC = () => {
   // Get session data using NextAuth
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
-  const router = useRouter();
   
   const [urlError, setUrlError] = useState(
     searchParams?.get('error') === 'OAuthAccountNotLinked'

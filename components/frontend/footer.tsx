@@ -44,14 +44,7 @@ const Footer = () => {
     { name: 'Telegram Channel', href: '#' },
   ];
 
-  const serviceLinks = [
-    { name: 'Facebook Services', href: '/services/facebook' },
-    { name: 'Instagram Services', href: '/services/instagram' },
-    { name: 'Twitter Services', href: '/services/twitter' },
-    { name: 'Telegram Services', href: '/services/telegram' },
-    { name: 'YouTube Services', href: '/services/youtube' },
-    { name: 'TikTok Services', href: '/services/tiktok' },
-  ];
+
 
   const bottomLinks = [
     { name: 'Privacy Policy', href: '/privacy-policy' },

@@ -254,11 +254,11 @@ export async function POST(req: NextRequest) {
         console.error('Fetch error:', fetchError);
 
         // Clear timeout if it exists
-        let timeoutId: NodeJS.Timeout | null = null;
+        const timeoutId: NodeJS.Timeout | null = null;
         if (timeoutId) clearTimeout(timeoutId);
 
         // Check if it's a timeout error
-        if ((fetchError as any)?.name === 'AbortError') {
+        if ((fetchError as Error)?.name === 'AbortError') {
           return NextResponse.json(
             { error: 'Payment gateway timeout. Please try again.' },
             { status: 408, headers: corsHeaders }

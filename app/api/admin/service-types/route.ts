@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET /api/admin/service-types - Get all service types
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
     

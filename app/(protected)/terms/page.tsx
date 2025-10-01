@@ -51,7 +51,7 @@ export default function TermsPage() {
       icon: <FaUserShield />,
       content: [
         'You must provide accurate and complete information when placing orders.',
-        "You are responsible for ensuring your social media accounts comply with the respective platform's terms of service.",
+        "You are responsible for ensuring your social media accounts comply with the respective platform&apos;s terms of service.",
         'You must not use our services for illegal, harmful, or fraudulent purposes.',
         'You agree not to resell our services without proper authorization.',
         'You must keep your account credentials secure and confidential.',
@@ -189,7 +189,7 @@ export default function TermsPage() {
           <div className="space-y-4">
             <p className="text-gray-700">
               If you have any questions about these Terms of Service, please
-              don't hesitate to contact us.
+              don&apos;t hesitate to contact us.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
