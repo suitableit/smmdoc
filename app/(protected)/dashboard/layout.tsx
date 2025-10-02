@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import dynamic from 'next/dynamic';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
+
+// Dynamically import admin dashboard to avoid SSR issues
+const AdminDashboard = dynamic(() => import('../admin/page'), {
+  ssr: false,
+  loading: () => <div>Loading admin dashboard...</div>
+});
 
 export default function DashboardLayout({
   children,
@@ -42,8 +49,6 @@ export default function DashboardLayout({
   if (isDashboard && !loading && user) {
     // If user is admin, render admin dashboard, otherwise render user dashboard
     if (user.role === 'ADMIN' || user.role === 'admin') {
-      // Import is done dynamically to avoid server/client mismatch
-      const AdminDashboard = require('../admin/page').default;
       return <AdminDashboard />;
     }
   }
@@ -56,4 +61,4 @@ export default function DashboardLayout({
       </main>
     </div>
   );
-} 
+}
