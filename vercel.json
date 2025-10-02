@@ -1,6 +1,20 @@
 {
+  "version": 2,
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install --legacy-peer-deps",
-  "devCommand": "npm run dev"
+  "devCommand": "npm run dev",
+  "functions": {
+    "app/api/**/*.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "env": {
+    "FORCE_NPM": "true"
+  },
+  "build": {
+    "env": {
+      "PACKAGE_MANAGER": "npm"
+    }
+  }
 }
