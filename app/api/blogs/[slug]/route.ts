@@ -5,11 +5,10 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/blogs/[slug] - Get single blog post by slug
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: { slug: string } }
 ) {
   try {
-    const resolvedParams = await params;
-    const { slug } = resolvedParams;
+    const { slug } = params;
 
     const post = await db.blogPost.findUnique({
       where: { slug },
@@ -80,7 +79,7 @@ export async function GET(
 // PUT /api/blogs/[slug] - Update blog post (Admin only)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: { slug: string } }
 ) {
   try {
     const session = await auth();
@@ -96,8 +95,7 @@ export async function PUT(
       );
     }
 
-    const resolvedParams = await params;
-    const { slug } = resolvedParams;
+    const { slug } = params;
     const body = await req.json();
     const {
       title,
@@ -155,7 +153,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: Record<string, unknown> = {};
+    const updateData: any = {};
     
     if (title !== undefined) updateData.title = title;
     if (newSlug !== undefined) updateData.slug = newSlug;
@@ -189,8 +187,22 @@ export async function PUT(
             image: true
           }
         },
-
-
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            color: true
+          }
+        },
+        tags: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            color: true
+          }
+        }
       }
     });
 
@@ -215,7 +227,7 @@ export async function PUT(
 // DELETE /api/blogs/[slug] - Delete blog post (Admin only)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: { slug: string } }
 ) {
   try {
     const session = await auth();
@@ -231,8 +243,7 @@ export async function DELETE(
       );
     }
 
-    const resolvedParams = await params;
-    const { slug } = resolvedParams;
+    const { slug } = params;
 
     // Check if post exists
     const existingPost = await db.blogPost.findUnique({

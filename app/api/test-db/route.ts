@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Simple database connection test
     const result = await db.$queryRaw`SELECT 1 as test`;

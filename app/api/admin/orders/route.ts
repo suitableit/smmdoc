@@ -180,6 +180,7 @@ export async function POST(req: NextRequest) {
       price, 
       usdPrice, 
       bdtPrice, 
+      currency, 
       avg_time,
       status = 'pending',
       skipBalanceCheck = false

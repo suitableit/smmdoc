@@ -5,11 +5,22 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
 import {
   FaClock,
+  FaEnvelope,
   FaInfoCircle,
   FaReceipt,
+  FaTelegram,
   FaTimes,
   FaWhatsapp,
 } from 'react-icons/fa';
+
+// Custom Gradient Spinner Component (matching Profile page)
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
 
 // Mock hook for demonstration
 const useSearchParams = () => {

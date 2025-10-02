@@ -1,30 +1,9 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { NextResponse } from 'next/server';
-
-// Task status/type definitions to allow broader status comparisons in statistics
-type TaskStatus = 'pending' | 'completed' | 'refunded';
-type TaskType = 'refill' | 'cancel';
-type Task = {
-  id: string;
-  originalOrderId: number;
-  originalOrder: any;
-  type: TaskType;
-  status: TaskStatus;
-  reason: string;
-  // Cancel task specific fields
-  refundType?: 'full' | 'partial';
-  customRefundAmount?: number;
-  // Refill task specific fields
-  refillType?: 'full' | 'remaining';
-  customQuantity?: number;
-  processedBy?: any;
-  createdAt: string;
-  updatedAt: string;
-};
+import { NextRequest, NextResponse } from 'next/server';
 
 // GET /api/admin/orders/refill-cancel - Get all refill and cancel tasks
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     
@@ -67,7 +46,6 @@ export async function GET() {
             id: true,
             name: true,
             rate: true,
-            status: true,
           }
         },
         category: {
@@ -84,17 +62,17 @@ export async function GET() {
     });
 
     // Create refill and cancel tasks based on order status
-    const tasks: Task[] = [];
+    const tasks = [];
 
     for (const order of orders) {
       // Create refill tasks for completed/partial orders
-      if (['completed', 'partial'].includes(order.status) && order.service?.status === 'active') {
+      if (['completed', 'partial'].includes(order.status) && (order.service as any)?.status === 'active') {
         tasks.push({
           id: `refill_${order.id}`,
           originalOrderId: order.id,
           originalOrder: order,
           type: 'refill' as const,
-          status: 'pending' as TaskStatus,
+          status: 'pending' as const,
           reason: order.status === 'partial' ? 'Partial delivery - refill remaining quantity' : 'Service delivery completed - refill available',
           refillType: order.status === 'partial' ? 'remaining' : 'full',
           customQuantity: order.status === 'partial' ? order.remains : order.qty,
@@ -107,30 +85,30 @@ export async function GET() {
       // Create cancel tasks for pending/processing/in_progress orders
       if (['pending', 'processing', 'in_progress'].includes(order.status)) {
         const progress = order.qty > 0 ? ((order.qty - order.remains) / order.qty) * 100 : 0;
-        const refundType: 'full' | 'partial' =
-          (order.status === 'processing' && progress > 0) || order.status === 'in_progress'
-            ? 'partial'
-            : 'full';
-        const customRefundAmount =
-          order.status === 'processing' && progress > 0
-            ? order.price * 0.8 // 80% refund if processing started
-            : order.status === 'in_progress'
-              ? order.price * Math.max(0.5, (100 - progress) / 100) // Proportional refund
-              : order.price;
+        let refundType = 'full';
+        let customRefundAmount = order.price;
+
+        if (order.status === 'processing' && progress > 0) {
+          refundType = 'partial';
+          customRefundAmount = order.price * 0.8; // 80% refund if processing started
+        } else if (order.status === 'in_progress') {
+          refundType = 'partial';
+          customRefundAmount = order.price * Math.max(0.5, (100 - progress) / 100); // Proportional refund
+        }
 
         tasks.push({
           id: `cancel_${order.id}`,
           originalOrderId: order.id,
           originalOrder: order,
           type: 'cancel' as const,
-          status: 'pending' as TaskStatus,
+          status: 'pending' as const,
           reason: `Order cancellation requested - Status: ${order.status}`,
           refundType,
           customRefundAmount,
           processedBy: undefined,
           createdAt: new Date(order.createdAt).toISOString(),
           updatedAt: new Date(order.updatedAt).toISOString(),
-        } as Task);
+        });
       }
     }
 
@@ -141,11 +119,11 @@ export async function GET() {
     const stats = {
       totalCancellations: cancelTasks.length,
       pendingCancellations: cancelTasks.filter(t => t.status === 'pending').length,
-      completedCancellations: cancelTasks.filter(t => t.status === 'completed').length,
+      completedCancellations: cancelTasks.filter(t => (t as any).status === 'completed').length,
       refundProcessed: cancelTasks.filter(t => ['completed', 'refunded'].includes(t.status)).length,
       totalRefillRequests: refillTasks.length,
       pendingRefills: refillTasks.filter(t => t.status === 'pending').length,
-      completedRefills: refillTasks.filter(t => t.status === 'completed').length,
+      completedRefills: refillTasks.filter(t => (t as any).status === 'completed').length,
       totalRefundAmount: cancelTasks
         .filter(t => ['completed', 'refunded'].includes(t.status))
         .reduce((sum, t) => sum + (t.customRefundAmount || t.originalOrder.price), 0),

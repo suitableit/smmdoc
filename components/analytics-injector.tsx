@@ -148,7 +148,7 @@ const AnalyticsInjector = () => {
         tempDiv.innerHTML = gaCode;
         
         const scripts = tempDiv.querySelectorAll('script');
-        scripts.forEach((script) => {
+        scripts.forEach((script, index) => {
           const newScript = document.createElement('script');
           newScript.setAttribute('data-analytics', 'ga');
           
@@ -212,7 +212,7 @@ const AnalyticsInjector = () => {
         tempDiv.innerHTML = fbCode;
         
         const scripts = tempDiv.querySelectorAll('script');
-        scripts.forEach((script) => {
+        scripts.forEach((script, index) => {
           const newScript = document.createElement('script');
           newScript.setAttribute('data-analytics', 'fb');
           
@@ -237,7 +237,7 @@ const AnalyticsInjector = () => {
 
         // Handle noscript tags
         const noscripts = tempDiv.querySelectorAll('noscript');
-        noscripts.forEach((noscript) => {
+        noscripts.forEach((noscript, index) => {
           const newNoscript = document.createElement('noscript');
           newNoscript.setAttribute('data-analytics', 'fb');
           newNoscript.innerHTML = noscript.innerHTML;
@@ -291,7 +291,7 @@ const AnalyticsInjector = () => {
         tempDiv.innerHTML = gtmCode;
         
         const scripts = tempDiv.querySelectorAll('script');
-        scripts.forEach((script) => {
+        scripts.forEach((script, index) => {
           const newScript = document.createElement('script');
           newScript.setAttribute('data-analytics', 'gtm');
           
@@ -316,7 +316,7 @@ const AnalyticsInjector = () => {
 
         // Handle noscript tags
         const noscripts = tempDiv.querySelectorAll('noscript');
-        noscripts.forEach((noscript) => {
+        noscripts.forEach((noscript, index) => {
           const newNoscript = document.createElement('noscript');
           newNoscript.setAttribute('data-analytics', 'gtm');
           newNoscript.innerHTML = noscript.innerHTML;
@@ -354,7 +354,7 @@ const AnalyticsInjector = () => {
       const analyticsNoscripts = document.querySelectorAll('noscript[data-analytics]');
       analyticsNoscripts.forEach(noscript => noscript.remove());
     };
-  }, [analyticsSettings, pathname, isAuthenticated, status, session]);
+  }, [analyticsSettings, isAuthenticated, pathname]);
 
   return null; // This component doesn't render anything visible
 };

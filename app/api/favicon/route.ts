@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getGeneralSettings } from '@/lib/utils/general-settings';
 import fs from 'fs';
 import path from 'path';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Get the site icon from general settings
     const generalSettings = await getGeneralSettings();

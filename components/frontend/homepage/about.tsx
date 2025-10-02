@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaArrowRight } from 'react-icons/fa';
-
+import { Feature, featuresData } from '@/data/frontend/homepage/about';
 
 const About: React.FC = () => {
   return (

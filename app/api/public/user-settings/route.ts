@@ -19,7 +19,7 @@ const defaultUserSettings = {
 export async function GET() {
   try {
     // Get user settings from database
-    const settings = await db.userSettings.findFirst();
+    let settings = await db.userSettings.findFirst();
     if (!settings) {
       // Return default settings if none exist
       return NextResponse.json({

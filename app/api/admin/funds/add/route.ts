@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
     
     const body = await req.json();
-    const { userId, amountUSD, amountBDT, status } = body;
+    const { userId, amountUSD, amountBDT, note, status } = body;
     
     if (!userId || !amountUSD || !amountBDT) {
       return NextResponse.json(
@@ -87,4 +87,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+} 

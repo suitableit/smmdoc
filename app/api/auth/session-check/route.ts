@@ -1,9 +1,9 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 // GET /api/auth/session-check - Check if current session is valid
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 

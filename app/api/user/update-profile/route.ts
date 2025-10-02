@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Prepare update data
-    const updateData: { name?: string; email?: string; username?: string } = {};
+    const updateData: any = {};
     
     if (fullName !== undefined) updateData.name = fullName;
     if (email !== undefined) updateData.email = email;

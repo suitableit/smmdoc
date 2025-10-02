@@ -637,7 +637,7 @@ const DashboardPage = () => {
                     No orders found
                   </div>
                   <div className="text-sm mb-4">
-                    You haven&apos;t placed any orders yet.
+                    You haven't placed any orders yet.
                   </div>
                   <button
                     onClick={() => router.push('/new-order')}
@@ -691,7 +691,7 @@ const DashboardPage = () => {
                     No Support Tickets found
                   </div>
                   <div className="text-sm">
-                    You haven&apos;t created any Support Tickets yet.
+                    You haven't created any Support Tickets yet.
                   </div>
                 </div>
               )}

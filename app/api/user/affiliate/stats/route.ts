@@ -1,8 +1,8 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 
@@ -66,6 +66,7 @@ export async function GET() {
     }
 
     // Calculate stats
+    const totalCommissions = affiliate.affiliate_commissions.reduce((sum, commission) => sum + commission.commissionAmount, 0);
     const conversionRate = affiliate.totalVisits > 0 ? ((affiliate.totalReferrals / affiliate.totalVisits) * 100).toFixed(2) : '0.00';
 
     const stats = {

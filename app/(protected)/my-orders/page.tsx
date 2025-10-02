@@ -276,7 +276,7 @@ export default function OrdersList() {
     const urlStatus = searchParams?.get('status');
     const newStatus = urlStatus ? urlStatus.replace('-', '_') : 'all';
     setStatus(newStatus);
-  }, [searchParams]);
+  }, []);
 
   // Sync status state with URL parameters
   useEffect(() => {

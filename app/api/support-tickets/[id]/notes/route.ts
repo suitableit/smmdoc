@@ -69,7 +69,7 @@ export async function POST(
     const { content } = noteSchema.parse(body);
 
     // Create the internal note
-    await db.ticketNote.create({
+    const note = await db.ticketNote.create({
       data: {
         ticketId: ticketId,
         userId: parseInt(session.user.id),
@@ -185,37 +185,37 @@ export async function POST(
         totalTickets,
         openTickets
       },
-      messages: updatedTicket.messages.map((msg: Record<string, unknown>) => {
+      messages: updatedTicket.messages.map((msg: any) => {
         let authorName;
         if (msg.messageType === 'system') {
           authorName = 'System';
-        } else if (msg.isFromAdmin || (msg.user as any)?.role === 'admin') {
+        } else if (msg.isFromAdmin || msg.user?.role === 'admin') {
           authorName = 'Admin';
         } else {
-          authorName = (msg.user as any)?.name || (msg.user as any)?.email || 'Unknown';
+          authorName = msg.user?.name || msg.user?.email || 'Unknown';
         }
         
         return {
-          id: String(msg.id),
+          id: msg.id.toString(),
           type: msg.messageType,
           author: authorName,
           authorRole: msg.isFromAdmin ? 'admin' : 'user',
           content: msg.message,
-          createdAt: (msg.createdAt as Date).toISOString(),
-          attachments: msg.attachments ? JSON.parse(msg.attachments as string) : [],
-          userImage: (msg.user as any)?.image,
+          createdAt: msg.createdAt.toISOString(),
+          attachments: msg.attachments ? JSON.parse(msg.attachments) : [],
+          userImage: msg.user?.image,
           user: {
-            ...(msg.user as any),
-            username: msg.messageType === 'system' && msg.isFromAdmin && (msg.user as any)?.role === 'admin' ? (msg.user as any).username : 
-                     msg.messageType === 'system' ? 'system' : (msg.user as any)?.username
+            ...msg.user,
+            username: msg.messageType === 'system' && msg.isFromAdmin && msg.user?.role === 'admin' ? msg.user.username : 
+                     msg.messageType === 'system' ? 'system' : msg.user?.username
           }
         };
       }),
-      notes: updatedTicket.notes.map((note: Record<string, unknown>) => ({
-        id: String(note.id),
+      notes: updatedTicket.notes.map((note: any) => ({
+        id: note.id.toString(),
         content: note.content,
-        author: (note.user as any)?.username || (note.user as any)?.name || 'Admin',
-        createdAt: (note.createdAt as Date).toISOString(),
+        author: note.user?.username || note.user?.name || 'Admin',
+        createdAt: note.createdAt.toISOString(),
         isPrivate: note.isPrivate
       }))
     };

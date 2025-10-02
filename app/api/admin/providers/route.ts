@@ -1,35 +1,7 @@
+import { auth } from '@/auth';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-
-// Types for database operations
-interface DatabaseProvider {
-  id: number;
-  name: string;
-  api_key: string;
-  api_url: string | null;
-  http_method?: string;
-  status: string;
-  is_custom: boolean | null;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
-  current_balance: number | null;
-  balance_last_updated: Date | null;
-}
-
-interface WhereClause {
-  deletedAt?: null | { not: null };
-  status?: string;
-}
-
-interface UpdateData {
-  status?: string;
-  name?: string;
-  api_key?: string;
-  api_url?: string;
-  http_method?: string;
-}
 // Custom providers only - no predefined providers
 
 // GET - Get all available providers
@@ -56,7 +28,7 @@ export async function GET(req: NextRequest) {
     const filter = searchParams.get('filter') || 'active'; // 'active', 'trash', 'all', 'with-services'
 
     // Get configured providers from database
-    let configuredProviders: DatabaseProvider[] = [];
+    let configuredProviders: any[] = [];
     try {
       // First ensure api_providers table exists and rename if needed
       await db.$executeRaw`
@@ -79,7 +51,7 @@ export async function GET(req: NextRequest) {
       // Columns api_url and is_custom already exist in schema, no need to add them
 
       // Build where clause based on filter
-      let whereClause: WhereClause = {};
+      let whereClause: any = {};
       
       if (filter === 'active') {
         whereClause = {
@@ -135,7 +107,7 @@ export async function GET(req: NextRequest) {
 
     // Get service and order counts for each provider
     const providerStats = await Promise.all(
-      configuredProviders.map(async (cp: DatabaseProvider) => {
+      configuredProviders.map(async (cp: any) => {
         try {
           // Count total services for this provider (including soft-deleted for trash providers)
           const totalServices = await db.service.count({
@@ -199,7 +171,7 @@ export async function GET(req: NextRequest) {
     const statsMap = new Map(providerStats.map(stat => [stat.providerId, stat]));
 
     // Map all providers as custom providers with dynamic stats
-    let allProviders = configuredProviders.map((cp: DatabaseProvider) => {
+    let allProviders = configuredProviders.map((cp: any) => {
       const stats = statsMap.get(cp.id) || { totalServices: 0, activeServices: 0, inactiveServices: 0, orderCount: 0 };
       
       return {
@@ -478,8 +450,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // All providers are custom providers
+    const providerConfig = {
+      value: providerName,
+      label: providerName,
+      description: `Custom provider: ${providerName}`
+    };
+
     // Check if provider already exists and create new provider
-    let newProvider: DatabaseProvider;
+    let newProvider: any;
     try {
       // Check if provider name already exists
       const existingProviderByName = await db.api_providers.findUnique({
@@ -579,15 +558,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Provider ${providerName} added successfully`,
+      message: `Provider ${providerConfig.label} added successfully`,
       data: {
         provider: {
           id: newProvider.id,
-          name: newProvider.name,
           status: newProvider.status,
           isCustom: newProvider.is_custom,
-          apiUrl: newProvider.api_url,
-          httpMethod: newProvider.http_method
+          ...providerConfig
         }
       },
       error: null
@@ -648,7 +625,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Prepare update data
-    const updateData: UpdateData = {};
+    const updateData: any = {};
     if (status !== undefined) updateData.status = status;
     if (name !== undefined) updateData.name = name;
     if (apiKey !== undefined) updateData.api_key = apiKey;
@@ -701,7 +678,7 @@ export async function PUT(req: NextRequest) {
       // Validate URL format
       try {
         new URL(finalApiUrl);
-      } catch {
+      } catch (error) {
         return NextResponse.json(
           {
             error: 'Cannot activate provider: Invalid API URL format',
@@ -840,10 +817,12 @@ export async function DELETE(req: NextRequest) {
               data: { deletedAt: new Date() }
             });
           } else {
-            // Has self-created services, update timestamp
+            // Has self-created services, change provider to "Self"
             await db.category.update({
               where: { id: categoryId },
               data: { 
+                providerId: null,
+                providerName: "Self",
                 updatedAt: new Date()
               }
             });
@@ -949,10 +928,12 @@ export async function DELETE(req: NextRequest) {
               where: { id: categoryId }
             });
           } else {
-            // Has self-created services, update timestamp
+            // Has self-created services, change provider to "Self"
             await db.category.update({
               where: { id: categoryId },
               data: { 
+                providerId: null,
+                providerName: "Self",
                 updatedAt: new Date()
               }
             });

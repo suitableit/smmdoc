@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -8,6 +10,7 @@ import {
   FaClipboardList,
   FaEye,
   FaHeart,
+  FaRegHeart,
   FaRegStar,
   FaSearch,
   FaStar,
@@ -29,7 +32,6 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
     </div>
   </div>
 );
-GradientSpinner.displayName = 'GradientSpinner';
 
 // Toast Component
 const Toast = ({
@@ -61,7 +63,6 @@ const Toast = ({
     </div>
   </div>
 );
-Toast.displayName = 'Toast';
 
 interface Service {
   id: number;
@@ -111,6 +112,7 @@ const UserServiceTable: React.FC = () => {
   const [isSearchLoading, setIsSearchLoading] = useState(false);
 
   const [totalServices, setTotalServices] = useState(0);
+  const [displayLimit] = useState(50); // Services to show in favorites section
   const [selectedProvider, setSelectedProvider] = useState('All');
   const [providers, setProviders] = useState<Array<{id: string, name: string}>>([]);
 
@@ -259,31 +261,21 @@ const UserServiceTable: React.FC = () => {
       setLoading(false);
       setIsSearchLoading(false);
     }
-  }, [debouncedSearch, user?.id, page, limit, selectedProvider]);
+  }, [debouncedSearch, user?.id, page, limit]);
 
   // Process services data for grouping and favorites
-  const processServicesData = React.useCallback((servicesData: Service[], categoriesData: Array<{
-    id: number;
-    category_name: string;
-    hideCategory?: string;
-    position?: number;
-  }>) => {
+  const processServicesData = React.useCallback((servicesData: Service[], categoriesData: any[]) => {
     // Separate favorite services
     const favorites = servicesData.filter(service => service.isFavorite);
     setFavoriteServices(favorites);
 
     // Group services by category
-    const groupedById: Record<string, { category: {
-      id: number;
-      category_name: string;
-      hideCategory?: string;
-      position?: number;
-    }; services: Service[] }> = {};
+    const groupedById: Record<string, { category: any; services: Service[] }> = {};
 
     // Initialize all active categories (including duplicates by name)
     categoriesData
-      .filter((category) => category.hideCategory !== 'yes')
-      .forEach((category) => {
+      .filter((category: any) => category.hideCategory !== 'yes')
+      .forEach((category: any) => {
         // Use unique key with ID to handle duplicate names
         const categoryKey = `${category.category_name}_${category.id}`;
         groupedById[categoryKey] = {
@@ -351,7 +343,7 @@ const UserServiceTable: React.FC = () => {
   // Initial load and search changes
   useEffect(() => {
     fetchServices();
-  }, [fetchServices]);
+  }, [fetchServices, debouncedSearch, page, limit, selectedProvider]);
 
 
 
@@ -867,18 +859,7 @@ const UserServiceTable: React.FC = () => {
         <ServiceViewModal
           isOpen={isOpen}
           setIsOpen={setIsOpen}
-          service={{
-            id: selected.id,
-            name: selected.name,
-            description: selected.description,
-            price: selected.rate,
-            min: selected.min_order,
-            max: selected.max_order,
-            rate: selected.avg_time,
-            category: selected.category?.category_name || 'Uncategorized',
-            refill: selected.refill,
-            cancel: selected.cancel
-          }}
+          service={selected}
         />
       )}
     </div>

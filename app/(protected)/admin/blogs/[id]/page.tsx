@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import Image from 'next/image';
 import {
   FaArrowLeft,
   FaCheckCircle,
@@ -286,7 +285,7 @@ const EditBlogPostPage = () => {
     toolbar: true,
     spellcheck: true,
     language: 'en',
-    toolbarButtonSize: 'middle' as const,
+    toolbarButtonSize: 'middle',
     theme: 'default',
     enableDragAndDropFileToEditor: true,
     uploader: {
@@ -298,14 +297,14 @@ const EditBlogPostPage = () => {
     showXPathInStatusbar: false,
     askBeforePasteHTML: false,
     askBeforePasteFromWord: false,
-    defaultActionOnPaste: 'insert_clear_html' as const,
+    defaultActionOnPaste: 'insert_clear_html',
     style: {
       background: '#ffffff',
       color: '#000000'
     },
     editorCssClass: 'jodit-editor-white-bg',
     events: {
-      afterInit: function (editor: any) {
+      afterInit: function (editor) {
         // Ensure editor is properly initialized
         editor.focus();
       }
@@ -746,11 +745,9 @@ const EditBlogPostPage = () => {
               <div className="space-y-3">
                 {formData.featuredImage ? (
                   <div className="relative">
-                    <Image
+                    <img
                       src={formData.featuredImage}
                       alt="Featured"
-                      width={400}
-                      height={192}
                       className="w-full h-48 object-cover rounded-lg"
                     />
                     <button

@@ -18,18 +18,9 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   </div>
 );
 
-interface DatabaseInfo {
-  host: string;
-  port: number;
-  database: string;
-  username: string;
-  currentTime: string;
-  lastAttempt: string;
-}
-
 export default function DatabaseErrorPage() {
   const [isRetrying, setIsRetrying] = useState(false);
-  const [databaseInfo, setDatabaseInfo] = useState<DatabaseInfo | null>(null);
+  const [databaseInfo, setDatabaseInfo] = useState<any>(null);
 
   const handleRetryConnection = async () => {
     setIsRetrying(true);
@@ -52,8 +43,8 @@ export default function DatabaseErrorPage() {
           setIsRetrying(false);
         }, 2000);
       }
-    } catch {
-      console.error('Retry connection failed');
+    } catch (error) {
+      console.error('Retry connection failed:', error);
       setTimeout(() => {
         setIsRetrying(false);
       }, 2000);
@@ -80,8 +71,8 @@ export default function DatabaseErrorPage() {
             setDatabaseInfo(data.databaseInfo);
           }
         }
-      } catch {
-        console.log('Failed to fetch database info');
+      } catch (error) {
+        console.log('Failed to fetch database info:', error);
       }
     };
     
@@ -100,7 +91,7 @@ export default function DatabaseErrorPage() {
           // Database is working, redirect to home page
           window.location.href = '/';
         }
-      } catch {
+      } catch (error) {
         // Database is still down, stay on this page
         console.log('Database still unavailable, staying on error page');
       }
@@ -126,7 +117,7 @@ export default function DatabaseErrorPage() {
               Database Connection Error
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300">
-              We&apos;re experiencing technical difficulties. Please try again in a moment.
+              We're experiencing technical difficulties. Please try again in a moment.
             </p>
           </div>
 

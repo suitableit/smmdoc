@@ -2,7 +2,7 @@
 
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
-import { faqData } from '@/data/frontend/homepage/faqs';
+import { FAQ, faqData } from '@/data/frontend/homepage/faqs';
 
 
 
@@ -22,7 +22,7 @@ function FAQs() {
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="text-left lg:text-center mb-6">
           <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
-            FAQ&apos;s
+            FAQ's
           </h4>
           <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
             People Also Asked to{' '}

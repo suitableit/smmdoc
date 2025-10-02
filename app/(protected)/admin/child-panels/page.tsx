@@ -1633,7 +1633,7 @@ const ChildPanelsPage = () => {
                                 <span className="font-medium">Enable Custom Branding</span>
                               </label>
                               <div className="text-sm text-gray-600">
-                                Allow this panel to use custom branding, logos, and remove &quot;Powered by&quot; links
+                                Allow this panel to use custom branding, logos, and remove "Powered by" links
                               </div>
                             </div>
 

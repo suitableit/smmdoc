@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { testProviderConnection } from '@/lib/utils/providerValidator';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     // Get all providers
     const providers = await db.api_providers.findMany({

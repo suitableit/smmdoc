@@ -37,15 +37,17 @@ interface ConnectionInfo {
 export default function OfflinePage() {
   const searchParams = useSearchParams();
   const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo>({
-    ipAddress: 'Unavailable',
+    ip: 'Unavailable',
     browser: 'Unknown',
     platform: 'Unknown',
+    errorCode: 'ERR_NETWORK_OFFLINE',
     lastAttempt: new Date().toLocaleString()
   });
   
   const [currentPageState, setCurrentPageState] = useState<PageState | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
+  const [connectionType, setConnectionType] = useState<string>('unknown');
   const [isDetectingIP, setIsDetectingIP] = useState(true);
 
 
@@ -71,7 +73,7 @@ export default function OfflinePage() {
           lastAttempt: new Date().toLocaleString()
         }));
       }
-    } catch {
+    } catch (error) {
       // Connection failed, update last attempt time
       setConnectionInfo(prev => ({
         ...prev,
@@ -88,22 +90,9 @@ export default function OfflinePage() {
       setIsOnline(navigator.onLine);
       
       // Get connection type if available
-      interface NavigatorConnection {
-        effectiveType?: string;
-        type?: string;
-      }
-      
-      interface ExtendedNavigator extends Navigator {
-        connection?: NavigatorConnection;
-        mozConnection?: NavigatorConnection;
-        webkitConnection?: NavigatorConnection;
-      }
-      
-      const connection = (navigator as ExtendedNavigator).connection || 
-                        (navigator as ExtendedNavigator).mozConnection || 
-                        (navigator as ExtendedNavigator).webkitConnection;
+      const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
       if (connection) {
-        // Connection type available but not used in UI
+        setConnectionType(connection.effectiveType || connection.type || 'unknown');
       }
     };
 
@@ -127,7 +116,7 @@ export default function OfflinePage() {
         try {
           const url = new URL(currentPath);
           pagePath = url.pathname;
-        } catch {
+        } catch (error) {
           pagePath = '/';
         }
       }
@@ -213,7 +202,7 @@ export default function OfflinePage() {
                 
                 if (response.ok) {
                   const data = await response.json();
-                  const ip = data.ip || data.query || data.IPv4;
+                  let ip = data.ip || data.query || data.IPv4;
                   
                   if (ip) {
                     // Store in localStorage for future use
@@ -222,12 +211,12 @@ export default function OfflinePage() {
                     return ip;
                   }
                 }
-              } catch {
+              } catch (serviceError) {
                 // Continue to next service
                 continue;
               }
             }
-          } catch {
+          } catch (error) {
             // Fall through to local methods
           }
         }
@@ -269,7 +258,7 @@ export default function OfflinePage() {
             rtc.close();
           }, 3000);
         });
-      } catch {
+      } catch (error) {
         return 'Unable to detect';
       }
     };
@@ -295,9 +284,14 @@ export default function OfflinePage() {
       window.removeEventListener('online', updateOnlineStatus);
       window.removeEventListener('offline', updateOnlineStatus);
     };
-  }, [searchParams]);
+  }, []);
 
-
+  const formatPagePath = (path: string) => {
+    if (path === '/') return 'Homepage';
+    return path.split('/').filter(Boolean).map(segment => 
+      segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ')
+    ).join(' > ');
+  };
 
   const formatTimestamp = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -334,7 +328,7 @@ export default function OfflinePage() {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              {isOnline ? "Connection Available" : "You&apos;re Offline"}
+              {isOnline ? "Connection Available" : "You're Offline"}
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 mb-2">
               {isOnline 

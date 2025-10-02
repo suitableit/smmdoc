@@ -546,7 +546,7 @@ export default function ActivateAffiliatePage() {
                 <div className="text-center py-8 bg-gray-50 dark:bg-[#1e1f2e] border border-gray-200 dark:border-gray-600 rounded-lg">
                   <FaWallet className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                   <p className="text-gray-500 dark:text-gray-400 text-sm">
-                    No payment methods added yet. Click &quot;Add Payment Method&quot; to get started.
+                    No payment methods added yet. Click "Add Payment Method" to get started.
                   </p>
                 </div>
               )}
@@ -852,7 +852,7 @@ export default function ActivateAffiliatePage() {
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                   Get unique referral link and share. When someone signs up using
-                  your link and places an order, you&apos;ll receive a 1% commission
+                  your link and places an order, you'll receive a 1% commission
                   on their order.
                 </p>
               </div>

@@ -21,7 +21,11 @@ const getValidProviders = async () => {
   }
 };
 
-
+// Default endpoints for custom providers
+const DEFAULT_ENDPOINTS = {
+  services: "/services",
+  balance: "/balance"
+};
 
 // POST - Sync services from providers
 export async function POST(req: NextRequest) {
@@ -81,14 +85,14 @@ export async function POST(req: NextRequest) {
         console.log(`Starting sync for provider: ${provider.name}`);
         
         // Create API specification from provider configuration
-        const apiSpec = createApiSpecFromProvider(provider as unknown as Record<string, unknown>);
+        const apiSpec = createApiSpecFromProvider(provider);
         
         // Create API request builder with provider's API specification
         const apiBuilder = new ApiRequestBuilder(
           apiSpec,
           provider.api_url,
           provider.api_key,
-          (provider as any).http_method || 'POST'
+          provider.http_method || 'POST'
         );
 
         // Build services request using API specification
@@ -97,7 +101,8 @@ export async function POST(req: NextRequest) {
         const response = await fetch(servicesRequest.url, {
           method: servicesRequest.method,
           headers: servicesRequest.headers,
-          body: servicesRequest.data
+          body: servicesRequest.data,
+          timeout: (provider.timeout_seconds || 30) * 1000
         });
 
         if (!response.ok) {
@@ -107,7 +112,10 @@ export async function POST(req: NextRequest) {
         const responseData = await response.json();
         
         // Parse response using API specification
-        const responseParser = new ApiResponseParser(apiSpec);
+        const responseParser = new ApiResponseParser({
+          responseMapping: provider.response_mapping || '',
+          responseFormat: (provider.response_format as 'json' | 'xml') || 'json'
+        });
         
         const providerServices = responseParser.parseServicesResponse(responseData);
 
@@ -161,12 +169,7 @@ export async function POST(req: NextRequest) {
 
         console.log(`Found ${existingServices.length} existing services for provider ${provider.name}`);
 
-        interface SyncError {
-          service: string;
-          error: string;
-        }
-
-        const syncStats = {
+        let syncStats = {
           provider: provider.name,
           providerId: provider.id,
           totalFetched: providerServices.length,
@@ -175,7 +178,7 @@ export async function POST(req: NextRequest) {
           disabled: 0,
           priceChanges: 0,
           statusChanges: 0,
-          errors: [] as SyncError[]
+          errors: [] as any[]
         };
 
         // Create a map of existing services by provider service ID
@@ -204,26 +207,19 @@ export async function POST(req: NextRequest) {
         // Process each provider service
         for (const providerService of providerServices) {
           try {
-            const providerServiceId = providerService.serviceId;
+            const providerServiceId = providerService.service || providerService.id;
             console.log(`Processing provider service: ${providerService.name} (ID: ${providerServiceId})`);
             
             const existingService = existingServiceMap.get(providerServiceId?.toString());
             console.log(`Found existing service:`, existingService ? `${existingService.id} (${existingService.name})` : 'None');
 
-            const providerRate = providerService.rate || 0;
+            const providerRate = parseFloat(providerService.rate) || 0;
             const markupRate = providerRate * (1 + profitMargin / 100);
             const rateUSD = convertToUSD(markupRate, 'USD', currencies);
 
             if (existingService) {
               // Update existing service
-              interface ServiceUpdates {
-                updateText?: string;
-                name?: string;
-                min_order?: number;
-                max_order?: number;
-                status?: string;
-              }
-              const updates: ServiceUpdates = {};
+              const updates: any = {};
               let hasChanges = false;
 
               // Parse existing provider info
@@ -254,13 +250,13 @@ export async function POST(req: NextRequest) {
                   hasChanges = true;
                 }
 
-                if (providerService.min !== existingService.min_order) {
-                  updates.min_order = providerService.min || 100;
+                if (parseInt(providerService.min) !== existingService.min_order) {
+                  updates.min_order = parseInt(providerService.min) || 100;
                   hasChanges = true;
                 }
 
-                if (providerService.max !== existingService.max_order) {
-                  updates.max_order = providerService.max || 10000;
+                if (parseInt(providerService.max) !== existingService.max_order) {
+                  updates.max_order = parseInt(providerService.max) || 10000;
                   hasChanges = true;
                 }
 
@@ -310,7 +306,7 @@ export async function POST(req: NextRequest) {
           
           // Create a comprehensive set of provider service identifiers
           providerServices.forEach(s => {
-            const serviceId = s.serviceId;
+            const serviceId = s.service || s.id;
             if (serviceId) {
               providerServiceIds.add(serviceId.toString());
               providerServiceIds.add(parseInt(serviceId).toString()); // Handle string/number conversion

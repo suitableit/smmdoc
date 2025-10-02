@@ -25,17 +25,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause for filtering
-    const whereClause: {
-      admin_status: string;
-      OR?: Array<{
-        user?: {
-          name?: { contains: string; mode: string };
-          email?: { contains: string; mode: string };
-        };
-        transaction_id?: { contains: string; mode: string };
-        invoice_id?: { contains: string; mode: string };
-      }>;
-    } = {
+    const whereClause: any = {
       admin_status: status,
     };
 
@@ -78,11 +68,11 @@ export async function GET(req: NextRequest) {
     if (sortBy === 'user.name') {
       orderBy = {
         user: {
-          name: sortOrder as 'asc' | 'desc',
+          name: sortOrder,
         },
       };
     } else {
-      orderBy[sortBy] = sortOrder as 'asc' | 'desc';
+      orderBy[sortBy] = sortOrder;
     }
 
     // Fetch transactions with pagination

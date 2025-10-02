@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -248,26 +250,21 @@ const FavoriteServicesTable: React.FC = () => {
       groupedById[categoryKey].services.push(service);
     });
 
-    // Sort categories by position and name
-    const sortedGrouped = Object.entries(groupedById)
-      .sort(([, a], [, b]) => {
-        const posA = a.category.position || 999;
-        const posB = b.category.position || 999;
-        if (posA !== posB) return posA - posB;
-        return a.category.category_name.localeCompare(b.category.category_name);
-      })
-      .reduce((acc, [key, value]) => {
-        acc[key] = value;
-        return acc;
-      }, {} as Record<string, { category: any; services: Service[] }>);
-
-    // Convert to the format expected by the UI
+    // Convert to the format expected by the UI and sort by ID first, then position
     const grouped: Record<string, Service[]> = {};
-    Object.entries(sortedGrouped).forEach(([key, { category, services }]) => {
-      // Use category name with ID to handle duplicates
-      const displayName = `${category.category_name} (ID: ${category.id})`;
-      grouped[displayName] = services;
-    });
+    Object.values(groupedById)
+      .sort((a, b) => {
+        // Sort by ID first (1, 2, 3...)
+        const idDiff = (a.category.id || 999) - (b.category.id || 999);
+        if (idDiff !== 0) return idDiff;
+        // Then by position if IDs are same
+        return (a.category.position || 999) - (b.category.position || 999);
+      })
+      .forEach(({ category, services }) => {
+        // Use category name with ID to handle duplicates
+        const displayName = `${category.category_name} (ID: ${category.id})`;
+        grouped[displayName] = services;
+      });
 
     setGroupedServices(grouped);
 
@@ -768,18 +765,7 @@ const FavoriteServicesTable: React.FC = () => {
         <ServiceViewModal
           isOpen={isOpen}
           setIsOpen={setIsOpen}
-          service={{
-            id: selected.id,
-            name: selected.name,
-            description: selected.description,
-            price: selected.rate,
-            min: selected.min_order,
-            max: selected.max_order,
-            rate: selected.avg_time,
-            category: selected.category?.category_name || 'Uncategorized',
-            refill: selected.refill,
-            cancel: selected.cancel
-          }}
+          service={selected}
         />
       )}
     </div>

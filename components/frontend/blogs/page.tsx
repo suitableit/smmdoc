@@ -68,6 +68,7 @@ const BlogPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
 
+
   // Fetch blog posts from API
   const fetchBlogPosts = async () => {
     try {
@@ -129,7 +130,7 @@ const BlogPage: React.FC = () => {
             Strategies
           </h1>
           <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-4xl mx-auto transition-colors duration-200">
-            Welcome to SMMDOC&apos;s blog page. Your gateway to the latest insights
+            Welcome to SMMDOC's blog page. Your gateway to the latest insights
             and trends in social media marketing. This resource outlines how we
             share knowledge, provide valuable content, and help you stay ahead
             in the digital marketing landscape with cutting-edge strategies and
@@ -183,7 +184,7 @@ const BlogPage: React.FC = () => {
         {!hasMorePosts && allBlogPosts.length > 6 && (
           <div className="text-center">
             <p className="text-gray-600 dark:text-gray-300 text-lg transition-colors duration-200">
-              You&apos;ve reached the end of our blog posts. Stay tuned for more
+              You've reached the end of our blog posts. Stay tuned for more
               updates!
             </p>
           </div>

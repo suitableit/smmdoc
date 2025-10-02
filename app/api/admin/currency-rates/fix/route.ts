@@ -37,7 +37,7 @@ export async function POST() {
 
         if (existingCurrency) {
           // Update existing currency
-          await db.currency.update({
+          const updatedCurrency = await db.currency.update({
             where: { code: currencyCode },
             data: { rate: correctRate },
           });
@@ -53,8 +53,8 @@ export async function POST() {
         } else {
           console.log(`⚠️ Currency ${currencyCode} not found in database`);
         }
-      } catch (err) {
-        console.error(`❌ Error updating ${currencyCode}:`, err);
+      } catch (error) {
+        console.error(`❌ Error updating ${currencyCode}:`, error);
       }
     }
 

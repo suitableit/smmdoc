@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import React from 'react';
 import { FaUserPlus, FaSearch, FaWallet, FaRocket } from 'react-icons/fa';
-import { stepsData } from '@/data/frontend/homepage/how-it-works';
+import { Step, stepsData } from '@/data/frontend/homepage/how-it-works';
 
 // Icon mapping
 const iconMap = {

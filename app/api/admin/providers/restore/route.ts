@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth-helpers';
+import { getCurrentUser } from '@/auth';
 import { db } from '@/lib/db';
 
 // POST - Restore provider from trash
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       where: { id: providerId },
       data: { 
         status: 'active',
-        updatedAt: new Date()
+        updated_at: new Date()
       }
     });
 

@@ -98,8 +98,11 @@ export default function VerifyPaymentPage() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Simulate response based on form selection
+      let success = false;
+
       if (values.responseType === 'Success') {
         // If user chose "Success" in the demo form
+        success = true;
         toast.dismiss();
         toast.success('Transaction verified successfully!');
 

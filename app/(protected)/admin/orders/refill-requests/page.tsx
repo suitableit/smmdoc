@@ -156,40 +156,6 @@ interface PaginationInfo {
   hasPrev: boolean;
 }
 
-interface RefillRequest {
-  id: string;
-  reason: string;
-  status: string;
-  adminNotes?: string;
-  processedBy?: string;
-  processedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-  order?: {
-    id: number;
-    qty: number;
-    price: number;
-    usdPrice: number;
-    bdtPrice: number;
-    link: string;
-    status: string;
-    createdAt: Date;
-    service?: {
-      name: string;
-      refill: boolean;
-      rate: number;
-    };
-  };
-  user?: {
-    id: number;
-    email: string;
-    name: string;
-    username?: string;
-    currency: string;
-    balance: number;
-  };
-}
-
 const RefillOrdersPage = () => {
   const { appName } = useAppNameWithFallback();
 
@@ -283,11 +249,11 @@ const RefillOrdersPage = () => {
 
       // Transform refill requests to orders format for display
       const transformedOrders = (result.data || [])
-        .filter((request: RefillRequest, index: number, self: RefillRequest[]) =>
+        .filter((request: any, index: number, self: any[]) =>
           // Remove duplicates based on order ID
           index === self.findIndex(r => r.order?.id === request.order?.id)
         )
-        .map((request: RefillRequest) => ({
+        .map((request: any) => ({
         id: request.order?.id || 0,
         qty: request.order?.qty || 0,
         price: request.order?.price || 0,
@@ -398,12 +364,12 @@ const RefillOrdersPage = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, fetchEligibleOrders]);
+  }, [searchTerm]);
 
   // Load data on component mount and when filters change
   useEffect(() => {
     fetchEligibleOrders();
-  }, [pagination.page, pagination.limit, statusFilter, fetchEligibleOrders]);
+  }, [pagination.page, pagination.limit, statusFilter]);
 
   useEffect(() => {
     setStatsLoading(true);
@@ -414,7 +380,7 @@ const RefillOrdersPage = () => {
     };
 
     loadData();
-  }, [fetchStats]);
+  }, []);
 
   // Update stats when pagination data changes
   useEffect(() => {
@@ -436,7 +402,7 @@ const RefillOrdersPage = () => {
   };
 
   // Safe ID formatter to prevent slice errors
-  const safeFormatOrderId = (id: string | number | null | undefined) => {
+  const safeFormatOrderId = (id: any) => {
     return formatID(String(id || 'null'));
   };
 

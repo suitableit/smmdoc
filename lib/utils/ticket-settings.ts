@@ -2,12 +2,10 @@ import { db } from '@/lib/db';
 
 interface TicketSettings {
   maxPendingTickets: string;
-  ticketSystemEnabled: boolean;
 }
 
 const DEFAULT_TICKET_SETTINGS: TicketSettings = {
   maxPendingTickets: '3',
-  ticketSystemEnabled: true,
 };
 
 // Cache settings for 5 minutes
@@ -33,7 +31,6 @@ export async function getTicketSettings(): Promise<TicketSettings> {
     if (settings) {
       cachedTicketSettings = {
         maxPendingTickets: settings.maxPendingTickets || DEFAULT_TICKET_SETTINGS.maxPendingTickets,
-        ticketSystemEnabled: settings.ticketSystemEnabled ?? DEFAULT_TICKET_SETTINGS.ticketSystemEnabled,
       };
       lastFetchTime = now;
       return cachedTicketSettings;

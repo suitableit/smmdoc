@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
 import { testProviderConnection } from '@/lib/utils/providerValidator';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const resolvedParams = await params;
-    const providerId = parseInt(resolvedParams.id);
+    const providerId = parseInt(params.id);
     
     if (isNaN(providerId)) {
       return NextResponse.json(

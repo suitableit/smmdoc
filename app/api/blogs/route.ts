@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const isAdmin = session?.user?.role === 'admin';
     
     // Build where clause for filtering
-    const whereClause: Record<string, unknown> = {};
+    const whereClause: any = {};
     
     // For non-admin users, only show published posts
     if (!isAdmin) {

@@ -139,6 +139,8 @@ export const contactMessageTemplates = {
     userName,
     subject,
     adminReply,
+    adminName,
+    messageId,
     originalMessage,
     attachments
   }: AdminReplyEmailData) => ({

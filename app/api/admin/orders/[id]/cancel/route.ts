@@ -101,6 +101,7 @@ export async function POST(
         break;
       case 'partial':
         // Refund based on remaining quantity
+        const deliveredPercentage = order.qty > 0 ? (order.qty - order.remains) / order.qty : 0;
         refundAmount = orderPrice * (order.remains / order.qty);
         break;
       case 'none':
@@ -322,7 +323,7 @@ export async function GET(
     const isCancellable = cancellableStatuses.includes(order.status);
     
     // Calculate refund estimates
-    const orderPrice = order.user.currency === 'USD' ? order.usdPrice : order.bdtPrice;
+    const orderPrice = (order as any).user?.currency === 'USD' ? order.usdPrice : order.bdtPrice;
     const deliveredQuantity = order.qty - order.remains;
     const deliveredPercentage = order.qty > 0 ? deliveredQuantity / order.qty : 0;
     const partialRefundAmount = orderPrice * (order.remains / order.qty);
@@ -338,7 +339,7 @@ export async function GET(
         remainingQuantity: order.remains,
         deliveredPercentage: Math.round(deliveredPercentage * 100),
         orderPrice,
-        currency: order.user.currency
+        currency: (order as any).user?.currency || 'USD'
       },
       refundOptions: {
         full: {

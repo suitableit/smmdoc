@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 // POST /api/user/affiliate/join - Join affiliate program
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const session = await auth();
 

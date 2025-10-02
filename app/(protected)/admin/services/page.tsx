@@ -11,64 +11,6 @@ import React, {
   useTransition,
 } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-
-// Type definitions
-interface Service {
-  id: string;
-  name: string;
-  description?: string;
-  status: 'active' | 'inactive';
-  rate: string | number;
-  provider_price: string | number;
-  providerPrice?: string | number;
-  self_price?: string | number;
-  cost_price?: string | number;
-  provider?: string;
-  deleted_at?: string | null;
-  deletedAt?: string | null;
-  category_id: string;
-  categoryId?: string | number;
-  category?: Category;
-  is_secret?: boolean;
-  type?: string;
-  serviceType?: ServiceType;
-  providerId?: number | string | null;
-  price_per_k?: number;
-  min_order?: number;
-  max_order?: number;
-  refill_enabled?: boolean;
-  cancel_enabled?: boolean;
-  refill?: boolean;
-  refillDays?: number;
-  refillDisplay?: string | number;
-  updateText?: string;
-  [key: string]: unknown;
-}
-
-interface Category {
-  id: string;
-  category_name: string;
-  hideCategory?: string;
-  position?: number;
-}
-
-interface ServiceType {
-  id: number;
-  name: string;
-  status?: string;
-}
-
-interface Provider {
-  id: number;
-  name?: string;
-  label?: string;
-  value?: string;
-  status?: string;
-}
-
-interface GroupedServices {
-  [categoryName: string]: Service[];
-}
 import {
   FaBox,
   FaBriefcase,
@@ -118,21 +60,19 @@ import {
 import { mutate } from 'swr';
 
 // Fetcher function for useSWR
-const fetcher = (url: string) => axiosInstance.get(url).then((res: any) => res.data);
+const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
 
 // Custom Form Components
 const FormField = ({ children }: { children: React.ReactNode }) => (
   <div className="space-y-2">{children}</div>
 );
 
-interface FormItemProps {
-  className?: string;
-  children: React.ReactNode;
-}
-
-const FormItem: React.FC<FormItemProps> = ({
+const FormItem = ({
   className = '',
   children,
+}: {
+  className?: string;
+  children: React.ReactNode;
 }) => <div className={`space-y-2 ${className}`}>{children}</div>;
 
 const FormLabel = ({
@@ -167,7 +107,7 @@ const FormMessage = ({
 // Optimized memoized components for better performance
 
 // ServiceActionsDropdown component
-const ServiceActionsDropdown = memo(function ServiceActionsDropdown({
+const ServiceActionsDropdown = memo(({
   service,
   statusFilter,
   categoryName,
@@ -177,7 +117,7 @@ const ServiceActionsDropdown = memo(function ServiceActionsDropdown({
   onRestore,
   onDelete,
 }: {
-  service: Service;
+  service: any;
   statusFilter: string;
   categoryName: string;
   activeCategoryToggles: Record<string, boolean>;
@@ -185,7 +125,7 @@ const ServiceActionsDropdown = memo(function ServiceActionsDropdown({
   onToggleStatus: () => void;
   onRestore: () => void;
   onDelete: () => void;
-}) {
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleToggle = () => {
@@ -285,16 +225,15 @@ const MemoizedServiceRow = memo(
     onToggleSecret,
     isUpdating,
   }: {
-    service: Service;
+    service: any;
     isSelected: boolean;
-    onToggleSelect: (serviceId: string) => void;
-    onEdit: (serviceId: string) => void;
-    onToggleStatus: (serviceId: string) => void;
-    onToggleRefill: (serviceId: string) => void;
-    onToggleCancel: (serviceId: string) => void;
-    onToggleSecret: (serviceId: string) => void;
+    onToggleSelect: (serviceId: number) => void;
+    onEdit: (serviceId: number) => void;
+    onToggleStatus: (serviceId: number) => void;
+    onToggleRefill: (serviceId: number) => void;
+    onToggleCancel: (serviceId: number) => void;
+    onToggleSecret: (serviceId: number) => void;
     isUpdating: boolean;
-    getProviderNameById: (providerId: number | string | null, providerName?: string) => string;
   }) => {
     return (
       <tr className="border-b hover:bg-gray-50 transition-colors duration-150">
@@ -346,11 +285,15 @@ const MemoizedServiceRow = memo(
           </span>
         </td>
         <td className="p-3 text-sm" style={{ color: 'var(--text-muted)' }}>
-          {service.provider || 'Self'}
+          {(() => {
+            const providerName = getProviderNameById(service.providerId, service.provider);
+            console.log('Rendering provider name for service:', service.id, 'providerId:', service.providerId, 'result:', providerName);
+            return providerName;
+          })()}
         </td>
         <td className="p-3">
           <PriceDisplay
-            amount={service.price_per_k || 0}
+            amount={service.price_per_k}
             originalCurrency="USD"
             className="text-sm font-medium"
           />
@@ -454,7 +397,7 @@ const MemoizedCategoryHeader = memo(
     onDeleteCategory,
   }: {
     categoryName: string;
-    services: Service[];
+    services: any[];
     isCollapsed: boolean;
     onToggleCollapse: () => void;
     onSelectCategory: () => void;
@@ -520,7 +463,7 @@ const MemoizedCategoryHeader = memo(
 MemoizedCategoryHeader.displayName = 'MemoizedCategoryHeader';
 
 // Custom Gradient Spinner Component
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }: { size?: string; className?: string }) => (
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
@@ -683,15 +626,7 @@ const DeleteServicesAndCategoriesModal = ({
 };
 
 // Delete Category Confirmation Modal Component
-const DeleteCategoryModal: React.FC<{
-  onClose: () => void;
-  onConfirm: (action: 'delete' | 'move', targetCategoryId?: string) => void;
-  categoryName: string;
-  categoryId: number;
-  isUpdating: boolean;
-  servicesCount: number;
-  categoriesData: { data: Category[] };
-}> = ({
+const DeleteCategoryModal = ({
   onClose,
   onConfirm,
   categoryName,
@@ -699,13 +634,21 @@ const DeleteCategoryModal: React.FC<{
   isUpdating,
   servicesCount,
   categoriesData,
+}: {
+  onClose: () => void;
+  onConfirm: (action: 'delete' | 'move', targetCategoryId?: string) => void;
+  categoryName: string;
+  categoryId: number;
+  isUpdating: boolean;
+  servicesCount: number;
+  categoriesData: any;
 }) => {
   const [deleteAction, setDeleteAction] = useState<'delete' | 'move'>('delete');
   const [targetCategoryId, setTargetCategoryId] = useState<string>('');
 
   // Filter out the current category from available options
   const availableCategories =
-    categoriesData?.data?.filter(cat => cat.id !== categoryId.toString()) || [];
+    categoriesData?.data?.filter((cat: any) => cat.id !== categoryId) || [];
 
   const handleConfirm = () => {
     if (deleteAction === 'move' && !targetCategoryId) {
@@ -722,7 +665,7 @@ const DeleteCategoryModal: React.FC<{
           className="text-lg font-semibold"
           style={{ color: 'var(--text-primary)' }}
         >
-          Delete &quot;{categoryName}&quot; Category
+          Delete "{categoryName}" Category
         </h3>
         <button
           onClick={onClose}
@@ -762,10 +705,7 @@ const DeleteCategoryModal: React.FC<{
                 name="deleteAction"
                 value="delete"
                 checked={deleteAction === 'delete'}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const value = e.target.value as 'delete' | 'move';
-                  setDeleteAction(value);
-                }}
+                onChange={(e) => setDeleteAction(e.target.value as 'delete')}
                 className="mt-0.5"
               />
               <div>
@@ -786,10 +726,7 @@ const DeleteCategoryModal: React.FC<{
                 name="deleteAction"
                 value="move"
                 checked={deleteAction === 'move'}
-                onChange={e => {
-                  const value = e.target.value as 'delete' | 'move';
-                  setDeleteAction(value);
-                }}
+                onChange={(e) => setDeleteAction(e.target.value as 'move')}
                 className="mt-0.5"
                 disabled={availableCategories.length === 0}
               />
@@ -815,11 +752,11 @@ const DeleteCategoryModal: React.FC<{
                     </label>
                     <select
                       value={targetCategoryId}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTargetCategoryId(e.target.value)}
+                      onChange={(e) => setTargetCategoryId(e.target.value)}
                       className="w-full pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-gray-900 transition-all duration-200 appearance-none cursor-pointer"
                     >
                       <option value="">Choose a category...</option>
-                      {availableCategories.map(category => (
+                      {availableCategories.map((category: any) => (
                         <option key={category.id} value={category.id}>
                           {category.category_name}
                         </option>
@@ -847,13 +784,13 @@ const DeleteCategoryModal: React.FC<{
           {deleteAction === 'move' && targetCategoryId && (
             <div className="p-3 bg-green-50 rounded-lg border border-green-200">
               <p className="text-sm text-green-800">
-                <strong>Ready:</strong> All services will be moved to &quot;
+                <strong>Ready:</strong> All services will be moved to "
                 {
                   availableCategories.find(
-                    (cat) => cat.id === targetCategoryId
+                    (cat: any) => cat.id === targetCategoryId
                   )?.category_name
                 }
-                &quot; before deleting this category.
+                " before deleting this category.
               </p>
             </div>
           )}
@@ -938,7 +875,7 @@ const CreateServiceForm: React.FC<{
   useEffect(() => {
     if (serviceTypesData?.data && !watch('serviceTypeId')) {
       const defaultServiceType = serviceTypesData.data.find(
-        (serviceType: ServiceType) => serviceType.name === 'Default'
+        (serviceType: any) => serviceType.name === 'Default'
       );
       if (defaultServiceType) {
         setValue('serviceTypeId', defaultServiceType.id.toString());
@@ -993,9 +930,9 @@ const CreateServiceForm: React.FC<{
         } else {
           showToast(response.data.error, 'error');
         }
-      } catch (error: unknown) {
+      } catch (error: any) {
         console.error('API Error:', error);
-        showToast(`Error: ${error instanceof Error ? error.message : 'Something went wrong'}`, 'error');
+        showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
       }
     });
   };
@@ -1111,7 +1048,7 @@ const CreateServiceForm: React.FC<{
                   <option value={''} hidden>
                     Select Service Category
                   </option>
-                  {categoriesData?.data?.map((category: Category) => (
+                  {categoriesData?.data?.map((category: any) => (
                     <option key={category.id} value={category.id}>
                       {category?.category_name}
                     </option>
@@ -1136,7 +1073,7 @@ const CreateServiceForm: React.FC<{
                   disabled={isPending || serviceTypesLoading}
                   required
                 >
-                  {serviceTypesData?.data?.map((serviceType: ServiceType) => (
+                  {serviceTypesData?.data?.map((serviceType: any) => (
                     <option key={serviceType.id} value={serviceType.id}>
                       {serviceType.name}
                     </option>
@@ -1188,7 +1125,7 @@ const CreateServiceForm: React.FC<{
                     {...register('rate')}
                     disabled={isPending}
                   />
-                  </FormControl>
+                </FormControl>
                 <FormMessage>{errors.rate?.message}</FormMessage>
               </FormItem>
 
@@ -1291,7 +1228,7 @@ const CreateServiceForm: React.FC<{
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('refill', {
-                    setValueAs: (value: string) => value === 'true',
+                    setValueAs: (value) => value === 'true',
                   })}
                   disabled={isPending}
                   required
@@ -1362,7 +1299,7 @@ const CreateServiceForm: React.FC<{
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('cancel', {
-                    setValueAs: value => value === 'true',
+                    setValueAs: (value) => value === 'true',
                   })}
                   disabled={isPending}
                   required
@@ -1602,7 +1539,7 @@ const CreateCategoryForm = ({
       // handle form submission
       axiosInstance
         .post('/api/admin/categories', values)
-        .then((res: any) => {
+        .then((res) => {
           if (res.data.success) {
             reset();
             showToast(
@@ -1761,7 +1698,7 @@ const EditCategoryForm = ({
   useEffect(() => {
     if (categoriesData?.data && categoryId) {
       const category = categoriesData.data.find(
-        (cat: Category) => cat.id === categoryId
+        (cat: any) => cat.id === parseInt(categoryId)
       );
       if (category) {
         reset({
@@ -1801,14 +1738,12 @@ const EditCategoryForm = ({
         } else {
           showToast(res.data.error || 'Failed to update category', 'error');
         }
-      } catch (error: unknown) {
+      } catch (error: any) {
         showToast(
           `Error: ${
-            error instanceof Error && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response && error.response.data && typeof error.response.data === 'object' && 'error' in error.response.data
-              ? (error.response.data as { error: string }).error
-              : error instanceof Error
-              ? error.message
-              : 'Something went wrong'
+            error.response?.data?.error ||
+            error.message ||
+            'Something went wrong'
           }`,
           'error'
         );
@@ -2036,9 +1971,9 @@ const EditServiceForm = ({
         } else {
           showToast(response.data.error || 'Failed to update service', 'error');
         }
-      } catch (error: unknown) {
+      } catch (error: any) {
         console.error('Edit API Error:', error);
-        showToast(`Error: ${error instanceof Error ? error.message : 'Something went wrong'}`, 'error');
+        showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
       }
     });
   };
@@ -2155,7 +2090,7 @@ const EditServiceForm = ({
                   <option value={''} hidden>
                     Select Service Category
                   </option>
-                  {categoriesData?.data?.map((category: Category) => (
+                  {categoriesData?.data?.map((category: any) => (
                     <option key={category.id} value={category.id}>
                       {category?.category_name}
                     </option>
@@ -2181,7 +2116,7 @@ const EditServiceForm = ({
                   required
                 >
                   <option value="">Select Service Type</option>
-                  {serviceTypesData?.data?.map((serviceType: ServiceType) => (
+                  {serviceTypesData?.data?.map((serviceType: any) => (
                     <option key={serviceType.id} value={serviceType.id}>
                       {serviceType.name}
                     </option>
@@ -2335,7 +2270,7 @@ const EditServiceForm = ({
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('refill', {
-                    setValueAs: (value: string) => value === 'true',
+                    setValueAs: (value) => value === 'true',
                   })}
                   disabled={isPending}
                   required
@@ -2406,7 +2341,7 @@ const EditServiceForm = ({
                 <select
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   {...register('cancel', {
-                    setValueAs: (value: string) => value === 'true',
+                    setValueAs: (value) => value === 'true',
                   })}
                   disabled={isPending}
                   required
@@ -2619,7 +2554,7 @@ function AdminServicesPage() {
 
   // ServiceTable related state
   const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [selected, setSelected] = useState<any>({});
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -2814,7 +2749,7 @@ function AdminServicesPage() {
     // If we have providers data, find the provider by ID
     if (providersData?.data?.providers) {
       console.log('Available providers:', providersData.data.providers);
-      const provider = providersData.data.providers.find((p: Provider) => {
+      const provider = providersData.data.providers.find((p: any) => {
         console.log('Comparing provider:', p.id, 'with providerId:', parseInt(providerId.toString()));
         return p.id === parseInt(providerId.toString());
       });
@@ -2852,8 +2787,8 @@ function AdminServicesPage() {
         refreshProviders(),
         // Refresh stats
         fetch('/api/admin/services/stats')
-          .then((res: any) => res.json())
-          .then((data: any) => {
+          .then((res) => res.json())
+          .then((data) => {
             if (data.data) {
               setStats((prev) => ({
                 ...prev,
@@ -2886,8 +2821,8 @@ function AdminServicesPage() {
         refreshProviders(),
         // Refresh stats
         fetch('/api/admin/services/stats')
-          .then((res: any) => res.json())
-          .then((data: any) => {
+          .then((res) => res.json())
+          .then((data) => {
             if (data.data) {
               setStats((prev) => ({
                 ...prev,
@@ -2930,12 +2865,12 @@ function AdminServicesPage() {
 
     const searchLower = searchTerm.toLowerCase();
 
-    return data.data.filter((service: Service) => {
+    return data.data.filter((service: any) => {
       // Pre-compute search fields to avoid repeated toLowerCase calls
       // Use direct parameters without mapping
       const serviceName = service.name?.toLowerCase() || '';
       const categoryName = service.category?.category_name?.toLowerCase() || '';
-      const dynamicProvider = getProviderNameById(service.providerId ?? null, service.provider).toLowerCase();
+      const dynamicProvider = getProviderNameById(service.providerId, service.provider).toLowerCase();
       const serviceId = service.id?.toString() || '';
 
       const matchesSearch =
@@ -2953,7 +2888,7 @@ function AdminServicesPage() {
         matchesProvider = !service.providerId;
       } else {
         // Get dynamic provider name and compare
-        const dynamicProviderName = getProviderNameById(service.providerId ?? null, service.provider);
+        const dynamicProviderName = getProviderNameById(service.providerId, service.provider);
         matchesProvider = dynamicProviderName === providerFilter;
       }
 
@@ -2994,18 +2929,18 @@ function AdminServicesPage() {
     console.log('Total services:', allServices.length);
     
     // Only count services that are NOT trashed (deletedAt is null or undefined)
-    const nonTrashedServices = allServices.filter((service: Service) => 
+    const nonTrashedServices = allServices.filter((service: any) => 
       service.deletedAt === null || service.deletedAt === undefined
     );
     console.log('Non-trashed services:', nonTrashedServices.length);
     
-    const trashedServices = allServices.filter((service: Service) => 
+    const trashedServices = allServices.filter((service: any) => 
       service.deletedAt !== null && service.deletedAt !== undefined
     );
     console.log('Trashed services:', trashedServices.length);
     
-    const activeCount = nonTrashedServices.filter((service: Service) => service.status === 'active').length;
-    const inactiveCount = nonTrashedServices.filter((service: Service) => service.status === 'inactive').length;
+    const activeCount = nonTrashedServices.filter((service: any) => service.status === 'active').length;
+    const inactiveCount = nonTrashedServices.filter((service: any) => service.status === 'inactive').length;
     const allCount = activeCount + inactiveCount;
     
     console.log('Active (non-trashed):', activeCount);
@@ -3022,7 +2957,7 @@ function AdminServicesPage() {
   // Calculate trashServices count using all services data
   const trashServicesCount = useMemo(() => {
     if (!allServicesData?.data) return 0;
-    const count = allServicesData.data.filter((service: Service) => 
+    const count = allServicesData.data.filter((service: any) => 
       service.deletedAt !== null && service.deletedAt !== undefined
     ).length;
     return count;
@@ -3043,8 +2978,8 @@ function AdminServicesPage() {
     // Get active providers from API, excluding reserved names
     const reservedNames = ['All', 'Self'];
     const activeProviders = providersData.data.providers
-      .filter((provider: Provider) => provider.status === 'active')
-      .map((provider: Provider) => provider.label || provider.value)
+      .filter((provider: any) => provider.status === 'active')
+      .map((provider: any) => provider.label || provider.value)
       .filter((providerName: string) => !reservedNames.includes(providerName))
       .sort();
     
@@ -3063,13 +2998,13 @@ function AdminServicesPage() {
     console.log('isLoading:', isLoading);
     
     // Use Map for better performance with large datasets
-    const groupedById = new Map<string, { category: Category; services: Service[] }>();
+    const groupedById = new Map<string, { category: any; services: any[] }>();
 
     // Always initialize with all categories when statusFilter is 'all', regardless of other conditions
     // This ensures empty categories are shown only when "All" filter is selected
     if (statusFilter === 'all' && data?.allCategories) {
       console.log('Initializing all categories for statusFilter=all');
-      data.allCategories.forEach((category: Category) => {
+      data.allCategories.forEach((category: any) => {
         const categoryKey = `${category.category_name}_${category.id}`;
         console.log('Adding category:', categoryKey, category);
         groupedById.set(categoryKey, {
@@ -3082,17 +3017,17 @@ function AdminServicesPage() {
     // If no data available, return empty for error handling
     if (!data) {
       console.log('No data available - API might have failed');
-      return {} as Record<string, Service[]>;
+      return {} as Record<string, any[]>;
     }
 
     // For non-'all' statusFilter, only show categories if there are services
     if (statusFilter !== 'all' && !filteredServices.length) {
       console.log('No services for non-all statusFilter, returning empty');
-      return {} as Record<string, Service[]>;
+      return {} as Record<string, any[]>;
     }
 
     // Group filtered services by category
-    filteredServices.forEach((service: Service) => {
+    filteredServices.forEach((service: any) => {
       const categoryId = service.category?.id;
       const categoryName = service.category?.category_name || 'Uncategorized';
       const categoryKey = categoryId
@@ -3102,7 +3037,7 @@ function AdminServicesPage() {
       if (!groupedById.has(categoryKey)) {
         groupedById.set(categoryKey, {
           category: service.category || {
-            id: '0',
+            id: 0,
             category_name: 'Uncategorized',
           },
           services: [],
@@ -3113,13 +3048,13 @@ function AdminServicesPage() {
 
     // Convert to array and sort for better performance
     const sortedGroups = Array.from(groupedById.values()).sort((a, b) => {
-      const idDiff = parseInt(a.category.id || '999') - parseInt(b.category.id || '999');
+      const idDiff = (a.category.id || 999) - (b.category.id || 999);
       if (idDiff !== 0) return idDiff;
       return (a.category.position || 999) - (b.category.position || 999);
     });
 
     // Build final grouped object
-    const grouped: Record<string, Service[]> = {};
+    const grouped: Record<string, any[]> = {};
 
     sortedGroups.forEach(({ category, services }) => {
       const displayName = `${category.category_name} (ID: ${category.id})`;
@@ -3129,15 +3064,15 @@ function AdminServicesPage() {
 
       if (customOrder && customOrder.length > 0) {
         // Use Map for O(1) lookup instead of find()
-        const serviceMap = new Map(services.map((s: any) => [s.id, s]));
-        const orderedServices: Service[] = [];
+        const serviceMap = new Map(services.map((s) => [s.id, s]));
+        const orderedServices: any[] = [];
 
-        customOrder.forEach((serviceId: any) => {
+        customOrder.forEach((serviceId) => {
           const service = serviceMap.get(serviceId);
           if (service) orderedServices.push(service);
         });
 
-        services.forEach((service: any) => {
+        services.forEach((service) => {
           if (!customOrder.includes(service.id)) {
             orderedServices.push(service);
           }
@@ -3146,20 +3081,20 @@ function AdminServicesPage() {
         grouped[displayName] = orderedServices;
       } else {
         // Optimized sorting
-        grouped[displayName] = services.sort((a: Service, b: Service) => {
+        grouped[displayName] = services.sort((a: any, b: any) => {
           let aValue = a[sortBy];
           let bValue = b[sortBy];
 
           if (sortBy === 'rate' || sortBy === 'provider_price') {
-            aValue = parseFloat(String(aValue)) || 0;
-            bValue = parseFloat(String(bValue)) || 0;
+            aValue = parseFloat(aValue) || 0;
+            bValue = parseFloat(bValue) || 0;
           }
 
           return sortOrder === 'asc'
-            ? (aValue as any) > (bValue as any)
+            ? aValue > bValue
               ? 1
               : -1
-            : (aValue as any) < (bValue as any)
+            : aValue < bValue
             ? 1
             : -1;
         });
@@ -3168,15 +3103,15 @@ function AdminServicesPage() {
 
     // Apply custom category order if available
     if (categoryOrder.length > 0) {
-      const orderedGrouped: GroupedServices = {};
+      const orderedGrouped: Record<string, any[]> = {};
 
-      categoryOrder.forEach((categoryName: string) => {
+      categoryOrder.forEach((categoryName) => {
         if (grouped[categoryName]) {
           orderedGrouped[categoryName] = grouped[categoryName];
         }
       });
 
-      Object.keys(grouped).forEach((categoryName: string) => {
+      Object.keys(grouped).forEach((categoryName) => {
         if (!categoryOrder.includes(categoryName)) {
           orderedGrouped[categoryName] = grouped[categoryName];
         }
@@ -3237,30 +3172,30 @@ function AdminServicesPage() {
       setSelectedServices([]);
       setSelectedCategories([]);
     } else {
-      setSelectedServices(allServices.map((service: Service) => service.id));
+      setSelectedServices(allServices.map((service: any) => service.id));
       setSelectedCategories(allCategories);
     }
   };
 
-  const handleSelectCategory = (categoryName: string, categoryServices: Service[]) => {
-    const categoryIds = categoryServices.map((service: any) => service.id);
-    const allSelected = categoryIds.every((id: any) =>
+  const handleSelectCategory = (categoryName: string, categoryServices: any[]) => {
+    const categoryIds = categoryServices.map((service) => service.id);
+    const allSelected = categoryIds.every((id) =>
       selectedServices.includes(id)
     );
     const categorySelected = selectedCategories.includes(categoryName);
 
     if (allSelected && categorySelected) {
       // Deselect category and its services
-      setSelectedServices((prev: any) =>
-        prev.filter((id: any) => !categoryIds.includes(id))
+      setSelectedServices((prev) =>
+        prev.filter((id) => !categoryIds.includes(id))
       );
-      setSelectedCategories((prev: any) =>
-        prev.filter((cat: any) => cat !== categoryName)
+      setSelectedCategories((prev) =>
+        prev.filter((cat) => cat !== categoryName)
       );
     } else {
       // Select category and its services
-      setSelectedServices((prev: any) => [...new Set([...prev, ...categoryIds])]);
-      setSelectedCategories((prev: any) => [...new Set([...prev, categoryName])]);
+      setSelectedServices((prev) => [...new Set([...prev, ...categoryIds])]);
+      setSelectedCategories((prev) => [...new Set([...prev, categoryName])]);
     }
   };
 
@@ -3270,9 +3205,9 @@ function AdminServicesPage() {
   };
 
   const handleSelectService = (serviceId: string) => {
-    setSelectedServices((prev: any) => {
+    setSelectedServices((prev) => {
       const newSelectedServices = prev.includes(serviceId)
-        ? prev.filter((id: any) => id !== serviceId)
+        ? prev.filter((id) => id !== serviceId)
         : [...prev, serviceId];
       
       // Update category selection based on service selection
@@ -3284,13 +3219,13 @@ function AdminServicesPage() {
 
   // Helper function to update category selection based on service selection
   const updateCategorySelectionBasedOnServices = (currentSelectedServices: string[]) => {
-    setSelectedCategories((prevSelectedCategories: any) => {
+    setSelectedCategories((prevSelectedCategories) => {
       const newSelectedCategories = [...prevSelectedCategories];
       
       // Check each category to see if it should be selected or deselected
-      Object.keys(groupedServices).forEach((categoryName: string) => {
+      Object.keys(groupedServices).forEach((categoryName) => {
         const categoryServices = groupedServices[categoryName] || [];
-        const categoryServiceIds = categoryServices.map((service: Service) => service.id);
+        const categoryServiceIds = categoryServices.map((service: any) => service.id);
         
         // Check if all services in this category are selected
         const allServicesSelected = categoryServiceIds.length > 0 && 
@@ -3561,7 +3496,7 @@ function AdminServicesPage() {
     }
 
     const categoryServices = groupedServices[categoryName] || [];
-    const currentServiceIds = categoryServices.map((s: Service) => s.id);
+    const currentServiceIds = categoryServices.map((s: any) => s.id);
     const currentOrder = serviceOrder[categoryName] || currentServiceIds;
     const newOrder = [...currentOrder];
 
@@ -3591,7 +3526,7 @@ function AdminServicesPage() {
     setDropPositionService(null);
 
     const draggedServiceObj = categoryServices.find(
-      (s: Service) => s.id === draggedService
+      (s: any) => s.id === draggedService
     );
     showToast(
       `Moved "${draggedServiceObj?.name || 'Service'}" in ${categoryName}`,
@@ -3610,11 +3545,11 @@ function AdminServicesPage() {
   };
 
   // API functions
-  const toggleServiceStatus = async (service: Service) => {
+  const toggleServiceStatus = async (service: any) => {
     try {
       // Find the category this service belongs to
       const serviceCategory = Object.entries(groupedServices).find(([categoryName, services]) => 
-        (services as Service[]).some(s => s.id === service.id)
+        (services as any[]).some(s => s.id === service.id)
       );
       
       if (serviceCategory) {
@@ -3643,14 +3578,14 @@ function AdminServicesPage() {
       } else {
         showToast('Failed to update service status', 'error');
       }
-    } catch (error: unknown) {
-      showToast(`Error: ${error instanceof Error ? error.message : 'Something went wrong'}`, 'error');
+    } catch (error: any) {
+      showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const restoreService = async (service: Service) => {
+  const restoreService = async (service: any) => {
     try {
       setIsUpdating(true);
       const response = await axiosInstance.post(
@@ -3666,14 +3601,14 @@ function AdminServicesPage() {
       } else {
         showToast('Failed to restore service', 'error');
       }
-    } catch (error: unknown) {
-      showToast(`Error: ${error instanceof Error ? error.message : 'Something went wrong'}`, 'error');
+    } catch (error: any) {
+      showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const toggleRefill = async (service: Service) => {
+  const toggleRefill = async (service: any) => {
     try {
       const response = await axiosInstance.post(
         '/api/admin/services/toggle-refill',
@@ -3689,12 +3624,12 @@ function AdminServicesPage() {
       } else {
         showToast('Failed to update refill setting', 'error');
       }
-    } catch (error: unknown) {
-      showToast(`Error: ${error instanceof Error ? error.message : 'Something went wrong'}`, 'error');
+    } catch (error: any) {
+      showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
     }
   };
 
-  const toggleCancel = async (service: Service) => {
+  const toggleCancel = async (service: any) => {
     try {
       const response = await axiosInstance.post(
         '/api/admin/services/toggle-cancel',
@@ -3710,8 +3645,8 @@ function AdminServicesPage() {
       } else {
         showToast('Failed to update cancel setting', 'error');
       }
-    } catch (error: unknown) {
-      showToast(`Error: ${error instanceof Error ? error.message : 'Something went wrong'}`, 'error');
+    } catch (error: any) {
+      showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
     }
   };
 
@@ -3724,7 +3659,7 @@ function AdminServicesPage() {
 
   const toggleCategoryAndServices = async (
     categoryName: string,
-    services: Service[]
+    services: any[]
   ) => {
     try {
       setIsUpdating(true);
@@ -3739,7 +3674,7 @@ function AdminServicesPage() {
 
       const categoryId = parseInt(categoryIdMatch[1]);
       const categoryData = categoriesData?.data?.find(
-        (cat: Category) => cat.id === categoryId.toString()
+        (cat: any) => cat.id === categoryId
       );
       if (!categoryData) {
         showToast('Category not found', 'error');
@@ -3795,14 +3730,14 @@ function AdminServicesPage() {
         'success'
       );
       await refreshAllData();
-    } catch (error: unknown) {
+    } catch (error: any) {
       setActiveCategoryToggles((prev) => ({
         ...prev,
         [categoryName]: !activeCategoryToggles[categoryName],
       }));
       showToast(
         `Error updating ${categoryName}: ${
-          error instanceof Error ? error.message : 'Something went wrong'
+          error.message || 'Something went wrong'
         }`,
         'error'
       );
@@ -3823,7 +3758,7 @@ function AdminServicesPage() {
       // Optimistic update: Remove service from UI immediately
       const currentData = data?.data || [];
       const updatedServices = currentData.filter(
-        (service: Service) => service.id.toString() !== id.toString()
+        (service: any) => service.id.toString() !== id.toString()
       );
 
       // Update the cache optimistically
@@ -3849,11 +3784,14 @@ function AdminServicesPage() {
         await refreshAllData();
         showToast(response.data.error || 'Failed to delete service', 'error');
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Delete service error:', error);
       // Revert optimistic update on error
       await refreshAllData();
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete service';
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to delete service';
       showToast(errorMessage, 'error');
     }
   };
@@ -3875,7 +3813,7 @@ function AdminServicesPage() {
       // Optimistic update: Remove selected services from UI immediately
       const currentData = data?.data || [];
       const updatedServices = currentData.filter(
-        (service: Service) => !selectedServices.includes(service.id.toString())
+        (service: any) => !selectedServices.includes(service.id.toString())
       );
 
       // Update the cache optimistically
@@ -3921,11 +3859,12 @@ function AdminServicesPage() {
       }
 
       handleCloseDeleteConfirmation();
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Bulk delete error:', error);
       // Revert optimistic update on error
       await refreshAllData();
-      const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Something went wrong';
       showToast(`Error deleting services: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
@@ -4026,10 +3965,11 @@ function AdminServicesPage() {
       await refreshAllData();
 
       handleCloseDeleteServicesAndCategoriesConfirmation();
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Bulk delete error:', error);
       await refreshAllData();
-      const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Something went wrong';
       showToast(`Error deleting services and categories: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
@@ -4218,10 +4158,10 @@ function AdminServicesPage() {
         setSelectedBulkOperation(''); // Clear the selected operation
         await refreshAllData();
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       showToast(
         `Error performing batch operation: ${
-          error instanceof Error ? error.message : 'Something went wrong'
+          error.message || 'Something went wrong'
         }`,
         'error'
       );
@@ -4325,15 +4265,15 @@ function AdminServicesPage() {
 
         // Remove category from categories list
         const updatedCategories = currentCategories.filter(
-          (cat: Category) => cat.id.toString() !== categoryId.toString()
+          (cat: any) => cat.id.toString() !== categoryId.toString()
         );
 
         // Remove services from this category if action is 'delete'
         let updatedServices = currentServices;
         if (action === 'delete') {
           updatedServices = currentServices.filter(
-            (service: Service) =>
-              service.categoryId?.toString() !== categoryId.toString()
+            (service: any) =>
+              service.categoryId.toString() !== categoryId.toString()
           );
         }
 
@@ -4374,11 +4314,12 @@ function AdminServicesPage() {
       } else {
         showToast(response.data.error || 'Failed to delete category', 'error');
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Delete category error:', error);
       // Revert optimistic updates on error
       await refreshAllData();
-      const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
+      const errorMessage =
+        error.response?.data?.error || error.message || 'Something went wrong';
       showToast(`Error: ${errorMessage}`, 'error');
     } finally {
       setIsUpdating(false);
@@ -4452,7 +4393,7 @@ function AdminServicesPage() {
         if (categoryIdMatch) {
           const categoryId = parseInt(categoryIdMatch[1]);
           const categoryData = categoriesData?.data?.find(
-            (cat: Category) => cat.id === categoryId.toString()
+            (cat: any) => cat.id === categoryId
           );
           // If hideCategory is "no" then category is active (toggle ON), if "yes" then inactive (toggle OFF)
           initialToggles[categoryName] = categoryData?.hideCategory === 'no';
@@ -4460,7 +4401,7 @@ function AdminServicesPage() {
           // Fallback for categories without ID format
           const actualCategoryName = getActualCategoryName(categoryName);
           const categoryData = categoriesData?.data?.find(
-            (cat: Category) => cat.category_name === actualCategoryName
+            (cat: any) => cat.category_name === actualCategoryName
           );
           initialToggles[categoryName] = categoryData?.hideCategory === 'no';
         }
@@ -4534,12 +4475,6 @@ function AdminServicesPage() {
     editCategoryModal.open,
     deleteConfirmationModal,
     deleteCategoryModal.open,
-    handleCloseEditModal,
-    handleCloseCreateModal,
-    handleCloseCategoryModal,
-    handleCloseEditCategoryModal,
-    handleCloseDeleteConfirmation,
-    handleCloseDeleteCategoryModal,
   ]);
 
   const serviceStats = [
@@ -5015,7 +4950,7 @@ function AdminServicesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(Object.entries(groupedServices) as [string, Service[]][])
+                      {(Object.entries(groupedServices) as [string, any[]][])
                         .filter(([categoryName, services]) => {
                           // If inactive filter is active, only show categories that:
                           // 1. Are inactive themselves, OR
@@ -5023,14 +4958,14 @@ function AdminServicesPage() {
                           if (statusFilter === 'inactive') {
                             const actualCategoryName = getActualCategoryName(categoryName);
                             const categoryData = categoriesData?.data?.find(
-                              (cat: Category) => cat.category_name === actualCategoryName
+                              (cat: any) => cat.category_name === actualCategoryName
                             );
                             
                             // Check if category is inactive
                             const isCategoryInactive = !activeCategoryToggles[categoryName];
                             
                             // Check if category has any inactive services
-                            const hasInactiveServices = services.some((service: Service) => service.status === 'inactive');
+                            const hasInactiveServices = services.some((service: any) => service.status === 'inactive');
                             
                             return isCategoryInactive || hasInactiveServices;
                           }
@@ -5047,12 +4982,12 @@ function AdminServicesPage() {
 
                           // Sort categories by position: top categories first, then bottom
                           const categoryA = categoriesData?.data?.find(
-                            (cat: Category) =>
-                  cat.category_name === actualCategoryNameA
+                            (cat: any) =>
+                              cat.category_name === actualCategoryNameA
                           );
                           const categoryB = categoriesData?.data?.find(
-                            (cat: Category) =>
-                  cat.category_name === actualCategoryNameB
+                            (cat: any) =>
+                              cat.category_name === actualCategoryNameB
                           );
 
                           const positionA = categoryA?.position || 'bottom';
@@ -5064,7 +4999,7 @@ function AdminServicesPage() {
                             return 1;
                           return categoryNameA.localeCompare(categoryNameB);
                         })
-                        .map(([categoryName, services], _) => (
+                        .map(([categoryName, services], categoryIndex) => (
                           <Fragment key={categoryName}>
                             {/* Drop zone before category */}
                             {draggedCategory &&
@@ -5203,7 +5138,7 @@ function AdminServicesPage() {
                                           getActualCategoryName(categoryName);
                                         const category =
                                           categoriesData?.data?.find(
-                                            (cat: Category) =>
+                                            (cat: any) =>
                                               cat.category_name ===
                                               actualCategoryName
                                           );
@@ -5229,7 +5164,7 @@ function AdminServicesPage() {
                                           getActualCategoryName(categoryName);
                                         const category =
                                           categoriesData?.data?.find(
-                                            (cat: Category) =>
+                                            (cat: any) =>
                                               cat.category_name ===
                                               actualCategoryName
                                           );
@@ -5271,7 +5206,7 @@ function AdminServicesPage() {
                             {/* Services Rows */}
                             {!collapsedCategories.includes(categoryName) &&
                               (services.length > 0 ? (
-                                services.map((service: Service, i: number) => (
+                                services.map((service: any, i: number) => (
                                   <Fragment key={service.id}>
                                     {/* Drop zone before service */}
                                     {draggedService &&
@@ -5418,7 +5353,7 @@ function AdminServicesPage() {
                                             }}
                                           >
                                             <PriceDisplay
-                                              amount={Number(service?.rate)}
+                                              amount={service?.rate}
                                               originalCurrency="USD"
                                             />
                                           </div>
@@ -5430,13 +5365,13 @@ function AdminServicesPage() {
                                           >
                                             Cost:{' '}
                                             <PriceDisplay
-                                              amount={Number(
+                                              amount={
                                                 service?.providerPrice ||
                                                 service?.provider_price ||
                                                 service?.self_price ||
                                                 service?.cost_price ||
                                                 service?.rate
-                                              )}
+                                              }
                                               originalCurrency="USD"
                                             />
                                           </div>
@@ -5543,7 +5478,7 @@ function AdminServicesPage() {
                                             statusFilter={statusFilter}
                                             categoryName={categoryName}
                                             activeCategoryToggles={activeCategoryToggles}
-                                            onEdit={() => handleEditService(Number(service.id))}
+                                            onEdit={() => handleEditService(service.id)}
                                             onToggleStatus={() => toggleServiceStatus(service)}
                                             onRestore={() => restoreService(service)}
                                             onDelete={() => deleteService(service?.id)}

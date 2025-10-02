@@ -21,7 +21,9 @@ export async function POST(req: NextRequest) {
     const { 
       invoice_id, 
       transaction_id, 
+      amount, 
       status, 
+      metadata,
       payment_method,
       sender_number
     } = webhookData;

@@ -14,7 +14,7 @@ import {
     FaUser,
     FaYoutube
 } from 'react-icons/fa';
-
+import { GradientSpinner } from '@/components/ui/GradientSpinner';
 import ReCAPTCHA from '@/components/ReCAPTCHA';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 
@@ -151,7 +151,7 @@ const ContactForm: React.FC = () => {
           Send us a Message
         </h3>
         <p className="text-gray-600 dark:text-gray-300 transition-colors duration-200">
-          We&apos;ll get back to you as soon as possible.
+          We'll get back to you as soon as possible.
         </p>
       </div>
 
@@ -360,7 +360,7 @@ const ContactForm: React.FC = () => {
           <div className="flex items-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400">
             <FaCheckCircle className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm">
-              Thank you! Your message has been sent successfully. We&apos;ll get back
+              Thank you! Your message has been sent successfully. We'll get back
               to you soon.
             </p>
           </div>
@@ -437,9 +437,9 @@ const HowToContact: React.FC = () => {
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed transition-colors duration-200">
                   Follow us, engage with us, and reach out through our social
-                  media channels. We&apos;re active and responsive on platforms
-                  like Facebook, Twitter, Instagram, LinkedIn, and more. It&apos;s
-                  not just a way to contact us; it&apos;s a window into the work we
+                  media channels. We're active and responsive on platforms
+                  like Facebook, Twitter, Instagram, LinkedIn, and more. It's
+                  not just a way to contact us; it's a window into the work we
                   do for our clients.
                 </p>
               </div>

@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
     try {
       await mkdir(uploadDir, { recursive: true });
-    } catch {
+    } catch (error) {
       // Directory might already exist
     }
 
@@ -102,8 +102,8 @@ export async function POST(req: NextRequest) {
         username,
         'profile picture'
       );
-    } catch {
-      console.error('Failed to log profile picture update activity');
+    } catch (error) {
+      console.error('Failed to log profile picture update activity:', error);
     }
 
     return NextResponse.json(
@@ -118,8 +118,8 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
 
-  } catch {
-    console.error('Profile picture upload error');
+  } catch (error) {
+    console.error('Profile picture upload error:', error);
     return NextResponse.json(
       {
         error: 'Failed to upload profile picture',

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // PUT /api/admin/blogs/[id]/status - Update blog post status (Admin only)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await auth();
@@ -21,8 +21,7 @@ export async function PUT(
       );
     }
 
-    const resolvedParams = await params;
-    const blogId = parseInt(resolvedParams.id);
+    const blogId = parseInt(params.id);
 
     if (isNaN(blogId)) {
       return NextResponse.json(

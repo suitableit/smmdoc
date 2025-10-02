@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
 
     // Build where clause
-    const where: Record<string, unknown> = {
+    const where: any = {
       userId: session.user.id,
     };
 
@@ -84,8 +84,8 @@ export async function GET(request: NextRequest) {
       total: transactions.length,
     });
 
-  } catch {
-    console.error('Error fetching user transactions');
+  } catch (error) {
+    console.error('Error fetching user transactions:', error);
     return NextResponse.json(
       { error: 'Failed to fetch transactions' },
       { status: 500 }

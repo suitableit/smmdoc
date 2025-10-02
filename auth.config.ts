@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { user_role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import type { NextAuthConfig } from 'next-auth';
@@ -38,7 +40,7 @@ export default {
     }),
   ],
   callbacks: {
-    async signIn({ user, account }: any) {
+    async signIn({ user, account, request }: any) {
       // Allow OAuth without email verification
       if (account?.provider !== 'credentials') return true;
       const existingUser = await getUserById(user.id);
@@ -118,7 +120,7 @@ export default {
       }
       return session;
     },
-    async jwt({ token }: any) {
+    async jwt({ token, req }: any) {
       if (!token.sub) return token;
 
       // Check for impersonation cookies using Next.js cookies() function

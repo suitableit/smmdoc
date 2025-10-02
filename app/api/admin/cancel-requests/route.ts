@@ -30,16 +30,7 @@ export async function GET(req: NextRequest) {
     console.log('Query params:', { page, limit, status, search });
 
     // Build Prisma where conditions
-    const whereCondition: {
-      status?: string;
-      OR?: Array<{
-        order?: { id: number };
-        user?: {
-          email?: { contains: string; mode: string };
-          name?: { contains: string; mode: string };
-        };
-      }>;
-    } = {};
+    const whereCondition: any = {};
 
     if (status && status !== 'all') {
       whereCondition.status = status;
