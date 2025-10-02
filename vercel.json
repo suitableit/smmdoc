@@ -1,8 +1,8 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "sh build.sh",
+  "installCommand": "npm ci --legacy-peer-deps",
   "devCommand": "npm run dev",
   "functions": {
     "app/api/**/*.ts": {
@@ -10,11 +10,17 @@
     }
   },
   "env": {
-    "FORCE_NPM": "true"
+    "FORCE_NPM": "true",
+    "NPM_CONFIG_PACKAGE_MANAGER": "npm"
   },
   "build": {
     "env": {
-      "PACKAGE_MANAGER": "npm"
+      "PACKAGE_MANAGER": "npm",
+      "NPM_CONFIG_PACKAGE_MANAGER": "npm",
+      "DISABLE_PNPM": "true"
     }
+  },
+  "github": {
+    "silent": true
   }
 }
