@@ -107,16 +107,16 @@ export async function GET() {
       // Create cancel tasks for pending/processing/in_progress orders
       if (['pending', 'processing', 'in_progress'].includes(order.status)) {
         const progress = order.qty > 0 ? ((order.qty - order.remains) / order.qty) * 100 : 0;
-        let refundType = 'full';
-        let customRefundAmount = order.price;
-
-        if (order.status === 'processing' && progress > 0) {
-          refundType = 'partial';
-          customRefundAmount = order.price * 0.8; // 80% refund if processing started
-        } else if (order.status === 'in_progress') {
-          refundType = 'partial';
-          customRefundAmount = order.price * Math.max(0.5, (100 - progress) / 100); // Proportional refund
-        }
+        const refundType: 'full' | 'partial' =
+          (order.status === 'processing' && progress > 0) || order.status === 'in_progress'
+            ? 'partial'
+            : 'full';
+        const customRefundAmount =
+          order.status === 'processing' && progress > 0
+            ? order.price * 0.8 // 80% refund if processing started
+            : order.status === 'in_progress'
+              ? order.price * Math.max(0.5, (100 - progress) / 100) // Proportional refund
+              : order.price;
 
         tasks.push({
           id: `cancel_${order.id}`,
@@ -125,12 +125,12 @@ export async function GET() {
           type: 'cancel' as const,
           status: 'pending' as TaskStatus,
           reason: `Order cancellation requested - Status: ${order.status}`,
-          refundType: ((order.status === 'processing' && progress > 0) || order.status === 'in_progress') ? ('partial' as const) : ('full' as const),
+          refundType,
           customRefundAmount,
           processedBy: undefined,
           createdAt: new Date(order.createdAt).toISOString(),
           updatedAt: new Date(order.updatedAt).toISOString(),
-        });
+        } as Task);
       }
     }
 
@@ -174,4 +174,3 @@ export async function GET() {
     );
   }
 }
-
