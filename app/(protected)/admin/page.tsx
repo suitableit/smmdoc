@@ -24,7 +24,7 @@ import {
     FaTimesCircle,
     FaUserPlus,
     FaUsers,
-} from 'react-icons/fa';
+} from 'react-icons/fa'; 
 
 
 
