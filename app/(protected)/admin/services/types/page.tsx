@@ -147,8 +147,8 @@ const ServiceTypes = () => {
     // Get active providers from API, excluding reserved names
     const reservedNames = ['All', 'Self'];
     const activeProviders = providersData.data.providers
-      .filter((provider: { status: string }) => provider.status === 'active')
-      .map((provider: { label?: string; value?: string }) => provider.label || provider.value)
+      .filter((provider: any) => provider.status === 'active')
+      .map((provider: any) => provider.label || provider.value)
       .filter((providerName: string) => !reservedNames.includes(providerName))
       .sort();
     
@@ -164,7 +164,7 @@ const ServiceTypes = () => {
 
     // If we have providers data, find the provider by ID
     if (providersData?.data?.providers) {
-      const provider = providersData.data.providers.find((p: { id: number; label?: string; name?: string }) => {
+      const provider = providersData.data.providers.find((p: any) => {
         return p.id === parseInt(providerId.toString());
       });
       if (provider) {
@@ -239,7 +239,7 @@ const ServiceTypes = () => {
 
 
   // Utility functions
-  const formatID = (id: string) => {
+  const formatID = (id: string, index: number) => {
     // Return the real database ID
     return String(id);
   };
@@ -261,7 +261,7 @@ const ServiceTypes = () => {
         matchesProvider = !serviceType.providerId;
       } else {
         // Get dynamic provider name and compare
-        const dynamicProviderName = getProviderNameById(serviceType.providerId ?? null, serviceType.providerName);
+        const dynamicProviderName = getProviderNameById(serviceType.providerId, serviceType.providerName);
         matchesProvider = dynamicProviderName === providerFilter;
       }
 
@@ -313,12 +313,9 @@ const ServiceTypes = () => {
       } else {
         showToast(response.data.error || 'Failed to delete service type', 'error');
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error deleting service type:', error);
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
-        : 'Error deleting service type';
-      showToast(errorMessage || 'Error deleting service type', 'error');
+      showToast(error.response?.data?.error || 'Error deleting service type', 'error');
     }
   };
 
@@ -348,12 +345,9 @@ const ServiceTypes = () => {
       } else {
         showToast(response.data.error || 'Failed to update service type', 'error');
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error updating service type:', error);
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
-        : 'Error updating service type';
-      showToast(errorMessage || 'Error updating service type', 'error');
+      showToast(error.response?.data?.error || 'Error updating service type', 'error');
     }
   };
 
@@ -378,12 +372,9 @@ const ServiceTypes = () => {
       } else {
         showToast(response.data.error || 'Failed to add service type', 'error');
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error adding service type:', error);
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error 
-        : 'Error adding service type';
-      showToast(errorMessage || 'Error adding service type', 'error');
+      showToast(error.response?.data?.error || 'Error adding service type', 'error');
     }
   };
 
@@ -605,7 +596,7 @@ const ServiceTypes = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {getPaginatedData().map((serviceType) => (
+                      {getPaginatedData().map((serviceType, index) => (
                         <tr
                           key={serviceType.id}
                           className="border-t hover:bg-gray-50 transition-colors duration-200"
@@ -613,7 +604,7 @@ const ServiceTypes = () => {
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               {/* Use direct service type ID parameter */}
-                              {formatID(serviceType.id)}
+                              {formatID(serviceType.id, (pagination.page - 1) * pagination.limit + index)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -641,7 +632,7 @@ const ServiceTypes = () => {
                               className="font-medium text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {getProviderNameById(serviceType.providerId ?? null, serviceType.providerName)}
+                              {getProviderNameById(serviceType.providerId, serviceType.providerName)}
                             </div>
                           </td>
                           <td className="p-3">

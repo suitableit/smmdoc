@@ -74,7 +74,7 @@ const PostTagsPage = () => {
   // API data state
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   // Fetch tags from API
   const fetchTags = async () => {
@@ -86,7 +86,7 @@ const PostTagsPage = () => {
       
       if (data.success) {
         // Transform API data to match PostTag interface
-        const transformedTags = data.data.map((tag: any) => ({
+        const transformedTags = data.data.map(tag => ({
           id: tag.id,
           name: tag.name,
           postCount: tag._count?.posts || 0,

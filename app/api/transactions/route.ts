@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: Record<string, unknown> = {};
+    const where: any = {};
 
     // If admin view, don't filter by userId, otherwise filter by current user
     if (!adminView || session.user.role !== 'admin') {
@@ -97,19 +97,19 @@ export async function GET(request: NextRequest) {
 
     // Date filtering
     if (startDate || endDate) {
-      (where as any).createdAt = {};
+      where.createdAt = {};
 
       if (startDate) {
-        (where as any).createdAt.gte = new Date(startDate + 'T00:00:00.000Z');
+        where.createdAt.gte = new Date(startDate + 'T00:00:00.000Z');
       }
 
       if (endDate) {
-        (where as any).createdAt.lte = new Date(endDate + 'T23:59:59.999Z');
+        where.createdAt.lte = new Date(endDate + 'T23:59:59.999Z');
       }
     }
 
     // Fetch transactions from database (using AddFund model) with timeout and retry
-    let transactions: Array<Record<string, unknown>> = [];
+    let transactions: any[] = [];
     let totalCount = 0;
 
     try {
@@ -194,7 +194,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const transformedTransactions = transactions.map((transaction: Record<string, unknown>) => ({
+    const transformedTransactions = transactions.map((transaction: any) => ({
       id: transaction.id,
       transactionId: transaction.transaction_id || transaction.id,
       invoice_id: transaction.invoice_id || transaction.id,
@@ -205,20 +205,20 @@ export async function GET(request: NextRequest) {
       method: transaction.method || 'uddoktapay',
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || transaction.id,
-      createdAt: (transaction.createdAt as Date).toISOString(),
-      updatedAt: (transaction.updatedAt as Date)?.toISOString() || (transaction.createdAt as Date).toISOString(),
+      createdAt: transaction.createdAt.toISOString(),
+      updatedAt: transaction.updatedAt?.toISOString() || transaction.createdAt.toISOString(),
       type: 'deposit', // All AddFund records are deposits
       phone: transaction.sender_number || '',
       currency: transaction.currency || 'BDT',
       userId: transaction.userId,
       user: transaction.user ? {
-        id: (transaction.user as any).id,
-        name: (transaction.user as any).name || '',
-        email: (transaction.user as any).email || '',
-        username: (transaction.user as any).username || '',
+        id: transaction.user.id,
+        name: transaction.user.name || '',
+        email: transaction.user.email || '',
+        username: transaction.user.username || '',
       } : null,
       notes: '', // Can be added later if needed
-      processedAt: transaction.admin_status === 'Success' ? (transaction.updatedAt as Date)?.toISOString() : null,
+      processedAt: transaction.admin_status === 'Success' ? transaction.updatedAt?.toISOString() : null,
     }));
 
     // For admin view, return structured response with pagination
@@ -324,7 +324,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update transaction status based on action
-    const updateData: Record<string, unknown> = {
+    const updateData: Record<string, any> = {
       updatedAt: new Date()
     };
 

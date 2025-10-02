@@ -1,3 +1,4 @@
+import nodemailer, { Transporter } from "nodemailer";
 import { createEmailTransporter, getFromEmailAddress } from './email-config';
 import { getAppName } from './utils/general-settings';
 
@@ -57,7 +58,7 @@ export const sendMail = async ({
     return true;
   } catch (error) {
     // Type assertion for error handling
-    const emailError = error as Error & { code?: string };
+    const emailError = error as any;
     
     console.error("❌ Error in sending mail:", {
       code: emailError.code || 'UNKNOWN',

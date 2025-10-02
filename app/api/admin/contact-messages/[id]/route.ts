@@ -143,7 +143,7 @@ export async function PUT(
             const { sendSMS } = await import('@/lib/sms');
             const { smsTemplates } = await import('@/lib/sms');
             
-            const userEmail = contactMessage.user.email as string;
+            const userEmail = contactMessage.user.email;
             const userName = (contactMessage.user as any).name || contactMessage.user.username || 'User';
             const userPhone = (contactMessage.user as any).phone;
             
@@ -154,7 +154,7 @@ export async function PUT(
               if (attachments) {
                 try {
                   const attachmentData = JSON.parse(attachments);
-                  adminAttachments = attachmentData.map((attachment: string | { originalName: string; encryptedPath: string; fileSize?: number; mimeType?: string }) => {
+                  adminAttachments = attachmentData.map((attachment: any) => {
                     // Handle both old format (string paths) and new format (objects)
                     if (typeof attachment === 'string') {
                       const filename = attachment.split('/').pop() || 'attachment';
@@ -183,11 +183,11 @@ export async function PUT(
               
               const emailTemplate = contactEmailTemplates.adminReplyToUser({
                 userName,
-                subject: contactMessage.subject as string,
+                subject: contactMessage.subject,
                 adminReply: adminReply.trim(),
                 adminName: session.user.name || session.user.username || 'Admin',
                 messageId: messageId,
-                originalMessage: contactMessage.message as string,
+                originalMessage: contactMessage.message,
                 attachments: adminAttachments
               });
               
@@ -202,7 +202,7 @@ export async function PUT(
              if (userPhone) {
                const { isValidBangladeshiPhone } = await import('@/lib/sms');
                if (isValidBangladeshiPhone(userPhone)) {
-                 const smsMessage = smsTemplates.adminReplyToUserSMS(contactMessage.subject as string);
+                 const smsMessage = smsTemplates.adminReplyToUserSMS(contactMessage.subject);
                  await sendSMS({
                    to: userPhone,
                    message: smsMessage

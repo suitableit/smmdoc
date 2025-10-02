@@ -25,13 +25,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const period = searchParams.get('period') || 'all'; // days or 'all'
     const userId = searchParams.get('userId'); // optional filter by user
-    const userIdNum = userId ? Number(userId) : undefined; // normalize to number for Prisma
 
     // Build where clause
-    const whereClause: {
-      createdAt?: { gte: Date };
-      userId?: number;
-    } = {};
+    const whereClause: any = {};
 
     // Only add date filter if period is not 'all'
     if (period !== 'all') {
@@ -42,8 +38,8 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    if (userIdNum !== undefined && !Number.isNaN(userIdNum)) {
-      whereClause.userId = userIdNum;
+    if (userId) {
+      whereClause.userId = userId;
     }
     
     // Get overall statistics
@@ -84,7 +80,7 @@ export async function GET(req: NextRequest) {
       
       // Daily order trends (last 30 days or all time)
       period === 'all' ?
-        (userIdNum !== undefined ? 
+        (userId ? 
           db.$queryRaw`
             SELECT
               DATE(createdAt) as date,
@@ -92,7 +88,7 @@ export async function GET(req: NextRequest) {
               SUM(price) as revenue,
               COUNT(DISTINCT userId) as unique_users
             FROM new_orders
-            WHERE userId = ${userIdNum}
+            WHERE userId = ${userId}
             GROUP BY DATE(createdAt)
             ORDER BY date DESC
             LIMIT 30
@@ -109,7 +105,7 @@ export async function GET(req: NextRequest) {
             LIMIT 30
           `
         ) :
-        (userIdNum !== undefined ?
+        (userId ?
           db.$queryRaw`
             SELECT
               DATE(createdAt) as date,
@@ -118,7 +114,7 @@ export async function GET(req: NextRequest) {
               COUNT(DISTINCT userId) as unique_users
             FROM new_orders
             WHERE createdAt >= ${new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000)}
-            AND userId = ${userIdNum}
+            AND userId = ${userId}
             GROUP BY DATE(createdAt)
             ORDER BY date DESC
             LIMIT 30
@@ -157,7 +153,7 @@ export async function GET(req: NextRequest) {
       }),
       
       // Top users by order count (if not filtering by specific user)
-      userIdNum !== undefined ? [] : db.newOrder.groupBy({
+      userId ? [] : db.newOrder.groupBy({
         by: ['userId'],
         where: whereClause,
         _count: {
@@ -244,12 +240,7 @@ export async function GET(req: NextRequest) {
     // Calculate growth rates (compare with previous period) - only if period is specified
     let orderGrowth = 0;
     let revenueGrowth = 0;
-    const periodInfo: {
-      type: 'all-time' | 'period';
-      endDate: string;
-      days?: number;
-      startDate?: string;
-    } = {
+    const periodInfo: any = {
       type: period === 'all' ? 'all-time' : 'period',
       endDate: new Date().toISOString()
     };
@@ -291,7 +282,7 @@ export async function GET(req: NextRequest) {
     console.log('Status stats:', statusStats);
 
     // Convert BigInt values to Numbers for JSON serialization
-    const convertBigIntToNumber = (value: bigint | number | null | undefined): number => {
+    const convertBigIntToNumber = (value: any): number => {
       return typeof value === 'bigint' ? Number(value) : (value || 0);
     };
 
@@ -311,7 +302,7 @@ export async function GET(req: NextRequest) {
         revenue: convertBigIntToNumber(stat._sum.price),
         percentage: totalStats._count.id > 0 ? Math.round((convertBigIntToNumber(stat._count.status) / convertBigIntToNumber(totalStats._count.id)) * 100) : 0
       })),
-      dailyTrends: Array.isArray(dailyStats) ? dailyStats.map((stat: { date: string; orders: bigint; revenue: bigint; unique_users: bigint }) => ({
+      dailyTrends: Array.isArray(dailyStats) ? dailyStats.map((stat: any) => ({
         date: stat.date,
         orders: convertBigIntToNumber(stat.orders),
         revenue: convertBigIntToNumber(stat.revenue),

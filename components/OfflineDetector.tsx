@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 export default function OfflineDetector({ children }: { children: React.ReactNode }) {
   const [isOnline, setIsOnline] = useState(true);
+  const [isCheckingConnection, setIsCheckingConnection] = useState(false);
   const pathname = usePathname();
 
   // Check network connectivity
   const checkConnectivity = async (): Promise<boolean> => {
     try {
+      setIsCheckingConnection(true);
+      
       // Try to fetch a small resource from the same origin
       const response = await fetch('/favicon.ico', {
         method: 'HEAD',
@@ -21,11 +24,13 @@ export default function OfflineDetector({ children }: { children: React.ReactNod
     } catch (error) {
       console.log('Connectivity check failed:', error);
       return false;
+    } finally {
+      setIsCheckingConnection(false);
     }
   };
 
   // Handle going offline - redirect to offline page
-  const handleGoOffline = useCallback(() => {
+  const handleGoOffline = () => {
     // Don't redirect if already on offline page
     if (pathname !== '/offline') {
       // Store current page info and redirect to offline page
@@ -35,10 +40,10 @@ export default function OfflineDetector({ children }: { children: React.ReactNod
       // Redirect to offline page with current page context
       window.location.href = `/offline?from=${encodeURIComponent(currentPath)}&title=${encodeURIComponent(currentPageTitle)}&error=connection_lost`;
     }
-  }, [pathname]);
+  };
 
   // Handle online/offline status changes
-  const handleOnlineStatusChange = useCallback(async () => {
+  const handleOnlineStatusChange = async () => {
     const browserOnline = navigator.onLine;
     
     if (browserOnline) {
@@ -60,7 +65,7 @@ export default function OfflineDetector({ children }: { children: React.ReactNod
       setIsOnline(false);
       handleGoOffline();
     }
-  }, [pathname, handleGoOffline]);
+  };
 
   useEffect(() => {
     // Set initial online status
@@ -106,7 +111,7 @@ export default function OfflineDetector({ children }: { children: React.ReactNod
       window.removeEventListener('offline', handleOffline);
       clearInterval(connectivityInterval);
     };
-  }, [pathname, isOnline, handleGoOffline, handleOnlineStatusChange]);
+  }, [pathname, isOnline]);
 
   return (
     <div>

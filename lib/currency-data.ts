@@ -56,12 +56,7 @@ export const defaultCurrencySettings = {
 export const formatCurrency = (
   amount: number,
   currencyCode: string,
-  settings: {
-    displayDecimals: number;
-    currencyPosition: string;
-    thousandsSeparator: string;
-    decimalSeparator: string;
-  }
+  settings: any
 ) => {
   const currency = defaultCurrencies.find(c => c.code === currencyCode);
   if (!currency) return `${amount}`;

@@ -4,7 +4,7 @@ import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     FaBan,
     FaCheckCircle,
@@ -76,7 +76,62 @@ const Toast = ({
   </div>
 );
 
-
+const dummyTickets: Ticket[] = [
+  {
+    id: 1,
+    subject: 'Order #123 - Issue',
+    status: 'open',
+    createdAt: '2024-03-20T10:30:00',
+    priority: 'high',
+    lastUpdated: '2024-03-20T14:45:00',
+    type: 'human',
+  },
+  {
+    id: 2,
+    subject: 'Payment Issue',
+    status: 'closed',
+    createdAt: '2024-03-19T09:15:00',
+    priority: undefined, // AI tickets don't have priority
+    lastUpdated: '2024-03-19T16:30:00',
+    type: 'ai',
+  },
+  {
+    id: 3,
+    subject: 'Account Access Problem',
+    status: 'customer_reply',
+    createdAt: '2024-03-18T14:20:00',
+    priority: 'low',
+    lastUpdated: '2024-03-19T11:00:00',
+    type: 'human',
+  },
+  {
+    id: 4,
+    subject: 'Refund Request',
+    status: 'closed',
+    createdAt: '2024-03-17T11:45:00',
+    priority: undefined, // AI tickets don't have priority
+    lastUpdated: '2024-03-18T09:30:00',
+    type: 'ai',
+  },
+  {
+    id: 5,
+    subject: 'Technical Support',
+    status: 'on_hold',
+    createdAt: '2024-03-16T16:00:00',
+    priority: 'low',
+    lastUpdated: '2024-03-17T10:15:00',
+    type: 'human',
+  },
+  {
+    id: 6,
+    subject: 'Billing Inquiry',
+    status: 'closed',
+    createdAt: '2024-03-15T13:20:00',
+    priority: undefined, // AI tickets don't have priority
+    lastUpdated: '2024-03-16T15:45:00',
+    type: 'ai',
+  },
+];
 
 export default function TicketsHistory() {
   const { appName } = useAppNameWithFallback();
@@ -105,17 +160,8 @@ export default function TicketsHistory() {
     setPageTitle('Tickets History', appName);
   }, [appName]);
 
-  // Show toast notification
-  const showToast = useCallback(
-    (message: string, type: 'success' | 'error' | 'info' = 'success') => {
-      setToastMessage({ message, type });
-      setTimeout(() => setToastMessage(null), 4000);
-    },
-    []
-  );
-
   // Fetch tickets from API
-  const fetchTickets = useCallback(async () => {
+  const fetchTickets = async () => {
     try {
       setIsLoading(true);
       setError(false);
@@ -139,7 +185,7 @@ export default function TicketsHistory() {
       
       if (data.success) {
         // Map API response to frontend format
-        const mappedTickets: Ticket[] = data.tickets.map((ticket: { id: number; subject: string; status: string; createdAt: string; lastUpdated: string; priority?: string; ticketType: string }) => ({
+        const mappedTickets: Ticket[] = data.tickets.map((ticket: any) => ({
            id: ticket.id,
            subject: ticket.subject,
            status: mapApiStatusToFrontend(ticket.status),
@@ -168,7 +214,7 @@ export default function TicketsHistory() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, status, activeTab, showToast]);
+  };
   
   // Map API status to frontend status
   const mapApiStatusToFrontend = (apiStatus: string) => {
@@ -188,7 +234,7 @@ export default function TicketsHistory() {
   // Load tickets on component mount and when filters change
   useEffect(() => {
     fetchTickets();
-  }, [fetchTickets, page, status, activeTab]);
+  }, [page, status, activeTab]);
   
   // Handle search with debounce
   useEffect(() => {
@@ -201,7 +247,16 @@ export default function TicketsHistory() {
     if (!search && searchInput === '') {
       fetchTickets();
     }
-  }, [search, fetchTickets, searchInput]);
+  }, [search]);
+
+  // Show toast notification
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' = 'success'
+  ) => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   // Live search functionality
   useEffect(() => {
@@ -221,7 +276,7 @@ export default function TicketsHistory() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchInput, tickets]);
+  }, [searchInput]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -268,7 +323,12 @@ export default function TicketsHistory() {
     totalPages: totalPages,
   };
 
-
+  // Handle search submit
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearch(searchInput);
+    setPage(1);
+  };
 
   // Calculate counts for each status filter
   const getStatusCount = (statusKey: string) => {

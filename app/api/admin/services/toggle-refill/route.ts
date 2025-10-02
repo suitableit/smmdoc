@@ -55,12 +55,12 @@ export async function POST(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Error toggling service refill:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to toggle refill status'
+        error: error.message || 'Failed to toggle refill status'
       },
       { status: 500 }
     );

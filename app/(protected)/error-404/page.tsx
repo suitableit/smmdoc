@@ -41,7 +41,7 @@ export default function GlobalError() {
             </span>
           </h1>
           <p className="page-description max-w-2xl mx-auto">
-            We&apos;re sorry, but an unexpected error has occurred in the
+            We're sorry, but an unexpected error has occurred in the
             application. This might be a temporary issue. You can try refreshing
             the page or return to the homepage to continue using our services.
           </p>

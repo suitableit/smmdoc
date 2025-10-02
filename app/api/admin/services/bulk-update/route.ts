@@ -45,13 +45,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Prepare update data - only include fields that are provided
-    const updateFields: {
-      rate?: number;
-      min_order?: number;
-      max_order?: number;
-      status?: string;
-      updatedAt?: Date;
-    } = {};
+    const updateFields: any = {};
     
     if (updateData.rate !== undefined && updateData.rate !== null) {
       const rate = parseFloat(updateData.rate);
@@ -159,7 +153,7 @@ export async function POST(req: NextRequest) {
 }
 
 // GET method to retrieve bulk update history (optional feature)
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     

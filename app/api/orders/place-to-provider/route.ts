@@ -2,7 +2,7 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
-import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
+import { ApiRequestBuilder, ApiResponseParser } from '@/lib/provider-api-specification';
 
 // POST /api/orders/place-to-provider - Forward order to external provider
 export async function POST(req: NextRequest) {
@@ -80,11 +80,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Prepare provider API request using API specification system
-    const apiSpec = createApiSpecFromProvider(provider);
-    const requestBuilder = new ApiRequestBuilder(apiSpec, provider.api_url, provider.api_key, 'POST');
+    const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
     
     const orderRequest = requestBuilder.buildAddOrderRequest(
-      String(order.service.providerServiceId || order.serviceId),
+      order.service.providerServiceId || order.serviceId,
       order.link,
       order.qty
     );
@@ -107,7 +106,7 @@ export async function POST(req: NextRequest) {
         timeout: 30000, // 30 seconds timeout
       });
       providerResponse = response.data;
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Provider API error:', error);
       
       // Log the failed attempt
@@ -117,7 +116,7 @@ export async function POST(req: NextRequest) {
           providerId: provider.id,
           action: 'forward_order',
           status: 'failed',
-          response: JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' })
+          response: JSON.stringify({ error: error.message })
         }
       });
 
@@ -125,7 +124,7 @@ export async function POST(req: NextRequest) {
         { 
           success: false, 
           message: 'Failed to forward order to provider', 
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error.message,
           data: null 
         },
         { status: 500 }
@@ -133,12 +132,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Check provider response using API specification system
-    const responseParser = new ApiResponseParser(apiSpec);
+    const responseParser = new ApiResponseParser();
     let parsedOrder;
     
     try {
       parsedOrder = responseParser.parseAddOrderResponse(providerResponse);
-    } catch {
+    } catch (parseError) {
       await db.providerOrderLog.create({
         data: {
           orderId: order.id,
@@ -181,7 +180,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Update order with provider information
-    await db.newOrder.update({
+    const updatedOrder = await db.newOrder.update({
       where: { id: orderId },
       data: {
         providerOrderId: parsedOrder.orderId.toString(),

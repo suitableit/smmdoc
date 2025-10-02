@@ -678,6 +678,12 @@ function NewOrder() {
     };
   }, []);
 
+  function decodeHTML(html: string) {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = html;
+    return txt.value;
+  }
+
   const userData = useSelector((state: any) => state.userDetails);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

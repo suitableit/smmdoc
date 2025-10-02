@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import Image from 'next/image';
 import {
   FaCheckCircle,
   FaGlobe,
@@ -115,7 +114,7 @@ const NewPostPage = () => {
     toolbar: true,
     spellcheck: true,
     language: 'en',
-    toolbarButtonSize: 'middle' as const,
+    toolbarButtonSize: 'middle',
     theme: 'default',
     enableDragAndDropFileToEditor: true,
     uploader: {
@@ -127,7 +126,7 @@ const NewPostPage = () => {
     showXPathInStatusbar: false,
     askBeforePasteHTML: false,
     askBeforePasteFromWord: false,
-    defaultActionOnPaste: 'insert_clear_html' as const,
+    defaultActionOnPaste: 'insert_clear_html',
     style: {
       background: '#ffffff',
       color: '#000000'
@@ -179,7 +178,7 @@ const NewPostPage = () => {
   };
 
   // Debounce function
-  const debounce = (func: (...args: any[]) => void, wait: number) => {
+  const debounce = (func: Function, wait: number) => {
     let timeout: NodeJS.Timeout;
     return function executedFunction(...args: any[]) {
       const later = () => {
@@ -570,11 +569,9 @@ const NewPostPage = () => {
               <div className="space-y-3">
                 {formData.featuredImage ? (
                   <div className="relative">
-                    <Image
+                    <img
                       src={formData.featuredImage}
                       alt="Featured"
-                      width={400}
-                      height={192}
                       className="w-full h-48 object-cover rounded-lg"
                     />
                     <button

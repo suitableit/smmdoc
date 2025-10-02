@@ -28,17 +28,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Build where clause for refill-eligible orders
-    const whereClause: {
-      status: { in: string[] } | string;
-      OR?: Array<{
-        user?: {
-          email?: { contains: string; mode: string };
-          name?: { contains: string; mode: string };
-        };
-        id?: number;
-        service?: { name?: { contains: string; mode: string } };
-      }>;
-    } = {
+    const whereClause: any = {
       status: {
         in: ['completed', 'partial'] // Only completed or partial orders can be refilled
       }
@@ -51,15 +41,7 @@ export async function GET(req: NextRequest) {
 
     // Add search filter
     if (search) {
-      const searchNumber = parseInt(search);
-      const orFilters: Array<{
-        user?: {
-          email?: { contains: string; mode: string };
-          name?: { contains: string; mode: string };
-        };
-        id?: number;
-        service?: { name?: { contains: string; mode: string } };
-      }> = [
+      whereClause.OR = [
         {
           user: {
             email: {
@@ -77,6 +59,12 @@ export async function GET(req: NextRequest) {
           }
         },
         {
+          id: {
+            contains: search,
+            mode: 'insensitive'
+          }
+        },
+        {
           service: {
             name: {
               contains: search,
@@ -85,13 +73,6 @@ export async function GET(req: NextRequest) {
           }
         }
       ];
-
-      // If the search string is numeric, allow matching by order id
-      if (!isNaN(searchNumber)) {
-        orFilters.push({ id: searchNumber });
-      }
-
-      whereClause.OR = orFilters;
     }
 
     // Get refill-eligible orders

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
 // GET /api/admin/test-task - Test endpoint to check if admin API is working
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     

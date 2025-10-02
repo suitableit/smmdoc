@@ -20,7 +20,7 @@ export async function GET() {
     }
 
     // Get ticket settings from database (create if not exists)
-    let settings = await db.ticket_settings.findFirst({
+    let settings: any = await db.ticket_settings.findFirst({
       include: {
         ticket_subjects: true
       }
@@ -44,7 +44,7 @@ export async function GET() {
       ticketSettings: {
         ticketSystemEnabled: settings.ticketSystemEnabled,
         maxPendingTickets: settings.maxPendingTickets,
-        subjects: settings.ticket_subjects.map((subject: { id: number; name: string }) => ({
+        subjects: settings.ticket_subjects.map((subject: any) => ({
           id: subject.id,
           name: subject.name
         })),
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     });
 
     await db.ticket_subjects.createMany({
-      data: ticketSettings.subjects.map((subject: { name: string }) => ({
+      data: ticketSettings.subjects.map((subject: any) => ({
         name: subject.name.trim(),
         ticketSettingsId: 1,
         createdAt: new Date(),

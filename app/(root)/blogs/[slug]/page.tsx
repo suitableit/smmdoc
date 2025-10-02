@@ -4,16 +4,14 @@ import BlogPostDetailClient from './BlogPostDetailClient';
 import { getAppName, getSiteDescription, getGeneralSettings } from '@/lib/utils/general-settings';
 
 interface BlogPostPageProps {
-  params: Promise<{
+  params: {
     slug: string;
-  }>;
+  };
 }
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   try {
-    const resolvedParams = await params;
-    
     // Get dynamic settings and meta keywords
     const [appName, siteDescription, generalSettings] = await Promise.all([
       getAppName(),
@@ -41,7 +39,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       console.error('Error fetching meta keywords:', error);
     }
     
-    const response = await fetch(`${baseUrl}/api/blogs/${resolvedParams.slug}`, {
+    const response = await fetch(`${baseUrl}/api/blogs/${params.slug}`, {
       cache: 'no-store'
     });
     
@@ -98,7 +96,10 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   } catch (error) {
     console.error('Error generating metadata:', error);
     // Fallback with dynamic settings
-    const siteDescription = await getSiteDescription().catch(() => 'Read insightful articles on social media marketing and digital strategies.');
+    const [appName, siteDescription] = await Promise.all([
+      getAppName().catch(() => 'SMM Panel'),
+      getSiteDescription().catch(() => 'Read insightful articles on social media marketing and digital strategies.')
+    ]);
     
     return {
       title: `Blog Post`,
@@ -109,9 +110,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   try {
-    const resolvedParams = await params;
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/blogs/${resolvedParams.slug}`, {
+    const response = await fetch(`${baseUrl}/api/blogs/${params.slug}`, {
       cache: 'no-store'
     });
     

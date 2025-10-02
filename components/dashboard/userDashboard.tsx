@@ -169,7 +169,7 @@ export default function UserDashboard() {
             <CardContent className="relative z-10">
               <div className="space-y-4">
                 {stats?.recentOrders && stats.recentOrders.length > 0 ? (
-                  stats.recentOrders.map((order: { id: string; service: { name: string }; category: { category_name: string }; createdAt: string; status: string; charge: number }) => (
+                  stats.recentOrders.map((order: any) => (
                     <div
                       key={order.id}
                       className="flex items-center justify-between border-b dark:border-slate-600/50 pb-2 hover:bg-slate-50 dark:hover:bg-slate-700/30 p-2 rounded-lg transition-all duration-300"
@@ -201,8 +201,8 @@ export default function UserDashboard() {
                         </Badge>
                         <span className="text-sm mt-1 dark:text-white">
                           {stats?.currency === 'USD'
-                            ? `$${(order as any).usdPrice?.toFixed(2) || '0.00'}`
-                            : `৳${(order as any).bdtPrice?.toFixed(2) || '0.00'}`}
+                            ? `$${order.usdPrice.toFixed(2)}`
+                            : `৳${order.bdtPrice.toFixed(2)}`}
                         </span>
                       </div>
                     </div>
@@ -239,7 +239,7 @@ export default function UserDashboard() {
               <div className="space-y-4">
                 {stats?.favoriteCategories &&
                 stats.favoriteCategories.length > 0 ? (
-                  stats.favoriteCategories.map((category: { id: string; name: string; services: { id: string; name: string }[] }) => (
+                  stats.favoriteCategories.map((category: any) => (
                     <div
                       key={category.id}
                       className="border-b dark:border-slate-600/50 pb-2 hover:bg-slate-50 dark:hover:bg-slate-700/30 p-2 rounded-lg transition-all duration-300"
@@ -248,7 +248,7 @@ export default function UserDashboard() {
                         {category.name}
                       </p>
                       <div className="mt-1 grid grid-cols-1 gap-1">
-                        {category.services.map((service: { id: string; name: string }) => (
+                        {category.services.map((service: any) => (
                           <Link
                             href={`/new-order?sId=${service.id}`}
                             key={service.id}

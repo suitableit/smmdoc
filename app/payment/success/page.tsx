@@ -5,10 +5,14 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import {
+  FaArrowRight,
   FaCheckCircle,
+  FaEnvelope,
   FaReceipt,
+  FaTelegram,
   FaTimes,
   FaWallet,
+  FaWhatsapp,
 } from 'react-icons/fa';
 
 // Custom Gradient Spinner Component (matching Profile page)

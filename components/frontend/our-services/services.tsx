@@ -54,11 +54,6 @@ const Toast = ({
   </div>
 );
 
-interface Category {
-  id: number;
-  category_name: string;
-}
-
 interface Service {
   id: number;
   name: string;
@@ -90,7 +85,7 @@ const ServicesTable: React.FC = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-  const [limit] = useState('10');
+  const [limit, setLimit] = useState('10');
   const [isShowAll, setIsShowAll] = useState(false);
 
   // Show toast notification
@@ -261,7 +256,7 @@ const ServicesTable: React.FC = () => {
           );
 
           // Add empty categories
-          data.allCategories.forEach((category: Category) => {
+          data.allCategories.forEach((category: any) => {
             if (!grouped[category.category_name]) {
               grouped[category.category_name] = [];
             }
@@ -416,11 +411,11 @@ const ServicesTable: React.FC = () => {
               <div>
                 {services.length > 0 ? (
                   <>
-                    Found <span className="font-medium text-[var(--primary)] dark:text-[var(--secondary)]">{services.length}</span> service{services.length !== 1 ? 's' : ''} matching &quot;{search}&quot;
+                    Found <span className="font-medium text-[var(--primary)] dark:text-[var(--secondary)]">{services.length}</span> service{services.length !== 1 ? 's' : ''} matching "{search}"
                   </>
                 ) : (
                   <>
-                    No services found matching &quot;{search}&quot;. Try different keywords or{' '}
+                    No services found matching "{search}". Try different keywords or{' '}
                     <button
                       onClick={() => setSearch('')}
                       className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline font-medium"
@@ -579,7 +574,7 @@ const ServicesTable: React.FC = () => {
           </h3>
           <p className="text-gray-600 dark:text-gray-400">
             {search 
-              ? `No services match your search &quot;${search}&quot;. Try different keywords.`
+              ? `No services match your search "${search}". Try different keywords.`
               : 'There are no services available at the moment.'
             }
           </p>
@@ -633,7 +628,7 @@ const ServicesTable: React.FC = () => {
                 const pageNumbers = [];
                 const maxVisiblePages = 5;
                 let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
-                const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
                 
                 // Adjust start page if we're near the end
                 if (endPage - startPage < maxVisiblePages - 1) {

@@ -43,7 +43,7 @@ export async function POST() {
         realTimeRates = data.rates;
         console.log('✅ Real-time rates fetched successfully');
       }
-    } catch {
+    } catch (error) {
       console.warn('⚠️ Failed to fetch real-time rates, using fallback rates');
     }
 

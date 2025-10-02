@@ -14,6 +14,7 @@ interface SectionProps {
 const Section: React.FC<SectionProps> = ({
   children,
   className = '',
+  bgColor = 'gray',
 }) => (
   <section
     className={`${className}`}
@@ -49,7 +50,7 @@ export default function Mission() {
             Strategies
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6 text-justify leading-relaxed text-justify transition-colors duration-200">
-            Our mission at SMMDOC is straightforward &ndash; to provide
+            Our mission at SMMDOC is straightforward – to provide
             high-quality, cost-effective social media marketing services that
             drive business growth and enhance online visibility. We are
             committed to helping businesses in Bangladesh and beyond to unlock

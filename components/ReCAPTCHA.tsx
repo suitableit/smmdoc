@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface ReCAPTCHAProps {
   siteKey: string;
@@ -17,13 +17,7 @@ interface ReCAPTCHAProps {
 
 declare global {
   interface Window {
-    grecaptcha: {
-      render: (container: HTMLElement, options: Record<string, unknown>) => number;
-      reset: (widgetId: number) => void;
-      getResponse: (widgetId?: number) => string;
-      execute: (siteKey: string, options: { action: string }) => Promise<string>;
-      ready: (callback: () => void) => void;
-    };
+    grecaptcha: any;
     onRecaptchaLoad: () => void;
   }
 }
@@ -32,7 +26,7 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
   siteKey,
   version,
   action = 'submit',
-  // threshold: _threshold = 0.5,
+  threshold = 0.5,
   onVerify,
   onError,
   onExpired,
@@ -55,7 +49,7 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
         console.log('ReCAPTCHA script already exists');
         // Wait for grecaptcha to be available
         const checkReady = () => {
-          if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
+          if (window.grecaptcha && window.grecaptcha.render) {
             console.log('ReCAPTCHA v2 ready (existing script)');
             setIsLoaded(true);
           } else {
@@ -75,7 +69,7 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
       script.onload = () => {
         // Wait for grecaptcha to be fully available
         const checkReady = () => {
-          if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
+          if (window.grecaptcha && window.grecaptcha.render) {
             setIsLoaded(true);
           } else {
             setTimeout(checkReady, 100);
@@ -91,7 +85,7 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
       document.head.appendChild(script);
     } else {
       // v3 loading logic (existing)
-      if (window.grecaptcha && typeof window.grecaptcha.ready === 'function') {
+      if (window.grecaptcha && window.grecaptcha.ready) {
         setIsLoaded(true);
         return;
       }
@@ -99,7 +93,7 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
       const existingScript = document.querySelector(`script[src*="recaptcha/api.js"]`);
       if (existingScript) {
         const checkLoaded = () => {
-          if (window.grecaptcha && typeof window.grecaptcha.ready === 'function') {
+          if (window.grecaptcha && window.grecaptcha.ready) {
             setIsLoaded(true);
           } else {
             setTimeout(checkLoaded, 100);
@@ -131,7 +125,7 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
     if (widgetId !== null) {
       setWidgetId(null);
     }
-  }, [widgetId, siteKey, version]);
+  }, [siteKey, version]);
 
   // Main rendering effect for v2 - optimized to prevent excessive re-renders
   useEffect(() => {
@@ -154,71 +148,70 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
             theme: theme || 'light',
           });
           setWidgetId(newWidgetId);
-        } catch (_error) {
-          console.error('Failed to render reCAPTCHA:', _error);
+        } catch (error) {
+          console.error('Failed to render reCAPTCHA:', error);
           if (onError) onError();
         }
       }
     }
-  }, [isLoaded, siteKey, version, widgetId, onVerify, onError, onExpired, size, theme]);
+  }, [isLoaded, siteKey, version, widgetId]); // Removed callback dependencies to prevent re-renders
 
   // Separate cleanup effect with improved DOM safety
   useEffect(() => {
-    const currentRef = recaptchaRef.current;
     return () => {
       if (version === 'v2' && widgetId !== null && window.grecaptcha && typeof widgetId === 'number') {
         try {
           if (window.grecaptcha.reset) {
             window.grecaptcha.reset(widgetId);
           }
-          if (currentRef && document.contains(currentRef)) {
+          const container = recaptchaRef.current;
+          if (container && document.contains(container)) {
             // Safely remove all child nodes
-            while (currentRef.firstChild) {
-              currentRef.removeChild(currentRef.firstChild);
+            while (container.firstChild) {
+              container.removeChild(container.firstChild);
             }
           }
-        } catch {
+        } catch (error) {
           // Silent cleanup - errors are expected during unmounting
         }
       }
     };
   }, [version, widgetId]);
 
-  const executeV3 = useCallback(async () => {
+  const executeV3 = async () => {
     if (!isLoaded || !window.grecaptcha || version !== 'v3') return;
 
     try {
       const token = await window.grecaptcha.execute(siteKey, { action });
       onVerify(token);
-    } catch (_error) {
-      console.error('reCAPTCHA v3 execution failed:', _error);
+    } catch (error) {
+      console.error('reCAPTCHA v3 execution failed:', error);
       if (onError) onError();
     }
-  }, [isLoaded, siteKey, version, action, onVerify, onError]);
+  };
 
-  // const reset = () => {
-  //   if (version === 'v2' && widgetId !== null && window.grecaptcha) {
-  //     try {
-  //       // Only attempt reset if the widget ID is valid and grecaptcha is available
-  //       if (typeof widgetId === 'number' && window.grecaptcha.getResponse) {
-  //         // Check if the widget still exists by trying to get its response
-  //         try {
-  //           window.grecaptcha.getResponse(widgetId);
-  //           // If we get here, the widget exists and we can safely reset it
-  //           window.grecaptcha.reset(widgetId);
-  //         } catch (widgetError) {
-  //           // Widget doesn't exist anymore, continue silently
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.warn('Failed to reset reCAPTCHA widget:', error);
-  //     }
-  //   }
-  // };
+  const reset = () => {
+    if (version === 'v2' && widgetId !== null && window.grecaptcha) {
+      try {
+        // Only attempt reset if the widget ID is valid and grecaptcha is available
+        if (typeof widgetId === 'number' && window.grecaptcha.getResponse) {
+          // Check if the widget still exists by trying to get its response
+          try {
+            window.grecaptcha.getResponse(widgetId);
+            // If we get here, the widget exists and we can safely reset it
+            window.grecaptcha.reset(widgetId);
+          } catch (widgetError) {
+            // Widget doesn't exist anymore, continue silently
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to reset reCAPTCHA widget:', error);
+      }
+    }
+  };
 
   // Cleanup on component unmount
   useEffect(() => {
-    const currentRef = recaptchaRef.current;
     return () => {
       if (version === 'v2' && widgetId !== null && window.grecaptcha) {
         try {
@@ -229,19 +222,19 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
               window.grecaptcha.getResponse(widgetId);
               // If we get here, the widget exists and we can safely reset it
               window.grecaptcha.reset(widgetId);
-            } catch (_widgetError) {
+            } catch (widgetError) {
               // Widget doesn't exist anymore, just log and continue
-              console.log('Widget already cleaned up:', _widgetError);
+              console.log('Widget already cleaned up:', widgetError);
             }
           }
           
           // Clear the container safely
-          if (currentRef && currentRef.parentNode) {
+          if (recaptchaRef.current && recaptchaRef.current.parentNode) {
             try {
               // Only clear innerHTML if the element is still in the DOM
-              currentRef.innerHTML = '';
-            } catch (_domError) {
-              console.log('Container already cleaned up:', _domError);
+              recaptchaRef.current.innerHTML = '';
+            } catch (domError) {
+              console.log('Container already cleaned up:', domError);
             }
           }
           
@@ -259,7 +252,7 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
       // Auto-execute v3 when loaded
       executeV3();
     }
-  }, [isLoaded, version, executeV3]);
+  }, [isLoaded, version]);
 
   // Check if this is the test site key
   const isTestKey = siteKey === '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
@@ -302,7 +295,7 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
                   >
                     <div className="flex items-center space-x-2">
                       <div className="w-6 h-6 border-2 border-gray-400 rounded"></div>
-                      <span className="text-sm text-gray-700">I&#39;m not a robot (Test Mode)</span>
+                      <span className="text-sm text-gray-700">I'm not a robot (Test Mode)</span>
                     </div>
                   </div>
                 )}

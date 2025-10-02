@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaUserShield } from 'react-icons/fa';
+import { FaUserShield, FaTimes } from 'react-icons/fa';
 
 interface UserSwitchIconProps {
   onSwitchBack: () => void;
@@ -10,6 +10,7 @@ interface UserSwitchIconProps {
 
 const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading = false }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [impersonatedUser, setImpersonatedUser] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user switching is active by calling the session API
@@ -20,12 +21,15 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
         
         if (session?.user?.isImpersonating) {
           setIsVisible(true);
+          setImpersonatedUser(session.user.username || 'user');
         } else {
           setIsVisible(false);
+          setImpersonatedUser(null);
         }
       } catch (error) {
         console.error('Error checking impersonation status:', error);
         setIsVisible(false);
+        setImpersonatedUser(null);
       }
     };
 

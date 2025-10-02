@@ -154,10 +154,10 @@ export async function GET(
         totalTickets,
         openTickets
       },
-      messages: ticket.messages.map((msg: { id: number; messageType: string; message: string; createdAt: Date; attachments: string | null; isFromAdmin: boolean; user: { id: number; name: string | null; image: string | null; role: string } }) => ({
+      messages: ticket.messages.map((msg: any) => ({
         id: msg.id,
         type: msg.messageType, // Map messageType to type
-        author: msg.messageType === 'system' ? 'System' : (msg.user.name || 'Unknown'),
+        author: msg.messageType === 'system' ? 'System' : msg.user.name,
         authorRole: msg.messageType === 'system' ? 'system' : (msg.isFromAdmin ? 'admin' : 'user'),
         content: msg.message, // Map message to content
         createdAt: msg.createdAt,
@@ -165,13 +165,17 @@ export async function GET(
         isEdited: false,
         userImage: msg.user.image,
         user: {
-          ...msg.user
+          ...msg.user,
+          // For system messages created by admins, show the admin username
+          // For legacy system messages, fall back to 'system'
+          username: msg.messageType === 'system' && msg.isFromAdmin && msg.user.role === 'admin' ? msg.user.username : 
+                   msg.messageType === 'system' ? 'system' : msg.user.username
         }
       })),
-      notes: ticket.notes.map((note: { id: number; content: string; createdAt: Date; isPrivate: boolean; user: { name: string | null } }) => ({
+      notes: ticket.notes.map((note: any) => ({
         id: note.id.toString(),
         content: note.content,
-        author: note.user.name || 'Unknown',
+        author: note.user.username || note.user.name,
         createdAt: note.createdAt.toISOString(),
         isPrivate: note.isPrivate
       }))
@@ -221,6 +225,7 @@ export async function PUT(
 
     // Check if ticket system is enabled
     // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);
@@ -248,7 +253,7 @@ export async function PUT(
     const validatedData = updateTicketSchema.parse(body);
 
     // Prepare update data
-    const updateData: Record<string, unknown> = {
+    const updateData: any = {
       lastUpdated: new Date()
     };
     
@@ -337,6 +342,7 @@ export async function DELETE(
     }
 
     // Ticket system is always enabled
+    const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
     const ticketId = parseInt(resolvedParams.id);

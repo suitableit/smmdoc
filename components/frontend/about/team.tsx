@@ -14,6 +14,7 @@ interface SectionProps {
 const Section: React.FC<SectionProps> = ({
   children,
   className = '',
+  bgColor = 'gray',
 }) => (
   <section
     className={`${className}`}
@@ -54,7 +55,7 @@ export default function Team() {
             tech-savvy innovators, our team brings a wealth of experience and
             fresh perspectives to the table. We foster a culture of continuous
             learning and improvement, ensuring our strategies are always ahead
-            of the curve. Our team&apos;s dedication and expertise are the driving
+            of the curve. Our team's dedication and expertise are the driving
             forces behind our success and the success of our clients.
           </p>
           <Link

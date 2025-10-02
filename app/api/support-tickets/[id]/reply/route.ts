@@ -102,7 +102,7 @@ export async function POST(
     }
 
     // Create the reply message
-    await db.ticketMessage.create({
+    const reply = await db.ticketMessage.create({
       data: {
         ticketId: ticketId,
         userId: parseInt(session.user.id),

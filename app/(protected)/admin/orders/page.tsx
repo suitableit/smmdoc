@@ -344,9 +344,7 @@ const AdminOrdersPage = () => {
           }
         );
       } else {
-        if (toastNotification) {
-          showToast(result.error || 'Failed to fetch orders', 'error');
-        }
+        toastNotification && showToast(result.error || 'Failed to fetch orders', 'error');
         setOrders([]);
       }
     } catch (error) {
@@ -382,7 +380,7 @@ const AdminOrdersPage = () => {
         // Build status breakdown object from array
         const statusBreakdown: Record<string, number> = {};
         if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
-          data.statusBreakdown.forEach((item: { status: string; count: number; }) => {
+          data.statusBreakdown.forEach((item: any) => {
             statusBreakdown[item.status] = item.count || 0;
           });
         }
@@ -436,13 +434,13 @@ const AdminOrdersPage = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, fetchOrders]);
+  }, [searchTerm]);
 
   // Load data on component mount and when filters change
   useEffect(() => {
     setOrdersLoading(true);
     fetchOrders();
-  }, [pagination.page, pagination.limit, statusFilter, fetchOrders]);
+  }, [pagination.page, pagination.limit, statusFilter]);
 
   useEffect(() => {
     fetchStats();
@@ -454,7 +452,7 @@ const AdminOrdersPage = () => {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [fetchStats, fetchAllOrdersForCounts]);
+  }, []);
 
   // Update stats when pagination data changes (real total orders)
   useEffect(() => {

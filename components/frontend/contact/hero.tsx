@@ -23,10 +23,10 @@ const Hero: React.FC = () => {
               for Your Social Media Solutions
             </h1>
             <p className="text-gray-600 dark:text-gray-300 text-lg text-justify mb-6 leading-relaxed transition-colors duration-200">
-              At SMMDOC, we&apos;re always eager to connect with you and discuss
+              At SMMDOC, we're always eager to connect with you and discuss
               how we can elevate your social media presence. Whether you have
               questions about our services, need assistance in choosing the
-              right strategy, or want to discuss a customized plan, we&apos;re here
+              right strategy, or want to discuss a customized plan, we're here
               to help. Learn more about our journey and ethos on our About Us
               page.
             </p>

@@ -135,17 +135,17 @@ const InstructionsPanel: React.FC = () => {
         </a>
 
         <p>
-          Let&apos;s say you want to use the Mass Orders to add Instagram Followers
+          Let's say you want to use the Mass Orders to add Instagram Followers
           to your 3 accounts: abcd, asdf, qwer
         </p>
 
         <p>
-          From the Services List, the service ID for this service &quot;Instagram
-          Followers [100% Real - 30 Days Guarantee- NEW SERVICE&quot; is 3740
+          From the Services List, the service ID for this service "Instagram
+          Followers [100% Real - 30 Days Guarantee- NEW SERVICE" is 3740
         </p>
 
         <p>
-          Let&apos;s say you want to add 1000 followers for each account, the output
+          Let's say you want to add 1000 followers for each account, the output
           will be like this: ID|Link|Quantity or in this example:
         </p>
 

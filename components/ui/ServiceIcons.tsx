@@ -33,7 +33,7 @@ export const YoutubeIcon: React.FC<ServiceIconProps> = ({ size = 24, color = "#F
   </svg>
 );
 
-export const TiktokIcon: React.FC<ServiceIconProps> = ({ size = 24, className }) => (
+export const TiktokIcon: React.FC<ServiceIconProps> = ({ size = 24, color = "#5F1DE8", className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
     <path d="M19.08 7.97A5.56 5.56 0 0 1 15 6.5a5.56 5.56 0 0 1-5.5-5.5h-3v13a2.5 2.5 0 0 1-5 0 2.5 2.5 0 0 1 5 0V14a10 10 0 0 0 5 1.36 10 10 0 0 0 10-10v-2a5.56 5.56 0 0 0 2.58.61z" fill="#FF004F" />
     <path d="M15 6.5a5.56 5.56 0 0 0 4.08 1.47A5.56 5.56 0 0 0 21.66 7V4a5.56 5.56 0 0 1-2.58.61A5.56 5.56 0 0 1 15 6.5z" fill="#00F2EA" />
@@ -119,4 +119,4 @@ export const RedditIcon: React.FC<ServiceIconProps> = ({ size = 24, color = "#FF
     <circle cx="15" cy="13" r="1.25" fill={color} />
     <path d="M14.5 16c-.65.65-1.7.65-2.35 0" stroke={color} strokeWidth="1" />
   </svg>
-);
+); 

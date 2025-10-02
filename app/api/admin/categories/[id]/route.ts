@@ -48,19 +48,14 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: {
-      category_name: string;
-      updatedAt: Date;
-      position?: 'top' | 'bottom';
-      hideCategory?: string;
-    } = {
+    const updateData: any = {
       category_name: category_name,
       updatedAt: new Date(),
     };
 
     // Add position if provided
-    if (position && (position === 'top' || position === 'bottom')) {
-      updateData.position = position as 'top' | 'bottom';
+    if (position) {
+      updateData.position = position as any;
     }
 
     // Add hideCategory if provided
@@ -211,7 +206,7 @@ export async function DELETE(
           }
         }
       });
-    } catch {
+    } catch (error) {
       console.log('RefillRequest table not found, skipping...');
     }
 
@@ -227,7 +222,7 @@ export async function DELETE(
           }
         }
       });
-    } catch {
+    } catch (error) {
       console.log('CancelRequest table not found, skipping...');
     }
 

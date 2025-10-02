@@ -8,29 +8,14 @@ interface TicketMessage {
   type?: 'customer' | 'staff' | 'system';
   createdAt: string;
   userImage?: string;
-  attachments?: {
-    id: string;
-    filename: string;
-    url: string;
-    size?: number;
-    type?: string;
-  }[];
+  attachments?: any[];
 }
 
 interface TicketDetails {
   id: string;
   messages: TicketMessage[];
   lastUpdated: string;
-  status?: string;
-  userInfo?: {
-    name?: string;
-    username?: string;
-    fullName?: string;
-    phone?: string;
-    company?: string;
-    address?: string;
-    registeredAt?: string;
-  };
+  [key: string]: any;
 }
 
 export const useTicketPolling = <T extends TicketDetails>(
@@ -83,7 +68,7 @@ export const useTicketPolling = <T extends TicketDetails>(
         
         setLastMessageCount(currentMessageCount);
         lastUpdateRef.current = updatedTicket.lastUpdated;
-        lastStatusRef.current = currentStatus || '';
+        lastStatusRef.current = currentStatus;
         
         // Enhance the data with userInfo like in the initial fetch (only for admin)
         if (apiEndpoint === 'admin') {

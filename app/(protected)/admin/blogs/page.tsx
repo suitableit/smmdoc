@@ -25,19 +25,6 @@ import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber } from '@/lib/utils';
 
-// Simple Spinner Component
-const Spinner = ({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 'lg', className?: string }) => {
-  const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8'
-  };
-  
-  return (
-    <div className={`${sizeClasses[size]} ${className} animate-spin rounded-full border-2 border-gray-300 border-t-blue-600`}></div>
-  );
-};
-
 // Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
@@ -188,7 +175,9 @@ const BlogsPage = () => {
     currentStatus: '',
   });
   const [newStatus, setNewStatus] = useState('');
-  const [statusReason, setStatusReason] = useState('');
+
+
+
 
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
@@ -1174,7 +1163,7 @@ const BlogsPage = () => {
                         Delete Blog
                       </h3>
                       <p className="text-sm text-gray-600 mb-6">
-                        Are you sure you want to delete &quot;{deleteDialog.blogTitle}&quot;? 
+                        Are you sure you want to delete "{deleteDialog.blogTitle}"? 
                         This action cannot be undone.
                       </p>
                       <div className="flex gap-2 justify-end">

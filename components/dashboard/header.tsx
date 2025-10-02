@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { PriceDisplay } from '@/components/PriceDisplay';
@@ -8,13 +10,13 @@ import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
 import { setUserDetails } from '@/lib/slice/userDetails';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
     FaBell,
     FaChevronDown,
     FaCog,
     FaDesktop,
+    FaEllipsisV,
     FaFileContract,
     FaHeadset,
     FaMoneyBillWave,
@@ -60,11 +62,10 @@ const AvatarImage = ({ src, alt }: { src: string; alt: string }) => {
   }
   
   return (
-    <Image
+    <img
       src={src}
       alt={alt}
-      fill
-      className="object-cover"
+      className="w-full h-full object-cover"
       onError={() => {
         setHasError(true);
       }}
@@ -85,7 +86,7 @@ const ThemeToggle = ({
   handleDropdownChange 
 }: { 
   isMobile?: boolean;
-  openDropdowns?: Record<string, boolean>;
+  openDropdowns?: any;
   handleDropdownChange?: (dropdown: string, isOpen: boolean) => void;
 }) => {
   const { theme, setTheme } = useTheme();
@@ -232,8 +233,7 @@ const ThemeToggle = ({
 
 // Mobile Currency Toggle Component
 const MobileCurrencyToggle = () => {
-  const { setCurrency, availableCurrencies, currentCurrencyData, currency } = useCurrency();
-  const [isLoading, setIsLoading] = useState(false);
+  const { currency, setCurrency, rate, isLoading, availableCurrencies, currentCurrencyData } = useCurrency();
 
   const handleCurrencyChange = async (newCurrency: string) => {
     await setCurrency(newCurrency);
@@ -301,49 +301,49 @@ const MobileCurrencyToggle = () => {
 };
 
 // Enhanced Mobile Menu Toggle Button (3-dot menu)
-// const MobileMenuToggle = ({
-//   isMenuOpen,
-//   toggleMenu,
-//   openDropdowns,
-//   handleDropdownChange,
-// }: {
-//   isMenuOpen: boolean;
-//   toggleMenu: () => void;
-//   openDropdowns?: Record<string, boolean>;
-//   handleDropdownChange?: (dropdown: string, isOpen: boolean) => void;
-// }) => (
-//   <DropdownMenu 
-//     open={openDropdowns?.mobile}
-//     onOpenChange={(isOpen) => handleDropdownChange?.('mobile', isOpen)}
-//   >
-//     <DropdownMenuTrigger asChild>
-//       <button
-//         className="lg:hidden h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 group"
-//         style={{
-//           backgroundColor: 'var(--dropdown-bg)',
-//           border: `1px solid var(--header-border)`,
-//         }}
-//         type="button"
-//         aria-label="Open navigation menu"
-//       >
-//         <FaEllipsisV
-//           className="w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200"
-//           style={{ color: 'var(--header-text-hover)' }}
-//         />
-//       </button>
-//     </DropdownMenuTrigger>
-//     <DropdownMenuContent
-//       align="end"
-//       className="w-64 sm:w-72 header-theme-transition shadow-lg max-w-[calc(100vw-1rem)]"
-//       style={{
-//         backgroundColor: 'var(--dropdown-bg)',
-//         border: `1px solid var(--header-border)`,
-//       }}
-//     >
-//       <MobileSidebar />
-//     </DropdownMenuContent>
-//   </DropdownMenu>
-// );
+const MobileMenuToggle = ({
+  isMenuOpen,
+  toggleMenu,
+  openDropdowns,
+  handleDropdownChange,
+}: {
+  isMenuOpen: boolean;
+  toggleMenu: () => void;
+  openDropdowns?: any;
+  handleDropdownChange?: (dropdown: string, isOpen: boolean) => void;
+}) => (
+  <DropdownMenu 
+    open={openDropdowns?.mobile}
+    onOpenChange={(isOpen) => handleDropdownChange?.('mobile', isOpen)}
+  >
+    <DropdownMenuTrigger asChild>
+      <button
+        className="lg:hidden h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 transition-all duration-200 group"
+        style={{
+          backgroundColor: 'var(--dropdown-bg)',
+          border: `1px solid var(--header-border)`,
+        }}
+        type="button"
+        aria-label="Open navigation menu"
+      >
+        <FaEllipsisV
+          className="w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200"
+          style={{ color: 'var(--header-text-hover)' }}
+        />
+      </button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent
+      align="end"
+      className="w-64 sm:w-72 header-theme-transition shadow-lg max-w-[calc(100vw-1rem)]"
+      style={{
+        backgroundColor: 'var(--dropdown-bg)',
+        border: `1px solid var(--header-border)`,
+      }}
+    >
+      <MobileSidebar />
+    </DropdownMenuContent>
+  </DropdownMenu>
+);
 
 // Enhanced Menu Component with updated styling
 const Menu = ({ 
@@ -351,20 +351,8 @@ const Menu = ({
   openDropdowns, 
   handleDropdownChange 
 }: { 
-  user: {
-    id?: string;
-    name?: string;
-    username?: string;
-    email?: string;
-    photo?: string;
-    image?: string;
-    role?: string;
-    userType?: string;
-    isAdmin?: boolean;
-    balance?: number;
-    currency?: string;
-  };
-  openDropdowns?: Record<string, boolean>;
+  user: any;
+  openDropdowns?: any;
   handleDropdownChange?: (dropdown: string, isOpen: boolean) => void;
 }) => {
   const currentUser = useCurrentUser();
@@ -375,8 +363,8 @@ const Menu = ({
   // Use managed dropdown state or fallback to local state
   const isOpen = openDropdowns?.profile || false;
   const setIsOpen = (open: boolean) => handleDropdownChange?.('profile', open);
-  // const { currency, rate, currentCurrencyData, availableCurrencies } = useCurrency();
-  const userData = useSelector((state: { userDetails: any }) => state.userDetails);
+  const { currency, rate, currentCurrencyData, availableCurrencies } = useCurrency();
+  const userData = useSelector((state: any) => state.userDetails);
 
   const closeMenu = () => setIsOpen(false);
   const enableAuth = true;
@@ -408,7 +396,7 @@ const Menu = ({
   // Get balance from API for real-time data
   const { data: userStatsResponse } = useGetUserStatsQuery(undefined);
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
-  // const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
+  const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
 
 
 
@@ -477,7 +465,7 @@ const Menu = ({
       >
         <Avatar className="h-10 w-10 sm:h-10 sm:w-10">
           <AvatarImage
-            src={user?.photo || user?.image || ''}
+            src={user?.photo || user?.image}
             alt={user?.name || 'User'}
           />
           {!(user?.photo || user?.image) && (
@@ -511,7 +499,7 @@ const Menu = ({
               <div className="flex items-center space-x-2 sm:space-x-4 mb-3 sm:mb-4">
                 <Avatar className="h-10 w-10 sm:h-14 sm:w-14 ring-2 sm:ring-3 ring-[var(--primary)]/20">
                   <AvatarImage
-                    src={user?.photo || user?.image || ''}
+                    src={user?.photo || user?.image}
                     alt={user?.name || 'User'}
                   />
                   {!(user?.photo || user?.image) && (
@@ -636,14 +624,13 @@ const Menu = ({
 const Header = () => {
   const currentUser = useCurrentUser();
   const dispatch = useDispatch();
-  const { setCurrency, availableCurrencies, currentCurrencyData, currency } = useCurrency();
-  const userData = useSelector((state: { userDetails: any }) => state.userDetails);
+  const { currency, setCurrency, rate, isLoading, availableCurrencies, currentCurrencyData } = useCurrency();
+  const userData = useSelector((state: any) => state.userDetails);
   
   // Use Redux store data primarily, fallback to currentUser
   const user = userData?.id ? userData : currentUser;
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  // const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
   
   // Dropdown state management
@@ -665,7 +652,7 @@ const Header = () => {
   };
   
   // Check if any dropdown is open
-  // const isAnyDropdownOpen = Object.values(openDropdowns).some(Boolean);
+  const isAnyDropdownOpen = Object.values(openDropdowns).some(Boolean);
 
   // Fetch contact system settings
   useEffect(() => {
@@ -693,45 +680,45 @@ const Header = () => {
 
   const { data: userStatsResponse } = useGetUserStatsQuery(undefined);
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
-  // const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
+  const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
 
-  // const formatCurrency = (amount: number) => {
-  //   if (!currentCurrencyData || !availableCurrencies || availableCurrencies.length === 0) {
-  //     return `$${amount.toFixed(2)}`;
-  //   }
+  const formatCurrency = (amount: number) => {
+    if (!currentCurrencyData || !availableCurrencies || availableCurrencies.length === 0) {
+      return `$${amount.toFixed(2)}`;
+    }
 
-  //   // Database balance is stored in user's preferred currency (from user.currency field)
-  //   // We need to get user's stored currency and convert to display currency
-  //   let convertedAmount = amount;
+    // Database balance is stored in user's preferred currency (from user.currency field)
+    // We need to get user's stored currency and convert to display currency
+    let convertedAmount = amount;
 
-  //   if (currentCurrencyData.code === userStoredCurrency) {
-  //     // If display currency matches stored currency, use amount as is
-  //     convertedAmount = amount;
-  //   } else {
-  //     // Convert between currencies using rates
-  //     const storedCurrencyData = availableCurrencies.find(c => c.code === userStoredCurrency);
+    if (currentCurrencyData.code === userStoredCurrency) {
+      // If display currency matches stored currency, use amount as is
+      convertedAmount = amount;
+    } else {
+      // Convert between currencies using rates
+      const storedCurrencyData = availableCurrencies.find(c => c.code === userStoredCurrency);
 
-  //     if (storedCurrencyData && currentCurrencyData) {
-  //       if (userStoredCurrency === 'USD') {
-  //         // Convert from USD to target currency
-  //         convertedAmount = amount * currentCurrencyData.rate;
-  //       } else if (currentCurrencyData.code === 'USD') {
-  //         // Convert from stored currency to USD
-  //         convertedAmount = amount / storedCurrencyData.rate;
-  //       } else {
-  //         // Convert between two non-USD currencies (via USD)
-  //         const usdAmount = amount / storedCurrencyData.rate;
-  //         convertedAmount = usdAmount * currentCurrencyData.rate;
-  //       }
-  //     }
-  //   }
+      if (storedCurrencyData && currentCurrencyData) {
+        if (userStoredCurrency === 'USD') {
+          // Convert from USD to target currency
+          convertedAmount = amount * currentCurrencyData.rate;
+        } else if (currentCurrencyData.code === 'USD') {
+          // Convert from stored currency to USD
+          convertedAmount = amount / storedCurrencyData.rate;
+        } else {
+          // Convert between two non-USD currencies (via USD)
+          const usdAmount = amount / storedCurrencyData.rate;
+          convertedAmount = usdAmount * currentCurrencyData.rate;
+        }
+      }
+    }
 
-  //   return `${currentCurrencyData.symbol}${convertedAmount.toFixed(2)}`;
-  // };
+    return `${currentCurrencyData.symbol}${convertedAmount.toFixed(2)}`;
+  };
 
-  // const toggleMenu = () => {
-  //   setIsMenuOpen(!isMenuOpen);
-  // };
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   async function fetchUser() {
     try {
@@ -775,7 +762,7 @@ const Header = () => {
       window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
       window.removeEventListener('avatarUpdated', handleAvatarUpdate);
     };
-  }, [fetchUser]);
+  }, []);
 
   // Manage body overflow to ensure scrollbar remains visible
   useEffect(() => {
@@ -820,7 +807,7 @@ const Header = () => {
       }} />
       {/* Mobile Logo - Visible only on mobile */}
       <Link href="/" className="flex lg:hidden items-center">
-        <Image src="/logo.png" alt="Logo" width={48} height={48} className="h-12 w-auto" />
+        <img src="/logo.png" alt="Logo" className="h-12 w-auto" />
       </Link>
 
       {/* Desktop Search - Hidden on mobile */}
@@ -1221,7 +1208,7 @@ const Header = () => {
                           className="text-xs mb-2"
                           style={{ color: 'var(--header-text)', opacity: 0.7 }}
                         >
-                          User &quot;john_doe123&quot; has registered and is pending approval. Review their account details.
+                          User "john_doe123" has registered and is pending approval. Review their account details.
                         </p>
                         <span
                           className="text-xs"
@@ -1283,7 +1270,7 @@ const Header = () => {
                           className="text-xs mb-2"
                           style={{ color: 'var(--header-text)', opacity: 0.7 }}
                         >
-                          Today&apos;s revenue: $2,450.00 (+15% from yesterday). 47 orders completed successfully.
+                          Today's revenue: $2,450.00 (+15% from yesterday). 47 orders completed successfully.
                         </p>
                         <span
                           className="text-xs"

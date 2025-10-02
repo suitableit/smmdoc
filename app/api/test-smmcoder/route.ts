@@ -38,7 +38,7 @@ export async function GET() {
           if (Array.isArray(data) && data.length > 0) {
             // Extract categories
             const categoryMap = new Map();
-            data.forEach((service: { category?: string }) => {
+            data.forEach((service: any) => {
               const categoryName = service.category || 'Uncategorized';
               if (categoryMap.has(categoryName)) {
                 categoryMap.set(categoryName, categoryMap.get(categoryName) + 1);

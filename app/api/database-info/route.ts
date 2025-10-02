@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Parse DATABASE_URL to extract connection details
     const databaseUrl = process.env.DATABASE_URL;

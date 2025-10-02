@@ -1,6 +1,6 @@
 'use client';
 
-// import { useCurrency } from '@/contexts/CurrencyContext'; // Removed unused import
+import { useCurrency } from '@/contexts/CurrencyContext';
 import axiosInstance from '@/lib/axiosInstance';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
@@ -24,14 +24,14 @@ import {
     FaTimesCircle,
     FaUserPlus,
     FaUsers,
-} from 'react-icons/fa'; 
+} from 'react-icons/fa';
 
-
-
-// GradientSpinner Component
+// Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} animate-spin`}>
-    <div className="w-full h-full rounded-full border-4 border-gray-200 border-t-blue-500"></div>
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
   </div>
 );
 
@@ -140,7 +140,7 @@ export default function AdminDashboardPage() {
     setPageTitle('Admin Dashboard', appName);
   }, [appName]);
 
-  // const { currency, rate } = useCurrency(); // Removed unused variables
+  const { currency, rate } = useCurrency();
   const [stats, setStats] = useState<DashboardStats>({
     totalOrders: 0,
     totalUsers: 0,
@@ -164,6 +164,8 @@ export default function AdminDashboardPage() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ticketsLoading, setTicketsLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [chartLoading, setChartLoading] = useState(true);
 
   // Latest Users State
   const [latestUsers, setLatestUsers] = useState<User[]>([]);
@@ -229,6 +231,10 @@ export default function AdminDashboardPage() {
         console.error('Error fetching dashboard stats:', error);
       } finally {
         setStatsLoading(false);
+        setOrdersLoading(false);
+        setTicketsLoading(false);
+        setUsersLoading(false);
+        setChartLoading(false);
       }
     };
 
@@ -266,8 +272,8 @@ export default function AdminDashboardPage() {
         setPendingTransactions([]);
         setTotalTransactionCount(0);
       }
-    } catch {
-      console.error('Error fetching pending transactions');
+    } catch (error) {
+      console.error('Error fetching pending transactions:', error);
       setPendingTransactions([]);
       setTotalTransactionCount(0);
     } finally {
@@ -323,8 +329,8 @@ export default function AdminDashboardPage() {
 
         showToast('Transaction approved successfully!', 'success');
       }
-    } catch {
-      console.error('Error approving transaction');
+    } catch (error) {
+      console.error('Error approving transaction:', error);
       showToast('Failed to approve transaction', 'error');
     }
   };
@@ -355,8 +361,8 @@ export default function AdminDashboardPage() {
 
         showToast('Transaction cancelled successfully!', 'success');
       }
-    } catch {
-      console.error('Error cancelling transaction');
+    } catch (error) {
+      console.error('Error cancelling transaction:', error);
       showToast('Failed to cancel transaction', 'error');
     }
   };
@@ -368,15 +374,15 @@ export default function AdminDashboardPage() {
   };
 
   // Function to format currency based on selected currency
-  // const formatDashboardCurrency = (amount: number) => {
-  //   // Admin stats are stored in BDT, so we need to convert if USD is selected
-  //   if (currency === 'USD' && rate) {
-  //     const amountInUSD = amount / rate;
-  //     return `$${amountInUSD.toFixed(2)}`;
-  //   } else {
-  //     return `৳${amount.toFixed(2)}`;
-  //   }
-  // };
+  const formatDashboardCurrency = (amount: number) => {
+    // Admin stats are stored in BDT, so we need to convert if USD is selected
+    if (currency === 'USD' && rate) {
+      const amountInUSD = amount / rate;
+      return `$${amountInUSD.toFixed(2)}`;
+    } else {
+      return `৳${amount.toFixed(2)}`;
+    }
+  };
 
   // Function to format date
   const formatDate = (dateString: string) => {
@@ -452,7 +458,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   <>
                     <p className="text-2xl font-bold text-green-600">
-                      {formatCurrency(stats.totalRevenue || 0, 'BDT')}
+                      {formatDashboardCurrency(stats.totalRevenue || 0)}
                     </p>
                     <p className="text-xs text-green-600 font-medium mt-1">
                       +8% from last month
@@ -504,7 +510,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   <>
                     <p className="text-2xl font-bold text-orange-600">
-                      {formatCurrency(stats.totalRevenue || 0, 'BDT')}
+                      {formatDashboardCurrency(stats.totalRevenue || 0)}
                     </p>
                     <p className="text-xs text-green-600 font-medium mt-1">
                       +22% from last month
@@ -533,7 +539,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   <>
                     <p className="text-2xl font-bold text-cyan-600">
-                      {formatCurrency(stats.totalRevenue || 0, 'BDT')}
+                      {formatDashboardCurrency(stats.totalRevenue || 0)}
                     </p>
                     <p className="text-xs text-cyan-600 font-medium mt-1">
                       Monthly Revenue
@@ -559,7 +565,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   <>
                     <p className="text-2xl font-bold text-rose-600">
-                      {formatCurrency(stats.todaysProfit || 0, 'BDT')}
+                      {formatDashboardCurrency(stats.todaysProfit || 0)}
                     </p>
                     <p className="text-xs text-rose-600 font-medium mt-1">
                       Daily Earnings
@@ -576,7 +582,7 @@ export default function AdminDashboardPage() {
                 <FaShoppingCart />
               </div>
               <div className="flex-1">
-                <h3 className="card-title">Today&apos;s Orders</h3>
+                <h3 className="card-title">Today's Orders</h3>
                 {statsLoading ? (
                   <div className="flex items-center gap-2">
                     <GradientSpinner size="w-6 h-6" />

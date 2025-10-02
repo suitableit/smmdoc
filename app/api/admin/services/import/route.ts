@@ -1,7 +1,6 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { convertToUSD, fetchCurrencyData } from '@/lib/currency-utils';
 
 // Configuration constants
 const API_TIMEOUT = 30000; // 30 seconds
@@ -67,7 +66,7 @@ const checkUrlReachability = async (url: string): Promise<boolean> => {
 };
 
 // Create provider configuration dynamically
-const createProviderConfig = (provider: { name: string; api_url: string; api_key: string; endpoints?: string | null; headers?: string | null }) => {
+const createProviderConfig = (provider: any) => {
   return {
     name: provider.name,
     baseUrl: provider.api_url,
@@ -255,14 +254,14 @@ export async function POST(req: NextRequest) {
         } catch (parseError) {
           console.warn('⚠️ API specification parsing failed, falling back to manual parsing:', parseError);
           // Fallback to manual parsing if API specification parsing fails
-          parsedServices = providerServices.map((service: Record<string, unknown>) => ({
+          parsedServices = providerServices.map((service: any) => ({
             serviceId: service.service || service.id,
             name: service.name,
             type: service.type || 'Default',
             category: service.category || 'Uncategorized',
-            rate: parseFloat((service.rate || service.price || '0') as string),
-            min: parseInt((service.min || '1') as string),
-            max: parseInt((service.max || '10000') as string),
+            rate: parseFloat(service.rate || service.price || '0'),
+            min: parseInt(service.min || '1'),
+            max: parseInt(service.max || '10000'),
             description: service.desc || service.description || service.details || service.info || '',
             refill: service.refill === true || service.refill === 1 || service.refill === '1' || service.refill === 'true' || 
                    service.refillable === true || service.refillable === 1 || service.refillable === '1' || service.refillable === 'true' ||
@@ -277,7 +276,7 @@ export async function POST(req: NextRequest) {
 
         // Filter services by categories
         const filteredServices = parsedServices.filter((service: any) => {
-          const serviceCategory = (service.category as string)?.toLowerCase() || '';
+          const serviceCategory = service.category?.toLowerCase() || '';
           return categoriesArray.some((cat: string) => 
             serviceCategory.includes(cat.toLowerCase()) || 
             cat.toLowerCase().includes(serviceCategory)
@@ -606,7 +605,7 @@ export async function GET(req: NextRequest) {
         // Extract unique categories from services with service counts
         const categoryMap = new Map();
         
-        providerServices.forEach((service: { category?: string }) => {
+        providerServices.forEach((service: any) => {
           const categoryName = service.category;
           if (categoryName && categoryName.trim() !== '') {
             if (categoryMap.has(categoryName)) {
@@ -739,7 +738,7 @@ export async function GET(req: NextRequest) {
         console.log(`✅ Fetched ${providerServices.length} services from ${provider.name}`);
 
         // Filter services by categories
-        const filteredServices = providerServices.filter((service: { category?: string }) => {
+        const filteredServices = providerServices.filter((service: any) => {
           const serviceCategory = service.category?.toLowerCase() || '';
           return categoriesArray.some(cat => 
             serviceCategory.includes(cat.toLowerCase()) || 
@@ -750,15 +749,15 @@ export async function GET(req: NextRequest) {
         console.log(`🔍 Filtered to ${filteredServices.length} services for categories: ${categoriesArray.join(', ')}`);
 
         // Format services for frontend using standard SMM panel format
-        const formattedServices = filteredServices.map((service: Record<string, unknown>) => ({
+        const formattedServices = filteredServices.map((service: any) => ({
           id: service.service || service.id,
           name: service.name,
           description: service.desc || service.description || '',
           category: service.category,
-          price: parseFloat((service.rate || service.price || '0') as string),
+          price: parseFloat(service.rate || service.price || '0'),
           currency: service.currency || 'USD',
-          min: parseInt((service.min || '1') as string),
-          max: parseInt((service.max || '10000') as string),
+          min: parseInt(service.min || '1'),
+          max: parseInt(service.max || '10000'),
           type: service.type || 'Default',
           refill: service.refill || false,
           cancel: service.cancel || false
@@ -863,7 +862,7 @@ export async function GET(req: NextRequest) {
         // Extract unique categories and count services for each
         const categoryMap = new Map<string, number>();
         
-        providerServices.forEach((service: { category?: string }) => {
+        providerServices.forEach((service: any) => {
           const category = service.category;
           if (category && category.trim() !== '') {
             categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
@@ -968,9 +967,6 @@ export async function PUT(req: NextRequest) {
         );
       }
 
-      // Fetch currency data for conversion
-      const { currencies } = await fetchCurrencyData();
-
       console.log('✅ Provider found:', provider.name);
 
       let importedCount = 0;
@@ -1009,7 +1005,7 @@ export async function PUT(req: NextRequest) {
           
           if (service.currency && service.currency !== 'USD') {
             try {
-              baseProviderPrice = convertToUSD(baseProviderPrice, service.currency, currencies);
+              baseProviderPrice = await convertToUSD(baseProviderPrice, service.currency);
               console.log(`💱 Converted ${originalProviderPrice} ${service.currency} to ${baseProviderPrice} USD`);
             } catch (conversionError) {
               console.warn(`⚠️ Currency conversion failed for ${service.name}:`, conversionError);

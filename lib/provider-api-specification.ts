@@ -197,7 +197,7 @@ export class ApiRequestBuilder {
   // Build request for adding order
   buildAddOrderRequest(serviceId: string, link: string, quantity: number, runs?: number, interval?: number): RequestConfig {
     const endpoint = this.spec.addOrderEndpoint || this.baseUrl;
-    const params: Record<string, string | number> = {
+    const params: Record<string, any> = {
       [this.spec.apiKeyParam]: this.apiKey,
       [this.spec.actionParam]: this.spec.addOrderAction,
       [this.spec.serviceIdParam]: serviceId,
@@ -274,7 +274,7 @@ export class ApiRequestBuilder {
     return this.buildRequest(endpoint, params);
   }
 
-  private buildRequest(endpoint: string, params: Record<string, string | number>): RequestConfig {
+  private buildRequest(endpoint: string, params: Record<string, any>): RequestConfig {
     const config: RequestConfig = {
       url: endpoint,
       method: this.httpMethod as 'GET' | 'POST',
@@ -285,18 +285,12 @@ export class ApiRequestBuilder {
       config.headers = { 'Content-Type': 'application/json' };
       config.data = JSON.stringify(params);
     } else if (this.spec.requestFormat === 'query' || this.httpMethod === 'GET') {
-      const stringParams = Object.fromEntries(
-        Object.entries(params).map(([key, value]) => [key, String(value)])
-      );
-      const queryString = new URLSearchParams(stringParams).toString();
+      const queryString = new URLSearchParams(params).toString();
       config.url = `${endpoint}?${queryString}`;
     } else {
       // Form data (default)
       config.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
-      const stringParams = Object.fromEntries(
-        Object.entries(params).map(([key, value]) => [key, String(value)])
-      );
-      config.data = new URLSearchParams(stringParams).toString();
+      config.data = new URLSearchParams(params).toString();
     }
 
     return config;
@@ -320,7 +314,7 @@ export class ApiResponseParser {
   }
 
   // Parse services response
-  parseServicesResponse(response: unknown): ParsedService[] {
+  parseServicesResponse(response: any): ParsedService[] {
     if (!Array.isArray(response)) {
       throw new Error('Services response must be an array');
     }
@@ -331,64 +325,64 @@ export class ApiResponseParser {
     }
 
     return response.map(service => ({
-      serviceId: String(this.getNestedValue(service, mapping.serviceId) || ''),
-      name: String(this.getNestedValue(service, mapping.name) || ''),
-      type: String(this.getNestedValue(service, mapping.type) || ''),
-      category: String(this.getNestedValue(service, mapping.category) || ''),
-      rate: parseFloat(String(this.getNestedValue(service, mapping.rate))) || 0,
-      min: parseInt(String(this.getNestedValue(service, mapping.min))) || 0,
-      max: parseInt(String(this.getNestedValue(service, mapping.max))) || 0,
+      serviceId: this.getNestedValue(service, mapping.serviceId),
+      name: this.getNestedValue(service, mapping.name),
+      type: this.getNestedValue(service, mapping.type),
+      category: this.getNestedValue(service, mapping.category),
+      rate: parseFloat(this.getNestedValue(service, mapping.rate)) || 0,
+      min: parseInt(this.getNestedValue(service, mapping.min)) || 0,
+      max: parseInt(this.getNestedValue(service, mapping.max)) || 0,
       refill: this.parseBooleanValue(this.getNestedValue(service, mapping.refill)),
       cancel: this.parseBooleanValue(this.getNestedValue(service, mapping.cancel))
     }));
   }
 
   // Parse add order response
-  parseAddOrderResponse(response: unknown): { orderId: string } {
+  parseAddOrderResponse(response: any): { orderId: string } {
     const mapping = this.spec.responseMapping?.addOrder;
     if (!mapping) {
-      return response as { orderId: string };
+      return response;
     }
 
     return {
-      orderId: String(this.getNestedValue(response, mapping.orderId) || '')
+      orderId: this.getNestedValue(response, mapping.orderId)
     };
   }
 
   // Parse order status response
-  parseOrderStatusResponse(response: unknown): ParsedOrderStatus {
+  parseOrderStatusResponse(response: any): ParsedOrderStatus {
     const mapping = this.spec.responseMapping?.orderStatus;
     if (!mapping) {
-      return response as ParsedOrderStatus;
+      return response;
     }
 
     return {
-      charge: parseFloat(String(this.getNestedValue(response, mapping.charge) || '0')) || 0,
-      startCount: parseInt(String(this.getNestedValue(response, mapping.startCount) || '0')) || 0,
-      status: String(this.getNestedValue(response, mapping.status) || ''),
-      remains: parseInt(String(this.getNestedValue(response, mapping.remains) || '0')) || 0,
-      currency: String(this.getNestedValue(response, mapping.currency) || '')
+      charge: parseFloat(this.getNestedValue(response, mapping.charge)) || 0,
+      startCount: parseInt(this.getNestedValue(response, mapping.startCount)) || 0,
+      status: this.getNestedValue(response, mapping.status),
+      remains: parseInt(this.getNestedValue(response, mapping.remains)) || 0,
+      currency: this.getNestedValue(response, mapping.currency)
     };
   }
 
   // Parse balance response
-  parseBalanceResponse(response: unknown): ParsedBalance {
+  parseBalanceResponse(response: any): ParsedBalance {
     const mapping = this.spec.responseMapping?.balance;
     if (!mapping) {
-      return response as ParsedBalance;
+      return response;
     }
 
     return {
-      balance: parseFloat(String(this.getNestedValue(response, mapping.balance) || '0')) || 0,
-      currency: String(this.getNestedValue(response, mapping.currency) || '')
+      balance: parseFloat(this.getNestedValue(response, mapping.balance)) || 0,
+      currency: this.getNestedValue(response, mapping.currency)
     };
   }
 
-  private getNestedValue(obj: unknown, path: string): unknown {
-    return path.split('.').reduce((current: any, key) => current?.[key], obj);
+  private getNestedValue(obj: any, path: string): any {
+    return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
-  private parseBooleanValue(value: unknown): boolean {
+  private parseBooleanValue(value: any): boolean {
     if (typeof value === 'boolean') return value;
     if (typeof value === 'string') {
       return value.toLowerCase() === 'true' || value === '1';
@@ -427,44 +421,44 @@ export interface ParsedBalance {
 }
 
 // Utility function to create API specification from database record
-export function createApiSpecFromProvider(provider: Record<string, unknown>): ApiSpecification {
+export function createApiSpecFromProvider(provider: any): ApiSpecification {
   return {
-    apiKeyParam: String(provider.api_key_param || DEFAULT_SMM_API_SPEC.apiKeyParam),
-    actionParam: String(provider.action_param || DEFAULT_SMM_API_SPEC.actionParam),
+    apiKeyParam: provider.api_key_param || DEFAULT_SMM_API_SPEC.apiKeyParam,
+    actionParam: provider.action_param || DEFAULT_SMM_API_SPEC.actionParam,
     
-    servicesAction: String(provider.services_action || DEFAULT_SMM_API_SPEC.servicesAction),
-    servicesEndpoint: provider.services_endpoint ? String(provider.services_endpoint) : undefined,
+    servicesAction: provider.services_action || DEFAULT_SMM_API_SPEC.servicesAction,
+    servicesEndpoint: provider.services_endpoint,
     
-    addOrderAction: String(provider.add_order_action || DEFAULT_SMM_API_SPEC.addOrderAction),
-    addOrderEndpoint: provider.add_order_endpoint ? String(provider.add_order_endpoint) : undefined,
-    serviceIdParam: String(provider.service_id_param || DEFAULT_SMM_API_SPEC.serviceIdParam),
-    linkParam: String(provider.link_param || DEFAULT_SMM_API_SPEC.linkParam),
-    quantityParam: String(provider.quantity_param || DEFAULT_SMM_API_SPEC.quantityParam),
-    runsParam: String(provider.runs_param || DEFAULT_SMM_API_SPEC.runsParam),
-    intervalParam: String(provider.interval_param || DEFAULT_SMM_API_SPEC.intervalParam),
+    addOrderAction: provider.add_order_action || DEFAULT_SMM_API_SPEC.addOrderAction,
+    addOrderEndpoint: provider.add_order_endpoint,
+    serviceIdParam: provider.service_id_param || DEFAULT_SMM_API_SPEC.serviceIdParam,
+    linkParam: provider.link_param || DEFAULT_SMM_API_SPEC.linkParam,
+    quantityParam: provider.quantity_param || DEFAULT_SMM_API_SPEC.quantityParam,
+    runsParam: provider.runs_param || DEFAULT_SMM_API_SPEC.runsParam,
+    intervalParam: provider.interval_param || DEFAULT_SMM_API_SPEC.intervalParam,
     
-    statusAction: String(provider.status_action || DEFAULT_SMM_API_SPEC.statusAction),
-    statusEndpoint: provider.status_endpoint ? String(provider.status_endpoint) : undefined,
-    orderIdParam: String(provider.order_id_param || DEFAULT_SMM_API_SPEC.orderIdParam),
-    ordersParam: String(provider.orders_param || DEFAULT_SMM_API_SPEC.ordersParam),
+    statusAction: provider.status_action || DEFAULT_SMM_API_SPEC.statusAction,
+    statusEndpoint: provider.status_endpoint,
+    orderIdParam: provider.order_id_param || DEFAULT_SMM_API_SPEC.orderIdParam,
+    ordersParam: provider.orders_param || DEFAULT_SMM_API_SPEC.ordersParam,
     
-    refillAction: String(provider.refill_action || DEFAULT_SMM_API_SPEC.refillAction),
-    refillEndpoint: provider.refill_endpoint ? String(provider.refill_endpoint) : undefined,
-    refillStatusAction: String(provider.refill_status_action || DEFAULT_SMM_API_SPEC.refillStatusAction),
-    refillIdParam: String(provider.refill_id_param || DEFAULT_SMM_API_SPEC.refillIdParam),
-    refillsParam: String(provider.refills_param || DEFAULT_SMM_API_SPEC.refillsParam),
+    refillAction: provider.refill_action || DEFAULT_SMM_API_SPEC.refillAction,
+    refillEndpoint: provider.refill_endpoint,
+    refillStatusAction: provider.refill_status_action || DEFAULT_SMM_API_SPEC.refillStatusAction,
+    refillIdParam: provider.refill_id_param || DEFAULT_SMM_API_SPEC.refillIdParam,
+    refillsParam: provider.refills_param || DEFAULT_SMM_API_SPEC.refillsParam,
     
-    cancelAction: String(provider.cancel_action || DEFAULT_SMM_API_SPEC.cancelAction),
-    cancelEndpoint: provider.cancel_endpoint ? String(provider.cancel_endpoint) : undefined,
+    cancelAction: provider.cancel_action || DEFAULT_SMM_API_SPEC.cancelAction,
+    cancelEndpoint: provider.cancel_endpoint,
     
-    balanceAction: String(provider.balance_action || DEFAULT_SMM_API_SPEC.balanceAction),
-    balanceEndpoint: provider.balance_endpoint ? String(provider.balance_endpoint) : undefined,
+    balanceAction: provider.balance_action || DEFAULT_SMM_API_SPEC.balanceAction,
+    balanceEndpoint: provider.balance_endpoint,
     
-    responseMapping: provider.response_mapping ? JSON.parse(String(provider.response_mapping)) : DEFAULT_SMM_API_SPEC.responseMapping,
+    responseMapping: provider.response_mapping ? JSON.parse(provider.response_mapping) : DEFAULT_SMM_API_SPEC.responseMapping,
     
-    requestFormat: (provider.request_format as 'form' | 'json' | 'query') || DEFAULT_SMM_API_SPEC.requestFormat,
-    responseFormat: (provider.response_format as 'json' | 'xml') || DEFAULT_SMM_API_SPEC.responseFormat,
-    rateLimitPerMin: provider.rate_limit_per_min ? Number(provider.rate_limit_per_min) : undefined,
-    timeoutSeconds: Number(provider.timeout_seconds || DEFAULT_SMM_API_SPEC.timeoutSeconds)
+    requestFormat: provider.request_format || DEFAULT_SMM_API_SPEC.requestFormat,
+    responseFormat: provider.response_format || DEFAULT_SMM_API_SPEC.responseFormat,
+    rateLimitPerMin: provider.rate_limit_per_min,
+    timeoutSeconds: provider.timeout_seconds || DEFAULT_SMM_API_SPEC.timeoutSeconds
   };
 }

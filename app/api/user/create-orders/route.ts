@@ -107,7 +107,7 @@ export async function POST(request: Request) {
 
     // Calculate total cost for all orders
     let totalCost = 0;
-    const processedOrders: Array<Record<string, unknown>> = [];
+    const processedOrders: any[] = [];
 
     for (const orderData of orders) {
       const {
@@ -118,6 +118,7 @@ export async function POST(request: Request) {
         price,
         usdPrice,
         bdtPrice,
+        currency,
         avg_time,
       } = orderData;
 
@@ -206,7 +207,7 @@ export async function POST(request: Request) {
       const createdOrders = [];
       for (const orderData of processedOrders) {
         const order = await prisma.newOrder.create({
-          data: orderData as any,
+          data: orderData,
           include: {
             service: {
               select: {

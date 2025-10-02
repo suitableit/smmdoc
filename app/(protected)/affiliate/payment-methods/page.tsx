@@ -479,7 +479,7 @@ export default function ActivateAffiliatePage() {
                 <div className="text-center py-8 bg-gray-50 dark:bg-[#1e1f2e] border border-gray-200 dark:border-gray-600 rounded-lg">
                   <FaWallet className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                   <p className="text-gray-500 dark:text-gray-400 text-sm">
-                    No payment methods added yet. Click &quot;Add Payment Method&quot; to get started.
+                    No payment methods added yet. Click "Add Payment Method" to get started.
                   </p>
                 </div>
               )}

@@ -1,19 +1,8 @@
 import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
 
-interface SyncLog {
-  id: string;
-  timestamp: string;
-  adminId?: string;
-  adminEmail?: string;
-  provider?: string;
-  syncType?: string;
-  status?: string;
-  [key: string]: unknown;
-}
-
 // In-memory sync logs (in production, use database table)
-let syncLogs: SyncLog[] = [];
+let syncLogs: any[] = [];
 
 // GET - Get sync logs
 export async function GET(req: NextRequest) {
@@ -155,5 +144,26 @@ export async function DELETE() {
       { error: 'Failed to clear sync logs', success: false, data: null },
       { status: 500 }
     );
+  }
+}
+
+// Helper function to add sync log (can be called from other APIs)
+async function addSyncLog(logData: any) {
+  try {
+    const newLog = {
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+      ...logData
+    };
+
+    syncLogs.unshift(newLog);
+    if (syncLogs.length > 1000) {
+      syncLogs = syncLogs.slice(0, 1000);
+    }
+
+    return newLog;
+  } catch (error) {
+    console.error('Error adding sync log:', error);
+    return null;
   }
 }

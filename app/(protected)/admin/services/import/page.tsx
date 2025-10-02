@@ -186,8 +186,8 @@ const ImportServicesPage = () => {
 
         if (result.success) {
           const formattedProviders = result.data.providers
-            .filter((p: { configured: boolean; status: string }) => p.configured && p.status === 'active') // Show only active configured providers
-            .map((p: { id?: string | number; label: string; apiUrl: string; status: string }) => ({
+            .filter((p: any) => p.configured && p.status === 'active') // Show only active configured providers
+            .map((p: any) => ({
               id: p.id?.toString() || '',
               name: p.label,
               url: p.apiUrl,
@@ -321,24 +321,6 @@ const ImportServicesPage = () => {
     }));
   };
 
-  // Toggle refill for a service
-  const toggleRefill = (service: any) => {
-    setServices((prev) =>
-      prev.map((s) =>
-        s.id === service.id ? { ...s, refill: !s.refill } : s
-      )
-    );
-  };
-
-  // Toggle cancel for a service
-  const toggleCancel = (service: any) => {
-    setServices((prev) =>
-      prev.map((s) =>
-        s.id === service.id ? { ...s, cancel: !s.cancel } : s
-      )
-    );
-  };
-
   // Handle category selection
   const handleCategorySelect = (categoryId: string | number) => {
     setApiCategories((prev) =>
@@ -375,7 +357,7 @@ const ImportServicesPage = () => {
       console.log('Categories API response:', result); // Debug log
 
       if (result.success) {
-        const categories = result.data.categories.map((cat: { id: string | number; name: string; servicesCount?: number }) => ({
+        const categories = result.data.categories.map((cat: any) => ({
           ...cat,
           servicesCount: cat.servicesCount || 0,
           selected: false
@@ -478,8 +460,8 @@ const ImportServicesPage = () => {
         console.log('📄 Pagination info:', pagination);
 
         // Store original provider price and apply profit margin to sale price
-        const servicesWithProfit = categoryServices.map((service: { id: string | number; name: string; rate: string | number; description?: string; refill?: boolean; cancel?: boolean; providerPrice?: string | number }) => {
-          const providerPrice = parseFloat(String(service.rate)) || 0;
+        const servicesWithProfit = categoryServices.map((service: any) => {
+          const providerPrice = parseFloat(service.rate) || 0;
           const salePrice = parseFloat((providerPrice * (1 + profitPercent / 100)).toFixed(2));
 
           console.log(`🔥 Service: ${service.name}, Provider: $${providerPrice}, Sale: $${salePrice}, Profit: ${profitPercent}%`);
@@ -699,11 +681,11 @@ const ImportServicesPage = () => {
       setTimeout(() => {
         router.push('/admin/services');
       }, 1500);
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Error importing services:', error);
       setIsLoading(false);
       showToast(
-        `Error importing services: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Error importing services: ${error.message || 'Unknown error'}`,
         'error'
       );
     }
