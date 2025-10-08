@@ -4,7 +4,13 @@ import { ApiRequestBuilder } from '@/lib/provider-api-specification';
 export interface ProviderValidationResult {
   isValid: boolean;
   error?: string;
-  provider?: any;
+  provider?: {
+    id: number;
+    name: string;
+    api_key: string;
+    api_url: string;
+    status: string;
+  };
 }
 
 /**
@@ -60,7 +66,7 @@ export async function validateProvider(providerId: number): Promise<ProviderVali
     // Validate API URL format
     try {
       new URL(provider.api_url);
-    } catch (error) {
+    } catch {
       return {
         isValid: false,
         error: 'Invalid API URL format'
@@ -120,9 +126,17 @@ export async function validateProviderByName(providerName: string): Promise<Prov
 
 /**
  * Get all valid (active with API URL and key) providers
- * @returns Promise<any[]>
+ * @returns Promise<Array<{id: number, name: string, api_key: string, api_url: string, status: string, createdAt: Date, updatedAt: Date}>>
  */
-export async function getValidProviders(): Promise<any[]> {
+export async function getValidProviders(): Promise<Array<{
+  id: number;
+  name: string;
+  api_key: string;
+  api_url: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+}>> {
   try {
     const providers = await db.api_providers.findMany({
       where: {
