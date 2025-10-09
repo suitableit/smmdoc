@@ -23,7 +23,6 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-import ProviderOrderStatus from '@/components/admin/ProviderOrderStatus';
 import { toast } from 'sonner';
 
 // Dynamic imports for modal components
@@ -196,31 +195,7 @@ const AdminOrdersPage = () => {
   const [statsLoading, setStatsLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
 
-  // Provider sync handler
-  const handleProviderSync = async (orderId: string) => {
-    try {
-      const response = await fetch('/api/admin/provider-sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ orderIds: [orderId] }),
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        toast.success('Provider sync completed successfully');
-        // Refresh orders after sync
-        await fetchOrders();
-      } else {
-        toast.error(result.error || 'Failed to sync provider order');
-      }
-    } catch (error) {
-      console.error('Error syncing provider order:', error);
-      toast.error('Failed to sync provider order');
-    }
-  };
+
 
   // New state for action modals
   const [editStartCountDialog, setEditStartCountDialog] = useState<{
@@ -766,28 +741,7 @@ const AdminOrdersPage = () => {
                 Refresh
               </button>
 
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/admin/provider-sync', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ action: 'sync_all' })
-                    });
-                    if (response.ok) {
-                      await fetchOrders();
-                      // Show success toast
-                    }
-                  } catch (error) {
-                    console.error('Provider sync failed:', error);
-                  }
-                }}
-                disabled={ordersLoading || statsLoading}
-                className="btn btn-secondary flex items-center gap-2 px-3 py-2.5"
-              >
-                <FaSync className="h-4 w-4" />
-                Sync Providers
-              </button>
+
             </div>
 
             {/* Right: Search Controls Only */}
@@ -808,10 +762,7 @@ const AdminOrdersPage = () => {
                 />
               </div>
 
-              <select className="w-[30%] md:w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
-                <option value="id">Order ID</option>
-                <option value="username">Username</option>
-              </select>
+              {/* Removed search dropdown per requirement: search via input only */}
             </div>
           </div>
         </div>
@@ -1045,25 +996,13 @@ const AdminOrdersPage = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
-                          Profit
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Price (Unit/Total)
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
                           Link
                         </th>
                         <th
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
-                          Seller
+                          Provider
                         </th>
                         <th
                           className="text-left p-3 font-semibold"
@@ -1083,12 +1022,7 @@ const AdminOrdersPage = () => {
                         >
                           Service
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Provider Status
-                        </th>
+                        
                         <th
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
@@ -1152,7 +1086,7 @@ const AdminOrdersPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="text-right">
+                            <div className="text-left">
                               <div
                                 className="font-semibold text-sm"
                                 style={{ color: 'var(--text-primary)' }}
@@ -1162,25 +1096,11 @@ const AdminOrdersPage = () => {
                                   ? formatPrice(order.charge, 2)
                                   : '0.00'}
                               </div>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="text-right">
-                              <div className="font-semibold text-sm text-green-600">
-                                $
+                              <div className="text-xs text-green-600">
+                                Profit: $
                                 {order.profit
                                   ? formatPrice(order.profit, 2)
                                   : '0.00'}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="text-right">
-                              <div className="font-semibold text-sm text-600">
-                                ${formatPrice(order.usdPrice || 0, 2)}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                Rate: ${order.service?.rate || 0}
                               </div>
                             </div>
                           </td>
@@ -1237,7 +1157,7 @@ const AdminOrdersPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="text-right">
+                            <div className="text-left">
                               <div
                                 className="font-semibold text-sm"
                                 style={{ color: 'var(--text-primary)' }}
@@ -1279,22 +1199,17 @@ const AdminOrdersPage = () => {
                               </div>
                             </div>
                           </td>
+
+                          {/* Status cell inserted after Service */}
                           <td className="p-3">
-                            <ProviderOrderStatus 
-                              order={{
-                                id: order.id.toString(),
-                                status: order.status,
-                                isProviderService: order.isProviderService,
-                                providerId: order.providerId,
-                                providerServiceId: order.providerServiceId,
-                                providerOrderId: order.providerOrderId,
-                                providerStatus: order.providerStatus,
-                                lastSyncAt: order.lastSyncAt,
-                                apiProvider: order.apiProvider
-                              }}
-                              onSync={handleProviderSync}
-                            />
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
+                              {getStatusIcon(order.status)}
+                              <span className="text-xs font-medium capitalize">
+                                {order.status ? order.status.replace('_', ' ') : 'null'}
+                              </span>
+                            </div>
                           </td>
+                          
                           <td className="p-3">
                             <div className="space-y-1">
                               <div
