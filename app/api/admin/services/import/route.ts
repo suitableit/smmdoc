@@ -1021,51 +1021,82 @@ export async function PUT(req: NextRequest) {
 
           // Map provider service type to existing predefined service types
           let serviceTypeId = null;
-          if (service.type) {
-            // Map common provider service type names to existing packageType IDs
-            const mapServiceTypeToPackageType = (typeName: string): number => {
-              const normalizedType = typeName.toLowerCase().trim();
-              
-              // Common mappings for provider service types
-              const typeMapping: Record<string, number> = {
-                'default': 1,
-                'standard': 1,
-                'basic': 1,
-                'normal': 1,
-                'package': 2,
-                'bulk': 2,
-                'bundle': 2,
-                'custom comments': 3,
-                'special comments': 3,
-                'comments': 3,
-                'package comments': 4,
-                'bulk comments': 4,
-                'auto likes': 11,
-                'auto views': 12,
-                'auto comments': 13,
-                'limited auto likes': 14,
-                'limited auto views': 15,
-                'subscription': 11,
-                'subscriptions': 11,
-                'auto': 11
-              };
-              
-              return typeMapping[normalizedType] || 1; // Default to type 1 if no mapping found
+          
+          // Map common provider service type names to existing service type names in database
+          const mapServiceTypeToPreferredName = (typeName: string): string => {
+            const normalizedType = typeName.toLowerCase().trim();
+            
+            // Map to service types that actually exist in the database
+            // Based on current database: "New", "Default", "Custom comments"
+            const typeMapping: Record<string, string> = {
+              'default': 'Default',
+              'standard': 'Default',
+              'basic': 'Default',
+              'normal': 'Default',
+              'package': 'Default', // Map package types to Default since Package doesn't exist
+              'bulk': 'Default',
+              'bundle': 'Default',
+              'custom comments': 'Custom comments',
+              'special comments': 'Custom comments',
+              'comments': 'Custom comments',
+              'package comments': 'Custom comments',
+              'bulk comments': 'Custom comments',
+              'auto likes': 'Default', // Map auto types to Default since they don't exist
+              'auto views': 'Default',
+              'auto comments': 'Custom comments', // Map auto comments to Custom comments
+              'limited auto likes': 'Default',
+              'limited auto views': 'Default',
+              'subscription': 'Default',
+              'subscriptions': 'Default',
+              'auto': 'Default',
+              'new': 'Default' // Map "new" to Default instead of "New" service type
             };
+            
+            return typeMapping[normalizedType] || 'Default'; // Default to 'Default' if no mapping found
+          };
 
-            const packageType = mapServiceTypeToPackageType(service.type);
-            
-            // Find existing service type by packageType
-            let serviceType = await db.servicetype.findFirst({
-              where: { packageType: packageType }
-            });
-            
-            if (serviceType) {
-              serviceTypeId = serviceType.id;
-              console.log(`📝 Mapped service type "${service.type}" to existing packageType ${packageType} (ID: ${serviceTypeId})`);
-            } else {
-              console.warn(`⚠️ No service type found for packageType ${packageType}, using null`);
+          // Determine preferred service type name from service type or default to 'Default'
+          const preferredServiceTypeName = service.type ? mapServiceTypeToPreferredName(service.type) : 'Default';
+          
+          // Find existing service type by name (preferred approach)
+          let serviceType = await db.servicetype.findFirst({
+            where: { 
+              name: preferredServiceTypeName,
+              status: 'active'
             }
+          });
+          
+          // If not found by name, fallback to 'Default' service type
+          if (!serviceType && preferredServiceTypeName !== 'Default') {
+            serviceType = await db.servicetype.findFirst({
+              where: { 
+                name: 'Default',
+                status: 'active'
+              }
+            });
+            console.log(`⚠️ Service type "${preferredServiceTypeName}" not found, falling back to "Default"`);
+          }
+          
+          // If still not found, get any active service type with packageType 1
+          if (!serviceType) {
+            serviceType = await db.servicetype.findFirst({
+              where: { 
+                packageType: 1,
+                status: 'active'
+              },
+              orderBy: { 
+                name: 'asc' // Order by name to get consistent results
+              }
+            });
+            console.log(`⚠️ "Default" service type not found, using first available service type with packageType 1`);
+          }
+          
+          // Ensure we always have a valid service type ID
+          if (serviceType) {
+            serviceTypeId = serviceType.id;
+            console.log(`📝 Mapped service type "${service.type || 'undefined'}" to existing service type "${serviceType.name}" (ID: ${serviceTypeId})`);
+          } else {
+            throw new Error('No service types found in database. Please ensure service types are properly configured.');
           }
 
           // Find or create category - use the actual service category
