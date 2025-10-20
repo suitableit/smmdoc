@@ -5,7 +5,7 @@ import { getCurrentUser } from '@/lib/auth-helpers';
 // GET /api/admin/providers/[id]/services - Get services by provider ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getCurrentUser();
@@ -22,7 +22,8 @@ export async function GET(
       );
     }
 
-    const providerId = parseInt(params.id);
+    const resolvedParams = await params;
+    const providerId = parseInt(resolvedParams.id);
 
     if (isNaN(providerId)) {
       return NextResponse.json(
@@ -51,8 +52,11 @@ export async function GET(
       );
     }
 
+
+
     // Fetch services from the provider's API
     if (!provider.api_url || !provider.api_key) {
+
       return NextResponse.json(
         {
           error: 'Provider API configuration is incomplete',
@@ -64,23 +68,36 @@ export async function GET(
     }
 
     try {
-      // Build the API URL for fetching services
+      // Build the API request for fetching services
       const apiKeyParam = provider.api_key_param || 'key';
       const actionParam = provider.action_param || 'action';
       const servicesAction = provider.services_action || 'services';
+      const httpMethod = provider.http_method || 'POST';
       
-      const servicesUrl = `${provider.api_url}?${apiKeyParam}=${encodeURIComponent(provider.api_key)}&${actionParam}=${servicesAction}`;
-
-      console.log('Fetching services from:', servicesUrl.replace(provider.api_key, '[REDACTED]'));
-
-      const response = await fetch(servicesUrl, {
-        method: provider.http_method || 'POST',
+      let requestOptions: RequestInit = {
+        method: httpMethod,
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        // Add timeout
         signal: AbortSignal.timeout(30000)
-      });
+      };
+
+      let servicesUrl = provider.api_url;
+
+      if (httpMethod.toUpperCase() === 'GET') {
+        // For GET requests, use query parameters
+        servicesUrl = `${provider.api_url}?${apiKeyParam}=${encodeURIComponent(provider.api_key)}&${actionParam}=${servicesAction}`;
+      } else {
+        // For POST requests, use form data in body
+        const formData = new URLSearchParams();
+        formData.append(apiKeyParam, provider.api_key);
+        formData.append(actionParam, servicesAction);
+        requestOptions.body = formData.toString();
+      }
+
+
+
+      const response = await fetch(servicesUrl, requestOptions);
 
       if (!response.ok) {
         throw new Error(`API request failed with status: ${response.status}`);
@@ -88,13 +105,48 @@ export async function GET(
 
       const apiServices = await response.json();
 
-      // Validate the response
-      if (!Array.isArray(apiServices)) {
-        throw new Error('Invalid API response format - expected array of services');
+
+
+      let servicesArray = [];
+
+      // Validate and extract the services array from different response formats
+      if (Array.isArray(apiServices)) {
+        // Direct array response
+        servicesArray = apiServices;
+      } else if (typeof apiServices === 'object' && apiServices !== null) {
+        // Check for various possible object structures
+        if (Array.isArray(apiServices.services)) {
+          servicesArray = apiServices.services;
+        } else if (Array.isArray(apiServices.data)) {
+          servicesArray = apiServices.data;
+        } else if (Array.isArray(apiServices.result)) {
+          servicesArray = apiServices.result;
+        } else if (apiServices.success && Array.isArray(apiServices.data)) {
+          servicesArray = apiServices.data;
+        } else {
+           throw new Error(`Invalid API response format - expected array of services or object with services array. Got object with keys: ${Object.keys(apiServices).join(', ')}`);
+         }
+      } else {
+        throw new Error(`Invalid API response format - expected array or object, got: ${typeof apiServices}`);
+      }
+
+      if (!Array.isArray(servicesArray) || servicesArray.length === 0) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            services: [],
+            total: 0,
+            provider: {
+              id: provider.id,
+              name: provider.name
+            }
+          },
+          error: null
+        });
       }
 
       // Transform the services data to a consistent format
-      const transformedServices = apiServices.map((service: any) => ({
+      const transformedServices = servicesArray.map((service: any) => ({
         id: service.service || service.id,
         name: service.name,
         description: service.desc || service.description || '',

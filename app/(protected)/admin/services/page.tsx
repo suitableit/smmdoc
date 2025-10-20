@@ -857,8 +857,37 @@ const CreateServiceForm: React.FC<{
     data: providersData,
     error: providersError,
     isLoading: providersLoading,
-  } = useSWR('/api/admin/providers', fetcher);
+  } = useSWR('/api/admin/providers?filter=with-services', fetcher);
+
+
+
   const [isPending, startTransition] = useTransition();
+  const [orderLinkType, setOrderLinkType] = useState<'link' | 'username'>('link');
+
+  // Helper function to detect if service requires username based on name/type patterns
+  const detectOrderLinkType = (serviceName: string, serviceType?: string): 'link' | 'username' => {
+    const name = serviceName.toLowerCase();
+    const type = serviceType?.toLowerCase() || '';
+    
+    // Keywords that typically require username
+    const usernameKeywords = ['comment', 'mention', 'reply', 'custom', 'dm', 'message', 'tag'];
+    
+    // Keywords that typically require link
+    const linkKeywords = ['follower', 'like', 'view', 'subscriber', 'share', 'watch', 'impression'];
+    
+    // Check for username patterns first (more specific)
+    if (usernameKeywords.some(keyword => name.includes(keyword) || type.includes(keyword))) {
+      return 'username';
+    }
+    
+    // Check for link patterns
+    if (linkKeywords.some(keyword => name.includes(keyword) || type.includes(keyword))) {
+      return 'link';
+    }
+    
+    // Default to link if uncertain
+    return 'link';
+  };
 
   const {
     register,
@@ -873,6 +902,7 @@ const CreateServiceForm: React.FC<{
     defaultValues: {
       ...createServiceDefaultValues,
       mode: 'manual', // Set default mode to manual
+      orderLink: 'link', // Set default order link to 'link'
     },
   });
 
@@ -925,9 +955,18 @@ const CreateServiceForm: React.FC<{
         setValue('max_order', selectedService.max?.toString() || '');
         setValue('perqty', '1000'); // Keep default per quantity
         setValue('avg_time', '0-1 hours'); // Default average time
+        
+        // Detect and set order link type based on service name and type
+        const detectedType = detectOrderLinkType(selectedService.name, selectedService.type);
+        setValue('orderLink', detectedType);
+        setOrderLinkType(detectedType);
       }
+    } else {
+      // Reset to default when no API service is selected
+      setValue('orderLink', 'link');
+      setOrderLinkType('link');
     }
-  }, [apiServiceIdValue, apiServicesData, setValue]);
+  }, [apiServiceIdValue, apiServicesData, setValue, detectOrderLinkType]);
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
     console.log('Form submitted with values:', values);
@@ -1085,7 +1124,7 @@ const CreateServiceForm: React.FC<{
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Category
+                Service Category <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
                 <select
@@ -1183,40 +1222,7 @@ const CreateServiceForm: React.FC<{
               </FormItem>
             )}
 
-            {/* API Service - Only show when mode is auto and provider is selected */}
-            {modeValue === 'auto' && providerIdValue && (
-              <FormItem className="md:col-span-2">
-                <FormLabel
-                  className="text-sm font-medium"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  API Service <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormControl>
-                  <select
-                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                    {...register('apiServiceId')}
-                    disabled={isPending || apiServicesLoading}
-                    required={modeValue === 'auto' && providerIdValue}
-                  >
-                    <option value="">
-                      {apiServicesLoading ? 'Loading services...' : 'Select API Service'}
-                    </option>
-                    {apiServicesData?.data?.services?.map((service: any) => (
-                      <option key={service.id} value={service.id}>
-                        {service.name}
-                      </option>
-                    ))}
-                  </select>
-                </FormControl>
-                <FormMessage>{errors.apiServiceId?.message}</FormMessage>
-                {apiServicesError && (
-                  <p className="text-sm text-red-500 mt-1">
-                    Failed to load services. Please try again.
-                  </p>
-                )}
-              </FormItem>
-            )}
+
 
             {/* API Service - Only show when mode is auto and provider is selected */}
             {modeValue === 'auto' && providerIdValue && (
@@ -1487,7 +1493,7 @@ const CreateServiceForm: React.FC<{
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Order Link <span className="text-red-500">*</span>
+                {orderLinkType === 'username' ? 'Username' : 'Order Link'} <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
                 <select
@@ -2033,7 +2039,7 @@ const EditServiceForm = ({
     data: providersData,
     error: providersError,
     isLoading: providersLoading,
-  } = useSWR('/api/admin/providers', fetcher);
+  } = useSWR('/api/admin/providers?filter=with-services', fetcher);
   const [isPending, startTransition] = useTransition();
 
   const {
