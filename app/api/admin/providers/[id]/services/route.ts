@@ -154,7 +154,16 @@ export async function GET(
         min: parseInt(service.min) || 1,
         max: parseInt(service.max) || 1000000,
         category: service.category || 'Uncategorized',
-        type: service.type || 'Default'
+        type: service.type || 'Default',
+        // Extract refill and cancel information from various possible field names
+        refill: service.refill === true || service.refill === 1 || service.refill === '1' || 
+                service.refill_enabled === true || service.refill_enabled === 1 || service.refill_enabled === '1' ||
+                service.refillEnabled === true || service.refillEnabled === 1 || service.refillEnabled === '1' ||
+                false,
+        cancel: service.cancel === true || service.cancel === 1 || service.cancel === '1' || 
+                service.cancel_enabled === true || service.cancel_enabled === 1 || service.cancel_enabled === '1' ||
+                service.cancelEnabled === true || service.cancelEnabled === 1 || service.cancelEnabled === '1' ||
+                false
       }));
 
       return NextResponse.json({
