@@ -1155,12 +1155,12 @@ function NewOrder() {
                     </small>
                     {qty > 0 && qty < (selected?.min_order || 0) && (
                       <div className="text-red-500 text-xs mt-1">
-                        ⚠️ Quantity must be at least {selected?.min_order || 0}
+                        Quantity must be at least {selected?.min_order || 0}
                       </div>
                     )}
                     {qty > (selected?.max_order || 999999) && (
                       <div className="text-red-500 text-xs mt-1">
-                        ⚠️ Quantity cannot exceed {selected?.max_order || 0}
+                        Quantity cannot exceed {selected?.max_order || 0}
                       </div>
                     )}
                   </div>
@@ -1211,7 +1211,6 @@ function NewOrder() {
                   >
                     {isSubmitting ? (
                       <>
-                        <GradientSpinner size="w-4 h-4" className="mr-2" />
                         Creating Order...
                       </>
                     ) : qty > 0 && qty < (selected?.min_order || 0) ? (

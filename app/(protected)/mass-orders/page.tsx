@@ -2,6 +2,14 @@
 
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { 
+  validateMassOrders, 
+  checkSufficientBalance, 
+  formatValidationErrors,
+  convertToApiFormat,
+  ParsedOrder,
+  ValidationResult 
+} from '@/lib/mass-order-validation';
 import axiosInstance from '@/lib/axiosInstance';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
@@ -10,16 +18,17 @@ import {
     useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
     FaCheckCircle,
     FaExternalLinkAlt,
     FaInfoCircle,
     FaLayerGroup,
     FaShoppingCart,
-    FaSpinner,
     FaTimes,
+    FaTimesCircle,
 } from 'react-icons/fa';
+import { formatCurrencyAmount } from '@/lib/currency-utils';
 import { useDispatch } from 'react-redux';
 
 // Custom Gradient Spinner Component
@@ -169,7 +178,13 @@ export default function MassOrder() {
   const user = useCurrentUser();
   const router = useRouter();
   const dispatch = useDispatch();
-  const { currency, rate: currencyRate } = useCurrency();
+  const { 
+    currency, 
+    rate: currencyRate,
+    availableCurrencies,
+    currentCurrencyData,
+    currencySettings
+  } = useCurrency();
   const { data: userStatsResponse, refetch: refetchUserStats } =
     useGetUserStatsQuery({});
   const userStats = userStatsResponse?.data;
@@ -179,14 +194,18 @@ export default function MassOrder() {
   );
   const [orders, setOrders] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [totalOrders, setTotalOrders] = useState(0);
   const [isFormLoading, setIsFormLoading] = useState(true);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [massOrderEnabled, setMassOrderEnabled] = useState<boolean | null>(null);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [balanceCheck, setBalanceCheck] = useState<ReturnType<typeof checkSufficientBalance> | null>(null);
 
   // Set document title using useEffect for client-side
   useEffect(() => {
@@ -202,23 +221,33 @@ export default function MassOrder() {
         if (response.data.success) {
           setMassOrderEnabled(true);
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error checking mass order settings:', error);
         
         // Check if it's a 403 error (mass order disabled)
-        if (error.response?.status === 403) {
-          setMassOrderEnabled(false);
-          showToast('Mass Order functionality is currently disabled by admin', 'error');
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 3000);
+        if (error instanceof Error && 'response' in error) {
+          const axiosError = error as any;
+          if (axiosError.response?.status === 403) {
+            setMassOrderEnabled(false);
+            showToast('Mass Order functionality is currently disabled by admin', 'error');
+            setTimeout(() => {
+              router.push('/dashboard');
+            }, 3000);
+          } else {
+            // For other errors, assume it's enabled but show generic error
+            setMassOrderEnabled(false);
+            showToast('Unable to verify mass order settings', 'error');
+            setTimeout(() => {
+              router.push('/dashboard');
+            }, 3000);
+          }
         } else {
-          // For other errors, assume it's enabled but show generic error
+          // For non-axios errors, assume it's enabled but show generic error
           setMassOrderEnabled(false);
-          showToast('Unable to verify mass order settings', 'error');
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 3000);
+            showToast('Unable to verify mass order settings', 'error');
+            setTimeout(() => {
+              router.push('/dashboard');
+            }, 3000);
         }
       }
     };
@@ -249,13 +278,55 @@ export default function MassOrder() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Format currency values consistently
+  // Format currency using the currency context
   const formatCurrency = (amount: number) => {
-    const convertedAmount =
-      currency === 'BDT' ? amount : amount / (currencyRate || 121.52);
-    const symbol = currency === 'USD' ? '$' : '৳';
-    return `${symbol}${convertedAmount.toFixed(2)}`;
+    if (currentCurrencyData && currencySettings) {
+      return formatCurrencyAmount(amount, currentCurrencyData.code, availableCurrencies, currencySettings);
+    }
+    return `$${amount.toFixed(2)}`;
   };
+
+  // Real-time validation function
+  const validateOrders = useCallback(async (input: string) => {
+    if (!input.trim()) {
+      setValidationResult(null);
+      setValidationErrors([]);
+      setTotalOrders(0);
+      setTotalPrice(0);
+      setBalanceCheck(null);
+      return;
+    }
+
+    setIsValidating(true);
+    try {
+      const result = await validateMassOrders(
+        input,
+        currentCurrencyData?.code || 'USD',
+        availableCurrencies as Array<{ code: string; rate: number; symbol: string; name: string }>
+      );
+      
+      setValidationResult(result);
+      setValidationErrors(formatValidationErrors(result));
+      setTotalOrders(result.validOrders.length);
+      setTotalPrice(result.totalCostInUserCurrency);
+      
+      // Check balance if user is available
+      if (userStats?.balance !== undefined) {
+        const balanceCheckResult = checkSufficientBalance(
+          result,
+          userStats.balance,
+          availableCurrencies as Array<{ code: string; rate: number; symbol: string; name: string }>,
+          currencySettings as { format: string; decimals: number; decimal_separator: string; thousand_separator: string; symbol_position: string }
+        );
+        setBalanceCheck(balanceCheckResult);
+      }
+    } catch (error) {
+      console.error('Validation error:', error);
+      setValidationErrors(['Failed to validate orders']);
+    } finally {
+      setIsValidating(false);
+    }
+  }, [currentCurrencyData, availableCurrencies, userStats, currencySettings]);
 
   // Handle New Order navigation
   const handleNewOrderClick = () => {
@@ -263,114 +334,30 @@ export default function MassOrder() {
   };
 
   // Parse and validate the orders text
-  const parseOrders = async (text: string) => {
-    if (!text.trim()) {
-      setTotalOrders(0);
-      setTotalPrice(0);
-      return;
-    }
-
-    const lines = text.trim().split('\n');
-    let validLines = 0;
-    let totalAmount = 0;
-
-    // Process each line to validate format
-    for (const line of lines) {
-      const parts = line.trim().split('|');
-      if (parts.length >= 3) {
-        const serviceId = parts[0].trim();
-        const link = parts[1].trim();
-        const quantity = parseInt(parts[2].trim(), 10);
-
-        if (!isNaN(quantity) && serviceId && link && link.startsWith('http')) {
-          validLines++;
-          // Use placeholder price for now - real validation will happen on submit
-          const placeholderPrice = 0.5; // Placeholder price per 1000 units
-          totalAmount += (placeholderPrice * quantity) / 1000;
-        }
-      }
-    }
-
-    setTotalOrders(validLines);
-    setTotalPrice(totalAmount);
-  };
+  const parseOrders = useCallback(async (text: string) => {
+    await validateOrders(text);
+  }, [validateOrders]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (totalOrders === 0) {
-      showToast(
-        'No valid orders found. Please check your input format.',
-        'error'
-      );
-      return;
-    }
-
-    // Check user balance
-    const userBalance = userStats?.balance || 0;
-    if (userBalance < totalPrice) {
-      showToast(
-        `Insufficient balance. Available: ${userBalance.toFixed(
-          2
-        )}, Required: ${totalPrice.toFixed(2)}`,
-        'error'
-      );
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      // Parse orders into API format
-      const lines = orders.trim().split('\n');
-      const orderArray = [];
-
-      for (const line of lines) {
-        const parts = line.trim().split('|');
-        if (parts.length >= 3) {
-          const serviceId = parts[0].trim();
-          const link = parts[1].trim();
-          const quantity = parseInt(parts[2].trim(), 10);
-
-          if (
-            !isNaN(quantity) &&
-            serviceId &&
-            link &&
-            link.startsWith('http')
-          ) {
-            // Fetch service details to get categoryId
-            try {
-              const serviceResponse = await axiosInstance.get(
-                `/api/user/services/serviceById?svId=${serviceId}`
-              );
-              const service = serviceResponse.data.data;
-
-              if (service && service.categoryId) {
-                orderArray.push({
-                  serviceId: serviceId,
-                  link: link,
-                  qty: quantity,
-                  categoryId: service.categoryId,
-                });
-              } else {
-                showToast(`Service ${serviceId} not found or invalid`, 'error');
-                continue;
-              }
-            } catch (error) {
-              showToast(`Failed to validate service ${serviceId}`, 'error');
-              continue;
-            }
-          }
-        }
-      }
-
-      if (orderArray.length === 0) {
-        showToast('No valid orders to submit.', 'error');
+      // Validate using our enhanced validation
+      if (!validationResult || validationResult.validOrders.length === 0) {
+        showToast('Please enter at least one valid order', 'error');
         return;
       }
 
-      // Generate a unique batch ID for this Mass Orders
+      // Check balance
+      if (balanceCheck && !balanceCheck.sufficient) {
+        showToast(balanceCheck.message || 'Insufficient balance', 'error');
+        return;
+      }
+
+      // Convert to API format
       const batchId = `MO-${Date.now()}-${(user?.id || Math.random()).toString().slice(-4)}`;
+      const orderArray = convertToApiFormat(validationResult);
 
       // Submit to Mass Orders API
       const response = await axiosInstance.post('/api/user/mass-orders', {
@@ -394,14 +381,18 @@ export default function MassOrder() {
         setOrders('');
         setTotalOrders(0);
         setTotalPrice(0);
+        setValidationResult(null);
+        setValidationErrors([]);
+        setBalanceCheck(null);
       } else {
         showToast(response.data.message || 'Failed to create orders', 'error');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating Mass Orderss:', error);
       const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
+        error instanceof Error && 'response' in error ?
+        (error as any).response?.data?.message || error.message :
+        error instanceof Error ? error.message :
         'Failed to create orders';
       showToast(errorMessage, 'error');
     } finally {
@@ -464,24 +455,72 @@ export default function MassOrder() {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="form-group  mb-0">
+                      <div className="form-group mb-0">
                         <label className="form-label">
                           Order Format: service_id | link | quantity
                         </label>
-                        <textarea
-                          placeholder="3740|https://instagram.com/username|1000"
-                          value={orders}
-                          onChange={(e) => {
-                            setOrders(e.target.value);
-                            parseOrders(e.target.value);
-                          }}
-                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                          style={{ height: '256px' }}
-                        />
+                        <div className="relative">
+                          <textarea
+                            placeholder="3740|https://instagram.com/username|1000"
+                            value={orders}
+                            onChange={(e) => {
+                              setOrders(e.target.value);
+                              parseOrders(e.target.value);
+                            }}
+                            className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
+                              validationErrors.length > 0 
+                                ? 'border-red-300 dark:border-red-600' 
+                                : validationResult && validationResult.validOrders.length > 0
+                                ? 'border-green-300 dark:border-green-600'
+                                : 'border-gray-300 dark:border-gray-600'
+                            }`}
+                            style={{ height: '256px' }}
+                          />
+                          {isValidating && (
+                            <div className="absolute top-3 right-3">
+                              <GradientSpinner size="w-4 h-4" />
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Validation Status */}
+                        {validationResult && (
+                          <div className="mt-2 text-xs">
+                            <div className={`flex items-center ${
+                              validationResult.validOrders.length > 0 
+                                ? 'text-green-600 dark:text-green-400' 
+                                : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {validationResult.validOrders.length > 0 ? (
+                                <FaCheckCircle className="mr-1 w-3 h-3" />
+                              ) : (
+                                <FaTimesCircle className="mr-1 w-3 h-3" />
+                              )}
+                              {validationResult.validOrders.length} valid, {validationResult.invalidOrders.length} invalid
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Validation Errors */}
+                        {validationErrors.length > 0 && (
+                          <div className="mt-2 text-xs text-red-600 dark:text-red-400">
+                            {validationErrors.slice(0, 3).map((error, index) => (
+                              <div key={index} className="flex items-start">
+                                <FaTimesCircle className="mr-1 mt-0.5 w-3 h-3 flex-shrink-0" />
+                                <span>{error}</span>
+                              </div>
+                            ))}
+                            {validationErrors.length > 3 && (
+                              <div className="mt-1 text-red-500">
+                                +{validationErrors.length - 3} more errors
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
-                      {/* Order Summary */}
-                      {totalOrders > 0 && (
+                      {/* Enhanced Order Summary */}
+                      {validationResult && validationResult.validOrders.length > 0 && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div className="flex justify-between">
@@ -489,37 +528,127 @@ export default function MassOrder() {
                                 Valid Orders:
                               </span>
                               <span className="font-semibold text-blue-900">
-                                {totalOrders}
+                                {validationResult.validOrders.length}
                               </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-blue-700">
-                                Estimated Cost:
+                                Total Cost:
                               </span>
                               <span className="font-semibold text-blue-900">
-                                {formatCurrency(totalPrice)}
+                                {formatCurrency(validationResult.totalCostInUserCurrency)}
                               </span>
                             </div>
                           </div>
+                          
+                          {/* Balance Check */}
+                          {balanceCheck && (
+                            <div className={`mt-2 p-2 rounded text-xs ${
+                              balanceCheck.sufficient 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              <div className="flex justify-between">
+                                <span>Available Balance:</span>
+                                <span className="font-semibold">
+                                  {formatCurrency(balanceCheck.available)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Required Amount:</span>
+                                <span className="font-semibold">
+                                  {formatCurrency(balanceCheck.required)}
+                                </span>
+                              </div>
+                              {!balanceCheck.sufficient && (
+                                <div className="mt-1 font-semibold">
+                                  {balanceCheck.message}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
                           <div className="text-xs text-blue-600 mt-2">
-                            * Final price will be calculated based on actual
-                            service rates
+                            Prices calculated in {currentCurrencyData?.code || 'USD'} based on current service rates
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Order Details Table */}
+                      {validationResult && validationResult.validOrders.length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                            <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                              Order Details ({validationResult.validOrders.length} orders)
+                            </h4>
+                          </div>
+                          <div className="max-h-64 overflow-y-auto">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                              <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
+                                <tr>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Service
+                                  </th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Qty
+                                  </th>
+                                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Price
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                {validationResult.validOrders.slice(0, 10).map((order, index) => (
+                                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td className="px-3 py-2 text-xs text-gray-900 dark:text-white">
+                                      <div className="font-medium">{order.serviceId}</div>
+                                      <div className="text-gray-500 dark:text-gray-400 truncate max-w-32">
+                                        {order.service?.name || 'Loading...'}
+                                      </div>
+                                    </td>
+                                    <td className="px-3 py-2 text-xs text-gray-900 dark:text-white">
+                                      {order.quantity.toLocaleString()}
+                                    </td>
+                                    <td className="px-3 py-2 text-xs text-right text-gray-900 dark:text-white">
+                                      {formatCurrency(order.priceInUserCurrency || 0)}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {validationResult.validOrders.length > 10 && (
+                              <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 text-center border-t border-gray-200 dark:border-gray-700">
+                                +{validationResult.validOrders.length - 10} more orders
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
 
                       <button
                         type="submit"
-                        disabled={totalOrders === 0 || isSubmitting}
+                        disabled={
+                          validationResult?.validOrders.length === 0 || 
+                          isSubmitting || 
+                          isValidating ||
+                          (balanceCheck && !balanceCheck.sufficient)
+                        }
                         className="btn btn-primary w-full"
                       >
                         {isSubmitting ? (
                           <>
-                            <FaSpinner className="animate-spin mr-2 w-4 h-4" />
                             Processing...
                           </>
+                        ) : isValidating ? (
+                          <>
+                            Validating...
+                          </>
+                        ) : validationResult?.validOrders.length === 0 ? (
+                          'Enter valid orders'
+                        ) : balanceCheck && !balanceCheck.sufficient ? (
+                          'Insufficient Balance'
                         ) : (
-                          `Submit ${totalOrders} Orders`
+                          `Submit ${validationResult?.validOrders.length || 0} Orders`
                         )}
                       </button>
                     </form>

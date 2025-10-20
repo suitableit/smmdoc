@@ -1,5 +1,4 @@
 import { Provider } from '@/types/provider';
-import { Order } from '@/types/order';
 import { ApiRequestBuilder, ApiResponseParser } from '@/lib/provider-api-specification';
 
 export interface ProviderOrderRequest {
@@ -135,7 +134,17 @@ export class ProviderOrderForwarder {
   /**
    * Get provider services list
    */
-  async getProviderServices(provider: Provider): Promise<any[]> {
+  async getProviderServices(provider: Provider): Promise<Array<{
+    service: string;
+    name: string;
+    category: string;
+    rate: number;
+    min: number;
+    max: number;
+    type: string;
+    refill?: boolean;
+    cancel?: boolean;
+  }>> {
     try {
       const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
       
@@ -158,7 +167,17 @@ export class ProviderOrderForwarder {
       }
 
       const responseParser = new ApiResponseParser();
-      const parsedServices = responseParser.parseServicesResponse(result);
+      const parsedServices = responseParser.parseServicesResponse(result) as Array<{
+        service: string;
+        name: string;
+        category: string;
+        rate: number;
+        min: number;
+        max: number;
+        type: string;
+        refill?: boolean;
+        cancel?: boolean;
+      }>;
 
       return parsedServices;
     } catch (error) {
