@@ -1100,6 +1100,8 @@ export async function PUT(req: NextRequest) {
               status: 'active',
               perqty: 1000,
               mode: 'auto', // Set imported services to auto mode
+              refill: service.refill || false, // Store refill status from API
+              cancel: service.cancel || false, // Store cancel status from API
               userId: session.user.id,
               categoryId: category.id,
               serviceTypeId: serviceTypeId,
@@ -1116,7 +1118,9 @@ export async function PUT(req: NextRequest) {
                 importedAt: new Date().toISOString(),
                 type: service.type,
                 mode: 'auto', // Also keep in updateText for reference
-                percentage: service.percent || profitMargin || 0 // Also store in updateText for reference
+                percentage: service.percent || profitMargin || 0, // Also store in updateText for reference
+                refill: service.refill || false, // Also store in updateText for reference
+                cancel: service.cancel || false // Also store in updateText for reference
               })
             }
           });
