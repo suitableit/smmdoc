@@ -857,7 +857,7 @@ const CreateServiceForm: React.FC<{
     data: providersData,
     error: providersError,
     isLoading: providersLoading,
-  } = useSWR('/api/admin/providers?filter=with-services', fetcher);
+  } = useSWR('/api/admin/providers?filter=active', fetcher);
 
 
 
@@ -865,7 +865,7 @@ const CreateServiceForm: React.FC<{
   const [orderLinkType, setOrderLinkType] = useState<'link' | 'username'>('link');
 
   // Helper function to detect if service requires username based on name/type patterns
-  const detectOrderLinkType = (serviceName: string, serviceType?: string): 'link' | 'username' => {
+  const detectOrderLinkType = useCallback((serviceName: string, serviceType?: string): 'link' | 'username' => {
     const name = serviceName.toLowerCase();
     const type = serviceType?.toLowerCase() || '';
     
@@ -887,7 +887,7 @@ const CreateServiceForm: React.FC<{
     
     // Default to link if uncertain
     return 'link';
-  };
+  }, []);
 
   const {
     register,
@@ -956,6 +956,50 @@ const CreateServiceForm: React.FC<{
         setValue('perqty', '1000'); // Keep default per quantity
         setValue('avg_time', '0-1 hours'); // Default average time
         
+        // Auto-fill refill and cancel settings from provider service
+        // Handle refill field - convert to boolean for form
+        let refillBoolValue = false; // default
+        if (selectedService.refill !== undefined && selectedService.refill !== null) {
+          if (typeof selectedService.refill === 'boolean') {
+            refillBoolValue = selectedService.refill;
+          } else if (typeof selectedService.refill === 'string') {
+            const refillStr = selectedService.refill.toLowerCase();
+            refillBoolValue = (refillStr === 'true' || refillStr === '1' || refillStr === 'on' || refillStr === 'yes');
+          } else if (typeof selectedService.refill === 'number') {
+            refillBoolValue = selectedService.refill > 0;
+          }
+        }
+        
+        // Handle cancel field - convert to boolean for form
+        let cancelBoolValue = false; // default
+        if (selectedService.cancel !== undefined && selectedService.cancel !== null) {
+          if (typeof selectedService.cancel === 'boolean') {
+            cancelBoolValue = selectedService.cancel;
+          } else if (typeof selectedService.cancel === 'string') {
+            const cancelStr = selectedService.cancel.toLowerCase();
+            cancelBoolValue = (cancelStr === 'true' || cancelStr === '1' || cancelStr === 'on' || cancelStr === 'yes');
+          } else if (typeof selectedService.cancel === 'number') {
+            cancelBoolValue = selectedService.cancel > 0;
+          }
+        }
+        
+        setValue('refill', refillBoolValue);
+        setValue('cancel', cancelBoolValue);
+        
+        // Set refill days and refill display if refill is enabled
+        if (refillBoolValue) {
+          // Set default values for refill days and display if not provided
+          const refillDays = selectedService.refillDays || selectedService.refill_days || 30;
+          const refillDisplay = selectedService.refillDisplay || selectedService.refill_display || 24;
+          
+          setValue('refillDays', refillDays.toString());
+          setValue('refillDisplay', refillDisplay.toString());
+        } else {
+          // Clear refill days and display when refill is disabled
+          setValue('refillDays', '');
+          setValue('refillDisplay', '');
+        }
+        
         // Detect and set order link type based on service name and type
         const detectedType = detectOrderLinkType(selectedService.name, selectedService.type);
         setValue('orderLink', detectedType);
@@ -965,8 +1009,12 @@ const CreateServiceForm: React.FC<{
       // Reset to default when no API service is selected
       setValue('orderLink', 'link');
       setOrderLinkType('link');
+      setValue('refill', false);
+      setValue('cancel', false);
+      setValue('refillDays', '');
+      setValue('refillDisplay', '');
     }
-  }, [apiServiceIdValue, apiServicesData, setValue, detectOrderLinkType]);
+  }, [apiServiceIdValue, apiServicesData, detectOrderLinkType]);
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
     console.log('Form submitted with values:', values);
@@ -2039,7 +2087,7 @@ const EditServiceForm = ({
     data: providersData,
     error: providersError,
     isLoading: providersLoading,
-  } = useSWR('/api/admin/providers?filter=with-services', fetcher);
+  } = useSWR('/api/admin/providers?filter=active', fetcher);
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -2688,9 +2736,9 @@ function AdminServicesPage() {
   const { data: categoriesData, mutate: refreshCategories } =
     useGetCategories();
 
-  // Fetch active providers from API with error handling - only providers with imported services
+  // Fetch active providers from API with error handling - all active providers
   const { data: providersData, mutate: refreshProviders, error: providersError } = useSWR(
-    '/api/admin/providers?filter=with-services',
+    '/api/admin/providers?filter=active',
     async (url) => {
       try {
         console.log('Fetching providers data...');
