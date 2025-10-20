@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ serviceTypes });
+    return NextResponse.json({ data: serviceTypes });
   } catch (error) {
     console.error('Error fetching service types:', error);
     return NextResponse.json(

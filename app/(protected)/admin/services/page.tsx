@@ -853,6 +853,20 @@ const CreateServiceForm: React.FC<{
     error: serviceTypesError,
     isLoading: serviceTypesLoading,
   } = useSWR('/api/admin/service-types', fetcher);
+
+  // Debug service types data
+  useEffect(() => {
+    console.log('🔍 Service Types Debug in Admin Services:');
+    console.log('📊 serviceTypesData:', serviceTypesData);
+    console.log('📊 serviceTypesError:', serviceTypesError);
+    console.log('📊 serviceTypesLoading:', serviceTypesLoading);
+    if (serviceTypesData?.data) {
+      console.log('📋 Service types count:', serviceTypesData.data.length);
+      serviceTypesData.data.forEach((type: any, index: number) => {
+        console.log(`  ${index + 1}. ID: ${type.id}, Name: ${type.name}`);
+      });
+    }
+  }, [serviceTypesData, serviceTypesError, serviceTypesLoading]);
   const {
     data: providersData,
     error: providersError,
@@ -940,6 +954,51 @@ const CreateServiceForm: React.FC<{
   // Watch API service selection for auto-fill
   const apiServiceIdValue = watch('apiServiceId');
 
+  // Function to map API service type to internal service type ID
+  const mapApiServiceTypeToInternalType = (apiServiceType: string): string | null => {
+    if (!apiServiceType || !serviceTypesData?.data) return null;
+    
+    // Normalize the API service type for comparison
+    const normalizedApiType = apiServiceType.toLowerCase().trim();
+    
+    // Define mapping rules (case-insensitive)
+    const typeMapping: { [key: string]: string[] } = {
+      '1': ['default', 'standard', 'normal', 'regular', 'basic'], // Default
+      '2': ['package', 'pack', 'bundle', 'fixed'], // Package
+      '3': ['special comments', 'custom comments', 'comments', 'special comment'], // Special Comments
+      '4': ['package comments', 'pack comments', 'bundle comments', 'package comment'], // Package Comments
+      '11': ['auto likes', 'auto like', 'subscription likes', 'auto-likes'], // Auto Likes
+      '12': ['auto views', 'auto view', 'subscription views', 'auto-views'], // Auto Views
+      '13': ['auto comments', 'auto comment', 'subscription comments', 'auto-comments'], // Auto Comments
+      '14': ['limited auto likes', 'limited likes', 'limited auto like'], // Limited Auto Likes
+      '15': ['limited auto views', 'limited views', 'limited auto view'], // Limited Auto Views
+    };
+    
+    // Find matching service type
+    for (const [internalTypeId, apiTypeVariants] of Object.entries(typeMapping)) {
+      if (apiTypeVariants.some(variant => normalizedApiType.includes(variant))) {
+        // Verify this service type exists in our system
+        const serviceTypeExists = serviceTypesData.data.find(
+          (type: any) => type.id.toString() === internalTypeId
+        );
+        if (serviceTypeExists) {
+          return internalTypeId;
+        }
+      }
+    }
+    
+    // If no exact match found, try partial matching
+    for (const serviceType of serviceTypesData.data) {
+      const normalizedInternalName = serviceType.name.toLowerCase();
+      if (normalizedApiType.includes(normalizedInternalName) || 
+          normalizedInternalName.includes(normalizedApiType)) {
+        return serviceType.id.toString();
+      }
+    }
+    
+    return null; // No match found
+  };
+
   // Auto-fill form fields when API service is selected
   useEffect(() => {
     if (apiServiceIdValue && apiServicesData?.data?.services) {
@@ -955,6 +1014,17 @@ const CreateServiceForm: React.FC<{
         setValue('max_order', selectedService.max?.toString() || '');
         setValue('perqty', '1000'); // Keep default per quantity
         setValue('avg_time', '0-1 hours'); // Default average time
+        
+        // Auto-fill service type based on API service type
+        if (selectedService.type && serviceTypesData?.data) {
+          const mappedServiceTypeId = mapApiServiceTypeToInternalType(selectedService.type);
+          if (mappedServiceTypeId) {
+            setValue('serviceTypeId', mappedServiceTypeId);
+            console.log(`🎯 Auto-filled service type: ${selectedService.type} → ID ${mappedServiceTypeId}`);
+          } else {
+            console.log(`⚠️ No mapping found for service type: ${selectedService.type}`);
+          }
+        }
         
         // Auto-fill refill and cancel settings from provider service
         // Handle refill field - convert to boolean for form
@@ -1014,7 +1084,7 @@ const CreateServiceForm: React.FC<{
       setValue('refillDays', '');
       setValue('refillDisplay', '');
     }
-  }, [apiServiceIdValue, apiServicesData, detectOrderLinkType]);
+  }, [apiServiceIdValue, apiServicesData, serviceTypesData, detectOrderLinkType]);
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
     console.log('Form submitted with values:', values);
