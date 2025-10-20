@@ -177,6 +177,7 @@ export async function GET(req: NextRequest) {
       return {
         value: cp.name,
         label: cp.name,
+        name: cp.name,
         description: `Custom provider: ${cp.name}`,
         configured: true,
         status: cp.status,
@@ -203,6 +204,8 @@ export async function GET(req: NextRequest) {
     if (filter === 'with-services') {
       allProviders = allProviders.filter(provider => provider.importedServices > 0);
     }
+
+
 
     return NextResponse.json({
       success: true,

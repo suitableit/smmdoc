@@ -181,7 +181,7 @@ const ImportServicesPage = () => {
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const response = await fetch('/api/admin/providers');
+        const response = await fetch('/api/admin/providers?filter=with-services');
         const result = await response.json();
 
         if (result.success) {
