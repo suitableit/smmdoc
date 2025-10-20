@@ -25,6 +25,19 @@ model Service {
   refillDisplay       Int?              @default(24)
   providerId          Int?
   providerName        String?
+  // Service type specific fields
+  packageType         Int?              @default(1) // Service package type (1-15)
+  apiServiceId        String?           // External API service ID
+  apiProviderId       Int?              // External API provider ID
+  dripfeedEnabled     Boolean           @default(false)
+  subscriptionMin     Int?              // For subscription services
+  subscriptionMax     Int?              // For subscription services
+  subscriptionDelay   Int?              // For subscription services (in minutes)
+  autoPostsMin        Int?              // For auto services
+  autoPostsMax        Int?              // For auto services
+  autoDelay           Int?              // For auto services (in minutes)
+  customComments      String?           @db.Text // For custom comment services
+  isSecret            Boolean           @default(false) // Secret service flag
   favoriteServices    FavoriteService[]
   newOrders           NewOrder[]
   category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -37,5 +50,6 @@ model Service {
   @@index([serviceTypeId], map: "Service_serviceTypeId_idx")
   @@index([status], map: "Service_status_idx")
   @@index([userId], map: "Service_userId_idx")
+  @@index([packageType], map: "Service_packageType_idx")
   @@map("service")
 }

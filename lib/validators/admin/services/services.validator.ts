@@ -18,7 +18,9 @@ const createServiceSchema = z.object({
   personalizedService: z.enum(['no', 'yes']).default('no'),
   serviceSpeed: z.enum(['slow', 'sometimes_slow', 'normal', 'fast']).default('normal'),
   mode: z.enum(['manual', 'auto']).default('manual'),
-  orderLink: z.enum(['username', 'url']).optional().default('username'),
+  orderLink: z.enum(['username', 'link']).optional().default('username'),
+  providerId: z.string().optional(),
+  apiServiceId: z.string().optional(),
 });
 
 // Edit service schema with optional fields
@@ -40,7 +42,9 @@ const editServiceSchema = z.object({
   personalizedService: z.enum(['no', 'yes']).optional(),
   serviceSpeed: z.enum(['slow', 'sometimes_slow', 'normal', 'fast']).optional(),
   mode: z.enum(['manual', 'auto']).optional(),
-  orderLink: z.enum(['username', 'url']).optional(),
+  orderLink: z.enum(['username', 'link']).optional(),
+  providerId: z.string().optional(),
+  apiServiceId: z.string().optional(),
 });
 
 type CreateServiceSchema = z.infer<typeof createServiceSchema>;
@@ -65,6 +69,8 @@ const createServiceDefaultValues: CreateServiceSchema = {
   serviceSpeed: 'normal',
   mode: 'manual',
   orderLink: 'username',
+  providerId: '',
+  apiServiceId: '',
 };
 
 export {

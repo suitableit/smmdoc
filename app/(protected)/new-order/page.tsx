@@ -11,6 +11,8 @@ import {
     dashboardApi,
     useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
+import { ServiceTypeFields } from '@/components/ServiceTypeFields';
+import { validateOrderByType, getServiceTypeConfig, ServiceType } from '@/lib/serviceTypes';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -324,6 +326,21 @@ function NewOrder() {
   const [isFormLoading, setIsFormLoading] = useState(true);
   const [isServiceDetailsLoading, setIsServiceDetailsLoading] = useState(false);
 
+  // Service type specific fields
+  const [serviceTypeFields, setServiceTypeFields] = useState({
+    comments: '',
+    username: '',
+    posts: undefined as number | undefined,
+    delay: undefined as number | undefined,
+    minQty: undefined as number | undefined,
+    maxQty: undefined as number | undefined,
+    isDripfeed: false,
+    dripfeedRuns: undefined as number | undefined,
+    dripfeedInterval: undefined as number | undefined,
+    isSubscription: false,
+  });
+  const [serviceTypeErrors, setServiceTypeErrors] = useState<Record<string, string>>({});
+
   // Show toast notification
   const showToast = (
     message: string,
@@ -331,6 +348,40 @@ function NewOrder() {
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Handle service type field changes
+  const handleServiceTypeFieldChange = (field: string, value: any) => {
+    setServiceTypeFields(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Clear error for this field
+    if (serviceTypeErrors[field]) {
+      setServiceTypeErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Reset service type fields when service changes
+  const resetServiceTypeFields = () => {
+    setServiceTypeFields({
+      comments: '',
+      username: '',
+      posts: undefined,
+      delay: undefined,
+      minQty: undefined,
+      maxQty: undefined,
+      isDripfeed: false,
+      dripfeedRuns: undefined,
+      dripfeedInterval: undefined,
+      isSubscription: false,
+    });
+    setServiceTypeErrors({});
   };
 
   const selected = services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService);
@@ -539,9 +590,11 @@ function NewOrder() {
         if (fetchedServices?.length > 0) {
           setSelectedService(fetchedServices[0]?.id);
           console.log('Auto-selected service:', fetchedServices[0]?.id);
+          resetServiceTypeFields(); // Reset service type fields when service changes
         } else {
           setSelectedService('');
           console.log('No services found for category:', selectedCategory);
+          resetServiceTypeFields(); // Reset service type fields when no service
         }
       })
       .catch((error) => {
@@ -737,6 +790,36 @@ function NewOrder() {
       return;
     }
 
+    // Service type validation
+    const serviceType = (selected?.packageType || 1) as ServiceType;
+    const validationData = {
+      link,
+      qty,
+      ...serviceTypeFields
+    };
+
+    const validation = validateOrderByType(serviceType, validationData);
+    if (!validation.isValid) {
+      // Set field-specific errors
+      const fieldErrors: Record<string, string> = {};
+      validation.errors.forEach(error => {
+        // Try to extract field name from error message
+        const fieldMatch = error.match(/^(\w+):/);
+        if (fieldMatch) {
+          fieldErrors[fieldMatch[1]] = error.substring(fieldMatch[1].length + 2);
+        } else {
+          // Generic error
+          showToast(`Service type validation failed: ${error}`, 'error');
+        }
+      });
+      
+      if (Object.keys(fieldErrors).length > 0) {
+        setServiceTypeErrors(fieldErrors);
+        showToast('Please fix the highlighted fields', 'error');
+      }
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -772,6 +855,17 @@ function NewOrder() {
           categoryId: parseInt(selectedCategory),
           userId: user?.id,
           avg_time: selected?.avg_time || '',
+          // Service type specific fields
+          comments: serviceTypeFields.comments || undefined,
+          username: serviceTypeFields.username || undefined,
+          posts: serviceTypeFields.posts || undefined,
+          delay: serviceTypeFields.delay || undefined,
+          minQty: serviceTypeFields.minQty || undefined,
+          maxQty: serviceTypeFields.maxQty || undefined,
+          isDripfeed: serviceTypeFields.isDripfeed,
+          dripfeedRuns: serviceTypeFields.dripfeedRuns || undefined,
+          dripfeedInterval: serviceTypeFields.dripfeedInterval || undefined,
+          isSubscription: serviceTypeFields.isSubscription,
         },
       ];
 
@@ -793,6 +887,7 @@ function NewOrder() {
         setSelectedService('');
         setSelectedCategory('');
         setSearch('');
+        resetServiceTypeFields();
       } else {
         showToast(response.data.message || 'Failed to create order', 'error');
       }
@@ -818,6 +913,7 @@ function NewOrder() {
       setQty(0);
       setSearch(selected.name);
       setShowDropdown(false);
+      resetServiceTypeFields(); // Reset service type fields when service changes
     }
   };
 
@@ -1068,6 +1164,16 @@ function NewOrder() {
                       </div>
                     )}
                   </div>
+
+                  {/* Service Type Specific Fields */}
+                  {selectedService && selected?.type && (
+                    <ServiceTypeFields
+                      serviceType={selected.type as ServiceType}
+                      values={serviceTypeFields}
+                      onChange={handleServiceTypeFieldChange}
+                      errors={serviceTypeErrors}
+                    />
+                  )}
 
                   {/* Price */}
                   <div className="form-group">

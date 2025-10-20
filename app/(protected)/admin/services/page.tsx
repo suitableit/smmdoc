@@ -853,6 +853,11 @@ const CreateServiceForm: React.FC<{
     error: serviceTypesError,
     isLoading: serviceTypesLoading,
   } = useSWR('/api/admin/service-types', fetcher);
+  const {
+    data: providersData,
+    error: providersError,
+    isLoading: providersLoading,
+  } = useSWR('/api/admin/providers', fetcher);
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -885,6 +890,44 @@ const CreateServiceForm: React.FC<{
 
   // Watch refill field to control readonly state of refill days and display
   const refillValue = watch('refill');
+  
+  // Watch mode field to control API provider field visibility
+  const modeValue = watch('mode');
+  
+  // Watch provider field for API services
+  const providerIdValue = watch('providerId');
+
+  // Fetch API services when provider is selected
+  const {
+    data: apiServicesData,
+    error: apiServicesError,
+    isLoading: apiServicesLoading,
+  } = useSWR(
+    modeValue === 'auto' && providerIdValue ? `/api/admin/providers/${providerIdValue}/services` : null,
+    fetcher
+  );
+
+  // Watch API service selection for auto-fill
+  const apiServiceIdValue = watch('apiServiceId');
+
+  // Auto-fill form fields when API service is selected
+  useEffect(() => {
+    if (apiServiceIdValue && apiServicesData?.data?.services) {
+      const selectedService = apiServicesData.data.services.find(
+        (service: any) => service.id.toString() === apiServiceIdValue
+      );
+      
+      if (selectedService) {
+        setValue('name', selectedService.name || '');
+        setValue('description', selectedService.description || '');
+        setValue('rate', selectedService.rate?.toString() || '');
+        setValue('min_order', selectedService.min?.toString() || '');
+        setValue('max_order', selectedService.max?.toString() || '');
+        setValue('perqty', '1000'); // Keep default per quantity
+        setValue('avg_time', '0-1 hours'); // Default average time
+      }
+    }
+  }, [apiServiceIdValue, apiServicesData, setValue]);
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
     console.log('Form submitted with values:', values);
@@ -897,6 +940,12 @@ const CreateServiceForm: React.FC<{
 
     if (!values.serviceTypeId || values.serviceTypeId === '') {
       showToast('Please select a service type', 'error');
+      return;
+    }
+
+    // Validate API provider when mode is auto
+    if (values.mode === 'auto' && (!values.providerId || values.providerId === '')) {
+      showToast('Please select an API provider when mode is Auto (API)', 'error');
       return;
     }
 
@@ -1073,6 +1122,7 @@ const CreateServiceForm: React.FC<{
                   disabled={isPending || serviceTypesLoading}
                   required
                 >
+                  <option value="">Select Service Type</option>
                   {serviceTypesData?.data?.map((serviceType: any) => (
                     <option key={serviceType.id} value={serviceType.id}>
                       {serviceType.name}
@@ -1104,6 +1154,104 @@ const CreateServiceForm: React.FC<{
               </FormControl>
               <FormMessage>{errors.mode?.message}</FormMessage>
             </FormItem>
+
+            {/* API Provider - 100% width - CONDITIONAL - Only show when mode is auto */}
+            {modeValue === 'auto' && (
+              <FormItem className="md:col-span-2">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  API Provider <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <select
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                    {...register('providerId')}
+                    disabled={isPending || providersLoading}
+                    required={modeValue === 'auto'}
+                  >
+                    <option value="">Select API Provider</option>
+                    {providersData?.data?.providers?.map((provider: any) => (
+                      <option key={provider.id} value={provider.id}>
+                        {provider.name}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
+                <FormMessage>{errors.providerId?.message}</FormMessage>
+              </FormItem>
+            )}
+
+            {/* API Service - Only show when mode is auto and provider is selected */}
+            {modeValue === 'auto' && providerIdValue && (
+              <FormItem className="md:col-span-2">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  API Service <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <select
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                    {...register('apiServiceId')}
+                    disabled={isPending || apiServicesLoading}
+                    required={modeValue === 'auto' && providerIdValue}
+                  >
+                    <option value="">
+                      {apiServicesLoading ? 'Loading services...' : 'Select API Service'}
+                    </option>
+                    {apiServicesData?.data?.services?.map((service: any) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
+                <FormMessage>{errors.apiServiceId?.message}</FormMessage>
+                {apiServicesError && (
+                  <p className="text-sm text-red-500 mt-1">
+                    Failed to load services. Please try again.
+                  </p>
+                )}
+              </FormItem>
+            )}
+
+            {/* API Service - Only show when mode is auto and provider is selected */}
+            {modeValue === 'auto' && providerIdValue && (
+              <FormItem className="md:col-span-2">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  API Service <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <select
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                    {...register('apiServiceId')}
+                    disabled={isPending || apiServicesLoading}
+                    required={modeValue === 'auto' && providerIdValue}
+                  >
+                    <option value="">
+                      {apiServicesLoading ? 'Loading services...' : 'Select API Service'}
+                    </option>
+                    {apiServicesData?.data?.services?.map((service: any) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
+                <FormMessage>{errors.apiServiceId?.message}</FormMessage>
+                {apiServicesError && (
+                  <p className="text-sm text-red-500 mt-1">
+                    Failed to load services. Please try again.
+                  </p>
+                )}
+              </FormItem>
+            )}
 
             {/* Service Price - 33% width - special grid - REQUIRED */}
             <div className="md:col-span-2 grid grid-cols-3 gap-6">
@@ -1370,6 +1518,7 @@ const CreateServiceForm: React.FC<{
                   disabled={isPending}
                   required
                 >
+                  <option value="">Select Service Speed</option>
                   <option value="slow">Slow</option>
                   <option value="sometimes_slow">Sometimes Slow</option>
                   <option value="normal">Normal</option>
@@ -1880,6 +2029,11 @@ const EditServiceForm = ({
     error: serviceError,
     isLoading: serviceLoading,
   } = useGetServicesId(serviceId);
+  const {
+    data: providersData,
+    error: providersError,
+    isLoading: providersLoading,
+  } = useSWR('/api/admin/providers', fetcher);
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -1887,6 +2041,7 @@ const EditServiceForm = ({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CreateServiceSchema>({
     mode: 'onChange',
@@ -1899,6 +2054,9 @@ const EditServiceForm = ({
 
   // Watch refill field to control readonly state of refill days and display
   const refillValue = watch('refill');
+  
+  // Watch mode field to control API provider field visibility
+  const modeValue = watch('mode');
 
   useEffect(() => {
     if (serviceData?.data && categoriesData?.data) {
@@ -1907,20 +2065,22 @@ const EditServiceForm = ({
         name: serviceData.data.name || '',
         description: serviceData.data.description || '',
         rate: String(serviceData.data.rate) || '',
-        min_order: String(serviceData.data.min_order) || '0',
-        max_order: String(serviceData.data.max_order) || '0',
-        perqty: String(serviceData.data.perqty) || '1000',
+        min_order: String(serviceData.data.min_order) || createServiceDefaultValues.min_order,
+        max_order: String(serviceData.data.max_order) || createServiceDefaultValues.max_order,
+        perqty: String(serviceData.data.perqty) || createServiceDefaultValues.perqty,
         avg_time: serviceData.data.avg_time || '',
         updateText: serviceData.data.updateText || '',
         serviceTypeId: serviceData.data.serviceTypeId || '',
-        mode: serviceData.data.mode || 'manual',
+        mode: serviceData.data.mode || createServiceDefaultValues.mode,
         refill: Boolean(serviceData.data.refill),
-        refillDays: serviceData.data.refillDays || 30,
-        refillDisplay: serviceData.data.refillDisplay || 24,
-        cancel: serviceData.data.cancel || false,
-        personalizedService: serviceData.data.personalizedService || 'no',
-        serviceSpeed: serviceData.data.serviceSpeed || 'normal',
-        orderLink: serviceData.data.orderLink || 'username',
+        refillDays: serviceData.data.refillDays || createServiceDefaultValues.refillDays,
+        refillDisplay: serviceData.data.refillDisplay || createServiceDefaultValues.refillDisplay,
+        cancel: serviceData.data.cancel || createServiceDefaultValues.cancel,
+        personalizedService: serviceData.data.personalizedService || createServiceDefaultValues.personalizedService,
+        serviceSpeed: serviceData.data.serviceSpeed || createServiceDefaultValues.serviceSpeed,
+        orderLink: serviceData.data.orderLink || createServiceDefaultValues.orderLink,
+        providerId: serviceData.data.providerId || createServiceDefaultValues.providerId,
+        apiServiceId: serviceData.data.apiServiceId || createServiceDefaultValues.apiServiceId,
       });
     }
   }, [categoriesData, reset, serviceData]);
@@ -1937,6 +2097,12 @@ const EditServiceForm = ({
 
     if (!values.serviceTypeId || values.serviceTypeId === '') {
       showToast('Please select a service type', 'error');
+      return;
+    }
+
+    // Validate API provider when mode is auto
+    if (values.mode === 'auto' && (!values.providerId || values.providerId === '')) {
+      showToast('Please select an API provider when mode is Auto (API)', 'error');
       return;
     }
 
@@ -2146,6 +2312,34 @@ const EditServiceForm = ({
               </FormControl>
               <FormMessage>{errors.mode?.message}</FormMessage>
             </FormItem>
+
+            {/* API Provider - 100% width - CONDITIONAL - Only show when mode is auto */}
+            {modeValue === 'auto' && (
+              <FormItem className="md:col-span-2">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  API Provider <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <select
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                    {...register('providerId')}
+                    disabled={isPending || providersLoading}
+                    required={modeValue === 'auto'}
+                  >
+                    <option value="">Select API Provider</option>
+                    {providersData?.data?.providers?.map((provider: any) => (
+                      <option key={provider.id} value={provider.id}>
+                        {provider.name}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
+                <FormMessage>{errors.providerId?.message}</FormMessage>
+              </FormItem>
+            )}
 
             {/* Service Price - 33% width - special grid - REQUIRED */}
             <div className="md:col-span-2 grid grid-cols-3 gap-6">

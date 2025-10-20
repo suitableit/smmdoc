@@ -93,12 +93,43 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, providerId, providerName, status } = body;
+    const { 
+      name, 
+      description,
+      packageType,
+      requiresLink,
+      requiresQuantity,
+      requiresComments,
+      requiresUsername,
+      requiresPosts,
+      requiresDelay,
+      requiresMin,
+      requiresMax,
+      supportsDripfeed,
+      supportsRefill,
+      supportsCancel,
+      isSubscription,
+      isAutoService,
+      maxQuantity,
+      minQuantity,
+      status
+    } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json(
         {
           error: 'Service type name is required',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
+    if (packageType && (packageType < 1 || packageType > 15)) {
+      return NextResponse.json(
+        {
+          error: 'Package type must be between 1 and 15',
           success: false,
           data: null
         },
@@ -145,9 +176,24 @@ export async function PUT(
       where: { id: Number((await params).id) },
       data: {
         name: name.trim(),
-        providerId: providerId?.trim() || null,
-        providerName: providerName?.trim() || 'Self',
-        status: status || 'active'
+        description: description?.trim() || null,
+        packageType: packageType || existingType.packageType,
+        requiresLink: requiresLink ?? existingType.requiresLink,
+        requiresQuantity: requiresQuantity ?? existingType.requiresQuantity,
+        requiresComments: requiresComments ?? existingType.requiresComments,
+        requiresUsername: requiresUsername ?? existingType.requiresUsername,
+        requiresPosts: requiresPosts ?? existingType.requiresPosts,
+        requiresDelay: requiresDelay ?? existingType.requiresDelay,
+        requiresMin: requiresMin ?? existingType.requiresMin,
+        requiresMax: requiresMax ?? existingType.requiresMax,
+        supportsDripfeed: supportsDripfeed ?? existingType.supportsDripfeed,
+        supportsRefill: supportsRefill ?? existingType.supportsRefill,
+        supportsCancel: supportsCancel ?? existingType.supportsCancel,
+        isSubscription: isSubscription ?? existingType.isSubscription,
+        isAutoService: isAutoService ?? existingType.isAutoService,
+        maxQuantity: maxQuantity ?? existingType.maxQuantity,
+        minQuantity: minQuantity ?? existingType.minQuantity,
+        status: status || existingType.status
       }
     });
 

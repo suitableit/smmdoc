@@ -23,6 +23,8 @@ export async function GET(request: Request) {
     const limitParam = searchParams.get('limit') || '10';
     const search = searchParams.get('search') || '';
     const filter = searchParams.get('filter') || 'all'; // Add filter parameter
+    const serviceTypeFilter = searchParams.get('serviceType') || ''; // Add service type filter
+    const packageTypeFilter = searchParams.get('packageType') || ''; // Add package type filter
     const limit = parseInt(limitParam);
 
     // Determine deletedAt filter based on filter parameter
@@ -39,6 +41,17 @@ export async function GET(request: Request) {
     if (limit >= 500) {
       const whereClause = {
         ...(deletedAtFilter !== undefined && { deletedAt: deletedAtFilter }), // Use dynamic filter based on request
+        ...(serviceTypeFilter && serviceTypeFilter.trim() && {
+          serviceType: {
+            name: {
+              contains: serviceTypeFilter.trim(),
+              mode: 'insensitive',
+            },
+          },
+        }),
+        ...(packageTypeFilter && packageTypeFilter.trim() && !isNaN(Number(packageTypeFilter.trim())) && {
+          packageType: Number(packageTypeFilter.trim()),
+        }),
         ...(search && search.trim()
           ? {
               OR: [
@@ -148,6 +161,17 @@ export async function GET(request: Request) {
       categoryId: {
         in: categoryIds,
       },
+      ...(serviceTypeFilter && serviceTypeFilter.trim() && {
+        serviceType: {
+          name: {
+            contains: serviceTypeFilter.trim(),
+            mode: 'insensitive',
+          },
+        },
+      }),
+      ...(packageTypeFilter && packageTypeFilter.trim() && !isNaN(Number(packageTypeFilter.trim())) && {
+        packageType: Number(packageTypeFilter.trim()),
+      }),
       ...(search && search.trim()
         ? {
             OR: [
@@ -284,6 +308,19 @@ export async function POST(request: Request) {
       personalizedService,
       serviceSpeed,
       mode,
+      // Service type specific fields
+      packageType,
+      apiServiceId,
+      apiProviderId,
+      dripfeedEnabled,
+      subscriptionMin,
+      subscriptionMax,
+      subscriptionDelay,
+      autoPostsMin,
+      autoPostsMax,
+      autoDelay,
+      customComments,
+      isSecret,
     } = body;
 
     // Allow empty fields for service creation
@@ -335,6 +372,19 @@ export async function POST(request: Request) {
       serviceSpeed: serviceSpeed || 'medium',
       mode: mode || 'manual',
       userId: session.user.id,
+      // Service type specific fields
+      packageType: toNumber(packageType, 1),
+      apiServiceId: apiServiceId || null,
+      apiProviderId: toInt(apiProviderId) || null,
+      dripfeedEnabled: toBool(dripfeedEnabled),
+      subscriptionMin: toInt(subscriptionMin) || null,
+      subscriptionMax: toInt(subscriptionMax) || null,
+      subscriptionDelay: toInt(subscriptionDelay) || null,
+      autoPostsMin: toInt(autoPostsMin) || null,
+      autoPostsMax: toInt(autoPostsMax) || null,
+      autoDelay: toInt(autoDelay) || null,
+      customComments: customComments || null,
+      isSecret: toBool(isSecret),
     };
 
     // Add categoryId if provided and valid

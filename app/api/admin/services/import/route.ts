@@ -1019,27 +1019,53 @@ export async function PUT(req: NextRequest) {
           const finalRate = parseFloat((baseProviderPrice * (1 + servicePercentage / 100)).toFixed(2));
           console.log(`💰 Calculating rate: Base Provider $${baseProviderPrice} + ${servicePercentage}% = $${finalRate}`);
 
-          // Find or create service type based on service.type
+          // Map provider service type to existing predefined service types
           let serviceTypeId = null;
           if (service.type) {
-            let serviceType = await db.servicetype.findFirst({
-              where: { name: service.type }
-            });
+            // Map common provider service type names to existing packageType IDs
+            const mapServiceTypeToPackageType = (typeName: string): number => {
+              const normalizedType = typeName.toLowerCase().trim();
+              
+              // Common mappings for provider service types
+              const typeMapping: Record<string, number> = {
+                'default': 1,
+                'standard': 1,
+                'basic': 1,
+                'normal': 1,
+                'package': 2,
+                'bulk': 2,
+                'bundle': 2,
+                'custom comments': 3,
+                'special comments': 3,
+                'comments': 3,
+                'package comments': 4,
+                'bulk comments': 4,
+                'auto likes': 11,
+                'auto views': 12,
+                'auto comments': 13,
+                'limited auto likes': 14,
+                'limited auto views': 15,
+                'subscription': 11,
+                'subscriptions': 11,
+                'auto': 11
+              };
+              
+              return typeMapping[normalizedType] || 1; // Default to type 1 if no mapping found
+            };
 
-            if (!serviceType) {
-              // Create new service type with provider data
-              serviceType = await db.servicetype.create({
-                data: {
-                  name: service.type,
-                  providerId: provider.id.toString(),
-                  providerName: provider.name,
-                  status: 'active'
-                }
-              });
-              console.log(`📝 Created new service type: ${service.type} with provider: ${provider.name}`);
-            }
+            const packageType = mapServiceTypeToPackageType(service.type);
             
-            serviceTypeId = serviceType.id;
+            // Find existing service type by packageType
+            let serviceType = await db.servicetype.findFirst({
+              where: { packageType: packageType }
+            });
+            
+            if (serviceType) {
+              serviceTypeId = serviceType.id;
+              console.log(`📝 Mapped service type "${service.type}" to existing packageType ${packageType} (ID: ${serviceTypeId})`);
+            } else {
+              console.warn(`⚠️ No service type found for packageType ${packageType}, using null`);
+            }
           }
 
           // Find or create category - use the actual service category
