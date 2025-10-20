@@ -49,13 +49,6 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
-    title: 'Service Types',
-    href: '/admin/services/types',
-    icon: 'FaShapes',
-    label: 'Service Types',
-    roles: ['admin'],
-  },
-  {
     title: 'Modify Bulk Services',
     href: '/admin/services/bulk-modify',
     icon: 'FaEdit',

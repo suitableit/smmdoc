@@ -1,11 +1,27 @@
 model ServiceType {
-  id          Int       @id @default(autoincrement())
-  name        String    @unique(map: "ServiceType_name_key")
-  description String?
-  status      String    @default("active")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  services    Service[]
+  id                Int       @id @default(autoincrement())
+  name              String    @unique(map: "ServiceType_name_key")
+  description       String?
+  status            String    @default("active")
+  packageType       Int       @default(1) // Service package type (1-15)
+  requiresLink      Boolean   @default(true)
+  requiresQuantity  Boolean   @default(true)
+  requiresComments  Boolean   @default(false)
+  requiresUsername  Boolean   @default(false)
+  requiresPosts     Boolean   @default(false)
+  requiresDelay     Boolean   @default(false)
+  requiresMin       Boolean   @default(false)
+  requiresMax       Boolean   @default(false)
+  supportsDripfeed  Boolean   @default(false)
+  supportsRefill    Boolean   @default(false)
+  supportsCancel    Boolean   @default(false)
+  isSubscription    Boolean   @default(false)
+  isAutoService     Boolean   @default(false)
+  maxQuantity       Int?
+  minQuantity       Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  services          Service[]
 
   @@map("servicetype")
 }

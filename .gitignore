@@ -43,3 +43,6 @@ next-env.d.ts
 
 # others
 /.trae
+
+#old site
+/old

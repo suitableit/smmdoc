@@ -9,6 +9,10 @@ import {
     publicRoutes,
 } from './lib/routes';
 // import { cookies } from 'next/headers'; // Removed to fix edge runtime error
+
+// Force middleware to run on Node.js runtime instead of edge runtime
+export const runtime = 'nodejs';
+
 export const { auth } = NextAuth(authConfig);
 
 export default auth(async (req) => {
@@ -30,6 +34,9 @@ export default auth(async (req) => {
   const isDatabaseErrorPage = nextUrl.pathname === '/database-error';
   const isTestDbApi = nextUrl.pathname === '/api/test-db';
   
+  // Temporarily disable database check to avoid edge runtime issues
+  // The database connection will be handled by individual API routes
+  /*
   // Check database connection for all routes except database error page and test-db API
   if (!isDatabaseErrorPage && !isTestDbApi) {
     try {
@@ -52,6 +59,7 @@ export default auth(async (req) => {
       return NextResponse.redirect(new URL('/database-error', nextUrl));
     }
   }
+  */
 
   // Check for impersonation cookies as fallback since middleware may have stale session
   const impersonatedUserId = req.cookies.get('impersonated-user-id')?.value;

@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { ActivityLogger } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
 
 export async function POST(request: Request) {
   try {
@@ -40,7 +41,22 @@ export async function POST(request: Request) {
 
     // Validate all orders first
     for (const orderData of orders) {
-      const { categoryId, serviceId, link, qty } = orderData;
+      const { 
+        categoryId, 
+        serviceId, 
+        link, 
+        qty,
+        comments,
+        username,
+        posts,
+        delay,
+        minQty,
+        maxQty,
+        isDripfeed,
+        dripfeedRuns,
+        dripfeedInterval,
+        isSubscription
+      } = orderData;
 
       if (!categoryId || !serviceId || !link || !qty) {
         return NextResponse.json(
@@ -67,6 +83,7 @@ export async function POST(request: Request) {
           status: true,
           providerId: true,
           providerServiceId: true,
+          packageType: true,
         },
       });
 
@@ -103,6 +120,35 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+
+      // Service type validation
+      const serviceTypeConfig = getServiceTypeConfig(service.packageType || 1);
+      const validationData = {
+        link,
+        qty,
+        comments,
+        username,
+        posts,
+        delay,
+        minQty,
+        maxQty,
+        isDripfeed,
+        dripfeedRuns,
+        dripfeedInterval,
+        isSubscription
+      };
+
+      const validation = validateOrderByType(service.packageType || 1, validationData);
+      if (!validation.isValid) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Service type validation failed for ${service.name}: ${validation.errors.join(', ')}`,
+            data: null,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Calculate total cost for all orders
@@ -120,12 +166,23 @@ export async function POST(request: Request) {
         bdtPrice,
         currency,
         avg_time,
+        // Service type specific fields
+        comments,
+        username,
+        posts,
+        delay,
+        minQty,
+        maxQty,
+        isDripfeed = false,
+        dripfeedRuns,
+        dripfeedInterval,
+        isSubscription = false,
       } = orderData;
 
       // Get service details for price calculation
       const service = await db.service.findUnique({
         where: { id: serviceId },
-        select: { rate: true, avg_time: true },
+        select: { rate: true, avg_time: true, packageType: true },
       });
 
       // Calculate prices if not provided
@@ -163,6 +220,19 @@ export async function POST(request: Request) {
         status: 'pending',
         remains: parseInt(qty),
         startCount: 0,
+        // Service type specific fields
+        packageType: service!.packageType || 1,
+        comments: comments || null,
+        username: username || null,
+        posts: posts ? parseInt(posts) : null,
+        delay: delay ? parseInt(delay) : null,
+        minQty: minQty ? parseInt(minQty) : null,
+        maxQty: maxQty ? parseInt(maxQty) : null,
+        isDripfeed,
+        dripfeedRuns: dripfeedRuns ? parseInt(dripfeedRuns) : null,
+        dripfeedInterval: dripfeedInterval ? parseInt(dripfeedInterval) : null,
+        isSubscription,
+        subscriptionStatus: isSubscription ? 'active' : null,
       });
     }
 

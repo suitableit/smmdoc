@@ -56,6 +56,20 @@ model Service {
   deletedAt           DateTime?
   percentage          Float?            @default(0)
   providerPrice       Float?            @default(0)
+  // Service type specific fields
+  packageType         Int?              @default(1)
+  apiServiceId        String?
+  apiProviderId       Int?
+  dripfeedEnabled     Boolean           @default(false)
+  subscriptionMin     Int?
+  subscriptionMax     Int?
+  subscriptionDelay   Int?
+  autoPostsMin        Int?
+  autoPostsMax        Int?
+  autoDelay           Int?
+  customComments      String?           @db.Text
+  isSecret            Boolean           @default(false)
+  typeParameters      String?           @db.Text // JSON field for type-specific parameters
   favoriteServices    FavoriteService[]
   newOrders           NewOrder[]
   category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -66,6 +80,7 @@ model Service {
   @@index([categoryId], map: "Service_categoryId_fkey")
   @@index([favrouteCatId], map: "Service_favrouteCatId_fkey")
   @@index([serviceTypeId], map: "Service_serviceTypeId_idx")
+  @@index([packageType], map: "Service_packageType_idx")
   @@index([status], map: "Service_status_idx")
   @@index([userId], map: "Service_userId_idx")
   @@map("services")
@@ -93,6 +108,22 @@ model NewOrder {
   lastSyncAt        DateTime?
   providerOrderId   String?
   providerStatus    String?
+  // Service type specific fields
+  packageType       Int?               @default(1)
+  comments          String?            @db.Text
+  username          String?
+  posts             Int?
+  delay             Int?
+  minQty            Int?
+  maxQty            Int?
+  isDripfeed        Boolean            @default(false)
+  dripfeedRuns      Int?
+  dripfeedInterval  Int?
+  apiOrderId        String?
+  apiResponse       String?            @db.Text
+  isSubscription    Boolean            @default(false)
+  subscriptionStatus String?
+  typeData          String?            @db.Text // JSON field for type-specific data
   cancelRequests    CancelRequest[]
   category          Category           @relation(fields: [categoryId], references: [id])
   service           Service            @relation(fields: [serviceId], references: [id])
@@ -103,6 +134,8 @@ model NewOrder {
   @@index([categoryId], map: "NewOrder_categoryId_fkey")
   @@index([serviceId], map: "NewOrder_serviceId_fkey")
   @@index([userId], map: "NewOrder_userId_fkey")
+  @@index([packageType], map: "NewOrder_packageType_idx")
+  @@index([status], map: "NewOrder_status_idx")
   @@map("new_orders")
 }
 
@@ -200,6 +233,8 @@ model Account {
   @@index([userId], map: "Account_userId_idx")
   @@map("account")
 }
+
+
 
 model Session {
   id           Int      @id @default(autoincrement())
@@ -601,14 +636,31 @@ model service_update_logs {
 }
 
 model servicetype {
-  id           Int       @id @default(autoincrement())
-  name         String    @unique(map: "ServiceType_name_key")
-  status       String    @default("active")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  providerId   String?
-  providerName String?
-  services     Service[]
+  id                Int       @id @default(autoincrement())
+  name              String    @unique(map: "ServiceType_name_key")
+  description       String?
+  status            String    @default("active")
+  packageType       Int       @default(1) // Service package type (1-15)
+  requiresLink      Boolean   @default(true)
+  requiresQuantity  Boolean   @default(true)
+  requiresComments  Boolean   @default(false)
+  requiresUsername  Boolean   @default(false)
+  requiresPosts     Boolean   @default(false)
+  requiresDelay     Boolean   @default(false)
+  requiresMin       Boolean   @default(false)
+  requiresMax       Boolean   @default(false)
+  supportsDripfeed  Boolean   @default(false)
+  supportsRefill    Boolean   @default(false)
+  supportsCancel    Boolean   @default(false)
+  isSubscription    Boolean   @default(false)
+  isAutoService     Boolean   @default(false)
+  maxQuantity       Int?
+  minQuantity       Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  providerId        String?
+  providerName      String?
+  services          Service[]
 
   @@map("service_types")
 }

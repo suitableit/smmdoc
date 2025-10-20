@@ -67,6 +67,19 @@ export async function PUT(request: Request) {
       personalizedService,
       serviceSpeed,
       mode,
+      // Service type specific fields
+      packageType,
+      apiServiceId,
+      apiProviderId,
+      dripfeedEnabled,
+      subscriptionMin,
+      subscriptionMax,
+      subscriptionDelay,
+      autoPostsMin,
+      autoPostsMax,
+      autoDelay,
+      customComments,
+      isSecret,
     } = body;
     if (!id) {
       return NextResponse.json({
@@ -174,6 +187,44 @@ export async function PUT(request: Request) {
     }
     if (mode !== undefined && mode !== null && mode !== '') {
       updateData.mode = mode;
+    }
+
+    // Service type specific fields
+    if (packageType !== undefined && packageType !== null && packageType !== '') {
+      updateData.packageType = toNumber(packageType, 1);
+    }
+    if (apiServiceId !== undefined && apiServiceId !== null && apiServiceId !== '') {
+      updateData.apiServiceId = apiServiceId;
+    }
+    if (apiProviderId !== undefined && apiProviderId !== null && apiProviderId !== '') {
+      updateData.apiProviderId = toInt(apiProviderId);
+    }
+    if (dripfeedEnabled !== undefined && dripfeedEnabled !== null) {
+      updateData.dripfeedEnabled = toBool(dripfeedEnabled);
+    }
+    if (subscriptionMin !== undefined && subscriptionMin !== null && subscriptionMin !== '') {
+      updateData.subscriptionMin = toInt(subscriptionMin);
+    }
+    if (subscriptionMax !== undefined && subscriptionMax !== null && subscriptionMax !== '') {
+      updateData.subscriptionMax = toInt(subscriptionMax);
+    }
+    if (subscriptionDelay !== undefined && subscriptionDelay !== null && subscriptionDelay !== '') {
+      updateData.subscriptionDelay = toInt(subscriptionDelay);
+    }
+    if (autoPostsMin !== undefined && autoPostsMin !== null && autoPostsMin !== '') {
+      updateData.autoPostsMin = toInt(autoPostsMin);
+    }
+    if (autoPostsMax !== undefined && autoPostsMax !== null && autoPostsMax !== '') {
+      updateData.autoPostsMax = toInt(autoPostsMax);
+    }
+    if (autoDelay !== undefined && autoDelay !== null && autoDelay !== '') {
+      updateData.autoDelay = toInt(autoDelay);
+    }
+    if (customComments !== undefined && customComments !== null && customComments !== '') {
+      updateData.customComments = customComments;
+    }
+    if (isSecret !== undefined && isSecret !== null) {
+      updateData.isSecret = toBool(isSecret);
     }
 
     // Prepare changes data for updateText

@@ -1,6 +1,7 @@
 import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
 
 // POST /api/user/mass-orders - Create multiple orders at once
 export async function POST(request: Request) {
@@ -78,7 +79,22 @@ export async function POST(request: Request) {
 
     for (let i = 0; i < orders.length; i++) {
       const orderData = orders[i];
-      const { categoryId, serviceId, link, qty } = orderData;
+      const { 
+        categoryId, 
+        serviceId, 
+        link, 
+        qty,
+        comments,
+        username,
+        posts,
+        delay,
+        minQty,
+        maxQty,
+        isDripfeed = false,
+        dripfeedRuns,
+        dripfeedInterval,
+        isSubscription = false
+      } = orderData;
 
       try {
         // Validate required fields
@@ -102,6 +118,7 @@ export async function POST(request: Request) {
             max_order: true,
             avg_time: true,
             status: true,
+            packageType: true,
           },
         });
 
@@ -130,6 +147,31 @@ export async function POST(request: Request) {
             `Order ${i + 1}: Quantity for '${service.name}' must be between ${
               service.min_order
             } and ${service.max_order}`
+          );
+          continue;
+        }
+
+        // Service type validation
+        const serviceTypeConfig = getServiceTypeConfig(service.packageType || 1);
+        const validationData = {
+          link,
+          qty: quantity,
+          comments,
+          username,
+          posts,
+          delay,
+          minQty,
+          maxQty,
+          isDripfeed,
+          dripfeedRuns,
+          dripfeedInterval,
+          isSubscription
+        };
+
+        const validation = validateOrderByType(service.packageType || 1, validationData);
+        if (!validation.isValid) {
+          validationErrors.push(
+            `Order ${i + 1}: Service type validation failed for '${service.name}': ${validation.errors.join(', ')}`
           );
           continue;
         }
@@ -164,6 +206,19 @@ export async function POST(request: Request) {
           startCount: 0,
           isMassOrder: true, // Mark as Mass Orders
           batchId: batchId || `MO-${Date.now()}-${(session.user.id as any).toString().slice(-4)}`, // Mass Orders batch ID
+          // Service type specific fields
+          packageType: service.packageType || 1,
+          comments: comments || null,
+          username: username || null,
+          posts: posts ? parseInt(posts) : null,
+          delay: delay ? parseInt(delay) : null,
+          minQty: minQty ? parseInt(minQty) : null,
+          maxQty: maxQty ? parseInt(maxQty) : null,
+          isDripfeed,
+          dripfeedRuns: dripfeedRuns ? parseInt(dripfeedRuns) : null,
+          dripfeedInterval: dripfeedInterval ? parseInt(dripfeedInterval) : null,
+          isSubscription,
+          subscriptionStatus: isSubscription ? 'active' : null,
           service: {
             name: service.name,
             rate: service.rate,
@@ -240,8 +295,23 @@ export async function POST(request: Request) {
       for (const orderData of validatedOrders) {
         const { orderIndex, service, ...createData } = orderData;
 
-        const order = await prisma.newOrder.create({
-          data: createData,
+        const order = await prisma.order.create({
+          data: {
+            ...createData,
+            // Service type specific fields
+            packageType: orderData.packageType,
+            comments: orderData.comments,
+            username: orderData.username,
+            posts: orderData.posts,
+            delay: orderData.delay,
+            minQty: orderData.minQty,
+            maxQty: orderData.maxQty,
+            isDripfeed: orderData.isDripfeed,
+            dripfeedRuns: orderData.dripfeedRuns,
+            dripfeedInterval: orderData.dripfeedInterval,
+            isSubscription: orderData.isSubscription,
+            subscriptionStatus: orderData.subscriptionStatus,
+          },
           include: {
             service: {
               select: {
@@ -344,7 +414,7 @@ export async function GET(request: Request) {
 
     if (type === 'stats') {
       // Get Mass Orders statistics
-      const stats = await db.newOrder.aggregate({
+      const stats = await db.order.aggregate({
         where: {
           userId: session.user.id,
           createdAt: {
@@ -375,7 +445,7 @@ export async function GET(request: Request) {
 
     if (type === 'recent') {
       // Get recent orders grouped by creation time (potential Mass Orderss)
-      const recentOrders = await db.newOrder.findMany({
+      const recentOrders = await db.order.findMany({
         where: {
           userId: session.user.id,
           createdAt: {

@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
 
 // GET /api/admin/orders - Get all orders with pagination and filtering
 export async function GET(req: NextRequest) {
@@ -183,7 +184,18 @@ export async function POST(req: NextRequest) {
       currency, 
       avg_time,
       status = 'pending',
-      skipBalanceCheck = false
+      skipBalanceCheck = false,
+      // Service type specific fields
+      comments,
+      username,
+      posts,
+      delay,
+      minQty,
+      maxQty,
+      isDripfeed = false,
+      dripfeedRuns,
+      dripfeedInterval,
+      isSubscription = false
     } = body;
     
     // Validate required fields
@@ -201,7 +213,10 @@ export async function POST(req: NextRequest) {
     // Validate service exists and is active
     const service = await db.service.findUnique({
       where: { id: serviceId },
-      include: { category: true }
+      include: { 
+        category: true,
+        serviceType: true
+      }
     });
     
     if (!service) {
@@ -231,6 +246,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { 
           error: `Quantity must be between ${service.min_order} and ${service.max_order}`,
+          success: false,
+          data: null 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Service type validation
+    const serviceTypeConfig = getServiceTypeConfig(service.packageType || 1);
+    const orderData = {
+      link,
+      qty,
+      comments,
+      username,
+      posts,
+      delay,
+      minQty,
+      maxQty,
+      isDripfeed,
+      dripfeedRuns,
+      dripfeedInterval,
+      isSubscription
+    };
+
+    const validation = validateOrderByType(service.packageType || 1, orderData);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { 
+          error: validation.errors.join(', '),
           success: false,
           data: null 
         },
@@ -298,7 +342,20 @@ export async function POST(req: NextRequest) {
         avg_time: avg_time || service.avg_time,
         status,
         remains: parseInt(qty), // Initially, all quantity remains to be delivered
-        startCount: 0
+        startCount: 0,
+        // Service type specific fields
+        packageType: service.packageType || 1,
+        comments: comments || null,
+        username: username || null,
+        posts: posts ? parseInt(posts) : null,
+        delay: delay ? parseInt(delay) : null,
+        minQty: minQty ? parseInt(minQty) : null,
+        maxQty: maxQty ? parseInt(maxQty) : null,
+        isDripfeed,
+        dripfeedRuns: dripfeedRuns ? parseInt(dripfeedRuns) : null,
+        dripfeedInterval: dripfeedInterval ? parseInt(dripfeedInterval) : null,
+        isSubscription,
+        subscriptionStatus: isSubscription ? 'active' : null
       },
       include: {
         user: {
