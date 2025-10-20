@@ -231,7 +231,7 @@ model Account {
 
   @@unique([provider, providerAccountId], map: "Account_provider_providerAccountId_key")
   @@index([userId], map: "Account_userId_idx")
-  @@map("account")
+  @@map("oauth_accounts")
 }
 
 
