@@ -64,7 +64,6 @@ export async function PUT(request: Request) {
       cancel,
       refillDays,
       refillDisplay,
-      personalizedService,
       serviceSpeed,
       mode,
       // Service type specific fields
@@ -178,9 +177,6 @@ export async function PUT(request: Request) {
     }
     if (refillDisplay !== undefined && refillDisplay !== null && refillDisplay !== '') {
       updateData.refillDisplay = toNumber(refillDisplay, 24);
-    }
-    if (personalizedService !== undefined && personalizedService !== null) {
-      updateData.personalizedService = toBool(personalizedService);
     }
     if (serviceSpeed !== undefined && serviceSpeed !== null && serviceSpeed !== '') {
       updateData.serviceSpeed = serviceSpeed;
