@@ -48,7 +48,6 @@ model Service {
   refill              Boolean           @default(false)
   refillDays          Int?              @default(30)
   serviceSpeed        String?           @default("medium")
-  personalizedService Boolean?          @default(false)
   refillDisplay       Int?              @default(24)
   providerId          Int?
   providerName        String?

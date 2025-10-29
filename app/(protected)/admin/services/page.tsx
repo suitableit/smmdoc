@@ -1583,27 +1583,7 @@ const CreateServiceForm: React.FC<{
               <FormMessage>{errors.cancel?.message}</FormMessage>
             </FormItem>
 
-            {/* Personalized Service - 50% width - REQUIRED */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Personalized Service <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <select
-                  className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('personalizedService')}
-                  disabled={isPending}
-                  required
-                >
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
-              </FormControl>
-              <FormMessage>{errors.personalizedService?.message}</FormMessage>
-            </FormItem>
+
 
             {/* Order Link - 50% width - REQUIRED */}
             <FormItem className="md:col-span-1">
@@ -1628,7 +1608,7 @@ const CreateServiceForm: React.FC<{
             </FormItem>
 
             {/* Service Speed - 50% width - REQUIRED */}
-            <FormItem className="md:col-span-1">
+            <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
@@ -2200,7 +2180,7 @@ const EditServiceForm = ({
         refillDays: serviceData.data.refillDays || createServiceDefaultValues.refillDays,
         refillDisplay: serviceData.data.refillDisplay || createServiceDefaultValues.refillDisplay,
         cancel: serviceData.data.cancel || createServiceDefaultValues.cancel,
-        personalizedService: serviceData.data.personalizedService || createServiceDefaultValues.personalizedService,
+
         serviceSpeed: serviceData.data.serviceSpeed || createServiceDefaultValues.serviceSpeed,
         orderLink: serviceData.data.orderLink || createServiceDefaultValues.orderLink,
         providerId: serviceData.data.providerId || createServiceDefaultValues.providerId,
@@ -2671,27 +2651,7 @@ const EditServiceForm = ({
               <FormMessage>{errors.cancel?.message}</FormMessage>
             </FormItem>
 
-            {/* Personalized Service - 50% width - REQUIRED */}
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Personalized Service <span className="text-red-500">*</span>
-              </FormLabel>
-              <FormControl>
-                <select
-                  className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('personalizedService')}
-                  disabled={isPending}
-                  required
-                >
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
-              </FormControl>
-              <FormMessage>{errors.personalizedService?.message}</FormMessage>
-            </FormItem>
+
 
             {/* Order Link - 50% width - REQUIRED */}
             <FormItem className="md:col-span-1">
@@ -2716,7 +2676,7 @@ const EditServiceForm = ({
             </FormItem>
 
             {/* Service Speed - 50% width - REQUIRED */}
-            <FormItem className="md:col-span-1">
+            <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}

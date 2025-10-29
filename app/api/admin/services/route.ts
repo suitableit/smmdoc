@@ -305,7 +305,6 @@ export async function POST(request: Request) {
       cancel,
       refillDays,
       refillDisplay,
-      personalizedService,
       serviceSpeed,
       mode,
       // Service type specific fields
@@ -368,7 +367,6 @@ export async function POST(request: Request) {
       cancel: toBool(cancel),
       refillDays: toNumber(refillDays, 30),
       refillDisplay: toNumber(refillDisplay, 24),
-      personalizedService: toBool(personalizedService),
       serviceSpeed: serviceSpeed || 'medium',
       mode: mode || 'manual',
       userId: session.user.id,

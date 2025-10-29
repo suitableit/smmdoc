@@ -295,7 +295,6 @@ const BulkModifyPage = () => {
             refillDays: '0',
             refillDisplay: '0',
             cancel: originalService.cancel ? 'on' : 'off',
-            personalizedService: 'no',
             orderLink: 'link',
             serviceSpeed: 'normal'
           };
