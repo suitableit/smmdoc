@@ -27,54 +27,52 @@ model Category {
 }
 
 model Service {
-  id                  Int               @id @default(autoincrement())
-  name                String
-  rate                Float
-  min_order           Int
-  max_order           Int
-  avg_time            String
-  description         String            @db.Text
-  updateText          String?           @db.Text
-  userId              Int
-  categoryId          Int
-  favrouteCatId       Int?
-  status              String            @default("active")
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  perqty              Int               @default(1000)
-  serviceTypeId       Int?
-  cancel              Boolean           @default(false)
-  mode                String            @default("manual")
-  refill              Boolean           @default(false)
-  refillDays          Int?              @default(30)
-  serviceSpeed        String?           @default("medium")
-  refillDisplay       Int?              @default(24)
-  providerId          Int?
-  providerName        String?
-  providerServiceId   String?
-  deletedAt           DateTime?
-  percentage          Float?            @default(0)
-  providerPrice       Float?            @default(0)
-  // Service type specific fields
-  packageType         Int?              @default(1)
-  apiServiceId        String?
-  apiProviderId       Int?
-  dripfeedEnabled     Boolean           @default(false)
-  subscriptionMin     Int?
-  subscriptionMax     Int?
-  subscriptionDelay   Int?
-  autoPostsMin        Int?
-  autoPostsMax        Int?
-  autoDelay           Int?
-  customComments      String?           @db.Text
-  isSecret            Boolean           @default(false)
-  typeParameters      String?           @db.Text // JSON field for type-specific parameters
-  favoriteServices    FavoriteService[]
-  newOrders           NewOrder[]
-  category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  favrouteCat         FavrouteCat?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
-  serviceType         servicetype?      @relation(fields: [serviceTypeId], references: [id])
-  user                user              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                Int               @id @default(autoincrement())
+  name              String
+  rate              Float
+  min_order         Int
+  max_order         Int
+  avg_time          String
+  description       String            @db.Text
+  updateText        String?           @db.Text
+  userId            Int
+  categoryId        Int
+  favrouteCatId     Int?
+  status            String            @default("active")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  perqty            Int               @default(1000)
+  serviceTypeId     Int?
+  cancel            Boolean           @default(false)
+  mode              String            @default("manual")
+  refill            Boolean           @default(false)
+  refillDays        Int?              @default(30)
+  serviceSpeed      String?           @default("medium")
+  refillDisplay     Int?              @default(24)
+  providerId        Int?
+  providerName      String?
+  providerServiceId String?
+  deletedAt         DateTime?
+  percentage        Float?            @default(0)
+  providerPrice     Float?            @default(0)
+  autoDelay         Int?
+  autoPostsMax      Int?
+  autoPostsMin      Int?
+  customComments    String?           @db.Text
+  dripfeedEnabled   Boolean           @default(false)
+  isSecret          Boolean           @default(false)
+  packageType       Int?              @default(1)
+  subscriptionDelay Int?
+  subscriptionMax   Int?
+  subscriptionMin   Int?
+  typeParameters    String?           @db.Text
+  orderLink         String            @default("link")
+  favoriteServices  FavoriteService[]
+  newOrders         NewOrder[]
+  category          Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  favrouteCat       FavrouteCat?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
+  serviceType       servicetype?      @relation(fields: [serviceTypeId], references: [id])
+  user              user              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([categoryId], map: "Service_categoryId_fkey")
   @@index([favrouteCatId], map: "Service_favrouteCatId_fkey")
@@ -86,49 +84,48 @@ model Service {
 }
 
 model NewOrder {
-  id                Int                @id @default(autoincrement())
-  categoryId        Int
-  serviceId         Int
-  userId            Int
-  link              String
-  qty               Int
-  price             Float
-  avg_time          String
-  status            String             @default("pending")
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  remains           Int                @default(0)
-  startCount        Int                @default(0)
-  bdtPrice          Float
-  currency          String
-  usdPrice          Float
-  charge            Float              @default(0)
-  profit            Float              @default(0)
-  lastSyncAt        DateTime?
-  providerOrderId   String?
-  providerStatus    String?
-  // Service type specific fields
-  packageType       Int?               @default(1)
-  comments          String?            @db.Text
-  username          String?
-  posts             Int?
-  delay             Int?
-  minQty            Int?
-  maxQty            Int?
-  isDripfeed        Boolean            @default(false)
-  dripfeedRuns      Int?
-  dripfeedInterval  Int?
-  apiOrderId        String?
-  apiResponse       String?            @db.Text
-  isSubscription    Boolean            @default(false)
+  id                 Int                @id @default(autoincrement())
+  categoryId         Int
+  serviceId          Int
+  userId             Int
+  link               String
+  qty                Int
+  price              Float
+  avg_time           String
+  status             String             @default("pending")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  remains            Int                @default(0)
+  startCount         Int                @default(0)
+  bdtPrice           Float
+  currency           String
+  usdPrice           Float
+  charge             Float              @default(0)
+  profit             Float              @default(0)
+  lastSyncAt         DateTime?
+  providerOrderId    String?
+  providerStatus     String?
+  apiOrderId         String?
+  apiResponse        String?            @db.Text
+  comments           String?            @db.Text
+  delay              Int?
+  dripfeedInterval   Int?
+  dripfeedRuns       Int?
+  isDripfeed         Boolean            @default(false)
+  isSubscription     Boolean            @default(false)
+  maxQty             Int?
+  minQty             Int?
+  packageType        Int?               @default(1)
+  posts              Int?
   subscriptionStatus String?
-  typeData          String?            @db.Text // JSON field for type-specific data
-  cancelRequests    CancelRequest[]
-  category          Category           @relation(fields: [categoryId], references: [id])
-  service           Service            @relation(fields: [serviceId], references: [id])
-  user              user               @relation(fields: [userId], references: [id])
-  providerOrderLogs ProviderOrderLog[]
-  refillRequests    RefillRequest[]
+  typeData           String?            @db.Text
+  username           String?
+  cancelRequests     CancelRequest[]
+  category           Category           @relation(fields: [categoryId], references: [id])
+  service            Service            @relation(fields: [serviceId], references: [id])
+  user               user               @relation(fields: [userId], references: [id])
+  providerOrderLogs  ProviderOrderLog[]
+  refillRequests     RefillRequest[]
 
   @@index([categoryId], map: "NewOrder_categoryId_fkey")
   @@index([serviceId], map: "NewOrder_serviceId_fkey")
@@ -232,8 +229,6 @@ model Account {
   @@index([userId], map: "Account_userId_idx")
   @@map("oauth_accounts")
 }
-
-
 
 model Session {
   id           Int      @id @default(autoincrement())
@@ -635,31 +630,31 @@ model service_update_logs {
 }
 
 model servicetype {
-  id                Int       @id @default(autoincrement())
-  name              String    @unique(map: "ServiceType_name_key")
-  description       String?
-  status            String    @default("active")
-  packageType       Int       @default(1) // Service package type (1-15)
-  requiresLink      Boolean   @default(true)
-  requiresQuantity  Boolean   @default(true)
-  requiresComments  Boolean   @default(false)
-  requiresUsername  Boolean   @default(false)
-  requiresPosts     Boolean   @default(false)
-  requiresDelay     Boolean   @default(false)
-  requiresMin       Boolean   @default(false)
-  requiresMax       Boolean   @default(false)
-  supportsDripfeed  Boolean   @default(false)
-  supportsRefill    Boolean   @default(false)
-  supportsCancel    Boolean   @default(false)
-  isSubscription    Boolean   @default(false)
-  isAutoService     Boolean   @default(false)
-  maxQuantity       Int?
-  minQuantity       Int?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  providerId        String?
-  providerName      String?
-  services          Service[]
+  id               Int       @id @default(autoincrement())
+  name             String    @unique(map: "ServiceType_name_key")
+  status           String    @default("active")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  providerId       String?
+  providerName     String?
+  description      String?
+  isAutoService    Boolean   @default(false)
+  isSubscription   Boolean   @default(false)
+  maxQuantity      Int?
+  minQuantity      Int?
+  packageType      Int       @default(1)
+  requiresComments Boolean   @default(false)
+  requiresDelay    Boolean   @default(false)
+  requiresLink     Boolean   @default(true)
+  requiresMax      Boolean   @default(false)
+  requiresMin      Boolean   @default(false)
+  requiresPosts    Boolean   @default(false)
+  requiresQuantity Boolean   @default(true)
+  requiresUsername Boolean   @default(false)
+  supportsCancel   Boolean   @default(false)
+  supportsDripfeed Boolean   @default(false)
+  supportsRefill   Boolean   @default(false)
+  services         Service[]
 
   @@map("service_types")
 }
@@ -711,7 +706,6 @@ model user {
   language                                      String                 @default("en")
   timezone                                      String                 @default("Asia/Dhaka")
   suspendedUntil                                DateTime?
-  accounts                                      Account?
   activitylog                                   activitylog[]
   addFund                                       addFund[]
   blogPosts                                     BlogPost[]
@@ -720,6 +714,7 @@ model user {
   favouriteCat                                  FavrouteCat[]
   favoriteServices                              FavoriteService[]
   newOrders                                     NewOrder[]
+  accounts                                      Account?
   refillrequest_refillrequest_processedByTouser RefillRequest[]        @relation("refillrequest_processedByTouser")
   refillRequests                                RefillRequest[]
   Category                                      Category[]

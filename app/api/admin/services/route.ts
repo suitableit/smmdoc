@@ -1,10 +1,11 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { getCurrentUser } from '@/lib/auth-helpers';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
+    const session = await getCurrentUser();
 
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
@@ -264,10 +265,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
+    console.log('POST /api/admin/services - Request received');
+    const session = await getCurrentUser();
+    console.log('Session:', session ? `${session.user.email} ${session.user.role}` : 'Not found');
     
     // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
+      console.log('Unauthorized access attempt - Session:', session ? 'exists but not admin' : 'not found');
       return NextResponse.json(
         {
           error: 'Unauthorized access. Admin privileges required.',
@@ -279,6 +283,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    console.log('Request body received:', JSON.stringify(body, null, 2));
     if (!body) {
       return NextResponse.json(
         {
@@ -307,10 +312,10 @@ export async function POST(request: Request) {
       refillDisplay,
       serviceSpeed,
       mode,
+      orderLink,
       // Service type specific fields
       packageType,
-      apiServiceId,
-      apiProviderId,
+      providerServiceId,
       dripfeedEnabled,
       subscriptionMin,
       subscriptionMax,
@@ -361,7 +366,7 @@ export async function POST(request: Request) {
       min_order: toNumber(min_order, 0),
       max_order: toNumber(max_order, 0),
       perqty: toNumber(perqty, 1000),
-      avg_time: avg_time || '',
+      avg_time: avg_time || '0-1 hours',
       updateText: updateText || '',
       refill: toBool(refill),
       cancel: toBool(cancel),
@@ -369,11 +374,11 @@ export async function POST(request: Request) {
       refillDisplay: toNumber(refillDisplay, 24),
       serviceSpeed: serviceSpeed || 'medium',
       mode: mode || 'manual',
+      orderLink: orderLink || 'link',
       userId: session.user.id,
       // Service type specific fields
       packageType: toNumber(packageType, 1),
-      apiServiceId: apiServiceId || null,
-      apiProviderId: toInt(apiProviderId) || null,
+      providerServiceId: providerServiceId || null,
       dripfeedEnabled: toBool(dripfeedEnabled),
       subscriptionMin: toInt(subscriptionMin) || null,
       subscriptionMax: toInt(subscriptionMax) || null,
@@ -407,9 +412,11 @@ export async function POST(request: Request) {
     }
 
     // Create the service in the database with proper type conversion
+    console.log('Creating service with data:', JSON.stringify(createData, null, 2));
     const newService = await db.service.create({
       data: createData,
     });
+    console.log('Service created successfully:', newService.id);
 
     return NextResponse.json(
       {

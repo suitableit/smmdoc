@@ -21,13 +21,12 @@ model Service {
   refill              Boolean           @default(false)
   refillDays          Int?              @default(30)
   serviceSpeed        String?           @default("medium")
+  exampleLink         String?
   refillDisplay       Int?              @default(24)
   providerId          Int?
   providerName        String?
   // Service type specific fields
   packageType         Int?              @default(1) // Service package type (1-15)
-  apiServiceId        String?           // External API service ID
-  apiProviderId       Int?              // External API provider ID
   dripfeedEnabled     Boolean           @default(false)
   subscriptionMin     Int?              // For subscription services
   subscriptionMax     Int?              // For subscription services
@@ -37,6 +36,7 @@ model Service {
   autoDelay           Int?              // For auto services (in minutes)
   customComments      String?           @db.Text // For custom comment services
   isSecret            Boolean           @default(false) // Secret service flag
+  orderLink           String            @default("link") // Order link type: "link" or "username"
   favoriteServices    FavoriteService[]
   newOrders           NewOrder[]
   category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)

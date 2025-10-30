@@ -16,10 +16,11 @@ const createServiceSchema = z.object({
   refillDays: z.number().optional().default(30),
   refillDisplay: z.number().optional().default(24),
   serviceSpeed: z.enum(['slow', 'sometimes_slow', 'normal', 'fast']).default('normal'),
+  exampleLink: z.string().optional(),
   mode: z.enum(['manual', 'auto']).default('manual'),
-  orderLink: z.enum(['username', 'link']).optional().default('username'),
+  orderLink: z.enum(['username', 'link']).optional().default('link'),
   providerId: z.string().optional(),
-  apiServiceId: z.string().optional(),
+  providerServiceId: z.string().optional(),
 });
 
 // Edit service schema with optional fields
@@ -39,10 +40,11 @@ const editServiceSchema = z.object({
   refillDays: z.number().optional(),
   refillDisplay: z.number().optional(),
   serviceSpeed: z.enum(['slow', 'sometimes_slow', 'normal', 'fast']).optional(),
+  exampleLink: z.string().optional(),
   mode: z.enum(['manual', 'auto']).optional(),
   orderLink: z.enum(['username', 'link']).optional(),
   providerId: z.string().optional(),
-  apiServiceId: z.string().optional(),
+  providerServiceId: z.string().optional(),
 });
 
 type CreateServiceSchema = z.infer<typeof createServiceSchema>;
@@ -64,10 +66,11 @@ const createServiceDefaultValues: CreateServiceSchema = {
   refillDays: 30,
   refillDisplay: 24,
   serviceSpeed: 'normal',
+  exampleLink: '',
   mode: 'manual',
-  orderLink: 'username',
+  orderLink: 'link',
   providerId: '',
-  apiServiceId: '',
+  providerServiceId: '',
 };
 
 export {
