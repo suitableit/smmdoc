@@ -29,7 +29,15 @@ export async function GET(request: Request) {
 
     // Add status filter if provided
     if (status && status !== 'all') {
-      whereClause.status = status;
+      // If user is filtering by 'pending', include both 'pending' and 'failed' orders
+      // since failed orders appear as pending to users
+      if (status === 'pending') {
+        whereClause.status = {
+          in: ['pending', 'failed']
+        };
+      } else {
+        whereClause.status = status;
+      }
     }
 
     // Add service filter if provided
@@ -119,6 +127,12 @@ export async function GET(request: Request) {
       take: limit
     });
 
+    // Transform failed orders to pending for user-facing response
+    const transformedOrders = orders.map(order => ({
+      ...order,
+      status: order.status === 'failed' ? 'pending' : order.status
+    }));
+
     // Calculate user order statistics
     const stats = await db.newOrder.aggregate({
       where: { userId: session.user.id },
@@ -139,13 +153,24 @@ export async function GET(request: Request) {
       }
     });
 
+    // Transform status breakdown to show failed orders as pending
+    const transformedStatusBreakdown = statusCounts.reduce((acc, item) => {
+      if (item.status === 'failed') {
+        // Add failed orders to pending count
+        acc['pending'] = (acc['pending'] || 0) + item._count.status;
+      } else {
+        acc[item.status] = item._count.status;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
     // Calculate pagination info
     const totalPages = Math.ceil(totalOrders / limit);
 
     return NextResponse.json(
       {
         success: true,
-        data: orders,
+        data: transformedOrders,
         pagination: {
           total: totalOrders,
           page,
@@ -157,10 +182,7 @@ export async function GET(request: Request) {
         stats: {
           totalOrders: stats._count.id,
           totalSpent: stats._sum.price || 0,
-          statusBreakdown: statusCounts.reduce((acc, item) => {
-            acc[item.status] = item._count.status;
-            return acc;
-          }, {} as Record<string, number>)
+          statusBreakdown: transformedStatusBreakdown
         }
       },
       { status: 200 }

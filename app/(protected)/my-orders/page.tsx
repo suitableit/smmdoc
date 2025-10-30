@@ -559,6 +559,28 @@ export default function OrdersList() {
     },
   ];
 
+  // Format status for display
+  const formatStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'in_progress':
+        return 'In Progress';
+      case 'pending':
+        return 'Pending';
+      case 'processing':
+        return 'Processing';
+      case 'completed':
+        return 'Completed';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'failed':
+        return 'Failed';
+      case 'partial':
+        return 'Partial';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
   // Get badge color based on status
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -820,11 +842,11 @@ export default function OrdersList() {
                         </td>
                         <td className="py-3 px-4">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(
                               order.status
                             )}`}
                           >
-                            {order.status}
+                            {formatStatusDisplay(order.status)}
                           </span>
                         </td>
                         <td
