@@ -601,6 +601,32 @@ const AdminOrdersPage = () => {
     setBulkStatus('');
   };
 
+  // Handle resend order
+  const handleResendOrder = async (orderId: number) => {
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/resend`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast('Order resent successfully', 'success');
+        fetchOrders();
+        fetchStats();
+        fetchAllOrdersForCounts();
+      } else {
+        showToast(result.error || 'Failed to resend order', 'error');
+      }
+    } catch (error) {
+      console.error('Error resending order:', error);
+      showToast('Error resending order', 'error');
+    }
+  };
+
   return (
     <div className="page-container">
       {/* Toast Container */}
@@ -1298,6 +1324,21 @@ const AdminOrdersPage = () => {
                                 {/* Dropdown Menu */}
                                 <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                                   <div className="py-1">
+                                    {order.status === 'failed' && (
+                                      <button
+                                        onClick={() => {
+                                          handleResendOrder(order.id);
+                                          const dropdown = document.querySelector(
+                                            '.absolute.right-0'
+                                          ) as HTMLElement;
+                                          dropdown?.classList.add('hidden');
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                      >
+                                        <FaSync className="h-3 w-3" />
+                                        Resend Order
+                                      </button>
+                                    )}
                                     <button
                                       onClick={() => {
                                         openEditStartCountDialog(
@@ -1402,6 +1443,21 @@ const AdminOrdersPage = () => {
                               {/* Dropdown Menu */}
                               <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                                 <div className="py-1">
+                                  {order.status === 'failed' && (
+                                    <button
+                                      onClick={() => {
+                                        handleResendOrder(order.id);
+                                        const dropdown = document.querySelector(
+                                          '.absolute.right-0'
+                                        ) as HTMLElement;
+                                        dropdown?.classList.add('hidden');
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                    >
+                                      <FaSync className="h-3 w-3" />
+                                      Resend Order
+                                    </button>
+                                  )}
                                   <button
                                     onClick={() => {
                                       openEditStartCountDialog(
