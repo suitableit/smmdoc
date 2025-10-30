@@ -321,8 +321,38 @@ export default function AdminDashboardPage() {
         if (!transactionsValid) setTransactionsLoading(true);
       }
 
-      // Prepare all API calls to run in parallel
-      const statsPromise = fetch('/api/admin/dashboard/stats').then(res => res.json());
+      // Helper function to create fetch with timeout and retry
+      const fetchWithRetry = async (url: string, options: any = {}, retries = 2): Promise<any> => {
+        for (let i = 0; i <= retries; i++) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+            
+            const response = await fetch(url, {
+              ...options,
+              signal: controller.signal,
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+          } catch (error) {
+            if (i === retries) throw error;
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+          }
+        }
+      };
+
+      // Prepare all API calls to run in parallel with improved error handling
+      const statsPromise = fetchWithRetry('/api/admin/dashboard/stats').catch(error => {
+        console.error('Stats API failed:', error);
+        return { success: false, error: error.message };
+      });
       
       const usersQueryParams = new URLSearchParams({
         page: '1',
@@ -331,7 +361,10 @@ export default function AdminDashboardPage() {
         sort: 'createdAt',
         order: 'desc',
       });
-      const usersPromise = fetch(`/api/admin/users?${usersQueryParams}`).then(res => res.json());
+      const usersPromise = fetchWithRetry(`/api/admin/users?${usersQueryParams}`).catch(error => {
+        console.error('Users API failed:', error);
+        return { success: false, error: error.message };
+      });
       
       const transactionsPromise = axiosInstance.get('/api/transactions', {
         params: {
@@ -340,33 +373,51 @@ export default function AdminDashboardPage() {
           limit: 10,
           offset: 0,
         },
-        timeout: 5000, // Reduced timeout for faster response
+        timeout: 15000, // Increased timeout to 15 seconds
+      }).catch(error => {
+        console.error('Transactions API failed:', error);
+        return { data: null, error: error.message };
       });
 
-      // Execute all API calls in parallel
-      const [statsResult, usersResult, transactionsResponse] = await Promise.all([
+      // Execute all API calls in parallel using Promise.allSettled for better error handling
+      const results = await Promise.allSettled([
         statsPromise,
         usersPromise,
         transactionsPromise,
       ]);
 
-      // Process stats data
-      if (statsResult.success) {
+      // Extract results with proper error handling
+      const statsResult = results[0].status === 'fulfilled' ? results[0].value : { success: false, error: 'Stats request failed' };
+      const usersResult = results[1].status === 'fulfilled' ? results[1].value : { success: false, error: 'Users request failed' };
+      const transactionsResponse = results[2].status === 'fulfilled' ? results[2].value : { data: null, error: 'Transactions request failed' };
+
+      // Process stats data with individual error handling
+      if (statsResult.success && statsResult.data) {
         setStats(statsResult.data);
         setCachedData(CACHE_KEYS.DASHBOARD_STATS, statsResult.data);
+      } else if (statsResult.error) {
+        console.warn('Stats data failed to load:', statsResult.error);
+        // Keep existing cached data if available, don't clear it
       }
+      // Always hide stats loading state
+      setStatsLoading(false);
 
-      // Process users data
-      if (usersResult.success) {
+      // Process users data with individual error handling
+      if (usersResult.success && usersResult.data) {
         const filteredUsers = (usersResult.data || []).filter(
           (user: User) => user.role === 'user'
         );
         const usersToShow = filteredUsers.slice(0, 5);
         setLatestUsers(usersToShow);
         setCachedData(CACHE_KEYS.LATEST_USERS, usersToShow);
+      } else if (usersResult.error) {
+        console.warn('Users data failed to load:', usersResult.error);
+        // Keep existing cached data if available, don't clear it
       }
+      // Always hide users loading state
+      setLatestUsersLoading(false);
 
-      // Process transactions data
+      // Process transactions data with individual error handling
       let transactionsToShow: PendingTransaction[] = [];
       if (transactionsResponse.data) {
         if (transactionsResponse.data.transactions) {
@@ -383,33 +434,26 @@ export default function AdminDashboardPage() {
           setPendingTransactions(transactionsToShow);
         }
         setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, transactionsToShow);
+      } else if (transactionsResponse.error) {
+        console.warn('Transactions data failed to load:', transactionsResponse.error);
+        // Keep existing cached data if available, don't clear it
       }
-
-      // Hide loading states
-      setStatsLoading(false);
-      setLatestUsersLoading(false);
+      // Always hide transactions loading state
       setTransactionsLoading(false);
 
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('Critical error in fetchAllData:', error);
       
-      // Only set fallback empty states if we don't have any valid cached data
-      const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
-      const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
-      const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
-      
-      if (!usersValid) {
-        setLatestUsers([]);
-      }
-      if (!transactionsValid) {
-        setPendingTransactions([]);
-        setTotalTransactionCount(0);
-      }
-
-      // Hide loading states even on error
+      // This catch block should rarely be reached now since we handle individual errors above
+      // But if it does, ensure all loading states are cleared and show user feedback
       setStatsLoading(false);
       setLatestUsersLoading(false);
       setTransactionsLoading(false);
+      
+      // Show user-friendly error message
+      if (!isBackgroundRefresh) {
+        showToast('Some dashboard data failed to load. Please try refreshing.', 'error');
+      }
     }
   }, []);
 

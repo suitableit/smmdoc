@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   FaBox,
   FaCheckCircle,
@@ -39,6 +39,10 @@ const MarkPartialModal = dynamic(() => import('@/components/admin/orders/modals/
 });
 
 const UpdateOrderStatusModal = dynamic(() => import('@/components/admin/orders/modals/update-order-status'), {
+  ssr: false,
+});
+
+const OrderTable = dynamic(() => import('@/components/admin/orders/order-table'), {
   ssr: false,
 });
 
@@ -149,6 +153,10 @@ interface PaginationInfo {
   hasPrev: boolean;
 }
 
+// Cache for stats data to avoid repeated API calls
+let statsCache: { data: OrderStats; timestamp: number } | null = null;
+const STATS_CACHE_DURATION = 30000; // 30 seconds
+
 const AdminOrdersPage = () => {
   const { appName } = useAppNameWithFallback();
 
@@ -156,6 +164,26 @@ const AdminOrdersPage = () => {
   useEffect(() => {
     setPageTitle('All Orders', appName);
   }, [appName]);
+
+  // Detect page reload vs navigation
+  useEffect(() => {
+    if (isInitialMount.current) {
+      // Use sessionStorage to detect if this is a fresh page load or navigation
+      const navigationKey = 'orders_page_visited';
+      const hasVisited = typeof window !== 'undefined' && sessionStorage.getItem(navigationKey);
+      
+      // If not visited before in this session, it's a page reload/fresh load
+      const isReload = !hasVisited;
+      
+      // Mark as visited for subsequent navigations
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(navigationKey, 'true');
+      }
+      
+      setIsPageReload(isReload);
+      isInitialMount.current = false;
+    }
+  }, []);
 
   // Get currency data
   const { availableCurrencies } = useCurrency();
@@ -190,6 +218,10 @@ const AdminOrdersPage = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+
+  // Page reload detection
+  const isInitialMount = useRef(true);
+  const [isPageReload, setIsPageReload] = useState(false);
 
   // Loading states
   const [statsLoading, setStatsLoading] = useState(true);
@@ -261,41 +293,19 @@ const AdminOrdersPage = () => {
     };
   };
 
-  // Fetch all orders to calculate real status counts
-  const fetchAllOrdersForCounts = async () => {
-    try {
-      console.log('Fetching all orders for status counts...');
-      const response = await fetch('/api/admin/orders?limit=1000'); // Get more orders for accurate counts
-      const result = await response.json();
+  // Optimized parallel data fetching with caching and fast loading
+  const fetchDataOptimized = async (showLoadingState = true) => {
+    const loadingStartTime = Date.now();
+    const minLoadingTime = 10; // 0.01 seconds minimum loading time
 
-      if (result.success && result.data) {
-        const allOrders = result.data;
-        const statusCounts = calculateStatusCounts(allOrders);
-
-        console.log('Calculated status counts:', statusCounts);
-
-        setStats((prev) => ({
-          ...prev,
-          pendingOrders: statusCounts.pending,
-          processingOrders: statusCounts.processing,
-          completedOrders: statusCounts.completed,
-          statusBreakdown: {
-            ...prev.statusBreakdown,
-            pending: statusCounts.pending,
-            processing: statusCounts.processing,
-            completed: statusCounts.completed,
-            partial: statusCounts.partial,
-            cancelled: statusCounts.cancelled,
-            failed: statusCounts.failed,
-          },
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching orders for counts:', error);
+    // Only show loading states if requested (for page reload)
+    if (showLoadingState) {
+      setOrdersLoading(true);
+      setStatsLoading(true);
     }
-  };
-  const fetchOrders = async () => {
+
     try {
+      // Create query params for orders
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -303,28 +313,100 @@ const AdminOrdersPage = () => {
         ...(searchTerm && { search: searchTerm }),
       });
 
-      const response = await fetch(`/api/admin/orders?${queryParams}`);
-      const result = await response.json();
+      // Check cache for stats data
+      const now = Date.now();
+      const useCache = statsCache && (now - statsCache.timestamp) < STATS_CACHE_DURATION;
 
-      if (result.success) {
-        setOrders(result.data || []);
-        setPagination(
-          result.pagination || {
-            page: 1,
-            limit: 20,
-            total: 0,
-            totalPages: 0,
-            hasNext: false,
-            hasPrev: false,
-          }
-        );
+      // Prepare promises for parallel execution
+      const promises = [
+        // Always fetch orders
+        fetch(`/api/admin/orders?${queryParams}`).then(res => res.json()),
+        // Only fetch stats if not cached
+        useCache ? Promise.resolve({ success: true, data: statsCache.data }) : 
+          fetch('/api/admin/orders/stats?period=all').then(res => res.json())
+      ];
+
+      // Execute both requests in parallel
+      const [ordersResult, statsResult] = await Promise.allSettled(promises);
+
+      // Process orders result
+      if (ordersResult.status === 'fulfilled' && ordersResult.value.success) {
+        const ordersData = ordersResult.value;
+        setOrders(ordersData.data || []);
+        setPagination(ordersData.pagination || {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        });
+
+        // Calculate status counts from current orders for quick stats
+        const statusCounts = calculateStatusCounts(ordersData.data || []);
+        
+        // Update stats with quick counts if no cached data
+        if (!useCache) {
+          setStats(prev => ({
+            ...prev,
+            pendingOrders: statusCounts.pending,
+            processingOrders: statusCounts.processing,
+            completedOrders: statusCounts.completed,
+            totalOrders: ordersData.pagination?.total || prev.totalOrders,
+          }));
+        }
       } else {
-        toastNotification && showToast(result.error || 'Failed to fetch orders', 'error');
         setOrders([]);
+        setPagination({
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        });
+        if (ordersResult.status === 'fulfilled') {
+          showToast(ordersResult.value.error || 'Failed to fetch orders', 'error');
+        }
       }
+
+      // Process stats result
+      if (statsResult.status === 'fulfilled' && statsResult.value.success && !useCache) {
+        const data = statsResult.value.data;
+        
+        // Build status breakdown object from array
+        const statusBreakdown: Record<string, number> = {};
+        if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
+          data.statusBreakdown.forEach((item: any) => {
+            statusBreakdown[item.status] = item.count || 0;
+          });
+        }
+
+        const processedStats = {
+          totalOrders: data.overview?.totalOrders || pagination.total,
+          pendingOrders: statusBreakdown.pending || 0,
+          processingOrders: statusBreakdown.processing || 0,
+          completedOrders: statusBreakdown.completed || 0,
+          totalRevenue: data.overview?.totalRevenue || 0,
+          todayOrders: data.dailyTrends?.[0]?.orders || 0,
+          statusBreakdown: statusBreakdown,
+        };
+
+        setStats(processedStats);
+        
+        // Update cache
+        statsCache = {
+          data: processedStats,
+          timestamp: now
+        };
+      } else if (useCache) {
+        // Use cached stats data
+        setStats(statsCache.data);
+      }
+
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      showToast('Error fetching orders', 'error');
+      console.error('Error fetching data:', error);
+      showToast('Error fetching data', 'error');
       setOrders([]);
       setPagination({
         page: 1,
@@ -335,109 +417,41 @@ const AdminOrdersPage = () => {
         hasPrev: false,
       });
     } finally {
-      setOrdersLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      console.log('Fetching stats from API...'); // Debug log
-      const response = await fetch('/api/admin/orders/stats?period=all');
-      console.log('Stats API response status:', response.status); // Debug log
-
-      const result = await response.json();
-      console.log('Stats API full response:', result); // Debug log
-
-      if (result.success) {
-        const data = result.data;
-        console.log('Stats API data:', data); // Debug log
-
-        // Build status breakdown object from array
-        const statusBreakdown: Record<string, number> = {};
-        if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
-          data.statusBreakdown.forEach((item: any) => {
-            statusBreakdown[item.status] = item.count || 0;
-          });
+      // Ensure minimum loading time for smooth UX
+      const elapsedTime = Date.now() - loadingStartTime;
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+      
+      setTimeout(() => {
+        // Only set loading to false if we showed loading state
+        if (showLoadingState) {
+          setOrdersLoading(false);
+          setStatsLoading(false);
         }
-
-        const processedStats = {
-          totalOrders: data.overview?.totalOrders || pagination.total, // Use pagination total as fallback
-          pendingOrders: statusBreakdown.pending || 0,
-          processingOrders: statusBreakdown.processing || 0,
-          completedOrders: statusBreakdown.completed || 0,
-          totalRevenue: data.overview?.totalRevenue || 0,
-          todayOrders: data.dailyTrends?.[0]?.orders || 0,
-          statusBreakdown: statusBreakdown,
-        };
-
-        console.log('Processed Stats:', processedStats); // Debug log
-        setStats(processedStats);
-      } else {
-        console.error('Stats API error:', result.error);
-        // Use pagination total as fallback
-        setStats({
-          totalOrders: pagination.total,
-          pendingOrders: 0,
-          processingOrders: 0,
-          completedOrders: 0,
-          totalRevenue: 0,
-          todayOrders: 0,
-          statusBreakdown: {},
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      // Use pagination total as fallback
-      setStats({
-        totalOrders: pagination.total,
-        pendingOrders: 0,
-        processingOrders: 0,
-        completedOrders: 0,
-        totalRevenue: 0,
-        todayOrders: 0,
-        statusBreakdown: {},
-      });
+      }, remainingTime);
     }
   };
 
-  // Handle search with debouncing - only update table, not whole page
+  // Handle search with optimized debouncing - faster response
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Set loading when search changes
-      setOrdersLoading(true);
-      fetchOrders();
-    }, 500);
+      // Don't show loading state for search (user interaction)
+      fetchDataOptimized(false);
+    }, 200); // Reduced from 500ms to 200ms for faster response
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   // Load data on component mount and when filters change
   useEffect(() => {
-    setOrdersLoading(true);
-    fetchOrders();
+    // Don't show loading state for filter changes (user interaction)
+    fetchDataOptimized(false);
   }, [pagination.page, pagination.limit, statusFilter]);
 
+  // Initial data load on component mount
   useEffect(() => {
-    fetchStats();
-    fetchAllOrdersForCounts(); // Get real status counts
-
-    // Simulate stats loading delay
-    const timer = setTimeout(() => {
-      setStatsLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Update stats when pagination data changes (real total orders)
-  useEffect(() => {
-    if (pagination.total > 0) {
-      setStats((prev) => ({
-        ...prev,
-        totalOrders: pagination.total,
-      }));
-    }
-  }, [pagination.total]);
+    // Only show loading state if it's a page reload
+    fetchDataOptimized(isPageReload);
+  }, [isPageReload]);
 
   // Show toast notification
   const showToast = (
@@ -507,10 +521,10 @@ const AdminOrdersPage = () => {
   };
 
   const handleRefresh = () => {
-    setOrdersLoading(true);
-    fetchOrders();
-    fetchStats();
-    fetchAllOrdersForCounts(); // Refresh status counts too
+    // Clear cache to force fresh data
+    statsCache = null;
+    // Show loading state for manual refresh
+    fetchDataOptimized(true);
     showToast('Orders refreshed successfully!', 'success');
   };
 
@@ -928,7 +942,7 @@ const AdminOrdersPage = () => {
               </div>
             )}
 
-            {ordersLoading ? (
+            {ordersLoading && isPageReload ? (
               <div className="flex items-center justify-center py-20">
                 <div className="text-center flex flex-col items-center">
                   <GradientSpinner size="w-12 h-12" className="mb-3" />
@@ -952,919 +966,87 @@ const AdminOrdersPage = () => {
                 </p>
               </div>
             ) : (
-              <React.Fragment>
-                {/* Table View - Visible on all screen sizes */}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm min-w-[1200px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
-                      <tr>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={
-                              selectedOrders.length === orders.length &&
-                              orders.length > 0
-                            }
-                            onChange={handleSelectAll}
-                            className="rounded border-gray-300 w-4 h-4"
-                          />
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          ID
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          User
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Charge
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Link
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Provider
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Start
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Quantity
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Service
-                        </th>
-                        
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Status
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Remains
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Date
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Mode
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.map((order) => (
-                        <tr
-                          key={order.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
-                        >
-                          <td className="p-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedOrders.includes(order.id)}
-                              onChange={() => handleSelectOrder(order.id)}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
-                          </td>
-                          <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {order.id || 'null'}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {order.user?.username ||
-                                order.user?.email?.split('@')[0] ||
-                                order.user?.name ||
-                                'null'}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="text-left">
-                              <div
-                                className="font-semibold text-sm"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
-                                $
-                                {order.charge
-                                  ? formatPrice(order.charge, 2)
-                                  : '0.00'}
-                              </div>
-                              <div className="text-xs text-green-600">
-                                Profit: $
-                                {order.profit
-                                  ? formatPrice(order.profit, 2)
-                                  : '0.00'}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="max-w-28">
-                              {order.link ? (
-                                <div className="flex items-center gap-1">
-                                  <a
-                                    href={order.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 text-xs truncate flex-1"
-                                  >
-                                    {order.link.length > 18
-                                      ? order.link.substring(0, 18) + '...'
-                                      : order.link}
-                                  </a>
-                                  <button
-                                    onClick={() =>
-                                      window.open(order.link, '_blank')
-                                    }
-                                    className="text-blue-500 hover:text-blue-700 p-1 flex-shrink-0"
-                                    title="Open link in new tab"
-                                  >
-                                    <FaExternalLinkAlt className="h-3 w-3" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <span
-                                  className="text-xs"
-                                  style={{ color: 'var(--text-muted)' }}
-                                >
-                                  null
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div
-                              className="text-sm font-medium"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {order.seller || 'null'}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div
-                              className="text-sm font-medium"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {order.startCount
-                                ? formatNumber(order.startCount)
-                                : 'null'}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="text-left">
-                              <div
-                                className="font-semibold text-sm"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
-                                {order.qty ? formatNumber(order.qty) : 'null'}
-                              </div>
-                              <div className="text-xs text-green-600">
-                                {order.qty && order.remains
-                                  ? formatNumber(order.qty - order.remains)
-                                  : '0'}{' '}
-                                delivered
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div>
-                              <div
-                                className="font-mono text-xs"
-                                style={{ color: 'var(--text-muted)' }}
-                              >
-                                {/* Use direct service ID parameter */}
-                                {order.service?.id
-                                  ? formatID(order.service.id)
-                                  : 'null'}
-                              </div>
-                              <div
-                                className="font-medium text-sm truncate max-w-44"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
-                                {/* Use direct service name parameter */}
-                                {order.service?.name || 'null'}
-                              </div>
-                              <div
-                                className="text-xs truncate max-w-44"
-                                style={{ color: 'var(--text-muted)' }}
-                              >
-                                {/* Use direct category name parameter */}
-                                {order.category?.category_name || 'null'}
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Status cell inserted after Service */}
-                          <td className="p-3">
-                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
-                              {getStatusIcon(order.status)}
-                              <span className="text-xs font-medium capitalize">
-                                {order.status ? order.status.replace('_', ' ') : 'null'}
-                              </span>
-                            </div>
-                          </td>
-                          
-                          <td className="p-3">
-                            <div className="space-y-1">
-                              <div
-                                className="text-xs font-medium"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
-                                {order.qty && order.remains
-                                  ? calculateProgress(order.qty, order.remains)
-                                  : 0}
-                                %
-                              </div>
-                              <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                <div
-                                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-1.5 rounded-full transition-all duration-300"
-                                  style={{
-                                    width: `${
-                                      order.qty && order.remains
-                                        ? calculateProgress(
-                                            order.qty,
-                                            order.remains
-                                          )
-                                        : 0
-                                    }%`,
-                                  }}
-                                />
-                              </div>
-                              <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
-                              >
-                                {order.remains
-                                  ? formatNumber(order.remains)
-                                  : 'null'}{' '}
-                                left
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div>
-                              <div className="text-xs">
-                                {order.createdAt
-                                  ? new Date(
-                                      order.createdAt
-                                    ).toLocaleDateString()
-                                  : 'null'}
-                              </div>
-                              <div className="text-xs">
-                                {order.createdAt
-                                  ? new Date(
-                                      order.createdAt
-                                    ).toLocaleTimeString()
-                                  : 'null'}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div
-                              className={`text-xs font-medium px-2 py-1 rounded ${
-                                order.mode === 'Auto'
-                                  ? 'bg-green-100 text-green-800'
-                                  : order.mode === 'Manual'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}
-                            >
-                              {order.mode || 'null'}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="flex items-center">
-                              {/* 3 Dot Menu */}
-                              <div className="relative">
-                                <button
-                                  className="btn btn-secondary p-2"
-                                  title="More Actions"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const dropdown = e.currentTarget
-                                      .nextElementSibling as HTMLElement;
-                                    dropdown.classList.toggle('hidden');
-                                  }}
-                                >
-                                  <FaEllipsisH className="h-3 w-3" />
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                                  <div className="py-1">
-                                    {order.status === 'failed' && (
-                                      <button
-                                        onClick={() => {
-                                          handleResendOrder(order.id);
-                                          const dropdown = document.querySelector(
-                                            '.absolute.right-0'
-                                          ) as HTMLElement;
-                                          dropdown?.classList.add('hidden');
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                      >
-                                        <FaSync className="h-3 w-3" />
-                                        Resend Order
-                                      </button>
-                                    )}
-                                    <button
-                                      onClick={() => {
-                                        openEditStartCountDialog(
-                                          order.id,
-                                          order.startCount || 0
-                                        );
-                                        const dropdown = document.querySelector(
-                                          '.absolute.right-0'
-                                        ) as HTMLElement;
-                                        dropdown?.classList.add('hidden');
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                    >
-                                      <FaEye className="h-3 w-3" />
-                                      Edit Start Count
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        openMarkPartialDialog(order.id);
-                                        const dropdown = document.querySelector(
-                                          '.absolute.right-0'
-                                        ) as HTMLElement;
-                                        dropdown?.classList.add('hidden');
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                    >
-                                      <FaExclamationCircle className="h-3 w-3" />
-                                      Mark Partial
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        openUpdateStatusDialog(
-                                          order.id,
-                                          order.status
-                                        );
-                                        const dropdown = document.querySelector(
-                                          '.absolute.right-0'
-                                        ) as HTMLElement;
-                                        dropdown?.classList.add('hidden');
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                    >
-                                      <FaSync className="h-3 w-3" />
-                                      Update Order Status
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile Card View - Hidden (using table view instead) */}
-                <div className="hidden">
-                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                    {orders.map((order) => (
-                      <div
-                        key={order.id}
-                        className="card card-padding border-l-4 border-blue-500 mb-4"
-                      >
-                        {/* Header with ID and Actions */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedOrders.includes(order.id)}
-                              onChange={() => handleSelectOrder(order.id)}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {order.id || 'null'}
-                            </div>
-                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
-                              {getStatusIcon(order.status)}
-                              <span className="text-xs font-medium capitalize">
-                                {order.status
-                                  ? order.status.replace('_', ' ')
-                                  : 'null'}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center">
-                            {/* 3 Dot Menu for Mobile */}
-                            <div className="relative">
-                              <button
-                                className="btn btn-secondary p-2"
-                                title="More Actions"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const dropdown = e.currentTarget
-                                    .nextElementSibling as HTMLElement;
-                                  dropdown.classList.toggle('hidden');
-                                }}
-                              >
-                                <FaEllipsisH className="h-3 w-3" />
-                              </button>
-
-                              {/* Dropdown Menu */}
-                              <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                                <div className="py-1">
-                                  {order.status === 'failed' && (
-                                    <button
-                                      onClick={() => {
-                                        handleResendOrder(order.id);
-                                        const dropdown = document.querySelector(
-                                          '.absolute.right-0'
-                                        ) as HTMLElement;
-                                        dropdown?.classList.add('hidden');
-                                      }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                    >
-                                      <FaSync className="h-3 w-3" />
-                                      Resend Order
-                                    </button>
-                                  )}
-                                  <button
-                                    onClick={() => {
-                                      openEditStartCountDialog(
-                                        order.id,
-                                        order.startCount || 0
-                                      );
-                                      const dropdown = document.querySelector(
-                                        '.absolute.right-0'
-                                      ) as HTMLElement;
-                                      dropdown?.classList.add('hidden');
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                  >
-                                    <FaEye className="h-3 w-3" />
-                                    Edit Start Count
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      openMarkPartialDialog(order.id);
-                                      const dropdown = document.querySelector(
-                                        '.absolute.right-0'
-                                      ) as HTMLElement;
-                                      dropdown?.classList.add('hidden');
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                  >
-                                    <FaExclamationCircle className="h-3 w-3" />
-                                    Mark Partial
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      openUpdateStatusDialog(
-                                        order.id,
-                                        order.status
-                                      );
-                                      const dropdown = document.querySelector(
-                                        '.absolute.right-0'
-                                      ) as HTMLElement;
-                                      dropdown?.classList.add('hidden');
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                  >
-                                    <FaSync className="h-3 w-3" />
-                                    Update Order Status
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* User Info */}
-                        <div className="flex items-center justify-between mb-4 pb-4 border-b">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              User
-                            </div>
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {order.user?.username ||
-                                order.user?.email?.split('@')[0] ||
-                                order.user?.name ||
-                                'null'}
-                            </div>
-                          </div>
-                          <div
-                            className={`text-xs font-medium px-2 py-1 rounded ${
-                              order.mode === 'Auto'
-                                ? 'bg-green-100 text-green-800'
-                                : order.mode === 'Manual'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {order.mode || 'null'}
-                          </div>
-                        </div>
-
-                        {/* Service Info */}
-                        <div className="mb-4">
-                          <div
-                            className="font-mono text-xs mb-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            {/* Use direct service ID parameter */}
-                            {order.service?.id
-                              ? formatID(order.service.id)
-                              : 'null'}
-                          </div>
-                          <div
-                            className="font-medium text-sm mb-1"
-                            style={{ color: 'var(--text-primary)' }}
-                          >
-                            {/* Use direct service name parameter */}
-                            {order.service?.name || 'null'}
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            {/* Use direct category name parameter */}
-                            {order.category?.category_name || 'null'} •
-                            Provider: {order.seller || 'null'}
-                          </div>
-                          {/* Provider Order Status */}
-                          {order.isProviderService && (
-                            <div className="mt-2 p-2 bg-gray-50 rounded-lg border">
-                              <div className="text-xs font-medium text-gray-600 mb-1">
-                                Provider Order Status
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-mono bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                  ID: {order.providerOrderId || 'N/A'}
-                                </span>
-                                <span className={`text-xs px-2 py-1 rounded ${
-                                  order.providerStatus === 'Completed' ? 'bg-green-100 text-green-700' :
-                                  order.providerStatus === 'In progress' ? 'bg-yellow-100 text-yellow-700' :
-                                  order.providerStatus === 'Pending' ? 'bg-orange-100 text-orange-700' :
-                                  order.providerStatus === 'Canceled' ? 'bg-red-100 text-red-700' :
-                                  'bg-gray-100 text-gray-700'
-                                }`}>
-                                  {order.providerStatus || 'Unknown'}
-                                </span>
-                              </div>
-                              {order.lastSyncAt && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  Last sync: {new Date(order.lastSyncAt).toLocaleString()}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {order.link ? (
-                            <div className="flex items-center gap-1 mt-1">
-                              <a
-                                href={order.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 text-xs flex-1 truncate"
-                              >
-                                {order.link.length > 38
-                                  ? order.link.substring(0, 38) + '...'
-                                  : order.link}
-                              </a>
-                              <button
-                                onClick={() =>
-                                  window.open(order.link, '_blank')
-                                }
-                                className="text-blue-500 hover:text-blue-700 p-1 flex-shrink-0"
-                                title="Open link in new tab"
-                              >
-                                <FaExternalLinkAlt className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ) : (
-                            <span
-                              className="text-xs mt-1 block"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              null
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Financial Info */}
-                        <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Unit Price
-                            </div>
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              ${formatPrice(order.usdPrice || 0, 2)}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Total Price
-                            </div>
-                            <div className="font-semibold text-sm text-blue-600">
-                              ${formatPrice(order.usdPrice || 0, 2)}
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Profit
-                            </div>
-                            <div className="font-semibold text-sm text-green-600">
-                              $
-                              {order.profit
-                                ? formatPrice(order.profit, 2)
-                                : '0.00'}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Quantity and Progress Info */}
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Quantity
-                            </div>
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {order.qty ? formatNumber(order.qty) : 'null'}
-                            </div>
-                            <div className="text-xs text-green-600">
-                              {order.qty && order.remains
-                                ? formatNumber(order.qty - order.remains)
-                                : '0'}{' '}
-                              delivered
-                            </div>
-                          </div>
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Start Count
-                            </div>
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {order.startCount
-                                ? formatNumber(order.startCount)
-                                : 'null'}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="mb-4">
-                          <div className="flex justify-between items-center mb-2">
-                            <span
-                              className="text-xs font-medium"
-                              style={{ color: 'var(--text-muted)' }}
-                            >
-                              Progress
-                            </span>
-                            <span
-                              className="text-xs font-medium"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
-                              {order.qty && order.remains
-                                ? calculateProgress(order.qty, order.remains)
-                                : 0}
-                              %
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] h-2 rounded-full transition-all duration-300"
-                              style={{
-                                width: `${
-                                  order.qty && order.remains
-                                    ? calculateProgress(
-                                        order.qty,
-                                        order.remains
-                                      )
-                                    : 0
-                                }%`,
-                              }}
-                            />
-                          </div>
-                          <div
-                            className="text-xs mt-1"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            {order.remains || 'null'} remaining
-                          </div>
-                        </div>
-
-                        {/* Date */}
-                        <div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Date:{' '}
-                            {order.createdAt
-                              ? new Date(order.createdAt).toLocaleDateString()
-                              : 'null'}
-                          </div>
-                          <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            Time:{' '}
-                            {order.createdAt
-                              ? new Date(order.createdAt).toLocaleTimeString()
-                              : 'null'}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Pagination */}
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-                  <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    {ordersLoading ? (
-                      <div className="flex items-center gap-2">
-                        <span>Loading pagination...</span>
-                      </div>
-                    ) : (
-                      `Showing ${formatNumber(
-                        (pagination.page - 1) * pagination.limit + 1
-                      )} to ${formatNumber(
-                        Math.min(
-                          pagination.page * pagination.limit,
-                          pagination.total
-                        )
-                      )} of ${formatNumber(pagination.total)} orders`
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 mt-4 md:mt-0">
-                    <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          page: Math.max(1, prev.page - 1),
-                        }))
-                      }
-                      disabled={!pagination.hasPrev || ordersLoading}
-                      className="btn btn-secondary"
-                    >
-                      Previous
-                    </button>
-                    <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
-                    >
-                      {ordersLoading ? (
-                        <GradientSpinner size="w-4 h-4" />
-                      ) : (
-                        `Page ${formatNumber(
-                          pagination.page
-                        )} of ${formatNumber(pagination.totalPages)}`
-                      )}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setPagination((prev) => ({
-                          ...prev,
-                          page: Math.min(prev.totalPages, prev.page + 1),
-                        }))
-                      }
-                      disabled={!pagination.hasNext || ordersLoading}
-                      className="btn btn-secondary"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-
-                {/* Bulk Status Change Dialog */}
-                <ChangeAllStatusModal
-                  isOpen={bulkStatusDialog.open}
-                  onClose={() => setBulkStatusDialog({ open: false })}
-                  selectedOrdersCount={selectedOrders.length}
-                  bulkStatus={bulkStatus}
-                  setBulkStatus={setBulkStatus}
-                  onUpdate={handleBulkStatusUpdate}
-                />
-
-                {/* Mark Partial Dialog */}
-                <MarkPartialModal
-                  isOpen={markPartialDialog.open}
-                  onClose={() => setMarkPartialDialog({ open: false, orderId: '' })}
-                  orderId={markPartialDialog.orderId}
-                  onSuccess={() => {
-                    fetchOrders();
-                    fetchStats();
-                    fetchAllOrdersForCounts();
-                  }}
-                  showToast={showToast}
-                />
-
-                {/* Edit Start Count Dialog */}
-                <StartCountModal
-                  isOpen={editStartCountDialog.open}
-                  onClose={() => setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 })}
-                  orderId={editStartCountDialog.orderId}
-                  currentCount={editStartCountDialog.currentCount}
-                  onSuccess={() => {
-                    fetchOrders();
-                    fetchStats();
-                    fetchAllOrdersForCounts();
-                  }}
-                  showToast={showToast}
-                />
-
-                {/* Update Status Dialog */}
-                <UpdateOrderStatusModal
-                  isOpen={updateStatusDialog.open}
-                  onClose={() => setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' })}
-                  orderId={updateStatusDialog.orderId}
-                  currentStatus={updateStatusDialog.currentStatus}
-                  onSuccess={() => {
-                    fetchOrders();
-                    fetchStats();
-                    fetchAllOrdersForCounts();
-                  }}
-                  showToast={showToast}
-                />
-              </React.Fragment>
+              <OrderTable
+                orders={orders}
+                selectedOrders={selectedOrders}
+                onSelectOrder={handleSelectOrder}
+                onSelectAll={handleSelectAll}
+                onResendOrder={handleResendOrder}
+                onEditStartCount={(orderId: number, currentCount: number) => {
+                  openEditStartCountDialog(orderId, currentCount);
+                }}
+                onMarkPartial={(orderId: number) => {
+                  openMarkPartialDialog(orderId);
+                }}
+                onUpdateStatus={(orderId: number, currentStatus: string) => {
+                  openUpdateStatusDialog(orderId, currentStatus);
+                }}
+                pagination={pagination}
+                onPageChange={(newPage: number) => {
+                  setPagination(prev => ({ ...prev, page: newPage }));
+                }}
+                isLoading={ordersLoading}
+                formatID={formatID}
+                formatNumber={formatNumber}
+                formatPrice={formatPrice}
+                getStatusIcon={getStatusIcon}
+                calculateProgress={calculateProgress}
+              />
             )}
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <ChangeAllStatusModal
+        isOpen={bulkStatusDialog.open}
+        onClose={() => setBulkStatusDialog({ open: false })}
+        selectedOrdersCount={selectedOrders.length}
+        bulkStatus={bulkStatus}
+        setBulkStatus={setBulkStatus}
+        onUpdate={handleBulkStatusUpdate}
+      />
+
+      {/* Mark Partial Dialog */}
+      <MarkPartialModal
+        isOpen={markPartialDialog.open}
+        onClose={() => setMarkPartialDialog({ open: false, orderId: '' })}
+        orderId={markPartialDialog.orderId}
+        onSuccess={() => {
+          setMarkPartialDialog({ open: false, orderId: '' });
+          fetchOrders();
+          showToast('Order marked as partial successfully');
+        }}
+        showToast={showToast}
+      />
+
+      {/* Start Count Dialog */}
+      <StartCountModal
+        isOpen={editStartCountDialog.open}
+        onClose={() => setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 })}
+        orderId={editStartCountDialog.orderId}
+        currentCount={editStartCountDialog.currentCount}
+        onSuccess={() => {
+          setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 });
+          fetchOrders();
+          showToast('Start count updated successfully');
+        }}
+        showToast={showToast}
+      />
+
+      {/* Update Status Dialog */}
+      <UpdateOrderStatusModal
+        isOpen={updateStatusDialog.open}
+        onClose={() => setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' })}
+        orderId={updateStatusDialog.orderId}
+        currentStatus={updateStatusDialog.currentStatus}
+        onSuccess={() => {
+          setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' });
+          fetchOrders();
+          showToast('Order status updated successfully');
+        }}
+        showToast={showToast}
+      />
     </div>
   );
 };
