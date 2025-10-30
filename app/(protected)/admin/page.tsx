@@ -27,70 +27,15 @@ import {
     FaUsers,
 } from 'react-icons/fa';
 
-// Dynamic import for PendingTransactions component
+// Optimized dynamic imports without loading states for instant display
 const PendingTransactions = dynamic(
   () => import('@/components/admin/main/pending-transactions'),
-  {
-    loading: () => (
-      <div className="mb-6">
-        <div className="card">
-          <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2 flex-1">
-                <div className="card-icon">
-                  <FaClock />
-                </div>
-                <h3 className="card-title">Pending Transactions</h3>
-              </div>
-            </div>
-          </div>
-          <div style={{ padding: '0 24px 24px' }}>
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center flex flex-col items-center">
-                <GradientSpinner size="w-12 h-12" className="mb-3" />
-                <div className="text-base font-medium">
-                  Loading transactions...
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    ),
-    ssr: false,
-  }
+  { ssr: false }
 );
 
-// Dynamic import for LatestUsers component
 const LatestUsers = dynamic(
   () => import('@/components/admin/main/latest-users'),
-  {
-    loading: () => (
-      <div className="mb-6">
-        <div className="card card-padding">
-          <div className="card-header mb-4">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
-                <div className="card-icon">
-                  <FaUsers />
-                </div>
-                <h3 className="card-title">Latest Users</h3>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center flex flex-col items-center">
-              <GradientSpinner size="w-12 h-12" className="mb-3" />
-              <div className="text-base font-medium">
-                Loading users...
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    ),
-    ssr: false,
-  }
+  { ssr: false }
 );
 
 // Custom Gradient Spinner Component
@@ -228,134 +173,106 @@ export default function AdminDashboardPage() {
     newUsersToday: 0,
   });
 
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [ordersLoading, setOrdersLoading] = useState(true);
-  const [ticketsLoading, setTicketsLoading] = useState(true);
-  const [usersLoading, setUsersLoading] = useState(true);
-  const [chartLoading, setChartLoading] = useState(true);
+  // Optimized: Start with false for instant display
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [chartLoading, setChartLoading] = useState(false);
 
   // Latest Users State
   const [latestUsers, setLatestUsers] = useState<User[]>([]);
-  const [latestUsersLoading, setLatestUsersLoading] = useState(true);
+  const [latestUsersLoading, setLatestUsersLoading] = useState(false);
 
   // Pending Transactions State
   const [pendingTransactions, setPendingTransactions] = useState<
     PendingTransaction[]
   >([]);
-  const [transactionsLoading, setTransactionsLoading] = useState(true);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [totalTransactionCount, setTotalTransactionCount] = useState(0);
   const [customToast, setCustomToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
-  // Fetch Latest Users
-  const fetchLatestUsers = useCallback(async () => {
+  // Optimized: Parallel data fetching with Promise.all
+  const fetchAllData = useCallback(async () => {
     try {
-      setLatestUsersLoading(true);
-      const queryParams = new URLSearchParams({
+      // Prepare all API calls to run in parallel
+      const statsPromise = fetch('/api/admin/dashboard/stats').then(res => res.json());
+      
+      const usersQueryParams = new URLSearchParams({
         page: '1',
-        limit: '5', // Get latest 5 users
-        role: 'user', // Only fetch users with 'user' role
-        sort: 'createdAt', // Sort by creation date
-        order: 'desc', // Newest first
+        limit: '5',
+        role: 'user',
+        sort: 'createdAt',
+        order: 'desc',
       });
-
-      const response = await fetch(`/api/admin/users?${queryParams}`);
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Client-side filter as backup to ensure no admins slip through
-        const filteredUsers = (result.data || []).filter(
-          (user: User) => user.role === 'user'
-        );
-        // Ensure we only show exactly 5 users maximum
-        setLatestUsers(filteredUsers.slice(0, 5));
-      } else {
-        throw new Error(result.error || 'Failed to fetch latest users');
-      }
-    } catch (error) {
-      console.error('Error fetching latest users:', error);
-      setLatestUsers([]);
-    } finally {
-      setLatestUsersLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/admin/dashboard/stats');
-        const result = await response.json();
-
-        if (result.success) {
-          setStats(result.data);
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
-      } finally {
-        setStatsLoading(false);
-        setOrdersLoading(false);
-        setTicketsLoading(false);
-        setUsersLoading(false);
-        setChartLoading(false);
-      }
-    };
-
-    fetchStats();
-    fetchLatestUsers();
-  }, [fetchLatestUsers]);
-
-  // Fetch Pending Transactions
-  const fetchPendingTransactions = async () => {
-    try {
-      // Use optimized endpoint with admin flag and limit
-      const response = await axiosInstance.get('/api/transactions', {
+      const usersPromise = fetch(`/api/admin/users?${usersQueryParams}`).then(res => res.json());
+      
+      const transactionsPromise = axiosInstance.get('/api/transactions', {
         params: {
           admin: 'true',
           status: 'pending',
           limit: 10,
           offset: 0,
         },
-        timeout: 10000, // 10 second timeout
+        timeout: 5000, // Reduced timeout for faster response
       });
 
-      // Handle the response structure
-      if (response.data && response.data.transactions) {
-        const transactions = response.data.transactions;
-        setTotalTransactionCount(transactions.length);
-        setPendingTransactions(transactions.slice(0, 3));
-      } else if (Array.isArray(response.data)) {
-        // Fallback for direct array response
-        const pending = response.data.filter(
-          (transaction: PendingTransaction) => transaction.status === 'pending'
-        );
-        setTotalTransactionCount(pending.length);
-        setPendingTransactions(pending.slice(0, 3));
-      } else {
-        setPendingTransactions([]);
-        setTotalTransactionCount(0);
+      // Execute all API calls in parallel
+      const [statsResult, usersResult, transactionsResponse] = await Promise.all([
+        statsPromise,
+        usersPromise,
+        transactionsPromise,
+      ]);
+
+      // Process stats data
+      if (statsResult.success) {
+        setStats(statsResult.data);
       }
+
+      // Process users data
+      if (usersResult.success) {
+        const filteredUsers = (usersResult.data || []).filter(
+          (user: User) => user.role === 'user'
+        );
+        setLatestUsers(filteredUsers.slice(0, 5));
+      }
+
+      // Process transactions data
+      if (transactionsResponse.data) {
+        if (transactionsResponse.data.transactions) {
+          const transactions = transactionsResponse.data.transactions;
+          setTotalTransactionCount(transactions.length);
+          setPendingTransactions(transactions.slice(0, 3));
+        } else if (Array.isArray(transactionsResponse.data)) {
+          const pending = transactionsResponse.data.filter(
+            (transaction: PendingTransaction) => transaction.status === 'pending'
+          );
+          setTotalTransactionCount(pending.length);
+          setPendingTransactions(pending.slice(0, 3));
+        }
+      }
+
     } catch (error) {
-      console.error('Error fetching pending transactions:', error);
+      console.error('Error fetching dashboard data:', error);
+      // Set fallback empty states
+      setLatestUsers([]);
       setPendingTransactions([]);
       setTotalTransactionCount(0);
-    } finally {
-      setTransactionsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchPendingTransactions();
+    // Fetch all data in parallel on component mount
+    fetchAllData();
 
     // Set up polling for new pending transactions
-    const interval = setInterval(fetchPendingTransactions, 30000);
+    const interval = setInterval(fetchAllData, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchAllData]);
 
   // Show toast notification
   const showToast = (
@@ -449,7 +366,7 @@ export default function AdminDashboardPage() {
   };
 
   // Function to format currency based on selected currency
-  const formatDashboardCurrency = (amount: number) => {
+  const formatDashboardCurrency = useCallback((amount: number) => {
     // Admin stats are stored in BDT, so we need to convert if USD is selected
     if (currency === 'USD' && rate) {
       const amountInUSD = amount / rate;
@@ -457,15 +374,15 @@ export default function AdminDashboardPage() {
     } else {
       return `৳${amount.toFixed(2)}`;
     }
-  };
+  }, [currency, rate]);
 
   // Function to format date
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     return {
       date: moment(dateString).format('DD/MM/YYYY'),
       time: moment(dateString).format('HH:mm'),
     };
-  };
+  }, []);
 
   if (false) {
     return (
@@ -502,9 +419,6 @@ export default function AdminDashboardPage() {
                 <p className="text-2xl font-bold text-blue-600">
                   {stats.totalUsers || 1}
                 </p>
-                <p className="text-xs text-green-600 font-medium mt-1">
-                  +12% from last month
-                </p>
               </div>
             </div>
           </div>
@@ -518,9 +432,6 @@ export default function AdminDashboardPage() {
                 <h3 className="card-title">Total Balance</h3>
                 <p className="text-2xl font-bold text-green-600">
                   {formatDashboardCurrency(stats.totalRevenue || 0)}
-                </p>
-                <p className="text-xs text-green-600 font-medium mt-1">
-                  +8% from last month
                 </p>
               </div>
             </div>
@@ -536,9 +447,6 @@ export default function AdminDashboardPage() {
                 <p className="text-2xl font-bold text-purple-600">
                   {stats.totalOrders || 0}
                 </p>
-                <p className="text-xs text-green-600 font-medium mt-1">
-                  +15% from last month
-                </p>
               </div>
             </div>
           </div>
@@ -552,9 +460,6 @@ export default function AdminDashboardPage() {
                 <h3 className="card-title">Total Payments</h3>
                 <p className="text-2xl font-bold text-orange-600">
                   {formatDashboardCurrency(stats.totalRevenue || 0)}
-                </p>
-                <p className="text-xs text-green-600 font-medium mt-1">
-                  +22% from last month
                 </p>
               </div>
             </div>
@@ -573,9 +478,6 @@ export default function AdminDashboardPage() {
                 <p className="text-2xl font-bold text-cyan-600">
                   {formatDashboardCurrency(stats.totalRevenue || 0)}
                 </p>
-                <p className="text-xs text-cyan-600 font-medium mt-1">
-                  Monthly Revenue
-                </p>
               </div>
             </div>
           </div>
@@ -590,9 +492,6 @@ export default function AdminDashboardPage() {
                 <p className="text-2xl font-bold text-rose-600">
                   {formatDashboardCurrency(stats.todaysProfit || 0)}
                 </p>
-                <p className="text-xs text-rose-600 font-medium mt-1">
-                  Daily Earnings
-                </p>
               </div>
             </div>
           </div>
@@ -606,9 +505,6 @@ export default function AdminDashboardPage() {
                 <h3 className="card-title">Today's Orders</h3>
                 <p className="text-2xl font-bold text-teal-600">
                   {stats.todaysOrders || 0}
-                </p>
-                <p className="text-xs text-teal-600 font-medium mt-1">
-                  Fresh Orders
                 </p>
               </div>
             </div>
