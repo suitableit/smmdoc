@@ -650,16 +650,9 @@ const AdminOrdersPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Total Orders</h3>
-                {statsLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-blue-600">
-                    {stats.totalOrders}
-                  </p>
-                )}
+                <p className="text-2xl font-bold text-blue-600">
+                  {stats.totalOrders}
+                </p>
               </div>
             </div>
           </div>
@@ -671,16 +664,9 @@ const AdminOrdersPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Pending Orders</h3>
-                {statsLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-yellow-600">
-                    {stats.pendingOrders}
-                  </p>
-                )}
+                <p className="text-2xl font-bold text-yellow-600">
+                  {stats.pendingOrders}
+                </p>
               </div>
             </div>
           </div>
@@ -692,16 +678,9 @@ const AdminOrdersPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Completed Orders</h3>
-                {statsLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-green-600">
-                    {stats.completedOrders}
-                  </p>
-                )}
+                <p className="text-2xl font-bold text-green-600">
+                  {stats.completedOrders}
+                </p>
               </div>
             </div>
           </div>
@@ -713,16 +692,9 @@ const AdminOrdersPage = () => {
               </div>
               <div>
                 <h3 className="card-title">Total Revenue</h3>
-                {statsLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
-                ) : (
-                  <p className="text-2xl font-bold text-purple-600">
-                    ${formatPrice(stats.totalRevenue, 2)}
-                  </p>
-                )}
+                <p className="text-2xl font-bold text-purple-600">
+                  ${formatPrice(stats.totalRevenue, 2)}
+                </p>
               </div>
             </div>
           </div>
