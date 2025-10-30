@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import {
   FaUsers,
@@ -43,7 +44,7 @@ interface LatestUsersProps {
   formatCurrency: (amount: number, currency: string) => string;
 }
 
-export default function LatestUsers({
+const LatestUsers = React.memo(function LatestUsers({
   latestUsers,
   latestUsersLoading,
   formatCurrency,
@@ -70,14 +71,7 @@ export default function LatestUsers({
         </div>
 
         <div>
-          {latestUsersLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center flex flex-col items-center">
-                <GradientSpinner size="w-12 h-12" className="mb-3" />
-                <div className="text-base font-medium">Loading users...</div>
-              </div>
-            </div>
-          ) : latestUsers.length === 0 ? (
+          {latestUsers.length === 0 ? (
             <div className="text-center py-12">
               <FaUsers
                 className="h-16 w-16 mx-auto mb-4"
@@ -334,4 +328,6 @@ export default function LatestUsers({
       </div>
     </div>
   );
-}
+});
+
+export default LatestUsers;

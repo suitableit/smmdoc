@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
 import {
@@ -48,14 +49,14 @@ interface PendingTransactionsProps {
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
 }
 
-export default function PendingTransactions({
+const PendingTransactions = React.memo(function PendingTransactions({
   pendingTransactions,
   transactionsLoading,
   onTransactionUpdate,
   showToast,
 }: PendingTransactionsProps) {
   
-  const handleApprove = async (transactionId: string | number) => {
+  const handleApprove = React.useCallback(async (transactionId: string | number) => {
     try {
       const response = await axiosInstance.patch(
         `/api/transactions/${transactionId}`,
@@ -72,9 +73,9 @@ export default function PendingTransactions({
       console.error('Error approving transaction:', error);
       showToast('Failed to approve transaction', 'error');
     }
-  };
+  }, [onTransactionUpdate, showToast]);
 
-  const handleCancel = async (transactionId: string | number) => {
+  const handleCancel = React.useCallback(async (transactionId: string | number) => {
     if (
       !confirm(
         'Are you sure you want to cancel this transaction? This action cannot be undone.'
@@ -99,7 +100,7 @@ export default function PendingTransactions({
       console.error('Error cancelling transaction:', error);
       showToast('Failed to cancel transaction', 'error');
     }
-  };
+  }, [onTransactionUpdate, showToast]);
 
   return (
     <div className="mb-6">
@@ -123,16 +124,7 @@ export default function PendingTransactions({
         </div>
 
         <div style={{ padding: '0 24px 24px' }}>
-          {transactionsLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center flex flex-col items-center">
-                <GradientSpinner size="w-12 h-12" className="mb-3" />
-                <div className="text-base font-medium">
-                  Loading transactions...
-                </div>
-              </div>
-            </div>
-          ) : pendingTransactions.length === 0 ? (
+          {pendingTransactions.length === 0 ? (
             <div className="text-center py-12">
               <FaCheckCircle
                 className="h-16 w-16 mx-auto mb-4"
@@ -470,4 +462,6 @@ export default function PendingTransactions({
       </div>
     </div>
   );
-}
+});
+
+export default PendingTransactions;
