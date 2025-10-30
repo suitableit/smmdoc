@@ -937,6 +937,8 @@ const CreateServiceForm: React.FC<{
   
   // Watch mode field to control API provider field visibility
   const modeValue = watch('mode');
+
+
   
   // Watch provider field for API services
   const providerIdValue = watch('providerId');
@@ -952,7 +954,7 @@ const CreateServiceForm: React.FC<{
   );
 
   // Watch API service selection for auto-fill
-  const apiServiceIdValue = watch('apiServiceId');
+  const providerServiceIdValue = watch('providerServiceId');
 
   // Function to map API service type to internal service type ID
   const mapApiServiceTypeToInternalType = (apiServiceType: string): string | null => {
@@ -1001,9 +1003,9 @@ const CreateServiceForm: React.FC<{
 
   // Auto-fill form fields when API service is selected
   useEffect(() => {
-    if (apiServiceIdValue && apiServicesData?.data?.services) {
+    if (providerServiceIdValue && apiServicesData?.data?.services) {
       const selectedService = apiServicesData.data.services.find(
-        (service: any) => service.id.toString() === apiServiceIdValue
+        (service: any) => service.id.toString() === providerServiceIdValue
       );
       
       if (selectedService) {
@@ -1084,7 +1086,7 @@ const CreateServiceForm: React.FC<{
       setValue('refillDays', '');
       setValue('refillDisplay', '');
     }
-  }, [apiServiceIdValue, apiServicesData, serviceTypesData, detectOrderLinkType]);
+  }, [providerServiceIdValue, apiServicesData, serviceTypesData, detectOrderLinkType]);
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
     console.log('Form submitted with values:', values);
@@ -1221,7 +1223,7 @@ const CreateServiceForm: React.FC<{
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Name
+                Service Name <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
                 <input
@@ -1354,7 +1356,7 @@ const CreateServiceForm: React.FC<{
                 <FormControl>
                   <select
                     className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                    {...register('apiServiceId')}
+                    {...register('providerServiceId')}
                     disabled={isPending || apiServicesLoading}
                     required={modeValue === 'auto' && providerIdValue}
                   >
@@ -1368,7 +1370,7 @@ const CreateServiceForm: React.FC<{
                     ))}
                   </select>
                 </FormControl>
-                <FormMessage>{errors.apiServiceId?.message}</FormMessage>
+                <FormMessage>{errors.providerServiceId?.message}</FormMessage>
                 {apiServicesError && (
                   <p className="text-sm text-red-500 mt-1">
                     Failed to load services. Please try again.
@@ -1630,6 +1632,26 @@ const CreateServiceForm: React.FC<{
                 </select>
               </FormControl>
               <FormMessage>{errors.serviceSpeed?.message}</FormMessage>
+            </FormItem>
+
+            {/* Example Link - 100% width - OPTIONAL */}
+            <FormItem className="md:col-span-2">
+              <FormLabel
+                className="text-sm font-medium"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Example Link
+              </FormLabel>
+              <FormControl>
+                <input
+                  type="url"
+                  placeholder="Enter example link (optional)"
+                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  {...register('exampleLink')}
+                  disabled={isPending}
+                />
+              </FormControl>
+              <FormMessage>{errors.exampleLink?.message}</FormMessage>
             </FormItem>
           </div>
 
@@ -2162,10 +2184,43 @@ const EditServiceForm = ({
   // Watch mode field to control API provider field visibility
   const modeValue = watch('mode');
 
+  // Debug refill value changes
   useEffect(() => {
-    if (serviceData?.data && categoriesData?.data) {
-      reset({
-        categoryId: serviceData.data.categoryId || '',
+    console.log('Refill value changed:', refillValue, typeof refillValue);
+  }, [refillValue]);
+
+  useEffect(() => {
+    if (serviceData?.data && categoriesData?.data && serviceTypesData?.data) {
+      console.log('=== EDIT SERVICE FORM DEBUG ===');
+      console.log('Raw serviceTypeId from database:', serviceData.data.serviceTypeId, typeof serviceData.data.serviceTypeId);
+      console.log('Available service types:', serviceTypesData.data);
+      console.log('Service types IDs:', serviceTypesData.data?.map((st: any) => ({ id: st.id, name: st.name, type: typeof st.id })));
+
+      
+      // Convert serviceTypeId to string, handle null/undefined properly
+      const serviceTypeIdValue = serviceData.data.serviceTypeId ? String(serviceData.data.serviceTypeId) : '';
+      console.log('Converted serviceTypeIdValue:', serviceTypeIdValue, typeof serviceTypeIdValue);
+      
+      // Check if the serviceTypeId exists in available service types
+      const matchingServiceType = serviceTypesData.data?.find((st: any) => String(st.id) === serviceTypeIdValue);
+      console.log('Matching service type found:', matchingServiceType);
+      
+      // Handle serviceSpeed - map "medium" to "normal" if needed, and ensure it's a valid option
+      let serviceSpeedValue = serviceData.data.serviceSpeed || createServiceDefaultValues.serviceSpeed;
+      if (serviceSpeedValue === 'medium') {
+        serviceSpeedValue = 'normal'; // Map medium to normal since form doesn't have medium option
+      }
+      // Ensure the value is one of the valid options
+      const validSpeeds = ['slow', 'sometimes_slow', 'normal', 'fast'];
+      if (!validSpeeds.includes(serviceSpeedValue)) {
+        serviceSpeedValue = 'normal'; // Default to normal if invalid
+      }
+      
+      // Convert providerId to string if it exists
+      const providerIdValue = serviceData.data.providerId ? String(serviceData.data.providerId) : '';
+      
+      const resetData = {
+        categoryId: serviceData.data.categoryId ? String(serviceData.data.categoryId) : '',
         name: serviceData.data.name || '',
         description: serviceData.data.description || '',
         rate: String(serviceData.data.rate) || '',
@@ -2174,20 +2229,37 @@ const EditServiceForm = ({
         perqty: String(serviceData.data.perqty) || createServiceDefaultValues.perqty,
         avg_time: serviceData.data.avg_time || '',
         updateText: serviceData.data.updateText || '',
-        serviceTypeId: serviceData.data.serviceTypeId || '',
+        serviceTypeId: serviceTypeIdValue,
         mode: serviceData.data.mode || createServiceDefaultValues.mode,
         refill: Boolean(serviceData.data.refill),
         refillDays: serviceData.data.refillDays || createServiceDefaultValues.refillDays,
         refillDisplay: serviceData.data.refillDisplay || createServiceDefaultValues.refillDisplay,
-        cancel: serviceData.data.cancel || createServiceDefaultValues.cancel,
-
-        serviceSpeed: serviceData.data.serviceSpeed || createServiceDefaultValues.serviceSpeed,
+        cancel: Boolean(serviceData.data.cancel),
+        serviceSpeed: serviceSpeedValue,
+        exampleLink: serviceData.data.exampleLink || createServiceDefaultValues.exampleLink,
         orderLink: serviceData.data.orderLink || createServiceDefaultValues.orderLink,
-        providerId: serviceData.data.providerId || createServiceDefaultValues.providerId,
-        apiServiceId: serviceData.data.apiServiceId || createServiceDefaultValues.apiServiceId,
-      });
+        providerId: providerIdValue,
+        providerServiceId: serviceData.data.providerServiceId || createServiceDefaultValues.providerServiceId,
+      };
+      
+      console.log('Reset data being passed to form:', resetData);
+      console.log('serviceTypeId in reset data:', resetData.serviceTypeId);
+      
+      reset(resetData);
+      
+      // Log form values after reset
+      setTimeout(() => {
+        console.log('Form values after reset:', watch());
+        console.log('serviceTypeId field value after reset:', watch('serviceTypeId'));
+      }, 50);
+
+      
+      // Ensure refill field triggers watch by setting it explicitly
+      setTimeout(() => {
+        setValue('refill', Boolean(serviceData.data.refill));
+      }, 100);
     }
-  }, [categoriesData, reset, serviceData]);
+  }, [categoriesData, reset, serviceData, serviceTypesData, watch, setValue]);
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
     console.log('Edit form submitted with values:', values);
@@ -2328,7 +2400,7 @@ const EditServiceForm = ({
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Name
+                Service Name <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
                 <input
@@ -2348,7 +2420,7 @@ const EditServiceForm = ({
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Category
+                Service Category <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
                 <select
@@ -2376,7 +2448,7 @@ const EditServiceForm = ({
                 className="text-sm font-medium"
                 style={{ color: 'var(--text-primary)' }}
               >
-                Service Type
+                Service Type <span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
                 <select
@@ -2452,7 +2524,7 @@ const EditServiceForm = ({
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Service Price (Always USD Price)
+                  Service Price (Always USD Price) <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
                   <input
@@ -2474,7 +2546,7 @@ const EditServiceForm = ({
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  Minimum Order
+                  Minimum Order <span className="text-red-500">*</span>
                 </FormLabel>
                 <FormControl>
                   <input
@@ -2698,6 +2770,26 @@ const EditServiceForm = ({
                 </select>
               </FormControl>
               <FormMessage>{errors.serviceSpeed?.message}</FormMessage>
+            </FormItem>
+
+            {/* Example Link - 100% width - OPTIONAL */}
+            <FormItem className="md:col-span-2">
+              <FormLabel
+                className="text-sm font-medium"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Example Link
+              </FormLabel>
+              <FormControl>
+                <input
+                  type="url"
+                  placeholder="Enter example link (optional)"
+                  className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  {...register('exampleLink')}
+                  disabled={isPending}
+                />
+              </FormControl>
+              <FormMessage>{errors.exampleLink?.message}</FormMessage>
             </FormItem>
           </div>
 

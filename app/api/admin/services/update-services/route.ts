@@ -66,10 +66,10 @@ export async function PUT(request: Request) {
       refillDisplay,
       serviceSpeed,
       mode,
+      orderLink,
       // Service type specific fields
       packageType,
-      apiServiceId,
-      apiProviderId,
+      providerServiceId,
       dripfeedEnabled,
       subscriptionMin,
       subscriptionMax,
@@ -184,16 +184,16 @@ export async function PUT(request: Request) {
     if (mode !== undefined && mode !== null && mode !== '') {
       updateData.mode = mode;
     }
+    if (orderLink !== undefined && orderLink !== null && orderLink !== '') {
+      updateData.orderLink = orderLink;
+    }
 
     // Service type specific fields
     if (packageType !== undefined && packageType !== null && packageType !== '') {
       updateData.packageType = toNumber(packageType, 1);
     }
-    if (apiServiceId !== undefined && apiServiceId !== null && apiServiceId !== '') {
-      updateData.apiServiceId = apiServiceId;
-    }
-    if (apiProviderId !== undefined && apiProviderId !== null && apiProviderId !== '') {
-      updateData.apiProviderId = toInt(apiProviderId);
+    if (providerServiceId !== undefined && providerServiceId !== null && providerServiceId !== '') {
+      updateData.providerServiceId = providerServiceId;
     }
     if (dripfeedEnabled !== undefined && dripfeedEnabled !== null) {
       updateData.dripfeedEnabled = toBool(dripfeedEnabled);

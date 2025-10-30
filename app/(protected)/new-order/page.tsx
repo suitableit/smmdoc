@@ -11,13 +11,14 @@ import {
     dashboardApi,
     useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
-import { ServiceTypeFields } from '@/components/ServiceTypeFields';
+import { ServiceTypeFields } from '@/app/components/ServiceTypeFields';
 import { validateOrderByType, getServiceTypeConfig, ServiceType } from '@/lib/serviceTypes';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
     FaBuffer,
+    FaCheck,
     FaCheckCircle,
     FaClock,
     FaDiscord,
@@ -153,10 +154,26 @@ const ServiceDetailsCard = ({
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Example Link</h4>
             <div className="flex items-center text-gray-600">
-              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                <FaLink className="text-red-600 text-sm" />
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                selected.exampleLink ? 'bg-blue-100' : 'bg-red-100'
+              }`}>
+                <FaLink className={`text-sm ${
+                  selected.exampleLink ? 'text-blue-600' : 'text-red-600'
+                }`} />
               </div>
-              <span className="text-sm">-</span>
+              {selected.exampleLink ? (
+                <a
+                  href={selected.exampleLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate max-w-48"
+                  title={selected.exampleLink}
+                >
+                  {selected.exampleLink}
+                </a>
+              ) : (
+                <span className="text-sm">-</span>
+              )}
             </div>
           </div>
 
@@ -164,10 +181,46 @@ const ServiceDetailsCard = ({
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Speed</h4>
             <div className="flex items-center text-gray-600">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                <FaTachometerAlt className="text-purple-600 text-sm" />
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                !selected.serviceSpeed ? 'bg-gray-100' :
+                selected.serviceSpeed === 'slow' ? 'bg-red-100' :
+                selected.serviceSpeed === 'sometimes_slow' ? 'bg-orange-100' :
+                selected.serviceSpeed === 'normal' || selected.serviceSpeed === 'medium' ? 'bg-yellow-100' :
+                selected.serviceSpeed === 'fast' ? 'bg-green-100' :
+                'bg-gray-100'
+              }`}>
+                <FaTachometerAlt className={`text-sm ${
+                  !selected.serviceSpeed ? 'text-gray-600' :
+                  selected.serviceSpeed === 'slow' ? 'text-red-600' :
+                  selected.serviceSpeed === 'sometimes_slow' ? 'text-orange-600' :
+                  selected.serviceSpeed === 'normal' || selected.serviceSpeed === 'medium' ? 'text-yellow-600' :
+                  selected.serviceSpeed === 'fast' ? 'text-green-600' :
+                  'text-gray-600'
+                }`} />
               </div>
-              <span className="text-sm">-</span>
+              <span className={`text-sm font-medium ${
+                !selected.serviceSpeed ? 'text-gray-600' :
+                selected.serviceSpeed === 'slow' ? 'text-red-600' :
+                selected.serviceSpeed === 'sometimes_slow' ? 'text-orange-600' :
+                selected.serviceSpeed === 'normal' || selected.serviceSpeed === 'medium' ? 'text-yellow-600' :
+                selected.serviceSpeed === 'fast' ? 'text-green-600' :
+                'text-gray-600'
+              }`}>
+                {(() => {
+                  if (!selected.serviceSpeed) return '-';
+                  
+                  // Map database values to display titles
+                  const speedMapping: { [key: string]: string } = {
+                    'slow': 'Slow',
+                    'sometimes_slow': 'Sometimes Slow',
+                    'normal': 'Normal',
+                    'medium': 'Normal', // Legacy mapping
+                    'fast': 'Fast'
+                  };
+                  
+                  return speedMapping[selected.serviceSpeed] || '-';
+                })()}
+              </span>
             </div>
           </div>
 
@@ -178,7 +231,7 @@ const ServiceDetailsCard = ({
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                 <FaClock className="text-blue-600 text-sm" />
               </div>
-              <span className="text-sm">-</span>
+              <span className="text-sm">Instant</span>
             </div>
           </div>
 
@@ -237,10 +290,23 @@ const ServiceDetailsCard = ({
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Guarantee</h4>
             <div className="flex items-center text-gray-600">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                <FaShieldAlt className="text-green-600 text-sm" />
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                selected.refill ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                <FaShieldAlt className={`text-sm ${
+                  selected.refill ? 'text-green-600' : 'text-red-600'
+                }`} />
               </div>
-              <span className="text-sm text-red-600">✕</span>
+              {selected.refill ? (
+                <span className="text-sm text-green-600 flex items-center">
+                  <FaCheck className="text-green-600 text-xs mr-1" />
+                  {selected.refillDays || 30} days
+                </span>
+              ) : (
+                <span className="text-sm text-red-600">
+                  <FaTimes className="text-red-600 text-xs" />
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -747,12 +813,20 @@ function NewOrder() {
       return;
     }
 
-    if (!link || !link.startsWith('http')) {
-      showToast(
-        'Please enter a valid link starting with http or https',
-        'error'
-      );
-      return;
+    // Dynamic validation based on orderLink field
+    if (selected?.orderLink === 'username') {
+      if (!link || link.trim().length === 0) {
+        showToast('Please enter a valid username', 'error');
+        return;
+      }
+    } else {
+      if (!link || !link.startsWith('http')) {
+        showToast(
+          'Please enter a valid link starting with http or https',
+          'error'
+        );
+        return;
+      }
     }
 
     if (qty < 1) {
@@ -911,6 +985,7 @@ function NewOrder() {
       setSelectedCategory(categoryId);
       setSelectedService(serviceId);
       setQty(0);
+      setLink(''); // Clear link when service changes
       setSearch(selected.name);
       setShowDropdown(false);
       resetServiceTypeFields(); // Reset service type fields when service changes
@@ -1044,6 +1119,7 @@ function NewOrder() {
                         setSelectedCategory(e.target.value);
                         setSelectedService('');
                         setQty(0);
+                        setLink(''); // Clear link when category changes
                       }}
                     >
                       <option value="" disabled>
@@ -1088,6 +1164,8 @@ function NewOrder() {
                       onChange={(e) => {
                         setSelectedService(e.target.value);
                         setQty(0);
+                        setLink(''); // Clear link when service changes
+                        resetServiceTypeFields(); // Reset service type fields
                       }}
                       disabled={!selectedCategory || services.length === 0}
                       required
@@ -1103,20 +1181,24 @@ function NewOrder() {
                     </select>
                   </div>
 
-                  {/* Link */}
+                  {/* Dynamic Link/Username Field */}
                   <div className="form-group">
                     <label className="form-label" htmlFor="link">
-                      Link
+                      {selected?.orderLink === 'username' ? 'Username' : 'Link'}
                     </label>
                     <input
-                      type="url"
+                      type={selected?.orderLink === 'username' ? 'text' : 'url'}
                       id="link"
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                      placeholder="https://example.com"
+                      placeholder={
+                        selected?.orderLink === 'username' 
+                          ? 'Enter username' 
+                          : 'https://example.com'
+                      }
                       required
                       value={link}
                       onChange={(e) => setLink(e.target.value)}
-                      pattern="https?://.+"
+                      pattern={selected?.orderLink === 'username' ? undefined : "https?://.+"}
                     />
                   </div>
 
@@ -1220,7 +1302,7 @@ function NewOrder() {
                     ) : !selectedService ? (
                       'Select a service first'
                     ) : !link ? (
-                      'Enter link'
+                      selected?.orderLink === 'username' ? 'Enter username' : 'Enter link'
                     ) : qty < 1 ? (
                       'Enter quantity'
                     ) : (
