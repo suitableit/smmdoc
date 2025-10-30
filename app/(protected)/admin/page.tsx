@@ -66,6 +66,93 @@ const Toast = ({
   </div>
 );
 
+// Cache keys for sessionStorage
+const CACHE_KEYS = {
+  DASHBOARD_STATS: 'admin_dashboard_stats',
+  LATEST_USERS: 'admin_latest_users',
+  PENDING_TRANSACTIONS: 'admin_pending_transactions',
+  CACHE_TIMESTAMP: 'admin_cache_timestamp'
+};
+
+// Different cache durations for different data types
+const CACHE_DURATIONS = {
+  DASHBOARD_STATS: 2 * 60 * 1000, // 2 minutes for stats (less dynamic)
+  LATEST_USERS: 45 * 1000, // 45 seconds for users (moderately dynamic)
+  PENDING_TRANSACTIONS: 30 * 1000, // 30 seconds for transactions (highly dynamic)
+  DEFAULT: 60 * 1000 // 1 minute default
+};
+
+// Cache utility functions
+const getCachedData = (key: string) => {
+  try {
+    if (typeof window === 'undefined') return null;
+    const cached = sessionStorage.getItem(key);
+    return cached ? JSON.parse(cached) : null;
+  } catch (error) {
+    console.warn('Error reading from cache:', error);
+    return null;
+  }
+};
+
+const setCachedData = (key: string, data: any) => {
+  try {
+    if (typeof window === 'undefined') return;
+    sessionStorage.setItem(key, JSON.stringify(data));
+    // Set individual timestamps for each data type
+    const timestampKey = `${key}_timestamp`;
+    sessionStorage.setItem(timestampKey, Date.now().toString());
+    // Add cache version for better invalidation
+    const versionKey = `${key}_version`;
+    sessionStorage.setItem(versionKey, Math.random().toString(36).substr(2, 9));
+  } catch (error) {
+    console.warn('Error writing to cache:', error);
+  }
+};
+
+const isCacheValid = (key: string) => {
+  try {
+    if (typeof window === 'undefined') return false;
+    const timestampKey = `${key}_timestamp`;
+    const timestamp = sessionStorage.getItem(timestampKey);
+    if (!timestamp) return false;
+    
+    // Get appropriate cache duration for this data type
+    let duration = CACHE_DURATIONS.DEFAULT;
+    if (key === CACHE_KEYS.DASHBOARD_STATS) duration = CACHE_DURATIONS.DASHBOARD_STATS;
+    else if (key === CACHE_KEYS.LATEST_USERS) duration = CACHE_DURATIONS.LATEST_USERS;
+    else if (key === CACHE_KEYS.PENDING_TRANSACTIONS) duration = CACHE_DURATIONS.PENDING_TRANSACTIONS;
+    
+    return Date.now() - parseInt(timestamp) < duration;
+  } catch (error) {
+    return false;
+  }
+};
+
+const clearCache = () => {
+  try {
+    if (typeof window === 'undefined') return;
+    Object.values(CACHE_KEYS).forEach(key => {
+      sessionStorage.removeItem(key);
+      sessionStorage.removeItem(`${key}_timestamp`);
+      sessionStorage.removeItem(`${key}_version`);
+    });
+  } catch (error) {
+    console.warn('Error clearing cache:', error);
+  }
+};
+
+// Force cache invalidation for specific data type
+const invalidateCache = (key: string) => {
+  try {
+    if (typeof window === 'undefined') return;
+    sessionStorage.removeItem(key);
+    sessionStorage.removeItem(`${key}_timestamp`);
+    sessionStorage.removeItem(`${key}_version`);
+  } catch (error) {
+    console.warn('Error invalidating cache:', error);
+  }
+};
+
 // User interfaces
 interface User {
   id: number;
@@ -153,51 +240,87 @@ export default function AdminDashboardPage() {
   }, [appName]);
 
   const { currency, rate } = useCurrency();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalOrders: 0,
-    totalUsers: 0,
-    totalServices: 0,
-    totalCategories: 0,
-    totalRevenue: 0,
-    recentOrders: [],
-    ordersByStatus: {
-      pending: 0,
-      processing: 0,
-      completed: 0,
-      cancelled: 0,
-      partial: 0,
-    },
-    dailyOrders: [],
-    todaysOrders: 0,
-    todaysProfit: 0,
-    newUsersToday: 0,
-  });
 
-  // Optimized: Start with false for instant display
-  const [statsLoading, setStatsLoading] = useState(false);
+  // Initialize state with cached data if available and valid
+  const initializeWithCache = () => {
+    // Check cache validity for each data type individually
+    const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
+    const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
+    const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
+    
+    // Initialize stats with cached data or defaults
+    const cachedStats = statsValid ? getCachedData(CACHE_KEYS.DASHBOARD_STATS) : null;
+    const defaultStats = {
+      totalOrders: 0,
+      totalUsers: 0,
+      totalServices: 0,
+      totalCategories: 0,
+      totalRevenue: 0,
+      recentOrders: [],
+      ordersByStatus: {
+        pending: 0,
+        processing: 0,
+        completed: 0,
+        cancelled: 0,
+        partial: 0,
+      },
+      dailyOrders: [],
+      todaysOrders: 0,
+      todaysProfit: 0,
+      newUsersToday: 0,
+    };
+
+    return {
+      stats: cachedStats || defaultStats,
+      latestUsers: usersValid ? getCachedData(CACHE_KEYS.LATEST_USERS) || [] : [],
+      pendingTransactions: transactionsValid ? getCachedData(CACHE_KEYS.PENDING_TRANSACTIONS) || [] : [],
+      hasStatsCache: statsValid && cachedStats !== null,
+      hasUsersCache: usersValid,
+      hasTransactionsCache: transactionsValid
+    };
+  };
+
+  const initialData = initializeWithCache();
+
+  const [stats, setStats] = useState<DashboardStats>(initialData.stats);
+
+  // Optimized: Start with false for instant display, only show loading if no cache
+  const [statsLoading, setStatsLoading] = useState(!initialData.hasStatsCache);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const [chartLoading, setChartLoading] = useState(false);
 
-  // Latest Users State
-  const [latestUsers, setLatestUsers] = useState<User[]>([]);
-  const [latestUsersLoading, setLatestUsersLoading] = useState(false);
+  // Latest Users State - Initialize with cached data
+  const [latestUsers, setLatestUsers] = useState<User[]>(initialData.latestUsers);
+  const [latestUsersLoading, setLatestUsersLoading] = useState(!initialData.hasUsersCache);
 
-  // Pending Transactions State
+  // Pending Transactions State - Initialize with cached data
   const [pendingTransactions, setPendingTransactions] = useState<
     PendingTransaction[]
-  >([]);
-  const [transactionsLoading, setTransactionsLoading] = useState(false);
-  const [totalTransactionCount, setTotalTransactionCount] = useState(0);
+  >(initialData.pendingTransactions);
+  const [transactionsLoading, setTransactionsLoading] = useState(!initialData.hasTransactionsCache);
+  const [totalTransactionCount, setTotalTransactionCount] = useState(initialData.pendingTransactions.length);
   const [customToast, setCustomToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
-  // Optimized: Parallel data fetching with Promise.all
-  const fetchAllData = useCallback(async () => {
+  // Optimized: Parallel data fetching with caching and stale-while-revalidate
+  const fetchAllData = useCallback(async (isBackgroundRefresh = false) => {
     try {
+      // Check individual cache validity for each data type
+      const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
+      const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
+      const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
+
+      // Only show loading states if this is not a background refresh and we don't have valid cached data
+      if (!isBackgroundRefresh) {
+        if (!statsValid) setStatsLoading(true);
+        if (!usersValid) setLatestUsersLoading(true);
+        if (!transactionsValid) setTransactionsLoading(true);
+      }
+
       // Prepare all API calls to run in parallel
       const statsPromise = fetch('/api/admin/dashboard/stats').then(res => res.json());
       
@@ -230,6 +353,7 @@ export default function AdminDashboardPage() {
       // Process stats data
       if (statsResult.success) {
         setStats(statsResult.data);
+        setCachedData(CACHE_KEYS.DASHBOARD_STATS, statsResult.data);
       }
 
       // Process users data
@@ -237,39 +361,81 @@ export default function AdminDashboardPage() {
         const filteredUsers = (usersResult.data || []).filter(
           (user: User) => user.role === 'user'
         );
-        setLatestUsers(filteredUsers.slice(0, 5));
+        const usersToShow = filteredUsers.slice(0, 5);
+        setLatestUsers(usersToShow);
+        setCachedData(CACHE_KEYS.LATEST_USERS, usersToShow);
       }
 
       // Process transactions data
+      let transactionsToShow: PendingTransaction[] = [];
       if (transactionsResponse.data) {
         if (transactionsResponse.data.transactions) {
           const transactions = transactionsResponse.data.transactions;
           setTotalTransactionCount(transactions.length);
-          setPendingTransactions(transactions.slice(0, 3));
+          transactionsToShow = transactions.slice(0, 3);
+          setPendingTransactions(transactionsToShow);
         } else if (Array.isArray(transactionsResponse.data)) {
           const pending = transactionsResponse.data.filter(
             (transaction: PendingTransaction) => transaction.status === 'pending'
           );
           setTotalTransactionCount(pending.length);
-          setPendingTransactions(pending.slice(0, 3));
+          transactionsToShow = pending.slice(0, 3);
+          setPendingTransactions(transactionsToShow);
         }
+        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, transactionsToShow);
       }
+
+      // Hide loading states
+      setStatsLoading(false);
+      setLatestUsersLoading(false);
+      setTransactionsLoading(false);
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // Set fallback empty states
-      setLatestUsers([]);
-      setPendingTransactions([]);
-      setTotalTransactionCount(0);
+      
+      // Only set fallback empty states if we don't have any valid cached data
+      const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
+      const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
+      const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
+      
+      if (!usersValid) {
+        setLatestUsers([]);
+      }
+      if (!transactionsValid) {
+        setPendingTransactions([]);
+        setTotalTransactionCount(0);
+      }
+
+      // Hide loading states even on error
+      setStatsLoading(false);
+      setLatestUsersLoading(false);
+      setTransactionsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    // Fetch all data in parallel on component mount
-    fetchAllData();
+    // Check individual cache validity for each data type
+    const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
+    const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
+    const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
+    
+    // Always fetch fresh data in background, but show loading states only if no valid cache exists
+    const hasAnyValidCache = statsValid || usersValid || transactionsValid;
+    
+    if (hasAnyValidCache) {
+      // Background refresh without loading states - always fetch fresh data
+      fetchAllData(true);
+    } else {
+      // Normal fetch with loading states when no cache exists
+      fetchAllData(false);
+    }
 
-    // Set up polling for new pending transactions
-    const interval = setInterval(fetchAllData, 30000);
+    // Set up more aggressive polling for background updates
+    // Use shorter intervals for more dynamic data
+    const interval = setInterval(() => {
+      // Always do background refresh during polling
+      fetchAllData(true);
+    }, 15000); // Reduced from 30 seconds to 15 seconds for more frequent updates
 
     return () => clearInterval(interval);
   }, [fetchAllData]);
@@ -306,10 +472,18 @@ export default function AdminDashboardPage() {
 
       if (response.status === 200) {
         // Remove from pending list
-        setPendingTransactions((prev) =>
-          prev.filter((t) => t.id !== transactionId)
-        );
+        const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
+        setPendingTransactions(updatedTransactions);
         setTotalTransactionCount((prev) => prev - 1);
+
+        // Update cache with new transaction list
+        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
+        
+        // Invalidate related caches to force fresh data
+        invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
+        
+        // Trigger immediate background refresh for all data
+        setTimeout(() => fetchAllData(true), 100);
 
         showToast('Transaction approved successfully!', 'success');
       }
@@ -338,10 +512,18 @@ export default function AdminDashboardPage() {
 
       if (response.status === 200) {
         // Remove from pending list
-        setPendingTransactions((prev) =>
-          prev.filter((t) => t.id !== transactionId)
-        );
+        const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
+        setPendingTransactions(updatedTransactions);
         setTotalTransactionCount((prev) => prev - 1);
+
+        // Update cache with new transaction list
+        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
+        
+        // Invalidate related caches to force fresh data
+        invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
+        
+        // Trigger immediate background refresh for all data
+        setTimeout(() => fetchAllData(true), 100);
 
         showToast('Transaction cancelled successfully!', 'success');
       }
@@ -353,11 +535,19 @@ export default function AdminDashboardPage() {
 
   const handleTransactionUpdate = useCallback((transactionId: number) => {
     // Remove from pending list and update count
-    setPendingTransactions((prev) =>
-      prev.filter((t) => t.id !== transactionId)
-    );
+    const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
+    setPendingTransactions(updatedTransactions);
     setTotalTransactionCount((prev) => prev - 1);
-  }, []);
+
+    // Update cache with new transaction list
+    setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
+    
+    // Invalidate related caches to force fresh data
+    invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
+    
+    // Trigger immediate background refresh for all data
+    setTimeout(() => fetchAllData(true), 100);
+  }, [pendingTransactions, fetchAllData]);
 
   const handleRefreshTransactions = () => {
     setTransactionsLoading(true);
@@ -519,9 +709,6 @@ export default function AdminDashboardPage() {
                 <h3 className="card-title">New Users Today</h3>
                 <p className="text-2xl font-bold text-indigo-600">
                   {stats.newUsersToday || 0}
-                </p>
-                <p className="text-xs text-indigo-600 font-medium mt-1">
-                  Fresh Registrations
                 </p>
               </div>
             </div>
