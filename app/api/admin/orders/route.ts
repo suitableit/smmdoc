@@ -87,6 +87,7 @@ export async function GET(req: NextRequest) {
             select: {
               id: true,
               name: true,
+              username: true,
               email: true,
               currency: true
             }
