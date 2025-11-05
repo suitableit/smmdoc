@@ -1,6 +1,18 @@
-import React from 'react';
+'use client'
+import React, { useEffect, useState } from 'react';
 import { FaShoppingCart, FaServer, FaUsers, FaShareAlt } from 'react-icons/fa';
-import { CounterItem, counterData } from '@/data/frontend/homepage/statistics';
+// Define local types and static structure instead of importing
+interface CounterItem {
+  iconName: string;
+  title: string;
+  count: string;
+}
+const counterData: CounterItem[] = [
+  { iconName: 'FaShoppingCart', title: 'Order Completed', count: '0' },
+  { iconName: 'FaServer', title: 'Active Services', count: '0' },
+  { iconName: 'FaUsers', title: 'Active Users', count: '0' },
+  { iconName: 'FaShareAlt', title: 'Affiliate Users', count: '100+' },
+];
 
 // Icon mapping
 const iconMap = {
@@ -11,11 +23,60 @@ const iconMap = {
 };
 
 export default function Statistics() {
+  const [counts, setCounts] = useState<{
+    completedOrders: number;
+    activeServices: number;
+    activeUsers: number;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/homepage/stats', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || 'Failed to load homepage stats');
+        }
+        setCounts(json.data);
+      } catch (err: any) {
+        console.error('Homepage stats error:', err);
+        setError(err.message || 'Failed to load stats');
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const dynamicCounterData: CounterItem[] = counterData.map((item) => {
+    let countValue = item.count;
+    if (counts) {
+      if (item.title === 'Order Completed') {
+        countValue = counts.completedOrders.toLocaleString();
+      } else if (item.title === 'Active Services') {
+        countValue = counts.activeServices.toLocaleString();
+      } else if (item.title === 'Active Users') {
+        countValue = counts.activeUsers.toLocaleString();
+      }
+    }
+    return { ...item, count: countValue };
+  });
+
   return (
     <section className="pt-[30px] pb-[30px] lg:pt-[60px] lg:pb-[60px] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4">
+        {error && (
+          <div className="mb-4 text-center text-sm text-red-600">
+            {error}
+          </div>
+        )}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {counterData.map((item, index) => {
+          {dynamicCounterData.map((item, index) => {
             const IconComponent = iconMap[item.iconName as keyof typeof iconMap];
             return (
               <div
