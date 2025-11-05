@@ -108,14 +108,6 @@ export async function GET(req: NextRequest) {
               id: true,
               category_name: true
             }
-          },
-          apiProvider: {
-            select: {
-              id: true,
-              name: true,
-              api_url: true,
-              status: true
-            }
           }
         },
         orderBy: {
