@@ -62,6 +62,71 @@ const Hero: React.FC = () => {
   const userRole = session?.user?.role || 'user'; // Default to 'user' if role is not set
   const isAdmin = userRole === 'admin';
 
+  // Dynamic homepage stats
+  const [usersCount, setUsersCount] = useState<number | null>(null);
+  const [completedOrdersCount, setCompletedOrdersCount] = useState<number | null>(null);
+  const [totalOrdersCount, setTotalOrdersCount] = useState<number | null>(null);
+  const [activeUsersCount, setActiveUsersCount] = useState<number | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
+
+  // Add user-specific stats for non-admin authenticated users
+  const [userBalance, setUserBalance] = useState<number | null>(null);
+  const [activeOrdersCountUser, setActiveOrdersCountUser] = useState<number | null>(null);
+  const [userStatsLoading, setUserStatsLoading] = useState<boolean>(false);
+  const [userStatsError, setUserStatsError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const fetchHomepageStats = async () => {
+      try {
+        const res = await fetch('/api/homepage/stats');
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || 'Failed to fetch homepage stats');
+        }
+        const { totalUsers, completedOrders, activeUsers, totalOrders } = json?.data || {};
+        if (typeof totalUsers === 'number') setUsersCount(totalUsers);
+        if (typeof completedOrders === 'number') setCompletedOrdersCount(completedOrders);
+        if (typeof totalOrders === 'number') setTotalOrdersCount(totalOrders);
+        if (typeof activeUsers === 'number') setActiveUsersCount(activeUsers);
+      } catch (err: any) {
+        console.error('Error fetching homepage stats:', err);
+        setStatsError(err.message || 'Failed to fetch homepage stats');
+      }
+    };
+    fetchHomepageStats();
+  }, []);
+
+  // Fetch user dashboard stats for non-admin authenticated users
+  React.useEffect(() => {
+    if (!isAuthenticated || isAdmin) return;
+    let cancelled = false;
+    const fetchUserStats = async () => {
+      try {
+        setUserStatsLoading(true);
+        setUserStatsError(null);
+        const res = await fetch('/api/user/dashboard/stats');
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || 'Failed to fetch user stats');
+        }
+        const data = json.data || {};
+        const ordersByStatus = data.ordersByStatus || {};
+        const pending = ordersByStatus.pending || 0;
+        const processing = ordersByStatus.processing || 0;
+        if (!cancelled) {
+          setActiveOrdersCountUser(pending + processing);
+          setUserBalance(typeof data.balance === 'number' ? data.balance : 0);
+        }
+      } catch (e: any) {
+        if (!cancelled) setUserStatsError(e.message || 'Failed to fetch user stats');
+      } finally {
+        if (!cancelled) setUserStatsLoading(false);
+      }
+    };
+    fetchUserStats();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, isAdmin]);
+
   const form = useForm<SignInSchema>({
     mode: 'all',
     resolver: zodResolver(signInSchema),
@@ -190,7 +255,7 @@ const Hero: React.FC = () => {
             <div>
               <div className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)]">
                 {/* You can replace these with actual user stats */}
-                {isAdmin ? '1,000+' : '12'}
+                {isAdmin ? (totalOrdersCount !== null ? totalOrdersCount.toLocaleString() : '0') : (activeOrdersCountUser !== null ? activeOrdersCountUser.toLocaleString() : (userStatsLoading ? '0' : '0'))}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 {isAdmin ? 'Total Orders' : 'Active Orders'}
@@ -198,7 +263,7 @@ const Hero: React.FC = () => {
             </div>
             <div>
               <div className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)]">
-                {isAdmin ? '500+' : '$45.80'}
+                {isAdmin ? (activeUsersCount !== null ? activeUsersCount.toLocaleString() : '0') : (userBalance !== null ? `$${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : (userStatsLoading ? '0' : '$0.00'))}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 {isAdmin ? 'Active Users' : 'Account Balance'}
@@ -304,7 +369,7 @@ const Hero: React.FC = () => {
                 />
                 <div className="text-gray-600 dark:text-gray-300 font-semibold text-base transition-colors duration-200">
                   <span className="text-[var(--primary)] dark:text-[var(--secondary)] font-bold transition-colors duration-200">
-                    500
+                    {usersCount !== null ? usersCount.toLocaleString() : '0'}
                   </span>
                   + Users using our services.
                 </div>
