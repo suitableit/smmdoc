@@ -11,7 +11,7 @@ import {
   FaSync,
   FaTimesCircle,
 } from 'react-icons/fa';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+import { formatID, formatNumber, formatPrice, formatCount } from '@/lib/utils';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 // Interfaces
@@ -341,7 +341,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     style={{ color: 'var(--text-primary)' }}
                   >
                     {typeof order.startCount === 'number'
-                      ? formatNumberProp(order.startCount)
+                      ? formatCount(order.startCount)
                       : '0'}
                   </div>
                 </td>
@@ -351,11 +351,11 @@ const OrderTable: React.FC<OrderTableProps> = ({
                       className="font-semibold text-sm"
                       style={{ color: 'var(--text-primary)' }}
                     >
-                      {order.qty ? formatNumberProp(order.qty) : 'null'}
+                      {order.qty ? formatCount(order.qty) : 'null'}
                     </div>
                     <div className="text-xs text-green-600">
                       {order.qty && order.remains
-                        ? formatNumberProp(order.qty - order.remains)
+                        ? formatCount(order.qty - order.remains)
                         : '0'}{' '}
                       delivered
                     </div>
@@ -430,7 +430,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {order.remains
-                        ? formatNumberProp(order.remains)
+                        ? formatCount(order.remains)
                         : 'null'}{' '}
                       left
                     </div>
@@ -487,7 +487,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                       {/* Dropdown Menu */}
                       <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                         <div className="py-1">
-                          {order.status === 'failed' && (
+                          {(order.status === 'failed' || order.status === 'pending') && (
                             <button
                               onClick={() => {
                                 onResendOrder(order.id);
@@ -606,7 +606,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     {/* Dropdown Menu */}
                     <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                       <div className="py-1">
-                        {order.status === 'failed' && (
+                        {(order.status === 'failed' || order.status === 'pending') && (
                           <button
                             onClick={() => {
                               onResendOrder(order.id);
@@ -845,11 +845,11 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     className="font-semibold text-sm"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {order.qty ? formatNumberProp(order.qty) : 'null'}
+                    {order.qty ? formatCount(order.qty) : 'null'}
                   </div>
                   <div className="text-xs text-green-600">
                     {order.qty && order.remains
-                      ? formatNumberProp(order.qty - order.remains)
+                      ? formatCount(order.qty - order.remains)
                       : '0'}{' '}
                     delivered
                   </div>
@@ -866,7 +866,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     style={{ color: 'var(--text-primary)' }}
                   >
                     {order.startCount
-                      ? formatNumberProp(order.startCount)
+                      ? formatCount(order.startCount)
                       : 'null'}
                   </div>
                 </div>
@@ -910,7 +910,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   className="text-xs mt-1"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  {order.remains || 'null'} remaining
+                  {order.remains ? formatCount(order.remains) : 'null'} remaining
                 </div>
               </div>
 
