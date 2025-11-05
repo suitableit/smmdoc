@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
+import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
 
 // GET /api/admin/orders - Get all orders with pagination and filtering
 export async function GET(req: NextRequest) {
@@ -400,6 +401,81 @@ export async function POST(req: NextRequest) {
       });
     }
     
+    // Forward to API provider if applicable
+    let updatedOrder = order;
+    try {
+      // Ensure service has provider mapping
+      if (service.providerId && service.providerServiceId) {
+        const apiProvider = await db.api_providers.findUnique({
+          where: { id: service.providerId },
+          select: {
+            id: true,
+            name: true,
+            api_url: true,
+            api_key: true,
+            status: true
+          }
+        });
+
+        if (apiProvider && apiProvider.status === 'active') {
+          const forwarder = ProviderOrderForwarder.getInstance();
+          const providerOrderData = {
+            service: String(service.providerServiceId),
+            link,
+            quantity: parseInt(qty),
+            runs: isDripfeed && dripfeedRuns ? parseInt(dripfeedRuns) : undefined,
+            interval: isDripfeed && dripfeedInterval ? parseInt(dripfeedInterval) : undefined
+          };
+
+          const providerRes = await forwarder.forwardOrderToProvider(apiProvider, providerOrderData);
+
+          updatedOrder = await db.newOrder.update({
+            where: { id: order.id },
+            data: {
+              status: providerRes.status || 'pending',
+              providerOrderId: providerRes.order,
+              providerStatus: providerRes.status,
+              apiOrderId: providerRes.order,
+              charge: providerRes.charge,
+              lastSyncAt: new Date(),
+              updatedAt: new Date()
+            },
+            include: {
+              user: { select: { id: true, name: true, email: true } },
+              service: { select: { id: true, name: true, rate: true } },
+              category: { select: { id: true, category_name: true } }
+            }
+          });
+
+          console.log(
+            `Admin ${session.user.email} forwarded order ${order.id} to provider ${apiProvider.name} -> Provider Order ${providerRes.order}`,
+            { orderId: order.id, providerId: apiProvider.id, providerOrderId: providerRes.order, status: providerRes.status }
+          );
+        }
+      }
+    } catch (providerError) {
+      const forwarder = ProviderOrderForwarder.getInstance();
+      const errorMessage = forwarder.formatProviderError(providerError);
+
+      updatedOrder = await db.newOrder.update({
+        where: { id: order.id },
+        data: {
+          status: 'failed',
+          providerStatus: 'failed',
+          apiResponse: errorMessage,
+          lastSyncAt: new Date(),
+          updatedAt: new Date()
+        },
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          service: { select: { id: true, name: true, rate: true } },
+          category: { select: { id: true, category_name: true } }
+        }
+      });
+
+      console.error('Error forwarding order to provider:', providerError);
+    }
+
     // Log the order creation
     console.log(`Admin ${session.user.email} created order ${order.id} for user ${user.email}`, {
       orderId: order.id,
@@ -408,14 +484,14 @@ export async function POST(req: NextRequest) {
       amount: finalPrice,
       timestamp: new Date().toISOString()
     });
-    
+
     return NextResponse.json({
       success: true,
       message: 'Order created successfully',
-      data: order,
+      data: updatedOrder,
       error: null
     });
-    
+
   } catch (error) {
     console.error('Error creating order:', error);
     return NextResponse.json(
