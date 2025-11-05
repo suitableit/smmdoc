@@ -227,8 +227,8 @@ const AdminOrdersPage = () => {
   const [isPageReload, setIsPageReload] = useState(false);
 
   // Loading states
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
 
 
@@ -300,12 +300,19 @@ const AdminOrdersPage = () => {
   const fetchDataOptimized = async (showLoadingState = true) => {
     const loadingStartTime = Date.now();
     const minLoadingTime = 10; // 0.01 seconds minimum loading time
+    const REQUEST_TIMEOUT_MS = 10000; // 10s safety timeout to avoid infinite loading
 
     // Only show loading states if requested (for page reload)
     if (showLoadingState) {
       setOrdersLoading(true);
       setStatsLoading(true);
     }
+
+    // Setup abort controllers for safety timeouts
+    const ordersController = new AbortController();
+    let statsController: AbortController | null = null;
+    const ordersTimeout = setTimeout(() => ordersController.abort(), REQUEST_TIMEOUT_MS);
+    let statsTimeout: ReturnType<typeof setTimeout> | null = null;
 
     try {
       // Create query params for orders
@@ -321,19 +328,30 @@ const AdminOrdersPage = () => {
       const useCache = statsCache && (now - statsCache.timestamp) < STATS_CACHE_DURATION;
 
       // Prepare promises for parallel execution
-      const promises = [
-        // Always fetch orders
-        fetch(`/api/admin/orders?${queryParams}`).then(res => res.json()),
-        // Only fetch stats if not cached
-        useCache ? Promise.resolve({ success: true, data: statsCache.data }) : 
-          fetch('/api/admin/orders/stats?period=all').then(res => res.json())
-      ];
+      const ordersPromise = fetch(`/api/admin/orders?${queryParams}`, { signal: ordersController.signal })
+        .then(res => res.json())
+        .catch(err => ({ success: false, error: err?.name === 'AbortError' ? 'Orders request timed out' : 'Failed to fetch orders' }));
+
+      let statsPromise: Promise<any>;
+      if (useCache) {
+        statsPromise = Promise.resolve({ success: true, data: statsCache.data });
+      } else {
+        statsController = new AbortController();
+        statsTimeout = setTimeout(() => statsController?.abort(), REQUEST_TIMEOUT_MS);
+        statsPromise = fetch('/api/admin/orders/stats?period=all', { signal: statsController.signal })
+          .then(res => res.json())
+          .catch(err => ({ success: false, error: err?.name === 'AbortError' ? 'Stats request timed out' : 'Failed to fetch stats' }));
+      }
 
       // Execute both requests in parallel
-      const [ordersResult, statsResult] = await Promise.allSettled(promises);
+      const [ordersResult, statsResult] = await Promise.allSettled([ordersPromise, statsPromise]);
+
+      // Clear timeouts once settled
+      clearTimeout(ordersTimeout);
+      if (statsTimeout) clearTimeout(statsTimeout);
 
       // Process orders result
-      if (ordersResult.status === 'fulfilled' && ordersResult.value.success) {
+      if (ordersResult.status === 'fulfilled' && ordersResult.value && ordersResult.value.success) {
         const ordersData = ordersResult.value;
         const transformed = (ordersData.data || []).map((o: any) => ({
           ...o,
@@ -377,11 +395,13 @@ const AdminOrdersPage = () => {
         });
         if (ordersResult.status === 'fulfilled') {
           showToast(ordersResult.value.error || 'Failed to fetch orders', 'error');
+        } else {
+          showToast('Failed to fetch orders', 'error');
         }
       }
 
       // Process stats result
-      if (statsResult.status === 'fulfilled' && statsResult.value.success && !useCache) {
+      if (statsResult.status === 'fulfilled' && statsResult.value && statsResult.value.success && !useCache) {
         const data = statsResult.value.data;
         
         // Build status breakdown object from array
@@ -409,9 +429,11 @@ const AdminOrdersPage = () => {
           data: processedStats,
           timestamp: now
         };
-      } else if (useCache) {
+      } else if (useCache && statsResult.status === 'fulfilled') {
         // Use cached stats data
-        setStats(statsCache.data);
+        setStats(statsCache!.data);
+      } else if (statsResult.status === 'rejected') {
+        showToast('Failed to fetch stats', 'error');
       }
 
     } catch (error) {
@@ -432,11 +454,11 @@ const AdminOrdersPage = () => {
       const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
       
       setTimeout(() => {
-        // Only set loading to false if we showed loading state
-        if (showLoadingState) {
-          setOrdersLoading(false);
-          setStatsLoading(false);
-        }
+        // Always clear loading flags after requests settle
+        setOrdersLoading(false);
+        setStatsLoading(false);
+        setOrdersLoading(false);
+        setStatsLoading(false);
       }, remainingTime);
     }
   };
