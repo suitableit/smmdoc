@@ -4,7 +4,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useGetUserOrdersQuery } from '@/lib/services/userOrderApi';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+import { formatID, formatNumber, formatPrice, formatCount } from '@/lib/utils';
 import moment from 'moment';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -819,12 +819,12 @@ export default function OrdersList() {
                         </td>
                         <td className="py-3 px-4">
                           <span className="text-sm text-gray-700">
-                            {formatNumber(order.startCount || 0)}
+                            {formatCount(order.startCount || 0)}
                           </span>
                         </td>
                         <td className="py-3 px-4">
                           <span className="text-sm font-medium text-gray-900">
-                            {formatNumber(order.qty || 0)}
+                            {formatCount(order.qty || 0)}
                           </span>
                         </td>
                         <td className="py-3 px-4 max-w-[200px]">
@@ -837,7 +837,7 @@ export default function OrdersList() {
                         </td>
                         <td className="py-3 px-4">
                           <span className="text-sm text-gray-700">
-                            {formatNumber(order.remains || order.qty || 0)}
+                            {formatCount(order.remains || order.qty || 0)}
                           </span>
                         </td>
                         <td className="py-3 px-4">

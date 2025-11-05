@@ -90,6 +90,9 @@ interface Order {
     rate: number;
     min_order: number;
     max_order: number;
+    providerId?: number;
+    providerName?: string;
+    providerServiceId?: string;
   };
   category: {
     id: number;
@@ -332,7 +335,14 @@ const AdminOrdersPage = () => {
       // Process orders result
       if (ordersResult.status === 'fulfilled' && ordersResult.value.success) {
         const ordersData = ordersResult.value;
-        setOrders(ordersData.data || []);
+        const transformed = (ordersData.data || []).map((o: any) => ({
+          ...o,
+          mode:
+            o?.service?.providerId && o?.service?.providerServiceId
+              ? 'Auto'
+              : 'Manual',
+        }));
+        setOrders(transformed);
         setPagination(ordersData.pagination || {
           page: 1,
           limit: 20,

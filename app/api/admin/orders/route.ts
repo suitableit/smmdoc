@@ -97,13 +97,24 @@ export async function GET(req: NextRequest) {
               name: true,
               rate: true,
               min_order: true,
-              max_order: true
+              max_order: true,
+              providerId: true,
+              providerName: true,
+              providerServiceId: true
             }
           },
           category: {
             select: {
               id: true,
               category_name: true
+            }
+          },
+          apiProvider: {
+            select: {
+              id: true,
+              name: true,
+              api_url: true,
+              status: true
             }
           }
         },
