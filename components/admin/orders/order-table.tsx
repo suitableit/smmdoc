@@ -30,6 +30,9 @@ interface Order {
     rate: number;
     min_order: number;
     max_order: number;
+    providerId?: number;
+    providerName?: string;
+    providerServiceId?: string;
   };
   category: {
     id: number;
@@ -329,7 +332,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     className="text-sm font-medium"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {order.seller || 'null'}
+                    {order.service?.providerName || order.seller || 'null'}
                   </div>
                 </td>
                 <td className="p-3">
@@ -337,9 +340,9 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     className="text-sm font-medium"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {order.startCount
+                    {typeof order.startCount === 'number'
                       ? formatNumberProp(order.startCount)
-                      : 'null'}
+                      : '0'}
                   </div>
                 </td>
                 <td className="p-3">
