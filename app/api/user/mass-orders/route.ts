@@ -152,29 +152,40 @@ export async function POST(request: Request) {
         }
 
         // Service type validation
-        const serviceTypeConfig = getServiceTypeConfig(service.packageType || 1);
-        const validationData = {
-          link,
-          qty: quantity,
-          comments,
-          username,
-          posts,
-          delay,
-          minQty,
-          maxQty,
-          isDripfeed,
-          dripfeedRuns,
-          dripfeedInterval,
-          isSubscription
-        };
-
-        const validation = validateOrderByType(service.packageType || 1, validationData);
-        if (!validation.isValid) {
-          validationErrors.push(
-            `Order ${i + 1}: Service type validation failed for '${service.name}': ${validation.errors.join(', ')}`
-          );
-          continue;
-        }
+-        const serviceTypeConfig = getServiceTypeConfig(service.packageType || 1);
++        const typeConfig = getServiceTypeConfig(service.packageType || 1);
+         const validationData = {
+           link,
+           qty: quantity,
+           comments,
+           username,
+           posts,
+           delay,
+           minQty,
+           maxQty,
+           isDripfeed,
+           dripfeedRuns,
+           dripfeedInterval,
+           isSubscription
+         };
+-
+-        const validation = validateOrderByType(service.packageType || 1, validationData);
+-        if (!validation.isValid) {
+-          validationErrors.push(
+-            `Order ${i + 1}: Service type validation failed for '${service.name}': ${validation.errors.join(', ')}`
+-          );
+-          continue;
+-        }
++
++        const errors = typeConfig 
++          ? validateOrderByType(typeConfig, validationData)
++          : ['Invalid service type'];
++        if (errors.length > 0) {
++          validationErrors.push(
++            `Order ${i + 1}: Service type validation failed for '${service.name}': ${errors.join(', ')}`
++          );
++          continue;
++        }
 
         // Calculate prices
         const usdPrice = (service.rate * quantity) / 1000;

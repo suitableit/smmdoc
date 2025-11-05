@@ -366,6 +366,7 @@ function NewOrder() {
   const [servicesData, setServicesData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
@@ -728,8 +729,9 @@ function NewOrder() {
 
   async function getServices() {
     try {
+      setIsSearchLoading(true);
       const res = await axiosInstance.get(
-        `/api/user/services/neworderservice?search=${search}`
+        `/api/user/services/neworderservice?search=${encodeURIComponent(search)}`
       );
       let fetchedServices = res?.data?.data || [];
 
@@ -766,6 +768,8 @@ function NewOrder() {
       setServicesData(fetchedServices);
     } catch (error) {
       showToast('Error fetching services', 'error');
+    } finally {
+      setIsSearchLoading(false);
     }
   }
 
@@ -865,18 +869,22 @@ function NewOrder() {
     }
 
     // Service type validation
-    const serviceType = (selected?.packageType || 1) as ServiceType;
+    const serviceTypeId = selected?.packageType || 1;
+    const typeConfig = getServiceTypeConfig(serviceTypeId);
     const validationData = {
       link,
       qty,
       ...serviceTypeFields
     };
 
-    const validation = validateOrderByType(serviceType, validationData);
-    if (!validation.isValid) {
+    const errors = typeConfig 
+      ? validateOrderByType(typeConfig, validationData) 
+      : ['Unsupported or unknown service type'];
+
+    if (errors && errors.length > 0) {
       // Set field-specific errors
       const fieldErrors: Record<string, string> = {};
-      validation.errors.forEach(error => {
+      errors.forEach(error => {
         // Try to extract field name from error message
         const fieldMatch = error.match(/^(\w+):/);
         if (fieldMatch) {
@@ -894,88 +902,94 @@ function NewOrder() {
       return;
     }
 
+    try {
     setIsSubmitting(true);
 
-    try {
-      const currentUserResponse = await axiosInstance.get('/api/user/current');
-      const currentUser = currentUserResponse.data;
+    // ... existing code ...
+    const currentUserResponse = await axiosInstance.get('/api/user/current');
+    const currentUser = currentUserResponse.data;
 
-      const usdPrice = (price * qty) / 1000;
-      // Use admin set BDT rate for conversion
-      const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
-      const usdToBdtRate = bdtCurrency?.rate || 121;
-      const bdtPrice = usdPrice * usdToBdtRate;
+    const usdPrice = (price * qty) / 1000;
+    // Use admin set BDT rate for conversion
+    const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
+    const usdToBdtRate = bdtCurrency?.rate || 121;
+    const bdtPrice = usdPrice * usdToBdtRate;
 
-      // Debug log to verify price calculation
-      console.log('Price Calculation Debug:', {
-        serviceRate: price,
-        quantity: qty,
+    // Debug log to verify price calculation
+    console.log('Price Calculation Debug:', {
+      serviceRate: price,
+      quantity: qty,
+      usdPrice: usdPrice,
+      bdtPrice: bdtPrice,
+      finalTotalPrice: finalTotalPrice,
+      userCurrency: currentUser?.currency,
+      sessionUserCurrency: user?.currency,
+    });
+
+    const orderPayload = [
+      {
+        link,
+        qty,
+        price: finalTotalPrice,
         usdPrice: usdPrice,
         bdtPrice: bdtPrice,
-        finalTotalPrice: finalTotalPrice,
-        userCurrency: currentUser?.currency,
-        sessionUserCurrency: user?.currency,
-      });
+        currency: currentUser?.currency,
+        serviceId: parseInt(selectedService),
+        categoryId: parseInt(selectedCategory),
+        userId: user?.id,
+        avg_time: selected?.avg_time || '',
+        // Service type specific fields
+        comments: serviceTypeFields.comments || undefined,
+        username: serviceTypeFields.username || undefined,
+        posts: serviceTypeFields.posts || undefined,
+        delay: serviceTypeFields.delay || undefined,
+        minQty: serviceTypeFields.minQty || undefined,
+        maxQty: serviceTypeFields.maxQty || undefined,
+        isDripfeed: serviceTypeFields.isDripfeed,
+        dripfeedRuns: serviceTypeFields.dripfeedRuns || undefined,
+        dripfeedInterval: serviceTypeFields.dripfeedInterval || undefined,
+        isSubscription: serviceTypeFields.isSubscription,
+      },
+    ];
 
-      const orderPayload = [
-        {
-          link,
-          qty,
-          price: finalTotalPrice,
-          usdPrice: usdPrice,
-          bdtPrice: bdtPrice,
-          currency: currentUser?.currency,
-          serviceId: parseInt(selectedService),
-          categoryId: parseInt(selectedCategory),
-          userId: user?.id,
-          avg_time: selected?.avg_time || '',
-          // Service type specific fields
-          comments: serviceTypeFields.comments || undefined,
-          username: serviceTypeFields.username || undefined,
-          posts: serviceTypeFields.posts || undefined,
-          delay: serviceTypeFields.delay || undefined,
-          minQty: serviceTypeFields.minQty || undefined,
-          maxQty: serviceTypeFields.maxQty || undefined,
-          isDripfeed: serviceTypeFields.isDripfeed,
-          dripfeedRuns: serviceTypeFields.dripfeedRuns || undefined,
-          dripfeedInterval: serviceTypeFields.dripfeedInterval || undefined,
-          isSubscription: serviceTypeFields.isSubscription,
-        },
-      ];
+    const response = await axiosInstance.post(
+      '/api/user/create-orders',
+      orderPayload
+    );
 
-      const response = await axiosInstance.post(
-        '/api/user/create-orders',
-        orderPayload
-      );
+    if (response.data.success) {
+      showToast('Order created successfully!', 'success');
 
-      if (response.data.success) {
-        showToast('Order created successfully!', 'success');
+      dispatch(dashboardApi.util.invalidateTags(['UserStats']));
 
-        dispatch(dashboardApi.util.invalidateTags(['UserStats']));
+      refetchUserStats();
 
-        refetchUserStats();
-
-        // Reset form
-        setLink('');
-        setQty(0);
-        setSelectedService('');
-        setSelectedCategory('');
-        setSearch('');
-        resetServiceTypeFields();
-      } else {
-        showToast(response.data.message || 'Failed to create order', 'error');
-      }
-    } catch (error: any) {
-      console.error('Error creating order:', error);
+      // Reset form
+      setLink('');
+      setQty(0);
+      setSelectedService('');
+      setSelectedCategory('');
+      setSearch('');
+      resetServiceTypeFields();
+    } else {
+      showToast(response.data.message || 'Failed to create order', 'error');
+    }
+  } catch (error: any) {
+    console.error('Error creating order:', error);
+    if (error.response?.status === 404) {
+      const notFoundMsg = error.response?.data?.message || 'Selected service not found or inactive.';
+      showToast(notFoundMsg, 'error');
+    } else {
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         'Failed to create order';
       showToast(errorMessage, 'error');
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  } finally {
+    setIsSubmitting(false);
+  }
+  }
 
   const handleSearchSelect = (serviceId: string, categoryId: string) => {
     const selected = servicesData.find((s) => s.id === serviceId);
@@ -1078,29 +1092,39 @@ function NewOrder() {
                       />
 
                       {/* Search Dropdown */}
-                      {showDropdown && servicesData.length > 0 && (
+                      {showDropdown && (
                         <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
-                          {servicesData.map((service) => (
-                            <div
-                              key={service.id}
-                              className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
-                              onClick={() =>
-                                handleSearchSelect(
-                                  service.id,
-                                  service.categoryId
-                                )
-                              }
-                            >
-                              <div className="flex justify-between items-center w-full">
-                                <span className="text-sm text-gray-900 truncate pr-2 flex-1">
-                                  {service.name}
-                                </span>
-                                <span className="text-xs text-gray-500 flex-shrink-0">
-                                  ${service.rate || '0.00'}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
+                          {isSearchLoading && (
+                            <div className="p-3 text-sm text-gray-500">Searching...</div>
+                          )}
+                          {!isSearchLoading && servicesData.length === 0 && search.trim().length > 0 && (
+                            <div className="p-3 text-sm text-gray-500">No services found</div>
+                          )}
+                          {!isSearchLoading && servicesData.length > 0 && (
+                            <>
+                              {servicesData.map((service) => (
+                                <div
+                                  key={service.id}
+                                  className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                                  onClick={() =>
+                                    handleSearchSelect(
+                                      service.id,
+                                      service.categoryId
+                                    )
+                                  }
+                                >
+                                  <div className="flex justify-between items-center w-full">
+                                    <span className="text-sm text-gray-900 truncate pr-2 flex-1">
+                                      {service.name}
+                                    </span>
+                                    <span className="text-xs text-gray-500 flex-shrink-0">
+                                      ${service.rate || '0.00'}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1326,7 +1350,7 @@ function NewOrder() {
     </div>
   );
 }
-
+ 
 export default function NewOrderPage() {
   const { appName } = useAppNameWithFallback();
 
