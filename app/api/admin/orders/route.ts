@@ -254,7 +254,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Service type validation
-    const serviceTypeConfig = getServiceTypeConfig(service.packageType || 1);
+    const typeConfig = getServiceTypeConfig(service.packageType || 1);
     const orderData = {
       link,
       qty,
@@ -270,13 +270,15 @@ export async function POST(req: NextRequest) {
       isSubscription
     };
 
-    const validation = validateOrderByType(service.packageType || 1, orderData);
-    if (!validation.isValid) {
+    const errors = typeConfig
+      ? validateOrderByType(typeConfig, orderData)
+      : ['Invalid service type'];
+    if (errors.length > 0) {
       return NextResponse.json(
-        { 
-          error: validation.errors.join(', '),
+        {
+          error: errors.join(', '),
           success: false,
-          data: null 
+          data: null
         },
         { status: 400 }
       );
