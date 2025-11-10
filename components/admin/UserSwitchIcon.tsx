@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { FaUserShield, FaTimes } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaUserShield } from 'react-icons/fa';
 
 interface UserSwitchIconProps {
   onSwitchBack: () => void;
@@ -13,32 +13,102 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
   const [impersonatedUser, setImpersonatedUser] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if user switching is active by calling the session API
-    const checkImpersonation = async () => {
-      try {
-        const response = await fetch('/api/auth/session');
-        const session = await response.json();
-        
-        if (session?.user?.isImpersonating) {
-          setIsVisible(true);
-          setImpersonatedUser(session.user.username || 'user');
-        } else {
-          setIsVisible(false);
-          setImpersonatedUser(null);
-        }
-      } catch (error) {
-        console.error('Error checking impersonation status:', error);
-        setIsVisible(false);
-        setImpersonatedUser(null);
+    const isMountedRef = { current: true };
+    const retryRef = { current: 0 };
+    const timeoutRef = { current: null as number | null };
+    const abortRef = { current: null as AbortController | null };
+
+    const BASE_INTERVAL_MS = 30000; // 30s base poll
+    const MAX_INTERVAL_MS = 300000; // 5 minutes cap
+
+    const clearScheduled = () => {
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
       }
     };
 
+    const scheduleNext = (hadError: boolean, impersonating: boolean) => {
+      // Only poll when tab is visible to avoid background noise
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return; // will reschedule on visibility change
+      }
+
+      let interval = BASE_INTERVAL_MS;
+      if (hadError) {
+        retryRef.current = Math.min(retryRef.current + 1, 5); // max 5 retries
+        interval = Math.min(BASE_INTERVAL_MS * Math.pow(2, retryRef.current), MAX_INTERVAL_MS);
+      } else {
+        retryRef.current = 0;
+        // If impersonating, we can keep the same 30s interval
+        interval = impersonating ? BASE_INTERVAL_MS : BASE_INTERVAL_MS;
+      }
+
+      timeoutRef.current = window.setTimeout(() => {
+        checkImpersonation();
+      }, interval);
+    };
+
+    const checkImpersonation = async () => {
+      // Cancel any in-flight request before starting a new one
+      if (abortRef.current) {
+        abortRef.current.abort();
+      }
+      abortRef.current = new AbortController();
+
+      try {
+        const response = await fetch('/api/auth/session', {
+          signal: abortRef.current.signal,
+          cache: 'no-store',
+        });
+        const session = await response.json();
+
+        const impersonating = Boolean(session?.user?.isImpersonating);
+        if (!isMountedRef.current) return;
+        setIsVisible(impersonating);
+        setImpersonatedUser(impersonating ? session.user.username || 'user' : null);
+
+        scheduleNext(false, impersonating);
+      } catch (error) {
+        if (!isMountedRef.current) return;
+        console.error('Error checking impersonation status:', error);
+        setIsVisible(false);
+        setImpersonatedUser(null);
+        scheduleNext(true, false);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document === 'undefined') return;
+      if (document.visibilityState === 'visible') {
+        clearScheduled();
+        // Immediately check when returning to the tab
+        checkImpersonation();
+      } else {
+        // Stop polling when hidden
+        clearScheduled();
+      }
+    };
+
+    // Initial check
     checkImpersonation();
-    
-    // Check periodically in case session changes
-    const interval = setInterval(checkImpersonation, 2000);
-    
-    return () => clearInterval(interval);
+
+    // Visibility-based polling: only when tab is visible
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+
+    return () => {
+      isMountedRef.current = false;
+      clearScheduled();
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
   }, []);
 
   if (!isVisible) return null;

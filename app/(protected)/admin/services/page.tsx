@@ -3341,20 +3341,59 @@ function AdminServicesPage() {
     }));
   }, [trashServicesCount]);
 
-  // Get unique providers for filter dropdown - now using API data
+  // Get unique providers for filter dropdown - show only providers that have services
   const uniqueProviders = useMemo(() => {
-    if (!providersData?.data?.providers) return ['All', 'Self'];
-    
-    // Get active providers from API, excluding reserved names
-    const reservedNames = ['All', 'Self'];
-    const activeProviders = providersData.data.providers
-      .filter((provider: any) => provider.status === 'active')
-      .map((provider: any) => provider.label || provider.value)
-      .filter((providerName: string) => !reservedNames.includes(providerName))
-      .sort();
-    
-    return ['All', 'Self', ...activeProviders];
-  }, [providersData?.data?.providers]);
+    // Always include 'All' and 'Self'
+    const result: string[] = ['All', 'Self'];
+
+    // Collect provider IDs that actually have services (exclude trashed)
+    const providerIdsWithServices = new Set<number>();
+
+    const sourceServices = Array.isArray(allServicesData?.data)
+      ? allServicesData!.data
+      : Array.isArray(data?.data)
+        ? data!.data
+        : [];
+
+    sourceServices.forEach((s: any) => {
+      if (s.providerId && (s.deletedAt === null || s.deletedAt === undefined)) {
+        try {
+          providerIdsWithServices.add(parseInt(String(s.providerId)));
+        } catch (_) {
+          // ignore parse errors
+        }
+      }
+    });
+
+    // If providers data is available, filter to only those with services
+    if (providersData?.data?.providers && providerIdsWithServices.size > 0) {
+      const names = providersData.data.providers
+        .filter((p: any) => p.status === 'active')
+        .filter((p: any) => providerIdsWithServices.has(Number(p.id)))
+        .map((p: any) => p.label || p.name || p.value)
+        .filter((name: string) => !!name && name.trim() !== '')
+        .sort();
+
+      return [...result, ...names];
+    }
+
+    // Fallback: derive provider names directly from services when providers API not ready
+    if (sourceServices.length > 0) {
+      const nameSet = new Set<string>();
+      sourceServices.forEach((s: any) => {
+        if (s.providerId && (s.deletedAt === null || s.deletedAt === undefined)) {
+          const name = getProviderNameById(s.providerId, s.provider);
+          if (name && name !== 'N/A' && name !== 'Provider (Error)') {
+            nameSet.add(name);
+          }
+        }
+      });
+      return [...result, ...Array.from(nameSet).sort()];
+    }
+
+    // Default minimal options when nothing loaded yet
+    return result;
+  }, [providersData?.data?.providers, allServicesData?.data, data?.data]);
 
   // Optimized grouping with better performance for large datasets
   const groupedServices = useMemo(() => {

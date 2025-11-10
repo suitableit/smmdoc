@@ -296,8 +296,20 @@ const AdminOrdersPage = () => {
     };
   };
 
+  // Track latest request to avoid stale updates
+  const latestRequestIdRef = useRef<number>(0);
+  const isMountedRef = useRef<boolean>(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Optimized parallel data fetching with caching and fast loading
   const fetchDataOptimized = async (showLoadingState = true) => {
+    const requestId = Date.now();
+    latestRequestIdRef.current = requestId;
     const loadingStartTime = Date.now();
     const minLoadingTime = 10; // 0.01 seconds minimum loading time
     const REQUEST_TIMEOUT_MS = 10000; // 10s safety timeout to avoid infinite loading
@@ -349,6 +361,11 @@ const AdminOrdersPage = () => {
       // Clear timeouts once settled
       clearTimeout(ordersTimeout);
       if (statsTimeout) clearTimeout(statsTimeout);
+
+      // Ignore if unmounted or outdated request
+      if (!isMountedRef.current || latestRequestIdRef.current !== requestId) {
+        return;
+      }
 
       // Process orders result
       if (ordersResult.status === 'fulfilled' && ordersResult.value && ordersResult.value.success) {
@@ -455,8 +472,9 @@ const AdminOrdersPage = () => {
       
       setTimeout(() => {
         // Always clear loading flags after requests settle
-        setOrdersLoading(false);
-        setStatsLoading(false);
+        if (!isMountedRef.current || latestRequestIdRef.current !== requestId) {
+          return;
+        }
         setOrdersLoading(false);
         setStatsLoading(false);
       }, remainingTime);
@@ -484,6 +502,15 @@ const AdminOrdersPage = () => {
     // Only show loading state if it's a page reload
     fetchDataOptimized(isPageReload);
   }, [isPageReload]);
+
+  // Dev-only: log render counts to help diagnose rerenders
+  const renderCountRef = useRef(0);
+  useEffect(() => {
+    renderCountRef.current += 1;
+    if (process.env.NODE_ENV === 'development' && renderCountRef.current % 50 === 0) {
+      console.warn('[AdminOrdersPage] high render count:', renderCountRef.current);
+    }
+  });
 
   // Show toast notification
   const showToast = (
