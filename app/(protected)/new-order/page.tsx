@@ -11,7 +11,7 @@ import {
     dashboardApi,
     useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
-import { ServiceTypeFields } from '@/app/components/ServiceTypeFields';
+import { ServiceTypeFields } from '@/components/ServiceTypeFields';
 import { validateOrderByType, getServiceTypeConfig, ServiceType } from '@/lib/serviceTypes';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
