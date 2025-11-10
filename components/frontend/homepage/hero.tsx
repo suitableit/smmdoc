@@ -16,7 +16,7 @@ import { signIn, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useState, useTransition } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
     FaBriefcase,
@@ -75,7 +75,14 @@ const Hero: React.FC = () => {
   const [userStatsLoading, setUserStatsLoading] = useState<boolean>(false);
   const [userStatsError, setUserStatsError] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  // Guard to avoid state updates on unmounted component
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    return () => { isMountedRef.current = false; };
+  }, []);
+
+  // Fetch homepage stats once
+  useEffect(() => {
     const fetchHomepageStats = async () => {
       try {
         const res = await fetch('/api/homepage/stats');
@@ -84,12 +91,14 @@ const Hero: React.FC = () => {
           throw new Error(json.error || 'Failed to fetch homepage stats');
         }
         const { totalUsers, completedOrders, activeUsers, totalOrders } = json?.data || {};
+        if (!isMountedRef.current) return;
         if (typeof totalUsers === 'number') setUsersCount(totalUsers);
         if (typeof completedOrders === 'number') setCompletedOrdersCount(completedOrders);
         if (typeof totalOrders === 'number') setTotalOrdersCount(totalOrders);
         if (typeof activeUsers === 'number') setActiveUsersCount(activeUsers);
       } catch (err: any) {
         console.error('Error fetching homepage stats:', err);
+        if (!isMountedRef.current) return;
         setStatsError(err.message || 'Failed to fetch homepage stats');
       }
     };
@@ -97,7 +106,7 @@ const Hero: React.FC = () => {
   }, []);
 
   // Fetch user dashboard stats for non-admin authenticated users
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isAuthenticated || isAdmin) return;
     let cancelled = false;
     const fetchUserStats = async () => {
@@ -126,6 +135,15 @@ const Hero: React.FC = () => {
     fetchUserStats();
     return () => { cancelled = true; };
   }, [isAuthenticated, isAdmin]);
+
+  // Dev-only: warn on excessive renders
+  const renderCountRef = useRef(0);
+  useEffect(() => {
+    renderCountRef.current += 1;
+    if (process.env.NODE_ENV === 'development' && renderCountRef.current % 100 === 0) {
+      console.warn('[Homepage Hero] high render count:', renderCountRef.current);
+    }
+  });
 
   const form = useForm<SignInSchema>({
     mode: 'all',

@@ -9,7 +9,7 @@ import {
     fetchCurrencyData,
     formatCurrencyAmount
 } from '@/lib/currency-utils';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useCallback, useRef, useState } from 'react';
 
 type CurrencyContextType = {
   currency: string;
@@ -96,14 +96,11 @@ export function CurrencyProvider({
   };
 
   // Refresh currency data function
-  const refreshCurrencyData = async () => {
+  const refreshCurrencyData = useCallback(async () => {
     clearCurrencyCache();
     await loadCurrencyData();
-
-    // Force re-render by updating state
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 100);
-  };
+    // Avoid forcing additional rerenders; loadCurrencyData manages isLoading
+  }, []);
 
   useEffect(() => {
     loadCurrencyData();
@@ -182,7 +179,7 @@ export function CurrencyProvider({
     fetchRate();
   }, [availableCurrencies]);
 
-  const setCurrency = async (newCurrency: string) => {
+  const setCurrency = useCallback(async (newCurrency: string) => {
     try {
       // Check if currency is available
       const isAvailable = availableCurrencies.some(c => c.code === newCurrency);
@@ -222,9 +219,9 @@ export function CurrencyProvider({
         setCurrencyState(savedCurrency);
       }
     }
-  };
+  }, [availableCurrencies]);
 
-  const formatCurrency = (amount: number): string => {
+  const formatCurrency = useCallback((amount: number): string => {
     if (!currentCurrencyData || !currencySettings) {
       return `$${amount.toFixed(2)}`;
     }
@@ -234,52 +231,56 @@ export function CurrencyProvider({
 
     // Format using admin settings
     return formatCurrencyAmount(convertedAmount, currentCurrencyData.code, availableCurrencies, currencySettings);
-  };
+  }, [currentCurrencyData, currencySettings, availableCurrencies]);
 
-  const convertAmount = (amount: number, fromCurrency?: string, toCurrency?: string): number => {
+  const convertAmount = useCallback((amount: number, fromCurrency?: string, toCurrency?: string): number => {
     if (!fromCurrency || !toCurrency) {
       return amount;
     }
     return convertCurrency(amount, fromCurrency, toCurrency, availableCurrencies);
-  };
+  }, [availableCurrencies]);
 
-  // Prevent hydration mismatch by not rendering until client is ready
-  if (!isClient) {
-    return (
-      <CurrencyContext.Provider
-        value={{
-          currency: serverCurrency || 'USD',
-          setCurrency,
-          rate,
-          isLoading: true,
-          formatCurrency,
-          convertAmount,
-          availableCurrencies: [],
-          currentCurrencyData: null,
-          currencySettings: null,
-          refreshCurrencyData
-        }}
-      >
-        {children}
-      </CurrencyContext.Provider>
-    );
-  }
+  // Dev-only: log excessive renders to help diagnose rerenders
+  const renderCountRef = useRef(0);
+  useEffect(() => {
+    renderCountRef.current += 1;
+    if (process.env.NODE_ENV === 'development' && renderCountRef.current % 20 === 0) {
+      console.warn('[CurrencyProvider] high render count:', renderCountRef.current);
+    }
+  });
+
+  // Build both values at top-level to keep hooks order consistent
+  const fallbackValue = useMemo(() => ({
+    currency: serverCurrency || 'USD',
+    setCurrency,
+    rate,
+    isLoading: true,
+    formatCurrency,
+    convertAmount,
+    availableCurrencies: [],
+    currentCurrencyData: null,
+    currencySettings: null,
+    refreshCurrencyData
+  }), [serverCurrency, setCurrency, rate, formatCurrency, convertAmount, refreshCurrencyData]);
+
+  const contextValue = useMemo(() => ({
+    currency,
+    setCurrency,
+    rate,
+    isLoading,
+    formatCurrency,
+    convertAmount,
+    availableCurrencies,
+    currentCurrencyData,
+    currencySettings,
+    refreshCurrencyData
+  }), [currency, setCurrency, rate, isLoading, formatCurrency, convertAmount, availableCurrencies, currentCurrencyData, currencySettings, refreshCurrencyData]);
+
+  // Choose value without conditional hooks or early returns
+  const value = isClient ? contextValue : fallbackValue;
 
   return (
-    <CurrencyContext.Provider
-      value={{
-        currency,
-        setCurrency,
-        rate,
-        isLoading,
-        formatCurrency,
-        convertAmount,
-        availableCurrencies,
-        currentCurrencyData,
-        currencySettings,
-        refreshCurrencyData
-      }}
-    >
+    <CurrencyContext.Provider value={value}>
       {children}
     </CurrencyContext.Provider>
   );
