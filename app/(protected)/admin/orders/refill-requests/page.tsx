@@ -11,17 +11,34 @@ import {
     FaSearch,
     FaSync,
     FaTimes
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -38,7 +55,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface Order {
   id: number;
   user: {
@@ -149,10 +167,12 @@ interface PaginationInfo {
 }
 
 const RefillOrdersPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('Refill Orders', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<RefillOrderStats>({
     totalEligible: 0,
@@ -179,9 +199,11 @@ const RefillOrdersPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [statsLoading, setStatsLoading] = useState(true);
-  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+
   const [refillDialogOpen, setRefillDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [refillInfo, setRefillInfo] = useState<RefillInfo | null>(null);
@@ -190,7 +212,8 @@ const RefillOrdersPage = () => {
     customQuantity: '',
     reason: '',
   });
-  const [processing, setProcessing] = useState(false);
+  const [processing, setProcessing] = useState(false);
+
   const calculateStatusCounts = (ordersData: Order[]) => {
     const counts = {
       partial: 0,
@@ -204,7 +227,8 @@ const RefillOrdersPage = () => {
     });
 
     return counts;
-  };
+  };
+
   const fetchEligibleOrders = async () => {
     try {
       setOrdersLoading(true);
@@ -225,9 +249,11 @@ const RefillOrdersPage = () => {
         throw new Error(result.message || 'Failed to fetch eligible orders');
       }
 
-      console.log('Refill requests fetched successfully:', result);
+      console.log('Refill requests fetched successfully:', result);
+
       const transformedOrders = (result.data || [])
-        .filter((request: any, index: number, self: any[]) =>
+        .filter((request: any, index: number, self: any[]) =>
+
           index === self.findIndex(r => r.order?.id === request.order?.id)
         )
         .map((request: any) => ({
@@ -273,15 +299,18 @@ const RefillOrdersPage = () => {
     } finally {
       setOrdersLoading(false);
     }
-  };
+  };
+
   const fetchStats = async () => {
     try {
       console.log('Fetching refill stats from API...');
 
-      const response = await fetch('/api/admin/refill-requests/stats');
+      const response = await fetch('/api/admin/refill-requests/stats');
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      }
+
       const text = await response.text();
       if (!text) {
         throw new Error('Empty response from server');
@@ -326,14 +355,16 @@ const RefillOrdersPage = () => {
       });
       showToast('Error fetching statistics. Please refresh the page.', 'error');
     }
-  };
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchEligibleOrders();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm]);
+
   useEffect(() => {
     fetchEligibleOrders();
   }, [pagination.page, pagination.limit, statusFilter]);
@@ -347,7 +378,8 @@ const RefillOrdersPage = () => {
     };
 
     loadData();
-  }, []);
+  }, []);
+
   useEffect(() => {
     if (pagination.total > 0) {
       setStats((prev) => ({
@@ -355,17 +387,20 @@ const RefillOrdersPage = () => {
         totalEligible: pagination.total,
       }));
     }
-  }, [pagination.total]);
+  }, [pagination.total]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const safeFormatOrderId = (id: any) => {
     return formatID(String(id || 'null'));
-  };
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -410,11 +445,13 @@ const RefillOrdersPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
+  };
+
   const handleOpenRefillDialog = async (order: Order) => {
     try {
       setSelectedOrder(order);
-      setRefillDialogOpen(true);
+      setRefillDialogOpen(true);
+
       const response = await fetch(`/api/admin/orders/${order.id}/refill`);
       const result = await response.json();
 
@@ -429,7 +466,8 @@ const RefillOrdersPage = () => {
       showToast('Error fetching refill information', 'error');
       setRefillDialogOpen(false);
     }
-  };
+  };
+
   const handleCreateRefill = async () => {
     if (!selectedOrder || !refillInfo) return;
 
@@ -482,6 +520,7 @@ const RefillOrdersPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -551,14 +590,18 @@ const RefillOrdersPage = () => {
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
-                >
-                  All
+                  >
+                    All
                   <span
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all' ? 'bg-white/20' : 'bg-purple-100 text-purple-700'
                     }`}
                   >
-                    {stats.totalEligible}
+                    {statsLoading ? (
+                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
+                    ) : (
+                      stats.totalEligible
+                    )}
                   </span>
                 </button>
                 <button
@@ -575,7 +618,11 @@ const RefillOrdersPage = () => {
                       statusFilter === 'partial' ? 'bg-white/20' : 'bg-orange-100 text-orange-700'
                     }`}
                   >
-                    {stats.partialOrders}
+                    {statsLoading ? (
+                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
+                    ) : (
+                      stats.partialOrders
+                    )}
                   </span>
                 </button>
                 <button
@@ -594,7 +641,11 @@ const RefillOrdersPage = () => {
                         : 'bg-green-100 text-green-700'
                     }`}
                   >
-                    {stats.completedOrders}
+                    {statsLoading ? (
+                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
+                    ) : (
+                      stats.completedOrders
+                    )}
                   </span>
                 </button>
               </div>
@@ -633,7 +684,8 @@ const RefillOrdersPage = () => {
                       } else if (selectedBulkAction === 'export') {
                         console.log('Export selected:', selectedOrders);
                         showToast(`Exporting ${selectedOrders?.length || 0} selected orders...`, 'info');
-                      }
+                      }
+
                       setSelectedBulkAction('');
                       setSelectedOrders([]);
                     }}
@@ -646,10 +698,144 @@ const RefillOrdersPage = () => {
             )}
 
             {ordersLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">Loading eligible orders...</div>
+              <div style={{ minHeight: '600px' }}>
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full text-sm min-w-[1300px]">
+                    <thead className="sticky top-0 bg-white border-b z-10">
+                      <tr>
+                        <th className="text-left p-3">
+                          <div className="h-4 w-4 gradient-shimmer rounded" />
+                        </th>
+                        {Array.from({ length: 10 }).map((_, idx) => (
+                          <th key={idx} className="text-left p-3">
+                            <div className="h-4 w-20 gradient-shimmer rounded" />
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: 10 }).map((_, rowIdx) => (
+                        <tr key={rowIdx} className="border-t">
+                          <td className="p-3">
+                            <div className="h-4 w-4 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-6 w-16 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                            <div className="h-3 w-32 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-4 w-32 gradient-shimmer rounded mb-1" />
+                            <div className="h-3 w-24 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-4 w-16 gradient-shimmer rounded mb-1" />
+                            <div className="h-3 w-20 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-4 w-24 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3 text-right">
+                            <div className="h-4 w-12 gradient-shimmer rounded mb-1" />
+                            <div className="h-3 w-16 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3 text-right">
+                            <div className="h-4 w-16 gradient-shimmer rounded mb-1" />
+                            <div className="h-3 w-12 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3 text-center">
+                            <div className="h-6 w-20 gradient-shimmer rounded-full mx-auto" />
+                          </td>
+                          <td className="p-3 text-center">
+                            <div className="h-4 w-12 gradient-shimmer rounded mb-1" />
+                            <div className="h-1.5 w-24 gradient-shimmer rounded-full mx-auto mb-1" />
+                            <div className="h-3 w-16 gradient-shimmer rounded mx-auto" />
+                          </td>
+                          <td className="p-3 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <div className="h-8 w-8 gradient-shimmer rounded" />
+                              <div className="h-8 w-8 gradient-shimmer rounded" />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="lg:hidden">
+                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <div key={idx} className="card card-padding border-l-4 border-blue-500 mb-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-4 w-4 gradient-shimmer rounded" />
+                            <div className="h-6 w-16 gradient-shimmer rounded" />
+                            <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                          </div>
+                          <div className="h-8 w-8 gradient-shimmer rounded" />
+                        </div>
+                        <div className="mb-4 pb-4 border-b">
+                          <div className="h-3 w-12 gradient-shimmer rounded mb-2" />
+                          <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-32 gradient-shimmer rounded" />
+                        </div>
+                        <div className="mb-4">
+                          <div className="h-4 w-32 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-24 gradient-shimmer rounded mb-2" />
+                          <div className="h-3 w-16 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-20 gradient-shimmer rounded mb-2" />
+                          <div className="h-4 w-24 gradient-shimmer rounded" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <div className="h-3 w-16 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-16 gradient-shimmer rounded mb-1" />
+                            <div className="h-3 w-12 gradient-shimmer rounded" />
+                          </div>
+                          <div>
+                            <div className="h-3 w-20 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-20 gradient-shimmer rounded mb-1" />
+                            <div className="h-3 w-12 gradient-shimmer rounded" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <div className="h-3 w-16 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-12 gradient-shimmer rounded" />
+                            <div className="h-3 w-16 gradient-shimmer rounded mt-1" />
+                          </div>
+                          <div>
+                            <div className="h-3 w-20 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-16 gradient-shimmer rounded" />
+                          </div>
+                        </div>
+                        <div className="mb-4">
+                          <div className="h-3 w-16 gradient-shimmer rounded mb-2" />
+                          <div className="h-2 w-full gradient-shimmer rounded-full mb-1" />
+                          <div className="h-3 w-20 gradient-shimmer rounded" />
+                        </div>
+                        <div className="flex justify-center">
+                          <div className="h-10 w-32 gradient-shimmer rounded-lg" />
+                        </div>
+                        <div className="mt-4 pt-4 border-t">
+                          <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-20 gradient-shimmer rounded" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <div className="h-5 w-48 gradient-shimmer rounded" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
+                    <div className="h-9 w-20 gradient-shimmer rounded" />
+                    <div className="h-5 w-24 gradient-shimmer rounded" />
+                    <div className="h-9 w-16 gradient-shimmer rounded" />
+                  </div>
                 </div>
               </div>
             ) : orders?.length === 0 ? (
@@ -1104,9 +1290,7 @@ const RefillOrdersPage = () => {
                     style={{ color: 'var(--text-muted)' }}
                   >
                     {ordersLoading ? (
-                      <div className="flex items-center gap-2">
-                        <span>Loading pagination...</span>
-                      </div>
+                      <div className="h-5 w-48 gradient-shimmer rounded" />
                     ) : (
                       `Showing ${formatNumber(
                         (pagination.page - 1) * pagination.limit + 1
@@ -1136,7 +1320,7 @@ const RefillOrdersPage = () => {
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {ordersLoading ? (
-                        <GradientSpinner size="w-4 h-4" />
+                        <div className="h-5 w-24 gradient-shimmer rounded" />
                       ) : (
                         `Page ${formatNumber(
                           pagination.page

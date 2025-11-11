@@ -12,13 +12,28 @@ import {
     FaSearch,
     FaShoppingCart,
     FaUserTie,
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
 );
 
 interface FAQItem {
@@ -33,17 +48,20 @@ const FAQPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [openItems, setOpenItems] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     setPageTitle('FAQs', appName);
-  }, [appName]);
+  }, [appName]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, []);
+
   const faqItems: FAQItem[] = [
     {
       id: 1,
@@ -129,19 +147,22 @@ const FAQPage = () => {
         "Once an order is placed, it cannot be canceled as our system starts processing it immediately. However, if the order hasn't started yet, you can contact support for assistance.",
       category: 'orders',
     },
-  ];
+  ];
+
   const filteredFAQs = faqItems.filter(
     (item) =>
       item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.answer.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  );
+
   const groupedFAQs = filteredFAQs.reduce((acc, item) => {
     if (!acc[item.category]) {
       acc[item.category] = [];
     }
     acc[item.category].push(item);
     return acc;
-  }, {} as Record<string, FAQItem[]>);
+  }, {} as Record<string, FAQItem[]>);
+
   const categoryNames: Record<string, { name: string; icon: React.ReactNode }> =
     {
       general: {
@@ -171,17 +192,53 @@ const FAQPage = () => {
 
   if (isLoading) {
     return (
-      <div className="page-container">
-        <div className="page-content">
-          {}
-          <div className="card card-padding">
-            <div className="text-center py-8 flex flex-col items-center">
-              <GradientSpinner size="w-14 h-14" className="mb-4" />
-              <div className="text-lg font-medium">Loading FAQs...</div>
+      <>
+        <ShimmerStyles />
+        <div className="page-container">
+          <div className="page-content">
+            <div className="card card-padding">
+              <div className="mb-6">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <div className="w-4 h-4 gradient-shimmer rounded" />
+                  </div>
+                  <div className="h-10 w-full gradient-shimmer rounded-lg pl-10" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {Array.from({ length: 6 }).map((_, categoryIdx) => (
+                  <div key={categoryIdx}>
+                    <div className="card-header mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="card-icon">
+                          <div className="w-5 h-5 gradient-shimmer rounded" />
+                        </div>
+                        <div className="h-6 w-32 gradient-shimmer rounded" />
+                      </div>
+                      <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                    </div>
+
+                    <div className="space-y-2">
+                      {Array.from({ length: 3 }).map((_, itemIdx) => (
+                        <div key={itemIdx} className="card">
+                          <div className="w-full p-4 flex justify-between items-center">
+                            <div className="flex-1">
+                              <div className="h-5 w-full gradient-shimmer rounded mb-2" />
+                              <div className="h-5 w-3/4 gradient-shimmer rounded" />
+                            </div>
+                            <div className="w-5 h-5 gradient-shimmer rounded ml-4" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 

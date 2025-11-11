@@ -25,23 +25,235 @@ import {
     FaTimesCircle,
     FaUserPlus,
     FaUsers,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 const PendingTransactions = dynamic(
   () => import('@/components/admin/main/pending-transactions'),
   { ssr: false }
 );
 
+const TransactionsTableSkeleton = () => {
+  const rows = Array.from({ length: 3 });
+  
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes shimmer {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+        .gradient-shimmer {
+          background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
+        .dark .gradient-shimmer {
+          background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+          background-size: 200% 100%;
+        }
+      `}} />
+      <div className="hidden lg:block overflow-x-auto min-h-[300px]">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 9 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-32 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-2 justify-center">
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="lg:hidden">
+        <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
+          {rows.map((_, idx) => (
+            <div key={idx} className="card card-padding border-l-4 border-yellow-500 mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-6 w-16 gradient-shimmer rounded" />
+                <div className="h-6 w-20 gradient-shimmer rounded-full" />
+              </div>
+              <div className="mb-4 pb-4 border-b">
+                <div className="h-4 w-32 gradient-shimmer rounded" />
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="h-4 w-20 gradient-shimmer rounded" />
+                <div className="h-4 w-24 gradient-shimmer rounded" />
+              </div>
+              <div className="mb-4">
+                <div className="h-4 w-20 gradient-shimmer rounded" />
+              </div>
+              <div className="mb-4">
+                <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                <div className="h-3 w-20 gradient-shimmer rounded" />
+              </div>
+              <div className="flex gap-2">
+                <div className="h-10 flex-1 gradient-shimmer rounded" />
+                <div className="h-10 flex-1 gradient-shimmer rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
+
 const LatestUsers = dynamic(
   () => import('@/components/admin/main/latest-users'),
   { ssr: false }
-);
+);
+
+const UsersTableSkeleton = () => {
+  const rows = Array.from({ length: 5 });
+  
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes shimmer {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+        .gradient-shimmer {
+          background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
+        .dark .gradient-shimmer {
+          background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+          background-size: 200% 100%;
+        }
+      `}} />
+      <div className="hidden lg:block overflow-x-auto min-h-[400px]">
+        <table className="w-full text-sm min-w-[600px]">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 5 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                  <div className="h-3 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="lg:hidden">
+        <div className="space-y-4">
+          {rows.map((_, idx) => (
+            <div key={idx} className="card card-padding border-l-4 border-blue-500 mb-4">
+              <div className="h-6 w-16 gradient-shimmer rounded mb-4" />
+              <div className="space-y-4">
+                <div className="h-4 w-32 gradient-shimmer rounded" />
+                <div className="h-4 w-40 gradient-shimmer rounded" />
+                <div className="h-4 w-24 gradient-shimmer rounded" />
+                <div className="h-4 w-28 gradient-shimmer rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -58,19 +270,22 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 const CACHE_KEYS = {
   DASHBOARD_STATS: 'admin_dashboard_stats',
   LATEST_USERS: 'admin_latest_users',
   PENDING_TRANSACTIONS: 'admin_pending_transactions',
   CACHE_TIMESTAMP: 'admin_cache_timestamp'
-};
+};
+
 const CACHE_DURATIONS = {
   DASHBOARD_STATS: 2 * 60 * 1000,
   LATEST_USERS: 45 * 1000,
   PENDING_TRANSACTIONS: 30 * 1000,
   DEFAULT: 60 * 1000
-};
+};
+
 const getCachedData = (key: string) => {
   try {
     if (typeof window === 'undefined') return null;
@@ -85,9 +300,11 @@ const getCachedData = (key: string) => {
 const setCachedData = (key: string, data: any) => {
   try {
     if (typeof window === 'undefined') return;
-    sessionStorage.setItem(key, JSON.stringify(data));
+    sessionStorage.setItem(key, JSON.stringify(data));
+
     const timestampKey = `${key}_timestamp`;
-    sessionStorage.setItem(timestampKey, Date.now().toString());
+    sessionStorage.setItem(timestampKey, Date.now().toString());
+
     const versionKey = `${key}_version`;
     sessionStorage.setItem(versionKey, Math.random().toString(36).substr(2, 9));
   } catch (error) {
@@ -100,7 +317,8 @@ const isCacheValid = (key: string) => {
     if (typeof window === 'undefined') return false;
     const timestampKey = `${key}_timestamp`;
     const timestamp = sessionStorage.getItem(timestampKey);
-    if (!timestamp) return false;
+    if (!timestamp) return false;
+
     let duration = CACHE_DURATIONS.DEFAULT;
     if (key === CACHE_KEYS.DASHBOARD_STATS) duration = CACHE_DURATIONS.DASHBOARD_STATS;
     else if (key === CACHE_KEYS.LATEST_USERS) duration = CACHE_DURATIONS.LATEST_USERS;
@@ -123,7 +341,8 @@ const clearCache = () => {
   } catch (error) {
     console.warn('Error clearing cache:', error);
   }
-};
+};
+
 const invalidateCache = (key: string) => {
   try {
     if (typeof window === 'undefined') return;
@@ -133,7 +352,8 @@ const invalidateCache = (key: string) => {
   } catch (error) {
     console.warn('Error invalidating cache:', error);
   }
-};
+};
+
 interface User {
   id: number;
   username: string;
@@ -212,16 +432,20 @@ type DashboardStats = {
 };
 
 export default function AdminDashboardPage() {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('Admin Dashboard', appName);
   }, [appName]);
 
-  const { currency, rate } = useCurrency();
-  const initializeWithCache = () => {
+  const { currency, rate } = useCurrency();
+
+  const initializeWithCache = () => {
+
     const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
     const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
-    const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
+    const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
+
     const cachedStats = statsValid ? getCachedData(CACHE_KEYS.DASHBOARD_STATS) : null;
     const defaultStats = {
       totalOrders: 0,
@@ -255,33 +479,40 @@ export default function AdminDashboardPage() {
 
   const initialData = initializeWithCache();
 
-  const [stats, setStats] = useState<DashboardStats>(initialData.stats);
-  const [statsLoading, setStatsLoading] = useState(!initialData.hasStatsCache);
+  const [stats, setStats] = useState<DashboardStats>(initialData.stats);
+
+  const [statsLoading, setStatsLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
-  const [chartLoading, setChartLoading] = useState(false);
+  const [chartLoading, setChartLoading] = useState(false);
+
   const [latestUsers, setLatestUsers] = useState<User[]>(initialData.latestUsers);
-  const [latestUsersLoading, setLatestUsersLoading] = useState(!initialData.hasUsersCache);
+  const [latestUsersLoading, setLatestUsersLoading] = useState(true);
+
   const [pendingTransactions, setPendingTransactions] = useState<
     PendingTransaction[]
   >(initialData.pendingTransactions);
-  const [transactionsLoading, setTransactionsLoading] = useState(!initialData.hasTransactionsCache);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
   const [totalTransactionCount, setTotalTransactionCount] = useState(initialData.pendingTransactions.length);
   const [customToast, setCustomToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const fetchAllData = useCallback(async (isBackgroundRefresh = false) => {
-    try {
+    try {
+
       const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
       const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
-      const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
+      const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
+
       if (!isBackgroundRefresh) {
-        if (!statsValid) setStatsLoading(true);
-        if (!usersValid) setLatestUsersLoading(true);
-        if (!transactionsValid) setTransactionsLoading(true);
-      }
+        setStatsLoading(true);
+        setLatestUsersLoading(true);
+        setTransactionsLoading(true);
+      }
+
       const fetchWithRetry = async (url: string, options: any = {}, retries = 2): Promise<any> => {
         for (let i = 0; i <= retries; i++) {
           try {
@@ -301,11 +532,13 @@ export default function AdminDashboardPage() {
 
             return await response.json();
           } catch (error) {
-            if (i === retries) throw error;
+            if (i === retries) throw error;
+
             await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
           }
         }
-      };
+      };
+
       const statsPromise = fetchWithRetry('/api/admin/dashboard/stats').catch(error => {
         console.error('Stats API failed:', error);
         return { success: false, error: error.message };
@@ -334,22 +567,28 @@ export default function AdminDashboardPage() {
       }).catch(error => {
         console.error('Transactions API failed:', error);
         return { data: null, error: error.message };
-      });
+      });
+
       const results = await Promise.allSettled([
         statsPromise,
         usersPromise,
         transactionsPromise,
-      ]);
+      ]);
+
       const statsResult = results[0].status === 'fulfilled' ? results[0].value : { success: false, error: 'Stats request failed' };
       const usersResult = results[1].status === 'fulfilled' ? results[1].value : { success: false, error: 'Users request failed' };
-      const transactionsResponse = results[2].status === 'fulfilled' ? results[2].value : { data: null, error: 'Transactions request failed' };
+      const transactionsResponse = results[2].status === 'fulfilled' ? results[2].value : { data: null, error: 'Transactions request failed' };
+
       if (statsResult.success && statsResult.data) {
         setStats(statsResult.data);
         setCachedData(CACHE_KEYS.DASHBOARD_STATS, statsResult.data);
       } else if (statsResult.error) {
-        console.warn('Stats data failed to load:', statsResult.error);
-      }
-      setStatsLoading(false);
+        console.warn('Stats data failed to load:', statsResult.error);
+
+      }
+
+      setStatsLoading(false);
+
       if (usersResult.success && usersResult.data) {
         const filteredUsers = (usersResult.data || []).filter(
           (user: User) => user.role === 'user'
@@ -358,9 +597,12 @@ export default function AdminDashboardPage() {
         setLatestUsers(usersToShow);
         setCachedData(CACHE_KEYS.LATEST_USERS, usersToShow);
       } else if (usersResult.error) {
-        console.warn('Users data failed to load:', usersResult.error);
-      }
-      setLatestUsersLoading(false);
+        console.warn('Users data failed to load:', usersResult.error);
+
+      }
+
+      setLatestUsersLoading(false);
+
       let transactionsToShow: PendingTransaction[] = [];
       if (transactionsResponse.data) {
         if (transactionsResponse.data.transactions) {
@@ -378,45 +620,59 @@ export default function AdminDashboardPage() {
         }
         setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, transactionsToShow);
       } else if (transactionsResponse.error) {
-        console.warn('Transactions data failed to load:', transactionsResponse.error);
-      }
+        console.warn('Transactions data failed to load:', transactionsResponse.error);
+
+      }
+
       setTransactionsLoading(false);
 
     } catch (error) {
-      console.error('Critical error in fetchAllData:', error);
+      console.error('Critical error in fetchAllData:', error);
+
+
       setStatsLoading(false);
       setLatestUsersLoading(false);
-      setTransactionsLoading(false);
+      setTransactionsLoading(false);
+
       if (!isBackgroundRefresh) {
         showToast('Some dashboard data failed to load. Please try refreshing.', 'error');
       }
     }
   }, []);
 
-  useEffect(() => {
+  useEffect(() => {
+
     const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
     const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
-    const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
+    const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
+
     const hasAnyValidCache = statsValid || usersValid || transactionsValid;
 
-    if (hasAnyValidCache) {
+    if (hasAnyValidCache) {
+
       fetchAllData(true);
-    } else {
+    } else {
+
       fetchAllData(false);
-    }
-    const interval = setInterval(() => {
+    }
+
+
+    const interval = setInterval(() => {
+
       fetchAllData(true);
     }, 15000);
 
     return () => clearInterval(interval);
-  }, [fetchAllData]);
+  }, [fetchAllData]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setCustomToast({ message, type });
     setTimeout(() => setCustomToast(null), 4000);
-  };
+  };
+
   const formatCurrency = useCallback((amount: number, currency: string) => {
     const formatters = {
       USD: (amt: number) => `${amt.toFixed(2)}`,
@@ -437,12 +693,16 @@ export default function AdminDashboardPage() {
         }
       );
 
-      if (response.status === 200) {
+      if (response.status === 200) {
+
         const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
         setPendingTransactions(updatedTransactions);
-        setTotalTransactionCount((prev) => prev - 1);
-        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
-        invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
+        setTotalTransactionCount((prev) => prev - 1);
+
+        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
+
+        invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
+
         setTimeout(() => fetchAllData(true), 100);
 
         showToast('Transaction approved successfully!', 'success');
@@ -470,12 +730,16 @@ export default function AdminDashboardPage() {
         }
       );
 
-      if (response.status === 200) {
+      if (response.status === 200) {
+
         const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
         setPendingTransactions(updatedTransactions);
-        setTotalTransactionCount((prev) => prev - 1);
-        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
-        invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
+        setTotalTransactionCount((prev) => prev - 1);
+
+        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
+
+        invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
+
         setTimeout(() => fetchAllData(true), 100);
 
         showToast('Transaction cancelled successfully!', 'success');
@@ -486,12 +750,16 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleTransactionUpdate = useCallback((transactionId: number) => {
+  const handleTransactionUpdate = useCallback((transactionId: number) => {
+
     const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
     setPendingTransactions(updatedTransactions);
-    setTotalTransactionCount((prev) => prev - 1);
-    setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
-    invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
+    setTotalTransactionCount((prev) => prev - 1);
+
+    setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
+
+    invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
+
     setTimeout(() => fetchAllData(true), 100);
   }, [pendingTransactions, fetchAllData]);
 
@@ -499,15 +767,18 @@ export default function AdminDashboardPage() {
     setTransactionsLoading(true);
     fetchPendingTransactions();
     showToast('Transactions refreshed successfully!', 'success');
-  };
-  const formatDashboardCurrency = useCallback((amount: number) => {
+  };
+
+  const formatDashboardCurrency = useCallback((amount: number) => {
+
     if (currency === 'USD' && rate) {
       const amountInUSD = amount / rate;
       return `$${amountInUSD.toFixed(2)}`;
     } else {
       return `৳${amount.toFixed(2)}`;
     }
-  }, [currency, rate]);
+  }, [currency, rate]);
+
   const formatDate = useCallback((dateString: string) => {
     return {
       date: moment(dateString).format('DD/MM/YYYY'),
@@ -525,6 +796,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="page-content">
+      <ShimmerStyles />
       {}
       <div className="toast-container">
         {customToast && (
@@ -547,9 +819,13 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Total Users</h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  {stats.totalUsers || 1}
-                </p>
+                {statsLoading ? (
+                  <div className="h-8 w-16 gradient-shimmer rounded" />
+                ) : (
+                  <p className="text-2xl font-bold text-blue-600">
+                    {stats.totalUsers || 1}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -561,9 +837,13 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Total Balance</h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatDashboardCurrency(stats.totalRevenue || 0)}
-                </p>
+                {statsLoading ? (
+                  <div className="h-8 w-20 gradient-shimmer rounded" />
+                ) : (
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatDashboardCurrency(stats.totalRevenue || 0)}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -575,9 +855,13 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Total Orders</h3>
-                <p className="text-2xl font-bold text-purple-600">
-                  {stats.totalOrders || 0}
-                </p>
+                {statsLoading ? (
+                  <div className="h-8 w-16 gradient-shimmer rounded" />
+                ) : (
+                  <p className="text-2xl font-bold text-purple-600">
+                    {stats.totalOrders || 0}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -589,9 +873,13 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Total Payments</h3>
-                <p className="text-2xl font-bold text-orange-600">
-                  {formatDashboardCurrency(stats.totalRevenue || 0)}
-                </p>
+                {statsLoading ? (
+                  <div className="h-8 w-20 gradient-shimmer rounded" />
+                ) : (
+                  <p className="text-2xl font-bold text-orange-600">
+                    {formatDashboardCurrency(stats.totalRevenue || 0)}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -606,9 +894,13 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Last 30 Days</h3>
-                <p className="text-2xl font-bold text-cyan-600">
-                  {formatDashboardCurrency(stats.totalRevenue || 0)}
-                </p>
+                {statsLoading ? (
+                  <div className="h-8 w-20 gradient-shimmer rounded" />
+                ) : (
+                  <p className="text-2xl font-bold text-cyan-600">
+                    {formatDashboardCurrency(stats.totalRevenue || 0)}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -620,9 +912,13 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Today Profit</h3>
-                <p className="text-2xl font-bold text-rose-600">
-                  {formatDashboardCurrency(stats.todaysProfit || 0)}
-                </p>
+                {statsLoading ? (
+                  <div className="h-8 w-20 gradient-shimmer rounded" />
+                ) : (
+                  <p className="text-2xl font-bold text-rose-600">
+                    {formatDashboardCurrency(stats.todaysProfit || 0)}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -634,9 +930,13 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">Today's Orders</h3>
-                <p className="text-2xl font-bold text-teal-600">
-                  {stats.todaysOrders || 0}
-                </p>
+                {statsLoading ? (
+                  <div className="h-8 w-16 gradient-shimmer rounded" />
+                ) : (
+                  <p className="text-2xl font-bold text-teal-600">
+                    {stats.todaysOrders || 0}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -648,9 +948,13 @@ export default function AdminDashboardPage() {
               </div>
               <div className="flex-1">
                 <h3 className="card-title">New Users Today</h3>
-                <p className="text-2xl font-bold text-indigo-600">
-                  {stats.newUsersToday || 0}
-                </p>
+                {statsLoading ? (
+                  <div className="h-8 w-16 gradient-shimmer rounded" />
+                ) : (
+                  <p className="text-2xl font-bold text-indigo-600">
+                    {stats.newUsersToday || 0}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -700,19 +1004,107 @@ export default function AdminDashboardPage() {
       </div>
 
       {}
-      <PendingTransactions
-        pendingTransactions={pendingTransactions}
-        transactionsLoading={transactionsLoading}
-        onTransactionUpdate={handleTransactionUpdate}
-        showToast={showToast}
-      />
+      <div className="mb-6">
+        <div className="card">
+          <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2 flex-1">
+                <div className="card-icon">
+                  <FaClock />
+                </div>
+                <h3 className="card-title">Pending Transactions</h3>
+              </div>
+              <Link
+                href="/admin/transactions"
+                className={`btn btn-secondary flex items-center gap-2`}
+              >
+                <FaEye className="w-4 h-4" />
+                View More
+              </Link>
+            </div>
+          </div>
+
+          <div style={{ padding: '0 24px 24px' }} className="min-h-[300px]">
+            {transactionsLoading ? (
+              <TransactionsTableSkeleton />
+            ) : pendingTransactions.length === 0 ? (
+              <div className="text-center py-12">
+                <FaCheckCircle
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  No pending transactions
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  All transactions are up to date
+                </p>
+              </div>
+            ) : (
+              <PendingTransactions
+                pendingTransactions={pendingTransactions}
+                onTransactionUpdate={handleTransactionUpdate}
+                showToast={showToast}
+              />
+            )}
+          </div>
+        </div>
+      </div>
 
       {}
-      <LatestUsers
-        latestUsers={latestUsers}
-        latestUsersLoading={latestUsersLoading}
-        formatCurrency={formatCurrency}
-      />
+      <div className="mb-6">
+        <div className="card card-padding">
+          <div className="card-header mb-4">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <div className="card-icon">
+                  <FaUsers />
+                </div>
+                <h3 className="card-title">Latest Users</h3>
+              </div>
+              <Link
+                href="/admin/users"
+                className={`btn btn-secondary flex items-center gap-2`}
+              >
+                <FaUsers className="w-4 h-4" />
+                View All Users
+              </Link>
+            </div>
+          </div>
+
+          <div className="min-h-[400px]">
+            {latestUsersLoading ? (
+              <UsersTableSkeleton />
+            ) : latestUsers.length === 0 ? (
+              <div className="text-center py-12">
+                <FaUsers
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  No users found
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {latestUsers.length === 0
+                    ? 'No users exist yet.'
+                    : 'No users match your criteria.'}
+                </p>
+              </div>
+            ) : (
+              <LatestUsers
+                latestUsers={latestUsers}
+                formatCurrency={formatCurrency}
+              />
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

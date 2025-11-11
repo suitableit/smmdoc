@@ -26,25 +26,44 @@ export default function Statistics() {
     completedOrders: number;
     activeServices: number;
     activeUsers: number;
+    totalOrders: number;
+    totalUsers: number;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        console.log('Statistics: Fetching homepage stats...');
         const res = await fetch('/api/homepage/stats', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
+          cache: 'no-store',
         });
+        console.log('Statistics: Response status:', res.status, res.ok);
+        
         const json = await res.json();
+        console.log('Statistics: Full API response:', json);
+        
         if (!res.ok || !json.success) {
+          console.error('Statistics: API error response:', json);
           throw new Error(json.error || 'Failed to load homepage stats');
         }
+        
+        console.log('Statistics: Received data:', json.data);
+        console.log('Statistics: Data types:', {
+          completedOrders: typeof json.data?.completedOrders,
+          activeServices: typeof json.data?.activeServices,
+          activeUsers: typeof json.data?.activeUsers,
+          totalOrders: typeof json.data?.totalOrders,
+          totalUsers: typeof json.data?.totalUsers,
+        });
+        
         setCounts(json.data);
       } catch (err: any) {
-        console.error('Homepage stats error:', err);
+        console.error('Statistics: Error fetching stats:', err);
         setError(err.message || 'Failed to load stats');
       }
     };
@@ -56,11 +75,14 @@ export default function Statistics() {
     let countValue = item.count;
     if (counts) {
       if (item.title === 'Order Completed') {
-        countValue = counts.completedOrders.toLocaleString();
+        const value = typeof counts.completedOrders === 'number' ? counts.completedOrders : 0;
+        countValue = value.toString();
       } else if (item.title === 'Active Services') {
-        countValue = counts.activeServices.toLocaleString();
+        const value = typeof counts.activeServices === 'number' ? counts.activeServices : 0;
+        countValue = value.toString();
       } else if (item.title === 'Active Users') {
-        countValue = counts.activeUsers.toLocaleString();
+        const value = typeof counts.activeUsers === 'number' ? counts.activeUsers : 0;
+        countValue = value.toString();
       }
     }
     return { ...item, count: countValue };

@@ -30,7 +30,8 @@ import {
 } from 'react-icons/fa';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 
-const Hero: React.FC = () => {
+const Hero: React.FC = () => {
+
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -45,52 +46,115 @@ const Hero: React.FC = () => {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
   const [rememberMe, setRememberMe] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };
+  };
+
   const isAuthenticated = status === 'authenticated' && session?.user;
   const isLoading = status === 'loading';
   const userRole = session?.user?.role || 'user';
-  const isAdmin = userRole === 'admin';
-  const [usersCount, setUsersCount] = useState<number | null>(null);
-  const [completedOrdersCount, setCompletedOrdersCount] = useState<number | null>(null);
-  const [totalOrdersCount, setTotalOrdersCount] = useState<number | null>(null);
-  const [activeUsersCount, setActiveUsersCount] = useState<number | null>(null);
-  const [statsError, setStatsError] = useState<string | null>(null);
+  const isAdmin = userRole === 'admin';
+
+  const [usersCount, setUsersCount] = useState<number>(0);
+  const [completedOrdersCount, setCompletedOrdersCount] = useState<number>(0);
+  const [totalOrdersCount, setTotalOrdersCount] = useState<number>(0);
+  const [activeUsersCount, setActiveUsersCount] = useState<number>(0);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+
   const [userBalance, setUserBalance] = useState<number | null>(null);
   const [activeOrdersCountUser, setActiveOrdersCountUser] = useState<number | null>(null);
   const [userStatsLoading, setUserStatsLoading] = useState<boolean>(false);
-  const [userStatsError, setUserStatsError] = useState<string | null>(null);
+  const [userStatsError, setUserStatsError] = useState<string | null>(null);
+
   const isMountedRef = useRef(true);
   useEffect(() => {
     return () => { isMountedRef.current = false; };
-  }, []);
+  }, []);
+
   useEffect(() => {
     const fetchHomepageStats = async () => {
       try {
-        const res = await fetch('/api/homepage/stats');
+        console.log('Hero: Fetching homepage stats...');
+        const res = await fetch('/api/homepage/stats', {
+          cache: 'no-store',
+        });
+        console.log('Hero: Response status:', res.status, res.ok);
+        
         const json = await res.json();
+        console.log('Hero: Full API response:', json);
+        
         if (!res.ok || !json.success) {
-          throw new Error(json.error || 'Failed to fetch homepage stats');
+          console.error('Hero: API error response:', json);
+          throw new Error(json.error || json.message || 'Failed to fetch homepage stats');
         }
+        
         const { totalUsers, completedOrders, activeUsers, totalOrders } = json?.data || {};
-        if (!isMountedRef.current) return;
-        if (typeof totalUsers === 'number') setUsersCount(totalUsers);
-        if (typeof completedOrders === 'number') setCompletedOrdersCount(completedOrders);
-        if (typeof totalOrders === 'number') setTotalOrdersCount(totalOrders);
-        if (typeof activeUsers === 'number') setActiveUsersCount(activeUsers);
+        
+        console.log('Hero: Extracted data:', { totalUsers, completedOrders, activeUsers, totalOrders });
+        console.log('Hero: Data types:', {
+          totalUsers: typeof totalUsers,
+          completedOrders: typeof completedOrders,
+          activeUsers: typeof activeUsers,
+          totalOrders: typeof totalOrders,
+        });
+        
+        if (!isMountedRef.current) {
+          console.log('Hero: Component unmounted, skipping state update');
+          return;
+        }
+        
+        const finalUsersCount = typeof totalUsers === 'number' ? totalUsers : (totalUsers === null || totalUsers === undefined ? 0 : Number(totalUsers) || 0);
+        const finalCompletedOrders = typeof completedOrders === 'number' ? completedOrders : (completedOrders === null || completedOrders === undefined ? 0 : Number(completedOrders) || 0);
+        const finalTotalOrders = typeof totalOrders === 'number' ? totalOrders : (totalOrders === null || totalOrders === undefined ? 0 : Number(totalOrders) || 0);
+        const finalActiveUsers = typeof activeUsers === 'number' ? activeUsers : (activeUsers === null || activeUsers === undefined ? 0 : Number(activeUsers) || 0);
+        
+        console.log('Hero: Setting state with values:', {
+          finalUsersCount,
+          finalCompletedOrders,
+          finalTotalOrders,
+          finalActiveUsers,
+          'raw values': { totalUsers, completedOrders, totalOrders, activeUsers },
+        });
+        
+        setUsersCount(finalUsersCount);
+        setCompletedOrdersCount(finalCompletedOrders);
+        setTotalOrdersCount(finalTotalOrders);
+        setActiveUsersCount(finalActiveUsers);
+        
+        console.log('Hero: State updated. Current values will be:', {
+          usersCount: finalUsersCount,
+          totalOrdersCount: finalTotalOrders,
+          activeUsersCount: finalActiveUsers,
+        });
+        
+        setDebugInfo({
+          apiResponse: json,
+          extracted: { totalUsers, completedOrders, activeUsers, totalOrders },
+          final: {
+            finalUsersCount,
+            finalTotalOrders,
+            finalActiveUsers,
+          },
+        });
       } catch (err: any) {
-        console.error('Error fetching homepage stats:', err);
+        console.error('Hero: Error fetching homepage stats:', err);
         if (!isMountedRef.current) return;
         setStatsError(err.message || 'Failed to fetch homepage stats');
+        setUsersCount(0);
+        setCompletedOrdersCount(0);
+        setTotalOrdersCount(0);
+        setActiveUsersCount(0);
       }
     };
     fetchHomepageStats();
-  }, []);
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated || isAdmin) return;
     let cancelled = false;
@@ -119,7 +183,8 @@ const Hero: React.FC = () => {
     };
     fetchUserStats();
     return () => { cancelled = true; };
-  }, [isAuthenticated, isAdmin]);
+  }, [isAuthenticated, isAdmin]);
+
   const renderCountRef = useRef(0);
   useEffect(() => {
     renderCountRef.current += 1;
@@ -137,13 +202,15 @@ const Hero: React.FC = () => {
   const onSubmit: SubmitHandler<SignInSchema> = async (values) => {
     setError('');
     setSuccess('');
-    setUrlError('');
+    setUrlError('');
+
     if (isEnabledForForm('signIn') && !recaptchaToken) {
       setError('Please complete the ReCAPTCHA verification.');
       return;
     }
 
-    startTransition(() => {
+    startTransition(() => {
+
       const submitData = recaptchaToken 
         ? { ...values, recaptchaToken }
         : values;
@@ -160,14 +227,17 @@ const Hero: React.FC = () => {
             return;
           }
 
-          if (data?.success) {
+          if (data?.success) {
+
             const redirectUrl = data.redirectTo || '/dashboard';
-            const isAdmin = data.isAdmin === true;
+            const isAdmin = data.isAdmin === true;
+
             setSuccess(isAdmin
               ? 'Login successful! Redirecting to admin dashboard...'
               : 'Login successful! Redirecting to dashboard...');
 
-            console.log('Redirect URL:', redirectUrl);
+            console.log('Redirect URL:', redirectUrl);
+
             setTimeout(() => {
               window.location.href = redirectUrl;
             }, 1000);
@@ -182,7 +252,8 @@ const Hero: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     await signIn('google', { callbackUrl: DEFAULT_SIGN_IN_REDIRECT });
-  };
+  };
+
   const AuthenticatedUserContent = () => (
     <div
       className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full -mt-[30px] lg:-mt-[0px] pt-[30px] p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200"
@@ -245,8 +316,10 @@ const Hero: React.FC = () => {
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)]">
-                {}
-                {isAdmin ? (totalOrdersCount !== null ? totalOrdersCount.toLocaleString() : '0') : (activeOrdersCountUser !== null ? activeOrdersCountUser.toLocaleString() : (userStatsLoading ? '0' : '0'))}
+                {isAdmin 
+                  ? (typeof totalOrdersCount === 'number' ? totalOrdersCount.toString() : '0')
+                  : (typeof activeOrdersCountUser === 'number' ? activeOrdersCountUser.toString() : (userStatsLoading ? '0' : '0'))
+                }
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 {isAdmin ? 'Total Orders' : 'Active Orders'}
@@ -254,7 +327,10 @@ const Hero: React.FC = () => {
             </div>
             <div>
               <div className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)]">
-                {isAdmin ? (activeUsersCount !== null ? activeUsersCount.toLocaleString() : '0') : (userBalance !== null ? `$${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : (userStatsLoading ? '0' : '$0.00'))}
+                {isAdmin 
+                  ? (typeof activeUsersCount === 'number' ? activeUsersCount.toString() : '0')
+                  : (typeof userBalance === 'number' ? `$${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : (userStatsLoading ? '0' : '$0.00'))
+                }
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 {isAdmin ? 'Active Users' : 'Account Balance'}
@@ -264,7 +340,8 @@ const Hero: React.FC = () => {
         </div>
       </div>
     </div>
-  );
+  );
+
   const LoadingContent = () => (
     <div
       className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200"
@@ -358,13 +435,22 @@ const Hero: React.FC = () => {
                 />
                 <div className="text-gray-600 dark:text-gray-300 font-semibold text-base transition-colors duration-200">
                   <span className="text-[var(--primary)] dark:text-[var(--secondary)] font-bold transition-colors duration-200">
-                    {usersCount !== null ? usersCount.toLocaleString() : '0'}
+                    {typeof usersCount === 'number' ? usersCount.toString() : '0'}
                   </span>
-                  + Users using our services.
+                  {' '}+ Users using our services.
                 </div>
               </div>
             </div>
           </div>
+          
+          {process.env.NODE_ENV === 'development' && debugInfo && (
+            <div className="mt-4 p-4 bg-yellow-100 dark:bg-yellow-900/20 rounded text-xs">
+              <strong>Debug Info:</strong>
+              <pre className="mt-2 overflow-auto max-h-40">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </div>
+          )}
 
           {}
           <div className="flex justify-center">

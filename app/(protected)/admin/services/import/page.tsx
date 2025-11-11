@@ -19,17 +19,34 @@ import {
     FaTimes,
     FaToggleOn,
     FaToggleOff,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID } from '@/lib/utils';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { formatID } from '@/lib/utils';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -46,7 +63,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 const StepProgress = ({ currentStep }: { currentStep: number }) => {
   const steps = [
     { number: 1, title: 'Choose Provider', icon: FaHandshake },
@@ -122,7 +140,8 @@ const StepProgress = ({ currentStep }: { currentStep: number }) => {
       </div>
     </div>
   );
-};
+};
+
 interface Provider {
   id: string | number;
   name: string;
@@ -157,11 +176,14 @@ interface Service {
 const ImportServicesPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const router = useRouter();
+  const router = useRouter();
+
   useEffect(() => {
     setPageTitle('Import Services', appName);
-  }, [appName]);
-  const [realProviders, setRealProviders] = useState<Provider[]>([]);
+  }, [appName]);
+
+  const [realProviders, setRealProviders] = useState<Provider[]>([]);
+
   useEffect(() => {
     const fetchProviders = async () => {
       try {
@@ -187,9 +209,12 @@ const ImportServicesPage = () => {
     };
 
     fetchProviders();
-  }, []);
+  }, []);
+
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [editedServices, setEditedServices] = useState<{
     [key: string]: Partial<Service>;
@@ -197,12 +222,15 @@ const ImportServicesPage = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<{
     [key: string]: boolean;
-  }>({});
+  }>({});
+
   const [selectedProvider, setSelectedProvider] = useState<string>('');
-  const [profitPercent, setProfitPercent] = useState<number>(10);
+  const [profitPercent, setProfitPercent] = useState<number>(10);
+
   const [apiCategories, setApiCategories] =
     useState<ApiCategory[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+
   const [services, setServices] = useState<Service[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -213,8 +241,10 @@ const ImportServicesPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-  const [duplicateServices, setDuplicateServices] = useState<Set<string>>(new Set());
+  } | null>(null);
+
+  const [duplicateServices, setDuplicateServices] = useState<Set<string>>(new Set());
+
   const checkDuplicateServices = async (servicesToCheck: Service[]) => {
     try {
       console.log('🔍 Checking duplicates for services:', servicesToCheck.length);
@@ -250,7 +280,8 @@ const ImportServicesPage = () => {
     } catch (error) {
       console.error('Error checking duplicates:', error);
     }
-  };
+  };
+
   const groupedServices = useMemo(() => {
     const filteredServices = services.filter(
       (service) =>
@@ -269,38 +300,44 @@ const ImportServicesPage = () => {
     });
 
     return grouped;
-  }, [services, searchTerm]);
+  }, [services, searchTerm]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const toggleCategoryCollapse = (category: string) => {
     setCollapsedCategories((prev) => ({
       ...prev,
       [category]: !prev[category],
     }));
-  };
+  };
+
   const handleCategorySelect = (categoryId: string | number) => {
     setApiCategories((prev) =>
       prev.map((cat) =>
         cat.id === categoryId ? { ...cat, selected: !cat.selected } : cat
       )
     );
-  };
+  };
+
   const handleSelectAllCategories = () => {
     const allSelected = apiCategories.every((cat) => cat.selected);
     setApiCategories((prev) =>
       prev.map((cat) => ({ ...cat, selected: !allSelected }))
     );
-  };
+  };
+
   const loadCategories = async () => {
     setCategoriesLoading(true);
     setIsLoading(true);
 
-    try {
+    try {
+
       const response = await fetch(`/api/admin/services/import?action=categories&providerId=${selectedProvider}`, {
         method: 'GET',
         credentials: 'include',
@@ -326,22 +363,26 @@ const ImportServicesPage = () => {
           'success'
         );
       } else {
-        showToast(`Failed to load categories: ${result.error}`, 'error');
+        showToast(`Failed to load categories: ${result.error}`, 'error');
+
         setApiCategories([]);
       }
     } catch (error) {
       console.error('Error loading categories:', error);
-      showToast('Failed to load categories', 'error');
+      showToast('Failed to load categories', 'error');
+
       setApiCategories([]);
     } finally {
       setCategoriesLoading(false);
       setIsLoading(false);
     }
-  };
+  };
+
   const getProviderName = (providerId: string) => {
     const provider = realProviders.find((p) => p.id?.toString() === providerId);
     return provider ? provider.name : 'Unknown Provider';
-  };
+  };
+
   const loadServicesForCategories = async (page = 1, append = false) => {
     if (!append) {
       setIsLoading(true);
@@ -361,7 +402,8 @@ const ImportServicesPage = () => {
         setIsLoading(false);
         setLoadingMore(false);
         return;
-      }
+      }
+
       const response = await fetch('/api/admin/services/import', {
         method: 'POST',
         headers: {
@@ -405,7 +447,8 @@ const ImportServicesPage = () => {
         const categoryServices = result.data.services || [];
         const pagination = result.data.pagination || {};
 
-        console.log('📄 Pagination info:', pagination);
+        console.log('📄 Pagination info:', pagination);
+
         const servicesWithProfit = categoryServices.map((service: any) => {
           const providerPrice = parseFloat(service.rate) || 0;
           const salePrice = parseFloat((providerPrice * (1 + profitPercent / 100)).toFixed(2));
@@ -423,19 +466,23 @@ const ImportServicesPage = () => {
             refill: service.refill || false,
             cancel: service.cancel || false,
           };
-        });
+        });
+
         setCurrentPage(pagination.page || 1);
         setTotalPages(pagination.totalPages || 1);
         setTotalServices(pagination.total || categoryServices.length);
         setHasMoreServices(pagination.hasMore || false);
 
-        if (append) {
+        if (append) {
+
           setServices(prev => [...prev, ...servicesWithProfit]);
           showToast(`Loaded ${servicesWithProfit.length} more services (${services.length + servicesWithProfit.length}/${pagination.total || servicesWithProfit.length} total)`, 'success');
-        } else {
+        } else {
+
           setServices(servicesWithProfit);
           showToast(`Loaded ${servicesWithProfit.length} services from selected categories (${pagination.total || servicesWithProfit.length} total available)`, 'success');
-        }
+        }
+
         await checkDuplicateServices(servicesWithProfit);
       } else {
         showToast(`Failed to load services: ${result.error}`, 'error');
@@ -453,14 +500,16 @@ const ImportServicesPage = () => {
       setIsLoading(false);
       setLoadingMore(false);
     }
-  };
+  };
+
   const loadMoreServices = async () => {
     if (hasMoreServices && !loadingMore && !isLoading) {
       const nextPage = currentPage + 1;
       console.log(`🔄 Loading more services - Page ${nextPage}`);
       await loadServicesForCategories(nextPage, true);
     }
-  };
+  };
+
   const calculateSalePrice = (service: Service, percentage: number) => {
     const providerPrice = parseFloat(service.providerPrice?.toString() || '0') || 0;
     const salePrice = parseFloat((providerPrice * (1 + percentage / 100)).toFixed(2));
@@ -468,11 +517,13 @@ const ImportServicesPage = () => {
     console.log(`💰 Calculating: Provider $${providerPrice} + ${percentage}% = $${salePrice}`);
 
     return salePrice;
-  };
+  };
+
   const getCurrentSalePrice = (service: Service) => {
     const currentPercent = getCurrentValue(service, 'percent') as number;
     return calculateSalePrice(service, currentPercent);
-  };
+  };
+
   const handleFieldChange = (
     serviceId: string | number,
     field: keyof Service,
@@ -489,7 +540,8 @@ const ImportServicesPage = () => {
       },
     }));
     setHasChanges(true);
-  };
+  };
+
   const getCurrentValue = (service: Service, field: keyof Service) => {
     if (!service || !service.id) return service?.[field];
 
@@ -499,13 +551,15 @@ const ImportServicesPage = () => {
     return editedServices[serviceId]?.[field] !== undefined
       ? editedServices[serviceId][field]
       : service[field];
-  };
+  };
+
   const handleNext = async () => {
     if (currentStep === 1) {
       if (!selectedProvider) {
         showToast('Please select a provider', 'error');
         return;
-      }
+      }
+
       const selectedProviderData = realProviders.find(
         (p) => p.id?.toString() === selectedProvider
       );
@@ -534,16 +588,19 @@ const ImportServicesPage = () => {
       await loadServicesForCategories();
       console.log('🔥 DEBUG: Current services after loading:', services.length);
     }
-  };
+  };
+
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
-  };
+  };
+
   const handleSaveServices = async () => {
     try {
-      setIsLoading(true);
-      showToast('Importing services...', 'pending');
+      setIsImporting(true);
+      showToast('Importing services...', 'pending');
+
       const response = await fetch('/api/admin/services/import', {
         method: 'PUT',
         headers: {
@@ -569,7 +626,8 @@ const ImportServicesPage = () => {
             skipped > 0 ? ` (${skipped} skipped)` : ''
           }${errors > 0 ? ` (${errors} errors)` : ''}`,
           'success'
-        );
+        );
+
         try {
           await fetch('/api/admin/categories/get-categories', {
             method: 'GET',
@@ -585,19 +643,21 @@ const ImportServicesPage = () => {
 
       } else {
         showToast(`Failed to import services: ${result.error}`, 'error');
-        setIsLoading(false);
+        setIsImporting(false);
         return;
-      }
+      }
+
       setCurrentStep(1);
       setSelectedProvider('');
       setServices([]);
-      setEditedServices({});
+      setEditedServices({});
+
       setTimeout(() => {
         router.push('/admin/services');
       }, 1500);
     } catch (error: any) {
       console.error('Error importing services:', error);
-      setIsLoading(false);
+      setIsImporting(false);
       showToast(
         `Error importing services: ${error.message || 'Unknown error'}`,
         'error'
@@ -619,6 +679,7 @@ const ImportServicesPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <StepProgress currentStep={currentStep} />
 
@@ -786,15 +847,55 @@ const ImportServicesPage = () => {
             {currentStep === 2 && (
               <div className="space-y-6">
                 {categoriesLoading ? (
-                  <div className="flex items-center justify-center py-20">
-                    <div className="text-center flex flex-col items-center">
-                      <GradientSpinner size="w-12 h-12" className="mb-3" />
-                      <div className="text-base font-medium">
-                        Loading categories from{' '}
-                        {getProviderName(selectedProvider)}...
+                  <>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="h-5 w-48 gradient-shimmer rounded mb-2" />
+                          <div className="h-4 w-64 gradient-shimmer rounded" />
+                        </div>
+                        <div className="h-9 w-24 gradient-shimmer rounded-lg" />
                       </div>
                     </div>
-                  </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm min-w-[600px]">
+                        <thead className="sticky top-0 bg-white border-b z-10">
+                          <tr>
+                            <th className="text-left p-3">
+                              <div className="h-4 w-4 gradient-shimmer rounded" />
+                            </th>
+                            <th className="text-left p-3">
+                              <div className="h-4 w-32 gradient-shimmer rounded" />
+                            </th>
+                            <th className="text-left p-3">
+                              <div className="h-4 w-28 gradient-shimmer rounded" />
+                            </th>
+                            <th className="text-left p-3">
+                              <div className="h-4 w-20 gradient-shimmer rounded" />
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Array.from({ length: 8 }).map((_, idx) => (
+                            <tr key={idx} className="border-t">
+                              <td className="p-3">
+                                <div className="h-4 w-4 gradient-shimmer rounded" />
+                              </td>
+                              <td className="p-3">
+                                <div className="h-4 w-40 gradient-shimmer rounded" />
+                              </td>
+                              <td className="p-3">
+                                <div className="h-4 w-16 gradient-shimmer rounded" />
+                              </td>
+                              <td className="p-3">
+                                <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 ) : (
                   <>
                     {}
@@ -860,13 +961,12 @@ const ImportServicesPage = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {apiCategories.map((category, index) => (
+                          {apiCategories.map((category) => (
                             <tr
                               key={category.id}
-                              className={`border-t hover:bg-gray-50 transition-colors duration-200 animate-in fade-in slide-in-from-left-1 ${
+                              className={`border-t hover:bg-gray-50 transition-colors duration-200 ${
                                 category.selected ? 'bg-blue-50' : ''
                               }`}
-                              style={{ animationDelay: `${index * 50}ms` }}
                             >
                               <td className="p-3">
                                 <input
@@ -950,26 +1050,137 @@ const ImportServicesPage = () => {
             {}
             {currentStep === 3 && (
               <div className="space-y-6">
-                {}
-                {isLoading && (
-                  <div className="flex items-center justify-center py-20">
-                    <div className="text-center flex flex-col items-center">
-                      <GradientSpinner size="w-16 h-16" className="mb-4" />
-                      <div className="text-lg font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-                        Loading Services...
-                      </div>
-                      <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                        Fetching services from {getProviderName(selectedProvider)} for selected categories
-                      </div>
-                      <div className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-                        This may take a few moments for large datasets
+                {isLoading ? (
+                  <>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+                        <div className="mb-2 md:mb-0">
+                          <div className="h-5 w-48 gradient-shimmer rounded mb-2" />
+                          <div className="h-4 w-64 gradient-shimmer rounded" />
+                        </div>
+                        <div className="h-4 w-32 gradient-shimmer rounded" />
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {}
-                {!isLoading && (
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-2">
+                      <div className="h-10 w-full md:max-w-md gradient-shimmer rounded-lg" />
+                      <div className="h-10 w-32 gradient-shimmer rounded-lg" />
+                    </div>
+                    <div className="hidden lg:block card animate-in fade-in duration-500">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm min-w-[1000px]">
+                          <thead className="sticky top-0 bg-white border-b z-10">
+                            <tr>
+                              {Array.from({ length: 8 }).map((_, idx) => (
+                                <th key={idx} className="text-left p-3">
+                                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Array.from({ length: 3 }).map((_, catIdx) => (
+                              <React.Fragment key={catIdx}>
+                                <tr className="bg-gray-50 border-t-2 border-gray-200">
+                                  <td colSpan={8} className="p-3">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <div className="h-4 w-4 gradient-shimmer rounded" />
+                                        <div className="h-5 w-32 gradient-shimmer rounded" />
+                                        <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                                {Array.from({ length: 3 }).map((_, serviceIdx) => (
+                                  <tr key={serviceIdx} className="border-t">
+                                    <td className="p-3 pl-8">
+                                      <div className="h-6 w-16 gradient-shimmer rounded" />
+                                    </td>
+                                    <td className="p-3">
+                                      <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                                    </td>
+                                    <td className="p-3">
+                                      <div className="h-6 w-16 gradient-shimmer rounded-full" />
+                                    </td>
+                                    <td className="p-3">
+                                      <div className="h-4 w-12 gradient-shimmer rounded mb-1" />
+                                      <div className="h-3 w-20 gradient-shimmer rounded" />
+                                    </td>
+                                    <td className="p-3">
+                                      <div className="h-[42px] w-20 gradient-shimmer rounded-lg" />
+                                    </td>
+                                    <td className="p-3">
+                                      <div className="h-8 w-8 gradient-shimmer rounded mx-auto" />
+                                    </td>
+                                    <td className="p-3">
+                                      <div className="h-8 w-8 gradient-shimmer rounded mx-auto" />
+                                    </td>
+                                    <td className="p-3">
+                                      <div className="h-16 w-full gradient-shimmer rounded-lg" />
+                                    </td>
+                                  </tr>
+                                ))}
+                              </React.Fragment>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div className="lg:hidden space-y-6">
+                      {Array.from({ length: 3 }).map((_, catIdx) => (
+                        <div key={catIdx} className="space-y-4">
+                          <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 flex-1">
+                                <div className="h-4 w-4 gradient-shimmer rounded" />
+                                <div className="h-5 w-32 gradient-shimmer rounded" />
+                                <div className="h-6 w-20 gradient-shimmer rounded-full ml-auto" />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-4 ml-4">
+                            {Array.from({ length: 2 }).map((_, serviceIdx) => (
+                              <div key={serviceIdx} className="card card-padding border-l-4 border-blue-500">
+                                <div className="flex items-center justify-between mb-4">
+                                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                                  <div className="h-5 w-16 gradient-shimmer rounded-full" />
+                                </div>
+                                <div className="mb-4">
+                                  <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                                  <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <div className="h-4 w-20 gradient-shimmer rounded mb-2" />
+                                    <div className="h-10 w-full gradient-shimmer rounded" />
+                                  </div>
+                                  <div>
+                                    <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <div className="h-4 w-16 gradient-shimmer rounded mb-2" />
+                                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                                  </div>
+                                  <div>
+                                    <div className="h-4 w-16 gradient-shimmer rounded mb-2" />
+                                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                                  <div className="h-20 w-full gradient-shimmer rounded-lg" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
                   <>
                 {}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -1033,9 +1244,11 @@ const ImportServicesPage = () => {
                           (cat) => collapsedCategories[cat]
                         );
 
-                        if (allCollapsed) {
+                        if (allCollapsed) {
+
                           setCollapsedCategories({});
-                        } else {
+                        } else {
+
                           const newCollapsed: { [key: string]: boolean } = {};
                           allCategories.forEach((cat) => {
                             newCollapsed[cat] = true;
@@ -1708,12 +1921,16 @@ const ImportServicesPage = () => {
                 ) : (
                   <button
                     onClick={handleSaveServices}
-                    disabled={isLoading || services.length === 0}
+                    disabled={isLoading || isImporting || services.length === 0}
                     className="btn btn-primary flex items-center gap-2 bg-green-600 hover:bg-green-700 w-full justify-center"
                   >
                     {isLoading ? (
                       <>
-                        Updating...
+                        Loading Services...
+                      </>
+                    ) : isImporting ? (
+                      <>
+                        Importing...
                       </>
                     ) : (
                       <>

@@ -3,13 +3,24 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { FaTicketAlt, FaExclamationTriangle } from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
+import { FaTicketAlt, FaExclamationTriangle } from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style jsx>{`
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}</style>
 );
 
 interface TicketSystemGuardProps {
@@ -33,21 +44,25 @@ const TicketSystemGuard: React.FC<TicketSystemGuardProps> = ({
         if (response.ok) {
           const data = await response.json();
           const enabled = data.ticketSystemEnabled || false;
-          setIsEnabled(enabled);
-          if (!enabled) {
+          setIsEnabled(enabled);
+
+          if (!enabled) {
+
             const isAdmin = session?.user?.role === 'admin';
             const redirectPath = isAdmin ? '/admin' : '/dashboard';
             router.push(redirectPath);
             return;
           }
-        } else {
+        } else {
+
           const isAdmin = session?.user?.role === 'admin';
           const redirectPath = isAdmin ? '/admin' : '/dashboard';
           router.push(redirectPath);
           return;
         }
       } catch (error) {
-        console.error('Error checking ticket system status:', error);
+        console.error('Error checking ticket system status:', error);
+
         const isAdmin = session?.user?.role === 'admin';
         const redirectPath = isAdmin ? '/admin' : '/dashboard';
         router.push(redirectPath);
@@ -58,17 +73,16 @@ const TicketSystemGuard: React.FC<TicketSystemGuardProps> = ({
     };
 
     checkTicketSystem();
-  }, []);
+  }, []);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <GradientSpinner className="mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
+      <>
+        <ShimmerStyles />
+      </>
     );
-  }
+  }
+
   return <>{children}</>
 };
 

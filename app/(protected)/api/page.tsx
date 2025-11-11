@@ -25,7 +25,30 @@ import {
     FaSpinner,
     FaSync,
     FaTimes,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -67,7 +90,8 @@ interface ServiceType {
 }
 
 export default function ApiIntegrationPage() {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('API Integration', appName);
   }, [appName]);
@@ -84,7 +108,8 @@ export default function ApiIntegrationPage() {
   const [activeTab, setActiveTab] = useState<'php' | 'python' | 'nodejs'>(
     'php'
   );
-  const user = useCurrentUser();
+  const user = useCurrentUser();
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -93,10 +118,12 @@ export default function ApiIntegrationPage() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  useEffect(() => {
+  useEffect(() => {
+
     const fetchApiKey = async () => {
       try {
-        setIsLoading(true);
+        setIsLoading(true);
+
         setTimeout(() => {
           setApiKey(
             'smmdoc_51NxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -115,7 +142,8 @@ export default function ApiIntegrationPage() {
   const generateNewApiKey = async () => {
     setIsGeneratingKey(true);
 
-    try {
+    try {
+
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const newApiKey =
@@ -150,7 +178,8 @@ export default function ApiIntegrationPage() {
         showToast('Failed to copy to clipboard', 'error');
       }
     );
-  };
+  };
+
   const serviceTypes: ServiceType[] = [
     {
       id: 0,
@@ -226,23 +255,29 @@ export default function ApiIntegrationPage() {
       serviceTypes.find((type) => type.id === selectedServiceType) ||
       serviceTypes[0]
     );
-  };
+  };
+
   const codeExamples = {
-    php: `<?php
-$url = 'https://smmdoc.com/api/v2';
-$apiKey = '${apiKey || 'YOUR_API_KEY'}';
+    php: `<?php
+
+$url = 'https://smmdoc.com/api/v2';
+
+$apiKey = '${apiKey || 'YOUR_API_KEY'}';
+
 $postData = [
     'key' => $apiKey,
     'action' => 'add',
     'service' => 1,
     'link' => 'https://www.instagram.com/username',
     'quantity' => 100
-];
+];
+
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_POST, 1);
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
 $response = curl_exec($ch);
 curl_close($ch);
 
@@ -282,9 +317,11 @@ axios.post(url, payload)
   };
 
   return (
-    <div className="page-container">
-      {}
-      {toastMessage && (
+    <>
+      {isLoading && <ShimmerStyles />}
+      <div className="page-container">
+        {}
+        {toastMessage && (
         <Toast
           message={toastMessage.message}
           type={toastMessage.type}
@@ -310,10 +347,13 @@ axios.post(url, payload)
               </p>
 
               {isLoading ? (
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-                  <div className="w-20 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-                  <div className="w-32 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 gradient-shimmer rounded" />
+                  </div>
+                  <div className="h-10 w-20 gradient-shimmer rounded-lg" />
+                  <div className="h-10 w-32 gradient-shimmer rounded-lg" />
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -1185,6 +1225,7 @@ axios.post(url, payload)
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

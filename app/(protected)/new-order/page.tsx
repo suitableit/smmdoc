@@ -44,12 +44,26 @@ import {
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
 );
 
 const Toast = ({
@@ -96,10 +110,50 @@ const ServiceDetailsCard = ({
   if (isLoading) {
     return (
       <div className="card card-padding">
-        <div className="text-center py-12 flex flex-col items-center">
-          <GradientSpinner size="w-12 h-12" className="mb-4" />
-          <div className="text-lg font-medium text-gray-700">
-            Loading service details...
+        <ShimmerStyles />
+        <div
+          className="card"
+          style={{
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+            color: 'white',
+            padding: '24px',
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-6 w-16 gradient-shimmer rounded-full" />
+          </div>
+          <div className="h-6 w-64 gradient-shimmer rounded mb-2" />
+          <div className="h-4 w-full gradient-shimmer rounded" />
+        </div>
+        <div className="card card-padding">
+          <div className="grid grid-cols-2 gap-4">
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <div key={idx}>
+                <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                <div className="flex items-center">
+                  <div className="h-8 w-8 gradient-shimmer rounded-full mr-3" />
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6">
+            <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+            <div className="h-24 w-full gradient-shimmer rounded-lg" />
+          </div>
+          <div className="mt-6 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+            <div className="text-center">
+              <div className="h-6 w-12 gradient-shimmer rounded mx-auto mb-2" />
+              <div className="h-3 w-16 gradient-shimmer rounded mx-auto" />
+            </div>
+            <div className="text-center">
+              <div className="h-6 w-12 gradient-shimmer rounded mx-auto mb-2" />
+              <div className="h-3 w-16 gradient-shimmer rounded mx-auto" />
+            </div>
+            <div className="text-center">
+              <div className="h-6 w-16 gradient-shimmer rounded mx-auto mb-2" />
+              <div className="h-3 w-20 gradient-shimmer rounded mx-auto" />
+            </div>
           </div>
         </div>
       </div>
@@ -207,7 +261,8 @@ const ServiceDetailsCard = ({
                 'text-gray-600'
               }`}>
                 {(() => {
-                  if (!selected.serviceSpeed) return '-';
+                  if (!selected.serviceSpeed) return '-';
+
                   const speedMapping: { [key: string]: string } = {
                     'slow': 'Slow',
                     'sometimes_slow': 'Sometimes Slow',
@@ -389,7 +444,8 @@ function NewOrder() {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(true);
-  const [isServiceDetailsLoading, setIsServiceDetailsLoading] = useState(false);
+  const [isServiceDetailsLoading, setIsServiceDetailsLoading] = useState(false);
+
   const [serviceTypeFields, setServiceTypeFields] = useState({
     comments: '',
     username: '',
@@ -402,19 +458,22 @@ function NewOrder() {
     dripfeedInterval: undefined as number | undefined,
     isSubscription: false,
   });
-  const [serviceTypeErrors, setServiceTypeErrors] = useState<Record<string, string>>({});
+  const [serviceTypeErrors, setServiceTypeErrors] = useState<Record<string, string>>({});
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
-  };
+  };
+
   const handleServiceTypeFieldChange = (field: string, value: any) => {
     setServiceTypeFields(prev => ({
       ...prev,
       [field]: value
-    }));
+    }));
+
     if (serviceTypeErrors[field]) {
       setServiceTypeErrors(prev => {
         const newErrors = { ...prev };
@@ -422,7 +481,8 @@ function NewOrder() {
         return newErrors;
       });
     }
-  };
+  };
+
   const resetServiceTypeFields = () => {
     setServiceTypeFields({
       comments: '',
@@ -441,18 +501,22 @@ function NewOrder() {
 
   const selected = services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService);
   const perQty = Number(selected?.perqty) || 1;
-  const price = Number(selected?.rate) || 0;
-  const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
+  const price = Number(selected?.rate) || 0;
+
+  const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
+
   let totalPrice = 0;
   const baseUsdPrice = (price * qty) / 1000;
 
   if (currency === 'USD') {
     totalPrice = baseUsdPrice;
-  } else if (currency === 'BDT') {
+  } else if (currency === 'BDT') {
+
     const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
     const usdToBdtRate = bdtCurrency?.rate || 121;
     totalPrice = baseUsdPrice * usdToBdtRate;
-  } else {
+  } else {
+
     const targetCurrency = availableCurrencies?.find(c => c.code === currency);
     const conversionRate = targetCurrency?.rate || 1;
     totalPrice = baseUsdPrice * conversionRate;
@@ -626,7 +690,8 @@ function NewOrder() {
     console.log('Selected category changed:', selectedCategory);
     setIsServiceDetailsLoading(true);
     setServices([]);
-    setSelectedService('');
+    setSelectedService('');
+
     axios
       .post('/api/admin/services/catId-by-services', {
         categoryId: parseInt(selectedCategory),
@@ -794,7 +859,8 @@ function NewOrder() {
     if (!selectedService) {
       showToast('Please select a service', 'error');
       return;
-    }
+    }
+
     if (selected?.orderLink === 'username') {
       if (!link || link.trim().length === 0) {
         showToast('Please enter a valid username', 'error');
@@ -843,7 +909,8 @@ function NewOrder() {
         'error'
       );
       return;
-    }
+    }
+
     const serviceTypeId = selected?.packageType || 1;
     const typeConfig = getServiceTypeConfig(serviceTypeId);
     const validationData = {
@@ -856,13 +923,16 @@ function NewOrder() {
       ? validateOrderByType(typeConfig, validationData) 
       : ['Unsupported or unknown service type'];
 
-    if (errors && errors.length > 0) {
+    if (errors && errors.length > 0) {
+
       const fieldErrors: Record<string, string> = {};
-      errors.forEach(error => {
+      errors.forEach(error => {
+
         const fieldMatch = error.match(/^(\w+):/);
         if (fieldMatch) {
           fieldErrors[fieldMatch[1]] = error.substring(fieldMatch[1].length + 2);
-        } else {
+        } else {
+
           showToast(`Service type validation failed: ${error}`, 'error');
         }
       });
@@ -875,14 +945,17 @@ function NewOrder() {
     }
 
     try {
-    setIsSubmitting(true);
+    setIsSubmitting(true);
+
     const currentUserResponse = await axiosInstance.get('/api/user/current');
     const currentUser = currentUserResponse.data;
 
-    const usdPrice = (price * qty) / 1000;
+    const usdPrice = (price * qty) / 1000;
+
     const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
     const usdToBdtRate = bdtCurrency?.rate || 121;
-    const bdtPrice = usdPrice * usdToBdtRate;
+    const bdtPrice = usdPrice * usdToBdtRate;
+
     console.log('Price Calculation Debug:', {
       serviceRate: price,
       quantity: qty,
@@ -904,7 +977,8 @@ function NewOrder() {
         serviceId: parseInt(selectedService),
         categoryId: parseInt(selectedCategory),
         userId: user?.id,
-        avg_time: selected?.avg_time || '',
+        avg_time: selected?.avg_time || '',
+
         comments: serviceTypeFields.comments || undefined,
         username: serviceTypeFields.username || undefined,
         posts: serviceTypeFields.posts || undefined,
@@ -928,7 +1002,8 @@ function NewOrder() {
 
       dispatch(dashboardApi.util.invalidateTags(['UserStats']));
 
-      refetchUserStats();
+      refetchUserStats();
+
       setLink('');
       setQty(0);
       setSelectedService('');
@@ -981,6 +1056,7 @@ function NewOrder() {
       )}
 
       <div className="page-content">
+        <ShimmerStyles />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           <div className="w-full space-y-4 lg:space-y-6">
             <div className="card" style={{ padding: '8px' }}>
@@ -1021,14 +1097,47 @@ function NewOrder() {
 
             <div className="card card-padding w-full max-w-full">
               {isFormLoading ? (
-                <div className="text-center py-12 flex flex-col items-center">
-                  <GradientSpinner size="w-16 h-16" className="mb-6" />
-                  <div className="text-xl font-semibold text-gray-700 mb-2">
-                    Loading Order Form...
+                <div className="space-y-4 w-full max-w-full">
+                  <div className="form-group w-full">
+                    <div className="form-label">
+                      <span className="inline-block h-4 w-32 gradient-shimmer rounded" />
+                    </div>
+                    <div className="relative w-full">
+                      <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    Please wait while we prepare everything for you
+                  <div className="form-group">
+                    <div className="form-label">
+                      <span className="inline-block h-4 w-24 gradient-shimmer rounded" />
+                    </div>
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
                   </div>
+                  <div className="form-group">
+                    <div className="form-label">
+                      <span className="inline-block h-4 w-20 gradient-shimmer rounded" />
+                    </div>
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="form-group">
+                    <div className="form-label">
+                      <span className="inline-block h-4 w-16 gradient-shimmer rounded" />
+                    </div>
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="form-group">
+                    <div className="form-label">
+                      <span className="inline-block h-4 w-24 gradient-shimmer rounded" />
+                    </div>
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                    <div className="h-3 w-32 gradient-shimmer rounded mt-1" />
+                  </div>
+                  <div className="form-group">
+                    <div className="form-label">
+                      <span className="inline-block h-4 w-20 gradient-shimmer rounded" />
+                    </div>
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
                 </div>
               ) : (
                 <form
@@ -1434,7 +1543,8 @@ export default function NewOrderPage() {
           </div>
 
           <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {platforms.map((platform, index) => {
+            {platforms.map((platform, index) => {
+
               const mobileClass = platform.solidColor;
               const desktopClass = platform.color.replace('bg-gradient-to-r', 'sm:bg-gradient-to-r');
 

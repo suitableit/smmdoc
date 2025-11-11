@@ -12,16 +12,99 @@ import {
     FaSync,
     FaTimes,
     FaTrash
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { setPageTitle } from '@/lib/utils/set-page-title';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const ContactMessagesTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 8 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-4 w-4 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-32 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-24 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-2">
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div className="h-5 w-48 gradient-shimmer rounded" />
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <div className="h-9 w-20 gradient-shimmer rounded" />
+          <div className="h-5 w-24 gradient-shimmer rounded" />
+          <div className="h-9 w-16 gradient-shimmer rounded" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -38,7 +121,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface ContactMessage {
   id: string;
   userId: string;
@@ -67,17 +151,20 @@ interface PaginationInfo {
 }
 
 const ContactMessagesPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('Contact Messages', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [messageCounts, setMessageCounts] = useState({
     total: 0,
     unread: 0,
     read: 0,
     replied: 0
-  });
+  });
+
   const dummyContactMessages: ContactMessage[] = [
     {
       id: '001',
@@ -189,7 +276,8 @@ const ContactMessagesPage = () => {
       createdAt: '2024-06-19T17:10:00Z',
       status: 'Read' as const,
     },
-  ];
+  ];
+
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
@@ -207,13 +295,17 @@ const ContactMessagesPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const [fallbackMode, setFallbackMode] = useState(false);
-  const [warningMessage, setWarningMessage] = useState('');
-  const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
+  const [warningMessage, setWarningMessage] = useState('');
+
+  const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
+
   const fetchContactMessages = async () => {
     setMessagesLoading(true);
     try {
@@ -229,7 +321,8 @@ const ContactMessagesPage = () => {
 
       if (response.ok && data.success) {
         setContactMessages(data.messages || []);
-        setMessageCounts(data.messageCounts || { total: 0, unread: 0, read: 0, replied: 0 });
+        setMessageCounts(data.messageCounts || { total: 0, unread: 0, read: 0, replied: 0 });
+
         if (data.fallbackMode) {
           setFallbackMode(true);
           setWarningMessage(data.warning || 'Database connection unavailable. Showing sample data.');
@@ -246,14 +339,16 @@ const ContactMessagesPage = () => {
           hasPrev: data.pagination?.hasPrev || false,
         }));
       } else {
-        console.error('Failed to fetch contact messages:', data.error);
+        console.error('Failed to fetch contact messages:', data.error);
+
         setContactMessages(dummyContactMessages);
         setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
         setFallbackMode(true);
         setWarningMessage('Database connection failed. Showing sample data.');
       }
     } catch (error) {
-      console.error('Error fetching contact messages:', error);
+      console.error('Error fetching contact messages:', error);
+
       setContactMessages(dummyContactMessages);
       setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
       setFallbackMode(true);
@@ -261,10 +356,12 @@ const ContactMessagesPage = () => {
     } finally {
       setMessagesLoading(false);
     }
-  };
+  };
+
   useEffect(() => {
     fetchContactMessages();
-  }, [statusFilter, searchTerm, pagination.page, pagination.limit]);
+  }, [statusFilter, searchTerm, pagination.page, pagination.limit]);
+
   const formatMessageID = (id: number | string) => {
     return `${String(id)}`;
   };
@@ -293,10 +390,12 @@ const ContactMessagesPage = () => {
       default:
         return <FaEnvelope className="h-3 w-3" />;
     }
-  };
+  };
+
   const getPaginatedData = () => {
     return contactMessages;
-  };
+  };
+
   const loadContactMessages = async () => {
     setMessagesLoading(true);
     try {
@@ -311,14 +410,16 @@ const ContactMessagesPage = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setContactMessages(data.messages || []);
+        setContactMessages(data.messages || []);
+
         if (data.fallbackMode) {
           setFallbackMode(true);
           setWarningMessage(data.warning || 'Database connection unavailable. Showing sample data.');
         } else {
           setFallbackMode(false);
           setWarningMessage('');
-        }
+        }
+
         const totalCount = data.messageCounts?.total || 0;
         setPagination(prev => ({
           ...prev,
@@ -326,7 +427,8 @@ const ContactMessagesPage = () => {
           totalPages: Math.ceil(totalCount / prev.limit),
           hasNext: prev.page < Math.ceil(totalCount / prev.limit),
           hasPrev: prev.page > 1
-        }));
+        }));
+
         setMessageCounts({
           total: data.messageCounts?.total || 0,
           unread: data.messageCounts?.unread || 0,
@@ -337,7 +439,8 @@ const ContactMessagesPage = () => {
         showToast(data.error || 'Failed to load contact messages', 'error');
       }
     } catch (error) {
-      console.error('Error loading contact messages:', error);
+      console.error('Error loading contact messages:', error);
+
       setContactMessages(dummyContactMessages);
       setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
       setFallbackMode(true);
@@ -346,10 +449,12 @@ const ContactMessagesPage = () => {
     } finally {
       setMessagesLoading(false);
     }
-  };
+  };
+
   useEffect(() => {
     loadContactMessages();
-  }, [statusFilter, searchTerm, pagination.page]);
+  }, [statusFilter, searchTerm, pagination.page]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -381,10 +486,13 @@ const ContactMessagesPage = () => {
         ? prev.filter((id) => id !== messageId)
         : [...prev, messageId]
     );
-  };
-  const handleViewEditMessage = (messageId: string) => {
+  };
+
+  const handleViewEditMessage = (messageId: string) => {
+
     window.open(`/admin/contact-messages/${messageId}`, '_blank');
-  };
+  };
+
   const handleDeleteMessage = async (messageId: string) => {
     setDeleteLoading(true);
     try {
@@ -396,7 +504,8 @@ const ContactMessagesPage = () => {
 
       if (response.ok && data.success) {
         setContactMessages((prev) => prev.filter((message) => message.id !== messageId));
-        showToast('Message deleted successfully', 'success');
+        showToast('Message deleted successfully', 'success');
+
         fetchContactMessages();
       } else {
         showToast(data.error || 'Error deleting message', 'error');
@@ -410,7 +519,8 @@ const ContactMessagesPage = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
+  };
+
   const handleMarkAsRead = async (messageId: string) => {
     try {
       const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
@@ -434,7 +544,8 @@ const ContactMessagesPage = () => {
               : message
           )
         );
-        showToast('Message marked as read', 'success');
+        showToast('Message marked as read', 'success');
+
         fetchContactMessages();
       } else {
         showToast(data.error || 'Error updating message status', 'error');
@@ -443,7 +554,8 @@ const ContactMessagesPage = () => {
       console.error('Error marking message as read:', error);
       showToast('Error updating message status', 'error');
     }
-  };
+  };
+
   const handleBulkOperation = async (operation: string) => {
     if (!operation || selectedMessages.length === 0) return;
 
@@ -464,7 +576,8 @@ const ContactMessagesPage = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok && data.success) {
+
         await fetchContactMessages();
 
         switch (operation) {
@@ -505,6 +618,7 @@ const ContactMessagesPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -723,13 +837,8 @@ const ContactMessagesPage = () => {
               </div>
             )}
             {messagesLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">
-                    Loading contact messages...
-                  </div>
-                </div>
+              <div className="min-h-[600px]">
+                <ContactMessagesTableSkeleton />
               </div>
             ) : getPaginatedData().length === 0 ? (
               <div className="text-center py-12">
@@ -813,18 +922,9 @@ const ContactMessagesPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {messagesLoading ? (
+                      {getPaginatedData().length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="p-8 text-center">
-                            <div className="flex items-center justify-center space-x-2">
-                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
-                              <span style={{ color: 'var(--text-primary)' }}>Loading contact messages...</span>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : getPaginatedData().length === 0 ? (
-                        <tr>
-                          <td colSpan={7} className="p-8 text-center">
+                          <td colSpan={8} className="p-8 text-center">
                             <div className="text-gray-500">
                               <FaEnvelope className="mx-auto h-12 w-12 mb-4 opacity-50" />
                               <p className="text-lg font-medium mb-2">No contact messages found</p>
@@ -970,7 +1070,7 @@ const ContactMessagesPage = () => {
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {messagesLoading ? (
-                        <GradientSpinner size="w-4 h-4" />
+                        <div className="h-4 w-24 gradient-shimmer rounded" />
                       ) : (
                         `Page ${pagination.page} of ${pagination.totalPages}`
                       )}

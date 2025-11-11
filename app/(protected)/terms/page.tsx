@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
@@ -15,11 +15,43 @@ import {
   FaUserShield,
 } from 'react-icons/fa';
 
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 export default function TermsPage() {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     setPageTitle('Terms & Conditions', appName);
   }, [appName]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const termsData = [
     {
@@ -117,6 +149,101 @@ export default function TermsPage() {
       ],
     },
   ];
+
+  if (isLoading) {
+    return (
+      <>
+        <ShimmerStyles />
+        <div className="page-container">
+          <div className="page-content">
+            <div className="page-header">
+              <div className="h-8 w-48 gradient-shimmer rounded mb-2" />
+              <div className="h-4 w-96 gradient-shimmer rounded" />
+            </div>
+
+            <div className="card card-padding mb-6">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+                <div className="flex items-center mb-2 md:mb-0">
+                  <div className="card-icon mr-4">
+                    <div className="w-6 h-6 gradient-shimmer rounded" />
+                  </div>
+                  <div>
+                    <div className="h-5 w-24 gradient-shimmer rounded mb-2" />
+                    <div className="h-4 w-48 gradient-shimmer rounded" />
+                  </div>
+                </div>
+                <div className="h-6 w-16 gradient-shimmer rounded-full" />
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="card card-padding">
+                  <div className="card-header mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="card-icon">
+                        <div className="w-6 h-6 gradient-shimmer rounded" />
+                      </div>
+                      <div className="h-6 w-40 gradient-shimmer rounded" />
+                    </div>
+                    <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                  </div>
+
+                  <div className="space-y-3">
+                    {Array.from({ length: 4 }).map((_, idx) => (
+                      <div key={idx} className="h-4 w-full gradient-shimmer rounded" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="card card-padding mt-8">
+              <div className="card-header">
+                <div className="card-icon">
+                  <div className="w-6 h-6 gradient-shimmer rounded" />
+                </div>
+                <div className="h-6 w-48 gradient-shimmer rounded" />
+              </div>
+
+              <div className="space-y-4 mt-4">
+                <div className="h-4 w-full gradient-shimmer rounded" />
+                <div className="h-4 w-3/4 gradient-shimmer rounded" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="h-5 w-24 gradient-shimmer rounded mb-2" />
+                    <div className="h-4 w-40 gradient-shimmer rounded" />
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="h-5 w-28 gradient-shimmer rounded mb-2" />
+                    <div className="h-4 w-32 gradient-shimmer rounded" />
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="h-10 w-32 gradient-shimmer rounded-lg" />
+                  <div className="h-10 w-24 gradient-shimmer rounded-lg" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-6">
+              <div className="flex items-start">
+                <div className="w-5 h-5 gradient-shimmer rounded mt-1 mr-3 flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="h-5 w-32 gradient-shimmer rounded mb-2" />
+                  <div className="h-4 w-full gradient-shimmer rounded mb-1" />
+                  <div className="h-4 w-3/4 gradient-shimmer rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="page-container">

@@ -9,15 +9,146 @@ import {
   FaEnvelope,
   FaEnvelopeOpen,
   FaTimes,
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
-const ButtonLoader = () => <div className="loading-spinner"></div>;
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const EmailSettingsSkeleton = () => {
+  return (
+    <>
+      <div className="w-full">
+        <div className="card card-padding w-full">
+          <div className="card-header">
+            <div className="card-icon">
+              <div className="h-10 w-10 gradient-shimmer rounded-lg flex-shrink-0" />
+            </div>
+            <h3 className="card-title">
+              <div className="h-6 w-40 gradient-shimmer rounded" />
+            </h3>
+          </div>
+          <div className="space-y-4">
+            <div className="form-group">
+              <label className="form-label block">
+                <span className="inline-block h-4 w-40 gradient-shimmer rounded" />
+              </label>
+              <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <span className="inline-block h-3 w-full gradient-shimmer rounded" />
+              </p>
+            </div>
+            <div className="form-group">
+              <label className="form-label block">
+                <span className="inline-block h-4 w-32 gradient-shimmer rounded" />
+              </label>
+              <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+            </div>
+            <div className="form-group">
+              <label className="form-label block">
+                <span className="inline-block h-4 w-32 gradient-shimmer rounded" />
+              </label>
+              <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+            </div>
+            <div className="form-group">
+              <label className="form-label block">
+                <span className="inline-block h-4 w-36 gradient-shimmer rounded" />
+              </label>
+              <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+            </div>
+            <div className="form-group">
+              <label className="form-label block">
+                <span className="inline-block h-4 w-16 gradient-shimmer rounded" />
+              </label>
+              <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+            </div>
+            <div className="form-group">
+              <label className="form-label block">
+                <span className="inline-block h-4 w-24 gradient-shimmer rounded" />
+              </label>
+              <div className="h-10 w-full gradient-shimmer rounded-lg" />
+            </div>
+            <button className="btn btn-primary w-full" disabled>
+              <span className="inline-block h-5 w-48 gradient-shimmer rounded" />
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="w-full">
+        <div className="card card-padding w-full">
+          <div className="card-header">
+            <div className="card-icon">
+              <div className="h-10 w-10 gradient-shimmer rounded-lg flex-shrink-0" />
+            </div>
+            <h3 className="card-title">
+              <div className="h-6 w-28 gradient-shimmer rounded" />
+            </h3>
+          </div>
+          <div className="space-y-4">
+            <div className="form-group">
+              <label className="form-label block">
+                <span className="inline-block h-4 w-32 gradient-shimmer rounded" />
+              </label>
+              <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+            </div>
+            <div className="form-group">
+              <label className="form-label block">
+                <span className="inline-block h-4 w-20 gradient-shimmer rounded" />
+              </label>
+              <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+            </div>
+            <div className="form-group">
+              <label className="form-label block">
+                <span className="inline-block h-4 w-24 gradient-shimmer rounded" />
+              </label>
+              <div className="h-24 w-full gradient-shimmer rounded-lg" />
+            </div>
+            <button className="btn btn-primary w-full" disabled>
+              <span className="inline-block h-5 w-32 gradient-shimmer rounded" />
+            </button>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <div className="w-5 h-5 gradient-shimmer rounded-full" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                    <span className="inline-block h-4 w-40 gradient-shimmer rounded" />
+                  </h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <span className="inline-block h-3 w-full gradient-shimmer rounded mb-1" />
+                    <span className="inline-block h-3 w-3/4 gradient-shimmer rounded" />
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const ButtonLoader = () => <div className="loading-spinner"></div>;
+
 const Toast = ({
   message,
   type = 'success',
@@ -48,16 +179,19 @@ interface EmailSMTPSettings {
 const EmailSettingsPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const currentUser = useCurrentUser();
+  const currentUser = useCurrentUser();
+
   useEffect(() => {
     setPageTitle('Email Settings', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [emailSettings, setEmailSettings] = useState<EmailSMTPSettings>({
     email: '',
     smtpUsername: '',
@@ -65,13 +199,15 @@ const EmailSettingsPage = () => {
     smtpHostServer: '',
     port: 587,
     protocol: 'none',
-  });
+  });
+
   const [testMailData, setTestMailData] = useState({
     recipientEmail: '',
     subject: `Test Email from ${appName}`,
     message: 'This is a test email to verify SMTP configuration is working correctly.',
   });
-  const [isTestingMail, setIsTestingMail] = useState(false);
+  const [isTestingMail, setIsTestingMail] = useState(false);
+
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -104,14 +240,16 @@ const EmailSettingsPage = () => {
     };
 
     loadSettings();
-  }, []);
+  }, []);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const saveEmailSettings = async () => {
     setIsLoading(true);
     try {
@@ -140,7 +278,8 @@ const EmailSettingsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   const sendTestMail = async () => {
     if (!testMailData.recipientEmail) {
       showToast('Please enter recipient email address', 'error');
@@ -172,40 +311,7 @@ const EmailSettingsPage = () => {
     } finally {
       setIsTestingMail(false);
     }
-  };
-  if (isPageLoading) {
-    return (
-      <div className="page-container">
-        <div className="page-content">
-          <div className="flex justify-center">
-            <div className="w-full max-w-6xl">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {}
-                <div className="card card-padding">
-                  <div className="flex items-center justify-center min-h-[400px]">
-                    <div className="text-center flex flex-col items-center">
-                      <GradientSpinner size="w-12 h-12" className="mb-3" />
-                      <div className="text-base font-medium">Loading SMTP settings...</div>
-                    </div>
-                  </div>
-                </div>
-
-                {}
-                <div className="card card-padding">
-                  <div className="flex items-center justify-center min-h-[400px]">
-                    <div className="text-center flex flex-col items-center">
-                      <GradientSpinner size="w-12 h-12" className="mb-3" />
-                      <div className="text-base font-medium">Loading test mail...</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  };
 
   const protocolOptions = [
     { value: 'none', label: 'None' },
@@ -227,18 +333,24 @@ const EmailSettingsPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         <div className="flex justify-center">
           <div className="page-content">
             {}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {isPageLoading ? (
+                <EmailSettingsSkeleton />
+              ) : (
+                <>
               {}
-              <div className="card card-padding">
-                <div className="card-header">
-                  <div className="card-icon">
-                    <FaEnvelope />
+              <div>
+                <div className="card card-padding">
+                  <div className="card-header">
+                    <div className="card-icon">
+                      <FaEnvelope />
+                    </div>
+                    <h3 className="card-title">Setup Email SMTP</h3>
                   </div>
-                  <h3 className="card-title">Setup Email SMTP</h3>
-                </div>
 
               <div className="space-y-4">
                 <div className="form-group">
@@ -342,10 +454,12 @@ const EmailSettingsPage = () => {
                     {isLoading ? 'Updating...' : 'Save Email SMTP Settings'}
                   </button>
                 </div>
+                </div>
               </div>
 
               {}
-              <div className="card card-padding">
+              <div>
+                <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
                     <FaEnvelopeOpen />
@@ -415,7 +529,10 @@ const EmailSettingsPage = () => {
                     </div>
                   </div>
                 </div>
+                </div>
               </div>
+                </>
+              )}
             </div>
           </div>
         </div>

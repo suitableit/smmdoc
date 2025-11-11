@@ -18,12 +18,26 @@ import ReCAPTCHA from '@/components/ReCAPTCHA';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 import TicketSystemGuard from '@/components/TicketSystemGuard';
 
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
 );
 
 const Toast = ({
@@ -43,8 +57,6 @@ const Toast = ({
     </button>
   </div>
 );
-
-const ButtonLoader = () => <div className="loading-spinner"></div>;
 
 interface TicketFormData {
   category: string;
@@ -528,6 +540,7 @@ const TicketPage: React.FC = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {}
           <div className="space-y-6">
@@ -557,14 +570,28 @@ const TicketPage: React.FC = () => {
 
             <div className="card card-padding">
               {isLoading ? (
-
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-14 h-14" className="mb-4" />
-                    <div className="text-lg font-medium">
-                      Loading...
-                    </div>
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
                   </div>
+                  <div className="form-group">
+                    <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="form-group">
+                    <div className="h-4 w-48 gradient-shimmer rounded mb-2" />
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="form-group">
+                    <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                    <div className="h-32 w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="form-group">
+                    <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                    <div className="h-10 w-32 gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
                 </div>
               ) : (
 

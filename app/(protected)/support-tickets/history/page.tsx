@@ -19,12 +19,26 @@ import {
 } from 'react-icons/fa';
 import TicketSystemGuard from '@/components/TicketSystemGuard';
 
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
 );
 
 type Ticket = {
@@ -461,6 +475,7 @@ export default function TicketsHistory() {
 
   return (
     <TicketSystemGuard>
+      <ShimmerStyles />
       <div className="page-container">
         {}
         {toastMessage && (
@@ -602,29 +617,37 @@ export default function TicketsHistory() {
           {}
           <div className="mb-6">
             <div className="flex flex-wrap gap-3">
-              {statusFilters.map((filter) => {
-                const IconComponent = filter.icon;
-                const isActive = status === filter.key;
-                const count = getStatusCount(filter.key);
+              {isLoading ? (
+                <>
+                  {Array.from({ length: 7 }).map((_, idx) => (
+                    <div key={idx} className="h-9 w-24 gradient-shimmer rounded-full" />
+                  ))}
+                </>
+              ) : (
+                statusFilters.map((filter) => {
+                  const IconComponent = filter.icon;
+                  const isActive = status === filter.key;
+                  const count = getStatusCount(filter.key);
 
-                return (
-                  <button
-                    key={filter.key}
-                    onClick={() => {
-                      setStatus(filter.key);
-                      setPage(1);
-                    }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      isActive
-                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                        : filter.color
-                    }`}
-                  >
-                    <IconComponent className="w-4 h-4" />
-                    {filter.label} ({count})
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={filter.key}
+                      onClick={() => {
+                        setStatus(filter.key);
+                        setPage(1);
+                      }}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
+                        isActive
+                          ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
+                          : filter.color
+                      }`}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                      {filter.label} ({count})
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -658,14 +681,35 @@ export default function TicketsHistory() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={7} className="py-8 text-center text-gray-500">
-                      <div className="flex flex-col items-center">
-                        <GradientSpinner size="w-8 h-8" className="mb-4" />
-                        <div className="text-lg font-medium">Loading tickets...</div>
-                      </div>
-                    </td>
-                  </tr>
+                  <>
+                    {Array.from({ length: 10 }).map((_, index) => (
+                      <tr key={index} className="border-b border-gray-100">
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-16 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-12 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-48 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-16 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-16 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-7 w-16 gradient-shimmer rounded" />
+                        </td>
+                      </tr>
+                    ))}
+                  </>
                 ) : filteredTickets.length > 0 ? (
                   filteredTickets.map((ticket, index) => {
                     const isLastRow = index === filteredTickets.length - 1;

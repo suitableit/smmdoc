@@ -22,7 +22,8 @@ import {
     FaSearch,
     FaSpinner,
     FaTimes
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 interface CancelRequest {
   id: number;
   status: string;
@@ -39,14 +40,30 @@ interface OrderWithCancelRequests {
     name?: string;
   };
   [key: string]: any;
-}
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+}
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const CancelModal = ({
   isOpen,
   onClose,
@@ -103,7 +120,8 @@ const CancelModal = ({
       </div>
     </div>
   );
-};
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -135,7 +153,8 @@ const Toast = ({
       </button>
     </div>
   </div>
-);
+);
+
 const RefillModal = ({
   isOpen,
   onClose,
@@ -235,31 +254,37 @@ export default function OrdersList() {
     isOpen: false,
     orderId: null,
     reason: ''
-  });
+  });
+
   const [localPendingCancelRequests, setLocalPendingCancelRequests] = useState<Set<number>>(new Set());
 
-  const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
+  const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
+
   const { data, isLoading, error } = useGetUserOrdersQuery({
     page,
     limit,
     status,
     search,
-  });
+  });
+
   useEffect(() => {
     setPageTitle('My Orders', appName);
-  }, [appName]);
+  }, [appName]);
+
   useEffect(() => {
     const urlStatus = searchParams?.get('status');
     const newStatus = urlStatus ? urlStatus.replace('-', '_') : 'all';
     setStatus(newStatus);
-  }, []);
+  }, []);
+
   useEffect(() => {
     const urlStatus = searchParams?.get('status');
     const newStatus = urlStatus ? urlStatus.replace('-', '_') : 'all';
     if (newStatus !== status) {
       setStatus(newStatus);
     }
-  }, [searchParams, status]);
+  }, [searchParams, status]);
+
   useEffect(() => {
     if (data?.data) {
       const ordersWithDeclinedRequests = data.data.filter((order: any) => 
@@ -278,7 +303,8 @@ export default function OrdersList() {
         });
       }
     }
-  }, [data]);
+  }, [data]);
+
   useEffect(() => {
     if (search.trim()) {
       setIsSearchLoading(true);
@@ -290,23 +316,27 @@ export default function OrdersList() {
     } else {
       setIsSearchLoading(false);
     }
-  }, [search]);
+  }, [search]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
-  };
+  };
+
   const handleStatusChange = (statusKey: string) => {
     setStatus(statusKey);
-    setPage(1);
+    setPage(1);
+
     const currentParams = searchParams?.toString() || '';
     const params = new URLSearchParams(currentParams);
 
     if (statusKey === 'all') {
       params.delete('status');
-    } else {
+    } else {
+
       const urlStatus = statusKey.replace('_', '-');
       params.set('status', urlStatus);
     }
@@ -316,10 +346,12 @@ export default function OrdersList() {
   };
 
   const orders = useMemo(() => {
-    let filteredOrders = data?.data || [];
+    let filteredOrders = data?.data || [];
+
     if (status !== 'all') {
       filteredOrders = filteredOrders.filter((order: any) => order.status === status);
-    }
+    }
+
     if (search) {
       filteredOrders = filteredOrders.filter((order: any) =>
         order.id.toString().includes(search) ||
@@ -339,17 +371,20 @@ export default function OrdersList() {
       limit: 10,
       totalPages: Math.ceil(orders.length / 10)
     };
-  }, [orders]);
+  }, [orders]);
+
   const handleRefill = (orderId: number) => {
     showToast(`Refill request submitted for order #${formatID(orderId)}`, 'success');
-  };
+  };
+
   const handleCancel = (orderId: number) => {
     setCancelModal({
       isOpen: true,
       orderId,
       reason: ''
     });
-  };
+  };
+
   const handleCancelConfirm = async () => {
     if (!cancelModal.orderId || !cancelModal.reason.trim()) {
       setToastMessage({
@@ -372,7 +407,8 @@ export default function OrdersList() {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success) {
+
         setLocalPendingCancelRequests(prev => new Set(prev).add(cancelModal.orderId!));
 
         setToastMessage({
@@ -393,7 +429,8 @@ export default function OrdersList() {
         type: 'error'
       });
     }
-  };
+  };
+
   const handleCancelClose = () => {
     setCancelModal({
       isOpen: false,
@@ -452,12 +489,14 @@ export default function OrdersList() {
         type: 'error'
       });
     }
-  };
+  };
+
   const getStatusCount = (statusKey: string) => {
     const allOrders = data?.data || [];
     if (statusKey === 'all') return allOrders.length;
     return allOrders.filter((order: any) => order.status === statusKey).length;
-  };
+  };
+
   const statusFilters = [
     {
       key: 'all',
@@ -501,7 +540,8 @@ export default function OrdersList() {
       icon: FaBan,
       color: 'bg-gray-600 hover:bg-gray-700',
     },
-  ];
+  ];
+
   const formatStatusDisplay = (status: string) => {
     switch (status) {
       case 'in_progress':
@@ -521,7 +561,8 @@ export default function OrdersList() {
       default:
         return status.charAt(0).toUpperCase() + status.slice(1);
     }
-  };
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -541,7 +582,8 @@ export default function OrdersList() {
       default:
         return 'bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-800';
     }
-  };
+  };
+
 
   return (
     <div className="page-container">
@@ -575,6 +617,7 @@ export default function OrdersList() {
       )}
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="card card-padding">
           {}
@@ -596,7 +639,7 @@ export default function OrdersList() {
               />
               {isSearchLoading && (
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none z-10">
-                  <GradientSpinner size="w-4 h-4" className="flex-shrink-0" />
+                  <div className="h-4 w-4 gradient-shimmer rounded-full" />
                 </div>
               )}
             </div>
@@ -605,26 +648,34 @@ export default function OrdersList() {
           {}
           <div className="mb-6">
             <div className="flex flex-wrap gap-3">
-              {statusFilters.map((filter) => {
-                const IconComponent = filter.icon;
-                const isActive = status === filter.key;
-                const count = getStatusCount(filter.key);
+              {isLoading ? (
+                <>
+                  {Array.from({ length: 7 }).map((_, idx) => (
+                    <div key={idx} className="h-9 w-24 gradient-shimmer rounded-full" />
+                  ))}
+                </>
+              ) : (
+                statusFilters.map((filter) => {
+                  const IconComponent = filter.icon;
+                  const isActive = status === filter.key;
+                  const count = getStatusCount(filter.key);
 
-                return (
-                  <button
-                    key={filter.key}
-                    onClick={() => handleStatusChange(filter.key)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      isActive
-                        ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                        : filter.color
-                    }`}
-                  >
-                    <IconComponent className="w-4 h-4" />
-                    {filter.label} ({count})
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={filter.key}
+                      onClick={() => handleStatusChange(filter.key)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
+                        isActive
+                          ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
+                          : filter.color
+                      }`}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                      {filter.label} ({count})
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -667,14 +718,44 @@ export default function OrdersList() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={10} className="py-8 text-center text-gray-500">
-                      <div className="flex flex-col items-center">
-                        <GradientSpinner size="w-12 h-12" className="mb-4" />
-                        <div className="text-lg font-medium">Loading orders...</div>
-                      </div>
-                    </td>
-                  </tr>
+                  <>
+                    {Array.from({ length: 10 }).map((_, idx) => (
+                      <tr key={idx} className="border-b border-gray-100">
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-16 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-20 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-12 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-32 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-16 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-12 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-12 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4 max-w-[200px]">
+                          <div className="h-4 w-40 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-24 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-12 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-6 w-16 gradient-shimmer rounded" />
+                        </td>
+                      </tr>
+                    ))}
+                  </>
                 ) : error ? (
                   <tr>
                     <td colSpan={10} className="py-8 text-center text-red-500">
@@ -731,7 +812,8 @@ export default function OrdersList() {
                         </td>
                         <td className="py-3 px-4">
                           <span className="text-sm font-medium text-gray-900">
-                            {(() => {
+                            {(() => {
+
                               const usdPrice = order.usdPrice || 0;
                               const bdtPrice = order.bdtPrice || 0;
 
@@ -745,7 +827,8 @@ export default function OrdersList() {
                                 displayAmount = usdPrice;
                               } else if (currentCurrencyData.code === 'BDT') {
                                 displayAmount = bdtPrice;
-                              } else {
+                              } else {
+
                                 displayAmount = usdPrice * currentCurrencyData.rate;
                               }
 
@@ -804,7 +887,9 @@ export default function OrdersList() {
                                 Refill
                               </button>
                             )}
-                            {order.status === 'pending' && order.service?.cancel && (() => {
+                            {order.status === 'pending' && order.service?.cancel && (() => {
+
+
                               const hasPendingCancelRequest = 
                                 (order.cancelRequests && order.cancelRequests.some((req: CancelRequest) => req.status === 'pending')) ||
                                 localPendingCancelRequests.has(order.id);

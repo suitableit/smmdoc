@@ -8,15 +8,32 @@ import {
   FaCheck,
   FaDollarSign,
   FaTimes,
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
-const ButtonLoader = () => <div className="loading-spinner"></div>;
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const ButtonLoader = () => <div className="loading-spinner"></div>;
+
 const Toast = ({
   message,
   type = 'success',
@@ -52,43 +69,54 @@ interface PriceUpdateSettings {
 const UpdatePricePage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const currentUser = useCurrentUser();
+  const currentUser = useCurrentUser();
+
   useEffect(() => {
     setPageTitle('Update Price', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-  const hasLoadedData = useRef(false);
+  } | null>(null);
+
+  const hasLoadedData = useRef(false);
+
   const [priceSettings, setPriceSettings] = useState<PriceUpdateSettings>({
     serviceType: 'all-services',
     profitPercentage: 10,
     providerId: '',
-  });
-  const [providers, setProviders] = useState<Provider[]>([]);
+  });
+
+  const [providers, setProviders] = useState<Provider[]>([]);
+
   useEffect(() => {
     const loadData = async () => {
-      try {
+      try {
         if (!currentUser) {
           console.log('User not authenticated yet, waiting...');
+          setIsPageLoading(true);
           return;
-        }
+        }
+
         if (hasLoadedData.current) {
+          setIsPageLoading(false);
           return;
         }
 
         setIsPageLoading(true);
-        hasLoadedData.current = true;
+        hasLoadedData.current = true;
+
         const settingsResponse = await fetch('/api/admin/price-settings');
         if (settingsResponse.ok) {
           const settingsData = await settingsResponse.json();
           if (settingsData.priceSettings) {
             setPriceSettings(settingsData.priceSettings);
           }
-        }
+        }
+
         const providersResponse = await fetch('/api/admin/providers?filter=with-services');
         if (providersResponse.ok) {
           const providersData = await providersResponse.json();
@@ -105,7 +133,7 @@ const UpdatePricePage = () => {
         }
       } catch (error) {
         console.error('Error loading data:', error);
-        showToast('Error loading data', 'error');
+        showToast('Error loading data', 'error');
         hasLoadedData.current = false;
       } finally {
         setIsPageLoading(false);
@@ -113,14 +141,16 @@ const UpdatePricePage = () => {
     };
 
     loadData();
-  }, [currentUser]);
+  }, [currentUser]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const updatePrices = async () => {
     setIsLoading(true);
     try {
@@ -145,19 +175,44 @@ const UpdatePricePage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   if (isPageLoading) {
     return (
       <div className="page-container">
         <div className="page-content">
+          <ShimmerStyles />
           <div className="flex justify-center">
             <div className="w-full max-w-2xl">
               <div className="card card-padding">
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">Loading price settings...</div>
+                <div className="card-header">
+                  <div className="card-icon">
+                    <div className="h-10 w-10 gradient-shimmer rounded-lg" />
                   </div>
+                  <div className="h-6 w-32 gradient-shimmer rounded ml-3" />
+                </div>
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <div className="form-label">
+                      <span className="inline-block h-4 w-24 gradient-shimmer rounded" />
+                    </div>
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="form-group">
+                    <div className="form-label">
+                      <span className="inline-block h-4 w-24 gradient-shimmer rounded" />
+                    </div>
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="form-group">
+                    <div className="form-label">
+                      <span className="inline-block h-4 w-32 gradient-shimmer rounded" />
+                    </div>
+                    <div className="relative">
+                      <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                    </div>
+                  </div>
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
                 </div>
               </div>
             </div>
@@ -187,6 +242,7 @@ const UpdatePricePage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         <div className="flex justify-center">
           <div className="w-full max-w-2xl">
             {}
@@ -206,7 +262,8 @@ const UpdatePricePage = () => {
                     onChange={(e) =>
                       setPriceSettings(prev => ({
                         ...prev,
-                        serviceType: e.target.value as 'all-services' | 'provider-services' | 'manual-services',
+                        serviceType: e.target.value as 'all-services' | 'provider-services' | 'manual-services',
+
                         providerId: e.target.value === 'provider-services' ? prev.providerId : ''
                       }))
                     }

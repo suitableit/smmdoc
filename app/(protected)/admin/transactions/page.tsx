@@ -14,7 +14,8 @@ import {
     FaSync,
     FaTimes,
     FaTimesCircle,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
@@ -22,14 +23,102 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 import { convertCurrency } from '@/lib/currency-utils';
 const formatID = (id: any) => id;
 const formatNumber = (num: number) => num.toLocaleString();
-const formatPrice = (price: number, decimals = 2) => price.toFixed(decimals);
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+const formatPrice = (price: number, decimals = 2) => price.toFixed(decimals);
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const TransactionsTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[1200px]">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 10 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-32 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-1">
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div className="h-5 w-48 gradient-shimmer rounded" />
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <div className="h-9 w-20 gradient-shimmer rounded" />
+          <div className="h-5 w-24 gradient-shimmer rounded" />
+          <div className="h-9 w-16 gradient-shimmer rounded" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -46,7 +135,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface Transaction {
   id: number;
   user: {
@@ -90,17 +180,22 @@ interface PaginationInfo {
 }
 
 const AdminAllTransactionsPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('All Transactions', appName);
-  }, [appName]);
-  const { currency, currentCurrencyData, availableCurrencies } = useCurrency();
-  const formatTransactionCurrency = useCallback((amount: number, currency: string) => {
+  }, [appName]);
+
+  const { currency, currentCurrencyData, availableCurrencies } = useCurrency();
+
+  const formatTransactionCurrency = useCallback((amount: number, currency: string) => {
+
     const currencyInfo = availableCurrencies?.find(c => c.code === currency);
 
     if (currencyInfo) {
       return `${currencyInfo.symbol}${formatPrice(amount, 2)}`;
-    }
+    }
+
     switch (currency) {
       case 'USD':
       case 'USDT':
@@ -112,7 +207,8 @@ const AdminAllTransactionsPage = () => {
       default:
         return `${currency} ${formatPrice(amount, 2)}`;
     }
-  }, [availableCurrencies]);
+  }, [availableCurrencies]);
+
   const dummyTransactions: Transaction[] = [
     {
       id: 1,
@@ -288,7 +384,8 @@ const AdminAllTransactionsPage = () => {
       updatedAt: '2024-01-06T17:25:00Z',
       processedAt: '2024-01-06T17:25:00Z',
     },
-  ];
+  ];
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [stats, setStats] = useState<TransactionStats>({
     totalTransactions: 0,
@@ -323,9 +420,11 @@ const AdminAllTransactionsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [statsLoading, setStatsLoading] = useState(false);
-  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+
   const [viewDetailsDialog, setViewDetailsDialog] = useState<{
     open: boolean;
     transaction: Transaction | null;
@@ -343,7 +442,8 @@ const AdminAllTransactionsPage = () => {
     transactionId: 0,
     currentStatus: '',
   });
-  const [newStatus, setNewStatus] = useState('');
+  const [newStatus, setNewStatus] = useState('');
+
   const [approveConfirmDialog, setApproveConfirmDialog] = useState<{
     open: boolean;
     transactionId: number;
@@ -352,7 +452,8 @@ const AdminAllTransactionsPage = () => {
     open: false,
     transactionId: 0,
     transaction: null,
-  });
+  });
+
   const [approveTransactionId, setApproveTransactionId] = useState('');
   const [defaultTransactionId, setDefaultTransactionId] = useState('');
 
@@ -364,7 +465,8 @@ const AdminAllTransactionsPage = () => {
     open: false,
     transactionId: 0,
     transaction: null,
-  });
+  });
+
   const [addDeductBalanceDialog, setAddDeductBalanceDialog] = useState<{
     open: boolean;
   }>({
@@ -376,7 +478,8 @@ const AdminAllTransactionsPage = () => {
     amount: '',
     action: 'add',
     notes: '',
-  });
+  });
+
   const [usernameSearching, setUsernameSearching] = useState(false);
   const [userFound, setUserFound] = useState<{
     id: number;
@@ -384,7 +487,8 @@ const AdminAllTransactionsPage = () => {
     name: string;
     email: string;
   } | null>(null);
-  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
+  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
+
   const calculateStatusCounts = (transactionsData: Transaction[]) => {
     const counts = {
       pending: 0,
@@ -399,7 +503,8 @@ const AdminAllTransactionsPage = () => {
     });
 
     return counts;
-  };
+  };
+
   const fetchAllTransactionsForCounts = useCallback(async () => {
     try {
       const statusCounts = calculateStatusCounts(dummyTransactions);
@@ -422,7 +527,8 @@ const AdminAllTransactionsPage = () => {
 
   const fetchTransactions = useCallback(async () => {
     try {
-      setTransactionsLoading(true);
+      setTransactionsLoading(true);
+
       const params = new URLSearchParams({
         admin: 'true',
         page: pagination.page.toString(),
@@ -456,8 +562,10 @@ const AdminAllTransactionsPage = () => {
       }
 
       const result = await response.json();
-      console.log('API Response:', result);
-      if (result.success) {
+      console.log('API Response:', result);
+
+      if (result.success) {
+
         setTransactions(result.data || []);
 
         if (result.pagination) {
@@ -489,7 +597,8 @@ const AdminAllTransactionsPage = () => {
             },
           });
         }
-      } else if (Array.isArray(result)) {
+      } else if (Array.isArray(result)) {
+
         console.log('Using legacy array response');
         setTransactions(result);
         setPagination({
@@ -504,7 +613,8 @@ const AdminAllTransactionsPage = () => {
         throw new Error(result.error || 'Failed to fetch transactions');
       }
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      console.error('Error fetching transactions:', error);
+
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions';
       showToast(`Database Error: ${errorMessage}`, 'error');
 
@@ -565,7 +675,8 @@ const AdminAllTransactionsPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setTransactionsLoading(true);
@@ -592,7 +703,8 @@ const AdminAllTransactionsPage = () => {
         totalTransactions: pagination.total,
       }));
     }
-  }, [pagination.total]);
+  }, [pagination.total]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -679,10 +791,12 @@ const AdminAllTransactionsPage = () => {
       default:
         return 'bg-gray-100 text-gray-800';
     }
-  };
+  };
+
   const displayMethod = (transaction: Transaction) => {
     return transaction.method || 'null';
-  };
+  };
+
   const handleRefresh = () => {
     setTransactionsLoading(true);
     fetchTransactions();
@@ -693,7 +807,8 @@ const AdminAllTransactionsPage = () => {
 
   const handleAddDeductBalance = () => {
     setAddDeductBalanceDialog({ open: true });
-  };
+  };
+
   const searchUsername = async (username: string) => {
     if (!username.trim()) {
       setUserFound(null);
@@ -707,7 +822,8 @@ const AdminAllTransactionsPage = () => {
 
       console.log('Search result for:', username, result);
 
-      if (result.users && result.users.length > 0) {
+      if (result.users && result.users.length > 0) {
+
         const exactMatch = result.users.find((user: any) =>
           user.username?.toLowerCase() === username.toLowerCase()
         );
@@ -724,7 +840,8 @@ const AdminAllTransactionsPage = () => {
     } finally {
       setUsernameSearching(false);
     }
-  };
+  };
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (balanceForm.username.trim()) {
@@ -775,7 +892,8 @@ const AdminAllTransactionsPage = () => {
         );
         setAddDeductBalanceDialog({ open: false });
         setBalanceForm({ username: '', amount: '', action: 'add', notes: '' });
-        setUserFound(null);
+        setUserFound(null);
+
         fetchTransactions();
       } else {
         showToast(result.error || 'Failed to update user balance', 'error');
@@ -790,8 +908,10 @@ const AdminAllTransactionsPage = () => {
 
   const handleApprove = (transactionId: string) => {
     const numericId = parseInt(transactionId);
-    const transaction = transactions.find((t) => t.id === numericId);
-    let defaultId = transaction?.transactionId?.toString() || '';
+    const transaction = transactions.find((t) => t.id === numericId);
+
+    let defaultId = transaction?.transactionId?.toString() || '';
+
     if (!defaultId) {
       const timestamp = new Date().getTime();
       const prefix = transaction?.type === 'deposit' ? 'DEP' : 'WDR';
@@ -809,7 +929,8 @@ const AdminAllTransactionsPage = () => {
   };
 
   const confirmApprove = async (transactionId: number) => {
-    const transaction = approveConfirmDialog.transaction;
+    const transaction = approveConfirmDialog.transaction;
+
     if (transaction?.type === 'deposit' && !approveTransactionId.trim()) {
       showToast('Please enter a transaction ID', 'error');
       return;
@@ -932,7 +1053,8 @@ const AdminAllTransactionsPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        showToast(`Transaction status updated to ${newStatus}`, 'success');
+        showToast(`Transaction status updated to ${newStatus}`, 'success');
+
         setTransactions(prevTransactions =>
           prevTransactions.map(transaction =>
             transaction.id === transactionId
@@ -946,7 +1068,8 @@ const AdminAllTransactionsPage = () => {
                 }
               : transaction
           )
-        );
+        );
+
         fetchStats();
         fetchAllTransactionsForCounts();
       } else {
@@ -959,7 +1082,8 @@ const AdminAllTransactionsPage = () => {
       console.error('Error updating transaction status:', error);
       showToast('Error updating transaction status', 'error');
     }
-  };
+  };
+
   const openViewDetailsDialog = (transaction: Transaction) => {
     setViewDetailsDialog({ open: true, transaction });
   };
@@ -986,6 +1110,7 @@ const AdminAllTransactionsPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1186,13 +1311,8 @@ const AdminAllTransactionsPage = () => {
 
           <div style={{ padding: '0 24px' }}>
             {transactionsLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">
-                    Loading transactions...
-                  </div>
-                </div>
+              <div className="min-h-[600px]">
+                <TransactionsTableSkeleton />
               </div>
             ) : transactions.length === 0 ? (
               <div className="text-center py-12">
@@ -1503,7 +1623,7 @@ const AdminAllTransactionsPage = () => {
                         style={{ color: 'var(--text-muted)' }}
                       >
                         {transactionsLoading ? (
-                          <GradientSpinner size="w-4 h-4" />
+                          <div className="h-4 w-24 gradient-shimmer rounded" />
                         ) : (
                           `Page ${formatNumber(
                             pagination.page
@@ -1990,7 +2110,8 @@ const AdminAllTransactionsPage = () => {
                                 }));
                                 if (!e.target.value.trim()) {
                                   setUserFound(null);
-                                } else {
+                                } else {
+
                                   setTimeout(() => {
                                     if (e.target.value === balanceForm.username) {
                                       searchUsername(e.target.value);
@@ -2094,7 +2215,8 @@ const AdminAllTransactionsPage = () => {
                                 const amount = parseFloat(balanceForm.amount);
                                 if (currency === 'BDT') {
                                   return amount.toFixed(2);
-                                }
+                                }
+
                                 if (availableCurrencies && availableCurrencies.length > 0) {
                                   const convertedAmount = convertCurrency(amount, currency, 'BDT', availableCurrencies);
                                   return convertedAmount.toFixed(2);

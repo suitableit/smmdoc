@@ -22,14 +22,30 @@ import {
     FaTimes,
     FaUser,
     FaUsers
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -65,21 +81,25 @@ const Toast = ({
 );
 
 export default function AffiliateProgram() {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('Affiliate Program', appName);
   }, [appName]);
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
-      <div className="space-y-6">
-        {}
-        <AffiliateStatsCards />
+    <>
+      <ShimmerStyles />
+      <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
+        <div className="space-y-6">
+          {}
+          <AffiliateStatsCards />
 
-        {}
-        <AffiliateEarningsSection />
+          {}
+          <AffiliateEarningsSection />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -92,7 +112,8 @@ interface AffiliateStats {
   availableEarnings: string;
   commissionRate: string;
   minimumPayout: string;
-}
+}
+
 interface AffiliateEarning {
   id: number;
   signupDate: string;
@@ -137,8 +158,10 @@ function AffiliateStatsCards() {
     availableEarnings: '$0.00',
     commissionRate: '1%',
     minimumPayout: '$100.00',
-  });
-  const referralLink = user?.id ? `https://smmdoc.com/ref/${user.id}` : '';
+  });
+
+  const referralLink = user?.id ? `https://smmdoc.com/ref/${user.id}` : '';
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -221,9 +244,7 @@ function AffiliateStatsCards() {
             <div>
               <h3 className="card-title">Username</h3>
               {userInfoLoading ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">Loading...</span>
-                </div>
+                <div className="h-4 w-24 gradient-shimmer rounded" />
               ) : (
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   {user?.username || user?.email?.split('@')[0] || 'User'}
@@ -242,9 +263,7 @@ function AffiliateStatsCards() {
             <div className="flex-1 min-w-0">
               <h3 className="card-title">Referral Link</h3>
               {userInfoLoading ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">Loading...</span>
-                </div>
+                <div className="h-4 w-40 gradient-shimmer rounded" />
               ) : (
                 <div className="flex items-center">
                   <p
@@ -279,9 +298,7 @@ function AffiliateStatsCards() {
             <div>
               <h3 className="card-title">Commission Rate</h3>
               {userInfoLoading ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">Loading...</span>
-                </div>
+                <div className="h-4 w-16 gradient-shimmer rounded" />
               ) : (
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   {stats.commissionRate}
@@ -300,9 +317,7 @@ function AffiliateStatsCards() {
             <div>
               <h3 className="card-title">Minimum Payout</h3>
               {userInfoLoading ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">Loading...</span>
-                </div>
+                <div className="h-4 w-24 gradient-shimmer rounded" />
               ) : (
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   {stats.minimumPayout}
@@ -356,10 +371,7 @@ function AffiliateStatsCards() {
                 </div>
                 <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
                   {statsLoading ? (
-                    <div className="flex items-center gap-2">
-                      <GradientSpinner size="w-5 h-5" />
-                      <span className="text-sm text-gray-400">Loading...</span>
-                    </div>
+                    <div className="h-8 w-16 gradient-shimmer rounded" />
                   ) : (
                     stats.visits
                   )}
@@ -378,10 +390,7 @@ function AffiliateStatsCards() {
                 </div>
                 <div className="text-2xl font-bold text-green-700 dark:text-green-300">
                   {statsLoading ? (
-                    <div className="flex items-center gap-2">
-                      <GradientSpinner size="w-5 h-5" />
-                      <span className="text-sm text-gray-400">Loading...</span>
-                    </div>
+                    <div className="h-8 w-16 gradient-shimmer rounded" />
                   ) : (
                     stats.registrations
                   )}
@@ -400,10 +409,7 @@ function AffiliateStatsCards() {
                 </div>
                 <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                   {statsLoading ? (
-                    <div className="flex items-center gap-2">
-                      <GradientSpinner size="w-5 h-5" />
-                      <span className="text-sm text-gray-400">Loading...</span>
-                    </div>
+                    <div className="h-8 w-16 gradient-shimmer rounded" />
                   ) : (
                     stats.referrals
                   )}
@@ -422,10 +428,7 @@ function AffiliateStatsCards() {
                 </div>
                 <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
                   {statsLoading ? (
-                    <div className="flex items-center gap-2">
-                      <GradientSpinner size="w-5 h-5" />
-                      <span className="text-sm text-gray-400">Loading...</span>
-                    </div>
+                    <div className="h-8 w-20 gradient-shimmer rounded" />
                   ) : (
                     stats.conversionRate
                   )}
@@ -444,10 +447,7 @@ function AffiliateStatsCards() {
                 </div>
                 <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
                   {statsLoading ? (
-                    <div className="flex items-center gap-2">
-                      <GradientSpinner size="w-5 h-5" />
-                      <span className="text-sm text-gray-400">Loading...</span>
-                    </div>
+                    <div className="h-8 w-24 gradient-shimmer rounded" />
                   ) : (
                     stats.totalEarnings
                   )}
@@ -466,10 +466,7 @@ function AffiliateStatsCards() {
                 </div>
                 <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
                   {statsLoading ? (
-                    <div className="flex items-center gap-2">
-                      <GradientSpinner size="w-5 h-5" />
-                      <span className="text-sm text-gray-400">Loading...</span>
-                    </div>
+                    <div className="h-8 w-24 gradient-shimmer rounded" />
                   ) : (
                     stats.availableEarnings
                   )}
@@ -482,7 +479,8 @@ function AffiliateStatsCards() {
       </div>
     </div>
   );
-}
+}
+
 function AffiliateEarningsSection() {
   const router = useRouter();
   const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
@@ -496,14 +494,16 @@ function AffiliateEarningsSection() {
     totalPages: 0,
     hasNext: false,
     hasPrev: false,
-  });
+  });
+
   const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
   const [withdrawalForm, setWithdrawalForm] = useState({
     amount: '',
     selectedPaymentMethod: '',
     paymentDetails: '',
   });
-  const [withdrawalProcessing, setWithdrawalProcessing] = useState(false);
+  const [withdrawalProcessing, setWithdrawalProcessing] = useState(false);
+
   const userPaymentMethods = [
     {
       id: '1',
@@ -525,7 +525,8 @@ function AffiliateEarningsSection() {
       method: 'Bank Transfer',
       accountNumber: 'Dutch Bangla Bank - 1234567890123'
     }
-  ];
+  ];
+
   const getPaymentMethodStyle = (method: string) => {
     switch (method.toLowerCase()) {
       case 'bkash':
@@ -544,7 +545,8 @@ function AffiliateEarningsSection() {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const sampleEarnings: AffiliateEarning[] = [
     {
       id: 1,
@@ -606,22 +608,27 @@ function AffiliateEarningsSection() {
       },
       currency: 'USD'
     }
-  ];
+  ];
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const fetchEarnings = async () => {
     try {
-      setEarningsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setEarningsLoading(true);
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       let filteredEarnings = sampleEarnings;
       if (statusFilter !== 'all') {
         filteredEarnings = sampleEarnings.filter(earning => earning.status === statusFilter);
-      }
+      }
+
       if (searchTerm) {
         filteredEarnings = filteredEarnings.filter(earning => 
           earning.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -643,19 +650,23 @@ function AffiliateEarningsSection() {
     } finally {
       setEarningsLoading(false);
     }
-  };
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchEarnings();
     }, 500);
     return () => clearTimeout(timer);
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter]);
+
   useEffect(() => {
     fetchEarnings();
-  }, []);
+  }, []);
+
   const safeFormatId = (id: any) => {
     return formatID(String(id || 'null'));
-  };
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -667,11 +678,13 @@ function AffiliateEarningsSection() {
       default:
         return <FaExclamationTriangle className="h-3 w-3 text-gray-500" />;
     }
-  };
+  };
+
   const handleRefresh = async () => {
     await fetchEarnings();
     showToast('Affiliate earnings refreshed successfully!', 'success');
-  };
+  };
+
   const handleWithdrawalRequest = async () => {
     if (!withdrawalForm.amount || parseFloat(withdrawalForm.amount) <= 0) {
       showToast('Please enter a valid withdrawal amount', 'error');
@@ -692,7 +705,8 @@ function AffiliateEarningsSection() {
     }
 
     try {
-      setWithdrawalProcessing(true);
+      setWithdrawalProcessing(true);
+
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       showToast('Withdrawal request submitted successfully!', 'success');
@@ -708,7 +722,8 @@ function AffiliateEarningsSection() {
     } finally {
       setWithdrawalProcessing(false);
     }
-  };
+  };
+
   const statusCounts = {
     all: sampleEarnings.length,
     pending: sampleEarnings.filter(e => e.status === 'pending').length,
@@ -888,10 +903,73 @@ function AffiliateEarningsSection() {
 
         <div style={{ padding: '0 24px' }}>
           {earningsLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center flex flex-col items-center">
-                <GradientSpinner size="w-12 h-12" className="mb-3" />
-                <div className="text-base font-medium">Loading affiliate earnings...</div>
+            <div className="overflow-x-auto" style={{ minHeight: '400px' }}>
+              <table className="w-full text-sm min-w-[700px]">
+                <thead className="sticky top-0 bg-white border-b z-10">
+                  <tr>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      ID
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      User
+                    </th>
+                    <th className="text-left p-3 font-semibold hidden md:table-cell" style={{ color: 'var(--text-primary)' }}>
+                      Signup Date
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Service
+                    </th>
+                    <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Amount
+                    </th>
+                    <th className="text-right p-3 font-semibold hidden md:table-cell" style={{ color: 'var(--text-primary)' }}>
+                      Commission
+                    </th>
+                    <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 10 }).map((_, index) => (
+                    <tr key={index} className="border-t">
+                      <td className="p-3">
+                        <div className="h-6 w-16 gradient-shimmer rounded" />
+                      </td>
+                      <td className="p-3">
+                        <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                        <div className="h-3 w-32 gradient-shimmer rounded" />
+                      </td>
+                      <td className="p-3 hidden md:table-cell">
+                        <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                        <div className="h-3 w-16 gradient-shimmer rounded" />
+                      </td>
+                      <td className="p-3">
+                        <div className="h-4 w-32 gradient-shimmer rounded" />
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="h-4 w-20 gradient-shimmer rounded mb-1 ml-auto" />
+                        <div className="h-3 w-12 gradient-shimmer rounded ml-auto" />
+                      </td>
+                      <td className="p-3 text-right hidden md:table-cell">
+                        <div className="h-4 w-20 gradient-shimmer rounded mb-1 ml-auto" />
+                        <div className="h-3 w-12 gradient-shimmer rounded ml-auto" />
+                      </td>
+                      <td className="p-3 text-center">
+                        <div className="h-6 w-20 gradient-shimmer rounded-full mx-auto" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              
+              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-6 border-t gap-3">
+                <div className="h-4 w-48 gradient-shimmer rounded" />
+                <div className="flex flex-row items-center justify-center gap-2 w-full sm:w-auto">
+                  <div className="h-10 w-20 gradient-shimmer rounded-lg" />
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                  <div className="h-10 w-16 gradient-shimmer rounded-lg" />
+                </div>
               </div>
             </div>
           ) : earnings.length === 0 ? (

@@ -12,15 +12,32 @@ import {
     FaSearch,
     FaTimes,
 } from 'react-icons/fa';
-import { TransactionsList } from './components/TransactionsList';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
-const ButtonLoader = () => <div className="loading-spinner"></div>;
+import { TransactionsList } from './components/TransactionsList';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const ButtonLoader = () => <div className="loading-spinner"></div>;
+
 const Toast = ({
   message,
   type = 'success',
@@ -52,7 +69,8 @@ type Transaction = {
   sender_number?: string;
   phone?: string;
   currency?: string;
-};
+};
+
 function formatAmount(amount: number) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -118,26 +136,31 @@ export default function TransactionsPage() {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+
   useEffect(() => {
     setPageTitle('Transactions', appName);
-  }, [appName]);
+  }, [appName]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
       setSearchLoading(false);
-    }, 500);
+    }, 500);
+
     if (searchTerm !== debouncedSearchTerm) {
       setSearchLoading(true);
     }
 
     return () => clearTimeout(timer);
-  }, [searchTerm, debouncedSearchTerm]);
+  }, [searchTerm, debouncedSearchTerm]);
+
   useEffect(() => {
     const hasSearchTerm = searchTerm.trim() !== '';
     const hasDateFilter = dateFilter.startDate !== '' || dateFilter.endDate !== '';
     setIsSearching(hasSearchTerm || hasDateFilter);
-  }, [searchTerm, dateFilter]);
+  }, [searchTerm, dateFilter]);
+
   const mockTransactions = [
     {
       id: 1,
@@ -204,7 +227,8 @@ export default function TransactionsPage() {
       sender_number: '01756789012',
       phone: '01756789012',
     },
-  ];
+  ];
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -216,14 +240,16 @@ export default function TransactionsPage() {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        setLoading(true);
+        setLoading(true);
+
         const params = new URLSearchParams({
           limit: '50',
         });
 
         if (activeTab !== 'all') {
           params.append('status', activeTab);
-        }
+        }
+
         const response = await fetch(`/api/user/transactions?${params.toString()}`);
 
         if (!response.ok) {
@@ -232,13 +258,15 @@ export default function TransactionsPage() {
 
         const data = await response.json();
         console.log('API Response:', data);
-        const transactionsToShow = data.transactions || [];
+        const transactionsToShow = data.transactions || [];
+
         const urlParams = new URLSearchParams(window.location.search);
         const invoiceId = urlParams.get('invoice_id');
         const amount = urlParams.get('amount');
         const transactionId = urlParams.get('transaction_id');
         const status = urlParams.get('status');
-        const phone = urlParams.get('phone');
+        const phone = urlParams.get('phone');
+
         if (invoiceId && amount && transactionId) {
           const existingTransaction = transactionsToShow.find(
             (tx: Transaction) =>
@@ -262,7 +290,8 @@ export default function TransactionsPage() {
               transaction_type: 'deposit' as const,
               sender_number: phone || 'N/A',
               phone: phone || 'N/A',
-            };
+            };
+
             transactionsToShow.unshift(newTransaction);
 
             if (status === 'success') {
@@ -283,7 +312,8 @@ export default function TransactionsPage() {
         }
       } catch (err) {
         console.error('Error fetching transactions:', err);
-        setError('Failed to load transactions');
+        setError('Failed to load transactions');
+
         const fallbackTransactions = [...mockTransactions];
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -326,11 +356,13 @@ export default function TransactionsPage() {
 
   const handleViewDetails = (invoiceId: string) => {
     showToast(`Viewing details for ${invoiceId}`, 'info');
-  };
+  };
+
   const filteredTransactions = transactions.filter((tx) => {
     const matchesSearch =
       tx.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (tx.transaction_id && String(tx.transaction_id).toLowerCase().includes(searchTerm.toLowerCase()));
+      (tx.transaction_id && String(tx.transaction_id).toLowerCase().includes(searchTerm.toLowerCase()));
+
     const txDate = new Date(tx.createdAt);
     const matchesDate =
       (!dateFilter.startDate || txDate >= new Date(dateFilter.startDate)) &&
@@ -375,12 +407,77 @@ export default function TransactionsPage() {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         <div className="card card-padding">
           {loading ? (
-            <div className="text-center py-8 flex flex-col items-center">
-              <GradientSpinner size="w-14 h-14" className="mb-4" />
-              <div className="text-lg font-medium">Loading transactions...</div>
-            </div>
+            <>
+              <div className="mb-6">
+                <div className="relative">
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                </div>
+              </div>
+              <div className="mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="h-4 w-20 gradient-shimmer rounded mb-2" />
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div>
+                    <div className="h-4 w-20 gradient-shimmer rounded mb-2" />
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                  </div>
+                </div>
+              </div>
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-3">
+                  {Array.from({ length: 4 }).map((_, idx) => (
+                    <div key={idx} className="h-9 w-28 gradient-shimmer rounded-full" />
+                  ))}
+                </div>
+              </div>
+              <div className="card">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-200 bg-gray-50">
+                        {Array.from({ length: 7 }).map((_, idx) => (
+                          <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
+                            <div className="h-4 w-24 gradient-shimmer rounded" />
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: 10 }).map((_, idx) => (
+                        <tr key={idx} className="border-b border-gray-100">
+                          <td className="py-3 px-4">
+                            <div className="h-4 w-8 gradient-shimmer rounded" />
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="h-4 w-32 gradient-shimmer rounded" />
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="h-4 w-20 gradient-shimmer rounded" />
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="h-4 w-24 gradient-shimmer rounded" />
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="h-4 w-20 gradient-shimmer rounded" />
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="h-4 w-32 gradient-shimmer rounded" />
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           ) : error ? (
             <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
               <p className="flex items-center">
@@ -500,9 +597,47 @@ export default function TransactionsPage() {
 
               {}
               {searchLoading ? (
-                <div className="text-center py-8 flex flex-col items-center">
-                  <GradientSpinner size="w-8 h-8" className="mb-3" />
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Searching transactions...</div>
+                <div className="card">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50">
+                          {Array.from({ length: 7 }).map((_, idx) => (
+                            <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
+                              <div className="h-4 w-24 gradient-shimmer rounded" />
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.from({ length: 10 }).map((_, idx) => (
+                          <tr key={idx} className="border-b border-gray-100">
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-8 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-32 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-20 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-24 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-20 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-32 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               ) : (
                 <TransactionsList

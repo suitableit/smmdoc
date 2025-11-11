@@ -21,14 +21,30 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatNumber } from '@/lib/utils';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { formatNumber } from '@/lib/utils';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -107,10 +123,12 @@ const FavoriteServicesTable: React.FC = () => {
   const [isSearchLoading, setIsSearchLoading] = useState(false);
 
   const [totalServices, setTotalServices] = useState(0);
-  const [displayLimit] = useState(50);
+  const [displayLimit] = useState(50);
+
   useEffect(() => {
     setPageTitle('Favorite Services', appName);
-  }, [appName]);
+  }, [appName]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -123,7 +141,8 @@ const FavoriteServicesTable: React.FC = () => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
-    }, 500);
+    }, 500);
+
     if (search.trim()) {
       setIsSearchLoading(true);
     } else {
@@ -131,8 +150,10 @@ const FavoriteServicesTable: React.FC = () => {
     }
 
     return () => clearTimeout(timer);
-  }, [search]);
-  const fetchServices = React.useCallback(async () => {
+  }, [search]);
+
+  const fetchServices = React.useCallback(async () => {
+
     if (!debouncedSearch && page === 1) {
       setLoading(true);
     }
@@ -171,17 +192,20 @@ const FavoriteServicesTable: React.FC = () => {
         throw new Error(`Failed to fetch favorite services: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json();
+
       setTotalPages(data.totalPages || 1);
       setTotalServices(data.total || 0);
-      setHasMoreData(page < (data.totalPages || 1));
+      setHasMoreData(page < (data.totalPages || 1));
+
       const favoriteServicesData =
         data?.data?.map((service: Service) => ({
           ...service,
           isFavorite: true,
         })) || [];
 
-      setServices(favoriteServicesData);
+      setServices(favoriteServicesData);
+
       processServicesData(favoriteServicesData, data.allCategories || []);
     } catch (error) {
       console.error('Error fetching favorite services:', error);
@@ -192,20 +216,26 @@ const FavoriteServicesTable: React.FC = () => {
       setLoading(false);
       setIsSearchLoading(false);
     }
-  }, [debouncedSearch, user?.id, page, limit]);
-  const processServicesData = React.useCallback((servicesData: Service[], categoriesData: any[]) => {
+  }, [debouncedSearch, user?.id, page, limit]);
+
+  const processServicesData = React.useCallback((servicesData: Service[], categoriesData: any[]) => {
+
     const favorites = servicesData.filter(service => service.isFavorite);
-    setFavoriteServices(favorites);
-    const groupedById: Record<string, { category: any; services: Service[] }> = {};
+    setFavoriteServices(favorites);
+
+    const groupedById: Record<string, { category: any; services: Service[] }> = {};
+
     categoriesData
       .filter((category: any) => category.hideCategory !== 'yes')
-      .forEach((category: any) => {
+      .forEach((category: any) => {
+
         const categoryKey = `${category.category_name}_${category.id}`;
         groupedById[categoryKey] = {
           category: category,
           services: []
         };
-      });
+      });
+
     servicesData.forEach((service: Service) => {
       const categoryId = service.category?.id;
       const categoryName = service.category?.category_name || 'Uncategorized';
@@ -218,46 +248,56 @@ const FavoriteServicesTable: React.FC = () => {
         };
       }
       groupedById[categoryKey].services.push(service);
-    });
+    });
+
     const grouped: Record<string, Service[]> = {};
     Object.values(groupedById)
-      .sort((a, b) => {
+      .sort((a, b) => {
+
         const idDiff = (a.category.id || 999) - (b.category.id || 999);
-        if (idDiff !== 0) return idDiff;
+        if (idDiff !== 0) return idDiff;
+
         return (a.category.position || 999) - (b.category.position || 999);
       })
-      .forEach(({ category, services }) => {
+      .forEach(({ category, services }) => {
+
         const displayName = `${category.category_name} (ID: ${category.id})`;
         grouped[displayName] = services;
       });
 
-    setGroupedServices(grouped);
+    setGroupedServices(grouped);
+
     const initialExpanded: Record<string, boolean> = {};
     Object.keys(grouped).forEach(categoryName => {
       initialExpanded[categoryName] = true;
     });
 
     setExpandedCategories(initialExpanded);
-  }, []);
+  }, []);
+
   const toggleCategory = (categoryName: string) => {
     setExpandedCategories(prev => ({
       ...prev,
       [categoryName]: !prev[categoryName]
     }));
-  };
+  };
+
   useEffect(() => {
     fetchServices();
-  }, [fetchServices, debouncedSearch, page, limit]);
+  }, [fetchServices, debouncedSearch, page, limit]);
+
   const handleLimitChange = (newLimit: string) => {
     setLimit(newLimit);
     setPage(1);
     setServices([]);
     setGroupedServices({});
-    setHasMoreData(true);
+    setHasMoreData(true);
+
     setTimeout(() => {
       fetchServices();
     }, 100);
-  };
+  };
+
   const handlePrevious = () => {
     if (page > 1) {
       setPage(page - 1);
@@ -286,7 +326,8 @@ const FavoriteServicesTable: React.FC = () => {
       return;
     }
 
-    try {
+    try {
+
       const currentService = services.find(
         (service) => service.id === serviceId
       );
@@ -308,22 +349,26 @@ const FavoriteServicesTable: React.FC = () => {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok) {
+
         setServices((prevServices) =>
           prevServices.filter((service) => service.id !== serviceId)
-        );
+        );
+
         setGroupedServices((prevGrouped) => {
           const newGrouped = { ...prevGrouped };
           Object.keys(newGrouped).forEach((categoryName) => {
             newGrouped[categoryName] = newGrouped[categoryName].filter(
               (service) => service.id !== serviceId
-            );
+            );
+
             if (newGrouped[categoryName].length === 0) {
               delete newGrouped[categoryName];
             }
           });
           return newGrouped;
-        });
+        });
+
         setFavoriteServices((prevFavorites) => {
           return prevFavorites.filter(service => service.id !== serviceId);
         });
@@ -344,10 +389,94 @@ const FavoriteServicesTable: React.FC = () => {
     return (
       <div className="page-container">
         <div className="page-content">
+          <ShimmerStyles />
           <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
-            <div className="text-center py-8 flex flex-col items-center">
-              <GradientSpinner size="w-14 h-14" className="mb-4" />
-              <div className="text-lg font-medium">Loading favorite services...</div>
+            <div className="mb-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex items-center gap-4 h-12">
+                  <div className="h-12 w-40 gradient-shimmer rounded-lg" />
+                </div>
+                <div className="w-full md:w-100 h-12">
+                  <div className="h-12 w-full gradient-shimmer rounded-lg" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
+                      {Array.from({ length: 11 }).map((_, idx) => (
+                        <th key={idx} className="text-left py-3 px-4">
+                          <div className="h-4 w-20 gradient-shimmer rounded" />
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: 3 }).map((_, catIdx) => (
+                      <React.Fragment key={catIdx}>
+                        <tr>
+                          <td colSpan={11} className="p-0">
+                            <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-4 px-6">
+                              <div className="flex items-center justify-between">
+                                <div className="h-6 w-64 gradient-shimmer rounded" />
+                                <div className="h-4 w-4 gradient-shimmer rounded" />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        {Array.from({ length: 5 }).map((_, serviceIdx) => (
+                          <tr key={serviceIdx} className="border-b border-gray-100 dark:border-gray-600">
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-4 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-12 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-48 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-6 w-20 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-16 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-12 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-12 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-16 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <div className="h-6 w-12 gradient-shimmer rounded mx-auto" />
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <div className="h-6 w-12 gradient-shimmer rounded mx-auto" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-8 w-20 gradient-shimmer rounded" />
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
+                <div className="flex items-center justify-center gap-4 flex-wrap">
+                  <div className="h-5 w-48 gradient-shimmer rounded" />
+                  <div className="h-5 w-32 gradient-shimmer rounded" />
+                  <div className="h-5 w-32 gradient-shimmer rounded" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -367,6 +496,7 @@ const FavoriteServicesTable: React.FC = () => {
       )}
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
           {}
@@ -415,7 +545,7 @@ const FavoriteServicesTable: React.FC = () => {
                     />
                     {isSearchLoading && (
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none z-10">
-                        <GradientSpinner size="w-4 h-4" className="flex-shrink-0" />
+                        <div className="h-4 w-4 gradient-shimmer rounded-full" />
                       </div>
                     )}
                   </div>
@@ -468,14 +598,59 @@ const FavoriteServicesTable: React.FC = () => {
                 </thead>
                 <tbody>
                   {isSearchLoading ? (
-                    <tr>
-                      <td colSpan={11} className="py-12 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <GradientSpinner size="w-8 h-8" />
-                          <div className="text-sm text-gray-600 dark:text-gray-400">Searching favorite services...</div>
-                        </div>
-                      </td>
-                    </tr>
+                    <>
+                      {Array.from({ length: 3 }).map((_, catIdx) => (
+                        <React.Fragment key={catIdx}>
+                          <tr>
+                            <td colSpan={11} className="p-0">
+                              <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-4 px-6">
+                                <div className="flex items-center justify-between">
+                                  <div className="h-6 w-64 gradient-shimmer rounded" />
+                                  <div className="h-4 w-4 gradient-shimmer rounded" />
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          {Array.from({ length: 5 }).map((_, serviceIdx) => (
+                            <tr key={serviceIdx} className="border-b border-gray-100 dark:border-gray-600">
+                              <td className="py-3 px-4">
+                                <div className="h-4 w-4 gradient-shimmer rounded" />
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="h-4 w-12 gradient-shimmer rounded" />
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="h-4 w-48 gradient-shimmer rounded" />
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="h-6 w-20 gradient-shimmer rounded" />
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="h-4 w-16 gradient-shimmer rounded" />
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="h-4 w-12 gradient-shimmer rounded" />
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="h-4 w-12 gradient-shimmer rounded" />
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="h-4 w-16 gradient-shimmer rounded" />
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="h-6 w-12 gradient-shimmer rounded mx-auto" />
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="h-6 w-12 gradient-shimmer rounded mx-auto" />
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="h-8 w-20 gradient-shimmer rounded" />
+                              </td>
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      ))}
+                    </>
                   ) : Object.keys(groupedServices).length > 0 ? (
                     Object.entries(groupedServices).map(([categoryName, categoryServices]) => (
                       <React.Fragment key={categoryName}>

@@ -12,15 +12,32 @@ import {
   FaPlug,
   FaShieldAlt,
   FaTimes,
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
-const ButtonLoader = () => <div className="loading-spinner"></div>;
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const ButtonLoader = () => <div className="loading-spinner"></div>;
+
 const Toast = ({
   message,
   type = 'success',
@@ -37,7 +54,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 const Switch = ({ checked, onCheckedChange, onClick, title }: any) => (
   <button
     onClick={onClick}
@@ -128,12 +146,15 @@ interface ReCAPTCHASettings {
 const IntegrationPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const currentUser = useCurrentUser();
+  const currentUser = useCurrentUser();
+
   useEffect(() => {
     setPageTitle('Integrations', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [isLoading, setIsLoading] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+
   const [liveChatLoading, setLiveChatLoading] = useState(false);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
@@ -142,7 +163,8 @@ const IntegrationPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [liveChatSettings, setLiveChatSettings] = useState<LiveChatSettings>({
     enabled: false,
     hoverTitle: 'Chat with us',
@@ -218,7 +240,8 @@ const IntegrationPage = () => {
       supportTicket: true,
       contactSupport: true,
     },
-  });
+  });
+
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -234,7 +257,8 @@ const IntegrationPage = () => {
 
           if (data.success && data.integrationSettings) {
             const settings = data.integrationSettings;
-            console.log('⚙️ Integration settings loaded:', settings);
+            console.log('⚙️ Integration settings loaded:', settings);
+
             setRecaptchaSettings({
               enabled: settings.recaptchaEnabled,
               version: settings.recaptchaVersion,
@@ -254,7 +278,8 @@ const IntegrationPage = () => {
                 supportTicket: settings.recaptchaSupportTicket,
                 contactSupport: settings.recaptchaContactSupport,
               },
-            });
+            });
+
             setLiveChatSettings({
               enabled: settings.liveChatEnabled,
               hoverTitle: settings.liveChatHoverTitle,
@@ -268,7 +293,8 @@ const IntegrationPage = () => {
               tawkToEnabled: settings.liveChatTawkToEnabled,
               tawkToWidgetCode: settings.liveChatTawkToCode || '',
               visibility: settings.liveChatVisibility,
-            });
+            });
+
             setAnalyticsSettings({
               enabled: settings.analyticsEnabled,
               googleAnalyticsEnabled: settings.googleAnalyticsEnabled,
@@ -280,7 +306,8 @@ const IntegrationPage = () => {
               gtmEnabled: settings.gtmEnabled,
               gtmCode: settings.gtmCode || '',
               gtmVisibility: settings.gtmVisibility,
-            });
+            });
+
             setNotificationSettings({
               pushNotificationsEnabled: settings.pushNotificationsEnabled,
               oneSignalCode: settings.oneSignalCode || '',
@@ -323,14 +350,17 @@ const IntegrationPage = () => {
     };
 
     loadSettings();
-  }, []);
+  }, []);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
+
   const saveLiveChatSettings = async () => {
     setLiveChatLoading(true);
     try {
@@ -436,7 +466,8 @@ const IntegrationPage = () => {
 
   const saveRecaptchaSettings = async () => {
     setRecaptchaLoading(true);
-    try {
+    try {
+
       if (recaptchaSettings.enabled) {
         if (recaptchaSettings.version === 'v2') {
           if (!recaptchaSettings.v2.siteKey || !recaptchaSettings.v2.secretKey) {
@@ -496,7 +527,8 @@ const IntegrationPage = () => {
 
   const saveIntegrationSettings = async () => {
     setIsLoading(true);
-    try {
+    try {
+
       if (recaptchaSettings.enabled) {
         if (recaptchaSettings.version === 'v2') {
           if (!recaptchaSettings.v2.siteKey || !recaptchaSettings.v2.secretKey) {
@@ -513,11 +545,14 @@ const IntegrationPage = () => {
         }
       }
 
-      const integrationSettings = {
+      const integrationSettings = {
+
         recaptchaEnabled: recaptchaSettings.enabled,
-        recaptchaVersion: recaptchaSettings.version,
+        recaptchaVersion: recaptchaSettings.version,
+
         recaptchaSiteKey: recaptchaSettings.version === 'v2' ? recaptchaSettings.v2.siteKey : recaptchaSettings.v3.siteKey,
-        recaptchaSecretKey: recaptchaSettings.version === 'v2' ? recaptchaSettings.v2.secretKey : recaptchaSettings.v3.secretKey,
+        recaptchaSecretKey: recaptchaSettings.version === 'v2' ? recaptchaSettings.v2.secretKey : recaptchaSettings.v3.secretKey,
+
         v2: {
           siteKey: recaptchaSettings.v2.siteKey,
           secretKey: recaptchaSettings.v2.secretKey,
@@ -552,29 +587,270 @@ const IntegrationPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   if (isPageLoading) {
     return (
       <div className="page-container">
         <div className="page-content">
-        <div className="flex justify-center">
-          <div className="page-content">
-            <div className="columns-1 md:columns-3 gap-6 space-y-6">
-              {}
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="card card-padding h-fit break-inside-avoid mb-6">
-                  <div className="flex items-center justify-center min-h-[200px]">
-                    <div className="text-center flex flex-col items-center">
-                      <GradientSpinner size="w-12 h-12" className="mb-3" />
-                      <div className="text-base font-medium">Loading integrations...</div>
+          <ShimmerStyles />
+          <div className="flex justify-center">
+            <div className="page-content">
+              <div className="columns-1 md:columns-3 gap-6 space-y-6">
+                <div className="card card-padding h-fit break-inside-avoid mb-6">
+                  <div className="card-header">
+                    <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                    <div className="h-6 w-32 gradient-shimmer rounded ml-3" />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="h-5 w-32 gradient-shimmer rounded mb-2" />
+                        <div className="h-4 w-48 gradient-shimmer rounded" />
+                      </div>
+                      <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                    </div>
+                    <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+                      <div className="form-group">
+                        <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                        <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                            <div className="h-3 w-40 gradient-shimmer rounded" />
+                          </div>
+                          <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                        </div>
+                        <div className="form-group">
+                          <div className="h-4 w-28 gradient-shimmer rounded mb-2" />
+                          <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                            <div className="h-3 w-40 gradient-shimmer rounded" />
+                          </div>
+                          <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                        </div>
+                        <div className="form-group">
+                          <div className="h-4 w-28 gradient-shimmer rounded mb-2" />
+                          <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                            <div className="h-3 w-40 gradient-shimmer rounded" />
+                          </div>
+                          <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                        </div>
+                        <div className="form-group">
+                          <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                          <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                            <div className="h-3 w-40 gradient-shimmer rounded" />
+                          </div>
+                          <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                        </div>
+                        <div className="form-group">
+                          <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                          <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <div className="h-10 w-full gradient-shimmer rounded-lg" />
                     </div>
                   </div>
                 </div>
-              ))}
+
+                <div className="card card-padding h-fit break-inside-avoid mb-6">
+                  <div className="card-header">
+                    <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                    <div className="h-6 w-28 gradient-shimmer rounded ml-3" />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="h-5 w-36 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-48 gradient-shimmer rounded" />
+                          </div>
+                          <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                        </div>
+                        <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+                          <div className="form-group">
+                            <div className="h-4 w-40 gradient-shimmer rounded mb-2" />
+                            <div className="h-32 w-full gradient-shimmer rounded-lg" />
+                          </div>
+                          <div className="form-group">
+                            <div className="h-4 w-48 gradient-shimmer rounded mb-2" />
+                            <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="h-5 w-32 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-48 gradient-shimmer rounded" />
+                          </div>
+                          <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                        </div>
+                        <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+                          <div className="form-group">
+                            <div className="h-4 w-36 gradient-shimmer rounded mb-2" />
+                            <div className="h-32 w-full gradient-shimmer rounded-lg" />
+                          </div>
+                          <div className="form-group">
+                            <div className="h-4 w-48 gradient-shimmer rounded mb-2" />
+                            <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="h-5 w-20 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-48 gradient-shimmer rounded" />
+                          </div>
+                          <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                        </div>
+                        <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+                          <div className="form-group">
+                            <div className="h-4 w-28 gradient-shimmer rounded mb-2" />
+                            <div className="h-32 w-full gradient-shimmer rounded-lg" />
+                          </div>
+                          <div className="form-group">
+                            <div className="h-4 w-48 gradient-shimmer rounded mb-2" />
+                            <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card card-padding h-fit break-inside-avoid mb-6">
+                  <div className="card-header">
+                    <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                    <div className="h-6 w-32 gradient-shimmer rounded ml-3" />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="h-5 w-36 gradient-shimmer rounded mb-2" />
+                        <div className="h-4 w-48 gradient-shimmer rounded" />
+                      </div>
+                      <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                    </div>
+                    <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+                      <div className="form-group">
+                        <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                        <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                      </div>
+                      <div className="form-group">
+                        <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                        <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                      </div>
+                      <div className="form-group">
+                        <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                        <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                      </div>
+                      <div className="form-group">
+                        <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                        <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                      </div>
+                      <div className="form-group">
+                        <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                        <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card card-padding h-fit break-inside-avoid mb-6">
+                  <div className="card-header">
+                    <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                    <div className="h-6 w-32 gradient-shimmer rounded ml-3" />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="h-5 w-48 gradient-shimmer rounded mb-2" />
+                          <div className="h-4 w-56 gradient-shimmer rounded" />
+                        </div>
+                        <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                      </div>
+                      <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
+                        <div className="form-group">
+                          <div className="h-4 w-40 gradient-shimmer rounded mb-2" />
+                          <div className="h-32 w-full gradient-shimmer rounded-lg" />
+                        </div>
+                        <div className="form-group">
+                          <div className="h-4 w-48 gradient-shimmer rounded mb-2" />
+                          <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="h-5 w-40 gradient-shimmer rounded mb-2" />
+                          <div className="h-4 w-48 gradient-shimmer rounded" />
+                        </div>
+                        <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                      <div className="space-y-3">
+                        {Array.from({ length: 5 }).map((_, idx) => (
+                          <div key={idx} className="flex items-center justify-between">
+                            <div className="h-4 w-40 gradient-shimmer rounded" />
+                            <div className="h-6 w-11 gradient-shimmer rounded-full" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                      <div className="space-y-3">
+                        {Array.from({ length: 5 }).map((_, idx) => (
+                          <div key={idx} className="flex items-center justify-between">
+                            <div className="h-4 w-40 gradient-shimmer rounded" />
+                            <div className="h-6 w-11 gradient-shimmer rounded-full" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
     );
   }
@@ -623,7 +899,8 @@ const IntegrationPage = () => {
                           onClick={() =>
                             setLiveChatSettings(prev => ({
                               ...prev,
-                              socialMediaEnabled: !prev.socialMediaEnabled,
+                              socialMediaEnabled: !prev.socialMediaEnabled,
+
                               tawkToEnabled: !prev.socialMediaEnabled ? false : prev.tawkToEnabled
                             }))
                           }
@@ -772,7 +1049,8 @@ const IntegrationPage = () => {
                           onClick={() =>
                             setLiveChatSettings(prev => ({
                               ...prev,
-                              tawkToEnabled: !prev.tawkToEnabled,
+                              tawkToEnabled: !prev.tawkToEnabled,
+
                               socialMediaEnabled: !prev.tawkToEnabled ? false : prev.socialMediaEnabled
                             }))
                           }

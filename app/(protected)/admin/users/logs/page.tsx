@@ -9,16 +9,93 @@ import {
   FaSync,
   FaTimes,
   FaTrash
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { setPageTitle } from '@/lib/utils/set-page-title';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const ActivityLogsTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[1000px]">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-4 w-4 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-6 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-64 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="flex items-center gap-1">
+                    <div className="h-4 w-32 gradient-shimmer rounded" />
+                    <div className="h-3 w-3 gradient-shimmer rounded" />
+                  </div>
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-8 w-8 gradient-shimmer rounded" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div className="h-5 w-48 gradient-shimmer rounded" />
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <div className="h-9 w-20 gradient-shimmer rounded" />
+          <div className="h-5 w-24 gradient-shimmer rounded" />
+          <div className="h-9 w-16 gradient-shimmer rounded" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -35,7 +112,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface UserActivityLog {
   id: string;
   username: string;
@@ -54,10 +132,12 @@ interface PaginationInfo {
 }
 
 const UserActivityLogsPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('User Activity Logs', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [activityLogs, setActivityLogs] = useState<UserActivityLog[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -77,9 +157,11 @@ const UserActivityLogsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [logsLoading, setLogsLoading] = useState(true);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const fetchActivityLogs = async (page = 1, search = '', searchBy = 'all') => {
     try {
       setLogsLoading(true);
@@ -115,26 +197,33 @@ const UserActivityLogsPage = () => {
     } finally {
       setLogsLoading(false);
     }
-  };
+  };
+
   useEffect(() => {
     fetchActivityLogs(pagination.page, searchTerm, searchBy);
-  }, [pagination.page, searchTerm, searchBy]);
+  }, [pagination.page, searchTerm, searchBy]);
+
   useEffect(() => {
     fetchActivityLogs();
-  }, []);
+  }, []);
+
   const formatID = (id: string) => {
     return id.toUpperCase();
-  };
+  };
+
   const getIpTrackerUrl = (ipAddress: string) => {
     return `https://www.ip-tracker.org/locator/ip-lookup.php?ip=${ipAddress}`;
-  };
+  };
+
   const getPaginatedData = () => {
     return activityLogs;
-  };
+  };
+
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
     fetchActivityLogs(newPage, searchTerm, searchBy);
-  };
+  };
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -163,7 +252,8 @@ const UserActivityLogsPage = () => {
   const handleRefresh = () => {
     fetchActivityLogs(pagination.page, searchTerm, searchBy);
     showToast('User activity logs refreshed successfully!', 'success');
-  };
+  };
+
   const handleDeleteLog = async (logId: string) => {
     setDeleteLoading(true);
     try {
@@ -173,11 +263,13 @@ const UserActivityLogsPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success) {
+
         setActivityLogs(prev => prev.filter(log => log.id !== logId));
         showToast('Activity log deleted successfully', 'success');
         setDeleteDialogOpen(false);
-        setLogToDelete(null);
+        setLogToDelete(null);
+
         fetchActivityLogs(pagination.page, searchTerm, searchBy);
       } else {
         showToast(result.error || 'Failed to delete activity log', 'error');
@@ -188,7 +280,8 @@ const UserActivityLogsPage = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
+  };
+
   const handleBulkDelete = async () => {
     try {
       const response = await fetch('/api/admin/activity-logs', {
@@ -201,11 +294,13 @@ const UserActivityLogsPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success) {
+
         setActivityLogs(prev => prev.filter(log => !selectedLogs.includes(log.id)));
         showToast(`${selectedLogs.length} activity logs deleted successfully`, 'success');
         setSelectedLogs([]);
-        setBulkDeleteDialogOpen(false);
+        setBulkDeleteDialogOpen(false);
+
         fetchActivityLogs(pagination.page, searchTerm, searchBy);
       } else {
         showToast(result.error || 'Failed to delete activity logs', 'error');
@@ -230,6 +325,7 @@ const UserActivityLogsPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -317,11 +413,8 @@ const UserActivityLogsPage = () => {
 
           <div style={{ padding: '0 24px' }}>
             {logsLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">Loading activity logs...</div>
-                </div>
+              <div className="min-h-[600px]">
+                <ActivityLogsTableSkeleton />
               </div>
             ) : getPaginatedData().length === 0 ? (
               <div className="text-center py-12">
@@ -604,7 +697,7 @@ const UserActivityLogsPage = () => {
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {logsLoading ? (
-                        <GradientSpinner size="w-4 h-4" />
+                        <div className="h-4 w-24 gradient-shimmer rounded" />
                       ) : (
                         `Page ${pagination.page} of ${pagination.totalPages}`
                       )}
