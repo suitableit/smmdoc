@@ -23,28 +23,6 @@ import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatNumber } from '@/lib/utils';
 
-const ShimmerStyles = () => (
-  <style dangerouslySetInnerHTML={{__html: `
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
-    .gradient-shimmer {
-      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .dark .gradient-shimmer {
-      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
-      background-size: 200% 100%;
-    }
-  `}} />
-);
-
 const Toast = ({
   message,
   type = 'success',
@@ -389,7 +367,6 @@ const FavoriteServicesTable: React.FC = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <ShimmerStyles />
           <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
             <div className="mb-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -496,7 +473,6 @@ const FavoriteServicesTable: React.FC = () => {
       )}
 
       <div className="page-content">
-        <ShimmerStyles />
         {}
         <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
           {}
