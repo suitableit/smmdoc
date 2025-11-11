@@ -1520,6 +1520,70 @@ body {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.gradient-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .gradient-shimmer {
+  background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+  background-size: 200% 100%;
+}
+
+.gradient-shimmer-green {
+  background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 25%, #d1fae5 50%, #a7f3d0 75%, #d1fae5 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .gradient-shimmer-green {
+  background: linear-gradient(90deg, #064e3b 0%, #065f46 25%, #064e3b 50%, #065f46 75%, #064e3b 100%);
+  background-size: 200% 100%;
+}
+
+.gradient-shimmer-blue {
+  background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 25%, #dbeafe 50%, #bfdbfe 75%, #dbeafe 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .gradient-shimmer-blue {
+  background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 25%, #1e3a8a 50%, #1e40af 75%, #1e3a8a 100%);
+  background-size: 200% 100%;
+}
+
+.gradient-shimmer-yellow {
+  background: linear-gradient(90deg, #fef3c7 0%, #fde68a 25%, #fef3c7 50%, #fde68a 75%, #fef3c7 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .gradient-shimmer-yellow {
+  background: linear-gradient(90deg, #78350f 0%, #92400e 25%, #78350f 50%, #92400e 75%, #78350f 100%);
+  background-size: 200% 100%;
+}
+
+.gradient-shimmer-red {
+  background: linear-gradient(90deg, #fee2e2 0%, #fecaca 25%, #fee2e2 50%, #fecaca 75%, #fee2e2 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .gradient-shimmer-red {
+  background: linear-gradient(90deg, #7f1d1d 0%, #991b1b 25%, #7f1d1d 50%, #991b1b 75%, #7f1d1d 100%);
+  background-size: 200% 100%;
+}
+
 @media (max-width: 768px) {
   .mobile-responsive {
     padding: 1rem;
