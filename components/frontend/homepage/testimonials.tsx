@@ -14,15 +14,13 @@ const Testimonials: React.FC = () => {
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Set initial value
+    handleResize();
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const itemsPerPage = 3;
-  const maxSlide = testimonialsData.length - itemsPerPage;
-
-  // Auto-play functionality
+  const maxSlide = testimonialsData.length - itemsPerPage;
   useEffect(() => {
     if (!isAutoPlaying) return;
 
@@ -38,8 +36,7 @@ const Testimonials: React.FC = () => {
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index);
-    setIsAutoPlaying(false);
-    // Resume auto-play after 10 seconds
+    setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
@@ -83,7 +80,7 @@ const Testimonials: React.FC = () => {
       className="pt-[30px] pb-[30px] lg:pt-[60px] lg:pb-[60px] relative transition-colors duration-200"
     >
       <div className="max-w-[1200px] mx-auto px-4">
-        {/* Header */}
+        {}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
@@ -98,7 +95,7 @@ const Testimonials: React.FC = () => {
             </h2>
           </div>
 
-          {/* Navigation Buttons */}
+          {}
           <div className="hidden md:flex gap-2">
             <button
               onClick={prevSlide}
@@ -117,7 +114,7 @@ const Testimonials: React.FC = () => {
           </div>
         </div>
 
-        {/* Testimonials Slider */}
+        {}
         <div className="overflow-hidden mb-8 -mx-4">
           <div
             className="flex transition-transform duration-500 ease-in-out"
@@ -156,7 +153,7 @@ const Testimonials: React.FC = () => {
           </div>
         </div>
 
-        {/* Pagination Dots with Shadow */}
+        {}
         <div className="flex justify-center mt-8 gap-3">
           {Array.from({ length: maxSlide + 1 }, (_, index) => (
             <button
@@ -172,7 +169,7 @@ const Testimonials: React.FC = () => {
           ))}
         </div>
 
-        {/* Mobile Navigation */}
+        {}
         <div className="flex md:hidden justify-center gap-4 mt-6">
           <button
             onClick={prevSlide}

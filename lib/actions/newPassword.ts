@@ -10,8 +10,7 @@ import { newPasswordSchema } from "../validators/auth.validator";
 export const newPasswordValues = async (
   values: z.infer<typeof newPasswordSchema>,
   token?: string | null
-) => {
-  // Check if password reset is enabled
+) => {
   const userSettings = await db.userSettings.findFirst();
   const resetPasswordEnabled = userSettings?.resetPasswordEnabled ?? true;
 

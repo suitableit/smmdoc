@@ -1,16 +1,6 @@
-/**
- * Service Stats actions to fetch service statistics from the API
- */
 
-// Fetch service stats
 export async function getServiceStats() {
-  try {
-    // আসল API কল করুন
-    // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/service-stats`);
-    // const data = await response.json();
-    // return data.stats;
-    
-    // ডেমো ডেটা (আপনার বাস্তব API রেডি হলে উপরের কোড আনকমেন্ট করুন)
+  try {
     return {
       totalServices: 2450,
       avgDeliveryTime: '2 Days',

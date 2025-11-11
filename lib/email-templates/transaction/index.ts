@@ -1,5 +1,3 @@
-// Transaction Email Templates
-// These templates are used for payment notifications to users and admins
 
 import { createEmailTemplate, emailContentSections, EmailLayoutData } from '../shared/email-layout';
 
@@ -14,8 +12,7 @@ export interface TransactionEmailData {
   phone?: string;
 }
 
-export const transactionTemplates = {
-  // User notification for successful payment
+export const transactionTemplates = {
   paymentSuccess: (data: TransactionEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Payment Successful!',
@@ -23,15 +20,13 @@ export const transactionTemplates = {
       footerMessage: 'Thank you for your payment!',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       ${emailContentSections.greeting(data.userName)}
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
         Great news! Your payment has been successfully processed and funds have been added to your account. You can now use these funds to place orders on our platform.
       </p>
-            
-      
-      <!-- Transaction Details -->
+
       <div style="background-color: #f9fafb; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px; border-bottom: 2px solid #22c55e; padding-bottom: 10px;">Transaction Details</h3>
         ${emailContentSections.infoTable([
@@ -41,22 +36,19 @@ export const transactionTemplates = {
           {label: 'Date', value: data.date}
         ])}
       </div>
-            
-      
+
       ${emailContentSections.ctaButton('View Transaction History', `${process.env.NEXT_PUBLIC_APP_URL}/transactions`)}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         Thank you for choosing our service! If you have any questions, please don't hesitate to contact our support team.
       </p>
     `;
-    
+
     return {
       subject: 'Payment Successful - Funds Added to Your Account',
       html: createEmailTemplate(layoutData, content)
     };
-  },
-
-  // User notification for cancelled payment
+  },
   paymentCancelled: (data: TransactionEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Payment Cancelled',
@@ -64,15 +56,13 @@ export const transactionTemplates = {
       footerMessage: 'No charges were made to your account',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       ${emailContentSections.greeting(data.userName)}
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
         We regret to inform you that your payment could not be verified and has been cancelled by our admin team.
       </p>
-            
-      
-      <!-- Transaction Details -->
+
       <div style="background-color: #fef2f2; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #ef4444;">
         <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px;">Transaction Details</h3>
         ${emailContentSections.infoTable([
@@ -82,9 +72,7 @@ export const transactionTemplates = {
           {label: 'Date', value: data.date}
         ])}
       </div>
-            
-      
-      <!-- What to do next -->
+
       <div style="background-color: #f3f4f6; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">What to do next:</h3>
         <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
@@ -93,8 +81,7 @@ export const transactionTemplates = {
           <li style="margin-bottom: 8px;">Ensure your transaction ID and phone number are accurate</li>
         </ul>
       </div>
-      
-      <!-- Contact Support -->
+
       <div style="background-color: #e0f2fe; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Contact Support:</h3>
         <div style="color: #4b5563;">
@@ -103,19 +90,17 @@ export const transactionTemplates = {
           <p style="margin: 5px 0;"><strong>Email:</strong> support@example.com</p>
         </div>
       </div>
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         We apologize for any inconvenience caused and appreciate your understanding.
       </p>
     `;
-    
+
     return {
       subject: 'Payment Cancelled - Transaction Not Approved',
       html: createEmailTemplate(layoutData, content)
     };
-  },
-
-  // Admin notification for pending transaction review
+  },
   adminPendingReview: (data: TransactionEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Payment Pending Review',
@@ -123,13 +108,12 @@ export const transactionTemplates = {
       footerMessage: 'This is an automated admin notification.',
       userEmail: 'admin@example.com'
     };
-    
+
     const content = `
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
         A new payment requires manual verification and approval.
       </p>
-      
-      <!-- Transaction Details -->
+
       <div style="background-color: #fef3c7; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px;">Transaction Details</h3>
         ${emailContentSections.infoTable([
@@ -142,21 +126,19 @@ export const transactionTemplates = {
           {label: 'Date', value: data.date}
         ])}
       </div>
-      
+
       ${emailContentSections.ctaButton('Review Transaction', `${process.env.NEXT_PUBLIC_APP_URL}/admin/funds`)}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         Please log in to the admin dashboard to approve or cancel this transaction.
       </p>
     `;
-    
+
     return {
       subject: 'Pending Payment Requires Manual Review',
       html: createEmailTemplate(layoutData, content)
     };
-  },
-
-  // Admin notification for auto-approved payment
+  },
   adminAutoApproved: (data: TransactionEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Payment Auto-Approved',
@@ -164,13 +146,12 @@ export const transactionTemplates = {
       footerMessage: 'This is an automated admin notification.',
       userEmail: 'admin@example.com'
     };
-    
+
     const content = `
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
         A new payment has been automatically verified and approved.
       </p>
-      
-      <!-- Transaction Details -->
+
       <div style="background-color: #f0fdf4; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #22c55e;">
         <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px;">Transaction Details</h3>
         ${emailContentSections.infoTable([
@@ -182,14 +163,14 @@ export const transactionTemplates = {
           {label: 'Date', value: data.date}
         ])}
       </div>
-      
+
       ${emailContentSections.ctaButton('View Transaction History', `${process.env.NEXT_PUBLIC_APP_URL}/admin/transactions`)}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         The user's account balance has been automatically updated.
       </p>
     `;
-    
+
     return {
       subject: 'Payment Auto-Approved - Funds Added',
       html: createEmailTemplate(layoutData, content)

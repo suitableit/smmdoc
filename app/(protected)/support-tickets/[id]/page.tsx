@@ -22,23 +22,17 @@ import {
     FaUserShield,
     FaVideo
 } from 'react-icons/fa';
-import TicketSystemGuard from '@/components/TicketSystemGuard';
-
-// Import APP_NAME constant
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import useTicketPolling from '@/hooks/useTicketPolling';
-
-// Custom Gradient Spinner Component
+import useTicketPolling from '@/hooks/useTicketPolling';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -55,12 +49,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Mock ButtonLoader component
-const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
-
-// Interfaces
+);
+const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
 interface TicketMessage {
   id: string;
   type: 'customer' | 'staff' | 'system';
@@ -97,9 +87,7 @@ interface SupportTicketDetails {
 const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const router = useRouter();
   const { appName } = useAppNameWithFallback();
-  const [ticketId, setTicketId] = useState<string | null>(null);
-  
-  // Resolve params safely
+  const [ticketId, setTicketId] = useState<string | null>(null);
   useEffect(() => {
     const resolveParams = async () => {
       try {
@@ -110,18 +98,12 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
       }
     };
     resolveParams();
-  }, [params]);
-
-  // Set document title
+  }, [params]);
   useEffect(() => {
     if (ticketId) {
       setPageTitle(`Ticket #${ticketId}`, appName);
     }
-  }, [appName, ticketId]);
-
-
-
-  // State management
+  }, [appName, ticketId]);
   const [ticketDetails, setTicketDetails] = useState<SupportTicketDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
@@ -131,12 +113,10 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Fetch ticket details
+  } | null>(null);
   useEffect(() => {
     if (!ticketId) return;
-    
+
     const fetchTicketDetails = async () => {
       try {
         setLoading(true);
@@ -155,18 +135,14 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
     };
 
     fetchTicketDetails();
-  }, [ticketId]);
-
-  // Real-time polling for message updates
+  }, [ticketId]);
   const { hasNewMessages, isPolling, markMessagesAsRead } = useTicketPolling(
     ticketId,
     ticketDetails,
     setTicketDetails,
-    3000, // Poll every 3 seconds
-    'user' // Use user API endpoint
-  );
-
-  // Utility functions
+    3000,
+    'user'
+  );
   const formatTicketID = (id: string | undefined) => {
     if (!id) return '0';
     return id.toString();
@@ -210,59 +186,49 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
     if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return <FaFileExcel className="h-4 w-4" />;
     if (mimetype.includes('zip') || mimetype.includes('rar')) return <FaFileArchive className="h-4 w-4" />;
     return <FaFileAlt className="h-4 w-4" />;
-  };
-
-  // Show toast notification
+  };
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Handle reply submission
+  };
   const handleReplySubmit = async () => {
     console.log('handleReplySubmit called with:', { replyContent, ticketId });
     if (!replyContent.trim()) {
       console.log('Reply content is empty, returning');
       return;
-    }
-    
-    // Check if ticket is closed before attempting to reply
+    }
     if (ticketDetails?.status === 'closed') {
       showToast('This ticket has been closed and no longer accepts replies.', 'error');
       return;
     }
-    
+
     setIsReplying(true);
     console.log('Starting reply submission...');
-    
+
     try {
-      let attachmentPaths: string[] = [];
-      
-      // Upload files first if any
+      let attachmentPaths: string[] = [];
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           const fileFormData = new FormData();
           fileFormData.append('file', file);
           fileFormData.append('uploadType', 'uploads');
-          
+
           const uploadResponse = await fetch('/api/upload', {
             method: 'POST',
             body: fileFormData,
           });
-          
+
           if (!uploadResponse.ok) {
             throw new Error(`Failed to upload file: ${file.name}`);
           }
-          
+
           const uploadResult = await uploadResponse.json();
           attachmentPaths.push(uploadResult.filePath);
         }
-      }
-      
-      // Send reply with attachment paths
+      }
       console.log('Sending request to:', `/api/support-tickets/${ticketId}/reply`);
       const response = await fetch(`/api/support-tickets/${ticketId}/reply`, {
         method: 'POST',
@@ -278,13 +244,9 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
       console.log('Response status:', response.status, response.statusText);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('API Error:', errorData);
-        
-        // Handle specific error cases
-        if (response.status === 400 && errorData.error && errorData.error.toLowerCase().includes('closed')) {
-          // Ticket was closed while user was composing reply
-          showToast('This ticket has been closed and no longer accepts replies. Please refresh the page.', 'error');
-          // Optionally refresh ticket details to sync status
+        console.error('API Error:', errorData);
+        if (response.status === 400 && errorData.error && errorData.error.toLowerCase().includes('closed')) {
+          showToast('This ticket has been closed and no longer accepts replies. Please refresh the page.', 'error');
           if (ticketId) {
             try {
               const refreshResponse = await fetch(`/api/support-tickets/${ticketId}`);
@@ -298,25 +260,21 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
           }
           return;
         }
-        
+
         throw new Error(errorData.error || 'Failed to send reply');
       }
 
       const responseData = await response.json();
-      console.log('Received response data:', responseData);
-      
-      // Extract ticket from response (API returns { success, message, ticket })
-      const updatedTicket = responseData.ticket || responseData;
-      
-      // Validate the response structure
+      console.log('Received response data:', responseData);
+      const updatedTicket = responseData.ticket || responseData;
       if (!updatedTicket || !updatedTicket.id) {
         console.error('Invalid response structure:', updatedTicket);
         throw new Error('Invalid response from server');
       }
-      
+
       console.log('Setting ticket details with updated data');
       setTicketDetails(updatedTicket);
-      
+
       console.log('Reply submitted successfully, clearing form');
       setReplyContent('');
       setSelectedFiles([]);
@@ -328,15 +286,12 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
       console.log('Reply submission completed, setting isReplying to false');
       setIsReplying(false);
     }
-  };
-
-  // Handle file selection
+  };
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     const validFiles: File[] = [];
-    
-    for (const file of files) {
-      // Validate file type (only images and PDFs)
+
+    for (const file of files) {
       const allowedTypes = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
         'application/pdf'
@@ -344,33 +299,25 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
       if (!allowedTypes.includes(file.type)) {
         showToast(`File "${file.name}" has an unsupported format. Only images and PDFs are allowed.`, 'error');
         continue;
-      }
-      
-      // Validate file size (3MB max for users)
-      const maxSize = 3 * 1024 * 1024; // 3MB
+      }
+      const maxSize = 3 * 1024 * 1024;
       if (file.size > maxSize) {
         showToast(`File "${file.name}" is too large. Maximum 3MB allowed for user uploads.`, 'error');
         continue;
       }
-      
+
       validFiles.push(file);
     }
-    
+
     if (validFiles.length > 0) {
       setSelectedFiles(prev => [...prev, ...validFiles]);
       showToast(`${validFiles.length} file(s) selected successfully!`, 'success');
-    }
-    
-    // Reset the input value to allow uploading the same file again
+    }
     event.target.value = '';
-  };
-
-  // Remove selected file
+  };
   const removeSelectedFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // Handle ticket closing
+  };
   const handleCloseTicket = async () => {
     const confirmed = window.confirm('Are you sure you want to close this ticket? This action cannot be undone.');
     if (!confirmed) return;
@@ -391,7 +338,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
 
       const updatedTicket = await response.json();
       setTicketDetails(updatedTicket);
-      
+
       showToast('Ticket has been closed successfully', 'success');
     } catch (error) {
       console.error('Error closing ticket:', error);
@@ -399,9 +346,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
     } finally {
       setIsClosingTicket(false);
     }
-  };
-
-  // Show loading state
+  };
   if (loading || !ticketId) {
     return (
       <div className="page-container">
@@ -423,9 +368,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
         </div>
       </div>
     );
-  }
-
-  // Show error state if no ticket data
+  }
   if (!ticketDetails) {
     return (
       <div className="page-container">
@@ -459,7 +402,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
   return (
     <TicketSystemGuard>
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -471,7 +414,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
       </div>
 
       <div className="page-content">
-        {/* Header */}
+        {}
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
             <button 
@@ -488,9 +431,9 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Main Content */}
+          {}
           <div className="md:col-span-2 space-y-6">
-            {/* AI Ticket System Message */}
+            {}
             {ticketDetails && ticketDetails.ticketType === 'AI' && ticketDetails.systemMessage && (
               <div className="card card-padding">
                 <div className="card-header">
@@ -499,7 +442,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                   </div>
                   <h3 className="card-title">System Processing Result</h3>
                 </div>
-                
+
                 <div className={`p-4 rounded-lg border-l-4 ${
                   ticketDetails.ticketStatus === 'Processed' 
                     ? 'bg-green-50 border-green-400 text-green-800' 
@@ -529,7 +472,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
               </div>
             )}
 
-            {/* Messages Thread */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -537,7 +480,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                 </div>
                 <h3 className="card-title">Conversation</h3>
               </div>
-              
+
               <div className="space-y-6" onClick={() => hasNewMessages && markMessagesAsRead()}>
                 {ticketDetails && ticketDetails.messages && ticketDetails.messages.length > 0 ? (
                   ticketDetails.messages.map((message) => (
@@ -560,7 +503,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                         </div>
                       )}
                     </div>
-                    
+
                     <div className={`flex-1 min-w-0 p-4 rounded-lg ${
                       message.type === 'customer' ? 'bg-blue-50 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800/50'
                     }`}>
@@ -571,16 +514,15 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                           {new Date(message.createdAt).toLocaleTimeString()}
                         </span>
                       </div>
-                      
+
                       <div className="prose prose-sm max-w-none">
                         <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
                       </div>
-                      
-                      {/* Attachments */}
+
+                      {}
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
-                          {message.attachments && message.attachments.map((attachment, index) => {
-                            // Handle both string paths and object attachments
+                          {message.attachments && message.attachments.map((attachment, index) => {
                             const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
                             const filename = typeof attachment === 'string' 
                               ? (attachment as string).split('/').pop() || 'Unknown file'
@@ -589,7 +531,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                               ? ''
                               : attachment.mimetype;
                             const filesize = typeof attachment === 'object' && attachment.filesize ? attachment.filesize : '';
-                            
+
                             return (
                               <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                                 {getFileIcon(mimetype)}
@@ -625,7 +567,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
               </div>
             </div>
 
-            {/* Reply Section - Only show if ticket is not closed */}
+            {}
             {ticketDetails.status !== 'closed' && (
               <div className="card card-padding">
                 <div className="card-header">
@@ -634,7 +576,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                   </div>
                   <h3 className="card-title">Post a Reply</h3>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="form-group">
                     <textarea
@@ -645,8 +587,8 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
                     />
                   </div>
-                  
-                  {/* File Upload */}
+
+                  {}
                   <div className="form-group">
                     <label className="form-label mb-2 flex items-center gap-2">
                       <FaPaperclip />
@@ -661,8 +603,8 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                     <small className="text-xs text-gray-500 mt-1">
                       You can upload screenshots or other relevant files (max 3MB each, images and PDFs only).
                     </small>
-                    
-                    {/* Selected Files */}
+
+                    {}
                     {selectedFiles.length > 0 && (
                       <div className="mt-2 space-y-2">
                         {selectedFiles.map((file, index) => (
@@ -681,7 +623,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleReplySubmit}
@@ -696,11 +638,11 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
             )}
           </div>
 
-          {/* Sidebar */}
+          {}
           <div className="space-y-6">
             {ticketDetails && (
               <>
-                {/* Ticket Information */}
+                {}
                 <div className="card card-padding">
                   <div className="card-header">
                     <div className="card-icon">
@@ -745,7 +687,7 @@ const UserSupportTicketPage = ({ params }: { params: Promise<{ id: string }> }) 
               </div>
             </div>
 
-            {/* Close Ticket Section */}
+            {}
             {ticketDetails.status !== 'closed' ? (
               <div className="card card-padding">
                 <div className="card-header">

@@ -35,8 +35,8 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError(''); // Clear error when user types
-    setSuccess(''); // Clear success message when user types
+    setError('');
+    setSuccess('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,7 +51,7 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
           email: formData.email,
           password: formData.password
         });
-        
+
         if (result?.error) {
           setError('Invalid credentials');
         } else if (result?.success) {
@@ -61,8 +61,7 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
         } else {
           setError('Something went wrong. Please try again.');
         }
-      } else {
-        // Sign up validation
+      } else {
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match');
           setLoading(false);
@@ -71,7 +70,7 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
 
         console.log('FormData before register:', formData);
         console.log('confirmPassword value:', formData.confirmPassword);
-        
+
         const result = await register({
           username: formData.username,
           name: formData.name,
@@ -79,15 +78,13 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
           password: formData.password,
           confirmPassword: formData.confirmPassword
         });
-        
+
         if (result?.error) {
           setError(result.error);
         } else if (result?.success) {
-          setSuccess('Registration successful! Please check your email for verification.');
-          // Don't redirect to dashboard immediately, wait for email verification
+          setSuccess('Registration successful! Please check your email for verification.');
           setTimeout(() => {
-            onSuccess();
-            // Redirect to verification page instead of dashboard
+            onSuccess();
             window.location.href = '/verify-email';
           }, 2000);
         } else {
@@ -97,7 +94,7 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
     } catch (error) {
       setError('Something went wrong. Please try again.');
     }
-    
+
     setLoading(false);
   };
 
@@ -166,7 +163,7 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
                 </div>
               </>
             )}
-            
+
             <div className="space-y-1">
               <Label htmlFor="email" className="text-sm">Email</Label>
               <Input
@@ -180,7 +177,7 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
                 className="h-9"
               />
             </div>
-            
+
             <div className="space-y-1">
               <Label htmlFor="password" className="text-sm">Password</Label>
               <Input
@@ -194,7 +191,7 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
                 className="h-9"
               />
             </div>
-            
+
             {type === 'signup' && (
               <div className="space-y-1">
                 <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
@@ -210,19 +207,19 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
                 />
               </div>
             )}
-            
+
             {error && (
               <div className="text-red-500 text-sm text-center py-1">
                 {error}
               </div>
             )}
-            
+
             {success && (
               <div className="text-green-500 text-sm text-center py-1">
                 {success}
               </div>
             )}
-            
+
             <Button 
               type="submit" 
               className="w-full h-9" 

@@ -14,7 +14,6 @@ import {
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrentUser } from '@/hooks/use-current-user';
 
-// Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -23,7 +22,6 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   </div>
 );
 
-// Toast Component
 const Toast = ({
   message,
   type = 'success',
@@ -69,7 +67,6 @@ interface Service {
   isFavorite?: boolean;
 }
 
-// Services Table Component
 const ServicesTable: React.FC = () => {
   const user = useCurrentUser();
   const [services, setServices] = useState<Service[]>([]);
@@ -88,7 +85,6 @@ const ServicesTable: React.FC = () => {
   const [limit, setLimit] = useState('10');
   const [isShowAll, setIsShowAll] = useState(false);
 
-  // Show toast notification
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -97,7 +93,6 @@ const ServicesTable: React.FC = () => {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Handle keyboard shortcuts for search
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
       setSearch('');
@@ -118,7 +113,7 @@ const ServicesTable: React.FC = () => {
     const fetchServices = async () => {
       setLoading(true);
       try {
-        // First fetch the services
+
         const response = await fetch(
           `/api/user/services?page=${page}&limit=${limit}&search=${debouncedSearch}`,
           {
@@ -144,7 +139,7 @@ const ServicesTable: React.FC = () => {
             })) || [];
 
           setServices(servicesData);
-          // Group services by category
+
           const grouped = servicesData.reduce(
             (acc: Record<string, Service[]>, service: Service) => {
               const categoryName =
@@ -163,7 +158,7 @@ const ServicesTable: React.FC = () => {
         }
 
         try {
-          // Then fetch favorite status
+
           const favResponse = await fetch(
             `/api/user/services/favorite-status?userId=${user.id}`,
             {
@@ -184,7 +179,6 @@ const ServicesTable: React.FC = () => {
           const favData = await favResponse.json();
           const favoriteServiceIds = favData.favoriteServiceIds || [];
 
-          // Merge favorite status with services
           const servicesWithFavorites =
             data?.data?.map((service: Service) => ({
               ...service,
@@ -193,7 +187,6 @@ const ServicesTable: React.FC = () => {
 
           setServices(servicesWithFavorites);
 
-          // Group services by category
           const grouped = servicesWithFavorites.reduce(
             (acc: Record<string, Service[]>, service: Service) => {
               const categoryName =
@@ -209,7 +202,7 @@ const ServicesTable: React.FC = () => {
           setGroupedServices(grouped);
         } catch (favError) {
           console.error('Error fetching favorites:', favError);
-          // If favorite fetch fails, still show services without favorites
+
           const servicesData =
             data?.data?.map((service: Service) => ({
               ...service,
@@ -218,7 +211,6 @@ const ServicesTable: React.FC = () => {
 
           setServices(servicesData);
 
-          // Group services by category
           const grouped = servicesData.reduce(
             (acc: Record<string, Service[]>, service: Service) => {
               const categoryName =
@@ -237,11 +229,9 @@ const ServicesTable: React.FC = () => {
         setTotalPages(data.totalPages || 1);
         setIsShowAll(data.isShowAll || false);
 
-        // Update grouped services to include empty categories
         if (data.allCategories && data.allCategories.length > 0) {
           const servicesData = data?.data || [];
 
-          // Group services by category
           const grouped = servicesData.reduce(
             (acc: Record<string, Service[]>, service: Service) => {
               const categoryName =
@@ -255,7 +245,6 @@ const ServicesTable: React.FC = () => {
             {}
           );
 
-          // Add empty categories
           data.allCategories.forEach((category: any) => {
             if (!grouped[category.category_name]) {
               grouped[category.category_name] = [];
@@ -293,7 +282,7 @@ const ServicesTable: React.FC = () => {
     }
 
     try {
-      // Find the current service to get the current favorite status
+
       const currentService = services.find(
         (service) => service.id === serviceId
       );
@@ -309,7 +298,7 @@ const ServicesTable: React.FC = () => {
         body: JSON.stringify({
           serviceId,
           userId: user.id,
-          action: currentService.isFavorite ? 'remove' : 'add', // Explicit action
+          action: currentService.isFavorite ? 'remove' : 'add',
         }),
       });
 
@@ -324,7 +313,6 @@ const ServicesTable: React.FC = () => {
           )
         );
 
-        // Update grouped services as well
         setGroupedServices((prevGrouped) => {
           const newGrouped = { ...prevGrouped };
           Object.keys(newGrouped).forEach((categoryName) => {
@@ -362,7 +350,7 @@ const ServicesTable: React.FC = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
-      {/* Toast Container */}
+      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -371,7 +359,7 @@ const ServicesTable: React.FC = () => {
         />
       )}
 
-      {/* Search Bar */}
+      {}
       <div className="mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -387,7 +375,7 @@ const ServicesTable: React.FC = () => {
             className="w-full pl-10 pr-12 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             autoComplete="off"
           />
-          {/* Clear Search Button */}
+          {}
           {search && (
             <button
               onClick={() => setSearch('')}
@@ -398,8 +386,8 @@ const ServicesTable: React.FC = () => {
             </button>
           )}
         </div>
-        
-        {/* Search Results Info */}
+
+        {}
         {search && (
           <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             {loading ? (
@@ -430,7 +418,7 @@ const ServicesTable: React.FC = () => {
         )}
       </div>
 
-      {/* Services by Category */}
+      {}
       {Object.keys(groupedServices).length > 0 ? (
         <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
           <table className="w-full border-collapse">
@@ -466,7 +454,7 @@ const ServicesTable: React.FC = () => {
               {Object.entries(groupedServices).map(
                 ([categoryName, categoryServices]) => (
                   <Fragment key={categoryName}>
-                    {/* Category Row */}
+                    {}
                     <tr>
                       <td colSpan={8} className="py-0">
                         <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 shadow-lg">
@@ -477,7 +465,7 @@ const ServicesTable: React.FC = () => {
                       </td>
                     </tr>
 
-                    {/* Category Services */}
+                    {}
                     {categoryServices.map((service, index) => {
                       const isLastInCategory =
                         index === categoryServices.length - 1;
@@ -589,7 +577,7 @@ const ServicesTable: React.FC = () => {
         </div>
       )}
 
-      {/* Pagination */}
+      {}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 gap-4">
           <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -601,9 +589,9 @@ const ServicesTable: React.FC = () => {
               </span>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2">
-            {/* First Page */}
+            {}
             <button
               onClick={() => setPage(1)}
               disabled={page === 1}
@@ -612,8 +600,8 @@ const ServicesTable: React.FC = () => {
             >
               ««
             </button>
-            
-            {/* Previous Page */}
+
+            {}
             <button
               onClick={handlePrevious}
               disabled={page === 1}
@@ -621,21 +609,19 @@ const ServicesTable: React.FC = () => {
             >
               Previous
             </button>
-            
-            {/* Page Numbers */}
+
+            {}
             <div className="flex items-center gap-1">
               {(() => {
                 const pageNumbers = [];
                 const maxVisiblePages = 5;
                 let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
                 let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-                
-                // Adjust start page if we're near the end
+
                 if (endPage - startPage < maxVisiblePages - 1) {
                   startPage = Math.max(1, endPage - maxVisiblePages + 1);
                 }
-                
-                // Add ellipsis at the beginning if needed
+
                 if (startPage > 1) {
                   pageNumbers.push(
                     <button
@@ -652,8 +638,7 @@ const ServicesTable: React.FC = () => {
                     );
                   }
                 }
-                
-                // Add visible page numbers
+
                 for (let i = startPage; i <= endPage; i++) {
                   pageNumbers.push(
                     <button
@@ -669,8 +654,7 @@ const ServicesTable: React.FC = () => {
                     </button>
                   );
                 }
-                
-                // Add ellipsis at the end if needed
+
                 if (endPage < totalPages) {
                   if (endPage < totalPages - 1) {
                     pageNumbers.push(
@@ -687,12 +671,12 @@ const ServicesTable: React.FC = () => {
                     </button>
                   );
                 }
-                
+
                 return pageNumbers;
               })()}
             </div>
-            
-            {/* Next Page */}
+
+            {}
             <button
               onClick={handleNext}
               disabled={page === totalPages}
@@ -700,8 +684,8 @@ const ServicesTable: React.FC = () => {
             >
               Next
             </button>
-            
-            {/* Last Page */}
+
+            {}
             <button
               onClick={() => setPage(totalPages)}
               disabled={page === totalPages}

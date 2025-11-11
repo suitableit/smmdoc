@@ -21,12 +21,8 @@ import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
 
 export default function SignInForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Get user settings to check if password reset is enabled
-  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
-
-  // Handle different URL messages
+  const searchParams = useSearchParams();
+  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
   let urlError = '';
   const errorParam = searchParams?.get('error');
   const messageParam = searchParams?.get('message');
@@ -43,9 +39,7 @@ export default function SignInForm() {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
   const [showPassword, setShowPassword] = useState(false);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-  
-  // Get ReCAPTCHA settings
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
   const togglePasswordVisibility = () => {
@@ -61,51 +55,42 @@ export default function SignInForm() {
   const onSubmit: SubmitHandler<SignInSchema> = async (values) => {
     setError('');
     setSuccess('');
-    urlError = '';
-    
-    // Check ReCAPTCHA if enabled
+    urlError = '';
     if (isEnabledForForm('signIn') && !recaptchaToken) {
       setError('Please complete the ReCAPTCHA verification.');
       return;
     }
-    
-    startTransition(() => {
-      // Add recaptcha token to values if available
+
+    startTransition(() => {
       const submitData = recaptchaToken 
         ? { ...values, recaptchaToken }
         : values;
-        
+
       login(submitData)
         .then((data) => {
           if (data?.error) {
             setError(data.error);
             return;
           }
-          
+
           if (data?.twoFactor) {
             setShowTwoFactor(true);
             return;
           }
-          
-          if (data?.success) {
-            // Get redirect URL
+
+          if (data?.success) {
             const redirectUrl = data.redirectTo || '/dashboard';
-            const isAdmin = data.isAdmin === true;
-            
-            // Set appropriate success message
+            const isAdmin = data.isAdmin === true;
             setSuccess(isAdmin 
               ? 'Login successful! Redirecting to admin dashboard...' 
               : 'Login successful! Redirecting to dashboard...');
-            
-            console.log('Redirect URL:', redirectUrl);
-            
-            // Force hard reload for admin dashboard to ensure proper session handling
+
+            console.log('Redirect URL:', redirectUrl);
             if (isAdmin) {
               setTimeout(() => {
                 window.location.href = redirectUrl;
               }, 1000);
-            } else {
-              // Use router for regular users
+            } else {
               setTimeout(() => {
                 router.push(redirectUrl);
               }, 1000);
@@ -228,7 +213,7 @@ export default function SignInForm() {
               )}
             </div>
 
-            {/* ReCAPTCHA Component */}
+            {}
             {isEnabledForForm('signIn') && recaptchaSettings && (
               <ReCAPTCHA
                 siteKey={recaptchaSettings.siteKey}
@@ -237,9 +222,7 @@ export default function SignInForm() {
                 threshold={recaptchaSettings.threshold}
                 onVerify={(token) => setRecaptchaToken(token)}
                 onError={() => {
-                  setRecaptchaToken(null);
-                  // Let Google's native error messages display instead of custom ones
-                  // This allows 'Invalid domain for site key' and other specific errors to show
+                  setRecaptchaToken(null);
                 }}
                 onExpired={() => {
                   setRecaptchaToken(null);
@@ -252,9 +235,7 @@ export default function SignInForm() {
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  id="remember"
-                  // checked={rememberMe}
-                  // onChange={(e) => setRememberMe(e.target.checked)}
+                  id="remember"
                   className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 transition-colors duration-200"
                 />
                 <label
@@ -264,7 +245,7 @@ export default function SignInForm() {
                   Remember me
                 </label>
               </div>
-              {/* Show forgot password link only if password reset is enabled */}
+              {}
               {(!settingsLoading && userSettings?.resetPasswordEnabled !== false) && (
                 <Link
                   href="/reset-password"
@@ -289,10 +270,10 @@ export default function SignInForm() {
                 setError('Please enter your email and password');
                 return;
               }
-              
+
               setError('');
               setSuccess('Logging in...');
-              
+
               login(formValues)
                 .then((data) => {
                   if (data?.error) {
@@ -300,21 +281,17 @@ export default function SignInForm() {
                     setSuccess('');
                     return;
                   }
-                  
+
                   if (data?.twoFactor) {
                     setShowTwoFactor(true);
                     return;
                   }
-                  
+
                   if (data?.success) {
                     const isAdmin = data.isAdmin === true;
-                    const redirectUrl = isAdmin ? '/admin' : '/dashboard';
-                    
-                    // Clear any previous messages
+                    const redirectUrl = isAdmin ? '/admin' : '/dashboard';
                     setError('');
-                    setSuccess(`Login successful! Redirecting to ${isAdmin ? 'Admin' : 'User'} Dashboard...`);
-                    
-                    // Create a notification element
+                    setSuccess(`Login successful! Redirecting to ${isAdmin ? 'Admin' : 'User'} Dashboard...`);
                     const notification = document.createElement('div');
                     notification.style.position = 'fixed';
                     notification.style.top = '50%';
@@ -335,17 +312,14 @@ export default function SignInForm() {
                         </div>
                       </div>
                     `;
-                    document.body.appendChild(notification);
-                    
-                    // Animate progress bar
+                    document.body.appendChild(notification);
                     let progress = 0;
                     const progressBar = document.getElementById('progress-bar');
                     const interval = setInterval(() => {
                       progress += 10;
                       if (progressBar) progressBar.style.width = `${progress}%`;
                       if (progress >= 100) {
-                        clearInterval(interval);
-                        // Force direct navigation with timestamp
+                        clearInterval(interval);
                         window.location.href = redirectUrl + '?t=' + new Date().getTime();
                       }
                     }, 100);
@@ -364,7 +338,7 @@ export default function SignInForm() {
         </div>
       </form>
 
-      {/* Google Sign-in Button - Added after the Sign In button */}
+      {}
       {!showTwoFactor && (
         <div className="mt-4">
           <div className="relative mb-4">

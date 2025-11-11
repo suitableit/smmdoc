@@ -8,23 +8,17 @@ import {
     FaSync,
     FaTimes,
     FaTrash,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatNumber } from '@/lib/utils';
-
-// Custom Gradient Spinner Component
+import { formatNumber } from '@/lib/utils';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -41,9 +35,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interface for SyncLog
+);
 interface SyncLog {
   id: number;
   slNo: number;
@@ -64,14 +56,10 @@ interface PaginationInfo {
 }
 
 const SyncLogsPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('API Sync Logs', appName);
-  }, [appName]);
-
-  // Dummy data for sync logs
+  }, [appName]);
   const dummySyncLogs: SyncLog[] = [
     {
       id: 1,
@@ -163,9 +151,7 @@ const SyncLogsPage = () => {
       changeType: 'deleted',
       when: '2024-01-13T10:40:00Z',
     },
-  ];
-
-  // State management
+  ];
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>(dummySyncLogs);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -185,13 +171,9 @@ const SyncLogsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [logsLoading, setLogsLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // Get change type badge
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const getChangeTypeBadge = (changeType: string) => {
     switch (changeType) {
       case 'added':
@@ -225,9 +207,7 @@ const SyncLogsPage = () => {
           </span>
         );
     }
-  };
-
-  // Filter sync logs based on search term and search category
+  };
   const filteredSyncLogs = syncLogs.filter((log) => {
     if (!searchTerm) return true;
 
@@ -247,9 +227,7 @@ const SyncLogsPage = () => {
           log.id.toString().toLowerCase().includes(searchLower)
         );
     }
-  });
-
-  // Update pagination when filtered data changes
+  });
   useEffect(() => {
     const total = filteredSyncLogs.length;
     const totalPages = Math.ceil(total / pagination.limit);
@@ -260,16 +238,12 @@ const SyncLogsPage = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1,
     }));
-  }, [filteredSyncLogs.length, pagination.limit]);
-
-  // Get paginated data
+  }, [filteredSyncLogs.length, pagination.limit]);
   const getPaginatedData = () => {
     const startIndex = (pagination.page - 1) * pagination.limit;
     const endIndex = startIndex + pagination.limit;
     return filteredSyncLogs.slice(startIndex, endIndex);
-  };
-
-  // Show toast notification
+  };
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -296,19 +270,15 @@ const SyncLogsPage = () => {
   };
 
   const handleRefresh = () => {
-    setLogsLoading(true);
-    // Simulate loading
+    setLogsLoading(true);
     setTimeout(() => {
       setLogsLoading(false);
       showToast('Sync logs refreshed successfully!', 'success');
     }, 1000);
-  };
-
-  // Handle log deletion
+  };
   const handleDeleteLog = async (logId: string | number) => {
     setDeleteLoading(true);
-    try {
-      // Simulate API call
+    try {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setSyncLogs((prev) => prev.filter((log) => log.id.toString() !== logId.toString()));
@@ -321,12 +291,9 @@ const SyncLogsPage = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
-
-  // Handle bulk delete
+  };
   const handleBulkDelete = async () => {
-    try {
-      // Simulate API call
+    try {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setSyncLogs((prev) =>
@@ -345,7 +312,7 @@ const SyncLogsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -357,12 +324,12 @@ const SyncLogsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
-              {/* Page View Dropdown */}
+              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -393,7 +360,7 @@ const SyncLogsPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls */}
+            {}
             <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
@@ -428,7 +395,7 @@ const SyncLogsPage = () => {
           </div>
         </div>
 
-        {/* Sync Logs Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
             {selectedLogs.length > 0 && (
@@ -479,7 +446,7 @@ const SyncLogsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View - Hidden on mobile */}
+                {}
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1000px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -617,7 +584,7 @@ const SyncLogsPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View - Visible on tablet and mobile */}
+                {}
                 <div className="lg:hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {getPaginatedData().map((log) => (
@@ -625,7 +592,7 @@ const SyncLogsPage = () => {
                         key={log.id}
                         className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
-                        {/* Header with Checkbox, Sl No and Actions */}
+                        {}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <input
@@ -640,7 +607,7 @@ const SyncLogsPage = () => {
                             {getChangeTypeBadge(log.changeType)}
                           </div>
 
-                          {/* Actions for Mobile */}
+                          {}
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => {
@@ -655,7 +622,7 @@ const SyncLogsPage = () => {
                           </div>
                         </div>
 
-                        {/* API Provider and Service Name */}
+                        {}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
@@ -687,7 +654,7 @@ const SyncLogsPage = () => {
                           </div>
                         </div>
 
-                        {/* Changes */}
+                        {}
                         <div className="mb-4">
                           <div
                             className="text-xs font-medium mb-1"
@@ -703,7 +670,7 @@ const SyncLogsPage = () => {
                           </div>
                         </div>
 
-                        {/* When */}
+                        {}
                         <div>
                           <div
                             className="text-xs font-medium mb-1"
@@ -729,7 +696,7 @@ const SyncLogsPage = () => {
                   </div>
                 </div>
 
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -794,7 +761,7 @@ const SyncLogsPage = () => {
           </div>
         </div>
 
-        {/* Delete Confirmation Dialog */}
+        {}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -837,7 +804,7 @@ const SyncLogsPage = () => {
           </div>
         )}
 
-        {/* Bulk Delete Confirmation Dialog */}
+        {}
         {bulkDeleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

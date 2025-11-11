@@ -14,14 +14,10 @@ import {
     FaTimes,
     FaTimesCircle,
     FaUserCheck
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-
-// Custom Form Components
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 const FormField = ({ children }: { children: React.ReactNode }) => (
   <div className="space-y-2">{children}</div>
 );
@@ -56,18 +52,14 @@ const FormMessage = ({
   children?: React.ReactNode 
 }) => (
   children ? <div className={`text-xs text-red-500 mt-1 ${className}`}>{children}</div> : null
-);
-
-// Custom Gradient Spinner Component
+);
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -84,9 +76,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces for type safety
+);
 interface ChildPanel {
   id: number;
   user: {
@@ -133,9 +123,7 @@ interface PaginationInfo {
   totalPages: number;
   hasNext: boolean;
   hasPrev: boolean;
-}
-
-// Dummy data for SMM Panel child panels
+}
 const dummyChildPanels: ChildPanel[] = [
   {
     id: 3001,
@@ -349,14 +337,10 @@ const dummyStats: ChildPanelStats = {
 };
 
 const ChildPanelsPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Child Panels', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [childPanels, setChildPanels] = useState<ChildPanel[]>(dummyChildPanels);
   const [stats, setStats] = useState<ChildPanelStats>(dummyStats);
 
@@ -375,13 +359,9 @@ const ChildPanelsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
-  const [panelsLoading, setPanelsLoading] = useState(false);
-
-  // New state for action modals
+  const [panelsLoading, setPanelsLoading] = useState(false);
   const [statusDialog, setStatusDialog] = useState<{
     open: boolean;
     panelId: number;
@@ -403,9 +383,7 @@ const ChildPanelsPage = () => {
   });
 
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
-
-  // Panel Settings modal state
+  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
   const [settingsDialog, setSettingsDialog] = useState<{
     open: boolean;
     panel: ChildPanel | null;
@@ -433,9 +411,7 @@ const ChildPanelsPage = () => {
       massOrders: true,
       drip_feed: true,
     },
-  });
-
-  // Calculate status counts from current panels data
+  });
   const calculateStatusCounts = (panelsData: ChildPanel[]) => {
     const counts = {
       active: 0,
@@ -452,14 +428,10 @@ const ChildPanelsPage = () => {
     });
 
     return counts;
-  };
-
-  // Fetch all panels to calculate real status counts
+  };
   const fetchAllPanelsForCounts = async () => {
     try {
-      console.log('Calculating status counts from dummy data...');
-      
-      // Simulate API delay
+      console.log('Calculating status counts from dummy data...');
       await new Promise(resolve => setTimeout(resolve, 200));
 
       const statusCounts = calculateStatusCounts(dummyChildPanels);
@@ -482,22 +454,14 @@ const ChildPanelsPage = () => {
 
   const fetchChildPanels = async () => {
     try {
-      setPanelsLoading(true);
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Filter dummy data based on current filters
-      let filteredPanels = [...dummyChildPanels];
-
-      // Apply status filter
+      setPanelsLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      let filteredPanels = [...dummyChildPanels];
       if (statusFilter !== 'all') {
         filteredPanels = filteredPanels.filter(
           panel => panel.status === statusFilter
         );
-      }
-
-      // Apply search filter
+      }
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         filteredPanels = filteredPanels.filter(
@@ -507,9 +471,7 @@ const ChildPanelsPage = () => {
             panel.domain?.toLowerCase().includes(searchLower) ||
             panel.panelName?.toLowerCase().includes(searchLower)
         );
-      }
-
-      // Apply pagination
+      }
       const startIndex = (pagination.page - 1) * pagination.limit;
       const endIndex = startIndex + pagination.limit;
       const paginatedPanels = filteredPanels.slice(startIndex, endIndex);
@@ -543,9 +505,7 @@ const ChildPanelsPage = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('Loading stats from dummy data...');
-
-      // Simulate API delay
+      console.log('Loading stats from dummy data...');
       await new Promise(resolve => setTimeout(resolve, 300));
 
       console.log('Stats loaded successfully:', dummyStats);
@@ -567,18 +527,14 @@ const ChildPanelsPage = () => {
       });
       showToast('Error fetching statistics. Please refresh the page.', 'error');
     }
-  };
-
-  // Handle search with debouncing
+  };
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchChildPanels();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Load data on component mount and when filters change
+  }, [searchTerm]);
   useEffect(() => {
     fetchChildPanels();
   }, [pagination.page, pagination.limit, statusFilter]);
@@ -592,9 +548,7 @@ const ChildPanelsPage = () => {
     };
 
     loadData();
-  }, []);
-
-  // Close dropdown when clicking outside
+  }, []);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownOpen !== null) {
@@ -609,9 +563,7 @@ const ChildPanelsPage = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [dropdownOpen]);
-
-  // Update stats when pagination data changes
+  }, [dropdownOpen]);
   useEffect(() => {
     if (pagination.total > 0) {
       setStats((prev) => ({
@@ -619,18 +571,14 @@ const ChildPanelsPage = () => {
         totalPanels: pagination.total,
       }));
     }
-  }, [pagination.total]);
-
-  // Show toast notification
+  }, [pagination.total]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Utility functions
+  };
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
@@ -709,16 +657,13 @@ const ChildPanelsPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
-
-  // Handle status change
+  };
   const handleStatusChange = async (
     panelId: number,
     status: string,
     reason: string
   ) => {
-    try {
-      // Simulate API call
+    try {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       showToast('Panel status updated successfully', 'success');
@@ -737,20 +682,15 @@ const ChildPanelsPage = () => {
         'error'
       );
     }
-  };
-
-  // Open status dialog
+  };
   const openStatusDialog = (panelId: number, currentStatus: string) => {
     setStatusDialog({ open: true, panelId, currentStatus });
     setNewStatus(currentStatus);
     setStatusReason('');
-  };
-
-  // Open settings dialog
+  };
   const openSettingsDialog = (panel: ChildPanel) => {
     setSettingsDialog({ open: true, panel });
-    setActiveSettingsTab('general');
-    // Populate current settings
+    setActiveSettingsTab('general');
     setSettingsData({
       panelName: panel.panelName,
       theme: panel.theme,
@@ -771,12 +711,9 @@ const ChildPanelsPage = () => {
         drip_feed: true,
       },
     });
-  };
-
-  // Handle settings save
+  };
   const handleSaveSettings = async () => {
-    try {
-      // Simulate API call
+    try {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       showToast('Panel settings updated successfully', 'success');
@@ -797,7 +734,7 @@ const ChildPanelsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -809,10 +746,10 @@ const ChildPanelsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
               <select
                 value={pagination.limit}
@@ -848,7 +785,7 @@ const ChildPanelsPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls */}
+            {}
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
                 <FaSearch
@@ -875,10 +812,10 @@ const ChildPanelsPage = () => {
           </div>
         </div>
 
-        {/* Child Panels Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -1000,7 +937,7 @@ const ChildPanelsPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {/* Bulk Action Section */}
+            {}
             {selectedPanels.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mb-4 pt-4">
                 <span
@@ -1046,8 +983,7 @@ const ChildPanelsPage = () => {
                             `Suspending ${selectedPanels.length} selected panels...`,
                             'info'
                           );
-                        }
-                        // Reset after action
+                        }
                         setSelectedBulkAction('');
                         setSelectedPanels([]);
                       }}
@@ -1088,7 +1024,7 @@ const ChildPanelsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1000px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -1293,9 +1229,7 @@ const ChildPanelsPage = () => {
                   </table>
                 </div>
 
-                
-
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1356,7 +1290,7 @@ const ChildPanelsPage = () => {
                   </div>
                 </div>
 
-                {/* Status Dialog */}
+                {}
                 {statusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1422,7 +1356,7 @@ const ChildPanelsPage = () => {
                   </div>
                 )}
 
-                {/* Panel Settings Dialog */}
+                {}
                 {settingsDialog.open && settingsDialog.panel && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -1440,7 +1374,7 @@ const ChildPanelsPage = () => {
                         </button>
                       </div>
 
-                      {/* Tabs */}
+                      {}
                       <div className="border-b border-gray-200 mb-6">
                         <nav className="-mb-px flex flex-wrap space-x-0 sm:space-x-8 gap-2">
                           <button
@@ -1486,7 +1420,7 @@ const ChildPanelsPage = () => {
                         </nav>
                       </div>
 
-                      {/* Tab Content */}
+                      {}
                       <div className="mb-6">
                         {activeSettingsTab === 'general' && (
                           <div className="space-y-6">
@@ -1536,7 +1470,7 @@ const ChildPanelsPage = () => {
                                 </select>
                               </div>
                             </div>
-                            
+
                             <div>
                               <FormLabel
                                 className="text-sm font-medium"
@@ -1715,8 +1649,8 @@ const ChildPanelsPage = () => {
                           <div className="space-y-6">
                             <div>
                               <h4 className="text-md font-semibold mb-4 text-gray-800">Panel Features</h4>
-                              
-                              {/* Select All */}
+
+                              {}
                               <div className="mb-4">
                                 <label className="flex items-center gap-2">
                                   <input
@@ -1744,9 +1678,9 @@ const ChildPanelsPage = () => {
                                 </label>
                               </div>
 
-                              {/* Features Grid */}
+                              {}
                               <div className="grid grid-cols-2 gap-4">
-                                {/* Left Column */}
+                                {}
                                 <div className="space-y-3">
                                   <label className="flex items-center gap-2">
                                     <input
@@ -1821,7 +1755,7 @@ const ChildPanelsPage = () => {
                                   </label>
                                 </div>
 
-                                {/* Right Column */}
+                                {}
                                 <div className="space-y-3">
                                   <label className="flex items-center gap-2">
                                     <input
@@ -1897,7 +1831,7 @@ const ChildPanelsPage = () => {
                                 </div>
                               </div>
 
-                              {/* Status Message */}
+                              {}
                               <div className="mt-4 text-sm text-gray-600">
                                 {Object.values(settingsData.featuresEnabled).every(v => !v) ? (
                                   <span className="text-amber-600">No features selected. Panel will have limited functionality.</span>
@@ -1924,7 +1858,7 @@ const ChildPanelsPage = () => {
                         )}
                       </div>
 
-                      {/* Action Buttons */}
+                      {}
                       <div className="flex gap-3 justify-end pt-4 border-t">
                         <button
                           onClick={() => setSettingsDialog({ open: false, panel: null })}
@@ -1943,7 +1877,7 @@ const ChildPanelsPage = () => {
                   </div>
                 )}
 
-                {/* View Details Dialog */}
+                {}
                 {viewDialog.open && viewDialog.panel && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -1961,7 +1895,7 @@ const ChildPanelsPage = () => {
                         </button>
                       </div>
 
-                      {/* Panel Info */}
+                      {}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                           <h4 className="text-md font-semibold mb-4 text-gray-800">
@@ -2070,7 +2004,7 @@ const ChildPanelsPage = () => {
                         </div>
                       </div>
 
-                      {/* Technical Details */}
+                      {}
                       <div className="mb-6">
                         <h4 className="text-md font-semibold mb-4 text-gray-800">
                           Technical Details
@@ -2103,7 +2037,7 @@ const ChildPanelsPage = () => {
                         </div>
                       </div>
 
-                      {/* Dates */}
+                      {}
                       <div className="mb-6">
                         <h4 className="text-md font-semibold mb-4 text-gray-800">
                           Important Dates
@@ -2139,7 +2073,7 @@ const ChildPanelsPage = () => {
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
+                      {}
                       <div className="flex gap-3 justify-end pt-4 border-t">
                         <button
                           onClick={() => {

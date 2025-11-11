@@ -18,8 +18,8 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
     const timeoutRef = { current: null as number | null };
     const abortRef = { current: null as AbortController | null };
 
-    const BASE_INTERVAL_MS = 30000; // 30s base poll
-    const MAX_INTERVAL_MS = 300000; // 5 minutes cap
+    const BASE_INTERVAL_MS = 30000;
+    const MAX_INTERVAL_MS = 300000;
 
     const clearScheduled = () => {
       if (timeoutRef.current !== null) {
@@ -33,18 +33,18 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
     };
 
     const scheduleNext = (hadError: boolean, impersonating: boolean) => {
-      // Only poll when tab is visible to avoid background noise
+
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
-        return; // will reschedule on visibility change
+        return;
       }
 
       let interval = BASE_INTERVAL_MS;
       if (hadError) {
-        retryRef.current = Math.min(retryRef.current + 1, 5); // max 5 retries
+        retryRef.current = Math.min(retryRef.current + 1, 5);
         interval = Math.min(BASE_INTERVAL_MS * Math.pow(2, retryRef.current), MAX_INTERVAL_MS);
       } else {
         retryRef.current = 0;
-        // If impersonating, we can keep the same 30s interval
+
         interval = impersonating ? BASE_INTERVAL_MS : BASE_INTERVAL_MS;
       }
 
@@ -54,7 +54,7 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
     };
 
     const checkImpersonation = async () => {
-      // Cancel any in-flight request before starting a new one
+
       if (abortRef.current) {
         abortRef.current.abort();
       }
@@ -86,18 +86,16 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
       if (typeof document === 'undefined') return;
       if (document.visibilityState === 'visible') {
         clearScheduled();
-        // Immediately check when returning to the tab
+
         checkImpersonation();
       } else {
-        // Stop polling when hidden
+
         clearScheduled();
       }
     };
 
-    // Initial check
     checkImpersonation();
 
-    // Visibility-based polling: only when tab is visible
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', handleVisibilityChange);
     }
@@ -128,8 +126,8 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
             <FaUserShield className="w-5 h-5" />
           )}
         </button>
-        
-        {/* Tooltip */}
+
+        {}
         <div className="absolute right-full mr-2 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none shadow-lg">
           Switch back to admin
           <div className="absolute left-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>

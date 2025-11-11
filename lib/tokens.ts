@@ -6,7 +6,7 @@ import { db } from "./db";
 
 export const generateTwoFactorToken = async (email: string) => {
   const token = crypto.randomInt(100_000, 1000_000).toString();
-  const expires = new Date(new Date().getTime() + 1000 * 60 * 5); // 5 minutes
+  const expires = new Date(new Date().getTime() + 1000 * 60 * 5);
   const existingToken = await getTwoFactorTokenByEmail(email);
   if (existingToken) {
     await db.twoFactorToken.delete({
@@ -25,12 +25,9 @@ export const generateTwoFactorToken = async (email: string) => {
   return twoFactorToken;
 };
 
-export const generatePasswordResetToken = async (email: string) => {
-  // Check user settings for reset link limit
+export const generatePasswordResetToken = async (email: string) => {
   const userSettings = await db.userSettings.findFirst();
-  const resetLinkMax = userSettings?.resetLinkMax || 3;
-
-  // Check how many reset tokens were created today for this email
+  const resetLinkMax = userSettings?.resetLinkMax || 3;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
@@ -51,9 +48,7 @@ export const generatePasswordResetToken = async (email: string) => {
   }
 
   const token = uuidv4();
-  const expires = new Date(new Date().getTime() + 1000 * 60 * 60 * 24); // 24 hours
-
-  // Don't delete existing token, just create a new one (for limit tracking)
+  const expires = new Date(new Date().getTime() + 1000 * 60 * 60 * 24);
   const passwordResetToken = await db.passwordResetToken.create({
     data: {
       token,
@@ -66,7 +61,7 @@ export const generatePasswordResetToken = async (email: string) => {
 
 export const generateVerificationToken = async (email: string) => {
   const token = uuidv4();
-  const expires = new Date(new Date().getTime() + 1000 * 60 * 60 * 24); // 24 hours
+  const expires = new Date(new Date().getTime() + 1000 * 60 * 60 * 24);
   const existingToken = await getVerificationTokenByEmail(email);
   if (existingToken) {
     await db.verificationToken.delete({

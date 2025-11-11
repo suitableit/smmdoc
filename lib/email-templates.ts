@@ -1,7 +1,4 @@
-// Email Templates - Main Export File
-// This file imports and re-exports all email templates from their respective folders
 
-// Import all template categories
 import { contactMessageTemplates, type ContactMessageEmailData, type AdminReplyEmailData } from './email-templates/contact-message';
 import { transactionTemplates, type TransactionEmailData } from './email-templates/transaction';
 import { supportTicketTemplates, type SupportTicketEmailData } from './email-templates/support-ticket';
@@ -9,9 +6,7 @@ import { newOrderTemplates, type NewOrderEmailData } from './email-templates/new
 import { announcementTemplates, type AnnouncementEmailData } from './email-templates/announcement';
 import { apiTemplates, type ApiEmailData } from './email-templates/api';
 import { accountTemplates, type AccountEmailData } from './email-templates/account';
-import { createEmailTemplate, emailContentSections, type EmailLayoutData } from './email-templates/shared/email-layout';
-
-// Re-export all interfaces
+import { createEmailTemplate, emailContentSections, type EmailLayoutData } from './email-templates/shared/email-layout';
 export type {
   ContactMessageEmailData,
   AdminReplyEmailData,
@@ -21,11 +16,8 @@ export type {
   AnnouncementEmailData,
   ApiEmailData,
   AccountEmailData,
-};
-
-// General email templates (keeping existing ones that don't fit into categories)
-export const emailTemplates = {
-  // Welcome email template
+};
+export const emailTemplates = {
   welcome: (data: { userName: string; userEmail: string }) => {
     const layoutData: EmailLayoutData = {
       title: 'Welcome to Our Platform!',
@@ -33,7 +25,7 @@ export const emailTemplates = {
       footerMessage: 'Welcome to our community',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       ${emailContentSections.greeting(data.userName)}
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
@@ -47,38 +39,24 @@ export const emailTemplates = {
         Best regards,<br>The Team
       </p>
     `;
-    
+
     return {
       subject: 'Welcome to Our Platform!',
       html: createEmailTemplate(layoutData, content)
     };
-  },
-  
-  // Payment success template
-  paymentSuccess: transactionTemplates.paymentSuccess,
-  
-  // Payment cancelled template
-  paymentCancelled: transactionTemplates.paymentCancelled,
-  
-  // Admin pending review template
+  },
+  paymentSuccess: transactionTemplates.paymentSuccess,
+  paymentCancelled: transactionTemplates.paymentCancelled,
   adminPendingReview: transactionTemplates.adminPendingReview,
-};
-
-// Re-export all template categories
+};
 export const contactEmailTemplates = contactMessageTemplates;
 export const transactionEmailTemplates = transactionTemplates;
 export const supportTicketEmailTemplates = supportTicketTemplates;
 export const newOrderEmailTemplates = newOrderTemplates;
 export const announcementEmailTemplates = announcementTemplates;
 export const apiEmailTemplates = apiTemplates;
-export const accountEmailTemplates = accountTemplates;
-
-// Legacy exports for backward compatibility
+export const accountEmailTemplates = accountTemplates;
 export const paymentSuccess = transactionTemplates.paymentSuccess;
 export const paymentCancelled = transactionTemplates.paymentCancelled;
 export const adminPendingReview = transactionTemplates.adminPendingReview;
-export const adminAutoApproved = transactionTemplates.adminAutoApproved;
-
-// All contact email templates have been moved to ./email-templates/contact-message
-
-// All transaction email templates have been moved to ./email-templates/transaction
+export const adminAutoApproved = transactionTemplates.adminAutoApproved;

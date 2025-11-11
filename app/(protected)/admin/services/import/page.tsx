@@ -19,23 +19,17 @@ import {
     FaTimes,
     FaToggleOn,
     FaToggleOff,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID } from '@/lib/utils';
-
-// Custom Gradient Spinner Component
+import { formatID } from '@/lib/utils';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -52,9 +46,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Step Progress Component
+);
 const StepProgress = ({ currentStep }: { currentStep: number }) => {
   const steps = [
     { number: 1, title: 'Choose Provider', icon: FaHandshake },
@@ -130,9 +122,7 @@ const StepProgress = ({ currentStep }: { currentStep: number }) => {
       </div>
     </div>
   );
-};
-
-// Define interfaces
+};
 interface Provider {
   id: string | number;
   name: string;
@@ -158,26 +148,20 @@ interface Service {
   description: string;
   type: string;
   percent?: number;
-  providerPrice?: number; // Original price from provider
-  refill?: boolean; // Whether refill is available
-  cancel?: boolean; // Whether cancel is available
-  currency?: string; // Service currency
+  providerPrice?: number;
+  refill?: boolean;
+  cancel?: boolean;
+  currency?: string;
 }
 
 const ImportServicesPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const router = useRouter();
-
-  // Set document title using useEffect for client-side
+  const router = useRouter();
   useEffect(() => {
     setPageTitle('Import Services', appName);
-  }, [appName]);
-
-  // Real providers data from API
-  const [realProviders, setRealProviders] = useState<Provider[]>([]);
-
-  // Fetch real providers on component mount
+  }, [appName]);
+  const [realProviders, setRealProviders] = useState<Provider[]>([]);
   useEffect(() => {
     const fetchProviders = async () => {
       try {
@@ -186,7 +170,7 @@ const ImportServicesPage = () => {
 
         if (result.success) {
           const formattedProviders = result.data.providers
-            .filter((p: any) => p.configured && p.status === 'active') // Show only active configured providers
+            .filter((p: any) => p.configured && p.status === 'active')
             .map((p: any) => ({
               id: p.id?.toString() || '',
               name: p.label,
@@ -203,12 +187,7 @@ const ImportServicesPage = () => {
     };
 
     fetchProviders();
-  }, []);
-
-  // Dummy data for providers (fallback)
-
-
-  // State management
+  }, []);
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -218,18 +197,12 @@ const ImportServicesPage = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<{
     [key: string]: boolean;
-  }>({});
-
-  // Step 1 state
+  }>({});
   const [selectedProvider, setSelectedProvider] = useState<string>('');
-  const [profitPercent, setProfitPercent] = useState<number>(10);
-
-  // Step 2 state
+  const [profitPercent, setProfitPercent] = useState<number>(10);
   const [apiCategories, setApiCategories] =
     useState<ApiCategory[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(false);
-
-  // Step 3 state
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -240,18 +213,14 @@ const ImportServicesPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Duplicate services state
-  const [duplicateServices, setDuplicateServices] = useState<Set<string>>(new Set());
-
-  // Check for duplicate services
+  } | null>(null);
+  const [duplicateServices, setDuplicateServices] = useState<Set<string>>(new Set());
   const checkDuplicateServices = async (servicesToCheck: Service[]) => {
     try {
       console.log('🔍 Checking duplicates for services:', servicesToCheck.length);
       console.log('Selected provider:', selectedProvider);
       console.log('Sample service IDs:', servicesToCheck.slice(0, 3).map(s => s.id));
-      
+
       const response = await fetch('/api/admin/services/check-duplicates', {
         method: 'POST',
         headers: {
@@ -264,7 +233,7 @@ const ImportServicesPage = () => {
       });
 
       console.log('API response status:', response.status);
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('Duplicate check result:', result);
@@ -281,9 +250,7 @@ const ImportServicesPage = () => {
     } catch (error) {
       console.error('Error checking duplicates:', error);
     }
-  };
-
-  // Group services by category and filter by search term
+  };
   const groupedServices = useMemo(() => {
     const filteredServices = services.filter(
       (service) =>
@@ -302,49 +269,38 @@ const ImportServicesPage = () => {
     });
 
     return grouped;
-  }, [services, searchTerm]);
-
-  // Show toast notification
+  }, [services, searchTerm]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Toggle category collapse
+  };
   const toggleCategoryCollapse = (category: string) => {
     setCollapsedCategories((prev) => ({
       ...prev,
       [category]: !prev[category],
     }));
-  };
-
-  // Handle category selection
+  };
   const handleCategorySelect = (categoryId: string | number) => {
     setApiCategories((prev) =>
       prev.map((cat) =>
         cat.id === categoryId ? { ...cat, selected: !cat.selected } : cat
       )
     );
-  };
-
-  // Handle select all categories
+  };
   const handleSelectAllCategories = () => {
     const allSelected = apiCategories.every((cat) => cat.selected);
     setApiCategories((prev) =>
       prev.map((cat) => ({ ...cat, selected: !allSelected }))
     );
-  };
-
-  // Load categories from API
+  };
   const loadCategories = async () => {
     setCategoriesLoading(true);
     setIsLoading(true);
 
-    try {
-      // Real API call to fetch categories with credentials
+    try {
       const response = await fetch(`/api/admin/services/import?action=categories&providerId=${selectedProvider}`, {
         method: 'GET',
         credentials: 'include',
@@ -354,7 +310,7 @@ const ImportServicesPage = () => {
       });
       const result = await response.json();
 
-      console.log('Categories API response:', result); // Debug log
+      console.log('Categories API response:', result);
 
       if (result.success) {
         const categories = result.data.categories.map((cat: any) => ({
@@ -370,32 +326,26 @@ const ImportServicesPage = () => {
           'success'
         );
       } else {
-        showToast(`Failed to load categories: ${result.error}`, 'error');
-        // Keep empty array instead of fallback data
+        showToast(`Failed to load categories: ${result.error}`, 'error');
         setApiCategories([]);
       }
     } catch (error) {
       console.error('Error loading categories:', error);
-      showToast('Failed to load categories', 'error');
-      // Keep empty array instead of fallback data
+      showToast('Failed to load categories', 'error');
       setApiCategories([]);
     } finally {
       setCategoriesLoading(false);
       setIsLoading(false);
     }
-  };
-
-  // Get provider name
+  };
   const getProviderName = (providerId: string) => {
     const provider = realProviders.find((p) => p.id?.toString() === providerId);
     return provider ? provider.name : 'Unknown Provider';
-  };
-
-  // Load services for selected categories with pagination
+  };
   const loadServicesForCategories = async (page = 1, append = false) => {
     if (!append) {
       setIsLoading(true);
-      setServices([]); // Clear existing services for new load
+      setServices([]);
       setCurrentPage(1);
     } else {
       setLoadingMore(true);
@@ -411,9 +361,7 @@ const ImportServicesPage = () => {
         setIsLoading(false);
         setLoadingMore(false);
         return;
-      }
-
-      // Use POST method to avoid URL length limits with many categories
+      }
       const response = await fetch('/api/admin/services/import', {
         method: 'POST',
         headers: {
@@ -424,7 +372,7 @@ const ImportServicesPage = () => {
           providerId: selectedProvider,
           categories: selectedCategoryNames,
           page: page,
-          limit: 1000 // Load 1000 services per batch
+          limit: 1000
         })
       });
 
@@ -457,9 +405,7 @@ const ImportServicesPage = () => {
         const categoryServices = result.data.services || [];
         const pagination = result.data.pagination || {};
 
-        console.log('📄 Pagination info:', pagination);
-
-        // Store original provider price and apply profit margin to sale price
+        console.log('📄 Pagination info:', pagination);
         const servicesWithProfit = categoryServices.map((service: any) => {
           const providerPrice = parseFloat(service.rate) || 0;
           const salePrice = parseFloat((providerPrice * (1 + profitPercent / 100)).toFixed(2));
@@ -470,32 +416,26 @@ const ImportServicesPage = () => {
 
           return {
             ...service,
-            providerPrice: providerPrice, // Store original provider price
-            rate: salePrice, // Calculate initial sale price
-            percent: profitPercent, // Set initial percent from Step 1
-            description: service.description || '', // Ensure description is preserved
-            refill: service.refill || false, // Explicitly preserve refill status
-            cancel: service.cancel || false, // Explicitly preserve cancel status
+            providerPrice: providerPrice,
+            rate: salePrice,
+            percent: profitPercent,
+            description: service.description || '',
+            refill: service.refill || false,
+            cancel: service.cancel || false,
           };
-        });
-
-        // Update pagination state with null checks
+        });
         setCurrentPage(pagination.page || 1);
         setTotalPages(pagination.totalPages || 1);
         setTotalServices(pagination.total || categoryServices.length);
         setHasMoreServices(pagination.hasMore || false);
 
-        if (append) {
-          // Append new services to existing ones
+        if (append) {
           setServices(prev => [...prev, ...servicesWithProfit]);
           showToast(`Loaded ${servicesWithProfit.length} more services (${services.length + servicesWithProfit.length}/${pagination.total || servicesWithProfit.length} total)`, 'success');
-        } else {
-          // Replace services with new ones
+        } else {
           setServices(servicesWithProfit);
           showToast(`Loaded ${servicesWithProfit.length} services from selected categories (${pagination.total || servicesWithProfit.length} total available)`, 'success');
-        }
-
-        // Check for duplicates after setting services
+        }
         await checkDuplicateServices(servicesWithProfit);
       } else {
         showToast(`Failed to load services: ${result.error}`, 'error');
@@ -513,18 +453,14 @@ const ImportServicesPage = () => {
       setIsLoading(false);
       setLoadingMore(false);
     }
-  };
-
-  // Load more services (next page)
+  };
   const loadMoreServices = async () => {
     if (hasMoreServices && !loadingMore && !isLoading) {
       const nextPage = currentPage + 1;
       console.log(`🔄 Loading more services - Page ${nextPage}`);
       await loadServicesForCategories(nextPage, true);
     }
-  };
-
-  // Calculate sale price based on provider price and percentage
+  };
   const calculateSalePrice = (service: Service, percentage: number) => {
     const providerPrice = parseFloat(service.providerPrice?.toString() || '0') || 0;
     const salePrice = parseFloat((providerPrice * (1 + percentage / 100)).toFixed(2));
@@ -532,15 +468,11 @@ const ImportServicesPage = () => {
     console.log(`💰 Calculating: Provider $${providerPrice} + ${percentage}% = $${salePrice}`);
 
     return salePrice;
-  };
-
-  // Get current sale price (recalculated based on current percentage)
+  };
   const getCurrentSalePrice = (service: Service) => {
     const currentPercent = getCurrentValue(service, 'percent') as number;
     return calculateSalePrice(service, currentPercent);
-  };
-
-  // Handle field changes in step 3
+  };
   const handleFieldChange = (
     serviceId: string | number,
     field: keyof Service,
@@ -557,9 +489,7 @@ const ImportServicesPage = () => {
       },
     }));
     setHasChanges(true);
-  };
-
-  // Get current value (edited value or original value)
+  };
   const getCurrentValue = (service: Service, field: keyof Service) => {
     if (!service || !service.id) return service?.[field];
 
@@ -569,17 +499,13 @@ const ImportServicesPage = () => {
     return editedServices[serviceId]?.[field] !== undefined
       ? editedServices[serviceId][field]
       : service[field];
-  };
-
-  // Navigate to next step
+  };
   const handleNext = async () => {
     if (currentStep === 1) {
       if (!selectedProvider) {
         showToast('Please select a provider', 'error');
         return;
-      }
-
-      // Check if selected provider is active
+      }
       const selectedProviderData = realProviders.find(
         (p) => p.id?.toString() === selectedProvider
       );
@@ -608,22 +534,16 @@ const ImportServicesPage = () => {
       await loadServicesForCategories();
       console.log('🔥 DEBUG: Current services after loading:', services.length);
     }
-  };
-
-  // Navigate to previous step
+  };
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
-  };
-
-  // Save and import services
+  };
   const handleSaveServices = async () => {
     try {
       setIsLoading(true);
-      showToast('Importing services...', 'pending');
-
-      // Real API call to import services
+      showToast('Importing services...', 'pending');
       const response = await fetch('/api/admin/services/import', {
         method: 'PUT',
         headers: {
@@ -634,7 +554,7 @@ const ImportServicesPage = () => {
           profitMargin: profitPercent,
           services: services.map(service => ({
             ...service,
-            ...editedServices[service.id] // Include any edits
+            ...editedServices[service.id]
           }))
         }),
       });
@@ -649,9 +569,7 @@ const ImportServicesPage = () => {
             skipped > 0 ? ` (${skipped} skipped)` : ''
           }${errors > 0 ? ` (${errors} errors)` : ''}`,
           'success'
-        );
-
-        // Force refresh categories and services cache
+        );
         try {
           await fetch('/api/admin/categories/get-categories', {
             method: 'GET',
@@ -669,15 +587,11 @@ const ImportServicesPage = () => {
         showToast(`Failed to import services: ${result.error}`, 'error');
         setIsLoading(false);
         return;
-      }
-
-      // Reset form
+      }
       setCurrentStep(1);
       setSelectedProvider('');
       setServices([]);
-      setEditedServices({});
-
-      // Redirect to services page after short delay
+      setEditedServices({});
       setTimeout(() => {
         router.push('/admin/services');
       }, 1500);
@@ -693,7 +607,7 @@ const ImportServicesPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -705,10 +619,10 @@ const ImportServicesPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Step Progress */}
+        {}
         <StepProgress currentStep={currentStep} />
 
-        {/* Step Content */}
+        {}
         <div className="card animate-in fade-in duration-500">
           <div className="px-6 py-6">
             <h2
@@ -720,10 +634,10 @@ const ImportServicesPage = () => {
               {currentStep === 3 && 'Customize Services'}
             </h2>
 
-            {/* Step 1: Choose Provider */}
+            {}
             {currentStep === 1 && (
               <div className="space-y-6">
-                {/* Provider Selection */}
+                {}
                 <div>
                   <label
                     className="form-label mb-3"
@@ -789,7 +703,7 @@ const ImportServicesPage = () => {
                   )}
                 </div>
 
-                {/* Profit Percent */}
+                {}
                 <div>
                   <label
                     className="form-label mb-3"
@@ -843,7 +757,7 @@ const ImportServicesPage = () => {
                   </div>
                 </div>
 
-                {/* Selected Provider Summary */}
+                {}
                 {selectedProvider && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h4 className="font-semibold text-blue-800 mb-2">
@@ -868,7 +782,7 @@ const ImportServicesPage = () => {
               </div>
             )}
 
-            {/* Step 2: Select Categories */}
+            {}
             {currentStep === 2 && (
               <div className="space-y-6">
                 {categoriesLoading ? (
@@ -883,7 +797,7 @@ const ImportServicesPage = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Provider Info */}
+                    {}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -910,7 +824,7 @@ const ImportServicesPage = () => {
                       </div>
                     </div>
 
-                    {/* Categories Table */}
+                    {}
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm min-w-[600px]">
                         <thead className="sticky top-0 bg-white border-b z-10">
@@ -1007,7 +921,7 @@ const ImportServicesPage = () => {
                       </table>
                     </div>
 
-                    {/* Selection Summary */}
+                    {}
                     {apiCategories.some((cat) => cat.selected) && (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                         <h4 className="font-semibold text-green-800 mb-2">
@@ -1033,10 +947,10 @@ const ImportServicesPage = () => {
               </div>
             )}
 
-            {/* Step 3: Customize Services */}
+            {}
             {currentStep === 3 && (
               <div className="space-y-6">
-                {/* Loading State */}
+                {}
                 {isLoading && (
                   <div className="flex items-center justify-center py-20">
                     <div className="text-center flex flex-col items-center">
@@ -1054,10 +968,10 @@ const ImportServicesPage = () => {
                   </div>
                 )}
 
-                {/* Services Content - Only show when not loading */}
+                {}
                 {!isLoading && (
                   <>
-                {/* Summary Info */}
+                {}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
                     <div className="mb-2 md:mb-0">
@@ -1083,9 +997,9 @@ const ImportServicesPage = () => {
                   </div>
                 </div>
 
-                {/* Controls */}
+                {}
                 <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-2">
-                  {/* Left: Search */}
+                  {}
                   <div className="relative flex-1 md:max-w-md">
                     <FaSearch
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
@@ -1100,7 +1014,7 @@ const ImportServicesPage = () => {
                     />
                   </div>
 
-                  {/* Right: Changes indicator and collapse toggle */}
+                  {}
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
                     {hasChanges && (
                       <div className="flex items-center justify-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -1111,7 +1025,7 @@ const ImportServicesPage = () => {
                       </div>
                     )}
 
-                    {/* Collapse/Expand All Toggle */}
+                    {}
                     <button
                       onClick={() => {
                         const allCategories = Object.keys(groupedServices);
@@ -1119,11 +1033,9 @@ const ImportServicesPage = () => {
                           (cat) => collapsedCategories[cat]
                         );
 
-                        if (allCollapsed) {
-                          // Expand all
+                        if (allCollapsed) {
                           setCollapsedCategories({});
-                        } else {
-                          // Collapse all
+                        } else {
                           const newCollapsed: { [key: string]: boolean } = {};
                           allCategories.forEach((cat) => {
                             newCollapsed[cat] = true;
@@ -1161,7 +1073,7 @@ const ImportServicesPage = () => {
                   </div>
                 </div>
 
-                {/* Services by Category */}
+                {}
                 {Object.keys(groupedServices).length === 0 ? (
                   <div className="text-center py-12">
                     <FaExclamationTriangle
@@ -1185,7 +1097,7 @@ const ImportServicesPage = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Desktop Table View */}
+                    {}
                     <div className="hidden lg:block card animate-in fade-in duration-500">
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm min-w-[1000px]">
@@ -1245,7 +1157,7 @@ const ImportServicesPage = () => {
                             {Object.entries(groupedServices).map(
                               ([category, categoryServices]) => (
                                 <React.Fragment key={category}>
-                                  {/* Category Header Row */}
+                                  {}
                                   <tr className="bg-gray-50 border-t-2 border-gray-200">
                                     <td colSpan={8} className="p-3">
                                       <div className="flex items-center justify-between">
@@ -1293,7 +1205,7 @@ const ImportServicesPage = () => {
                                     </td>
                                   </tr>
 
-                                  {/* Services Rows */}
+                                  {}
                                   {!collapsedCategories[category] &&
                                     (categoryServices.length > 0 ? (
                                       categoryServices.map((service, index) => (
@@ -1482,7 +1394,7 @@ const ImportServicesPage = () => {
                       </div>
                     </div>
 
-                    {/* Mobile Card View */}
+                    {}
                     <div className="lg:hidden space-y-6">
                       {Object.entries(groupedServices).map(
                         ([category, categoryServices]) => (
@@ -1490,7 +1402,7 @@ const ImportServicesPage = () => {
                             key={category}
                             className="space-y-4 animate-in fade-in duration-500"
                           >
-                            {/* Category Header */}
+                            {}
                             <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 flex-1">
@@ -1532,7 +1444,7 @@ const ImportServicesPage = () => {
                               )}
                             </div>
 
-                            {/* Services Cards */}
+                            {}
                             {!collapsedCategories[category] && (
                               <div className="space-y-4 ml-4">
                                 {categoryServices.length > 0 ? (
@@ -1548,7 +1460,7 @@ const ImportServicesPage = () => {
                                         animationDelay: `${index * 50}ms`,
                                       }}
                                     >
-                                      {/* Header */}
+                                      {}
                                       <div className="flex items-center justify-between mb-4">
                                         <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                                           {formatID(service.id)}
@@ -1560,7 +1472,7 @@ const ImportServicesPage = () => {
                                         )}
                                       </div>
 
-                                      {/* Service Name */}
+                                      {}
                                       <div className="mb-4">
                                         <label className="form-label mb-2">
                                           Service Name
@@ -1584,7 +1496,7 @@ const ImportServicesPage = () => {
                                         />
                                       </div>
 
-                                      {/* Price and Percent */}
+                                      {}
                                       <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
                                           <label className="form-label mb-2">
@@ -1632,7 +1544,7 @@ const ImportServicesPage = () => {
                                         </div>
                                       </div>
 
-                                      {/* Refill and Cancel Toggles */}
+                                      {}
                                       <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
                                           <label className="form-label mb-2">
@@ -1690,7 +1602,7 @@ const ImportServicesPage = () => {
                                         </div>
                                       </div>
 
-                                      {/* Description */}
+                                      {}
                                       <div>
                                         <label className="form-label mb-2">
                                           Description
@@ -1732,7 +1644,7 @@ const ImportServicesPage = () => {
                       )}
                     </div>
 
-                    {/* Load More Button */}
+                    {}
                     {hasMoreServices && !isLoading && (
                       <div className="flex justify-center py-6">
                         <button
@@ -1760,7 +1672,7 @@ const ImportServicesPage = () => {
               </div>
             )}
 
-            {/* Navigation Buttons */}
+            {}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t mt-8">
               <div className="w-full md:w-auto">
                 {currentStep > 1 && (

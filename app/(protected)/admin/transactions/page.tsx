@@ -14,9 +14,7 @@ import {
     FaSync,
     FaTimes,
     FaTimesCircle,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant and useCurrency hook
+} from 'react-icons/fa';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
@@ -24,18 +22,14 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 import { convertCurrency } from '@/lib/currency-utils';
 const formatID = (id: any) => id;
 const formatNumber = (num: number) => num.toLocaleString();
-const formatPrice = (price: number, decimals = 2) => price.toFixed(decimals);
-
-// Custom Gradient Spinner Component
+const formatPrice = (price: number, decimals = 2) => price.toFixed(decimals);
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -52,9 +46,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces for type safety
+);
 interface Transaction {
   id: number;
   user: {
@@ -98,26 +90,17 @@ interface PaginationInfo {
 }
 
 const AdminAllTransactionsPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('All Transactions', appName);
-  }, [appName]);
-
-  // Currency hook for dynamic formatting
-  const { currency, currentCurrencyData, availableCurrencies } = useCurrency();
-
-  // Dynamic currency formatting function
-  const formatTransactionCurrency = useCallback((amount: number, currency: string) => {
-    // Find currency data from available currencies
+  }, [appName]);
+  const { currency, currentCurrencyData, availableCurrencies } = useCurrency();
+  const formatTransactionCurrency = useCallback((amount: number, currency: string) => {
     const currencyInfo = availableCurrencies?.find(c => c.code === currency);
 
     if (currencyInfo) {
       return `${currencyInfo.symbol}${formatPrice(amount, 2)}`;
-    }
-
-    // Fallback to hardcoded formats
+    }
     switch (currency) {
       case 'USD':
       case 'USDT':
@@ -129,9 +112,7 @@ const AdminAllTransactionsPage = () => {
       default:
         return `${currency} ${formatPrice(amount, 2)}`;
     }
-  }, [availableCurrencies]);
-
-  // Dummy data for testing - Updated to show empty Transaction IDs for pending withdrawals
+  }, [availableCurrencies]);
   const dummyTransactions: Transaction[] = [
     {
       id: 1,
@@ -141,7 +122,7 @@ const AdminAllTransactionsPage = () => {
         name: 'John Doe',
         username: 'johndoe',
       },
-      transactionId: '', // Empty for pending withdrawal
+      transactionId: '',
       amount: 500,
       currency: 'BDT',
       phone: '+8801712345678',
@@ -181,7 +162,7 @@ const AdminAllTransactionsPage = () => {
         name: 'Alex Johnson',
         username: 'alexj',
       },
-      transactionId: '', // Empty for pending withdrawal
+      transactionId: '',
       amount: 250,
       currency: 'USD',
       phone: '+8801555123456',
@@ -238,7 +219,7 @@ const AdminAllTransactionsPage = () => {
         name: 'Robert Taylor',
         username: 'robertt',
       },
-      transactionId: '', // Empty for pending withdrawal
+      transactionId: '',
       amount: 600,
       currency: 'BDT',
       phone: '+8801444567890',
@@ -307,9 +288,7 @@ const AdminAllTransactionsPage = () => {
       updatedAt: '2024-01-06T17:25:00Z',
       processedAt: '2024-01-06T17:25:00Z',
     },
-  ];
-
-  // State management
+  ];
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [stats, setStats] = useState<TransactionStats>({
     totalTransactions: 0,
@@ -338,19 +317,15 @@ const AdminAllTransactionsPage = () => {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchType, setSearchType] = useState('id'); // 'id', 'username', 'phone'
+  const [searchType, setSearchType] = useState('id');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
-  const [transactionsLoading, setTransactionsLoading] = useState(false);
-
-  // Dialog states
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [viewDetailsDialog, setViewDetailsDialog] = useState<{
     open: boolean;
     transaction: Transaction | null;
@@ -368,9 +343,7 @@ const AdminAllTransactionsPage = () => {
     transactionId: 0,
     currentStatus: '',
   });
-  const [newStatus, setNewStatus] = useState('');
-
-  // Confirmation modals state
+  const [newStatus, setNewStatus] = useState('');
   const [approveConfirmDialog, setApproveConfirmDialog] = useState<{
     open: boolean;
     transactionId: number;
@@ -379,9 +352,7 @@ const AdminAllTransactionsPage = () => {
     open: false,
     transactionId: 0,
     transaction: null,
-  });
-
-  // New state for approve transaction ID input
+  });
   const [approveTransactionId, setApproveTransactionId] = useState('');
   const [defaultTransactionId, setDefaultTransactionId] = useState('');
 
@@ -393,9 +364,7 @@ const AdminAllTransactionsPage = () => {
     open: false,
     transactionId: 0,
     transaction: null,
-  });
-
-  // Add/Deduct Balance modal state
+  });
   const [addDeductBalanceDialog, setAddDeductBalanceDialog] = useState<{
     open: boolean;
   }>({
@@ -407,9 +376,7 @@ const AdminAllTransactionsPage = () => {
     amount: '',
     action: 'add',
     notes: '',
-  });
-
-  // Username search states
+  });
   const [usernameSearching, setUsernameSearching] = useState(false);
   const [userFound, setUserFound] = useState<{
     id: number;
@@ -417,9 +384,7 @@ const AdminAllTransactionsPage = () => {
     name: string;
     email: string;
   } | null>(null);
-  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
-
-  // Calculate status counts
+  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
   const calculateStatusCounts = (transactionsData: Transaction[]) => {
     const counts = {
       pending: 0,
@@ -434,9 +399,7 @@ const AdminAllTransactionsPage = () => {
     });
 
     return counts;
-  };
-
-  // Fetch functions
+  };
   const fetchAllTransactionsForCounts = useCallback(async () => {
     try {
       const statusCounts = calculateStatusCounts(dummyTransactions);
@@ -459,9 +422,7 @@ const AdminAllTransactionsPage = () => {
 
   const fetchTransactions = useCallback(async () => {
     try {
-      setTransactionsLoading(true);
-
-      // Build query parameters
+      setTransactionsLoading(true);
       const params = new URLSearchParams({
         admin: 'true',
         page: pagination.page.toString(),
@@ -481,8 +442,6 @@ const AdminAllTransactionsPage = () => {
         params.append('searchType', searchType);
       }
 
-
-
       const response = await fetch(`/api/transactions?${params.toString()}`, {
         method: 'GET',
         headers: {
@@ -497,11 +456,8 @@ const AdminAllTransactionsPage = () => {
       }
 
       const result = await response.json();
-      console.log('API Response:', result);
-
-      // Handle both new structured response and legacy array response
-      if (result.success) {
-        // New structured response
+      console.log('API Response:', result);
+      if (result.success) {
         setTransactions(result.data || []);
 
         if (result.pagination) {
@@ -533,8 +489,7 @@ const AdminAllTransactionsPage = () => {
             },
           });
         }
-      } else if (Array.isArray(result)) {
-        // Legacy array response - fallback
+      } else if (Array.isArray(result)) {
         console.log('Using legacy array response');
         setTransactions(result);
         setPagination({
@@ -549,9 +504,7 @@ const AdminAllTransactionsPage = () => {
         throw new Error(result.error || 'Failed to fetch transactions');
       }
     } catch (error) {
-      console.error('Error fetching transactions:', error);
-
-      // Show more specific error message
+      console.error('Error fetching transactions:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions';
       showToast(`Database Error: ${errorMessage}`, 'error');
 
@@ -612,9 +565,7 @@ const AdminAllTransactionsPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
-
-  // Effects
+  }, []);
   useEffect(() => {
     const timer = setTimeout(() => {
       setTransactionsLoading(true);
@@ -641,9 +592,7 @@ const AdminAllTransactionsPage = () => {
         totalTransactions: pagination.total,
       }));
     }
-  }, [pagination.total]);
-
-  // Utility functions
+  }, [pagination.total]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -730,14 +679,10 @@ const AdminAllTransactionsPage = () => {
       default:
         return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  // Helper function to display method (without background colors)
+  };
   const displayMethod = (transaction: Transaction) => {
     return transaction.method || 'null';
-  };
-
-  // Action handlers
+  };
   const handleRefresh = () => {
     setTransactionsLoading(true);
     fetchTransactions();
@@ -748,9 +693,7 @@ const AdminAllTransactionsPage = () => {
 
   const handleAddDeductBalance = () => {
     setAddDeductBalanceDialog({ open: true });
-  };
-
-  // Username search function
+  };
   const searchUsername = async (username: string) => {
     if (!username.trim()) {
       setUserFound(null);
@@ -762,18 +705,17 @@ const AdminAllTransactionsPage = () => {
       const response = await fetch(`/api/admin/users/search?q=${encodeURIComponent(username)}`);
       const result = await response.json();
 
-      console.log('Search result for:', username, result); // Debug log
+      console.log('Search result for:', username, result);
 
-      if (result.users && result.users.length > 0) {
-        // Find exact username match first, otherwise take first result
+      if (result.users && result.users.length > 0) {
         const exactMatch = result.users.find((user: any) =>
           user.username?.toLowerCase() === username.toLowerCase()
         );
         const foundUser = exactMatch || result.users[0];
-        console.log('Found user:', foundUser); // Debug log
+        console.log('Found user:', foundUser);
         setUserFound(foundUser);
       } else {
-        console.log('No users found for:', username); // Debug log
+        console.log('No users found for:', username);
         setUserFound(null);
       }
     } catch (error) {
@@ -782,9 +724,7 @@ const AdminAllTransactionsPage = () => {
     } finally {
       setUsernameSearching(false);
     }
-  };
-
-  // Debounced username search
+  };
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (balanceForm.username.trim()) {
@@ -820,7 +760,7 @@ const AdminAllTransactionsPage = () => {
           amount: parseFloat(balanceForm.amount),
           action: balanceForm.action,
           notes: balanceForm.notes,
-          adminCurrency: currency, // Pass admin's current currency
+          adminCurrency: currency,
         }),
       });
 
@@ -835,8 +775,7 @@ const AdminAllTransactionsPage = () => {
         );
         setAddDeductBalanceDialog({ open: false });
         setBalanceForm({ username: '', amount: '', action: 'add', notes: '' });
-        setUserFound(null);
-        // Refresh transactions to show new admin transaction
+        setUserFound(null);
         fetchTransactions();
       } else {
         showToast(result.error || 'Failed to update user balance', 'error');
@@ -851,12 +790,8 @@ const AdminAllTransactionsPage = () => {
 
   const handleApprove = (transactionId: string) => {
     const numericId = parseInt(transactionId);
-    const transaction = transactions.find((t) => t.id === numericId);
-
-    // Use actual transaction ID as default, fallback to generated ID if not available
-    let defaultId = transaction?.transactionId?.toString() || '';
-    
-    // If no actual transaction ID exists, generate one based on type and timestamp
+    const transaction = transactions.find((t) => t.id === numericId);
+    let defaultId = transaction?.transactionId?.toString() || '';
     if (!defaultId) {
       const timestamp = new Date().getTime();
       const prefix = transaction?.type === 'deposit' ? 'DEP' : 'WDR';
@@ -864,7 +799,7 @@ const AdminAllTransactionsPage = () => {
     }
 
     setDefaultTransactionId(defaultId);
-    setApproveTransactionId(defaultId); // Set actual transaction ID as default
+    setApproveTransactionId(defaultId);
 
     setApproveConfirmDialog({
       open: true,
@@ -874,9 +809,7 @@ const AdminAllTransactionsPage = () => {
   };
 
   const confirmApprove = async (transactionId: number) => {
-    const transaction = approveConfirmDialog.transaction;
-
-    // For deposit transactions, require transaction ID
+    const transaction = approveConfirmDialog.transaction;
     if (transaction?.type === 'deposit' && !approveTransactionId.trim()) {
       showToast('Please enter a transaction ID', 'error');
       return;
@@ -999,9 +932,7 @@ const AdminAllTransactionsPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        showToast(`Transaction status updated to ${newStatus}`, 'success');
-
-        // Update local state optimistically
+        showToast(`Transaction status updated to ${newStatus}`, 'success');
         setTransactions(prevTransactions =>
           prevTransactions.map(transaction =>
             transaction.id === transactionId
@@ -1015,9 +946,7 @@ const AdminAllTransactionsPage = () => {
                 }
               : transaction
           )
-        );
-
-        // Refresh data
+        );
         fetchStats();
         fetchAllTransactionsForCounts();
       } else {
@@ -1030,9 +959,7 @@ const AdminAllTransactionsPage = () => {
       console.error('Error updating transaction status:', error);
       showToast('Error updating transaction status', 'error');
     }
-  };
-
-  // Dialog openers
+  };
   const openViewDetailsDialog = (transaction: Transaction) => {
     setViewDetailsDialog({ open: true, transaction });
   };
@@ -1047,7 +974,7 @@ const AdminAllTransactionsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -1059,12 +986,12 @@ const AdminAllTransactionsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex flex-col md:flex-row items-left gap-2">
-              <div className="flex items-center gap-2 justify-start"> {/* Page View Dropdown and Refresh Button */} 
-                {/* Page View Dropdown */}
+              <div className="flex items-center gap-2 justify-start"> {} 
+                {}
                 <select
                   value={pagination.limit}
                   onChange={(e) =>
@@ -1072,7 +999,7 @@ const AdminAllTransactionsPage = () => {
                       ...prev,
                       limit:
                         e.target.value === 'all'
-                          ? 999999 // Very large number to get all transactions
+                          ? 999999
                           : parseInt(e.target.value),
                       page: 1,
                     }))
@@ -1099,7 +1026,7 @@ const AdminAllTransactionsPage = () => {
                 </button>
               </div>
 
-              {/* Add/Deduct User Balance button */}
+              {}
               <div className="w-full md:w-auto">
                 <button
                   onClick={handleAddDeductBalance}
@@ -1111,11 +1038,7 @@ const AdminAllTransactionsPage = () => {
               </div>
             </div>
 
-            
-
-            
-
-            {/* Search Controls */}
+            {}
             <div className="flex flex-col md:flex-row items-center gap-3 justify-center md:justify-start">
               <select
                 value={typeFilter}
@@ -1154,11 +1077,10 @@ const AdminAllTransactionsPage = () => {
               </div>
             </div>
 
-
           </div>
         </div>
 
-        {/* Transactions Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
             <div className="mb-4">
@@ -1291,7 +1213,7 @@ const AdminAllTransactionsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -1540,8 +1462,6 @@ const AdminAllTransactionsPage = () => {
                   </table>
                 </div>
 
-                
-
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1606,7 +1526,7 @@ const AdminAllTransactionsPage = () => {
                   )}
                 </div>
 
-                {/* View Details Dialog */}
+                {}
                 {viewDetailsDialog.open && viewDetailsDialog.transaction && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-[600px] max-w-[90vw] mx-4 max-h-[80vh] overflow-y-auto">
@@ -1764,7 +1684,7 @@ const AdminAllTransactionsPage = () => {
                   </div>
                 )}
 
-                {/* Update Status Dialog */}
+                {}
                 {updateStatusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1822,7 +1742,7 @@ const AdminAllTransactionsPage = () => {
                   </div>
                 )}
 
-                {/* Approve Confirmation Dialog with Transaction ID Input */}
+                {}
                 {approveConfirmDialog.open &&
                   approveConfirmDialog.transaction && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1913,7 +1833,7 @@ const AdminAllTransactionsPage = () => {
                             </p>
                           </div>
 
-                          {/* Transaction ID field is now unified above */}
+                          {}
                         </div>
 
                         <div className="flex flex-col-reverse md:flex-row gap-3 justify-center md:justify-end">
@@ -1949,7 +1869,7 @@ const AdminAllTransactionsPage = () => {
                     </div>
                   )}
 
-                {/* Cancel Confirmation Dialog */}
+                {}
                 {cancelConfirmDialog.open &&
                   cancelConfirmDialog.transaction && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2047,7 +1967,7 @@ const AdminAllTransactionsPage = () => {
                     </div>
                   )}
 
-                {/* Add/Deduct User Balance Dialog */}
+                {}
                 {addDeductBalanceDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
@@ -2070,8 +1990,7 @@ const AdminAllTransactionsPage = () => {
                                 }));
                                 if (!e.target.value.trim()) {
                                   setUserFound(null);
-                                } else {
-                                  // Search username with debounce
+                                } else {
                                   setTimeout(() => {
                                     if (e.target.value === balanceForm.username) {
                                       searchUsername(e.target.value);
@@ -2165,7 +2084,7 @@ const AdminAllTransactionsPage = () => {
                           />
                         </div>
 
-                        {/* Conversion Preview */}
+                        {}
                         {balanceForm.amount && parseFloat(balanceForm.amount) > 0 && userFound && (
                           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                             <div className="text-sm text-blue-800">
@@ -2175,8 +2094,7 @@ const AdminAllTransactionsPage = () => {
                                 const amount = parseFloat(balanceForm.amount);
                                 if (currency === 'BDT') {
                                   return amount.toFixed(2);
-                                }
-                                // Use the same convertCurrency function as the API
+                                }
                                 if (availableCurrencies && availableCurrencies.length > 0) {
                                   const convertedAmount = convertCurrency(amount, currency, 'BDT', availableCurrencies);
                                   return convertedAmount.toFixed(2);

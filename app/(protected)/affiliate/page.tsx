@@ -22,18 +22,14 @@ import {
     FaTimes,
     FaUser,
     FaUsers
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Custom Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -69,9 +65,7 @@ const Toast = ({
 );
 
 export default function AffiliateProgram() {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Affiliate Program', appName);
   }, [appName]);
@@ -79,10 +73,10 @@ export default function AffiliateProgram() {
   return (
     <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
       <div className="space-y-6">
-        {/* Affiliate Stats Component */}
+        {}
         <AffiliateStatsCards />
-        
-        {/* Affiliate Earnings Section */}
+
+        {}
         <AffiliateEarningsSection />
       </div>
     </div>
@@ -98,9 +92,7 @@ interface AffiliateStats {
   availableEarnings: string;
   commissionRate: string;
   minimumPayout: string;
-}
-
-// Define interface for affiliate earning records
+}
 interface AffiliateEarning {
   id: number;
   signupDate: string;
@@ -145,12 +137,8 @@ function AffiliateStatsCards() {
     availableEarnings: '$0.00',
     commissionRate: '1%',
     minimumPayout: '$100.00',
-  });
-
-  // Generate referral link based on user's ID
-  const referralLink = user?.id ? `https://smmdoc.com/ref/${user.id}` : '';
-
-  // Show toast notification
+  });
+  const referralLink = user?.id ? `https://smmdoc.com/ref/${user.id}` : '';
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -213,7 +201,7 @@ function AffiliateStatsCards() {
 
   return (
     <div className="space-y-6">
-      {/* Toast Container */}
+      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -222,9 +210,9 @@ function AffiliateStatsCards() {
         />
       )}
 
-      {/* User Information Cards - Dashboard Style */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Username Card */}
+        {}
         <div className="card card-padding">
           <div className="card-content">
             <div className="card-icon">
@@ -245,7 +233,7 @@ function AffiliateStatsCards() {
           </div>
         </div>
 
-        {/* Referral Link Card */}
+        {}
         <div className="card card-padding">
           <div className="card-content">
             <div className="card-icon">
@@ -282,7 +270,7 @@ function AffiliateStatsCards() {
           </div>
         </div>
 
-        {/* Commission Rate Card */}
+        {}
         <div className="card card-padding">
           <div className="card-content">
             <div className="card-icon">
@@ -303,7 +291,7 @@ function AffiliateStatsCards() {
           </div>
         </div>
 
-        {/* Minimum Payout Card */}
+        {}
         <div className="card card-padding">
           <div className="card-content">
             <div className="card-icon">
@@ -325,7 +313,7 @@ function AffiliateStatsCards() {
         </div>
       </div>
 
-      {/* Your Unique Referral Link Section */}
+      {}
       <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-xl p-6 shadow-lg">
         <div className="flex flex-col md:flex-row items-center gap-4">
           <label className="text-sm font-medium text-white/80 whitespace-nowrap">
@@ -349,7 +337,7 @@ function AffiliateStatsCards() {
         </div>
       </div>
 
-      {/* Order Statistics Overview Style Cards */}
+      {}
       <div className="card card-padding">
         <div className="card-header mb-4">
           <div className="card-icon">
@@ -359,7 +347,7 @@ function AffiliateStatsCards() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {/* Total Visits */}
+          {}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -381,7 +369,7 @@ function AffiliateStatsCards() {
             </div>
           </div>
 
-          {/* Registrations */}
+          {}
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -403,7 +391,7 @@ function AffiliateStatsCards() {
             </div>
           </div>
 
-          {/* Referrals */}
+          {}
           <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -425,7 +413,7 @@ function AffiliateStatsCards() {
             </div>
           </div>
 
-          {/* Conversion Rate */}
+          {}
           <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -447,7 +435,7 @@ function AffiliateStatsCards() {
             </div>
           </div>
 
-          {/* Total Earnings */}
+          {}
           <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -469,7 +457,7 @@ function AffiliateStatsCards() {
             </div>
           </div>
 
-          {/* Available Earnings */}
+          {}
           <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -494,9 +482,7 @@ function AffiliateStatsCards() {
       </div>
     </div>
   );
-}
-
-// New Affiliate Earnings Section Component
+}
 function AffiliateEarningsSection() {
   const router = useRouter();
   const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
@@ -510,18 +496,14 @@ function AffiliateEarningsSection() {
     totalPages: 0,
     hasNext: false,
     hasPrev: false,
-  });
-
-  // Withdrawal modal states
+  });
   const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
   const [withdrawalForm, setWithdrawalForm] = useState({
     amount: '',
     selectedPaymentMethod: '',
     paymentDetails: '',
   });
-  const [withdrawalProcessing, setWithdrawalProcessing] = useState(false);
-
-  // User's configured payment methods (this would come from API)
+  const [withdrawalProcessing, setWithdrawalProcessing] = useState(false);
   const userPaymentMethods = [
     {
       id: '1',
@@ -543,9 +525,7 @@ function AffiliateEarningsSection() {
       method: 'Bank Transfer',
       accountNumber: 'Dutch Bangla Bank - 1234567890123'
     }
-  ];
-
-  // Get payment method icon and color
+  ];
   const getPaymentMethodStyle = (method: string) => {
     switch (method.toLowerCase()) {
       case 'bkash':
@@ -564,9 +544,7 @@ function AffiliateEarningsSection() {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Sample data for demonstration
+  } | null>(null);
   const sampleEarnings: AffiliateEarning[] = [
     {
       id: 1,
@@ -628,32 +606,22 @@ function AffiliateEarningsSection() {
       },
       currency: 'USD'
     }
-  ];
-
-  // Show toast notification
+  ];
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Fetch earnings data
+  };
   const fetchEarnings = async () => {
     try {
-      setEarningsLoading(true);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Filter sample data based on status filter
+      setEarningsLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
       let filteredEarnings = sampleEarnings;
       if (statusFilter !== 'all') {
         filteredEarnings = sampleEarnings.filter(earning => earning.status === statusFilter);
-      }
-      
-      // Filter by search term
+      }
       if (searchTerm) {
         filteredEarnings = filteredEarnings.filter(earning => 
           earning.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -661,41 +629,33 @@ function AffiliateEarningsSection() {
           earning.user.email.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
-      
+
       setEarnings(filteredEarnings);
       setPagination(prev => ({
         ...prev,
         total: filteredEarnings.length,
         totalPages: Math.ceil(filteredEarnings.length / prev.limit)
       }));
-      
+
     } catch (error) {
       console.error('Error fetching earnings:', error);
       showToast('Error fetching earnings data', 'error');
     } finally {
       setEarningsLoading(false);
     }
-  };
-
-  // Handle search with debouncing
+  };
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchEarnings();
     }, 500);
     return () => clearTimeout(timer);
-  }, [searchTerm, statusFilter]);
-
-  // Initial load
+  }, [searchTerm, statusFilter]);
   useEffect(() => {
     fetchEarnings();
-  }, []);
-
-  // Safe ID formatter
+  }, []);
   const safeFormatId = (id: any) => {
     return formatID(String(id || 'null'));
-  };
-
-  // Get status icon
+  };
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -707,15 +667,11 @@ function AffiliateEarningsSection() {
       default:
         return <FaExclamationTriangle className="h-3 w-3 text-gray-500" />;
     }
-  };
-
-  // Handle refresh
+  };
   const handleRefresh = async () => {
     await fetchEarnings();
     showToast('Affiliate earnings refreshed successfully!', 'success');
-  };
-
-  // Handle withdrawal request
+  };
   const handleWithdrawalRequest = async () => {
     if (!withdrawalForm.amount || parseFloat(withdrawalForm.amount) <= 0) {
       showToast('Please enter a valid withdrawal amount', 'error');
@@ -728,19 +684,17 @@ function AffiliateEarningsSection() {
     }
 
     const amount = parseFloat(withdrawalForm.amount);
-    const minWithdrawal = 100; // Minimum withdrawal amount
-    
+    const minWithdrawal = 100;
+
     if (amount < minWithdrawal) {
       showToast(`Minimum withdrawal amount is ${minWithdrawal}`, 'error');
       return;
     }
 
     try {
-      setWithdrawalProcessing(true);
-      
-      // Simulate API call
+      setWithdrawalProcessing(true);
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       showToast('Withdrawal request submitted successfully!', 'success');
       setWithdrawalModalOpen(false);
       setWithdrawalForm({
@@ -754,9 +708,7 @@ function AffiliateEarningsSection() {
     } finally {
       setWithdrawalProcessing(false);
     }
-  };
-
-  // Calculate status counts
+  };
   const statusCounts = {
     all: sampleEarnings.length,
     pending: sampleEarnings.filter(e => e.status === 'pending').length,
@@ -766,7 +718,7 @@ function AffiliateEarningsSection() {
 
   return (
     <div className="space-y-6">
-      {/* Toast Container */}
+      {}
       {toast && (
         <Toast
           message={toast.message}
@@ -775,10 +727,10 @@ function AffiliateEarningsSection() {
         />
       )}
 
-      {/* Controls Section */}
+      {}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* Left: Action Buttons */}
+          {}
           <div className="w-full md:w-auto flex flex-col md:flex-row items-center gap-2">
             <div className="w-full md:w-auto flex items-center gap-2">
               <select
@@ -830,7 +782,7 @@ function AffiliateEarningsSection() {
             </div>
           </div>
 
-          {/* Right: Search Controls */}
+          {}
           <div className="w-full md:w-auto flex items-center gap-3">
             <div className="relative w-full md:w-auto">
               <FaSearch
@@ -851,12 +803,11 @@ function AffiliateEarningsSection() {
         </div>
       </div>
 
-      {/* Affiliate Earnings Table */}
+      {}
       <div className="card">
         <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
 
-
-          {/* Filter Buttons */}
+          {}
           <div className="mb-4">
             <div className="block space-y-2">
               <button
@@ -958,7 +909,7 @@ function AffiliateEarningsSection() {
             </div>
           ) : (
             <>
-              {/* Desktop and Mobile Table View */}
+              {}
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[700px]">
                   <thead className="sticky top-0 bg-white border-b z-10">
@@ -1056,7 +1007,7 @@ function AffiliateEarningsSection() {
                 </table>
               </div>
 
-              {/* Pagination */}
+              {}
               <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-6 border-t gap-3">
                 <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   Showing {formatNumber((pagination.page - 1) * pagination.limit + 1)} to {formatNumber(Math.min(pagination.page * pagination.limit, pagination.total))} of {formatNumber(pagination.total)} earnings
@@ -1088,7 +1039,7 @@ function AffiliateEarningsSection() {
         </div>
       </div>
 
-      {/* Withdrawal Request Modal */}
+      {}
       {withdrawalModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
@@ -1103,14 +1054,14 @@ function AffiliateEarningsSection() {
             </div>
 
             <div className="space-y-4">
-              {/* Available Balance Info */}
+              {}
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                 <div className="text-sm text-green-600 font-medium mb-1">Available Balance</div>
                 <div className="text-2xl font-bold text-green-700">$245.50</div>
                 <div className="text-xs text-green-600 mt-1">Minimum withdrawal: $100.00</div>
               </div>
 
-              {/* Withdrawal Amount */}
+              {}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                   Withdrawal Amount
@@ -1132,7 +1083,7 @@ function AffiliateEarningsSection() {
                 </div>
               </div>
 
-              {/* Payment Method Selection */}
+              {}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                   Payment Method
@@ -1159,7 +1110,7 @@ function AffiliateEarningsSection() {
                 </div>
               </div>
 
-              {/* Important Notice */}
+              {}
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="flex items-start gap-3">
                   <div className="text-blue-500 mt-0.5">

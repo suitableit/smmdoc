@@ -14,22 +14,16 @@ import {
     FaTrash,
     FaUserCheck,
     FaUserShield,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-
-// Custom Gradient Spinner Component
+import { setPageTitle } from '@/lib/utils/set-page-title';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -46,9 +40,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces for type safety
+);
 interface Admin {
   id: number;
   username: string;
@@ -139,9 +131,7 @@ interface EditAdminModalProps {
   onClose: () => void;
   onSave: (adminData: Partial<Admin>) => void;
   isLoading: boolean;
-}
-
-// Custom hooks for better organization
+}
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -181,14 +171,10 @@ const useClickOutside = (
 };
 
 const AdminsListPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('All Admins', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [stats, setStats] = useState<AdminStats>({
     totalAdmins: 0,
@@ -216,14 +202,10 @@ const AdminsListPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [adminsLoading, setAdminsLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  // New state for action modals
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
     adminId: number;
@@ -243,9 +225,7 @@ const AdminsListPage = () => {
     adminId: 0,
     currentRole: '',
   });
-  const [newRole, setNewRole] = useState('');
-
-  // Edit modal state
+  const [newRole, setNewRole] = useState('');
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
     admin: Admin | null;
@@ -253,12 +233,8 @@ const AdminsListPage = () => {
     open: false,
     admin: null,
   });
-  const [editFormData, setEditFormData] = useState<Partial<Admin>>({});
-
-  // Use debounced search term
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
-
-  // Memoized filter options
+  const [editFormData, setEditFormData] = useState<Partial<Admin>>({});
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const filterOptions = useMemo(
     () => [
       { key: 'all', label: 'All', count: stats.totalAdmins },
@@ -266,16 +242,14 @@ const AdminsListPage = () => {
       { key: 'inactive', label: 'Inactive', count: stats.inactiveAdmins },
     ],
     [stats]
-  );
-
-  // API functions
+  );
   const fetchAdmins = useCallback(async () => {
     try {
       setAdminsLoading(true);
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
-        role: 'admin', // Filter for admin role only
+        role: 'admin',
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
       });
@@ -286,8 +260,7 @@ const AdminsListPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Filter data to only include admin roles on client side as backup
+      if (result.success) {
         const adminData = (result.data || []).filter((user: Admin) =>
           ['admin', 'moderator'].includes(user.role)
         );
@@ -313,8 +286,7 @@ const AdminsListPage = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      setStatsLoading(true);
-      // Add role parameter to filter admin stats only
+      setStatsLoading(true);
       const response = await fetch('/api/admin/users/stats?period=all&role=admin');
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -349,18 +321,14 @@ const AdminsListPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
-
-  // Effects
+  }, []);
   useEffect(() => {
     fetchAdmins();
   }, [fetchAdmins]);
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
-
-  // Show toast notification
+  }, [fetchStats]);
   const showToast = useCallback(
     (
       message: string,
@@ -370,9 +338,7 @@ const AdminsListPage = () => {
       setTimeout(() => setToast(null), 4000);
     },
     []
-  );
-
-  // Utility functions
+  );
   const getStatusIcon = (status: string) => {
     const icons = {
       active: <FaCheckCircle className="h-3 w-3 text-green-500" />,
@@ -384,13 +350,11 @@ const AdminsListPage = () => {
   const getRoleIcon = (role: string) => {
     const icons = {
       super_admin: <FaCrown className="h-3 w-3 text-yellow-500" />,
-      admin: null, // No icon for admin
+      admin: null,
       moderator: <FaUserShield className="h-3 w-3 text-purple-500" />,
     };
     return icons[role as keyof typeof icons] || null;
-  };
-
-  // Updated formatCurrency function to only show USD with comma separators
+  };
   const formatCurrency = useCallback((amount: number) => {
     return `$${amount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
@@ -419,9 +383,7 @@ const AdminsListPage = () => {
   const handleRefresh = useCallback(async () => {
     await Promise.all([fetchAdmins(), fetchStats()]);
     showToast('Data refreshed successfully!', 'success');
-  }, [fetchAdmins, fetchStats, showToast]);
-
-  // Generic API action handler
+  }, [fetchAdmins, fetchStats, showToast]);
   const handleApiAction = useCallback(
     async (
       url: string,
@@ -462,9 +424,7 @@ const AdminsListPage = () => {
       }
     },
     [fetchAdmins, fetchStats, showToast]
-  );
-
-  // Handle admin deletion
+  );
   const handleDeleteAdmin = useCallback(
     async (adminId: string) => {
       const success = await handleApiAction(
@@ -480,9 +440,7 @@ const AdminsListPage = () => {
       }
     },
     [handleApiAction]
-  );
-
-  // Handle admin status update
+  );
   const handleStatusUpdate = useCallback(
     async (adminId: string | number, newStatus: string) => {
       return handleApiAction(
@@ -493,9 +451,7 @@ const AdminsListPage = () => {
       );
     },
     [handleApiAction]
-  );
-
-  // Handle change role
+  );
   const handleChangeRole = useCallback(
     async (adminId: string | number, role: string) => {
       const success = await handleApiAction(
@@ -512,9 +468,7 @@ const AdminsListPage = () => {
       return success;
     },
     [handleApiAction]
-  );
-
-  // Modal handlers
+  );
   const openUpdateStatusDialog = useCallback(
     (adminId: string | number, currentStatus: string) => {
       setUpdateStatusDialog({ open: true, adminId: typeof adminId === 'string' ? parseInt(adminId) : adminId, currentStatus });
@@ -529,9 +483,7 @@ const AdminsListPage = () => {
       setNewRole(currentRole);
     },
     []
-  );
-
-  // Handle edit admin save
+  );
   const handleEditSave = useCallback(
     async (adminData: Partial<Admin>) => {
       if (!editDialog.admin) return;
@@ -549,16 +501,14 @@ const AdminsListPage = () => {
       }
     },
     [editDialog.admin, handleApiAction]
-  );
-
-  // Pagination handlers
+  );
   const handlePageChange = useCallback((newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
   }, []);
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -570,12 +520,12 @@ const AdminsListPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
-              {/* Page View Dropdown */}
+              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -608,7 +558,7 @@ const AdminsListPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls Only */}
+            {}
             <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
@@ -635,10 +585,10 @@ const AdminsListPage = () => {
           </div>
         </div>
 
-        {/* Admins Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons - Inside table header */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -734,7 +684,7 @@ const AdminsListPage = () => {
               </div>
             ) : (
               <>
-                {/* Desktop Table View */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -933,7 +883,7 @@ const AdminsListPage = () => {
                   </table>
                 </div>
 
-                {/* Pagination */}
+                {}
                 <Pagination
                   pagination={pagination}
                   onPageChange={handlePageChange}
@@ -944,7 +894,7 @@ const AdminsListPage = () => {
           </div>
         </div>
 
-        {/* Modals */}
+        {}
         <DeleteConfirmationModal
           isOpen={deleteDialogOpen}
           onClose={() => {
@@ -1043,9 +993,7 @@ const AdminsListPage = () => {
       </div>
     </div>
   );
-};
-
-// Extracted Components for better organization
+};
 const AdminActions: React.FC<AdminActionsProps> = ({
   admin,
   onEdit,
@@ -1158,9 +1106,7 @@ const Pagination: React.FC<PaginationProps> = ({
       </button>
     </div>
   </div>
-);
-
-// Modal Components
+);
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   isOpen,
   onClose,
@@ -1318,9 +1264,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
   onSave,
   isLoading,
 }) => {
-  const [formData, setFormData] = useState<Partial<Admin>>({});
-
-  // Initialize form data when modal opens
+  const [formData, setFormData] = useState<Partial<Admin>>({});
   React.useEffect(() => {
     if (admin) {
       setFormData({
@@ -1353,9 +1297,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
     setFormData((prev) => ({ ...prev, password: password }));
-  };
-
-  // Available permissions
+  };
   const availablePermissions = [
     { id: 'view_users', label: 'View Users' },
     { id: 'moderate_content', label: 'Moderate Content' },
@@ -1398,7 +1340,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
         <h3 className="text-lg font-semibold mb-4">Edit Admin</h3>
 
         <div className="space-y-4">
-          {/* Username */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Username</label>
             <input
@@ -1412,7 +1354,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
             />
           </div>
 
-          {/* Email */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Email</label>
             <input
@@ -1426,7 +1368,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
             />
           </div>
 
-          {/* Full Name */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Full Name</label>
             <input
@@ -1439,7 +1381,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
             />
           </div>
 
-          {/* Password */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Password</label>
             <div className="relative">
@@ -1467,7 +1409,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
             </p>
           </div>
 
-          {/* Status - Only show for non-Admin roles */}
+          {}
           {formData.role !== 'admin' && (
             <div className="mb-4">
               <label className="form-label mb-2">Status</label>
@@ -1483,7 +1425,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
             </div>
           )}
 
-          {/* Role */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Role</label>
             <select
@@ -1498,12 +1440,12 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
             </select>
           </div>
 
-          {/* Permissions - Only show for Moderator role */}
+          {}
           {formData.role === 'moderator' && (
             <div className="mb-4">
               <label className="form-label mb-2">Permissions</label>
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                {/* Select All Option */}
+                {}
                 <div className="mb-3 pb-3 border-b border-gray-200">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
@@ -1525,7 +1467,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
                   </label>
                 </div>
 
-                {/* Individual Permissions */}
+                {}
                 <div className="grid grid-cols-2 gap-3">
                   {availablePermissions.map((permission) => (
                     <label
@@ -1553,7 +1495,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
                   ))}
                 </div>
 
-                {/* Status Message */}
+                {}
                 {formData.permissions && formData.permissions.length === 0 ? (
                   <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
                     No permissions selected. Moderator will have limited access.

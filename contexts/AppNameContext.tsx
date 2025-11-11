@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-// Global function to update app name across all contexts
 let globalSetAppName: ((name: string) => void) | null = null;
 
 export function updateGlobalAppName(newAppName: string) {
@@ -27,7 +26,6 @@ export function AppNameProvider({
 }) {
   const [appName, setAppName] = useState(initialAppName);
 
-  // Set global reference for updating app name
   useEffect(() => {
     globalSetAppName = setAppName;
     return () => {
@@ -50,11 +48,10 @@ export function useAppName() {
   return context;
 }
 
-// Hook for getting app name with fallback
 export function useAppNameWithFallback() {
   const context = useContext(AppNameContext);
   if (context === undefined) {
-    // Fallback to environment variable if context is not available
+
     return {
       appName: process.env.NEXT_PUBLIC_APP_NAME || 'SMM Panel',
       setAppName: () => {}

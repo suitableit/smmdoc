@@ -24,9 +24,7 @@ export default function PaymentSuccess() {
     } else if (!orderId) {
       toast.error('❌ Invoice ID is missing. Please contact support.');
       setStatus('MISSING');
-    }
-
-    // Cleanup function
+    }
     return () => {
       if (redirectTimeoutRef.current) {
         clearTimeout(redirectTimeoutRef.current);
@@ -34,12 +32,11 @@ export default function PaymentSuccess() {
     };
   }, [orderId]);
 
-  useEffect(() => {
-    // Redirect to transactions page after successful verification
+  useEffect(() => {
     if (status === 'SUCCESS' || status === 'ALREADY_VERIFIED') {
       redirectTimeoutRef.current = setTimeout(() => {
         router.push('/transactions?status=success&transaction=' + invoiceId);
-      }, 2000); // 2 second delay to show success message
+      }, 2000);
     }
   }, [status, router, invoiceId]);
 

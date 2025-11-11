@@ -5,13 +5,6 @@ interface GradientSpinnerProps {
   className?: string;
 }
 
-/**
- * GradientSpinner - A consistent gradient loading spinner component
- * Used throughout the SMMDOC application for all loading states
- * 
- * @param size - Tailwind size classes (e.g., 'w-4 h-4', 'w-6 h-6', 'w-16 h-16')
- * @param className - Additional CSS classes
- */
 export const GradientSpinner: React.FC<GradientSpinnerProps> = ({ 
   size = 'w-16 h-16', 
   className = '' 

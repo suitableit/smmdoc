@@ -17,18 +17,14 @@ import {
     FaUniversity,
     FaUser,
     FaWallet
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Custom Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -115,14 +111,10 @@ export default function ActivateAffiliatePage() {
     swiftCode: '',
   });
   const [showAddForm, setShowAddForm] = useState(false);
-  const [errors, setErrors] = useState<Partial<ActivationFormData>>({});
-
-  // Set document title
+  const [errors, setErrors] = useState<Partial<ActivationFormData>>({});
   useEffect(() => {
     setPageTitle('Activate Affiliate Account', appName);
-  }, [appName]);
-
-  // Check if user already has affiliate account activated
+  }, [appName]);
   useEffect(() => {
     const checkAffiliateStatus = async () => {
       try {
@@ -151,18 +143,14 @@ export default function ActivateAffiliatePage() {
     } else {
       setCheckingStatus(false);
     }
-  }, [user]);
-
-  // Show toast notification
+  }, [user]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
-  };
-
-  // Validate form
+  };
   const validateForm = (): boolean => {
     const newErrors: any = {};
 
@@ -176,9 +164,7 @@ export default function ActivateAffiliatePage() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  // Validate new payment method form
+  };
   const validateNewPaymentMethod = (): boolean => {
     const newErrors: any = {};
 
@@ -212,9 +198,7 @@ export default function ActivateAffiliatePage() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  // Add payment method
+  };
   const addPaymentMethod = () => {
     if (!validateNewPaymentMethod()) {
       showToast('Please fix the errors below', 'error');
@@ -241,9 +225,7 @@ export default function ActivateAffiliatePage() {
     setFormData(prev => ({
       ...prev,
       paymentMethods: [...prev.paymentMethods, paymentMethod],
-    }));
-
-    // Reset the form
+    }));
     setNewPaymentMethod({
       method: '',
       mobileNumber: '',
@@ -256,18 +238,14 @@ export default function ActivateAffiliatePage() {
     setShowAddForm(false);
     setErrors({});
     showToast('Payment method added successfully!', 'success');
-  };
-
-  // Remove payment method
+  };
   const removePaymentMethod = (id: string) => {
     setFormData(prev => ({
       ...prev,
       paymentMethods: prev.paymentMethods.filter(pm => pm.id !== id),
     }));
     showToast('Payment method removed', 'info');
-  };
-
-  // Handle form submission
+  };
   const handleActivateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -302,25 +280,19 @@ export default function ActivateAffiliatePage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Handle input changes
+  };
   const handleInputChange = (field: keyof ActivationFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if ((errors as any)[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
-  };
-
-  // Handle new payment method input changes
+  };
   const handleNewPaymentMethodChange = (field: keyof NewPaymentMethodForm, value: string) => {
     setNewPaymentMethod(prev => ({ ...prev, [field]: value }));
     if ((errors as any)[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
-  };
-
-  // Get payment method display name
+  };
   const getPaymentMethodDisplayName = (method: string): string => {
     const names: Record<string, string> = {
       bkash: 'bKash',
@@ -349,7 +321,7 @@ export default function ActivateAffiliatePage() {
     return (
       <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
         <div className="space-y-6">
-          {/* Success Message */}
+          {}
           <div className="card card-padding">
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -378,7 +350,7 @@ export default function ActivateAffiliatePage() {
   return (
     <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
       <div className="space-y-6">
-        {/* Toast Container */}
+        {}
         {toastMessage && (
           <Toast
             message={toastMessage.message}
@@ -387,7 +359,7 @@ export default function ActivateAffiliatePage() {
           />
         )}
 
-        {/* Activation Form */}
+        {}
         <div className="card card-padding">
           <div className="card-header mb-6">
             <div className="card-icon">
@@ -397,7 +369,7 @@ export default function ActivateAffiliatePage() {
           </div>
 
           <form onSubmit={handleActivateAccount} className="space-y-6">
-            {/* User Info Display */}
+            {}
             <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-4 border border-gray-200 dark:border-gray-600">
               <div className="flex items-center gap-3 mb-2">
                 <FaUser className="w-4 h-4 text-gray-500" />
@@ -411,7 +383,7 @@ export default function ActivateAffiliatePage() {
               </p>
             </div>
 
-            {/* Payment Methods Section */}
+            {}
             <div>
               <div className="flex items-center justify-between mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -427,7 +399,7 @@ export default function ActivateAffiliatePage() {
                 </button>
               </div>
 
-              {/* Added Payment Methods List */}
+              {}
               {formData.paymentMethods.length > 0 ? (
                 <div className="space-y-3 mb-4">
                   {formData.paymentMethods.map((paymentMethod) => (
@@ -489,7 +461,7 @@ export default function ActivateAffiliatePage() {
               )}
             </div>
 
-            {/* Add Payment Method Form */}
+            {}
             {showAddForm && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -518,7 +490,7 @@ export default function ActivateAffiliatePage() {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Payment Method Selection */}
+                  {}
                   <div>
                     <label htmlFor="newPaymentMethod" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Payment Method *
@@ -545,7 +517,7 @@ export default function ActivateAffiliatePage() {
                     )}
                   </div>
 
-                  {/* Mobile Number for Mobile Financial Services */}
+                  {}
                   {newPaymentMethod.method && newPaymentMethod.method !== 'bank' && (
                     <div>
                       <label htmlFor="newMobileNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -572,7 +544,7 @@ export default function ActivateAffiliatePage() {
                     </div>
                   )}
 
-                  {/* Bank Details for Bank Transfer */}
+                  {}
                   {newPaymentMethod.method === 'bank' && (
                     <div className="space-y-4">
                       <div>
@@ -682,7 +654,7 @@ export default function ActivateAffiliatePage() {
                     </div>
                   )}
 
-                  {/* Add Button */}
+                  {}
                   <div className="flex flex-col md:flex-row gap-3">
                     <button
                       type="button"
@@ -715,7 +687,7 @@ export default function ActivateAffiliatePage() {
               </div>
             )}
 
-            {/* Terms Agreement */}
+            {}
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <input
@@ -737,7 +709,7 @@ export default function ActivateAffiliatePage() {
               </div>
             </div>
 
-            {/* Submit Button */}
+            {}
             <div className="flex gap-4">
               <button
                 type="submit"

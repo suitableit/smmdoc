@@ -96,9 +96,7 @@ function BreadcrumbEllipsis({
       <span className="sr-only">More</span>
     </span>
   )
-}
-
-// Custom BreadCrumb component for admin pages
+}
 interface BreadCrumbItem {
   title: string;
   link?: string;
@@ -139,4 +137,3 @@ export {
     BreadcrumbLink, BreadcrumbList, BreadcrumbPage,
     BreadcrumbSeparator
 }
-

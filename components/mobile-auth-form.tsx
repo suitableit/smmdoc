@@ -29,14 +29,10 @@ const MobileAuthForm = ({
   handleSubmit,
   setAuthType
 }: MobileAuthFormProps) => {
-  useEffect(() => {
-    // Render the form in the mobile container when component mounts
+  useEffect(() => {
     const mobileContainer = document.getElementById('auth-form-container-mobile');
-    if (mobileContainer) {
-      // Clear existing content
-      mobileContainer.innerHTML = '';
-      
-      // Create the form element
+    if (mobileContainer) {
+      mobileContainer.innerHTML = '';
       const formElement = document.createElement('div');
       formElement.innerHTML = `
         <div id="mobile-auth-form-root"></div>
@@ -45,8 +41,7 @@ const MobileAuthForm = ({
     }
   }, []);
 
-  useEffect(() => {
-    // Update the form content when props change
+  useEffect(() => {
     const mobileFormRoot = document.getElementById('mobile-auth-form-root');
     if (mobileFormRoot) {
       mobileFormRoot.innerHTML = `
@@ -62,7 +57,7 @@ const MobileAuthForm = ({
                 ? 'Enter your details below to sign in.' 
                 : 'Create your account to get started.'}
             </p>
-            
+
             <form id="mobile-auth-form" class="space-y-3">
               ${authType === 'signup' ? `
                 <div class="space-y-1">
@@ -88,7 +83,7 @@ const MobileAuthForm = ({
                   />
                 </div>
               ` : ''}
-              
+
               <div class="space-y-1">
                 <label class="text-xs">Username or Email</label>
                 <input
@@ -100,7 +95,7 @@ const MobileAuthForm = ({
                   required
                 />
               </div>
-              
+
               <div class="space-y-1">
                 <label class="text-xs">Password</label>
                 <input 
@@ -112,7 +107,7 @@ const MobileAuthForm = ({
                   required
                 />
               </div>
-              
+
               ${authType === 'signup' ? `
                 <div class="space-y-1">
                   <label class="text-xs">Confirm Password</label>
@@ -126,19 +121,19 @@ const MobileAuthForm = ({
                   />
                 </div>
               ` : ''}
-              
+
               ${error ? `
                 <div class="text-red-500 text-sm text-center">
                   ${error}
                 </div>
               ` : ''}
-              
+
               ${success ? `
                 <div class="text-green-500 text-sm text-center">
                   ${success}
                 </div>
               ` : ''}
-              
+
               <button 
                 type="submit" 
                 class="w-full bg-purple-600 hover:bg-purple-700 h-8 text-sm text-white rounded-md transition-colors ${loading ? 'opacity-50 cursor-not-allowed' : ''}"
@@ -146,7 +141,7 @@ const MobileAuthForm = ({
               >
                 ${loading ? 'Please wait...' : (authType === 'signin' ? 'Sign In' : 'Sign Up')}
               </button>
-              
+
               <div class="flex items-center justify-center space-x-4 mt-3">
                 <button type="button" class="flex items-center justify-center w-8 h-8 border border-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 dark:border-gray-600">
                   <svg class="w-4 h-4" viewBox="0 0 24 24">
@@ -158,7 +153,7 @@ const MobileAuthForm = ({
                 </button>
               </div>
             </form>
-            
+
             <div class="text-center mt-2">
               ${authType === 'signin' ? `
                 <p class="text-xs mb-1">
@@ -178,40 +173,34 @@ const MobileAuthForm = ({
             </div>
           </div>
         </div>
-      `;
-      
-      // Add event listeners
+      `;
       const form = document.getElementById('mobile-auth-form');
       if (form) {
         form.addEventListener('submit', (e) => {
           e.preventDefault();
           handleSubmit(e as any);
-        });
-        
-        // Add input change listeners
+        });
         const inputs = form.querySelectorAll('input');
         inputs.forEach(input => {
           input.addEventListener('input', (e) => {
             handleInputChange(e as any);
           });
         });
-      }
-      
-      // Add switch auth type listeners
+      }
       const switchToSignup = document.getElementById('switch-to-signup');
       const switchToSignin = document.getElementById('switch-to-signin');
-      
+
       if (switchToSignup) {
         switchToSignup.addEventListener('click', () => setAuthType('signup'));
       }
-      
+
       if (switchToSignin) {
         switchToSignin.addEventListener('click', () => setAuthType('signin'));
       }
     }
   }, [authType, formData, error, success, loading, handleInputChange, handleSubmit, setAuthType]);
 
-  return null; // This component doesn't render anything directly
+  return null;
 };
 
 export default MobileAuthForm;

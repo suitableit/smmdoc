@@ -21,7 +21,6 @@ import ReCAPTCHA from '@/components/ReCAPTCHA';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 import ContactSystemGuard from '@/components/ContactSystemGuard';
 
-// Custom Gradient Spinner Component (Large version for loading state)
 const GradientSpinner = ({ size = 'w-5 h-5', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -30,7 +29,6 @@ const GradientSpinner = ({ size = 'w-5 h-5', className = '' }) => (
   </div>
 );
 
-// Toast Component
 const Toast = ({
   message,
   type = 'success',
@@ -85,12 +83,10 @@ function ContactSupportPage() {
     canSubmit: boolean;
   } | null>(null);
   const user = useCurrentUser();
-  
-  // ReCAPTCHA state
+
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
-  // Show toast notification
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -99,16 +95,14 @@ function ContactSupportPage() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Set document title using useEffect for client-side
   useEffect(() => {
     setPageTitle('Contact Support', appName);
   }, [appName]);
 
-  // Load contact form data and categories
   useEffect(() => {
     const loadContactFormData = async () => {
       try {
-        // Set default categories for now
+
         setCategories([
           { id: 1, name: 'General Inquiry' },
           { id: 2, name: 'Business Partnership' },
@@ -133,11 +127,11 @@ function ContactSupportPage() {
           });
         } else {
           console.log('API error:', data.error);
-          // Keep default values if API fails
+
         }
       } catch (error) {
         console.error('Error loading contact form data:', error);
-        // Keep default values if API fails
+
       } finally {
         setIsLoading(false);
       }
@@ -146,7 +140,6 @@ function ContactSupportPage() {
     loadContactFormData();
   }, []);
 
-  // Navigation handlers
   const handleNavigateToTicket = () => {
     router.push('/support-tickets');
   };
@@ -155,9 +148,8 @@ function ContactSupportPage() {
     router.push('/faqs');
   };
 
-  // Handle form submission
   const handleSubmit = async () => {
-    // Check if user can submit
+
     if (contactFormData && !contactFormData.canSubmit) {
       showToast(
         `You have reached the maximum limit of ${contactFormData.maxPendingContacts} pending contacts. Please wait for a response to your previous messages.`,
@@ -166,7 +158,6 @@ function ContactSupportPage() {
       return;
     }
 
-    // Basic validation
     if (!formData.subject || formData.subject.length < 5) {
       showToast('Subject must be at least 5 characters', 'error');
       return;
@@ -182,7 +173,6 @@ function ContactSupportPage() {
       return;
     }
 
-    // Check ReCAPTCHA if enabled
     if (isEnabledForForm('contactSupport') && !recaptchaToken) {
       showToast('Please complete the ReCAPTCHA verification.', 'error');
       return;
@@ -191,25 +181,22 @@ function ContactSupportPage() {
     setIsSubmitting(true);
 
     try {
-      // Create FormData for file upload
+
       const submitData = new FormData();
       submitData.append('subject', formData.subject);
       submitData.append('category', formData.category);
       submitData.append('message', formData.message);
-      
-      // Add files if any
+
       if (formData.attachments) {
         Array.from(formData.attachments).forEach((file) => {
           submitData.append('attachments', file);
         });
       }
-      
-      // Add recaptcha token if available
+
       if (recaptchaToken) {
         submitData.append('recaptchaToken', recaptchaToken);
       }
-      
-      // Submit contact form to API
+
       const response = await fetch('/api/contact-support', {
         method: 'POST',
         body: submitData,
@@ -218,10 +205,9 @@ function ContactSupportPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Show success message
+
         showToast(data.message || 'Your message has been sent successfully!', 'success');
 
-        // Reset form
         setFormData({
           subject: '',
           category: '',
@@ -230,14 +216,13 @@ function ContactSupportPage() {
         });
         setSelectedFiles([]);
         setRecaptchaToken(null);
-        
-        // Reset file input
+
         const fileInput = document.getElementById('attachments') as HTMLInputElement;
         if (fileInput) {
           fileInput.value = '';
         }
       } else {
-        // Show error message from API
+
         showToast(data.error || 'Failed to send message. Please try again later.', 'error');
       }
     } catch (error) {
@@ -262,16 +247,21 @@ function ContactSupportPage() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFileSelection(e.target.files);
+    }
+  };
+
   const handleFileSelection = (fileList: FileList) => {
     const files = Array.from(fileList);
     const validFiles: File[] = [];
-    const maxFileSize = 3 * 1024 * 1024; // 3MB
+    const maxFileSize = 3 * 1024 * 1024;
     const allowedTypes = [
       'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
       'application/pdf'
     ];
 
-    // Check if user is trying to select more files than allowed
     const totalFiles = selectedFiles.length + files.length;
     if (totalFiles > 4) {
       showToast(`You can only select up to 4 files. You currently have ${selectedFiles.length} files selected.`, 'error');
@@ -279,19 +269,17 @@ function ContactSupportPage() {
     }
 
     for (const file of files) {
-      // Check file type
+
       if (!allowedTypes.includes(file.type)) {
         showToast(`File "${file.name}" has an unsupported format. Only images (JPEG, PNG, GIF, WebP, BMP) and PDFs are allowed.`, 'error');
         continue;
       }
 
-      // Check file size
       if (file.size > maxFileSize) {
         showToast(`File "${file.name}" is too large. Maximum file size is 3MB.`, 'error');
         continue;
       }
 
-      // Check for duplicate files
       if (selectedFiles.some(existingFile => existingFile.name === file.name && existingFile.size === file.size)) {
         showToast(`File "${file.name}" is already selected.`, 'error');
         continue;
@@ -303,16 +291,15 @@ function ContactSupportPage() {
     if (validFiles.length > 0) {
       const newSelectedFiles = [...selectedFiles, ...validFiles];
       setSelectedFiles(newSelectedFiles);
-      
-      // Create a new FileList-like object for form submission
+
       const dataTransfer = new DataTransfer();
       newSelectedFiles.forEach(file => dataTransfer.items.add(file));
-      
+
       setFormData((prev) => ({
         ...prev,
         attachments: dataTransfer.files,
       }));
-      
+
       showToast(`${validFiles.length} file(s) selected successfully!`, 'success');
     }
   };
@@ -320,17 +307,17 @@ function ContactSupportPage() {
   const removeSelectedFile = (index: number) => {
     const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
     setSelectedFiles(newSelectedFiles);
-    
+
     if (newSelectedFiles.length === 0) {
       setFormData((prev) => ({
         ...prev,
         attachments: null,
       }));
     } else {
-      // Create a new FileList-like object for form submission
+
       const dataTransfer = new DataTransfer();
       newSelectedFiles.forEach(file => dataTransfer.items.add(file));
-      
+
       setFormData((prev) => ({
         ...prev,
         attachments: dataTransfer.files,
@@ -343,7 +330,7 @@ function ContactSupportPage() {
       <div className="page-container">
         <div className="page-content">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Loading State */}
+            {}
             <div className="lg:col-span-2">
               <div className="card card-padding">
                 <div className="flex items-center justify-center min-h-[400px]">
@@ -357,9 +344,9 @@ function ContactSupportPage() {
               </div>
             </div>
 
-            {/* Right Column - Static Info Cards */}
+            {}
             <div className="space-y-6">
-              {/* Contact Information Card */}
+              {}
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
@@ -409,7 +396,7 @@ function ContactSupportPage() {
                 </div>
               </div>
 
-              {/* Support Tickets Card */}
+              {}
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
@@ -433,7 +420,7 @@ function ContactSupportPage() {
                 </div>
               </div>
 
-              {/* FAQ Card */}
+              {}
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
@@ -464,7 +451,7 @@ function ContactSupportPage() {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -475,7 +462,7 @@ function ContactSupportPage() {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Contact Form */}
+          {}
           <div className="lg:col-span-2">
             <div className="card card-padding">
               <div className="card-header">
@@ -486,7 +473,7 @@ function ContactSupportPage() {
               </div>
 
               <div className="space-y-6">
-                {/* Username */}
+                {}
                 <div className="form-group">
                   <label className="form-label" htmlFor="username">
                     Username
@@ -502,7 +489,7 @@ function ContactSupportPage() {
                   />
                 </div>
 
-                {/* Subject */}
+                {}
                 <div className="form-group">
                   <label className="form-label" htmlFor="subject">
                     Subject
@@ -520,7 +507,6 @@ function ContactSupportPage() {
                   />
                 </div>
 
-                {/* Category */}
                 <div className="form-group">
                   <label className="form-label" htmlFor="category">
                     Category
@@ -545,7 +531,6 @@ function ContactSupportPage() {
                   </select>
                 </div>
 
-                {/* Message */}
                 <div className="form-group">
                   <label className="form-label" htmlFor="message">
                     Message
@@ -567,7 +552,6 @@ function ContactSupportPage() {
                   </small>
                 </div>
 
-                {/* Attachments */}
                 <div className="form-group">
                   <label className="form-label" htmlFor="attachments">
                     Attachments (Optional)
@@ -577,16 +561,9 @@ function ContactSupportPage() {
                     id="attachments"
                     className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
                     multiple
-                    accept="image/*,.pdf"
-                    onChange={(e) =>
-                      handleInputChange('attachments', e.target.files)
-                    }
+                    accept="image/*"
+                    onChange={handleFileChange}
                   />
-                  <small className="text-xs text-gray-500 mt-1">
-                    You can upload up to 4 files. Supported: Images and PDFs (max 3MB each).
-                  </small>
-                  
-                  {/* Selected Files Display */}
                   {selectedFiles.length > 0 && (
                     <div className="mt-3 space-y-2">
                       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -627,7 +604,7 @@ function ContactSupportPage() {
                   )}
                 </div>
 
-                {/* ReCAPTCHA */}
+                {}
                 {isEnabledForForm('contactSupport') && recaptchaSettings && (
                   <ReCAPTCHA
                     siteKey={recaptchaSettings.siteKey}
@@ -639,17 +616,17 @@ function ContactSupportPage() {
                     }}
                     onError={() => {
                       setRecaptchaToken(null);
-                      // Let Google's native error messages display instead of custom ones
-                      // This allows 'Invalid domain for site key' and other specific errors to show
+
+
                     }}
                     onExpired={() => {
                       setRecaptchaToken(null);
-                      // Let Google's native expired message display
+
                     }}
                   />
                 )}
 
-                {/* Submit Button */}
+                {}
                 <button
                   type="button"
                   onClick={handleSubmit}
@@ -671,9 +648,9 @@ function ContactSupportPage() {
             </div>
           </div>
 
-          {/* Right Column - Contact Info & Links */}
+          {}
           <div className="space-y-6">
-            {/* Contact Information Card */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -715,7 +692,7 @@ function ContactSupportPage() {
               </div>
             </div>
 
-            {/* Support Tickets Card */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -739,7 +716,7 @@ function ContactSupportPage() {
               </div>
             </div>
 
-            {/* FAQ Card */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">

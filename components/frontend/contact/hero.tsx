@@ -10,7 +10,7 @@ const Hero: React.FC = () => {
     <section className="pt-[60px] pb-[60px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
-          {/* Text Content */}
+          {}
           <div>
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               Contact Us
@@ -39,7 +39,7 @@ const Hero: React.FC = () => {
             </Link>
           </div>
 
-          {/* Image */}
+          {}
           <div className="text-center lg:text-right">
             <div className="relative">
               <Image

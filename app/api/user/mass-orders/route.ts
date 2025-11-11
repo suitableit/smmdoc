@@ -151,41 +151,29 @@ export async function POST(request: Request) {
           continue;
         }
 
-        // Service type validation
--        const serviceTypeConfig = getServiceTypeConfig(service.packageType || 1);
-+        const typeConfig = getServiceTypeConfig(service.packageType || 1);
-         const validationData = {
-           link,
-           qty: quantity,
-           comments,
-           username,
-           posts,
-           delay,
-           minQty,
-           maxQty,
-           isDripfeed,
-           dripfeedRuns,
-           dripfeedInterval,
-           isSubscription
-         };
--
--        const validation = validateOrderByType(service.packageType || 1, validationData);
--        if (!validation.isValid) {
--          validationErrors.push(
--            `Order ${i + 1}: Service type validation failed for '${service.name}': ${validation.errors.join(', ')}`
--          );
--          continue;
--        }
-+
-+        const errors = typeConfig 
-+          ? validateOrderByType(typeConfig, validationData)
-+          : ['Invalid service type'];
-+        if (errors.length > 0) {
-+          validationErrors.push(
-+            `Order ${i + 1}: Service type validation failed for '${service.name}': ${errors.join(', ')}`
-+          );
-+          continue;
-+        }
+        const typeConfig = getServiceTypeConfig(service.packageType || 1);
+        const validationData = {
+          link: link,
+          qty: quantity,
+          comments: comments,
+          username: username,
+          posts: posts,
+          delay: delay,
+          minQty: minQty,
+          maxQty: maxQty,
+          isDripfeed: isDripfeed,
+          dripfeedRuns: dripfeedRuns,
+          dripfeedInterval: dripfeedInterval,
+          isSubscription: isSubscription
+        };
+
+        const validationErrorsList = typeConfig ? validateOrderByType(typeConfig, validationData) : ['Invalid service type'];
+        if (validationErrorsList.length > 0) {
+          validationErrors.push(
+            `Order ${i + 1}: Service type validation failed for '${service.name}': ${validationErrorsList.join(', ')}`
+          );
+          continue;
+        }
 
         // Calculate prices
         const usdPrice = (service.rate * quantity) / 1000;

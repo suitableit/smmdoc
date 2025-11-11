@@ -7,16 +7,14 @@ interface FormErrorProps {
 
 export const FormError: React.FC<FormErrorProps> = ({ message }) => {
   const router = useRouter();
-  
-  if (!message) return null;
-  
-  // Check if message contains "contact support" text
+
+  if (!message) return null;
   const contactSupportRegex = /(.*?)(contact support)(.*)/i;
   const match = message.match(contactSupportRegex);
-  
+
   if (match) {
     const [, beforeText, contactText, afterText] = match;
-    
+
     return (
       <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive">
         <ExclamationTriangleIcon className="w-4 h-4" />
@@ -35,7 +33,7 @@ export const FormError: React.FC<FormErrorProps> = ({ message }) => {
       </div>
     );
   }
-  
+
   return (
     <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive">
       <ExclamationTriangleIcon className="w-4 h-4" />

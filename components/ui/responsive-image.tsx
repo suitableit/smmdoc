@@ -18,13 +18,9 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   maintainAspectRatio = true,
   className,
   ...props
-}) => {
-  // যদি উভয় মাত্রা "auto" হয়, Next.js এর Image কম্পোনেন্ট কাজ করবে না
-  // তাই একটি ডিফল্ট মান সেট করতে হবে এবং স্টাইলের মাধ্যমে তা সামঞ্জস্য করতে হবে
+}) => {
   const imgWidth = width === "auto" ? 500 : width;
-  const imgHeight = height === "auto" ? 500 : height;
-
-  // অ্যাসপেক্ট রেশিও বজায় রাখার জন্য স্টাইল
+  const imgHeight = height === "auto" ? 500 : height;
   const imageStyle: React.CSSProperties = {
     width: width === "auto" ? "auto" : undefined,
     height: height === "auto" ? "auto" : undefined,

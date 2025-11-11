@@ -11,22 +11,16 @@ import {
   FaTimes,
   FaUpload
 } from 'react-icons/fa';
-import JoditEditor from 'jodit-react';
-
-// Import APP_NAME constant
+import JoditEditor from 'jodit-react';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-
-// Custom Gradient Spinner Component
+import { setPageTitle } from '@/lib/utils/set-page-title';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -43,9 +37,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces
+);
 interface PostFormData {
   id: string;
   title: string;
@@ -66,9 +58,7 @@ interface PostFormData {
 const EditBlogPostPage = () => {
   const { appName } = useAppNameWithFallback();
   const params = useParams();
-  const postId = params.id as string;
-
-  // State management
+  const postId = params.id as string;
   const [formData, setFormData] = useState<PostFormData>({
     id: '',
     title: '',
@@ -101,9 +91,7 @@ const EditBlogPostPage = () => {
     updatedAt: '',
     author: ''
   });
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-  // Track which fields were auto-filled internally
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [autoFilledFields, setAutoFilledFields] = useState<{
     excerpt: boolean;
     metaTitle: boolean;
@@ -117,62 +105,46 @@ const EditBlogPostPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
-  const [isLoadingPost, setIsLoadingPost] = useState(true);
-
-  // Set document title using useEffect for client-side
+  const [isLoadingPost, setIsLoadingPost] = useState(true);
   useEffect(() => {
     setPageTitle('Edit Post', appName);
-  }, [appName]);
-
-  // Load existing post data on component mount
+  }, [appName]);
   useEffect(() => {
     const loadPost = async () => {
       try {
-        setIsLoadingPost(true);
-        
-        // Fetch post data from API using the slug (postId)
+        setIsLoadingPost(true);
         const response = await fetch(`/api/blogs/id/${postId}`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch post data');
         }
-        
+
         const responseData = await response.json();
-        
+
         if (!responseData.success) {
           throw new Error(responseData.error || 'Failed to fetch post data');
         }
-        
-        const postData = responseData.data;
-        
-        // Auto-fill empty fields internally but don't show in form
+
+        const postData = responseData.data;
         const autoFilled = {
           excerpt: false,
           metaTitle: false,
           metaDescription: false
-        };
-        
-        // Generate excerpt from content if empty
+        };
         let excerpt = postData.excerpt || '';
         if (!excerpt && postData.content) {
           const textContent = postData.content.replace(/<[^>]*>/g, '').replace(/[#*`]/g, '');
           excerpt = textContent.substring(0, 160) + (textContent.length > 160 ? '...' : '');
           autoFilled.excerpt = true;
-        }
-        
-        // Generate meta title from title if empty
+        }
         let metaTitle = postData.metaTitle || '';
         if (!metaTitle && postData.title) {
           metaTitle = postData.title;
           autoFilled.metaTitle = true;
-        }
-        
-        // Generate meta description from excerpt/content if empty
+        }
         let metaDescription = postData.metaDescription || '';
         if (!metaDescription) {
           if (excerpt) {
@@ -182,9 +154,7 @@ const EditBlogPostPage = () => {
             metaDescription = textContent.substring(0, 160) + (textContent.length > 160 ? '...' : '');
           }
           autoFilled.metaDescription = true;
-        }
-        
-        // Set form data with all the actual values from the API
+        }
         const formDataToSet = {
           id: postData.id || '',
           title: postData.title || '',
@@ -201,11 +171,11 @@ const EditBlogPostPage = () => {
           updatedAt: postData.updatedAt || '',
           author: postData.author?.username || postData.author?.name || postData.author || ''
         };
-        
+
         setFormData(formDataToSet);
         setOriginalFormData(formDataToSet);
         setAutoFilledFields(autoFilled);
-        
+
       } catch (error) {
         showToast('Error loading post data', 'error');
         console.error('Error loading post:', error);
@@ -217,24 +187,18 @@ const EditBlogPostPage = () => {
     if (postId) {
       loadPost();
     }
-  }, [postId]);
-
-  // Check for unsaved changes
+  }, [postId]);
   useEffect(() => {
     const hasChanges = JSON.stringify(formData) !== JSON.stringify(originalFormData);
     setHasUnsavedChanges(hasChanges);
-  }, [formData, originalFormData]);
-
-  // Show toast notification
+  }, [formData, originalFormData]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Generate slug from title
+  };
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
@@ -242,12 +206,10 @@ const EditBlogPostPage = () => {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
-  };
-
-  // Handle form field changes
+  };
   const handleInputChange = (field: keyof PostFormData, value: any) => {
     console.log(`Updating field ${field} with value:`, value);
-    
+
     setFormData(prev => {
       const updated = {
         ...prev,
@@ -255,17 +217,13 @@ const EditBlogPostPage = () => {
       };
       console.log('Updated formData:', updated);
       return updated;
-    });
-
-    // Update auto-filled tracking when user provides input
+    });
     if (field === 'excerpt' || field === 'metaTitle' || field === 'metaDescription') {
       setAutoFilledFields(prev => ({
         ...prev,
-        [field]: false // Mark as not auto-filled since user provided input
+        [field]: false
       }));
-    }
-
-    // Auto-generate slug when title changes (only if slug hasn't been manually modified)
+    }
     if (field === 'title' && value) {
       const generatedSlug = generateSlug(value);
       if (formData.slug === generateSlug(originalFormData.title)) {
@@ -275,9 +233,7 @@ const EditBlogPostPage = () => {
         }));
       }
     }
-  };
-
-  // Jodit editor configuration - memoized to prevent unnecessary re-renders
+  };
   const editorConfig = useMemo(() => ({
     readonly: false,
     placeholder: 'Write your post content here...',
@@ -304,41 +260,34 @@ const EditBlogPostPage = () => {
     },
     editorCssClass: 'jodit-editor-white-bg',
     events: {
-      afterInit: function (editor) {
-        // Ensure editor is properly initialized
+      afterInit: function (editor) {
         editor.focus();
       }
     }
-  }), []);
-
-  // Handle image upload
+  }), []);
   const handleImageUpload = async (file: File) => {
     try {
-      setImageUploading(true);
-      
-      // Validate file type
+      setImageUploading(true);
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         showToast('Only image files (JPEG, PNG, GIF, WebP) are allowed', 'error');
         return;
-      }
-      
-      // Validate file size (5MB max)
+      }
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
         showToast('File size must be less than 5MB', 'error');
         return;
       }
-      
+
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
-      formDataUpload.append('type', 'uploads'); // Store in public/uploads folder
-      
+      formDataUpload.append('type', 'uploads');
+
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formDataUpload,
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setFormData(prev => ({
@@ -356,19 +305,15 @@ const EditBlogPostPage = () => {
     } finally {
       setImageUploading(false);
     }
-  };
-
-  // Handle form submission
+  };
   const handleSubmit = async (status: 'draft' | 'published') => {
     try {
-      setIsLoading(true);
-      
-      // Basic validation (same as new-post page)
+      setIsLoading(true);
       if (!formData.title.trim()) {
         showToast('Please enter a post title', 'error');
         return;
       }
-      
+
       if (!formData.content.trim()) {
         showToast('Please enter post content', 'error');
         return;
@@ -385,10 +330,8 @@ const EditBlogPostPage = () => {
         seoTitle: formData.metaTitle,
         seoDescription: formData.metaDescription
       };
-      
-      console.log('Updating post:', postData);
-      
-      // Call API to update blog post using ID instead of slug
+
+      console.log('Updating post:', postData);
       const response = await fetch(`/api/blogs/id/${formData.id}`, {
         method: 'PUT',
         headers: {
@@ -396,38 +339,30 @@ const EditBlogPostPage = () => {
         },
         body: JSON.stringify(postData),
       });
-      
+
       const result = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(result.error || 'Failed to update blog post');
       }
-      
+
       showToast(
         status === 'draft' ? 'Post saved as draft!' : 'Post updated successfully!',
         'success'
-      );
-      
-      // Update original form data to reflect saved state
-      setOriginalFormData(formData);
-      
-      // Redirect to blog list after successful update
+      );
+      setOriginalFormData(formData);
       if (status === 'published') {
         setTimeout(() => {
           window.location.href = '/admin/blogs';
         }, 2000);
       }
-      
+
     } catch (error) {
       showToast('Error updating post', 'error');
     } finally {
       setIsLoading(false);
     }
-  };
-
-
-
-  // Handle discard changes
+  };
   const handleDiscardChanges = () => {
     if (hasUnsavedChanges) {
       const confirmed = window.confirm('Are you sure you want to discard all unsaved changes?');
@@ -436,9 +371,7 @@ const EditBlogPostPage = () => {
         showToast('Changes discarded', 'info');
       }
     }
-  };
-
-  // Handle back navigation
+  };
   const handleBack = () => {
     if (hasUnsavedChanges) {
       const confirmed = window.confirm('You have unsaved changes. Are you sure you want to leave?');
@@ -467,7 +400,7 @@ const EditBlogPostPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -479,7 +412,7 @@ const EditBlogPostPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Page Header */}
+        {}
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -537,9 +470,9 @@ const EditBlogPostPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content - Left Column */}
+          {}
           <div className="lg:col-span-2 space-y-6">
-            {/* Post Title & Slug */}
+            {}
             <div className="card card-padding">
               <div className="space-y-4">
                 <div>
@@ -577,7 +510,7 @@ const EditBlogPostPage = () => {
               </div>
             </div>
 
-            {/* Post Content */}
+            {}
             <div className="card card-padding">
               <div>
                 <label className="form-label mb-2">
@@ -598,7 +531,7 @@ const EditBlogPostPage = () => {
               </div>
             </div>
 
-            {/* Post Excerpt */}
+            {}
             <div className="card card-padding">
               <div>
                 <label className="form-label mb-2">
@@ -625,7 +558,7 @@ const EditBlogPostPage = () => {
               </div>
             </div>
 
-            {/* SEO Settings */}
+            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 SEO Settings
@@ -677,9 +610,9 @@ const EditBlogPostPage = () => {
             </div>
           </div>
 
-          {/* Sidebar - Right Column */}
+          {}
           <div className="space-y-6">
-            {/* Post Info */}
+            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Post Information
@@ -716,7 +649,7 @@ const EditBlogPostPage = () => {
               </div>
             </div>
 
-            {/* Publish Settings */}
+            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Publish Settings
@@ -737,7 +670,7 @@ const EditBlogPostPage = () => {
               </div>
             </div>
 
-            {/* Featured Image */}
+            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Featured Image
@@ -761,36 +694,7 @@ const EditBlogPostPage = () => {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input
                       type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleImageUpload(file);
-                      }}
-                      className="hidden"
-                      id="featured-image"
-                    />
-                    <label
-                      htmlFor="featured-image"
-                      className="cursor-pointer flex flex-col items-center gap-2"
-                    >
-                      {imageUploading ? (
-                        <GradientSpinner size="w-8 h-8" />
-                      ) : (
-                        <FaUpload className="h-8 w-8 text-gray-400" />
-                      )}
-                      <span className="text-sm text-gray-600">
-                        {imageUploading ? 'Uploading...' : 'Click to upload image'}
-                      </span>
-                    </label>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Fixed Action Buttons */}
+                      accept="image}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex flex-wrap justify-center gap-3 md:hidden z-50">
         <div className="flex flex-1 gap-3">
           {hasUnsavedChanges && (

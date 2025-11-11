@@ -61,7 +61,7 @@ export default function MemoryMonitor() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (autoRefresh) {
-      interval = setInterval(fetchStats, 5000); // Refresh every 5 seconds
+      interval = setInterval(fetchStats, 5000);
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -104,7 +104,7 @@ export default function MemoryMonitor() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Memory Usage Card */}
+        {}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
@@ -123,12 +123,12 @@ export default function MemoryMonitor() {
                     {getMemoryStatus(memoryStats.heapUsedPercentage).status}
                   </Badge>
                 </div>
-                
+
                 <Progress 
                   value={memoryStats.heapUsedPercentage} 
                   className="w-full"
                 />
-                
+
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Heap Used:</span>
@@ -147,7 +147,7 @@ export default function MemoryMonitor() {
                     <span>{formatBytes(memoryStats.external)}</span>
                   </div>
                 </div>
-                
+
                 <p className="text-xs text-muted-foreground">
                   Last updated: {new Date(memoryStats.timestamp).toLocaleTimeString()}
                 </p>
@@ -160,7 +160,7 @@ export default function MemoryMonitor() {
           </CardContent>
         </Card>
 
-        {/* Database Stats Card */}
+        {}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Database Statistics</CardTitle>
@@ -195,7 +195,7 @@ export default function MemoryMonitor() {
                     <p className="text-xs text-muted-foreground">Users</p>
                   </div>
                 </div>
-                
+
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Active Connections:</span>
@@ -214,7 +214,7 @@ export default function MemoryMonitor() {
         </Card>
       </div>
 
-      {/* Performance Tips */}
+      {}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Performance Tips</CardTitle>

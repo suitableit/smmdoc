@@ -4,8 +4,8 @@ interface MarkPartialModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderId: string | number;
-  onSuccess?: () => void; // Callback for successful update
-  showToast?: (message: string, type: 'success' | 'error') => void; // Toast function
+  onSuccess?: () => void;
+  showToast?: (message: string, type: 'success' | 'error') => void;
 }
 
 const MarkPartialModal: React.FC<MarkPartialModalProps> = ({
@@ -16,18 +16,14 @@ const MarkPartialModal: React.FC<MarkPartialModalProps> = ({
   showToast,
 }) => {
   const [notGoingAmount, setNotGoingAmount] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Reset form when modal opens/closes
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     if (isOpen) {
       setNotGoingAmount('');
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
-  // Handle mark as partial API call
+  if (!isOpen) return null;
   const handleMarkPartial = async (orderId: string, notGoingAmount: string) => {
     try {
       setIsLoading(true);
@@ -46,7 +42,7 @@ const MarkPartialModal: React.FC<MarkPartialModalProps> = ({
 
       if (result.success) {
         showToast?.('Order marked as partial', 'success');
-        onSuccess?.(); // Refresh orders data
+        onSuccess?.();
         handleClose();
       } else {
         showToast?.(result.error || 'Failed to mark order as partial', 'error');

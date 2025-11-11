@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { FaCheckCircle, FaTimes } from 'react-icons/fa';
 import UserSwitchIcon from './UserSwitchIcon';
 
-// Custom Toast Component matching website design
 const Toast = ({
   message,
   type = 'success',
@@ -32,7 +31,6 @@ const UserSwitchWrapper = () => {
   } | null>(null);
   const router = useRouter();
 
-  // Show toast notification
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -43,7 +41,7 @@ const UserSwitchWrapper = () => {
 
   const handleSwitchBack = async () => {
     setIsLoading(true);
-    
+
     try {
       const response = await fetch('/api/admin/switch-back', {
         method: 'POST',
@@ -56,7 +54,7 @@ const UserSwitchWrapper = () => {
 
       if (response.ok) {
         showToast('Successfully switched back to admin account', 'success');
-        // Redirect to admin page to load admin functionality properly
+
         window.location.href = '/admin';
       } else {
         showToast(data.error || 'Failed to switch back', 'error');
@@ -71,7 +69,7 @@ const UserSwitchWrapper = () => {
 
   return (
     <>
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -81,7 +79,7 @@ const UserSwitchWrapper = () => {
           />
         )}
       </div>
-      
+
       <UserSwitchIcon 
         onSwitchBack={handleSwitchBack}
         isLoading={isLoading}

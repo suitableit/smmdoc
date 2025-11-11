@@ -4,8 +4,6 @@ import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { FAQ, faqData } from '@/data/frontend/homepage/faqs';
 
-
-
 function FAQs() {
   const [openItems, setOpenItems] = useState<number[]>([]);
 

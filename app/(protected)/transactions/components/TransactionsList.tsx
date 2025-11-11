@@ -29,11 +29,8 @@ interface TransactionsListProps {
 
 export function TransactionsList({
   transactions,
-}: TransactionsListProps) {
-
-  // Function to format currency based on transaction's original currency
-  const formatTransactionCurrency = (amount: number, transactionCurrency?: string) => {
-    // Display amount in the currency it was originally added/deducted
+}: TransactionsListProps) {
+  const formatTransactionCurrency = (amount: number, transactionCurrency?: string) => {
     if (transactionCurrency === 'USD' || transactionCurrency === 'USDT') {
       return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     } else {
@@ -82,7 +79,7 @@ export function TransactionsList({
               <th className="text-left py-3 px-4 font-medium text-gray-900">
                 Status
               </th>
-              
+
             </tr>
           </thead>
           <tbody>
@@ -131,7 +128,7 @@ export function TransactionsList({
                 <td className="py-3 px-4">
                   <StatusBadge status={transaction.status} />
                 </td>
-                
+
               </tr>
             ))}
           </tbody>

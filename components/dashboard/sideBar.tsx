@@ -1,13 +1,9 @@
 'use client';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
-import { Session } from 'next-auth';
-
-// Dynamically import all components to prevent hydration issues
+import { Session } from 'next-auth';
 const Image = dynamic(() => import('next/image'), { ssr: false });
-const Link = dynamic(() => import('next/link'), { ssr: false });
-
-// Import SideBarNav normally since we're using session data
+const Link = dynamic(() => import('next/link'), { ssr: false });
 import SideBarNav from './sideBarNav';
 
 interface SideBarProps {
@@ -31,7 +27,7 @@ function SideBarContent({
         collapsed ? 'w-[80px]' : 'w-[280px]'
       } overflow-hidden`}
     >
-      {/* Sidebar Header with Logo */}
+      {}
       <div
         className={`sidebar-header ${
           collapsed ? 'p-4 flex-col space-y-3' : 'p-4'
@@ -99,7 +95,7 @@ function SideBarContent({
         )}
       </div>
 
-      {/* Sidebar Navigation */}
+      {}
       <div className="sidebar-nav overflow-y-auto overflow-x-hidden h-[calc(100%-6rem)]">
         <SideBarNav collapsed={collapsed} session={session} setOpen={() => {}} />
       </div>
@@ -112,9 +108,7 @@ export default function SideBar({
   setCollapsed: setExternalCollapsed,
   session,
 }: SideBarProps) {
-  const [internalCollapsed, setInternalCollapsed] = useState(false);
-
-  // Use external or internal collapsed state
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
   const collapsed =
     externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
   const setCollapsed = (value: boolean) => {

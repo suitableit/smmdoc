@@ -11,27 +11,21 @@ import {
   FaSync,
   FaTag,
   FaTimes 
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import { useGetServices } from '@/hooks/service-fetch';
 import axiosInstance from '@/lib/axiosInstance';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatNumber } from '@/lib/utils';
-import { mutate } from 'swr';
-
-// Custom Gradient Spinner Component
+import { mutate } from 'swr';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -48,9 +42,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces
+);
 interface Category {
   id: number;
   category_name: string;
@@ -88,18 +80,12 @@ interface PaginationInfo {
 }
 
 const BulkModifyPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Bulk Modify Services', appName);
-  }, [appName]);
-
-  // API hooks
+  }, [appName]);
   const { data: categoriesData, error: categoriesError, isLoading: categoriesLoading } = useGetCategories();
-  const { data: servicesData, error: servicesError, isLoading: servicesLoading } = useGetServices();
-
-  // State management
+  const { data: servicesData, error: servicesError, isLoading: servicesLoading } = useGetServices();
   const [categories, setCategories] = useState<Category[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | number>('');
@@ -109,7 +95,7 @@ const BulkModifyPage = () => {
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [tempSelectedCategory, setTempSelectedCategory] = useState<string | number>('');
   const [isUpdating, setIsUpdating] = useState(false);
-  
+
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
@@ -122,46 +108,34 @@ const BulkModifyPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [localServicesLoading, setLocalServicesLoading] = useState(false);
-  const [paginationLoading, setPaginationLoading] = useState(false);
-
-  // Utility functions
+  const [paginationLoading, setPaginationLoading] = useState(false);
   const formatID = (id: string | number) => {
     return id.toString().toUpperCase();
-  };
-
-  // Show toast notification
+  };
   const showToast = useCallback((
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  }, []);
-
-  // Update categories when data is loaded
+  }, []);
   useEffect(() => {
     if (categoriesData?.data) {
       setCategories(categoriesData.data);
     }
-  }, [categoriesData]);
-
-  // Load services when data is available
+  }, [categoriesData]);
   useEffect(() => {
     if (servicesData?.data) {
       setLocalServicesLoading(true);
-      if (selectedCategory) {
-        // Filter services by selected category
+      if (selectedCategory) {
         const categoryServices = servicesData.data.filter((service: Service) => 
           service.categoryId === parseInt(selectedCategory.toString()) || service.category?.id === parseInt(selectedCategory.toString())
         );
         setServices(categoryServices);
         showToast(`Loaded ${categoryServices.length} services for selected category`, 'success');
-      } else {
-        // Show all services when no category is selected
+      } else {
         setServices(servicesData.data);
         showToast(`Loaded ${servicesData.data.length} services`, 'success');
       }
@@ -169,18 +143,14 @@ const BulkModifyPage = () => {
       setEditedServices({});
       setHasChanges(false);
     }
-  }, [selectedCategory, servicesData, showToast]);
-
-  // Filter services based on search term
+  }, [selectedCategory, servicesData, showToast]);
   const filteredServices = services.filter(service =>
     service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     service.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
     service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     service.provider?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     service.category?.category_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Update pagination when filtered data changes
+  );
   useEffect(() => {
     const total = filteredServices.length;
     const totalPages = Math.ceil(total / pagination.limit);
@@ -191,18 +161,12 @@ const BulkModifyPage = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1
     }));
-  }, [filteredServices.length, pagination.limit]);
-
-  // Get paginated data
+  }, [filteredServices.length, pagination.limit]);
   const getPaginatedData = () => {
     const startIndex = (pagination.page - 1) * pagination.limit;
     const endIndex = startIndex + pagination.limit;
     return filteredServices.slice(startIndex, endIndex);
-  };
-
-
-
-  // Handle field changes
+  };
   const handleFieldChange = (serviceId: string | number, field: keyof Service, value: string | number) => {
     setEditedServices(prev => ({
       ...prev,
@@ -212,32 +176,25 @@ const BulkModifyPage = () => {
       }
     }));
     setHasChanges(true);
-  };
-
-  // Get current value (edited value or original value)
+  };
   const getCurrentValue = (service: Service, field: keyof Service) => {
     return editedServices[service.id]?.[field] !== undefined 
       ? editedServices[service.id][field] 
       : service[field];
-  };
-
-  // Handle category selection from modal
+  };
   const handleCategorySelect = () => {
     if (tempSelectedCategory) {
       setSelectedCategory(tempSelectedCategory);
       setCategoryModalOpen(false);
       setTempSelectedCategory('');
     }
-  };
-
-  // Handle refresh
+  };
   const handleRefresh = () => {
     if (selectedCategory) {
-      setLocalServicesLoading(true);
-      // Trigger SWR revalidation
+      setLocalServicesLoading(true);
       mutate('/api/admin/services?page=1&limit=500&search=');
       mutate('/api/admin/categories/get-categories');
-      
+
       setTimeout(() => {
         setLocalServicesLoading(false);
         setEditedServices({});
@@ -245,43 +202,31 @@ const BulkModifyPage = () => {
         showToast('Services refreshed successfully!', 'success');
       }, 1000);
     }
-  };
-
-  // Handle save changes
+  };
   const handleSaveChanges = async () => {
     try {
       setIsUpdating(true);
-      showToast('Saving changes...', 'pending');
-      
-      // Prepare bulk update data
+      showToast('Saving changes...', 'pending');
       const serviceIds = Object.keys(editedServices).map(id => parseInt(id));
-      const updateData: any = {};
-      
-      // Check if all services have the same changes for bulk update
+      const updateData: any = {};
       const firstServiceChanges = Object.values(editedServices)[0];
       const allServicesSameChanges = Object.values(editedServices).every(changes => 
         JSON.stringify(changes) === JSON.stringify(firstServiceChanges)
       );
-      
-      if (allServicesSameChanges && firstServiceChanges) {
-        // Use bulk update for same changes
+
+      if (allServicesSameChanges && firstServiceChanges) {
         if (firstServiceChanges.rate !== undefined) updateData.rate = parseFloat(firstServiceChanges.rate.toString());
         if (firstServiceChanges.min_order !== undefined) updateData.min_order = parseInt(firstServiceChanges.min_order.toString());
         if (firstServiceChanges.max_order !== undefined) updateData.max_order = parseInt(firstServiceChanges.max_order.toString());
-        if (firstServiceChanges.status !== undefined) updateData.status = firstServiceChanges.status;
-        
-        // Use bulk update API
+        if (firstServiceChanges.status !== undefined) updateData.status = firstServiceChanges.status;
         await axiosInstance.post('/api/admin/services/bulk-update', {
           serviceIds,
           updateData
         });
-      } else {
-        // Use individual updates for different changes
+      } else {
         const updatePromises = Object.entries(editedServices).map(async ([serviceId, changes]) => {
           const originalService = services.find(s => s.id === parseInt(serviceId));
-          if (!originalService) return;
-
-          // Merge original service data with changes
+          if (!originalService) return;
           const updatedData = {
             name: changes.name || originalService.name,
             description: changes.description || originalService.description,
@@ -300,16 +245,12 @@ const BulkModifyPage = () => {
           };
 
           return axiosInstance.put(`/api/admin/services/update-services?id=${serviceId}`, updatedData);
-        });
-
-        // Execute all updates
+        });
         await Promise.all(updatePromises);
-      }
-      
-      // Refresh data
+      }
       await mutate('/api/admin/services?page=1&limit=500&search=');
       await mutate('/api/admin/categories/get-categories');
-      
+
       setEditedServices({});
       setHasChanges(false);
       setIsUpdating(false);
@@ -319,15 +260,11 @@ const BulkModifyPage = () => {
       setIsUpdating(false);
       showToast(`Error saving changes: ${error.message || 'Unknown error'}`, 'error');
     }
-  };
-
-  // Get selected category name
+  };
   const getSelectedCategoryName = () => {
     const category = categories.find(cat => cat.id === parseInt(selectedCategory.toString()));
     return category ? category.category_name : '';
-  };
-
-  // Handle error states only (loading will be handled in the content area)
+  };
   const isInitialLoading = categoriesLoading || servicesLoading;
 
   if (categoriesError || servicesError) {
@@ -359,7 +296,7 @@ const BulkModifyPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -371,12 +308,12 @@ const BulkModifyPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto mb-2 md:mb-0">
-              {/* Page View Dropdown */}
+              {}
               <select 
                 value={pagination.limit === filteredServices.length ? 'all' : pagination.limit}
                 onChange={(e) => {
@@ -385,8 +322,7 @@ const BulkModifyPage = () => {
                     ...prev, 
                     limit: e.target.value === 'all' ? filteredServices.length : parseInt(e.target.value), 
                     page: 1 
-                  }));
-                  // Simulate loading time for pagination change
+                  }));
                   setTimeout(() => {
                     setPaginationLoading(false);
                   }, 800);
@@ -399,7 +335,7 @@ const BulkModifyPage = () => {
                 <option value="100">100</option>
                 <option value="all">All</option>
               </select>
-              
+
               <button
                 onClick={handleRefresh}
                 disabled={localServicesLoading || isInitialLoading || !selectedCategory}
@@ -437,8 +373,8 @@ const BulkModifyPage = () => {
                 </button>
               )}
             </div>
-            
-            {/* Right: Search Controls */}
+
+            {}
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full">
                 <FaSearch
@@ -457,7 +393,7 @@ const BulkModifyPage = () => {
           </div>
         </div>
 
-        {/* Services Table */}
+        {}
         <div className="card">
           <div className="px-6 py-6">
             {selectedCategory && (
@@ -531,7 +467,7 @@ const BulkModifyPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View - Hidden on mobile */}
+                {}
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -651,7 +587,7 @@ const BulkModifyPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View - Visible on tablet and mobile */}
+                {}
                 <div className="lg:hidden">
                   <div className="space-y-4 pt-6">
                     {getPaginatedData().map((service) => (
@@ -661,7 +597,7 @@ const BulkModifyPage = () => {
                           editedServices[service.id] ? 'bg-yellow-50' : ''
                         }`}
                       >
-                        {/* Header with ID */}
+                        {}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
@@ -681,7 +617,7 @@ const BulkModifyPage = () => {
                           )}
                         </div>
 
-                        {/* Service Name */}
+                        {}
                         <div className="mb-4">
                           <label className="form-label mb-2">Service Name</label>
                           <input
@@ -692,7 +628,7 @@ const BulkModifyPage = () => {
                           />
                         </div>
 
-                        {/* Min and Max */}
+                        {}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <label className="form-label mb-2">Min Order</label>
@@ -716,7 +652,7 @@ const BulkModifyPage = () => {
                           </div>
                         </div>
 
-                        {/* Price */}
+                        {}
                         <div className="mb-4">
                           <label className="form-label mb-2">Price (USD)</label>
                           <input
@@ -729,7 +665,7 @@ const BulkModifyPage = () => {
                           />
                         </div>
 
-                        {/* Description */}
+                        {}
                         <div>
                           <label className="form-label mb-2">Description</label>
                           <textarea
@@ -744,7 +680,7 @@ const BulkModifyPage = () => {
                   </div>
                 </div>
 
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -809,7 +745,7 @@ const BulkModifyPage = () => {
           </div>
         </div>
 
-        {/* Category Selection Modal */}
+        {}
         {categoryModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

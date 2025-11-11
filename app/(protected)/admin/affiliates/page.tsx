@@ -13,23 +13,17 @@ import {
     FaTimes,
     FaTimesCircle,
     FaUserCheck
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-
-// Custom Gradient Spinner Component
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -46,9 +40,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces for type safety
+);
 interface AffiliateReferral {
   id: number;
   user: {
@@ -106,9 +98,7 @@ interface PaginationInfo {
   totalPages: number;
   hasNext: boolean;
   hasPrev: boolean;
-}
-
-// Dummy data for SMM Panel affiliates
+}
 const dummyAffiliates: AffiliateReferral[] = [
   {
     id: 1001,
@@ -350,14 +340,10 @@ const dummyStats: AffiliateStats = {
 };
 
 const AffiliateReferralsPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Affiliate Referrals', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [affiliates, setAffiliates] = useState<AffiliateReferral[]>(dummyAffiliates);
   const [stats, setStats] = useState<AffiliateStats>(dummyStats);
 
@@ -376,13 +362,9 @@ const AffiliateReferralsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
-  const [affiliatesLoading, setAffiliatesLoading] = useState(false);
-
-  // New state for action modals
+  const [affiliatesLoading, setAffiliatesLoading] = useState(false);
   const [payoutDialog, setPayoutDialog] = useState<{
     open: boolean;
     affiliateId: number;
@@ -421,9 +403,7 @@ const AffiliateReferralsPage = () => {
   });
 
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
-
-  // Calculate status counts from current affiliates data
+  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
   const calculateStatusCounts = (affiliatesData: AffiliateReferral[]) => {
     const counts = {
       active: 0,
@@ -439,14 +419,10 @@ const AffiliateReferralsPage = () => {
     });
 
     return counts;
-  };
-
-  // Fetch all affiliates to calculate real status counts
+  };
   const fetchAllAffiliatesForCounts = async () => {
     try {
-      console.log('Calculating status counts from dummy data...');
-      
-      // Simulate API delay
+      console.log('Calculating status counts from dummy data...');
       await new Promise(resolve => setTimeout(resolve, 200));
 
       const statusCounts = calculateStatusCounts(dummyAffiliates);
@@ -467,22 +443,14 @@ const AffiliateReferralsPage = () => {
 
   const fetchAffiliates = async () => {
     try {
-      setAffiliatesLoading(true);
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Filter dummy data based on current filters
-      let filteredAffiliates = [...dummyAffiliates];
-
-      // Apply status filter
+      setAffiliatesLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      let filteredAffiliates = [...dummyAffiliates];
       if (statusFilter !== 'all') {
         filteredAffiliates = filteredAffiliates.filter(
           affiliate => affiliate.status === statusFilter
         );
-      }
-
-      // Apply search filter
+      }
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         filteredAffiliates = filteredAffiliates.filter(
@@ -491,9 +459,7 @@ const AffiliateReferralsPage = () => {
             affiliate.user.email?.toLowerCase().includes(searchLower) ||
             affiliate.referralCode?.toLowerCase().includes(searchLower)
         );
-      }
-
-      // Apply pagination
+      }
       const startIndex = (pagination.page - 1) * pagination.limit;
       const endIndex = startIndex + pagination.limit;
       const paginatedAffiliates = filteredAffiliates.slice(startIndex, endIndex);
@@ -527,9 +493,7 @@ const AffiliateReferralsPage = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('Loading stats from dummy data...');
-
-      // Simulate API delay
+      console.log('Loading stats from dummy data...');
       await new Promise(resolve => setTimeout(resolve, 300));
 
       console.log('Stats loaded successfully:', dummyStats);
@@ -553,18 +517,14 @@ const AffiliateReferralsPage = () => {
       });
       showToast('Error fetching statistics. Please refresh the page.', 'error');
     }
-  };
-
-  // Handle search with debouncing
+  };
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchAffiliates();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Load data on component mount and when filters change
+  }, [searchTerm]);
   useEffect(() => {
     fetchAffiliates();
   }, [pagination.page, pagination.limit, statusFilter]);
@@ -578,9 +538,7 @@ const AffiliateReferralsPage = () => {
     };
 
     loadData();
-  }, []);
-
-  // Close dropdown when clicking outside
+  }, []);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownOpen !== null) {
@@ -595,9 +553,7 @@ const AffiliateReferralsPage = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [dropdownOpen]);
-
-  // Update stats when pagination data changes
+  }, [dropdownOpen]);
   useEffect(() => {
     if (pagination.total > 0) {
       setStats((prev) => ({
@@ -605,18 +561,14 @@ const AffiliateReferralsPage = () => {
         totalAffiliates: pagination.total,
       }));
     }
-  }, [pagination.total]);
-
-  // Show toast notification
+  }, [pagination.total]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Utility functions
+  };
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
@@ -696,9 +648,7 @@ const AffiliateReferralsPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
-
-  // Handle payout processing
+  };
   const handleProcessPayout = async (
     affiliateId: number,
     amount: number,
@@ -750,9 +700,7 @@ const AffiliateReferralsPage = () => {
         'error'
       );
     }
-  };
-
-  // Handle status change
+  };
   const handleStatusChange = async (
     affiliateId: number,
     status: string,
@@ -795,9 +743,7 @@ const AffiliateReferralsPage = () => {
         'error'
       );
     }
-  };
-
-  // Open payout dialog
+  };
   const openPayoutDialog = (
     affiliateId: number,
     requestedAmount: number,
@@ -812,11 +758,9 @@ const AffiliateReferralsPage = () => {
       paymentMethod,
     });
     setPayoutAmount(requestedAmount.toString());
-    setPayoutMethod(paymentMethod); // Show actual user selected method
+    setPayoutMethod(paymentMethod);
     setPayoutNotes('');
-  };
-
-  // Open status dialog
+  };
   const openStatusDialog = (affiliateId: number, currentStatus: string) => {
     setStatusDialog({ open: true, affiliateId, currentStatus });
     setNewStatus(currentStatus);
@@ -825,7 +769,7 @@ const AffiliateReferralsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -837,10 +781,10 @@ const AffiliateReferralsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
               <select
                 value={pagination.limit}
@@ -876,7 +820,7 @@ const AffiliateReferralsPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls */}
+            {}
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative flex-1">
                 <FaSearch
@@ -903,10 +847,10 @@ const AffiliateReferralsPage = () => {
           </div>
         </div>
 
-        {/* Affiliates Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -990,7 +934,7 @@ const AffiliateReferralsPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {/* Bulk Action Section */}
+            {}
             {selectedAffiliates.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mb-4 pt-4">
                 <span
@@ -1036,8 +980,7 @@ const AffiliateReferralsPage = () => {
                             `Processing payouts for ${selectedAffiliates.length} selected affiliates...`,
                             'info'
                           );
-                        }
-                        // Reset after action
+                        }
                         setSelectedBulkAction('');
                         setSelectedAffiliates([]);
                       }}
@@ -1078,7 +1021,7 @@ const AffiliateReferralsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -1345,9 +1288,7 @@ const AffiliateReferralsPage = () => {
                   </table>
                 </div>
 
-                
-
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1408,7 +1349,7 @@ const AffiliateReferralsPage = () => {
                   </div>
                 </div>
 
-                {/* Payout Dialog */}
+                {}
                 {payoutDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1489,7 +1430,7 @@ const AffiliateReferralsPage = () => {
                   </div>
                 )}
 
-                {/* Status Dialog */}
+                {}
                 {statusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1554,7 +1495,7 @@ const AffiliateReferralsPage = () => {
                   </div>
                 )}
 
-                {/* View Details Dialog */}
+                {}
                 {viewDialog.open && viewDialog.affiliate && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -1572,7 +1513,7 @@ const AffiliateReferralsPage = () => {
                         </button>
                       </div>
 
-                      {/* Affiliate Info */}
+                      {}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                           <h4 className="text-md font-semibold mb-4 text-gray-800">
@@ -1676,7 +1617,7 @@ const AffiliateReferralsPage = () => {
                         </div>
                       </div>
 
-                      {/* Financial Summary */}
+                      {}
                       <div className="mb-6">
                         <h4 className="text-md font-semibold mb-4 text-gray-800">
                           Financial Summary
@@ -1717,7 +1658,7 @@ const AffiliateReferralsPage = () => {
                         </div>
                       </div>
 
-                      {/* Payout History */}
+                      {}
                       {viewDialog.affiliate.payoutHistory && 
                        viewDialog.affiliate.payoutHistory.length > 0 && (
                         <div className="mb-6">
@@ -1746,7 +1687,7 @@ const AffiliateReferralsPage = () => {
                         </div>
                       )}
 
-                      {/* Action Buttons */}
+                      {}
                       <div className="flex gap-3 justify-end pt-4 border-t">
                         {viewDialog.affiliate.requestedCommission > 0 && (
                           <button

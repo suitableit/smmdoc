@@ -1,39 +1,28 @@
 import { db } from '@/lib/db';
-import { NextRequest } from 'next/server';
-
-// Utility function to extract IP address from request
+import { NextRequest } from 'next/server';
 export function getClientIP(request?: NextRequest): string {
-  if (!request) return 'unknown';
-  
-  // Check for IP set by middleware first
+  if (!request) return 'unknown';
   const middlewareIP = request.headers.get('x-client-ip');
   if (middlewareIP) {
     return middlewareIP;
-  }
-  
-  // Check various headers for IP address
+  }
   const forwarded = request.headers.get('x-forwarded-for');
   const realIP = request.headers.get('x-real-ip');
   const cfConnectingIP = request.headers.get('cf-connecting-ip');
-  
-  if (forwarded) {
-    // x-forwarded-for can contain multiple IPs, take the first one
+
+  if (forwarded) {
     return forwarded.split(',')[0].trim();
   }
-  
+
   if (realIP) {
     return realIP;
   }
-  
+
   if (cfConnectingIP) {
     return cfConnectingIP;
-  }
-  
-  // Fallback to connection remote address (may not work in all environments)
+  }
   return 'unknown';
-}
-
-// Utility function to extract user agent
+}
 export function getUserAgent(request?: NextRequest): string {
   if (!request) return 'unknown';
   return request.headers.get('user-agent') || 'unknown';

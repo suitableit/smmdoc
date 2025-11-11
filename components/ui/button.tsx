@@ -44,9 +44,7 @@ const buttonVariants = cva(
       size: "default",
     },
   }
-)
-
-// Support for compound variants (gradient + specific color)
+)
 function Button({
   className,
   variant,
@@ -59,9 +57,7 @@ function Button({
     asChild?: boolean
     gradientColor?: 'yellow' | 'blue' | 'green' | 'orange' | 'red' | 'purple'
   }) {
-  const Comp = asChild ? Slot : "button"
-
-  // If gradientColor is specified, use the gradient variant
+  const Comp = asChild ? Slot : "button"
   const actualVariant = gradientColor ? `gradient.${gradientColor}` as any : variant
 
   return (

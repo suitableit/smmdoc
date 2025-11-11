@@ -24,41 +24,29 @@ export default function SignUpForm() {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
   const [showPassword, setShowPassword] = useState(false);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-
-  // Get user settings to check if name field is enabled
-  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
-  
-  // Get ReCAPTCHA settings
-  const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
-
-  // Create dynamic schema based on name field setting
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
+  const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
   const dynamicSchema = useMemo(() => {
     if (settingsLoading || !userSettings) {
-      return createSignUpSchema(false); // Use optional name field while loading
+      return createSignUpSchema(false);
     }
     return createSignUpSchema(userSettings.nameFieldEnabled);
-  }, [userSettings, settingsLoading]);
-
-  // Create a key to force form recreation when schema changes
+  }, [userSettings, settingsLoading]);
   const formKey = useMemo(() => {
     return `form-${settingsLoading}-${userSettings?.nameFieldEnabled}`;
   }, [settingsLoading, userSettings?.nameFieldEnabled]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };
-
-  // Handle email input change
+  };
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     form.setValue('email', value, {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true
-    });
-
-    // Only reset email status if there's a validation message showing
+    });
     if (emailStatus.message) {
       setEmailStatus({
         checking: false,
@@ -66,9 +54,7 @@ export default function SignUpForm() {
         message: ''
       });
     }
-  };
-
-  // Username validation states
+  };
   const [usernameStatus, setUsernameStatus] = useState<{
     checking: boolean;
     available: boolean | null;
@@ -77,9 +63,7 @@ export default function SignUpForm() {
     checking: false,
     available: null,
     message: ''
-  });
-
-  // Email validation states
+  });
   const [emailStatus, setEmailStatus] = useState<{
     checking: boolean;
     available: boolean | null;
@@ -92,11 +76,9 @@ export default function SignUpForm() {
 
   const form = useForm<DynamicSignUpSchema>({
     mode: 'all',
-    resolver: zodResolver(dynamicSchema), // Use dynamic schema based on settings
+    resolver: zodResolver(dynamicSchema),
     defaultValues: signUpDefaultValues,
-  });
-
-  // Function to check username availability
+  });
   const checkUsernameAvailability = useCallback(async (username: string) => {
     if (!username || username.length < 3) {
       setUsernameStatus({
@@ -145,9 +127,7 @@ export default function SignUpForm() {
         message: 'Error checking username availability'
       });
     }
-  }, []);
-
-  // Function to check email availability
+  }, []);
   const checkEmailAvailability = useCallback(async (email: string) => {
     if (!email || !email.includes('@')) {
       setEmailStatus({
@@ -196,23 +176,18 @@ export default function SignUpForm() {
         message: 'Error checking email availability'
       });
     }
-  }, []);
-
-  // Handle username input transformation
+  }, []);
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Remove special characters and convert to lowercase
+    const value = e.target.value;
     const cleanedValue = value
       .toLowerCase()
-      .replace(/[^a-z0-9._]/g, ''); // Only allow lowercase letters, numbers, dots, and underscores
+      .replace(/[^a-z0-9._]/g, '');
 
     form.setValue('username', cleanedValue, {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true
-    });
-
-    // Only reset username status if there's a validation message showing
+    });
     if (usernameStatus.message) {
       setUsernameStatus({
         checking: false,
@@ -220,32 +195,22 @@ export default function SignUpForm() {
         message: ''
       });
     }
-  };
-
-  // Removed live validation - validation now happens only on form submission
+  };
 
   const onSubmit: SubmitHandler<DynamicSignUpSchema> = async (values) => {
     setError('');
-    setSuccess('');
-
-    // Check ReCAPTCHA if enabled for sign-up form
+    setSuccess('');
     if (isEnabledForForm('signUp') && !recaptchaToken) {
       setError('Please complete the reCAPTCHA verification');
       return;
-    }
-
-    // Handle optional name field based on admin settings
+    }
     const submitData = { ...values } as any;
     if (!userSettings?.nameFieldEnabled && submitData.name === '') {
-      delete submitData.name; // Remove empty name field if not required
-    }
-
-    // Add reCAPTCHA token if available
+      delete submitData.name;
+    }
     if (recaptchaToken) {
       submitData.recaptchaToken = recaptchaToken;
-    }
-
-    // Reset validation status before checking
+    }
     setUsernameStatus({
       checking: false,
       available: null,
@@ -255,9 +220,7 @@ export default function SignUpForm() {
       checking: false,
       available: null,
       message: ''
-    });
-
-    // Check username availability on form submission
+    });
     if (values.username) {
       setUsernameStatus({
         checking: true,
@@ -296,9 +259,7 @@ export default function SignUpForm() {
         setError('Error checking username availability');
         return;
       }
-    }
-
-    // Check email availability on form submission
+    }
     if (values.email) {
       setEmailStatus({
         checking: true,
@@ -397,7 +358,7 @@ export default function SignUpForm() {
               }`}
             />
 
-            {/* Username validation status indicator - only show warnings */}
+            {}
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               {usernameStatus.checking && (
                 <FaSpinner className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
@@ -411,7 +372,7 @@ export default function SignUpForm() {
             Only lowercase letters, numbers, dots (.) and underscores (_) are allowed
           </p>
 
-          {/* Username validation message - only show warnings */}
+          {}
           {usernameStatus.message && usernameStatus.available === false && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
               {usernameStatus.message}
@@ -425,7 +386,7 @@ export default function SignUpForm() {
           )}
         </div>
 
-        {/* Name field - conditionally shown based on admin settings */}
+        {}
         {(settingsLoading || userSettings?.nameFieldEnabled !== false) && (
           <div>
             <label
@@ -480,7 +441,7 @@ export default function SignUpForm() {
               }`}
             />
 
-            {/* Email validation status indicator - only show warnings */}
+            {}
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               {emailStatus.checking && (
                 <FaSpinner className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
@@ -491,7 +452,7 @@ export default function SignUpForm() {
             </div>
           </div>
 
-          {/* Email validation message - only show warnings */}
+          {}
           {emailStatus.message && emailStatus.available === false && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
               {emailStatus.message}
@@ -584,7 +545,7 @@ export default function SignUpForm() {
         <FormError message={error} />
         <FormSuccess message={success} />
 
-        {/* ReCAPTCHA Component */}
+        {}
         {isEnabledForForm('signUp') && recaptchaSettings && (
           <ReCAPTCHA
             siteKey={recaptchaSettings.siteKey}
@@ -593,9 +554,7 @@ export default function SignUpForm() {
             threshold={recaptchaSettings.threshold}
             onVerify={(token) => setRecaptchaToken(token)}
             onError={() => {
-              setRecaptchaToken(null);
-              // Let Google's native error messages display instead of custom ones
-              // This allows 'Invalid domain for site key' and other specific errors to show
+              setRecaptchaToken(null);
             }}
             onExpired={() => {
               setRecaptchaToken(null);
@@ -613,7 +572,7 @@ export default function SignUpForm() {
         </button>
       </form>
 
-      {/* Google Sign-up Button - Replacing Social component */}
+      {}
       <div className="mt-4">
         <div className="relative mb-4">
           <div className="absolute inset-0 flex items-center">

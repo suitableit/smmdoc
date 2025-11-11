@@ -19,7 +19,6 @@ import {
     FaUser
 } from 'react-icons/fa';
 
-// Types
 interface BlogPost {
   id: number;
   title: string;
@@ -44,9 +43,6 @@ interface BlogPostDetailClientProps {
   post: BlogPost;
 }
 
-// Removed unused imports and constants related to categories and tags
-
-// Sidebar Components
 const SearchBar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<BlogPost[]>([]);
@@ -99,7 +95,7 @@ const SearchBar: React.FC = () => {
           onBlur={() => setTimeout(() => setShowResults(false), 200)}
           className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent transition-all duration-200"
         />
-        
+
         {showResults && searchResults.length > 0 && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
             {searchResults.map((post) => (
@@ -118,7 +114,7 @@ const SearchBar: React.FC = () => {
             ))}
           </div>
         )}
-        
+
         {isSearching && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-4 text-center">
             <p className="text-gray-600 dark:text-gray-400 text-sm">Searching...</p>
@@ -140,7 +136,7 @@ const RecentPosts: React.FC = () => {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            // Handle both array and object with posts property
+
             const posts = Array.isArray(data.data) ? data.data : (data.data?.posts || []);
             setRecentPosts(posts);
           }
@@ -213,11 +209,11 @@ const RecentPosts: React.FC = () => {
 };
 
 const Categories: React.FC = () => {
-  return null; // Component removed as categories are no longer used
+  return null;
 };
 
 const PopularTags: React.FC = () => {
-  return null; // Component removed as tags are no longer used
+  return null;
 };
 
 const TrendingWidget: React.FC = () => {
@@ -253,7 +249,7 @@ const TrendingWidget: React.FC = () => {
           Trending Now
         </h3>
       </div>
-      
+
       {loading && (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
@@ -308,13 +304,11 @@ const TrendingWidget: React.FC = () => {
   );
 };
 
-// Social Share Component
 const SocialShare: React.FC<{ post: BlogPost }> = ({ post }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Get current page URL when component mounts
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setCurrentUrl(window.location.href);
@@ -367,7 +361,7 @@ const SocialShare: React.FC<{ post: BlogPost }> = ({ post }) => {
       >
         <FaShare className="w-4 h-4" />
       </button>
-      
+
       {isOpen && (
         <div className="absolute right-0 top-0 transform -translate-y-full -translate-y-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2 min-w-[160px] z-10">
           <button
@@ -377,7 +371,7 @@ const SocialShare: React.FC<{ post: BlogPost }> = ({ post }) => {
             <FaFacebookF className="w-4 h-4 mr-3 text-blue-600" />
             Facebook
           </button>
-          
+
           <button
             onClick={shareOnTwitter}
             className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-500 dark:hover:text-blue-400 rounded-md transition-colors duration-200"
@@ -385,7 +379,7 @@ const SocialShare: React.FC<{ post: BlogPost }> = ({ post }) => {
             <FaTwitter className="w-4 h-4 mr-3 text-blue-500" />
             Twitter
           </button>
-          
+
           <button
             onClick={shareOnLinkedIn}
             className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-700 dark:hover:text-blue-400 rounded-md transition-colors duration-200"
@@ -393,7 +387,7 @@ const SocialShare: React.FC<{ post: BlogPost }> = ({ post }) => {
             <FaLinkedinIn className="w-4 h-4 mr-3 text-blue-700" />
             LinkedIn
           </button>
-          
+
           <button
             onClick={shareViaEmail}
             className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 rounded-md transition-colors duration-200"
@@ -407,16 +401,15 @@ const SocialShare: React.FC<{ post: BlogPost }> = ({ post }) => {
   );
 };
 
-// Main Blog Post Component
 const BlogPostDetailClient: React.FC<BlogPostDetailClientProps> = ({ post }) => {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0d0712] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-[30px] lg:pt-[6  0px] pb-[120px]">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
+          {}
           <div className="lg:col-span-2">
             <article className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 overflow-hidden transition-colors duration-200">
-              {/* Article Header */}
+              {}
               <div className="p-8">
                 <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6 leading-tight transition-colors duration-200">
                   {post.title}
@@ -437,7 +430,7 @@ const BlogPostDetailClient: React.FC<BlogPostDetailClientProps> = ({ post }) => 
                    </div>
                  </div>
 
-                {/* Featured Image */}
+                {}
                 {post.featuredImage && (
                   <div className="mb-8">
                     <Image
@@ -450,7 +443,7 @@ const BlogPostDetailClient: React.FC<BlogPostDetailClientProps> = ({ post }) => 
                   </div>
                 )}
 
-                {/* Article Content */}
+                {}
                 <div className="prose prose-lg max-w-none">
                   <div 
                     className="text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-200"
@@ -458,9 +451,7 @@ const BlogPostDetailClient: React.FC<BlogPostDetailClientProps> = ({ post }) => 
                   />
                 </div>
 
-
-
-                {/* Call to Action */}
+                {}
                 <div className="mt-8 p-6 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-2xl text-white">
                   <h3 className="text-xl font-bold mb-2">
                     Ready to Boost Your Social Media Presence?
@@ -477,7 +468,7 @@ const BlogPostDetailClient: React.FC<BlogPostDetailClientProps> = ({ post }) => 
                   </Link>
                 </div>
 
-                {/* Social Share */}
+                {}
                 <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
@@ -498,7 +489,7 @@ const BlogPostDetailClient: React.FC<BlogPostDetailClientProps> = ({ post }) => 
             </article>
           </div>
 
-          {/* Sidebar */}
+          {}
           <div className="lg:col-span-1">
             <div className="sticky top-8">
               <SearchBar />

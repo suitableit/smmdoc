@@ -1,16 +1,12 @@
-// API Specification Configuration System for SMM Panel Integration
-// This module handles the standardized API parameter rules and configurations
 
 export interface ApiSpecification {
-  // Basic API Configuration
+
   apiKeyParam: string;
   actionParam: string;
-  
-  // Service List Configuration
+
   servicesAction: string;
   servicesEndpoint?: string;
-  
-  // Add Order Configuration
+
   addOrderAction: string;
   addOrderEndpoint?: string;
   serviceIdParam: string;
@@ -18,32 +14,26 @@ export interface ApiSpecification {
   quantityParam: string;
   runsParam: string;
   intervalParam: string;
-  
-  // Order Status Configuration
+
   statusAction: string;
   statusEndpoint?: string;
   orderIdParam: string;
   ordersParam: string;
-  
-  // Refill Configuration
+
   refillAction: string;
   refillEndpoint?: string;
   refillStatusAction: string;
   refillIdParam: string;
   refillsParam: string;
-  
-  // Cancel Configuration
+
   cancelAction: string;
   cancelEndpoint?: string;
-  
-  // Balance Configuration
+
   balanceAction: string;
   balanceEndpoint?: string;
-  
-  // Response Mapping
+
   responseMapping?: ResponseFieldMapping;
-  
-  // Request Settings
+
   requestFormat: 'form' | 'json' | 'query';
   responseFormat: 'json' | 'xml';
   rateLimitPerMin?: number;
@@ -51,7 +41,7 @@ export interface ApiSpecification {
 }
 
 export interface ResponseFieldMapping {
-  // Service List Response Mapping
+
   services?: {
     serviceId: string;
     name: string;
@@ -63,13 +53,11 @@ export interface ResponseFieldMapping {
     refill: string;
     cancel: string;
   };
-  
-  // Add Order Response Mapping
+
   addOrder?: {
     orderId: string;
   };
-  
-  // Order Status Response Mapping
+
   orderStatus?: {
     charge: string;
     startCount: string;
@@ -77,58 +65,48 @@ export interface ResponseFieldMapping {
     remains: string;
     currency: string;
   };
-  
-  // Balance Response Mapping
+
   balance?: {
     balance: string;
     currency: string;
   };
-  
-  // Refill Response Mapping
+
   refill?: {
     refillId: string;
   };
-  
+
   refillStatus?: {
     status: string;
   };
 }
 
-// Default SMM Panel API Specification (Standard Configuration)
 export const DEFAULT_SMM_API_SPEC: ApiSpecification = {
-  // Basic Parameters
+
   apiKeyParam: 'key',
   actionParam: 'action',
-  
-  // Service List
+
   servicesAction: 'services',
-  
-  // Add Order
+
   addOrderAction: 'add',
   serviceIdParam: 'service',
   linkParam: 'link',
   quantityParam: 'quantity',
   runsParam: 'runs',
   intervalParam: 'interval',
-  
-  // Order Status
+
   statusAction: 'status',
   orderIdParam: 'order',
   ordersParam: 'orders',
-  
-  // Refill
+
   refillAction: 'refill',
   refillStatusAction: 'refill_status',
   refillIdParam: 'refill',
   refillsParam: 'refills',
-  
-  // Cancel
+
   cancelAction: 'cancel',
-  
-  // Balance
+
   balanceAction: 'balance',
-  
-  // Default Response Mapping (Standard SMM Panel Format)
+
   responseMapping: {
     services: {
       serviceId: 'service',
@@ -162,14 +140,12 @@ export const DEFAULT_SMM_API_SPEC: ApiSpecification = {
       status: 'status'
     }
   },
-  
-  // Request Settings
+
   requestFormat: 'form',
   responseFormat: 'json',
   timeoutSeconds: 30
 };
 
-// API Request Builder Class
 export class ApiRequestBuilder {
   private spec: ApiSpecification;
   private baseUrl: string;
@@ -183,7 +159,6 @@ export class ApiRequestBuilder {
     this.httpMethod = httpMethod;
   }
 
-  // Build request for getting services
   buildServicesRequest(): RequestConfig {
     const endpoint = this.spec.servicesEndpoint || this.baseUrl;
     const params = {
@@ -194,7 +169,6 @@ export class ApiRequestBuilder {
     return this.buildRequest(endpoint, params);
   }
 
-  // Build request for adding order
   buildAddOrderRequest(serviceId: string, link: string, quantity: number, runs?: number, interval?: number): RequestConfig {
     const endpoint = this.spec.addOrderEndpoint || this.baseUrl;
     const params: Record<string, any> = {
@@ -215,7 +189,6 @@ export class ApiRequestBuilder {
     return this.buildRequest(endpoint, params);
   }
 
-  // Build request for order status
   buildOrderStatusRequest(orderId: string): RequestConfig {
     const endpoint = this.spec.statusEndpoint || this.baseUrl;
     const params = {
@@ -227,7 +200,6 @@ export class ApiRequestBuilder {
     return this.buildRequest(endpoint, params);
   }
 
-  // Build request for multiple orders status
   buildMultipleOrderStatusRequest(orderIds: string[]): RequestConfig {
     const endpoint = this.spec.statusEndpoint || this.baseUrl;
     const params = {
@@ -239,7 +211,6 @@ export class ApiRequestBuilder {
     return this.buildRequest(endpoint, params);
   }
 
-  // Build request for balance
   buildBalanceRequest(): RequestConfig {
     const endpoint = this.spec.balanceEndpoint || this.baseUrl;
     const params = {
@@ -250,7 +221,6 @@ export class ApiRequestBuilder {
     return this.buildRequest(endpoint, params);
   }
 
-  // Build request for refill
   buildRefillRequest(orderId: string): RequestConfig {
     const endpoint = this.spec.refillEndpoint || this.baseUrl;
     const params = {
@@ -262,7 +232,6 @@ export class ApiRequestBuilder {
     return this.buildRequest(endpoint, params);
   }
 
-  // Build request for cancel
   buildCancelRequest(orderIds: string[]): RequestConfig {
     const endpoint = this.spec.cancelEndpoint || this.baseUrl;
     const params = {
@@ -288,7 +257,7 @@ export class ApiRequestBuilder {
       const queryString = new URLSearchParams(params).toString();
       config.url = `${endpoint}?${queryString}`;
     } else {
-      // Form data (default)
+
       config.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
       config.data = new URLSearchParams(params).toString();
     }
@@ -305,7 +274,6 @@ export interface RequestConfig {
   timeout: number;
 }
 
-// Response Parser Class
 export class ApiResponseParser {
   private spec: ApiSpecification;
 
@@ -313,7 +281,6 @@ export class ApiResponseParser {
     this.spec = spec;
   }
 
-  // Parse services response
   parseServicesResponse(response: any): ParsedService[] {
     if (!Array.isArray(response)) {
       throw new Error('Services response must be an array');
@@ -321,7 +288,7 @@ export class ApiResponseParser {
 
     const mapping = this.spec.responseMapping?.services;
     if (!mapping) {
-      return response; // Return as-is if no mapping defined
+      return response;
     }
 
     return response.map(service => ({
@@ -337,7 +304,6 @@ export class ApiResponseParser {
     }));
   }
 
-  // Parse add order response
   parseAddOrderResponse(response: any): { orderId: string } {
     const mapping = this.spec.responseMapping?.addOrder;
     if (!mapping) {
@@ -349,7 +315,6 @@ export class ApiResponseParser {
     };
   }
 
-  // Parse order status response
   parseOrderStatusResponse(response: any): ParsedOrderStatus {
     const mapping = this.spec.responseMapping?.orderStatus;
     if (!mapping) {
@@ -365,7 +330,6 @@ export class ApiResponseParser {
     };
   }
 
-  // Parse balance response
   parseBalanceResponse(response: any): ParsedBalance {
     const mapping = this.spec.responseMapping?.balance;
     if (!mapping) {
@@ -394,7 +358,6 @@ export class ApiResponseParser {
   }
 }
 
-// Parsed Response Interfaces
 export interface ParsedService {
   serviceId: string;
   name: string;
@@ -420,15 +383,14 @@ export interface ParsedBalance {
   currency: string;
 }
 
-// Utility function to create API specification from database record
 export function createApiSpecFromProvider(provider: any): ApiSpecification {
   return {
     apiKeyParam: provider.api_key_param || DEFAULT_SMM_API_SPEC.apiKeyParam,
     actionParam: provider.action_param || DEFAULT_SMM_API_SPEC.actionParam,
-    
+
     servicesAction: provider.services_action || DEFAULT_SMM_API_SPEC.servicesAction,
     servicesEndpoint: provider.services_endpoint,
-    
+
     addOrderAction: provider.add_order_action || DEFAULT_SMM_API_SPEC.addOrderAction,
     addOrderEndpoint: provider.add_order_endpoint,
     serviceIdParam: provider.service_id_param || DEFAULT_SMM_API_SPEC.serviceIdParam,
@@ -436,26 +398,26 @@ export function createApiSpecFromProvider(provider: any): ApiSpecification {
     quantityParam: provider.quantity_param || DEFAULT_SMM_API_SPEC.quantityParam,
     runsParam: provider.runs_param || DEFAULT_SMM_API_SPEC.runsParam,
     intervalParam: provider.interval_param || DEFAULT_SMM_API_SPEC.intervalParam,
-    
+
     statusAction: provider.status_action || DEFAULT_SMM_API_SPEC.statusAction,
     statusEndpoint: provider.status_endpoint,
     orderIdParam: provider.order_id_param || DEFAULT_SMM_API_SPEC.orderIdParam,
     ordersParam: provider.orders_param || DEFAULT_SMM_API_SPEC.ordersParam,
-    
+
     refillAction: provider.refill_action || DEFAULT_SMM_API_SPEC.refillAction,
     refillEndpoint: provider.refill_endpoint,
     refillStatusAction: provider.refill_status_action || DEFAULT_SMM_API_SPEC.refillStatusAction,
     refillIdParam: provider.refill_id_param || DEFAULT_SMM_API_SPEC.refillIdParam,
     refillsParam: provider.refills_param || DEFAULT_SMM_API_SPEC.refillsParam,
-    
+
     cancelAction: provider.cancel_action || DEFAULT_SMM_API_SPEC.cancelAction,
     cancelEndpoint: provider.cancel_endpoint,
-    
+
     balanceAction: provider.balance_action || DEFAULT_SMM_API_SPEC.balanceAction,
     balanceEndpoint: provider.balance_endpoint,
-    
+
     responseMapping: provider.response_mapping ? JSON.parse(provider.response_mapping) : DEFAULT_SMM_API_SPEC.responseMapping,
-    
+
     requestFormat: provider.request_format || DEFAULT_SMM_API_SPEC.requestFormat,
     responseFormat: provider.response_format || DEFAULT_SMM_API_SPEC.responseFormat,
     rateLimitPerMin: provider.rate_limit_per_min,

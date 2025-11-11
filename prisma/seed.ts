@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Seed API providers with sample data
   const sampleProvider = await prisma.api_providers.upsert({
     where: { name: 'SampleSMM' },
     update: {},

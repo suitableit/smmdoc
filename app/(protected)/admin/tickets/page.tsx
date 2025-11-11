@@ -14,12 +14,10 @@ import {
     FaTrash
 } from 'react-icons/fa';
 
-// Import APP_NAME constant
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import TicketSystemGuard from '@/components/TicketSystemGuard';
 
-// Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -28,7 +26,6 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   </div>
 );
 
-// Toast Component
 const Toast = ({
   message,
   type = 'success',
@@ -47,7 +44,6 @@ const Toast = ({
   </div>
 );
 
-// Define interface for SupportTicket
 interface SupportTicket {
   id: string;
   userId: string;
@@ -72,14 +68,10 @@ interface PaginationInfo {
 const SupportTicketsPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  // Set document title using useEffect for client-side
   useEffect(() => {
     setPageTitle('Support Tickets', appName);
   }, [appName]);
 
-
-
-  // State management
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -100,16 +92,13 @@ const SupportTicketsPage = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
-  // Loading states
   const [ticketsLoading, setTicketsLoading] = useState(true);
   const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
   const [closingTicketId, setClosingTicketId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Bulk operations state
   const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
 
-  // Fetch tickets from API
   const fetchTickets = async () => {
     try {
       setTicketsLoading(true);
@@ -122,7 +111,9 @@ const SupportTicketsPage = () => {
 
       const response = await fetch(`/api/admin/tickets?${params}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch tickets');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `Failed to fetch tickets (${response.status})`;
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -136,8 +127,25 @@ const SupportTicketsPage = () => {
         hasPrev: data.hasPrev || false,
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load tickets';
+      
+      if (errorMessage.includes('Ticket system is currently disabled')) {
+        console.log('Ticket system is disabled');
+        setSupportTickets([]);
+        setPagination({
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 1,
+          hasNext: false,
+          hasPrev: false,
+        });
+        showToast('Ticket system is currently disabled', 'info');
+        return;
+      }
+      
       console.error('Error fetching tickets:', error);
-      showToast('Error loading tickets', 'error');
+      showToast(errorMessage, 'error');
       setSupportTickets([]);
       setPagination({
         page: 1,
@@ -152,12 +160,10 @@ const SupportTicketsPage = () => {
     }
   };
 
-  // Initial load and when dependencies change
   useEffect(() => {
     fetchTickets();
   }, [pagination.page, pagination.limit, searchTerm, statusFilter]);
 
-  // Utility functions
   const formatTicketID = (id: string | number) => {
     return String(id || '0');
   };
@@ -191,21 +197,18 @@ const SupportTicketsPage = () => {
     }
   };
 
-  // Removed getStatusIcon function as icons are no longer needed in status display
 
-  // Filter tickets based on search term and status
   const filteredTickets = supportTickets.filter((ticket) => {
     const matchesSearch =
       ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.id.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
-  // Update pagination when filtered data changes
   useEffect(() => {
     const total = filteredTickets.length;
     const totalPages = Math.ceil(total / pagination.limit);
@@ -216,19 +219,17 @@ const SupportTicketsPage = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1,
     }));
-    // Clear selections when filter changes
+
     setSelectedTickets([]);
     setSelectedBulkOperation('');
   }, [filteredTickets.length, pagination.limit, statusFilter]);
 
-  // Get paginated data
   const getPaginatedData = () => {
     const startIndex = (pagination.page - 1) * pagination.limit;
     const endIndex = startIndex + pagination.limit;
     return filteredTickets.slice(startIndex, endIndex);
   };
 
-  // Show toast notification
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -258,13 +259,11 @@ const SupportTicketsPage = () => {
     );
   };
 
-  // Handle view ticket
   const handleViewTicket = (ticketId: string) => {
-    // Navigate to admin ticket details page
+
     window.open(`/admin/tickets/${ticketId}`, '_blank');
   };
 
-  // Handle ticket deletion
   const handleDeleteTicket = async (ticketId: string) => {
     setDeleteLoading(true);
     try {
@@ -280,7 +279,7 @@ const SupportTicketsPage = () => {
       showToast('Ticket deleted successfully', 'success');
       setDeleteDialogOpen(false);
       setTicketToDelete(null);
-      fetchTickets(); // Refresh the list
+      fetchTickets();
     } catch (error) {
       console.error('Error deleting ticket:', error);
       showToast('Error deleting ticket', 'error');
@@ -289,7 +288,6 @@ const SupportTicketsPage = () => {
     }
   };
 
-  // Handle mark as read/unread
   const handleToggleReadStatus = async (ticketId: string) => {
     try {
       const ticket = supportTickets.find(t => t.id === ticketId);
@@ -322,9 +320,7 @@ const SupportTicketsPage = () => {
     }
   };
 
-  // Removed handleHoldTicket function as Hold Ticket option is no longer needed
 
-  // Handle close ticket
   const handleCloseTicket = async (ticketId: string) => {
     const confirmed = window.confirm('Are you sure you want to close this ticket? This action cannot be undone.');
     if (!confirmed) return;
@@ -360,7 +356,6 @@ const SupportTicketsPage = () => {
     }
   };
 
-  // Handle bulk operations
   const handleBulkOperation = async (operation: string) => {
     try {
       setBulkOperationLoading(true);
@@ -380,8 +375,7 @@ const SupportTicketsPage = () => {
       }
 
       const result = await response.json();
-      
-      // Update local state based on operation
+
       switch (operation) {
         case 'mark_read':
           setSupportTickets((prev) =>
@@ -407,22 +401,22 @@ const SupportTicketsPage = () => {
           );
           break;
       }
-      
+
       showToast(result.message || 'Operation completed successfully', 'success');
       setSelectedTickets([]);
-      fetchTickets(); // Refresh the list
+      fetchTickets();
     } catch (error) {
       console.error('Error performing bulk operation:', error);
       showToast('Error performing bulk operation', 'error');
     } finally {
       setBulkOperationLoading(false);
-      setSelectedBulkOperation(''); // Reset after execution
+      setSelectedBulkOperation('');
     }
   };
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -434,12 +428,12 @@ const SupportTicketsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
-              {/* Page View Dropdown */}
+              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -470,7 +464,7 @@ const SupportTicketsPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls */}
+            {}
             <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
@@ -495,10 +489,10 @@ const SupportTicketsPage = () => {
           </div>
         </div>
 
-        {/* Support Tickets Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons - Inside table header */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -639,7 +633,7 @@ const SupportTicketsPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {/* Selected Tickets Actions - Top of table */}
+            {}
             {selectedTickets.length > 0 && (
               <div className="flex flex-col md:flex-row md:items-center gap-2 py-4 border-b mb-4">
                 <div className="flex items-center gap-2 mb-2 md:mb-0">
@@ -649,8 +643,8 @@ const SupportTicketsPage = () => {
                   >
                     {selectedTickets.length} selected
                   </span>
-                  
-                  {/* Bulk Operations Dropdown */}
+
+                  {}
                   <select 
                     value={selectedBulkOperation}
                     onChange={(e) => setSelectedBulkOperation(e.target.value)}
@@ -664,7 +658,7 @@ const SupportTicketsPage = () => {
                   </select>
                 </div>
 
-                {/* Save Changes Button - appears when operation is selected */}
+                {}
                 {selectedBulkOperation && (
                   <button
                     onClick={() => {
@@ -705,7 +699,7 @@ const SupportTicketsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View - Hidden on mobile */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -841,7 +835,7 @@ const SupportTicketsPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
-                              {/* View Button */}
+                              {}
                               <button
                                 className="btn btn-secondary p-2"
                                 title="View Ticket"
@@ -850,7 +844,7 @@ const SupportTicketsPage = () => {
                                 <FaEye className="h-3 w-3" />
                               </button>
 
-                              {/* 3 Dot Menu */}
+                              {}
                               <div className="relative">
                                 <button
                                   className="btn btn-secondary p-2"
@@ -859,7 +853,7 @@ const SupportTicketsPage = () => {
                                     e.stopPropagation();
                                     const dropdown = e.currentTarget
                                       .nextElementSibling as HTMLElement;
-                                    // Close other dropdowns
+
                                     document
                                       .querySelectorAll('.dropdown-menu')
                                       .forEach((menu) => {
@@ -872,7 +866,7 @@ const SupportTicketsPage = () => {
                                   <FaEllipsisH className="h-3 w-3" />
                                 </button>
 
-                                {/* Dropdown Menu */}
+                                {}
                                 <div className="dropdown-menu hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                                   <div className="py-1">
                                     <button
@@ -891,7 +885,7 @@ const SupportTicketsPage = () => {
                                       )}
                                       Mark as {ticket.isRead ? 'Unread' : 'Read'}
                                     </button>
-                                    {/* Removed Hold Ticket option */}
+                                    {}
                                     {ticket.status !== 'Closed' && (
                                       <button
                                         onClick={() => {
@@ -931,9 +925,7 @@ const SupportTicketsPage = () => {
                   </table>
                 </div>
 
-                
-
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -994,7 +986,7 @@ const SupportTicketsPage = () => {
           </div>
         </div>
 
-        {/* Delete Confirmation Dialog */}
+        {}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

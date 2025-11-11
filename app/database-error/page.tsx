@@ -9,7 +9,6 @@ import {
   FaWhatsapp
 } from 'react-icons/fa';
 
-// Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -24,9 +23,9 @@ export default function DatabaseErrorPage() {
 
   const handleRetryConnection = async () => {
     setIsRetrying(true);
-    
+
     try {
-      // Test database connection
+
       const response = await fetch('/api/test-db', {
         method: 'GET',
         headers: {
@@ -35,10 +34,10 @@ export default function DatabaseErrorPage() {
       });
 
       if (response.ok) {
-        // Connection successful, redirect to home
+
         window.location.href = '/';
       } else {
-        // Still failing, show retry again after delay
+
         setTimeout(() => {
           setIsRetrying(false);
         }, 2000);
@@ -52,10 +51,9 @@ export default function DatabaseErrorPage() {
   };
 
   useEffect(() => {
-    // Set page title
+
     document.title = 'Database Connection Error - SMM Panel';
-    
-    // Fetch real database information
+
     const fetchDatabaseInfo = async () => {
       try {
         const response = await fetch('/api/database-info', {
@@ -64,7 +62,7 @@ export default function DatabaseErrorPage() {
             'Cache-Control': 'no-cache',
           },
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
@@ -75,9 +73,7 @@ export default function DatabaseErrorPage() {
         console.log('Failed to fetch database info:', error);
       }
     };
-    
-    // Check if database is actually working when page loads
-    // If it is, redirect user away from this page
+
     const checkDatabaseStatus = async () => {
       try {
         const response = await fetch('/api/test-db', {
@@ -86,17 +82,17 @@ export default function DatabaseErrorPage() {
             'Cache-Control': 'no-cache',
           },
         });
-        
+
         if (response.ok) {
-          // Database is working, redirect to home page
+
           window.location.href = '/';
         }
       } catch (error) {
-        // Database is still down, stay on this page
+
         console.log('Database still unavailable, staying on error page');
       }
     };
-    
+
     fetchDatabaseInfo();
     checkDatabaseStatus();
   }, []);
@@ -104,7 +100,7 @@ export default function DatabaseErrorPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl mx-auto">
-        {/* Main Error Card */}
+        {}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 text-center">
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6 relative">
@@ -121,9 +117,7 @@ export default function DatabaseErrorPage() {
             </p>
           </div>
 
-
-
-          {/* Action Buttons */}
+          {}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={handleRetryConnection}
@@ -142,7 +136,7 @@ export default function DatabaseErrorPage() {
                 </>
               )}
             </button>
-            
+
             <a
               href="https://wa.me/+8801723139610"
               target="_blank"
@@ -154,7 +148,7 @@ export default function DatabaseErrorPage() {
             </a>
           </div>
 
-          {/* Technical Information Section */}
+          {}
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center mb-6">
               <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-purple-600 rounded-lg flex items-center justify-center mr-3">
@@ -162,7 +156,7 @@ export default function DatabaseErrorPage() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Technical Information</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
@@ -211,7 +205,7 @@ export default function DatabaseErrorPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
               <p className="text-blue-700 dark:text-blue-300 text-sm">
                 <strong>Support Information:</strong> If this problem continues, please contact our support team with the error code above.

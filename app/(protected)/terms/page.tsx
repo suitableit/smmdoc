@@ -16,9 +16,7 @@ import {
 } from 'react-icons/fa';
 
 export default function TermsPage() {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Terms & Conditions', appName);
   }, [appName]);
@@ -123,7 +121,7 @@ export default function TermsPage() {
   return (
     <div className="page-container">
       <div className="page-content">
-        {/* Page Header */}
+        {}
         <div className="page-header">
           <h1 className="page-title">Terms of Service</h1>
           <p className="page-description">
@@ -132,7 +130,7 @@ export default function TermsPage() {
           </p>
         </div>
 
-        {/* Last Updated Notice */}
+        {}
         <div className="card card-padding mb-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
             <div className="flex items-center mb-2 md:mb-0">
@@ -152,7 +150,7 @@ export default function TermsPage() {
           </div>
         </div>
 
-        {/* Terms Sections */}
+        {}
         <div className="space-y-6">
           {termsData.map((section, index) => (
             <div key={section.id} className="card card-padding">
@@ -177,7 +175,7 @@ export default function TermsPage() {
           ))}
         </div>
 
-        {/* Contact Information */}
+        {}
         <div className="card card-padding mt-8">
           <div className="card-header">
             <div className="card-icon">
@@ -225,7 +223,7 @@ export default function TermsPage() {
           </div>
         </div>
 
-        {/* Agreement Notice */}
+        {}
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-6">
           <div className="flex items-start">
             <FaExclamationTriangle className="text-yellow-600 mt-1 mr-3 flex-shrink-0" />

@@ -11,23 +11,17 @@ import {
   FaSync,
   FaTimes,
   FaTimesCircle,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-
-// Custom Gradient Spinner Component
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -44,9 +38,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces for type safety
+);
 interface CancelRequest {
   id: number;
   order: {
@@ -101,9 +93,7 @@ interface PaginationInfo {
   totalPages: number;
   hasNext: boolean;
   hasPrev: boolean;
-}
-
-// Dummy data generator
+}
 const generateDummyData = (): CancelRequest[] => {
   const services = [
     'Instagram Followers',
@@ -210,14 +200,10 @@ const generateDummyData = (): CancelRequest[] => {
 };
 
 const CancelRequestsPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Order Cancel Requests', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [cancelRequests, setCancelRequests] = useState<CancelRequest[]>([]);
   const [stats, setStats] = useState<CancelRequestStats>({
     totalRequests: 0,
@@ -246,13 +232,9 @@ const CancelRequestsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
-  const [requestsLoading, setRequestsLoading] = useState(false);
-
-  // New state for action modals
+  const [requestsLoading, setRequestsLoading] = useState(false);
   const [approveDialog, setApproveDialog] = useState<{
     open: boolean;
     requestId: string | number;
@@ -279,9 +261,7 @@ const CancelRequestsPage = () => {
     open: false,
     request: null,
   });
-  const [selectedBulkAction, setSelectedBulkAction] = useState('');
-
-  // Fetch cancel requests from API
+  const [selectedBulkAction, setSelectedBulkAction] = useState('');
   const fetchCancelRequests = async (page = 1, status = 'all', search = '') => {
     setRequestsLoading(true);
     setStatsLoading(true);
@@ -306,9 +286,7 @@ const CancelRequestsPage = () => {
           totalPages: 0,
           hasNext: false,
           hasPrev: false
-        });
-
-        // Calculate stats from fetched data
+        });
         const data = result.data || [];
         const pending = data.filter((r: CancelRequest) => r.status === 'pending').length;
         const approved = data.filter((r: CancelRequest) => r.status === 'approved').length;
@@ -341,39 +319,27 @@ const CancelRequestsPage = () => {
       setRequestsLoading(false);
       setStatsLoading(false);
     }
-  };
-
-  // Initialize with real data
+  };
   useEffect(() => {
     fetchCancelRequests();
-  }, []);
-
-  // Fetch data when search term or status filter changes
+  }, []);
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchCancelRequests(1, statusFilter, searchTerm);
-    }, 500); // Debounce search
+    }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, statusFilter]);
-
-  // Handle pagination
+  }, [searchTerm, statusFilter]);
   const handlePageChange = (newPage: number) => {
     fetchCancelRequests(newPage, statusFilter, searchTerm);
-  };
-
-  // Show toast notification
+  };
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  
-
-  // Utility functions
+  };
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
@@ -387,8 +353,7 @@ const CancelRequestsPage = () => {
     }
   };
 
-  const handleSelectAll = () => {
-    // Only select requests that can be selected (Self orders that are pending)
+  const handleSelectAll = () => {
     const selectableRequests = cancelRequests.filter(
       (request) =>
         request.status !== 'declined' &&
@@ -401,11 +366,9 @@ const CancelRequestsPage = () => {
     if (
       selectedRequests.length === selectableIds.length &&
       selectableIds.length > 0
-    ) {
-      // If all selectable requests are selected, deselect all
+    ) {
       setSelectedRequests([]);
-    } else {
-      // Select all selectable requests
+    } else {
       setSelectedRequests(selectableIds);
     }
   };
@@ -426,9 +389,7 @@ const CancelRequestsPage = () => {
       console.error('Error refreshing data:', error);
       showToast('Error refreshing data. Please try again.', 'error');
     }
-  };
-
-  // Handle request approval
+  };
   const handleApproveRequest = async (
     requestId: string | number,
     refundAmount: number,
@@ -463,9 +424,7 @@ const CancelRequestsPage = () => {
         'error'
       );
     }
-  };
-
-  // Handle request decline
+  };
   const handleDeclineRequest = async (requestId: number, reason: string) => {
     try {
       setCancelRequests(prev => 
@@ -494,9 +453,7 @@ const CancelRequestsPage = () => {
         'error'
       );
     }
-  };
-
-  // Open approve dialog
+  };
   const openApproveDialog = (
     requestId: number,
     currentRefundAmount: number
@@ -508,9 +465,7 @@ const CancelRequestsPage = () => {
     });
     setNewRefundAmount(currentRefundAmount.toString());
     setAdminNotes('');
-  };
-
-  // Open decline dialog
+  };
   const openDeclineDialog = (requestId: number) => {
     setDeclineDialog({ open: true, requestId });
     setDeclineReason('');
@@ -518,7 +473,7 @@ const CancelRequestsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -530,10 +485,10 @@ const CancelRequestsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
               <select
                 value={pagination.limit}
@@ -569,7 +524,7 @@ const CancelRequestsPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls */}
+            {}
             <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
@@ -595,10 +550,10 @@ const CancelRequestsPage = () => {
           </div>
         </div>
 
-        {/* Cancel Requests Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -682,7 +637,7 @@ const CancelRequestsPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {/* Bulk Action Section */}
+            {}
             {selectedRequests.length > 0 && (
               <div className="flex flex-row flex-wrap items-center gap-2 py-4 border-b mb-4 w-full">
                 <div className="flex items-center gap-2">
@@ -719,8 +674,7 @@ const CancelRequestsPage = () => {
                           `Declining ${selectedRequests.length} selected requests...`,
                           'info'
                         );
-                      }
-                      // Reset after action
+                      }
                       setSelectedBulkAction('');
                       setSelectedRequests([]);
                     }}
@@ -760,7 +714,7 @@ const CancelRequestsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View */}
+                {}
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1100px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -780,7 +734,7 @@ const CancelRequestsPage = () => {
                             className="rounded border-gray-300 w-4 h-4"
                           />
                         </th>
-                        
+
                         <th
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
@@ -859,7 +813,7 @@ const CancelRequestsPage = () => {
                                 />
                               )}
                           </td>
-                          
+
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               {formatID(String(request.order.id).slice(-8))}
@@ -883,7 +837,7 @@ const CancelRequestsPage = () => {
                           </td>
                           <td className="p-3">
                             <div>
-                              {/* Use direct service name parameter */}
+                              {}
                               <div
                                 className="font-medium text-sm truncate max-w-44"
                                 style={{ color: 'var(--text-primary)' }}
@@ -891,7 +845,7 @@ const CancelRequestsPage = () => {
                                 {request.order?.service?.name ||
                                   'Unknown Service'}
                               </div>
-                              {/* Use direct category name parameter */}
+                              {}
                               <div
                                 className="text-xs truncate max-w-44"
                                 style={{ color: 'var(--text-muted)' }}
@@ -994,7 +948,7 @@ const CancelRequestsPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
+                {}
                 <div className="lg:hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {cancelRequests.map((request) => (
@@ -1002,7 +956,7 @@ const CancelRequestsPage = () => {
                         key={request.id}
                         className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
-                        {/* Header with ID and Status */}
+                        {}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <input
@@ -1011,7 +965,7 @@ const CancelRequestsPage = () => {
                               onChange={() => handleSelectRequest(request.id.toString())}
                               className="rounded border-gray-300 w-4 h-4"
                             />
-                            
+
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                               {getStatusIcon(request.status)}
                               <span className="text-xs font-medium capitalize">
@@ -1032,7 +986,7 @@ const CancelRequestsPage = () => {
                           </div>
                         </div>
 
-                        {/* User Info */}
+                        {}
                         <div className="flex items-center justify-between mb-4 pb-4 border-b">
                           <div>
                             <div
@@ -1067,16 +1021,16 @@ const CancelRequestsPage = () => {
                           </div>
                         </div>
 
-                        {/* Service Info */}
+                        {}
                         <div className="mb-4">
-                          {/* Use direct service name parameter */}
+                          {}
                           <div
                             className="font-medium text-sm mb-1"
                             style={{ color: 'var(--text-primary)' }}
                           >
                             {request.order?.service?.name || 'Unknown Service'}
                           </div>
-                          {/* Use direct category name parameter */}
+                          {}
                           <div
                             className="text-xs"
                             style={{ color: 'var(--text-muted)' }}
@@ -1087,7 +1041,7 @@ const CancelRequestsPage = () => {
                           </div>
                         </div>
 
-                        {/* Financial Info */}
+                        {}
                         <div className="grid grid-cols-3 gap-4 mb-4">
                           <div>
                             <div
@@ -1137,7 +1091,7 @@ const CancelRequestsPage = () => {
                           </div>
                         </div>
 
-                        {/* Link */}
+                        {}
                         <div className="mb-4">
                           <div
                             className="text-xs font-medium mb-1"
@@ -1164,7 +1118,7 @@ const CancelRequestsPage = () => {
                   </div>
                 </div>
 
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1215,7 +1169,7 @@ const CancelRequestsPage = () => {
                   </div>
                 </div>
 
-                {/* Approve Dialog */}
+                {}
                 {approveDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1278,7 +1232,7 @@ const CancelRequestsPage = () => {
                   </div>
                 )}
 
-                {/* View Details Dialog */}
+                {}
                 {viewDialog.open &&
                   viewDialog.request &&
                   viewDialog.request.order && (
@@ -1298,7 +1252,7 @@ const CancelRequestsPage = () => {
                           </button>
                         </div>
 
-                        {/* Request Info */}
+                        {}
                         <div className="mb-6">
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
@@ -1350,7 +1304,7 @@ const CancelRequestsPage = () => {
                           </div>
                         </div>
 
-                        {/* Order Summary */}
+                        {}
                         <div className="mb-6">
                           <h4 className="text-md font-semibold mb-4 text-gray-800">
                             Order Summary
@@ -1459,7 +1413,7 @@ const CancelRequestsPage = () => {
                           </div>
                         </div>
 
-                        {/* Reason */}
+                        {}
                         <div className="mb-6">
                           <h4 className="text-md font-semibold mb-3 text-gray-800">
                             Cancel Reason
@@ -1472,7 +1426,7 @@ const CancelRequestsPage = () => {
                           </div>
                         </div>
 
-                        {/* Admin Notes (if processed) */}
+                        {}
                         {viewDialog.request.adminNotes && (
                           <div className="mb-6">
                             <h4 className="text-md font-semibold mb-3 text-gray-800">
@@ -1500,7 +1454,7 @@ const CancelRequestsPage = () => {
                           </div>
                         )}
 
-                        {/* Action Buttons */}
+                        {}
                         {viewDialog.request.status === 'pending' &&
                           viewDialog.request.order?.seller === 'Self' && (
                             <div className="flex gap-3 justify-end pt-4 border-t">
@@ -1533,7 +1487,7 @@ const CancelRequestsPage = () => {
                     </div>
                   )}
 
-                {/* Decline Dialog */}
+                {}
                 {declineDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

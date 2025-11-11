@@ -18,7 +18,6 @@ import { GradientSpinner } from '@/components/ui/GradientSpinner';
 import ReCAPTCHA from '@/components/ReCAPTCHA';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 
-// Contact Form Component
 const ContactForm: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -34,8 +33,7 @@ const ContactForm: React.FC = () => {
     'idle' | 'success' | 'error'
   >('idle');
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-  
-  // Get ReCAPTCHA settings
+
   const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
   const validateEmail = (email: string) => {
@@ -44,7 +42,7 @@ const ContactForm: React.FC = () => {
   };
 
   const validatePhone = (phone: string) => {
-    // Basic phone validation - should contain country code and numbers
+
     const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
     return phoneRegex.test(phone.replace(/\s/g, ''));
   };
@@ -87,7 +85,6 @@ const ContactForm: React.FC = () => {
       return;
     }
 
-    // Check ReCAPTCHA if enabled
     if (isEnabledForForm('contact') && !recaptchaToken) {
       setErrors({ ...errors, recaptcha: 'Please complete the ReCAPTCHA verification.' });
       return;
@@ -98,7 +95,7 @@ const ContactForm: React.FC = () => {
     setErrors({});
 
     try {
-      // Prepare submission data
+
       const submitData = {
         ...formData,
         adminEmail: 'support@smmdoc.com',
@@ -138,7 +135,6 @@ const ContactForm: React.FC = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -156,7 +152,7 @@ const ContactForm: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Name Field */}
+        {}
         <div>
           <label
             htmlFor="name"
@@ -186,9 +182,9 @@ const ContactForm: React.FC = () => {
           )}
         </div>
 
-        {/* Email and Phone Row */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Email Field */}
+          {}
           <div>
             <label
               htmlFor="email"
@@ -218,7 +214,7 @@ const ContactForm: React.FC = () => {
             )}
           </div>
 
-          {/* Phone Field */}
+          {}
           <div>
             <label
               htmlFor="phone"
@@ -249,7 +245,7 @@ const ContactForm: React.FC = () => {
           </div>
         </div>
 
-        {/* Subject Field */}
+        {}
         <div>
           <label
             htmlFor="subject"
@@ -279,7 +275,7 @@ const ContactForm: React.FC = () => {
           )}
         </div>
 
-        {/* Message Field */}
+        {}
         <div>
           <label
             htmlFor="message"
@@ -304,7 +300,7 @@ const ContactForm: React.FC = () => {
           )}
         </div>
 
-        {/* ReCAPTCHA Component */}
+        {}
         {isEnabledForForm('contact') && recaptchaSettings && (
           <ReCAPTCHA
             siteKey={recaptchaSettings.siteKey}
@@ -313,31 +309,30 @@ const ContactForm: React.FC = () => {
             threshold={recaptchaSettings.threshold}
             onVerify={(token) => {
               setRecaptchaToken(token);
-              // Clear any previous ReCAPTCHA error
+
               if (errors.recaptcha) {
                 setErrors(prev => ({ ...prev, recaptcha: '' }));
               }
             }}
             onError={() => {
               setRecaptchaToken(null);
-                // Let Google's native error messages display instead of custom ones
-                // This allows 'Invalid domain for site key' and other specific errors to show
+
               }}
               onExpired={() => {
                 setRecaptchaToken(null);
-                // Let Google's native expired message display
+
               }}
             />
         )}
-        
-        {/* ReCAPTCHA Error */}
+
+        {}
         {errors.recaptcha && (
           <p className="text-red-500 dark:text-red-400 text-sm text-center transition-colors duration-200">
             {errors.recaptcha}
           </p>
         )}
 
-        {/* Submit Button */}
+        {}
         <button
           type="submit"
           disabled={isSubmitting}
@@ -355,7 +350,7 @@ const ContactForm: React.FC = () => {
           )}
         </button>
 
-        {/* Form Status */}
+        {}
         {submitStatus === 'success' && (
           <div className="flex items-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400">
             <FaCheckCircle className="w-5 h-5 flex-shrink-0" />
@@ -395,10 +390,10 @@ const HowToContact: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {/* Left: How to Contact */}
+          {}
           <div>
             <div className="space-y-6 mb-8">
-              {/* Email Card */}
+              {}
               <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="mb-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
@@ -421,7 +416,7 @@ const HowToContact: React.FC = () => {
                 </p>
               </div>
 
-              {/* Social Media Card */}
+              {}
               <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="mb-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
@@ -462,7 +457,7 @@ const HowToContact: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Contact Form */}
+          {}
           <div>
             <ContactForm />
           </div>

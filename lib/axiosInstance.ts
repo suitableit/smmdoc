@@ -1,49 +1,36 @@
-import axios from "axios";
-
-// Determine the correct base URL based on the current environment
-const getBaseUrl = () => {
-  // Check if we're running in the browser
-  if (typeof window !== 'undefined') {
-    // Use the current window location origin as the base URL
+import axios from "axios";
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') {
     return window.location.origin;
-  }
-  // Default to localhost when running on server
+  }
   return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 };
 
 const axiosInstance = axios.create({
   baseURL: getBaseUrl(),
-  withCredentials: false, // Ensure this is false to avoid CORS issues with wildcard origins
+  withCredentials: false,
   headers: {
     "Content-Type": "application/json",
     "Accept": "application/json",
   },
-  timeout: 60000, // Increased to 60 seconds timeout
-});
-
-// Optional: intercept requests
+  timeout: 60000,
+});
 axiosInstance.interceptors.request.use(
   (config) => {
-    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
-    
-    // Make sure withCredentials remains false for all requests
-    config.withCredentials = false;
-    
-    // Ensure we're using the correct URL for API requests
+    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    config.withCredentials = false;
     if (config.url && config.url.startsWith('/api/')) {
       config.baseURL = getBaseUrl();
       console.log(`Using base URL: ${config.baseURL} for API request`);
     }
-    
+
     return config;
   },
   (error) => {
     console.error("Request error:", error);
     return Promise.reject(error);
   }
-);
-
-// Optional: intercept responses
+);
 axiosInstance.interceptors.response.use(
   (response) => {
     console.log(`API Response: ${response.status} ${response.config.url}`);
@@ -51,17 +38,13 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     console.error("Response error:", error);
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
+    if (error.response) {
       console.error("Error data:", error.response.data);
       console.error("Error status:", error.response.status);
       console.error("Error headers:", error.response.headers);
-    } else if (error.request) {
-      // The request was made but no response was received
+    } else if (error.request) {
       console.error("Error request:", error.request);
-    } else {
-      // Something happened in setting up the request that triggered an Error
+    } else {
       console.error("Error message:", error.message);
     }
     return Promise.reject(error);

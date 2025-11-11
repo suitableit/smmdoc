@@ -25,9 +25,7 @@ import {
     FaTimesCircle,
     FaUserPlus,
     FaUsers,
-} from 'react-icons/fa';
-
-// Optimized dynamic imports without loading states for instant display
+} from 'react-icons/fa';
 const PendingTransactions = dynamic(
   () => import('@/components/admin/main/pending-transactions'),
   { ssr: false }
@@ -36,18 +34,14 @@ const PendingTransactions = dynamic(
 const LatestUsers = dynamic(
   () => import('@/components/admin/main/latest-users'),
   { ssr: false }
-);
-
-// Custom Gradient Spinner Component
+);
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -64,25 +58,19 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Cache keys for sessionStorage
+);
 const CACHE_KEYS = {
   DASHBOARD_STATS: 'admin_dashboard_stats',
   LATEST_USERS: 'admin_latest_users',
   PENDING_TRANSACTIONS: 'admin_pending_transactions',
   CACHE_TIMESTAMP: 'admin_cache_timestamp'
-};
-
-// Different cache durations for different data types
+};
 const CACHE_DURATIONS = {
-  DASHBOARD_STATS: 2 * 60 * 1000, // 2 minutes for stats (less dynamic)
-  LATEST_USERS: 45 * 1000, // 45 seconds for users (moderately dynamic)
-  PENDING_TRANSACTIONS: 30 * 1000, // 30 seconds for transactions (highly dynamic)
-  DEFAULT: 60 * 1000 // 1 minute default
-};
-
-// Cache utility functions
+  DASHBOARD_STATS: 2 * 60 * 1000,
+  LATEST_USERS: 45 * 1000,
+  PENDING_TRANSACTIONS: 30 * 1000,
+  DEFAULT: 60 * 1000
+};
 const getCachedData = (key: string) => {
   try {
     if (typeof window === 'undefined') return null;
@@ -97,11 +85,9 @@ const getCachedData = (key: string) => {
 const setCachedData = (key: string, data: any) => {
   try {
     if (typeof window === 'undefined') return;
-    sessionStorage.setItem(key, JSON.stringify(data));
-    // Set individual timestamps for each data type
+    sessionStorage.setItem(key, JSON.stringify(data));
     const timestampKey = `${key}_timestamp`;
-    sessionStorage.setItem(timestampKey, Date.now().toString());
-    // Add cache version for better invalidation
+    sessionStorage.setItem(timestampKey, Date.now().toString());
     const versionKey = `${key}_version`;
     sessionStorage.setItem(versionKey, Math.random().toString(36).substr(2, 9));
   } catch (error) {
@@ -114,14 +100,12 @@ const isCacheValid = (key: string) => {
     if (typeof window === 'undefined') return false;
     const timestampKey = `${key}_timestamp`;
     const timestamp = sessionStorage.getItem(timestampKey);
-    if (!timestamp) return false;
-    
-    // Get appropriate cache duration for this data type
+    if (!timestamp) return false;
     let duration = CACHE_DURATIONS.DEFAULT;
     if (key === CACHE_KEYS.DASHBOARD_STATS) duration = CACHE_DURATIONS.DASHBOARD_STATS;
     else if (key === CACHE_KEYS.LATEST_USERS) duration = CACHE_DURATIONS.LATEST_USERS;
     else if (key === CACHE_KEYS.PENDING_TRANSACTIONS) duration = CACHE_DURATIONS.PENDING_TRANSACTIONS;
-    
+
     return Date.now() - parseInt(timestamp) < duration;
   } catch (error) {
     return false;
@@ -139,9 +123,7 @@ const clearCache = () => {
   } catch (error) {
     console.warn('Error clearing cache:', error);
   }
-};
-
-// Force cache invalidation for specific data type
+};
 const invalidateCache = (key: string) => {
   try {
     if (typeof window === 'undefined') return;
@@ -151,9 +133,7 @@ const invalidateCache = (key: string) => {
   } catch (error) {
     console.warn('Error invalidating cache:', error);
   }
-};
-
-// User interfaces
+};
 interface User {
   id: number;
   username: string;
@@ -232,23 +212,16 @@ type DashboardStats = {
 };
 
 export default function AdminDashboardPage() {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Admin Dashboard', appName);
   }, [appName]);
 
-  const { currency, rate } = useCurrency();
-
-  // Initialize state with cached data if available and valid
-  const initializeWithCache = () => {
-    // Check cache validity for each data type individually
+  const { currency, rate } = useCurrency();
+  const initializeWithCache = () => {
     const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
     const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
-    const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
-    
-    // Initialize stats with cached data or defaults
+    const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
     const cachedStats = statsValid ? getCachedData(CACHE_KEYS.DASHBOARD_STATS) : null;
     const defaultStats = {
       totalOrders: 0,
@@ -282,20 +255,14 @@ export default function AdminDashboardPage() {
 
   const initialData = initializeWithCache();
 
-  const [stats, setStats] = useState<DashboardStats>(initialData.stats);
-
-  // Optimized: Start with false for instant display, only show loading if no cache
+  const [stats, setStats] = useState<DashboardStats>(initialData.stats);
   const [statsLoading, setStatsLoading] = useState(!initialData.hasStatsCache);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
-  const [chartLoading, setChartLoading] = useState(false);
-
-  // Latest Users State - Initialize with cached data
+  const [chartLoading, setChartLoading] = useState(false);
   const [latestUsers, setLatestUsers] = useState<User[]>(initialData.latestUsers);
-  const [latestUsersLoading, setLatestUsersLoading] = useState(!initialData.hasUsersCache);
-
-  // Pending Transactions State - Initialize with cached data
+  const [latestUsersLoading, setLatestUsersLoading] = useState(!initialData.hasUsersCache);
   const [pendingTransactions, setPendingTransactions] = useState<
     PendingTransaction[]
   >(initialData.pendingTransactions);
@@ -304,56 +271,46 @@ export default function AdminDashboardPage() {
   const [customToast, setCustomToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Optimized: Parallel data fetching with caching and stale-while-revalidate
+  } | null>(null);
   const fetchAllData = useCallback(async (isBackgroundRefresh = false) => {
-    try {
-      // Check individual cache validity for each data type
+    try {
       const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
       const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
-      const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
-
-      // Only show loading states if this is not a background refresh and we don't have valid cached data
+      const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
       if (!isBackgroundRefresh) {
         if (!statsValid) setStatsLoading(true);
         if (!usersValid) setLatestUsersLoading(true);
         if (!transactionsValid) setTransactionsLoading(true);
-      }
-
-      // Helper function to create fetch with timeout and retry
+      }
       const fetchWithRetry = async (url: string, options: any = {}, retries = 2): Promise<any> => {
         for (let i = 0; i <= retries; i++) {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-            
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
             const response = await fetch(url, {
               ...options,
               signal: controller.signal,
             });
-            
+
             clearTimeout(timeoutId);
-            
+
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
+
             return await response.json();
           } catch (error) {
-            if (i === retries) throw error;
-            // Wait before retry (exponential backoff)
+            if (i === retries) throw error;
             await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
           }
         }
-      };
-
-      // Prepare all API calls to run in parallel with improved error handling
+      };
       const statsPromise = fetchWithRetry('/api/admin/dashboard/stats').catch(error => {
         console.error('Stats API failed:', error);
         return { success: false, error: error.message };
       });
-      
+
       const usersQueryParams = new URLSearchParams({
         page: '1',
         limit: '5',
@@ -365,7 +322,7 @@ export default function AdminDashboardPage() {
         console.error('Users API failed:', error);
         return { success: false, error: error.message };
       });
-      
+
       const transactionsPromise = axiosInstance.get('/api/transactions', {
         params: {
           admin: 'true',
@@ -373,36 +330,26 @@ export default function AdminDashboardPage() {
           limit: 10,
           offset: 0,
         },
-        timeout: 15000, // Increased timeout to 15 seconds
+        timeout: 15000,
       }).catch(error => {
         console.error('Transactions API failed:', error);
         return { data: null, error: error.message };
-      });
-
-      // Execute all API calls in parallel using Promise.allSettled for better error handling
+      });
       const results = await Promise.allSettled([
         statsPromise,
         usersPromise,
         transactionsPromise,
-      ]);
-
-      // Extract results with proper error handling
+      ]);
       const statsResult = results[0].status === 'fulfilled' ? results[0].value : { success: false, error: 'Stats request failed' };
       const usersResult = results[1].status === 'fulfilled' ? results[1].value : { success: false, error: 'Users request failed' };
-      const transactionsResponse = results[2].status === 'fulfilled' ? results[2].value : { data: null, error: 'Transactions request failed' };
-
-      // Process stats data with individual error handling
+      const transactionsResponse = results[2].status === 'fulfilled' ? results[2].value : { data: null, error: 'Transactions request failed' };
       if (statsResult.success && statsResult.data) {
         setStats(statsResult.data);
         setCachedData(CACHE_KEYS.DASHBOARD_STATS, statsResult.data);
       } else if (statsResult.error) {
-        console.warn('Stats data failed to load:', statsResult.error);
-        // Keep existing cached data if available, don't clear it
-      }
-      // Always hide stats loading state
-      setStatsLoading(false);
-
-      // Process users data with individual error handling
+        console.warn('Stats data failed to load:', statsResult.error);
+      }
+      setStatsLoading(false);
       if (usersResult.success && usersResult.data) {
         const filteredUsers = (usersResult.data || []).filter(
           (user: User) => user.role === 'user'
@@ -411,13 +358,9 @@ export default function AdminDashboardPage() {
         setLatestUsers(usersToShow);
         setCachedData(CACHE_KEYS.LATEST_USERS, usersToShow);
       } else if (usersResult.error) {
-        console.warn('Users data failed to load:', usersResult.error);
-        // Keep existing cached data if available, don't clear it
-      }
-      // Always hide users loading state
-      setLatestUsersLoading(false);
-
-      // Process transactions data with individual error handling
+        console.warn('Users data failed to load:', usersResult.error);
+      }
+      setLatestUsersLoading(false);
       let transactionsToShow: PendingTransaction[] = [];
       if (transactionsResponse.data) {
         if (transactionsResponse.data.transactions) {
@@ -435,65 +378,45 @@ export default function AdminDashboardPage() {
         }
         setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, transactionsToShow);
       } else if (transactionsResponse.error) {
-        console.warn('Transactions data failed to load:', transactionsResponse.error);
-        // Keep existing cached data if available, don't clear it
-      }
-      // Always hide transactions loading state
+        console.warn('Transactions data failed to load:', transactionsResponse.error);
+      }
       setTransactionsLoading(false);
 
     } catch (error) {
-      console.error('Critical error in fetchAllData:', error);
-      
-      // This catch block should rarely be reached now since we handle individual errors above
-      // But if it does, ensure all loading states are cleared and show user feedback
+      console.error('Critical error in fetchAllData:', error);
       setStatsLoading(false);
       setLatestUsersLoading(false);
-      setTransactionsLoading(false);
-      
-      // Show user-friendly error message
+      setTransactionsLoading(false);
       if (!isBackgroundRefresh) {
         showToast('Some dashboard data failed to load. Please try refreshing.', 'error');
       }
     }
   }, []);
 
-  useEffect(() => {
-    // Check individual cache validity for each data type
+  useEffect(() => {
     const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
     const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
-    const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
-    
-    // Always fetch fresh data in background, but show loading states only if no valid cache exists
+    const transactionsValid = isCacheValid(CACHE_KEYS.PENDING_TRANSACTIONS);
     const hasAnyValidCache = statsValid || usersValid || transactionsValid;
-    
-    if (hasAnyValidCache) {
-      // Background refresh without loading states - always fetch fresh data
-      fetchAllData(true);
-    } else {
-      // Normal fetch with loading states when no cache exists
-      fetchAllData(false);
-    }
 
-    // Set up more aggressive polling for background updates
-    // Use shorter intervals for more dynamic data
-    const interval = setInterval(() => {
-      // Always do background refresh during polling
+    if (hasAnyValidCache) {
       fetchAllData(true);
-    }, 15000); // Reduced from 30 seconds to 15 seconds for more frequent updates
+    } else {
+      fetchAllData(false);
+    }
+    const interval = setInterval(() => {
+      fetchAllData(true);
+    }, 15000);
 
     return () => clearInterval(interval);
-  }, [fetchAllData]);
-
-  // Show toast notification
+  }, [fetchAllData]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setCustomToast({ message, type });
     setTimeout(() => setCustomToast(null), 4000);
-  };
-
-  // Utility functions
+  };
   const formatCurrency = useCallback((amount: number, currency: string) => {
     const formatters = {
       USD: (amt: number) => `${amt.toFixed(2)}`,
@@ -514,19 +437,12 @@ export default function AdminDashboardPage() {
         }
       );
 
-      if (response.status === 200) {
-        // Remove from pending list
+      if (response.status === 200) {
         const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
         setPendingTransactions(updatedTransactions);
-        setTotalTransactionCount((prev) => prev - 1);
-
-        // Update cache with new transaction list
-        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
-        
-        // Invalidate related caches to force fresh data
-        invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
-        
-        // Trigger immediate background refresh for all data
+        setTotalTransactionCount((prev) => prev - 1);
+        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
+        invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
         setTimeout(() => fetchAllData(true), 100);
 
         showToast('Transaction approved successfully!', 'success');
@@ -554,19 +470,12 @@ export default function AdminDashboardPage() {
         }
       );
 
-      if (response.status === 200) {
-        // Remove from pending list
+      if (response.status === 200) {
         const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
         setPendingTransactions(updatedTransactions);
-        setTotalTransactionCount((prev) => prev - 1);
-
-        // Update cache with new transaction list
-        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
-        
-        // Invalidate related caches to force fresh data
-        invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
-        
-        // Trigger immediate background refresh for all data
+        setTotalTransactionCount((prev) => prev - 1);
+        setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
+        invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
         setTimeout(() => fetchAllData(true), 100);
 
         showToast('Transaction cancelled successfully!', 'success');
@@ -577,19 +486,12 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleTransactionUpdate = useCallback((transactionId: number) => {
-    // Remove from pending list and update count
+  const handleTransactionUpdate = useCallback((transactionId: number) => {
     const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
     setPendingTransactions(updatedTransactions);
-    setTotalTransactionCount((prev) => prev - 1);
-
-    // Update cache with new transaction list
-    setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
-    
-    // Invalidate related caches to force fresh data
-    invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
-    
-    // Trigger immediate background refresh for all data
+    setTotalTransactionCount((prev) => prev - 1);
+    setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
+    invalidateCache(CACHE_KEYS.DASHBOARD_STATS);
     setTimeout(() => fetchAllData(true), 100);
   }, [pendingTransactions, fetchAllData]);
 
@@ -597,20 +499,15 @@ export default function AdminDashboardPage() {
     setTransactionsLoading(true);
     fetchPendingTransactions();
     showToast('Transactions refreshed successfully!', 'success');
-  };
-
-  // Function to format currency based on selected currency
-  const formatDashboardCurrency = useCallback((amount: number) => {
-    // Admin stats are stored in BDT, so we need to convert if USD is selected
+  };
+  const formatDashboardCurrency = useCallback((amount: number) => {
     if (currency === 'USD' && rate) {
       const amountInUSD = amount / rate;
       return `$${amountInUSD.toFixed(2)}`;
     } else {
       return `৳${amount.toFixed(2)}`;
     }
-  }, [currency, rate]);
-
-  // Function to format date
+  }, [currency, rate]);
   const formatDate = useCallback((dateString: string) => {
     return {
       date: moment(dateString).format('DD/MM/YYYY'),
@@ -628,7 +525,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="page-content">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {customToast && (
           <Toast
@@ -639,9 +536,9 @@ export default function AdminDashboardPage() {
         )}
       </div>
 
-      {/* Statistics Overview - Section 1 */}
+      {}
       <div className="mb-6">
-        {/* First Row Stats */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <div className="card card-padding">
             <div className="card-content">
@@ -700,7 +597,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Second Row Stats */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="card card-padding">
             <div className="card-content">
@@ -760,7 +657,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Quick Actions - Section 2 */}
+      {}
       <div className="mb-6">
         <div className="card card-padding">
           <div className="card-header mb-4">
@@ -802,7 +699,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Pending Transactions - Section 3 */}
+      {}
       <PendingTransactions
         pendingTransactions={pendingTransactions}
         transactionsLoading={transactionsLoading}
@@ -810,7 +707,7 @@ export default function AdminDashboardPage() {
         showToast={showToast}
       />
 
-      {/* Latest Users - Section 7 */}
+      {}
       <LatestUsers
         latestUsers={latestUsers}
         latestUsersLoading={latestUsersLoading}

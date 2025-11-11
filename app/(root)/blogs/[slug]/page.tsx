@@ -9,10 +9,9 @@ interface BlogPostPageProps {
   };
 }
 
-// Generate metadata for SEO
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   try {
-    // Get dynamic settings and meta keywords
+
     const [appName, siteDescription, generalSettings] = await Promise.all([
       getAppName(),
       getSiteDescription(),
@@ -22,8 +21,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     const siteUrl = generalSettings.siteUrl;
 
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    
-    // Fetch meta settings for keywords
+
     let metaKeywords = '';
     try {
       const metaResponse = await fetch(`${baseUrl}/api/public/meta-settings`, {
@@ -38,29 +36,29 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     } catch (error) {
       console.error('Error fetching meta keywords:', error);
     }
-    
+
     const response = await fetch(`${baseUrl}/api/blogs/${params.slug}`, {
       cache: 'no-store'
     });
-    
+
     if (!response.ok) {
       return {
         title: `Blog Post Not Found - ${appName}`,
         description: 'The requested blog post could not be found.'
       };
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.success || !data.data) {
       return {
         title: `Blog Post Not Found`,
         description: 'The requested blog post could not be found.'
       };
     }
-    
+
     const post = data.data;
-    
+
     return {
       title: post.seoTitle || `${post.title}`,
       description: post.seoDescription || post.excerpt || siteDescription,
@@ -95,12 +93,12 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     };
   } catch (error) {
     console.error('Error generating metadata:', error);
-    // Fallback with dynamic settings
+
     const [appName, siteDescription] = await Promise.all([
       getAppName().catch(() => 'SMM Panel'),
       getSiteDescription().catch(() => 'Read insightful articles on social media marketing and digital strategies.')
     ]);
-    
+
     return {
       title: `Blog Post`,
       description: siteDescription
@@ -114,13 +112,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const response = await fetch(`${baseUrl}/api/blogs/${params.slug}`, {
       cache: 'no-store'
     });
-    
+
     if (!response.ok) {
       notFound();
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.success || !data.data) {
       notFound();
     }

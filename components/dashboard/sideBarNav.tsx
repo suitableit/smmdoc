@@ -64,9 +64,7 @@ export default function SideBarNav({
   const path = usePathname() || '';
   const isAdmin = session?.user?.role === 'admin';
   const [ticketSystemEnabled, setTicketSystemEnabled] = useState(true);
-  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
-
-  // Fetch ticket system settings
+  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
   useEffect(() => {
     const fetchTicketSettings = async () => {
       try {
@@ -76,16 +74,13 @@ export default function SideBarNav({
           setTicketSystemEnabled(data.ticketSystemEnabled ?? true);
         }
       } catch (error) {
-        console.error('Error fetching ticket settings:', error);
-        // Default to enabled on error
+        console.error('Error fetching ticket settings:', error);
         setTicketSystemEnabled(true);
       }
     };
 
     fetchTicketSettings();
-  }, []);
-
-  // Fetch contact system settings
+  }, []);
   useEffect(() => {
     const fetchContactSettings = async () => {
       try {
@@ -95,28 +90,22 @@ export default function SideBarNav({
           setContactSystemEnabled(data.contactSystemEnabled ?? true);
         }
       } catch (error) {
-        console.error('Error fetching contact settings:', error);
-        // Default to enabled on error
+        console.error('Error fetching contact settings:', error);
         setContactSystemEnabled(true);
       }
     };
 
     fetchContactSettings();
-  }, []);
-
-  // Memoize items based on user role to prevent unnecessary recalculations
+  }, []);
   const items = useMemo(() => {
     return isAdmin
       ? adminNavItems
       : userNavItems.filter((item: NavItem) =>
           item.roles.includes(session?.user?.role || 'user')
         );
-  }, [isAdmin, session?.user?.role]);
-
-  // Memoize sections to prevent unnecessary recalculations on each render
+  }, [isAdmin, session?.user?.role]);
   const sections = useMemo<AdminSections | UserSections>(() => {
-    if (isAdmin) {
-      // Group admin items into sections
+    if (isAdmin) {
       return {
         dashboard: items.filter((item) => ['Dashboard'].includes(item.title)),
         orders: items.filter((item) =>
@@ -199,8 +188,7 @@ export default function SideBarNav({
           ['Account Settings', 'Logout'].includes(item.title)
         ),
       } as AdminSections;
-    } else {
-      // Group user items into sections
+    } else {
       return {
         core: items.filter((item) => ['Dashboard'].includes(item.title)),
         orders: items.filter((item) =>
@@ -242,17 +230,10 @@ export default function SideBarNav({
     }
   }, [isAdmin, items, ticketSystemEnabled, contactSystemEnabled]);
 
-  const isActive = (itemPath: string) => {
-    // Exact match
-    if (path === itemPath) return true;
-
-    // For root path
-    if (itemPath === '/' && path === '/') return true;
-
-    // Prevent parent routes from being active when on child routes
-    // Only mark as active if this is the most specific match
-    if (path.startsWith(itemPath + '/')) {
-      // Check if any other item has a more specific match
+  const isActive = (itemPath: string) => {
+    if (path === itemPath) return true;
+    if (itemPath === '/' && path === '/') return true;
+    if (path.startsWith(itemPath + '/')) {
       const allItems = Object.values(sections).flat() as NavItem[];
       const hasMoreSpecificMatch = allItems.some((item) => {
         return (
@@ -266,9 +247,7 @@ export default function SideBarNav({
     }
 
     return false;
-  };
-
-  // Memoize the icon rendering function to prevent unnecessary re-renders
+  };
   const renderIcon = useMemo(() => {
     return (iconName: string) => {
       const Icon = (FaIcons as Record<string, React.ComponentType>)[iconName];
@@ -279,14 +258,11 @@ export default function SideBarNav({
   const renderNavSection = (title: string, sectionItems: NavItem[]) => {
     if (!sectionItems || !sectionItems.length) return null;
 
-    if (collapsed) {
-      // When collapsed, render items without section wrapper to remove gaps
+    if (collapsed) {
       return (
         <ul className="nav-links space-y-0">
           {sectionItems.map((item, index) => {
-            const active = isActive(item.href);
-
-            // Handle logout action
+            const active = isActive(item.href);
             const handleClick = () => {
               if (item.isLogout) {
                 signOut({ callbackUrl: '/' });
@@ -297,7 +273,7 @@ export default function SideBarNav({
 
             return (
               <li key={index} className="nav-item relative group">
-                {/* Blue indicator bar - shows on active or hover */}
+                {}
                 <div
                   className={cn(
                     'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
@@ -316,7 +292,7 @@ export default function SideBarNav({
                     )}
                     title={item.title}
                   >
-                    {/* Icon */}
+                    {}
                     <span
                       className={cn(
                         'flex items-center justify-center transition-colors duration-200 text-lg',
@@ -340,7 +316,7 @@ export default function SideBarNav({
                     onClick={handleClick}
                     title={item.title}
                   >
-                    {/* Icon */}
+                    {}
                     <span
                       className={cn(
                         'flex items-center justify-center transition-colors duration-200 text-lg',
@@ -369,9 +345,7 @@ export default function SideBarNav({
         )}
         <ul className="nav-links space-y-0">
           {sectionItems.map((item, index) => {
-            const active = isActive(item.href);
-            
-            // Handle logout action
+            const active = isActive(item.href);
             const handleClick = () => {
               if (item.isLogout) {
                 signOut({ callbackUrl: '/' });
@@ -382,7 +356,7 @@ export default function SideBarNav({
 
             return (
               <li key={index} className="nav-item relative group">
-                {/* Blue indicator bar - shows on active or hover */}
+                {}
                 <div
                   className={cn(
                     'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
@@ -401,7 +375,7 @@ export default function SideBarNav({
                     )}
                     title={collapsed ? item.title : undefined}
                   >
-                    {/* Icon */}
+                    {}
                     <span
                       className={cn(
                         'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
@@ -411,7 +385,7 @@ export default function SideBarNav({
                       {renderIcon(item.icon)}
                     </span>
 
-                    {/* Title */}
+                    {}
                     <span
                       className={cn(
                         'text-sm font-medium transition-all duration-200 opacity-100',
@@ -435,7 +409,7 @@ export default function SideBarNav({
                     onClick={handleClick}
                     title={collapsed ? item.title : undefined}
                   >
-                    {/* Icon */}
+                    {}
                     <span
                       className={cn(
                         'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
@@ -447,7 +421,7 @@ export default function SideBarNav({
                       {renderIcon(item.icon)}
                     </span>
 
-                    {/* Title */}
+                    {}
                     <span
                       className={cn(
                         'text-sm font-medium transition-all duration-200 opacity-100',
@@ -459,14 +433,14 @@ export default function SideBarNav({
                       {item.title}
                     </span>
 
-                    {/* Badge */}
+                    {}
                     {item.badge && (
                       <div className="badge ml-auto py-1 px-2 text-xs font-medium rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
                         {item.badge}
                       </div>
                     )}
 
-                    {/* Status Indicator */}
+                    {}
                     {item.statusColor && (
                       <div className="ml-auto">
                         <div
@@ -499,12 +473,8 @@ export default function SideBarNav({
         </ul>
       </div>
     );
-  };
-
-  // Return null if session data is not available yet
-  if (!session?.user) return null;
-
-  // Helper function to safely access sections with proper typing
+  };
+  if (!session?.user) return null;
   const getSectionItems = (sectionKey: keyof (AdminSections | UserSections)): NavItem[] => {
     return sections[sectionKey] || [];
   };
@@ -543,7 +513,5 @@ export default function SideBarNav({
       </div>
     </div>
   );
-}
-
-// Add display name
+}
 SideBarNav.displayName = 'SideBarNav';

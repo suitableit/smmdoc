@@ -82,20 +82,14 @@ export default function AddUserFund() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      setLoading(true);
-
-      // Convert amount based on selected currency
+      setLoading(true);
       const amountValue = parseFloat(data.amount);
       const selectedCurrency = availableCurrencies?.find(c => c.code === data.currency);
-      const currencyRate = selectedCurrency?.rate || 1;
-
-      // Convert to USD (base currency) first
+      const currencyRate = selectedCurrency?.rate || 1;
       let amountInUSD = amountValue;
       if (data.currency !== 'USD') {
         amountInUSD = amountValue / currencyRate;
-      }
-
-      // Convert to BDT for storage (database stores in BDT)
+      }
       const amountInBDT = amountInUSD * (rate || 121.45);
 
       const payload = {
@@ -103,7 +97,7 @@ export default function AddUserFund() {
         amountUSD: amountInUSD.toFixed(2),
         amountBDT: amountInBDT.toFixed(2),
         note: data.note || 'Added by admin',
-        status: 'COMPLETED', // Admin added funds are automatically approved
+        status: 'COMPLETED',
       };
 
       const response = await axiosInstance.post(

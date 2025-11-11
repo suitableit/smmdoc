@@ -8,22 +8,16 @@ import {
   FaTimes,
   FaUpload
 } from 'react-icons/fa';
-import JoditEditor from 'jodit-react';
-
-// Import APP_NAME constant
+import JoditEditor from 'jodit-react';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-
-// Custom Gradient Spinner Component
+import { setPageTitle } from '@/lib/utils/set-page-title';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -40,9 +34,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces
+);
 interface PostFormData {
   title: string;
   slug: string;
@@ -55,23 +47,17 @@ interface PostFormData {
 }
 
 const NewPostPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Show toast notification
+  const { appName } = useAppNameWithFallback();
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Set document title using useEffect for client-side
+  };
   useEffect(() => {
     setPageTitle('New Post', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [formData, setFormData] = useState<PostFormData>({
     title: '',
     slug: '',
@@ -86,13 +72,9 @@ const NewPostPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
-
-  // Slug validation states
+  const [imageUploading, setImageUploading] = useState(false);
   const [slugStatus, setSlugStatus] = useState<{
     isChecking: boolean;
     isAvailable: boolean | null;
@@ -101,12 +83,8 @@ const NewPostPage = () => {
     isChecking: false,
     isAvailable: null,
     message: ''
-  });
-
-  // Track if slug was manually edited
-  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
-
-  // Jodit editor configuration - memoized to prevent unnecessary re-renders
+  });
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const editorConfig = useMemo(() => ({
     readonly: false,
     placeholder: 'Write your post content here...',
@@ -132,9 +110,7 @@ const NewPostPage = () => {
       color: '#000000'
     },
     editorCssClass: 'jodit-editor-white-bg'
-  }), []);
-
-  // Generate slug from title
+  }), []);
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
@@ -143,9 +119,7 @@ const NewPostPage = () => {
       .replace(/-+/g, '-')
       .replace(/^-+|-+$/g, '')
       .trim();
-  };
-
-  // Debounced slug availability check
+  };
   const checkSlugAvailability = async (slug: string) => {
     if (!slug || slug.length < 3) {
       setSlugStatus({ isChecking: false, isAvailable: null, message: '' });
@@ -154,13 +128,10 @@ const NewPostPage = () => {
 
     setSlugStatus({ isChecking: true, isAvailable: null, message: 'Checking availability...' });
 
-    try {
-      // Simulate API call to check slug availability
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // For demo purposes, consider slugs containing 'test' as unavailable
+    try {
+      await new Promise(resolve => setTimeout(resolve, 800));
       const isAvailable = !slug.includes('test');
-      
+
       setSlugStatus({
         isChecking: false,
         isAvailable,
@@ -175,9 +146,7 @@ const NewPostPage = () => {
         message: 'Error checking availability'
       });
     }
-  };
-
-  // Debounce function
+  };
   const debounce = (func: Function, wait: number) => {
     let timeout: NodeJS.Timeout;
     return function executedFunction(...args: any[]) {
@@ -188,38 +157,26 @@ const NewPostPage = () => {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
-  };
-
-  // Debounced slug check
-  const debouncedSlugCheck = debounce(checkSlugAvailability, 1000);
-
-  // Handle form field changes
+  };
+  const debouncedSlugCheck = debounce(checkSlugAvailability, 1000);
   const handleInputChange = (field: keyof PostFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
-    }));
-
-    // Auto-generate slug when title changes (only if not manually edited)
+    }));
     if (field === 'title' && value && !isSlugManuallyEdited) {
       const newSlug = generateSlug(value);
       setFormData(prev => ({
         ...prev,
         slug: newSlug
-      }));
-      // Check availability of the new slug
+      }));
       debouncedSlugCheck(newSlug);
-    }
-
-    // Handle manual slug editing
+    }
     if (field === 'slug') {
-      setIsSlugManuallyEdited(true);
-      // Check availability of manually entered slug
+      setIsSlugManuallyEdited(true);
       debouncedSlugCheck(value);
     }
-  };
-
-  // Handle slug regeneration from title
+  };
   const regenerateSlug = () => {
     if (formData.title) {
       const newSlug = generateSlug(formData.title);
@@ -230,36 +187,30 @@ const NewPostPage = () => {
       setIsSlugManuallyEdited(false);
       debouncedSlugCheck(newSlug);
     }
-  };
-
-  // Handle image upload
+  };
   const handleImageUpload = async (file: File) => {
     try {
-      setImageUploading(true);
-      
-      // Validate file type
+      setImageUploading(true);
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         showToast('Only image files (JPEG, PNG, GIF, WebP) are allowed', 'error');
         return;
-      }
-      
-      // Validate file size (5MB max)
+      }
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
         showToast('File size must be less than 5MB', 'error');
         return;
       }
-      
+
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
-      formDataUpload.append('type', 'uploads'); // Store in public/uploads folder
-      
+      formDataUpload.append('type', 'uploads');
+
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formDataUpload,
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setFormData(prev => ({
@@ -277,19 +228,15 @@ const NewPostPage = () => {
     } finally {
       setImageUploading(false);
     }
-  };
-
-  // Handle form submission
+  };
   const handleSubmit = async (status: 'draft' | 'published') => {
     try {
-      setIsLoading(true);
-      
-      // Basic validation
+      setIsLoading(true);
       if (!formData.title.trim()) {
         showToast('Please enter a post title', 'error');
         return;
       }
-      
+
       if (!formData.content.trim()) {
         showToast('Please enter post content', 'error');
         return;
@@ -306,10 +253,8 @@ const NewPostPage = () => {
         seoTitle: formData.metaTitle,
         seoDescription: formData.metaDescription
       };
-      
-      console.log('Submitting post:', postData);
-      
-      // Call API to create blog post
+
+      console.log('Submitting post:', postData);
       const response = await fetch('/api/blogs', {
         method: 'POST',
         headers: {
@@ -317,25 +262,23 @@ const NewPostPage = () => {
         },
         body: JSON.stringify(postData),
       });
-      
+
       const result = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(result.error || 'Failed to create blog post');
       }
-      
+
       showToast(
         status === 'draft' ? 'Post saved as draft!' : 'Post published successfully!',
         'success'
-      );
-      
-      // Reset form after successful submission
+      );
       if (status === 'published') {
         setTimeout(() => {
           window.location.href = '/admin/blogs';
         }, 2000);
       }
-      
+
     } catch (error) {
       showToast('Error saving post', 'error');
     } finally {
@@ -343,11 +286,9 @@ const NewPostPage = () => {
     }
   };
 
-
-
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -359,7 +300,7 @@ const NewPostPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Page Header */}
+        {}
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -392,9 +333,9 @@ const NewPostPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content - Left Column */}
+          {}
           <div className="lg:col-span-2 space-y-6">
-            {/* Post Title & Slug */}
+            {}
             <div className="card card-padding">
               <div className="space-y-4">
                 <div>
@@ -465,7 +406,7 @@ const NewPostPage = () => {
               </div>
             </div>
 
-            {/* Post Content */}
+            {}
             <div className="card card-padding">
               <div>
                 <label className="form-label mb-2">
@@ -486,7 +427,7 @@ const NewPostPage = () => {
               </div>
             </div>
 
-            {/* Post Excerpt */}
+            {}
             <div className="card card-padding">
               <div>
                 <label className="form-label mb-2">Post Excerpt</label>
@@ -503,7 +444,7 @@ const NewPostPage = () => {
               </div>
             </div>
 
-            {/* SEO Settings */}
+            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 SEO Settings
@@ -539,9 +480,9 @@ const NewPostPage = () => {
             </div>
           </div>
 
-          {/* Sidebar - Right Column */}
+          {}
           <div className="space-y-6">
-            {/* Publish Settings */}
+            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Publish Settings
@@ -561,7 +502,7 @@ const NewPostPage = () => {
               </div>
             </div>
 
-            {/* Featured Image */}
+            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Featured Image
@@ -585,36 +526,7 @@ const NewPostPage = () => {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input
                       type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleImageUpload(file);
-                      }}
-                      className="hidden"
-                      id="featured-image"
-                    />
-                    <label
-                      htmlFor="featured-image"
-                      className="cursor-pointer flex flex-col items-center gap-2"
-                    >
-                      {imageUploading ? (
-                        <GradientSpinner size="w-8 h-8" />
-                      ) : (
-                        <FaUpload className="h-8 w-8 text-gray-400" />
-                      )}
-                      <span className="text-sm text-gray-600">
-                        {imageUploading ? 'Uploading...' : 'Click to upload image'}
-                      </span>
-                    </label>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Fixed Action Buttons */}
+                      accept="image}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex flex-wrap justify-center gap-3 md:hidden z-50">
         <button
           onClick={() => handleSubmit('draft')}

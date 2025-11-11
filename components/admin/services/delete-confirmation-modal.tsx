@@ -15,7 +15,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
 }) => {
   return (
     <div className="w-full max-w-md">
-      {/* Modal Header */}
+      {}
       <div className="flex items-center justify-between p-6">
         <h3
           className="text-lg font-semibold"
@@ -34,7 +34,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
 
       <div className="px-6 pb-6">
         <div className="space-y-4">
-          {/* Warning Icon and Message */}
+          {}
           <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
             <FaExclamationTriangle className="h-6 w-6 text-red-500 flex-shrink-0" />
             <div>
@@ -48,7 +48,7 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {}
           <div className="flex gap-2 justify-end">
             <button onClick={onClose} className="btn btn-secondary px-6 py-2">
               Cancel
@@ -66,4 +66,3 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
     </div>
   );
 };
-

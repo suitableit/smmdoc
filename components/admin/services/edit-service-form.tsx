@@ -13,12 +13,8 @@ import axiosInstance from '@/lib/axiosInstance';
 import {
   createServiceDefaultValues,
   CreateServiceSchema,
-} from '@/lib/validators/admin/services/services.validator';
-
-// Fetcher function for useSWR
-const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
-
-// Form components
+} from '@/lib/validators/admin/services/services.validator';
+const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
 const FormItem = ({
   className = '',
   children,
@@ -54,18 +50,14 @@ const FormMessage = ({
 }) =>
   children ? (
     <div className={`text-xs text-red-500 mt-1 ${className}`}>{children}</div>
-  ) : null;
-
-// Custom Gradient Spinner Component
+  ) : null;
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Edit Service Form Component
+);
 export const EditServiceForm = ({
   serviceId,
   onClose,
@@ -110,21 +102,14 @@ export const EditServiceForm = ({
     setValue,
     formState: { errors },
   } = useForm<CreateServiceSchema>({
-    mode: 'onChange',
-    // No resolver for edit form to allow empty fields
+    mode: 'onChange',
     defaultValues: {
       ...createServiceDefaultValues,
       mode: 'manual',
     },
-  });
-
-  // Watch refill field to control readonly state of refill days and display
-  const refillValue = watch('refill');
-  
-  // Watch mode field to control API provider field visibility
-  const modeValue = watch('mode');
-
-  // Debug refill value changes
+  });
+  const refillValue = watch('refill');
+  const modeValue = watch('mode');
   useEffect(() => {
     console.log('Refill value changed:', refillValue, typeof refillValue);
   }, [refillValue]);
@@ -134,31 +119,21 @@ export const EditServiceForm = ({
       console.log('=== EDIT SERVICE FORM DEBUG ===');
       console.log('Raw serviceTypeId from database:', serviceData.data.serviceTypeId, typeof serviceData.data.serviceTypeId);
       console.log('Available service types:', serviceTypesData.data);
-      console.log('Service types IDs:', serviceTypesData.data?.map((st: any) => ({ id: st.id, name: st.name, type: typeof st.id })));
-
-      
-      // Convert serviceTypeId to string, handle null/undefined properly
+      console.log('Service types IDs:', serviceTypesData.data?.map((st: any) => ({ id: st.id, name: st.name, type: typeof st.id })));
       const serviceTypeIdValue = serviceData.data.serviceTypeId ? String(serviceData.data.serviceTypeId) : '';
-      console.log('Converted serviceTypeIdValue:', serviceTypeIdValue, typeof serviceTypeIdValue);
-      
-      // Check if the serviceTypeId exists in available service types
+      console.log('Converted serviceTypeIdValue:', serviceTypeIdValue, typeof serviceTypeIdValue);
       const matchingServiceType = serviceTypesData.data?.find((st: any) => String(st.id) === serviceTypeIdValue);
-      console.log('Matching service type found:', matchingServiceType);
-      
-      // Handle serviceSpeed - map "medium" to "normal" if needed, and ensure it's a valid option
+      console.log('Matching service type found:', matchingServiceType);
       let serviceSpeedValue = serviceData.data.serviceSpeed || createServiceDefaultValues.serviceSpeed;
       if (serviceSpeedValue === 'medium') {
-        serviceSpeedValue = 'normal'; // Map medium to normal since form doesn't have medium option
-      }
-      // Ensure the value is one of the valid options
+        serviceSpeedValue = 'normal';
+      }
       const validSpeeds = ['slow', 'sometimes_slow', 'normal', 'fast'];
       if (!validSpeeds.includes(serviceSpeedValue)) {
-        serviceSpeedValue = 'normal'; // Default to normal if invalid
-      }
-      
-      // Convert providerId to string if it exists
+        serviceSpeedValue = 'normal';
+      }
       const providerIdValue = serviceData.data.providerId ? String(serviceData.data.providerId) : '';
-      
+
       const resetData = {
         categoryId: serviceData.data.categoryId ? String(serviceData.data.categoryId) : '',
         name: serviceData.data.name || '',
@@ -181,20 +156,15 @@ export const EditServiceForm = ({
         providerId: providerIdValue,
         providerServiceId: serviceData.data.providerServiceId || createServiceDefaultValues.providerServiceId,
       };
-      
+
       console.log('Reset data being passed to form:', resetData);
       console.log('serviceTypeId in reset data:', resetData.serviceTypeId);
-      
-      reset(resetData);
-      
-      // Log form values after reset
+
+      reset(resetData);
       setTimeout(() => {
         console.log('Form values after reset:', watch());
         console.log('serviceTypeId field value after reset:', watch('serviceTypeId'));
-      }, 50);
-
-      
-      // Ensure refill field triggers watch by setting it explicitly
+      }, 50);
       setTimeout(() => {
         setValue('refill', Boolean(serviceData.data.refill));
       }, 100);
@@ -203,9 +173,7 @@ export const EditServiceForm = ({
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
     console.log('Edit form submitted with values:', values);
-    console.log('Service ID:', serviceId);
-
-    // Validate required fields
+    console.log('Service ID:', serviceId);
     if (!values.categoryId || values.categoryId === '') {
       showToast('Please select a service category', 'error');
       return;
@@ -214,15 +182,11 @@ export const EditServiceForm = ({
     if (!values.serviceTypeId || values.serviceTypeId === '') {
       showToast('Please select a service type', 'error');
       return;
-    }
-
-    // Validate API provider when mode is auto
+    }
     if (values.mode === 'auto' && (!values.providerId || values.providerId === '')) {
       showToast('Please select an API provider when mode is Auto (API)', 'error');
       return;
-    }
-
-    // Filter out empty values and only send changed fields
+    }
     const filteredValues = Object.fromEntries(
       Object.entries(values).filter(([key, value]) => {
         if (value === '' || value === null || value === undefined) return false;
@@ -244,12 +208,11 @@ export const EditServiceForm = ({
           showToast(
             response.data.message || 'Service updated successfully',
             'success'
-          );
-          // Live refresh all data
+          );
           if (refreshAllData) {
             await refreshAllData();
           }
-          onClose(); // Close modal on success
+          onClose();
         } else {
           showToast(response.data.error || 'Failed to update service', 'error');
         }
@@ -313,7 +276,7 @@ export const EditServiceForm = ({
 
   return (
     <div className="w-full max-w-6xl">
-      {/* Modal Header */}
+      {}
       <div className="flex items-center justify-between p-6">
         <h3
           className="text-lg font-semibold"
@@ -332,9 +295,9 @@ export const EditServiceForm = ({
 
       <div className="px-6 pb-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Form Grid */}
+          {}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Service Name - 100% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -354,7 +317,7 @@ export const EditServiceForm = ({
               <FormMessage>{errors.name?.message}</FormMessage>
             </FormItem>
 
-            {/* Service Category - 50% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -382,7 +345,7 @@ export const EditServiceForm = ({
               <FormMessage>{errors.categoryId?.message}</FormMessage>
             </FormItem>
 
-            {/* Service Type - 50% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -408,7 +371,7 @@ export const EditServiceForm = ({
               <FormMessage>{errors.serviceTypeId?.message}</FormMessage>
             </FormItem>
 
-            {/* Mode - 100% width - REQUIRED with default manual */}
+            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -429,7 +392,7 @@ export const EditServiceForm = ({
               <FormMessage>{errors.mode?.message}</FormMessage>
             </FormItem>
 
-            {/* API Provider - 100% width - CONDITIONAL - Only show when mode is auto */}
+            {}
             {modeValue === 'auto' && (
               <FormItem className="md:col-span-2">
                 <FormLabel
@@ -457,7 +420,7 @@ export const EditServiceForm = ({
               </FormItem>
             )}
 
-            {/* Service Price - 33% width - special grid - REQUIRED */}
+            {}
             <div className="md:col-span-2 grid grid-cols-3 gap-6">
               <FormItem className="col-span-1">
                 <FormLabel
@@ -480,7 +443,7 @@ export const EditServiceForm = ({
                 <FormMessage>{errors.rate?.message}</FormMessage>
               </FormItem>
 
-              {/* Minimum Order - 33% width - REQUIRED */}
+              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -501,7 +464,7 @@ export const EditServiceForm = ({
                 <FormMessage>{errors.min_order?.message}</FormMessage>
               </FormItem>
 
-              {/* Maximum Order - 33% width - REQUIRED */}
+              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -523,9 +486,9 @@ export const EditServiceForm = ({
               </FormItem>
             </div>
 
-            {/* Per Quantity and Average Time - 50% width each - REQUIRED */}
+            {}
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Per Quantity - 50% width - REQUIRED */}
+              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -547,7 +510,7 @@ export const EditServiceForm = ({
                 <FormMessage>{errors.perqty?.message}</FormMessage>
               </FormItem>
 
-              {/* Average Time - 50% width - REQUIRED */}
+              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -568,7 +531,7 @@ export const EditServiceForm = ({
               </FormItem>
             </div>
 
-            {/* Refill - 100% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -592,7 +555,7 @@ export const EditServiceForm = ({
               <FormMessage>{errors.refill?.message}</FormMessage>
             </FormItem>
 
-            {/* Refill Days - 50% width (show only when refill is on) - REQUIRED */}
+            {}
             {refillValue === true && (
               <FormItem className="md:col-span-1">
                 <FormLabel
@@ -615,7 +578,7 @@ export const EditServiceForm = ({
               </FormItem>
             )}
 
-            {/* Refill Display - 50% width (show only when refill is on) - REQUIRED */}
+            {}
             {refillValue === true && (
               <FormItem className="md:col-span-1">
                 <FormLabel
@@ -639,7 +602,7 @@ export const EditServiceForm = ({
               </FormItem>
             )}
 
-            {/* Cancel - 50% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -663,9 +626,7 @@ export const EditServiceForm = ({
               <FormMessage>{errors.cancel?.message}</FormMessage>
             </FormItem>
 
-
-
-            {/* Order Link - 50% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -687,7 +648,7 @@ export const EditServiceForm = ({
               <FormMessage>{errors.orderLink?.message}</FormMessage>
             </FormItem>
 
-            {/* Service Speed - 50% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -712,7 +673,7 @@ export const EditServiceForm = ({
               <FormMessage>{errors.serviceSpeed?.message}</FormMessage>
             </FormItem>
 
-            {/* Example Link - 100% width - OPTIONAL */}
+            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -733,7 +694,7 @@ export const EditServiceForm = ({
             </FormItem>
           </div>
 
-          {/* Service Description - 100% width - REQUIRED */}
+          {}
           <FormItem>
             <FormLabel
               className="text-sm font-medium"
@@ -753,7 +714,7 @@ export const EditServiceForm = ({
             <FormMessage>{errors.description?.message}</FormMessage>
           </FormItem>
 
-          {/* Submit Buttons */}
+          {}
           <div className="flex gap-2 justify-center">
             <button
               type="button"
@@ -785,4 +746,3 @@ export const EditServiceForm = ({
     </div>
   );
 };
-

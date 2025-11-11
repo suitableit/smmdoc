@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -12,8 +12,7 @@ export const revalidate = { next: { revalidate: 3600 } };
 
 export function formatError(error: unknown): string {
   if (error instanceof Error) {
-    if (error.name === 'ZodError' && 'errors' in error) {
-      // Handle Zod validation errors
+    if (error.name === 'ZodError' && 'errors' in error) {
       const fieldErrors = (error as any).errors.map((err: any) => err.message);
       return fieldErrors.join('. ');
     }
@@ -34,15 +33,9 @@ export function formatError(error: unknown): string {
 
     if (error.name === 'PrismaClientInitializationError') {
       return 'Database connection failed. Please check your database configuration.';
-    }
+    }
 
-    // if (error instanceof AxiosError) {
-    //   return `HTTP Request Failed: ${
-    //     error.response?.data?.message || error.message
-    //   }`;
-    // }
-
-    return error.message; // Generic JavaScript error
+    return error.message;
   }
 
   return typeof error === 'string' ? error : JSON.stringify(error);
@@ -50,16 +43,13 @@ export function formatError(error: unknown): string {
 
 export function handleError(error: unknown): string {
   const formattedErrorMessage = formatError(error);
-  if (process.env.NODE_ENV === 'production') {
-    // Sentry.captureException(error);
+  if (process.env.NODE_ENV === 'production') {
     console.error('Error in production mode:', error);
   } else {
     console.error('Error in development mode:', error);
   }
   return formattedErrorMessage;
-}
-
-// Helper function to clean field names (e.g., "User_email_key" → "Email")
+}
 function extractFieldName(target: any): string {
   if (!target) return 'Field';
   if (Array.isArray(target)) target = target[0];
@@ -70,14 +60,10 @@ function extractFieldName(target: any): string {
       .split('_')
       .pop() || 'Field'
   );
-}
-
-// Helper function to capitalize field names
+}
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-// Number formatting utilities
+}
 export function formatNumber(num: number | string): string {
   const number = typeof num === 'string' ? parseFloat(num) : num;
   if (isNaN(number)) return '0';
@@ -95,14 +81,12 @@ export function formatPrice(amount: number, decimals: number = 2): string {
 
 export function formatID(id: number | string): string {
   const number = typeof id === 'string' ? parseInt(id) : id;
-  if (isNaN(number)) return String(id);
-  // Return ID without comma separators
+  if (isNaN(number)) return String(id);
   return number.toString();
 }
 
 export function formatCount(count: number | string): string {
   const number = typeof count === 'string' ? parseInt(count) : count;
-  if (isNaN(number)) return '0';
-  // Return count without comma separators
+  if (isNaN(number)) return '0';
   return number.toString();
 }

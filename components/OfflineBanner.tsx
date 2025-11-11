@@ -26,7 +26,7 @@ export default function OfflineBanner({ isOnline, onRetry, isRetrying = false }:
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           {onRetry && (
             <button

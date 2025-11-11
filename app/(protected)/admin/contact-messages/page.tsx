@@ -12,22 +12,16 @@ import {
     FaSync,
     FaTimes,
     FaTrash
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-
-// Custom Gradient Spinner Component
+import { setPageTitle } from '@/lib/utils/set-page-title';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -44,9 +38,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interface for ContactMessage
+);
 interface ContactMessage {
   id: string;
   userId: string;
@@ -75,23 +67,17 @@ interface PaginationInfo {
 }
 
 const ContactMessagesPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Contact Messages', appName);
-  }, [appName]);
-
-  // State for real data
+  }, [appName]);
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [messageCounts, setMessageCounts] = useState({
     total: 0,
     unread: 0,
     read: 0,
     replied: 0
-  });
-
-// Dummy data for contact messages (fallback)
+  });
   const dummyContactMessages: ContactMessage[] = [
     {
       id: '001',
@@ -203,9 +189,7 @@ const ContactMessagesPage = () => {
       createdAt: '2024-06-19T17:10:00Z',
       status: 'Read' as const,
     },
-  ];
-
-  // State management
+  ];
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
@@ -223,21 +207,13 @@ const ContactMessagesPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // Fallback mode state
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [fallbackMode, setFallbackMode] = useState(false);
-  const [warningMessage, setWarningMessage] = useState('');
-
-  // Bulk operations state
-  const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
-
-  // Fetch contact messages from API
+  const [warningMessage, setWarningMessage] = useState('');
+  const [selectedBulkOperation, setSelectedBulkOperation] = useState('');
   const fetchContactMessages = async () => {
     setMessagesLoading(true);
     try {
@@ -253,9 +229,7 @@ const ContactMessagesPage = () => {
 
       if (response.ok && data.success) {
         setContactMessages(data.messages || []);
-        setMessageCounts(data.messageCounts || { total: 0, unread: 0, read: 0, replied: 0 });
-        
-        // Check if we're in fallback mode
+        setMessageCounts(data.messageCounts || { total: 0, unread: 0, read: 0, replied: 0 });
         if (data.fallbackMode) {
           setFallbackMode(true);
           setWarningMessage(data.warning || 'Database connection unavailable. Showing sample data.');
@@ -263,7 +237,7 @@ const ContactMessagesPage = () => {
           setFallbackMode(false);
           setWarningMessage('');
         }
-        
+
         setPagination(prev => ({
           ...prev,
           total: data.pagination?.total || 0,
@@ -272,16 +246,14 @@ const ContactMessagesPage = () => {
           hasPrev: data.pagination?.hasPrev || false,
         }));
       } else {
-        console.error('Failed to fetch contact messages:', data.error);
-        // Use dummy data as fallback
+        console.error('Failed to fetch contact messages:', data.error);
         setContactMessages(dummyContactMessages);
         setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
         setFallbackMode(true);
         setWarningMessage('Database connection failed. Showing sample data.');
       }
     } catch (error) {
-      console.error('Error fetching contact messages:', error);
-      // Use dummy data as fallback
+      console.error('Error fetching contact messages:', error);
       setContactMessages(dummyContactMessages);
       setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
       setFallbackMode(true);
@@ -289,16 +261,10 @@ const ContactMessagesPage = () => {
     } finally {
       setMessagesLoading(false);
     }
-  };
-
-  // Load data on component mount and when filters change
+  };
   useEffect(() => {
     fetchContactMessages();
-  }, [statusFilter, searchTerm, pagination.page, pagination.limit]);
-
-
-
-  // Utility functions
+  }, [statusFilter, searchTerm, pagination.page, pagination.limit]);
   const formatMessageID = (id: number | string) => {
     return `${String(id)}`;
   };
@@ -327,18 +293,10 @@ const ContactMessagesPage = () => {
       default:
         return <FaEnvelope className="h-3 w-3" />;
     }
-  };
-
-
-
-
-
-  // Get paginated data (now handled by API)
+  };
   const getPaginatedData = () => {
-    return contactMessages; // API already handles filtering and pagination
-  };
-
-  // Load contact messages from API
+    return contactMessages;
+  };
   const loadContactMessages = async () => {
     setMessagesLoading(true);
     try {
@@ -353,18 +311,14 @@ const ContactMessagesPage = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setContactMessages(data.messages || []);
-
-        // Check if we're in fallback mode
+        setContactMessages(data.messages || []);
         if (data.fallbackMode) {
           setFallbackMode(true);
           setWarningMessage(data.warning || 'Database connection unavailable. Showing sample data.');
         } else {
           setFallbackMode(false);
           setWarningMessage('');
-        }
-
-        // Update pagination with real data
+        }
         const totalCount = data.messageCounts?.total || 0;
         setPagination(prev => ({
           ...prev,
@@ -372,9 +326,7 @@ const ContactMessagesPage = () => {
           totalPages: Math.ceil(totalCount / prev.limit),
           hasNext: prev.page < Math.ceil(totalCount / prev.limit),
           hasPrev: prev.page > 1
-        }));
-
-        // Update message counts for status tabs
+        }));
         setMessageCounts({
           total: data.messageCounts?.total || 0,
           unread: data.messageCounts?.unread || 0,
@@ -385,8 +337,7 @@ const ContactMessagesPage = () => {
         showToast(data.error || 'Failed to load contact messages', 'error');
       }
     } catch (error) {
-      console.error('Error loading contact messages:', error);
-      // Use dummy data as fallback
+      console.error('Error loading contact messages:', error);
       setContactMessages(dummyContactMessages);
       setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
       setFallbackMode(true);
@@ -395,14 +346,10 @@ const ContactMessagesPage = () => {
     } finally {
       setMessagesLoading(false);
     }
-  };
-
-  // Load contact messages from API
+  };
   useEffect(() => {
     loadContactMessages();
-  }, [statusFilter, searchTerm, pagination.page]);
-
-  // Show toast notification
+  }, [statusFilter, searchTerm, pagination.page]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -434,15 +381,10 @@ const ContactMessagesPage = () => {
         ? prev.filter((id) => id !== messageId)
         : [...prev, messageId]
     );
-  };
-
-  // Handle view/edit message
-  const handleViewEditMessage = (messageId: string) => {
-    // Open message details in new tab
+  };
+  const handleViewEditMessage = (messageId: string) => {
     window.open(`/admin/contact-messages/${messageId}`, '_blank');
-  };
-
-  // Handle message deletion
+  };
   const handleDeleteMessage = async (messageId: string) => {
     setDeleteLoading(true);
     try {
@@ -454,8 +396,7 @@ const ContactMessagesPage = () => {
 
       if (response.ok && data.success) {
         setContactMessages((prev) => prev.filter((message) => message.id !== messageId));
-        showToast('Message deleted successfully', 'success');
-        // Refresh data to update counts
+        showToast('Message deleted successfully', 'success');
         fetchContactMessages();
       } else {
         showToast(data.error || 'Error deleting message', 'error');
@@ -469,9 +410,7 @@ const ContactMessagesPage = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
-
-  // Handle mark as read
+  };
   const handleMarkAsRead = async (messageId: string) => {
     try {
       const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
@@ -495,8 +434,7 @@ const ContactMessagesPage = () => {
               : message
           )
         );
-        showToast('Message marked as read', 'success');
-        // Refresh data to update counts
+        showToast('Message marked as read', 'success');
         fetchContactMessages();
       } else {
         showToast(data.error || 'Error updating message status', 'error');
@@ -505,9 +443,7 @@ const ContactMessagesPage = () => {
       console.error('Error marking message as read:', error);
       showToast('Error updating message status', 'error');
     }
-  };
-
-  // Handle bulk operations
+  };
   const handleBulkOperation = async (operation: string) => {
     if (!operation || selectedMessages.length === 0) return;
 
@@ -528,10 +464,9 @@ const ContactMessagesPage = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        // Refresh the messages to get updated data
+      if (response.ok && data.success) {
         await fetchContactMessages();
-        
+
         switch (operation) {
           case 'mark_read':
             showToast(`Marked ${selectedIds.length} message(s) as read`, 'success');
@@ -543,7 +478,7 @@ const ContactMessagesPage = () => {
             showToast(`Deleted ${selectedIds.length} message(s)`, 'success');
             break;
         }
-        
+
         setSelectedMessages([]);
       } else {
         showToast(data.error || 'Bulk operation failed', 'error');
@@ -558,7 +493,7 @@ const ContactMessagesPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -570,12 +505,12 @@ const ContactMessagesPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
-              {/* Page View Dropdown */}
+              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -606,7 +541,7 @@ const ContactMessagesPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls */}
+            {}
             <div className="flex items-center gap-3">
               <div className="relative">
                 <FaSearch
@@ -632,7 +567,7 @@ const ContactMessagesPage = () => {
           </div>
         </div>
 
-        {/* Warning Banner for Fallback Mode */}
+        {}
         {fallbackMode && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
             <div className="flex-shrink-0">
@@ -654,10 +589,10 @@ const ContactMessagesPage = () => {
           </div>
         )}
 
-        {/* Contact Messages Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons - Inside table header */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -741,7 +676,7 @@ const ContactMessagesPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {/* Selected Messages Actions - Top of table */}
+            {}
             {selectedMessages.length > 0 && (
               <div className="flex flex-col md:flex-row md:items-center gap-2 py-4 border-b mb-4">
                 <div className="flex items-center gap-2 mb-2 md:mb-0">
@@ -751,8 +686,8 @@ const ContactMessagesPage = () => {
                   >
                     {selectedMessages.length} selected
                   </span>
-                  
-                  {/* Bulk Operations Dropdown */}
+
+                  {}
                   <select 
                     value={selectedBulkOperation}
                     onChange={(e) => setSelectedBulkOperation(e.target.value)}
@@ -766,12 +701,12 @@ const ContactMessagesPage = () => {
                   </select>
                 </div>
 
-                {/* Save Changes Button - appears when operation is selected */}
+                {}
                 {selectedBulkOperation && (
                   <button
                     onClick={() => {
                       handleBulkOperation(selectedBulkOperation);
-                      setSelectedBulkOperation(''); // Reset after execution
+                      setSelectedBulkOperation('');
                     }}
                     disabled={bulkOperationLoading || messagesLoading}
                     className="btn btn-primary flex items-center gap-2 px-4 py-2.5 disabled:opacity-50 w-full md:w-auto"
@@ -814,7 +749,7 @@ const ContactMessagesPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -959,7 +894,7 @@ const ContactMessagesPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
-                              {/* Conditional Action Button */}
+                              {}
                               {message.adminReply ? (
                                 <button
                                   className="btn btn-secondary p-2"
@@ -978,7 +913,7 @@ const ContactMessagesPage = () => {
                                 </button>
                               )}
 
-                              {/* Delete Button */}
+                              {}
                               <button
                                 className="btn btn-secondary p-2"
                                 title="Delete Message"
@@ -998,9 +933,7 @@ const ContactMessagesPage = () => {
                   </table>
                 </div>
 
-                
-
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1061,7 +994,7 @@ const ContactMessagesPage = () => {
           </div>
         </div>
 
-        {/* Delete Confirmation Dialog */}
+        {}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

@@ -28,7 +28,7 @@ export interface ProviderStatusResponse {
 
 export class ProviderOrderForwarder {
   private static instance: ProviderOrderForwarder;
-  
+
   public static getInstance(): ProviderOrderForwarder {
     if (!ProviderOrderForwarder.instance) {
       ProviderOrderForwarder.instance = new ProviderOrderForwarder();
@@ -36,16 +36,13 @@ export class ProviderOrderForwarder {
     return ProviderOrderForwarder.instance;
   }
 
-  /**
-   * Forward order to external provider
-   */
   async forwardOrderToProvider(
     provider: Provider,
     orderData: ProviderOrderRequest
   ): Promise<ProviderOrderResponse> {
     try {
       const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
-      
+
       const orderRequest = requestBuilder.buildAddOrderRequest(
         orderData.service,
         orderData.link,
@@ -65,7 +62,7 @@ export class ProviderOrderForwarder {
       }
 
       const result = await response.json();
-      
+
       if (result.error) {
         throw new Error(`Provider error: ${result.error}`);
       }
@@ -87,16 +84,13 @@ export class ProviderOrderForwarder {
     }
   }
 
-  /**
-   * Check order status from provider
-   */
   async checkProviderOrderStatus(
     provider: Provider,
     providerOrderId: string
   ): Promise<ProviderStatusResponse> {
     try {
       const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
-      
+
       const statusRequest = requestBuilder.buildOrderStatusRequest(providerOrderId);
 
       const response = await fetch(statusRequest.url, {
@@ -110,7 +104,7 @@ export class ProviderOrderForwarder {
       }
 
       const result = await response.json();
-      
+
       if (result.error) {
         throw new Error(`Provider error: ${result.error}`);
       }
@@ -131,9 +125,6 @@ export class ProviderOrderForwarder {
     }
   }
 
-  /**
-   * Get provider services list
-   */
   async getProviderServices(provider: Provider): Promise<Array<{
     service: string;
     name: string;
@@ -147,7 +138,7 @@ export class ProviderOrderForwarder {
   }>> {
     try {
       const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
-      
+
       const servicesRequest = requestBuilder.buildServicesRequest();
 
       const response = await fetch(servicesRequest.url, {
@@ -161,7 +152,7 @@ export class ProviderOrderForwarder {
       }
 
       const result = await response.json();
-      
+
       if (result.error) {
         throw new Error(`Provider error: ${result.error}`);
       }
@@ -186,13 +177,10 @@ export class ProviderOrderForwarder {
     }
   }
 
-  /**
-   * Get provider balance
-   */
   async getProviderBalance(provider: Provider): Promise<number> {
     try {
       const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
-      
+
       const balanceRequest = requestBuilder.buildBalanceRequest();
 
       const response = await fetch(balanceRequest.url, {
@@ -206,7 +194,7 @@ export class ProviderOrderForwarder {
       }
 
       const result = await response.json();
-      
+
       if (result.error) {
         throw new Error(`Provider error: ${result.error}`);
       }
@@ -221,9 +209,6 @@ export class ProviderOrderForwarder {
     }
   }
 
-  /**
-   * Map provider status to internal status
-   */
   private mapProviderStatus(providerStatus: string): string {
     const statusMap: { [key: string]: string } = {
       'Pending': 'pending',
@@ -240,15 +225,10 @@ export class ProviderOrderForwarder {
     return statusMap[providerStatus] || 'pending';
   }
 
-  /**
-   * Validate provider configuration
-   */
   validateProvider(provider: Provider): boolean {
     if (!provider.api_url || !provider.api_key) {
       return false;
-    }
-
-    // Basic URL validation
+    }
     try {
       new URL(provider.api_url);
     } catch {
@@ -258,9 +238,6 @@ export class ProviderOrderForwarder {
     return true;
   }
 
-  /**
-   * Test provider connection
-   */
   async testProviderConnection(provider: Provider): Promise<boolean> {
     try {
       await this.getProviderBalance(provider);
@@ -271,15 +248,12 @@ export class ProviderOrderForwarder {
     }
   }
 
-  /**
-   * Sync multiple orders status from provider
-   */
   async syncOrdersStatus(
     provider: Provider,
     providerOrderIds: string[]
   ): Promise<{ [orderId: string]: ProviderStatusResponse }> {
     const results: { [orderId: string]: ProviderStatusResponse } = {};
-    
+
     for (const orderId of providerOrderIds) {
       try {
         const status = await this.checkProviderOrderStatus(provider, orderId);
@@ -288,13 +262,10 @@ export class ProviderOrderForwarder {
         console.error(`Failed to sync status for order ${orderId}:`, error);
       }
     }
-    
+
     return results;
   }
 
-  /**
-   * Calculate provider service cost
-   */
   calculateProviderCost(
     serviceRate: number,
     quantity: number,
@@ -305,18 +276,15 @@ export class ProviderOrderForwarder {
     return baseCost + markupAmount;
   }
 
-  /**
-   * Format provider error message
-   */
   formatProviderError(error: any): string {
     if (typeof error === 'string') {
       return error;
     }
-    
+
     if (error.message) {
       return error.message;
     }
-    
+
     return 'Unknown provider error occurred';
   }
 }

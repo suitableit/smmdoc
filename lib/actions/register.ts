@@ -10,15 +10,11 @@ import { signUpSchema } from "../validators/auth.validator";
 import { verifyReCAPTCHA, getReCAPTCHASettings } from "../recaptcha";
 
 export const register = async (values: z.infer<typeof signUpSchema> & { recaptchaToken?: string }) => {
-  console.log('Received values:', values);
-  
-  // Add confirmPassword if it doesn't exist
+  console.log('Received values:', values);
   if (!values.confirmPassword && values.password) {
     values = { ...values, confirmPassword: values.password };
     console.log('Added confirmPassword:', values);
-  }
-  
-  // Verify reCAPTCHA if enabled and token provided
+  }
   const recaptchaSettings = await getReCAPTCHASettings();
   if (recaptchaSettings && recaptchaSettings.enabledForms?.signUp) {
     if (!values.recaptchaToken) {
@@ -36,46 +32,37 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
       return { success: false, error: recaptchaResult.error || "reCAPTCHA verification failed" };
     }
   }
-  
+
   const validatedFields = signUpSchema.safeParse(values);
   console.log('Validation result:', validatedFields);
-  
+
   if (!validatedFields.success) {
     console.log('Validation errors:', validatedFields.error.format());
     return { success: false, error: "Invalid fields" };
   }
-  const { username, name, email, password, confirmPassword } = validatedFields.data;
-  
-  // Check if passwords match
+  const { username, name, email, password, confirmPassword } = validatedFields.data;
   if (password !== confirmPassword) {
     return { success: false, error: "Passwords do not match" };
   }
-  
-  const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Check if email already exists
+  const hashedPassword = await bcrypt.hash(password, 10);
   const existingUser = await getUserByEmail(email);
   if (existingUser) {
     return { success: false, error: "Email already exists" };
-  }
-
-  // Check if username already exists
+  }
   const existingUsername = await db.user.findUnique({
     where: { username: username }
   });
   if (existingUsername) {
     return { success: false, error: "Username is already exist" };
   }
-  try {
-    // Check user settings for free balance and email confirmation
+  try {
     const userSettings = await db.userSettings.findFirst();
     let initialBalance = 0;
 
     if (userSettings?.userFreeBalanceEnabled && userSettings?.freeAmount > 0) {
       initialBalance = userSettings.freeAmount;
-    }
-
-    // Check if email confirmation is enabled
+    }
     const emailConfirmationEnabled = userSettings?.emailConfirmationEnabled ?? true;
 
     await db.user.create({
@@ -85,12 +72,10 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
         email,
         password: hashedPassword,
         balance: initialBalance,
-        total_deposit: initialBalance, // If free balance is given, count it as deposit
-        emailVerified: emailConfirmationEnabled ? null : new Date(), // Auto-verify if email confirmation is disabled
+        total_deposit: initialBalance,
+        emailVerified: emailConfirmationEnabled ? null : new Date(),
       },
-    });
-
-    // Only send verification email if email confirmation is enabled
+    });
     if (emailConfirmationEnabled) {
       const verificationToken = await generateVerificationToken(email);
       await sendMail({
@@ -98,9 +83,7 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
         subject: "Email Verification",
         html: `<a href="${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken?.token}">Click here to verify your email</a>`,
       });
-    }
-
-    // Create appropriate success message based on settings
+    }
     let successMessage = "Registration successful!";
 
     if (initialBalance > 0) {

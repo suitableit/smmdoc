@@ -11,23 +11,17 @@ import {
     FaSearch,
     FaSync,
     FaTimes
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-
-// Custom Gradient Spinner Component
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -44,9 +38,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces for type safety
+);
 interface Order {
   id: number;
   user: {
@@ -157,14 +149,10 @@ interface PaginationInfo {
 }
 
 const RefillOrdersPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Refill Orders', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<RefillOrderStats>({
     totalEligible: 0,
@@ -191,13 +179,9 @@ const RefillOrdersPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [ordersLoading, setOrdersLoading] = useState(true);
-
-  // Refill dialog states
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [refillDialogOpen, setRefillDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [refillInfo, setRefillInfo] = useState<RefillInfo | null>(null);
@@ -206,9 +190,7 @@ const RefillOrdersPage = () => {
     customQuantity: '',
     reason: '',
   });
-  const [processing, setProcessing] = useState(false);
-
-  // Calculate status counts from current orders data
+  const [processing, setProcessing] = useState(false);
   const calculateStatusCounts = (ordersData: Order[]) => {
     const counts = {
       partial: 0,
@@ -222,9 +204,7 @@ const RefillOrdersPage = () => {
     });
 
     return counts;
-  };
-
-  // Fetch eligible orders
+  };
   const fetchEligibleOrders = async () => {
     try {
       setOrdersLoading(true);
@@ -245,12 +225,9 @@ const RefillOrdersPage = () => {
         throw new Error(result.message || 'Failed to fetch eligible orders');
       }
 
-      console.log('Refill requests fetched successfully:', result);
-
-      // Transform refill requests to orders format for display
+      console.log('Refill requests fetched successfully:', result);
       const transformedOrders = (result.data || [])
-        .filter((request: any, index: number, self: any[]) =>
-          // Remove duplicates based on order ID
+        .filter((request: any, index: number, self: any[]) =>
           index === self.findIndex(r => r.order?.id === request.order?.id)
         )
         .map((request: any) => ({
@@ -269,7 +246,7 @@ const RefillOrdersPage = () => {
           rate: request.order?.service?.rate || 0
         },
         category: { category_name: 'Refill Request' },
-        refillRequest: request // Store original refill request data
+        refillRequest: request
       }));
 
       setOrders(transformedOrders);
@@ -296,21 +273,15 @@ const RefillOrdersPage = () => {
     } finally {
       setOrdersLoading(false);
     }
-  };
-
-  // Fetch stats
+  };
   const fetchStats = async () => {
     try {
       console.log('Fetching refill stats from API...');
 
-      const response = await fetch('/api/admin/refill-requests/stats');
-
-      // Check if response is ok
+      const response = await fetch('/api/admin/refill-requests/stats');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Check if response has content
+      }
       const text = await response.text();
       if (!text) {
         throw new Error('Empty response from server');
@@ -332,10 +303,10 @@ const RefillOrdersPage = () => {
 
       setStats({
         totalEligible: result.data?.eligibleOrdersCount || 0,
-        partialOrders: 0, // Calculate from orders if needed
-        completedOrders: 0, // Calculate from orders if needed
+        partialOrders: 0,
+        completedOrders: 0,
         todayRefills: result.data?.totalRequests || 0,
-        totalRefillAmount: 0, // Calculate if needed
+        totalRefillAmount: 0,
         statusBreakdown: {
           pending: result.data?.pendingRequests || 0,
           approved: result.data?.approvedRequests || 0,
@@ -355,18 +326,14 @@ const RefillOrdersPage = () => {
       });
       showToast('Error fetching statistics. Please refresh the page.', 'error');
     }
-  };
-
-  // Handle search with debouncing
+  };
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchEligibleOrders();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Load data on component mount and when filters change
+  }, [searchTerm]);
   useEffect(() => {
     fetchEligibleOrders();
   }, [pagination.page, pagination.limit, statusFilter]);
@@ -380,9 +347,7 @@ const RefillOrdersPage = () => {
     };
 
     loadData();
-  }, []);
-
-  // Update stats when pagination data changes
+  }, []);
   useEffect(() => {
     if (pagination.total > 0) {
       setStats((prev) => ({
@@ -390,23 +355,17 @@ const RefillOrdersPage = () => {
         totalEligible: pagination.total,
       }));
     }
-  }, [pagination.total]);
-
-  // Show toast notification
+  }, [pagination.total]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Safe ID formatter to prevent slice errors
+  };
   const safeFormatOrderId = (id: any) => {
     return formatID(String(id || 'null'));
-  };
-
-  // Utility functions
+  };
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -451,15 +410,11 @@ const RefillOrdersPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
-
-  // Handle refill dialog
+  };
   const handleOpenRefillDialog = async (order: Order) => {
     try {
       setSelectedOrder(order);
-      setRefillDialogOpen(true);
-
-      // Fetch refill information
+      setRefillDialogOpen(true);
       const response = await fetch(`/api/admin/orders/${order.id}/refill`);
       const result = await response.json();
 
@@ -474,9 +429,7 @@ const RefillOrdersPage = () => {
       showToast('Error fetching refill information', 'error');
       setRefillDialogOpen(false);
     }
-  };
-
-  // Handle refill creation
+  };
   const handleCreateRefill = async () => {
     if (!selectedOrder || !refillInfo) return;
 
@@ -503,7 +456,7 @@ const RefillOrdersPage = () => {
         setSelectedOrder(null);
         setRefillInfo(null);
         setRefillForm({ type: 'full', customQuantity: '', reason: '' });
-        fetchEligibleOrders(); // Refresh the list
+        fetchEligibleOrders();
       } else {
         showToast(result.error || 'Failed to create refill order', 'error');
       }
@@ -517,7 +470,7 @@ const RefillOrdersPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -529,10 +482,10 @@ const RefillOrdersPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
               <select
                 value={pagination.limit}
@@ -561,7 +514,7 @@ const RefillOrdersPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls */}
+            {}
             <div className="flex items-center gap-3">
               <div className="relative">
                 <FaSearch
@@ -585,10 +538,10 @@ const RefillOrdersPage = () => {
           </div>
         </div>
 
-        {/* Refill Orders Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -649,7 +602,7 @@ const RefillOrdersPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {/* Bulk Action Section */}
+            {}
             {selectedOrders?.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mb-4 pt-4">
                 <div className="flex items-center gap-2">
@@ -680,8 +633,7 @@ const RefillOrdersPage = () => {
                       } else if (selectedBulkAction === 'export') {
                         console.log('Export selected:', selectedOrders);
                         showToast(`Exporting ${selectedOrders?.length || 0} selected orders...`, 'info');
-                      }
-                      // Reset after action
+                      }
                       setSelectedBulkAction('');
                       setSelectedOrders([]);
                     }}
@@ -715,7 +667,7 @@ const RefillOrdersPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View */}
+                {}
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1300px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -801,11 +753,11 @@ const RefillOrdersPage = () => {
                                 className="font-medium text-sm truncate max-w-44"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {/* Use direct service name parameter */}
+                                {}
                                 {order.service?.name || 'Unknown Service'}
                               </div>
                               <div className="text-xs truncate max-w-44" style={{ color: 'var(--text-muted)' }}>
-                                {/* Use direct category name parameter */}
+                                {}
                                 {order.category?.category_name || 'Unknown Category'}
                               </div>
                             </div>
@@ -925,7 +877,7 @@ const RefillOrdersPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
+                {}
                 <div className="lg:hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {orders?.map((order, index) => (
@@ -933,7 +885,7 @@ const RefillOrdersPage = () => {
                         key={`${order.id}-${index}`}
                         className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
-                        {/* Header with ID and Status */}
+                        {}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <input
@@ -961,7 +913,7 @@ const RefillOrdersPage = () => {
                           </div>
                         </div>
 
-                        {/* User Info */}
+                        {}
                         <div className="mb-4 pb-4 border-b">
                           <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
                             User
@@ -977,21 +929,21 @@ const RefillOrdersPage = () => {
                           </div>
                         </div>
 
-                        {/* Service Info */}
+                        {}
                         <div className="mb-4">
                           <div
                             className="font-medium text-sm mb-1"
                             style={{ color: 'var(--text-primary)' }}
                           >
-                            {/* Use direct service name parameter */}
+                            {}
                             {order.service?.name || 'Unknown Service'}
                           </div>
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            {/* Use direct category name parameter */}
+                            {}
                             {order.category?.category_name || 'Unknown Category'}
                           </div>
-                          
-                          {/* Seller Info */}
+
+                          {}
                           <div className="flex items-center gap-2 mt-2">
                             <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
                               Seller:
@@ -1005,7 +957,7 @@ const RefillOrdersPage = () => {
                               </span>
                             )}
                           </div>
-                          
+
                           <div className="flex items-center gap-1 mt-1">
                             <a
                               href={order.link}
@@ -1027,7 +979,7 @@ const RefillOrdersPage = () => {
                           </div>
                         </div>
 
-                        {/* Financial Info */}
+                        {}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
@@ -1056,7 +1008,7 @@ const RefillOrdersPage = () => {
                           </div>
                         </div>
 
-                        {/* Quantity and Progress Info */}
+                        {}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
@@ -1091,7 +1043,7 @@ const RefillOrdersPage = () => {
                           </div>
                         </div>
 
-                        {/* Progress Bar */}
+                        {}
                         <div className="mb-4">
                           <div className="flex justify-between items-center mb-2">
                             <span
@@ -1120,7 +1072,7 @@ const RefillOrdersPage = () => {
                           </div>
                         </div>
 
-                        {/* Action Button */}
+                        {}
                         <div className="flex justify-center">
                           <button
                             onClick={() => handleOpenRefillDialog(order)}
@@ -1131,7 +1083,7 @@ const RefillOrdersPage = () => {
                           </button>
                         </div>
 
-                        {/* Date */}
+                        {}
                         <div className="mt-4 pt-4 border-t">
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                             Date: {new Date(order.createdAt).toLocaleDateString()}
@@ -1145,7 +1097,7 @@ const RefillOrdersPage = () => {
                   </div>
                 </div>
 
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1211,7 +1163,7 @@ const RefillOrdersPage = () => {
         </div>
       </div>
 
-      {/* Refill Dialog */}
+      {}
       {refillDialogOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -1232,7 +1184,7 @@ const RefillOrdersPage = () => {
 
             {refillInfo && (
               <div className="space-y-6">
-                {/* Order Information */}
+                {}
                 <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                   <div>
                     <div
@@ -1280,7 +1232,7 @@ const RefillOrdersPage = () => {
                   </div>
                 </div>
 
-                {/* Refill Options */}
+                {}
                 <div className="space-y-4">
                   <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     Refill Type
@@ -1348,7 +1300,7 @@ const RefillOrdersPage = () => {
                   </div>
                 </div>
 
-                {/* Reason */}
+                {}
                 <div className="space-y-2">
                   <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     Reason (Optional)

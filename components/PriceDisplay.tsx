@@ -1,4 +1,4 @@
-// components/PriceDisplay.tsx
+
 'use client';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { formatPrice } from '@/lib/utils';
@@ -18,14 +18,11 @@ export function PriceDisplay({
 
   if (isLoading || !availableCurrencies.length) {
     return <span className={`inline-block h-6 w-20 bg-accent animate-pulse rounded-md ${className}`} />;
-  }
-
-  // Get currency data from available currencies
+  }
   const currentCurrencyData = availableCurrencies.find(c => c.code === currency);
   const originalCurrencyData = availableCurrencies.find(c => c.code === originalCurrency);
 
-  if (!currentCurrencyData || !originalCurrencyData) {
-    // Fallback display
+  if (!currentCurrencyData || !originalCurrencyData) {
     return (
       <span className={className}>
         {originalCurrency === 'USD' ? '$' : '৳'}{formatPrice(amount, 2)}
@@ -35,19 +32,13 @@ export function PriceDisplay({
 
   let displayAmount = amount;
   let displayCurrency: 'USD' | 'BDT' = originalCurrency;
-  let displaySymbol = originalCurrencyData.symbol;
-
-  // Convert if currencies are different
-  if (currency !== originalCurrency) {
-    // Convert using database rates
-    if (originalCurrency === 'USD') {
-      // USD to other currency
+  let displaySymbol = originalCurrencyData.symbol;
+  if (currency !== originalCurrency) {
+    if (originalCurrency === 'USD') {
       displayAmount = amount * Number(currentCurrencyData.rate);
-    } else if (currency === 'USD') {
-      // Other currency to USD
+    } else if (currency === 'USD') {
       displayAmount = amount / Number(originalCurrencyData.rate);
-    } else {
-      // Between two non-USD currencies (via USD)
+    } else {
       const usdAmount = amount / Number(originalCurrencyData.rate);
       displayAmount = usdAmount * Number(currentCurrencyData.rate);
     }

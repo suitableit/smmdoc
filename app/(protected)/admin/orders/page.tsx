@@ -16,16 +16,12 @@ import {
   FaSync,
   FaTimes,
   FaTimesCircle,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-import { toast } from 'sonner';
-
-// Dynamic imports for modal components
+import { toast } from 'sonner';
 const ChangeAllStatusModal = dynamic(() => import('@/components/admin/orders/modals/change-all-status'), {
   ssr: false,
 });
@@ -44,18 +40,14 @@ const UpdateOrderStatusModal = dynamic(() => import('@/components/admin/orders/m
 
 const OrderTable = dynamic(() => import('@/components/admin/orders/order-table'), {
   ssr: false,
-});
-
-// Custom Gradient Spinner Component
+});
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -72,9 +64,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces for type safety
+);
 interface Order {
   id: number;
   user: {
@@ -121,8 +111,7 @@ interface Order {
   remains: number;
   avg_time: string;
   seller: string;
-  mode: string;
-  // Provider order fields
+  mode: string;
   isProviderService?: boolean;
   providerId?: string;
   providerServiceId?: string;
@@ -154,47 +143,32 @@ interface PaginationInfo {
   totalPages: number;
   hasNext: boolean;
   hasPrev: boolean;
-}
-
-// Cache for stats data to avoid repeated API calls
+}
 let statsCache: { data: OrderStats; timestamp: number } | null = null;
-const STATS_CACHE_DURATION = 30000; // 30 seconds
+const STATS_CACHE_DURATION = 30000;
 
 const AdminOrdersPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('All Orders', appName);
-  }, [appName]);
-
-  // Detect page reload vs navigation
+  }, [appName]);
   useEffect(() => {
-    if (isInitialMount.current) {
-      // Use sessionStorage to detect if this is a fresh page load or navigation
+    if (isInitialMount.current) {
       const navigationKey = 'orders_page_visited';
-      const hasVisited = typeof window !== 'undefined' && sessionStorage.getItem(navigationKey);
-      
-      // If not visited before in this session, it's a page reload/fresh load
-      const isReload = !hasVisited;
-      
-      // Mark as visited for subsequent navigations
+      const hasVisited = typeof window !== 'undefined' && sessionStorage.getItem(navigationKey);
+      const isReload = !hasVisited;
       if (typeof window !== 'undefined') {
         sessionStorage.setItem(navigationKey, 'true');
       }
-      
+
       setIsPageReload(isReload);
       isInitialMount.current = false;
     }
-  }, []);
-
-  // Get currency data
-  const { availableCurrencies } = useCurrency();
-
-  // State management
+  }, []);
+  const { availableCurrencies } = useCurrency();
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<OrderStats>({
-    totalOrders: 0, // Use real data, not mock
+    totalOrders: 0,
     pendingOrders: 0,
     processingOrders: 0,
     completedOrders: 0,
@@ -220,19 +194,11 @@ const AdminOrdersPage = () => {
   const [toastNotification, setToastNotification] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Page reload detection
+  } | null>(null);
   const isInitialMount = useRef(true);
-  const [isPageReload, setIsPageReload] = useState(false);
-
-  // Loading states
+  const [isPageReload, setIsPageReload] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-
-
-
-  // New state for action modals
+  const [ordersLoading, setOrdersLoading] = useState(false);
   const [editStartCountDialog, setEditStartCountDialog] = useState<{
     open: boolean;
     orderId: string | number;
@@ -257,17 +223,13 @@ const AdminOrdersPage = () => {
   }>({
     open: false,
     orderId: '',
-  });
-
-  // New state for bulk status change
+  });
   const [bulkStatusDialog, setBulkStatusDialog] = useState<{
     open: boolean;
   }>({
     open: false,
   });
-  const [bulkStatus, setBulkStatus] = useState('');
-
-  // Calculate status counts from current orders data
+  const [bulkStatus, setBulkStatus] = useState('');
   const calculateStatusCounts = (ordersData: Order[]) => {
     const counts = {
       pending: 0,
@@ -288,15 +250,13 @@ const AdminOrdersPage = () => {
 
     return {
       pending: counts.pending,
-      processing: counts.processing + counts.in_progress, // Combine processing and in_progress
+      processing: counts.processing + counts.in_progress,
       completed: counts.completed,
       partial: counts.partial,
-      cancelled: counts.cancelled + counts.refunded, // Combine cancelled and refunded
+      cancelled: counts.cancelled + counts.refunded,
       failed: counts.failed,
     };
-  };
-
-  // Track latest request to avoid stale updates
+  };
   const latestRequestIdRef = useRef<number>(0);
   const isMountedRef = useRef<boolean>(true);
 
@@ -304,42 +264,31 @@ const AdminOrdersPage = () => {
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
-
-  // Optimized parallel data fetching with caching and fast loading
+  }, []);
   const fetchDataOptimized = async (showLoadingState = true) => {
     const requestId = Date.now();
     latestRequestIdRef.current = requestId;
     const loadingStartTime = Date.now();
-    const minLoadingTime = 10; // 0.01 seconds minimum loading time
-    const REQUEST_TIMEOUT_MS = 10000; // 10s safety timeout to avoid infinite loading
-
-    // Only show loading states if requested (for page reload)
+    const minLoadingTime = 10;
+    const REQUEST_TIMEOUT_MS = 10000;
     if (showLoadingState) {
       setOrdersLoading(true);
       setStatsLoading(true);
-    }
-
-    // Setup abort controllers for safety timeouts
+    }
     const ordersController = new AbortController();
     let statsController: AbortController | null = null;
     const ordersTimeout = setTimeout(() => ordersController.abort(), REQUEST_TIMEOUT_MS);
     let statsTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    try {
-      // Create query params for orders
+    try {
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(searchTerm && { search: searchTerm }),
-      });
-
-      // Check cache for stats data
+      });
       const now = Date.now();
-      const useCache = statsCache && (now - statsCache.timestamp) < STATS_CACHE_DURATION;
-
-      // Prepare promises for parallel execution
+      const useCache = statsCache && (now - statsCache.timestamp) < STATS_CACHE_DURATION;
       const ordersPromise = fetch(`/api/admin/orders?${queryParams}`, { signal: ordersController.signal })
         .then(res => res.json())
         .catch(err => ({ success: false, error: err?.name === 'AbortError' ? 'Orders request timed out' : 'Failed to fetch orders' }));
@@ -353,21 +302,13 @@ const AdminOrdersPage = () => {
         statsPromise = fetch('/api/admin/orders/stats?period=all', { signal: statsController.signal })
           .then(res => res.json())
           .catch(err => ({ success: false, error: err?.name === 'AbortError' ? 'Stats request timed out' : 'Failed to fetch stats' }));
-      }
-
-      // Execute both requests in parallel
-      const [ordersResult, statsResult] = await Promise.allSettled([ordersPromise, statsPromise]);
-
-      // Clear timeouts once settled
+      }
+      const [ordersResult, statsResult] = await Promise.allSettled([ordersPromise, statsPromise]);
       clearTimeout(ordersTimeout);
-      if (statsTimeout) clearTimeout(statsTimeout);
-
-      // Ignore if unmounted or outdated request
+      if (statsTimeout) clearTimeout(statsTimeout);
       if (!isMountedRef.current || latestRequestIdRef.current !== requestId) {
         return;
-      }
-
-      // Process orders result
+      }
       if (ordersResult.status === 'fulfilled' && ordersResult.value && ordersResult.value.success) {
         const ordersData = ordersResult.value;
         const transformed = (ordersData.data || []).map((o: any) => ({
@@ -385,12 +326,8 @@ const AdminOrdersPage = () => {
           totalPages: 0,
           hasNext: false,
           hasPrev: false,
-        });
-
-        // Calculate status counts from current orders for quick stats
-        const statusCounts = calculateStatusCounts(ordersData.data || []);
-        
-        // Update stats with quick counts if no cached data
+        });
+        const statusCounts = calculateStatusCounts(ordersData.data || []);
         if (!useCache) {
           setStats(prev => ({
             ...prev,
@@ -415,13 +352,9 @@ const AdminOrdersPage = () => {
         } else {
           showToast('Failed to fetch orders', 'error');
         }
-      }
-
-      // Process stats result
+      }
       if (statsResult.status === 'fulfilled' && statsResult.value && statsResult.value.success && !useCache) {
-        const data = statsResult.value.data;
-        
-        // Build status breakdown object from array
+        const data = statsResult.value.data;
         const statusBreakdown: Record<string, number> = {};
         if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
           data.statusBreakdown.forEach((item: any) => {
@@ -439,15 +372,12 @@ const AdminOrdersPage = () => {
           statusBreakdown: statusBreakdown,
         };
 
-        setStats(processedStats);
-        
-        // Update cache
+        setStats(processedStats);
         statsCache = {
           data: processedStats,
           timestamp: now
         };
-      } else if (useCache && statsResult.status === 'fulfilled') {
-        // Use cached stats data
+      } else if (useCache && statsResult.status === 'fulfilled') {
         setStats(statsCache!.data);
       } else if (statsResult.status === 'rejected') {
         showToast('Failed to fetch stats', 'error');
@@ -465,13 +395,11 @@ const AdminOrdersPage = () => {
         hasNext: false,
         hasPrev: false,
       });
-    } finally {
-      // Ensure minimum loading time for smooth UX
+    } finally {
       const elapsedTime = Date.now() - loadingStartTime;
       const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-      
-      setTimeout(() => {
-        // Always clear loading flags after requests settle
+
+      setTimeout(() => {
         if (!isMountedRef.current || latestRequestIdRef.current !== requestId) {
           return;
         }
@@ -479,49 +407,34 @@ const AdminOrdersPage = () => {
         setStatsLoading(false);
       }, remainingTime);
     }
-  };
-
-  // Handle search with optimized debouncing - faster response
+  };
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // Don't show loading state for search (user interaction)
+    const timer = setTimeout(() => {
       fetchDataOptimized(false);
-    }, 200); // Reduced from 500ms to 200ms for faster response
+    }, 200);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Load data on component mount and when filters change
-  useEffect(() => {
-    // Don't show loading state for filter changes (user interaction)
+  }, [searchTerm]);
+  useEffect(() => {
     fetchDataOptimized(false);
-  }, [pagination.page, pagination.limit, statusFilter]);
-
-  // Initial data load on component mount
-  useEffect(() => {
-    // Only show loading state if it's a page reload
+  }, [pagination.page, pagination.limit, statusFilter]);
+  useEffect(() => {
     fetchDataOptimized(isPageReload);
-  }, [isPageReload]);
-
-  // Dev-only: log render counts to help diagnose rerenders
+  }, [isPageReload]);
   const renderCountRef = useRef(0);
   useEffect(() => {
     renderCountRef.current += 1;
     if (process.env.NODE_ENV === 'development' && renderCountRef.current % 50 === 0) {
       console.warn('[AdminOrdersPage] high render count:', renderCountRef.current);
     }
-  });
-
-  // Show toast notification
+  });
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToastNotification({ message, type });
     setTimeout(() => setToastNotification(null), 4000);
-  };
-
-  // Utility functions
+  };
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
@@ -545,9 +458,7 @@ const AdminOrdersPage = () => {
 
   const calculateProgress = (qty: number, remains: number) => {
     return qty > 0 ? Math.round(((qty - remains) / qty) * 100) : 0;
-  };
-
-  // Function to format currency based on order currency
+  };
   const formatCurrency = (amount: number, currency: string) => {
     if (currency === 'USD') {
       return `$${formatPrice(amount, 2)}`;
@@ -555,8 +466,7 @@ const AdminOrdersPage = () => {
       return `৳${formatPrice(amount, 2)}`;
     } else if (currency === 'XCD') {
       return `$${formatPrice(amount, 2)}`;
-    } else {
-      // For other currencies, try to find the symbol from available currencies
+    } else {
       const currencyData = availableCurrencies?.find(c => c.code === currency);
       const symbol = currencyData?.symbol || '$';
       return `${symbol}${formatPrice(amount, 2)}`;
@@ -579,15 +489,11 @@ const AdminOrdersPage = () => {
     );
   };
 
-  const handleRefresh = () => {
-    // Clear cache to force fresh data
-    statsCache = null;
-    // Show loading state for manual refresh
+  const handleRefresh = () => {
+    statsCache = null;
     fetchDataOptimized(true);
     showToast('Orders refreshed successfully!', 'success');
-  };
-
-  // Handle order deletion
+  };
   const handleDeleteOrder = async (orderId: number) => {
     try {
       const response = await fetch(`/api/admin/orders/${orderId}`, {
@@ -609,11 +515,7 @@ const AdminOrdersPage = () => {
       console.error('Error deleting order:', error);
       showToast('Error deleting order', 'error');
     }
-  };
-
-
-
-  // Handle bulk status update
+  };
   const handleBulkStatusUpdate = async (newStatus: string) => {
     try {
       const response = await fetch('/api/admin/orders/bulk/status', {
@@ -647,34 +549,20 @@ const AdminOrdersPage = () => {
       console.error('Error updating orders status:', error);
       showToast('Error updating orders status', 'error');
     }
-  };
-
-
-
-
-
-  // Open mark partial dialog
+  };
   const openMarkPartialDialog = (orderId: string | number) => {
     setMarkPartialDialog({ open: true, orderId });
-  };
-
-  // Open edit start count dialog
+  };
   const openEditStartCountDialog = (orderId: string | number, currentCount: number) => {
     setEditStartCountDialog({ open: true, orderId, currentCount });
-  };
-
-  // Open update status dialog
+  };
   const openUpdateStatusDialog = (orderId: string | number, currentStatus: string) => {
     setUpdateStatusDialog({ open: true, orderId, currentStatus });
-  };
-
-  // Open bulk status dialog
+  };
   const openBulkStatusDialog = () => {
     setBulkStatusDialog({ open: true });
     setBulkStatus('');
-  };
-
-  // Handle resend order
+  };
   const handleResendOrder = async (orderId: number) => {
     try {
       const response = await fetch(`/api/admin/orders/${orderId}/resend`, {
@@ -702,7 +590,7 @@ const AdminOrdersPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toastNotification && (
         <Toast
@@ -714,7 +602,7 @@ const AdminOrdersPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Stats Cards */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div className="card card-padding">
             <div className="card-content">
@@ -773,12 +661,12 @@ const AdminOrdersPage = () => {
           </div>
         </div>
 
-        {/* Controls Section - After stats cards */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
-              {/* Page View Dropdown */}
+              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -812,10 +700,9 @@ const AdminOrdersPage = () => {
                 Refresh
               </button>
 
-
             </div>
 
-            {/* Right: Search Controls Only */}
+            {}
             <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
@@ -833,15 +720,15 @@ const AdminOrdersPage = () => {
                 />
               </div>
 
-              {/* Removed search dropdown per requirement: search via input only */}
+              {}
             </div>
           </div>
         </div>
 
-        {/* Orders Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons - Inside table header */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -982,7 +869,7 @@ const AdminOrdersPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {/* Selected Orders Actions - Top of table */}
+            {}
             {selectedOrders.length > 0 && (
               <div className="flex items-center gap-2 py-4 border-b mb-4">
                 <span
@@ -1056,7 +943,7 @@ const AdminOrdersPage = () => {
         </div>
       </div>
 
-      {/* Modals */}
+      {}
       <ChangeAllStatusModal
         isOpen={bulkStatusDialog.open}
         onClose={() => setBulkStatusDialog({ open: false })}
@@ -1066,7 +953,7 @@ const AdminOrdersPage = () => {
         onUpdate={handleBulkStatusUpdate}
       />
 
-      {/* Mark Partial Dialog */}
+      {}
       <MarkPartialModal
         isOpen={markPartialDialog.open}
         onClose={() => setMarkPartialDialog({ open: false, orderId: '' })}
@@ -1079,7 +966,7 @@ const AdminOrdersPage = () => {
         showToast={showToast}
       />
 
-      {/* Start Count Dialog */}
+      {}
       <StartCountModal
         isOpen={editStartCountDialog.open}
         onClose={() => setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 })}
@@ -1093,7 +980,7 @@ const AdminOrdersPage = () => {
         showToast={showToast}
       />
 
-      {/* Update Status Dialog */}
+      {}
       <UpdateOrderStatusModal
         isOpen={updateStatusDialog.open}
         onClose={() => setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' })}

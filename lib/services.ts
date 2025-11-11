@@ -1,16 +1,6 @@
-/**
- * Service actions to fetch services data from the API
- */
 
-// Fetch all services
 export async function getServices() {
-  try {
-    // আসল API কল করুন
-    // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/services`);
-    // const data = await response.json();
-    // return data.services;
-    
-    // ডেমো ডেটা (আপনার বাস্তব API রেডি হলে উপরের কোড আনকমেন্ট করুন)
+  try {
     return [
       { 
         id: '1', 
@@ -66,34 +56,18 @@ export async function getServices() {
     console.error('Error fetching services:', error);
     return [];
   }
-}
-
-// Get a specific service by ID
+}
 export async function getServiceById(id: string) {
-  try {
-    // আসল API কল করুন
-    // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/services/${id}`);
-    // const data = await response.json();
-    // return data.service;
-    
-    // ডেমো ডেটা (আপনার বাস্তব API রেডি হলে উপরের কোড আনকমেন্ট করুন)
+  try {
     const services = await getServices();
     return services.find(service => service.id === id);
   } catch (error) {
     console.error(`Error fetching service with ID ${id}:`, error);
     return null;
   }
-}
-
-// Get services by category
+}
 export async function getServicesByCategory(categoryId: string) {
-  try {
-    // আসল API কল করুন
-    // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories/${categoryId}/services`);
-    // const data = await response.json();
-    // return data.services;
-    
-    // ডেমো ডেটা (আপনার বাস্তব API রেডি হলে উপরের কোড আনকমেন্ট করুন)
+  try {
     const services = await getServices();
     return services.filter(service => service.category.name === categoryId);
   } catch (error) {

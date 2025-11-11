@@ -24,9 +24,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
-
-// Form schema for transaction verification
+import { z } from 'zod';
 const verifyFormSchema = z.object({
   transactionId: z.string().min(1, 'Transaction ID is required'),
   phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
@@ -40,10 +38,8 @@ export default function VerifyPaymentPage() {
   const searchParams = useSearchParams();
   const invoiceId = searchParams?.get('invoice_id');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentLogo, setPaymentLogo] = useState('/nagad.svg'); // Default logo
-  const [paymentAmount, setPaymentAmount] = useState<string>('0.00');
-
-  // Form with default values
+  const [paymentLogo, setPaymentLogo] = useState('/nagad.svg');
+  const [paymentAmount, setPaymentAmount] = useState<string>('0.00');
   const form = useForm<VerifyFormValues>({
     resolver: zodResolver(verifyFormSchema),
     defaultValues: {
@@ -53,21 +49,16 @@ export default function VerifyPaymentPage() {
     },
   });
 
-  useEffect(() => {
-    // Get the payment amount from localStorage or query params
+  useEffect(() => {
     const amount =
       searchParams?.get('amount') ||
       localStorage.getItem('payment_amount') ||
       '0.00';
-    setPaymentAmount(amount);
-
-    // Get payment method from localStorage or query params
+    setPaymentAmount(amount);
     const method =
       searchParams?.get('method') ||
       localStorage.getItem('payment_method') ||
-      'nagad';
-
-    // Set logo based on payment method
+      'nagad';
     switch (method.toLowerCase()) {
       case 'bkash':
         setPaymentLogo('/bkash.svg');
@@ -89,41 +80,25 @@ export default function VerifyPaymentPage() {
   const onSubmit = async (values: VerifyFormValues) => {
     setIsSubmitting(true);
 
-    try {
-      // In a real app, this would send the data to your backend
-      // which would then verify with the payment gateway
-      toast.loading('Verifying transaction...');
-
-      // Simulate API call - replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Simulate response based on form selection
+    try {
+      toast.loading('Verifying transaction...');
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       let success = false;
 
-      if (values.responseType === 'Success') {
-        // If user chose "Success" in the demo form
+      if (values.responseType === 'Success') {
         success = true;
         toast.dismiss();
-        toast.success('Transaction verified successfully!');
-
-        // Redirect to success page
+        toast.success('Transaction verified successfully!');
         router.push(
           `/transactions/success?invoice_id=${invoiceId || 'INV-DEMO'}`
         );
-      } else if (values.responseType === 'Pending') {
-        // Pending response
+      } else if (values.responseType === 'Pending') {
         toast.dismiss();
-        toast.info('Transaction is pending verification');
-
-        // Here you would normally wait for admin approval
-        // For demo, we'll redirect to transactions page with a pending status
+        toast.info('Transaction is pending verification');
         router.push('/transactions?status=pending');
-      } else {
-        // Failed response
+      } else {
         toast.dismiss();
-        toast.error('Transaction verification failed');
-
-        // Redirect to transactions with error status
+        toast.error('Transaction verification failed');
         router.push('/transactions?status=failed');
       }
     } catch (error) {

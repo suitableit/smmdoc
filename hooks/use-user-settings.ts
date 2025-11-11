@@ -31,15 +31,15 @@ export function useUserSettings(): UseUserSettingsReturn {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch('/api/public/user-settings');
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch user settings');
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setSettings(data.userSettings);
       } else {
@@ -47,9 +47,7 @@ export function useUserSettings(): UseUserSettingsReturn {
       }
     } catch (err) {
       console.error('Error fetching user settings:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      
-      // Set default settings on error
+      setError(err instanceof Error ? err.message : 'Unknown error');
       setSettings({
         resetPasswordEnabled: true,
         signUpPageEnabled: true,

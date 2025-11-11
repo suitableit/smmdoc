@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { FaTicketAlt, FaExclamationTriangle } from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+import { FaTicketAlt, FaExclamationTriangle } from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -35,26 +33,21 @@ const TicketSystemGuard: React.FC<TicketSystemGuardProps> = ({
         if (response.ok) {
           const data = await response.json();
           const enabled = data.ticketSystemEnabled || false;
-          setIsEnabled(enabled);
-          
-          // If disabled, redirect to appropriate dashboard
-          if (!enabled) {
-            // Check if user is admin to determine redirect destination
+          setIsEnabled(enabled);
+          if (!enabled) {
             const isAdmin = session?.user?.role === 'admin';
             const redirectPath = isAdmin ? '/admin' : '/dashboard';
             router.push(redirectPath);
             return;
           }
-        } else {
-          // If we can't fetch settings, assume disabled for security
+        } else {
           const isAdmin = session?.user?.role === 'admin';
           const redirectPath = isAdmin ? '/admin' : '/dashboard';
           router.push(redirectPath);
           return;
         }
       } catch (error) {
-        console.error('Error checking ticket system status:', error);
-        // If there's an error, assume disabled for security
+        console.error('Error checking ticket system status:', error);
         const isAdmin = session?.user?.role === 'admin';
         const redirectPath = isAdmin ? '/admin' : '/dashboard';
         router.push(redirectPath);
@@ -65,9 +58,7 @@ const TicketSystemGuard: React.FC<TicketSystemGuardProps> = ({
     };
 
     checkTicketSystem();
-  }, []);
-
-  // Show loading spinner while checking
+  }, []);
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -77,9 +68,7 @@ const TicketSystemGuard: React.FC<TicketSystemGuardProps> = ({
         </div>
       </div>
     );
-  }
-
-  // Render children if ticket system is enabled
+  }
   return <>{children}</>
 };
 

@@ -12,7 +12,6 @@ import {
 } from 'react-icons/fa';
 import { WifiOff } from 'lucide-react';
 
-// Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -43,38 +42,37 @@ export default function OfflinePage() {
     errorCode: 'ERR_NETWORK_OFFLINE',
     lastAttempt: new Date().toLocaleString()
   });
-  
+
   const [currentPageState, setCurrentPageState] = useState<PageState | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [connectionType, setConnectionType] = useState<string>('unknown');
   const [isDetectingIP, setIsDetectingIP] = useState(true);
 
-
   const handleRetryConnection = async () => {
     setIsRetrying(true);
-    
+
     try {
-      // Check actual network connectivity
+
       const response = await fetch('/api/test-db', { 
         method: 'GET',
         cache: 'no-cache',
         signal: AbortSignal.timeout(5000)
       });
-      
+
       if (response.ok) {
-        // Connection successful, redirect to home or previous page
+
         const fromParam = searchParams.get('from');
         window.location.href = fromParam || '/';
       } else {
-        // Update connection info with real status
+
         setConnectionInfo(prev => ({
           ...prev,
           lastAttempt: new Date().toLocaleString()
         }));
       }
     } catch (error) {
-      // Connection failed, update last attempt time
+
       setConnectionInfo(prev => ({
         ...prev,
         lastAttempt: new Date().toLocaleString()
@@ -85,32 +83,27 @@ export default function OfflinePage() {
   };
 
   useEffect(() => {
-    // Real-time network connectivity monitoring
+
     const updateOnlineStatus = () => {
       setIsOnline(navigator.onLine);
-      
-      // Get connection type if available
+
       const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
       if (connection) {
         setConnectionType(connection.effectiveType || connection.type || 'unknown');
       }
     };
 
-    // Set up event listeners for network changes
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
-    
-    // Initial check
+
     updateOnlineStatus();
 
-    // Get current page information from URL parameters or referrer
     const getCurrentPageState = () => {
       const fromParam = searchParams.get('from');
       const titleParam = searchParams.get('title');
       const errorParam = searchParams.get('error');
       const currentPath = fromParam || document.referrer || '/';
-      
-      // Extract path from referrer if it's a full URL
+
       let pagePath = currentPath;
       if (currentPath.startsWith('http')) {
         try {
@@ -120,11 +113,10 @@ export default function OfflinePage() {
           pagePath = '/';
         }
       }
-      
-      // Use title from URL parameter if available, otherwise generate from path
+
       let pageTitle = titleParam || document.title || 'SMM Doc';
       if (!titleParam && (pageTitle === 'SMM Doc' || pageTitle.includes('Offline'))) {
-        // Generate title from path
+
         if (pagePath === '/') {
           pageTitle = 'Homepage';
         } else if (pagePath === '/services') {
@@ -135,7 +127,7 @@ export default function OfflinePage() {
           ).join(' - ');
         }
       }
-      
+
       return {
         path: pagePath,
         title: pageTitle,
@@ -144,14 +136,12 @@ export default function OfflinePage() {
       };
     };
 
-    // Set current page state
     setCurrentPageState(getCurrentPageState());
 
-    // Get browser and platform info
     const getBrowserInfo = () => {
       const userAgent = navigator.userAgent;
       let browser = 'Unknown';
-      
+
       if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
         browser = 'Chrome';
       } else if (userAgent.includes('Firefox')) {
@@ -163,82 +153,79 @@ export default function OfflinePage() {
       } else if (userAgent.includes('Opera')) {
         browser = 'Opera';
       }
-      
+
       return browser;
     };
 
     const getPlatformInfo = () => {
       const platform = navigator.platform;
       const userAgent = navigator.userAgent;
-      
+
       if (platform.includes('Win')) return 'Windows';
       if (platform.includes('Mac')) return 'macOS';
       if (platform.includes('Linux')) return 'Linux';
       if (userAgent.includes('Android')) return 'Android';
       if (userAgent.includes('iPhone') || userAgent.includes('iPad')) return 'iOS';
-      
+
       return platform || 'Unknown';
     };
 
-    // Get IP address with proper online detection
     const getIPAddress = async () => {
       try {
-        // If online, try to get public IP from external API
+
         if (navigator.onLine) {
           try {
-            // Try multiple IP detection services for reliability
+
             const ipServices = [
               'https://api.ipify.org?format=json',
               'https://ipapi.co/json/',
               'https://api.ip.sb/jsonip'
             ];
-            
+
             for (const service of ipServices) {
               try {
                 const response = await fetch(service, {
                   method: 'GET',
                   signal: AbortSignal.timeout(3000)
                 });
-                
+
                 if (response.ok) {
                   const data = await response.json();
                   let ip = data.ip || data.query || data.IPv4;
-                  
+
                   if (ip) {
-                    // Store in localStorage for future use
+
                     localStorage.setItem('user-ip', ip);
                     localStorage.setItem('user-ip-timestamp', Date.now().toString());
                     return ip;
                   }
                 }
               } catch (serviceError) {
-                // Continue to next service
+
                 continue;
               }
             }
           } catch (error) {
-            // Fall through to local methods
+
           }
         }
-        
-        // Try to get from local storage if previously stored (within last 24 hours)
+
         const storedIP = localStorage.getItem('user-ip');
         const storedTimestamp = localStorage.getItem('user-ip-timestamp');
-        
+
         if (storedIP && storedTimestamp) {
           const age = Date.now() - parseInt(storedTimestamp);
           const twentyFourHours = 24 * 60 * 60 * 1000;
-          
+
           if (age < twentyFourHours) {
             return storedIP;
           }
         }
-        
-        // Fallback to WebRTC method for local IP
+
         return new Promise<string>((resolve) => {
           const rtc = new RTCPeerConnection({ iceServers: [] });
           rtc.createDataChannel('');
-          
+
           rtc.onicecandidate = (event) => {
             if (event.candidate) {
               const candidate = event.candidate.candidate;
@@ -249,10 +236,9 @@ export default function OfflinePage() {
               }
             }
           };
-          
+
           rtc.createOffer().then(offer => rtc.setLocalDescription(offer));
-          
-          // Timeout fallback
+
           setTimeout(() => {
             resolve('Unable to detect');
             rtc.close();
@@ -263,11 +249,10 @@ export default function OfflinePage() {
       }
     };
 
-    // Initialize connection info
     const initializeConnectionInfo = async () => {
       setIsDetectingIP(true);
       const ipAddress = await getIPAddress();
-      
+
       setConnectionInfo({
         browser: getBrowserInfo(),
         platform: getPlatformInfo(),
@@ -279,7 +264,6 @@ export default function OfflinePage() {
 
     initializeConnectionInfo();
 
-    // Cleanup event listeners
     return () => {
       window.removeEventListener('online', updateOnlineStatus);
       window.removeEventListener('offline', updateOnlineStatus);
@@ -297,20 +281,20 @@ export default function OfflinePage() {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return 'Just now';
     if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    
+
     return date.toLocaleString();
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl mx-auto">
-        {/* Main Error Card */}
+        {}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 text-center">
           <div className="text-center mb-8">
             <div className={`w-20 h-20 bg-gradient-to-r ${isOnline ? 'from-green-500 to-green-600' : 'from-orange-500 to-orange-600'} rounded-full flex items-center justify-center mx-auto mb-6 relative`}>
@@ -346,7 +330,7 @@ export default function OfflinePage() {
             )}
           </div>
 
-          {/* Action Buttons */}
+          {}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={handleRetryConnection}
@@ -365,7 +349,7 @@ export default function OfflinePage() {
                 </>
               )}
             </button>
-            
+
             <a
               href="https://wa.me/+8801723139610"
               target="_blank"
@@ -377,9 +361,7 @@ export default function OfflinePage() {
             </a>
           </div>
 
-
-
-          {/* Technical Information Section */}
+          {}
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center mb-6">
               <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-purple-600 rounded-lg flex items-center justify-center mr-3">
@@ -387,7 +369,7 @@ export default function OfflinePage() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Connection Information</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
@@ -444,7 +426,7 @@ export default function OfflinePage() {
                 </div>
               </div>
             </div>
-            
+
             {!isOnline && (
               <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 border border-orange-200 dark:border-orange-800 mt-6">
                  <p className="text-orange-700 dark:text-orange-300 text-sm">

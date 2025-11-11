@@ -1,4 +1,4 @@
-// Default currency data for initialization
+
 export const defaultCurrencies = [
   {
     code: 'USD',
@@ -50,9 +50,7 @@ export const defaultCurrencySettings = {
   currencyPosition: 'left',
   thousandsSeparator: ',',
   decimalSeparator: '.',
-};
-
-// Currency formatting utility
+};
 export const formatCurrency = (
   amount: number,
   currencyCode: string,
@@ -62,14 +60,10 @@ export const formatCurrency = (
   if (!currency) return `${amount}`;
 
   const { symbol } = currency;
-  const { displayDecimals, currencyPosition, thousandsSeparator, decimalSeparator } = settings;
-
-  // Format number with separators
+  const { displayDecimals, currencyPosition, thousandsSeparator, decimalSeparator } = settings;
   const parts = amount.toFixed(displayDecimals).split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
-  const formattedAmount = parts.join(decimalSeparator);
-
-  // Apply currency position
+  const formattedAmount = parts.join(decimalSeparator);
   switch (currencyPosition) {
     case 'left':
       return `${symbol}${formattedAmount}`;

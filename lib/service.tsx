@@ -2,9 +2,7 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { GridLayout } from '@/components/ui/GridLayout';
 import { InfoCard } from '@/components/ui/InfoCard';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { ServiceTile } from '@/components/ui/ServiceTile';
-
-// Mock data for this example
+import { ServiceTile } from '@/components/ui/ServiceTile';
 const popularServices = [
   { id: '1', title: 'Facebook Page Likes', description: 'High quality Facebook page likes from real users', price: 5.99, badge: 'Popular' },
   { id: '2', title: 'Instagram Followers', description: 'Organic Instagram followers for your profile', price: 7.99, badge: 'Hot' },
@@ -30,7 +28,7 @@ const categories = [
 export default function ExploreServicesPage() {
   return (
     <PageContainer title="Explore Services" subtitle="Browse and order from our wide range of social media services">
-      {/* Stats Section */}
+      {}
       <section className="mb-8">
         <GridLayout cols={3} gap="md">
           {stats.map((stat, index) => (
@@ -46,7 +44,7 @@ export default function ExploreServicesPage() {
         </GridLayout>
       </section>
 
-      {/* Categories Section */}
+      {}
       <section className="mb-8">
         <PageHeader title="Service Categories" subtitle="Browse services by category" />
         <GridLayout cols={4} gap="md">
@@ -63,7 +61,7 @@ export default function ExploreServicesPage() {
         </GridLayout>
       </section>
 
-      {/* Popular Services Section */}
+      {}
       <section>
         <PageHeader 
           title="Popular Services" 

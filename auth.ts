@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import authConfig from '@/auth.config';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import NextAuth from 'next-auth';
@@ -11,35 +11,24 @@ export const {
   signOut,
 } = NextAuth({
   events: {
-    async linkAccount({ user }: any) {
-      // Convert string ID to number if needed
+    async linkAccount({ user }: any) {
       const userId = typeof user.id === 'string' ? parseInt(user.id) : user.id;
-      if (!isNaN(userId)) {
-        // Check if this is a new user (balance is 0 and total_deposit is 0)
+      if (!isNaN(userId)) {
         const existingUser = await db.user.findUnique({
           where: { id: userId },
           select: { balance: true, total_deposit: true }
-        });
-
-        // Check user settings for free balance and email confirmation
+        });
         const userSettings = await db.userSettings.findFirst();
         let initialBalance = 0;
 
         if (userSettings?.userFreeBalanceEnabled && userSettings?.freeAmount > 0) {
           initialBalance = userSettings.freeAmount;
-        }
-
-        // Check if email confirmation is enabled
-        const emailConfirmationEnabled = userSettings?.emailConfirmationEnabled ?? true;
-
-        // Update user with email verification and free balance if applicable
-        const updateData: any = {};
-
-        // Only set emailVerified if email confirmation is enabled (OAuth users are auto-verified)
+        }
+        const emailConfirmationEnabled = userSettings?.emailConfirmationEnabled ?? true;
+        const updateData: any = {};
         if (emailConfirmationEnabled) {
           updateData.emailVerified = new Date();
-        } else {
-          // If email confirmation is disabled, still verify OAuth users
+        } else {
           updateData.emailVerified = new Date();
         }
 

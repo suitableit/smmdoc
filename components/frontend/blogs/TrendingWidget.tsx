@@ -27,13 +27,13 @@ const TrendingWidget: React.FC = () => {
       try {
         setError(null);
         const response = await fetch('/api/blogs/trending');
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch trending posts');
         }
-        
+
         const data = await response.json();
-        
+
         if (data.success && data.data) {
           setTrendingPosts(data.data);
         } else {

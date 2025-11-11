@@ -22,22 +22,16 @@ import {
   FaChevronUp,
   FaSortAmountDown,
   FaSortAmountUp,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-
-// Custom Gradient Spinner Component
+import { setPageTitle } from '@/lib/utils/set-page-title';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -54,9 +48,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces
+);
 interface Announcement {
   id: string;
   title: string;
@@ -90,14 +82,10 @@ interface AnnouncementFormData {
 }
 
 const AnnouncementsPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Announcements', appName);
-  }, [appName]);
-
-  // Dummy data for announcements
+  }, [appName]);
   const dummyAnnouncements: Announcement[] = [
     {
       id: 'ann_001',
@@ -189,31 +177,23 @@ const AnnouncementsPage = () => {
       buttonText: 'Register Now',
       buttonLink: '/webinar-registration',
     },
-  ];
-
-  // State management
+  ];
   const [announcements, setAnnouncements] = useState<Announcement[]>(dummyAnnouncements);
   const [filteredAnnouncements, setFilteredAnnouncements] = useState<Announcement[]>(dummyAnnouncements);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Filter and search states
+  } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [audienceFilter, setAudienceFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'views' | 'title'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-
-  // Modal states
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
-
-  // Form state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [formData, setFormData] = useState<AnnouncementFormData>({
     title: '',
     content: '',
@@ -225,18 +205,14 @@ const AnnouncementsPage = () => {
     buttonEnabled: false,
     buttonText: '',
     buttonLink: '',
-  });
-
-  // Show toast notification
+  });
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Filter and search logic
+  };
   useEffect(() => {
     let filtered = announcements.filter(announcement => {
       const matchesSearch = announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -246,9 +222,7 @@ const AnnouncementsPage = () => {
       const matchesAudience = audienceFilter === 'all' || announcement.targetedAudience === audienceFilter;
 
       return matchesSearch && matchesStatus && matchesType && matchesAudience;
-    });
-
-    // Sort announcements
+    });
     filtered.sort((a, b) => {
       let aValue, bValue;
 
@@ -273,16 +247,12 @@ const AnnouncementsPage = () => {
       } else {
         return aValue < bValue ? 1 : -1;
       }
-    });
-
-    // Always show sticky announcements first if they match filters
+    });
     const stickyFiltered = filtered.filter(ann => ann.isSticky);
     const nonStickyFiltered = filtered.filter(ann => !ann.isSticky);
-    
-    setFilteredAnnouncements([...stickyFiltered, ...nonStickyFiltered]);
-  }, [announcements, searchTerm, statusFilter, typeFilter, audienceFilter, sortBy, sortOrder]);
 
-  // Reset form
+    setFilteredAnnouncements([...stickyFiltered, ...nonStickyFiltered]);
+  }, [announcements, searchTerm, statusFilter, typeFilter, audienceFilter, sortBy, sortOrder]);
   const resetForm = () => {
     setFormData({
       title: '',
@@ -296,9 +266,7 @@ const AnnouncementsPage = () => {
       buttonText: '',
       buttonLink: '',
     });
-  };
-
-  // Handle create announcement
+  };
   const handleCreateAnnouncement = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
       showToast('Please fill in all required fields', 'error');
@@ -337,9 +305,7 @@ const AnnouncementsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Handle edit announcement
+  };
   const handleEditAnnouncement = async () => {
     if (!editingAnnouncement || !formData.title.trim() || !formData.content.trim()) {
       showToast('Please fill in all required fields', 'error');
@@ -377,9 +343,7 @@ const AnnouncementsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Handle delete announcement
+  };
   const handleDeleteAnnouncement = async (id: string) => {
     try {
       setIsLoading(true);
@@ -393,26 +357,22 @@ const AnnouncementsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Handle toggle status
+  };
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'draft' : 'active';
-    
+
     try {
       setAnnouncements(prev => prev.map(ann => 
         ann.id === id 
           ? { ...ann, status: newStatus as any, updatedAt: new Date().toISOString() }
           : ann
       ));
-      
+
       showToast(`Announcement ${newStatus === 'active' ? 'activated' : 'deactivated'}`, 'success');
     } catch (error) {
       showToast('Error updating announcement status', 'error');
     }
-  };
-
-  // Start editing
+  };
   const startEditing = (announcement: Announcement) => {
     setEditingAnnouncement(announcement);
     setFormData({
@@ -427,9 +387,7 @@ const AnnouncementsPage = () => {
       buttonText: announcement.buttonText,
       buttonLink: announcement.buttonLink,
     });
-  };
-
-  // Get type icon and color
+  };
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'warning': return <FaExclamationTriangle className="h-4 w-4" />;
@@ -459,7 +417,7 @@ const AnnouncementsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -471,7 +429,7 @@ const AnnouncementsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Page Header */}
+        {}
         <div className="mb-6">
           <div className="flex items-center justify-start">
             <button
@@ -487,11 +445,11 @@ const AnnouncementsPage = () => {
           </div>
         </div>
 
-        {/* Filters and Search */}
+        {}
         <div className="card card-padding mb-6">
-          {/* Single row layout - All filters in one line */}
+          {}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {/* Search */}
+            {}
             <div className="min-w-0">
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -505,7 +463,7 @@ const AnnouncementsPage = () => {
               </div>
             </div>
 
-            {/* Status Filter */}
+            {}
             <div className="min-w-0">
               <select
                 value={statusFilter}
@@ -520,7 +478,7 @@ const AnnouncementsPage = () => {
               </select>
             </div>
 
-            {/* Type Filter */}
+            {}
             <div className="min-w-0">
               <select
                 value={typeFilter}
@@ -535,7 +493,7 @@ const AnnouncementsPage = () => {
               </select>
             </div>
 
-            {/* Audience Filter */}
+            {}
             <div className="min-w-0">
               <select
                 value={audienceFilter}
@@ -550,7 +508,7 @@ const AnnouncementsPage = () => {
           </div>
         </div>
 
-        {/* Announcements List */}
+        {}
         <div className="space-y-4">
           {filteredAnnouncements.length === 0 ? (
             <div className="card card-padding text-center py-12">
@@ -594,11 +552,11 @@ const AnnouncementsPage = () => {
                             </span>
                           )}
                         </div>
-                        
+
                         <p className="text-gray-700 mb-3 line-clamp-2">
                           {announcement.content}
                         </p>
-                        
+
                         <div className="flex flex-wrap gap-2 mb-3">
                           <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(announcement.status)}`}>
                             {announcement.status.charAt(0).toUpperCase() + announcement.status.slice(1)}
@@ -613,7 +571,7 @@ const AnnouncementsPage = () => {
                             {announcement.views} views
                           </span>
                         </div>
-                        
+
                         {announcement.buttonEnabled && announcement.buttonText && (
                           <div className="mb-3">
                             <a
@@ -626,7 +584,7 @@ const AnnouncementsPage = () => {
                             </a>
                           </div>
                         )}
-                        
+
                         <div className="flex items-center gap-4 text-sm text-gray-500">
                           <span className="flex items-center gap-1">
                             <FaCalendarAlt className="h-3 w-3" />
@@ -643,7 +601,7 @@ const AnnouncementsPage = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="hidden md:flex items-center gap-2 ml-4">
                     <button
                       onClick={() => handleToggleStatus(announcement.id, announcement.status)}
@@ -672,7 +630,7 @@ const AnnouncementsPage = () => {
                     </button>
                   </div>
                 </div>
-                {/* Mobile action buttons */}
+                {}
                 <div className="flex md:hidden items-center gap-2 mt-4 pt-4 border-t border-gray-200">
                   <button
                     onClick={() => handleToggleStatus(announcement.id, announcement.status)}
@@ -706,7 +664,7 @@ const AnnouncementsPage = () => {
         </div>
       </div>
 
-      {/* Create/Edit Modal */}
+      {}
       {(showCreateModal || editingAnnouncement) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -764,7 +722,7 @@ const AnnouncementsPage = () => {
                       <option value="critical">Critical</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="form-label mb-2">Targeted Audience</label>
                     <select
@@ -789,7 +747,7 @@ const AnnouncementsPage = () => {
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="form-label mb-2">End Date (Optional)</label>
                     <input
@@ -811,7 +769,7 @@ const AnnouncementsPage = () => {
                     />
                     <span className="form-label">Enable Action Button</span>
                   </label>
-                  
+
                   {formData.buttonEnabled && (
                     <div className="space-y-4 pl-6 border-l-2 border-blue-200">
                       <div>
@@ -824,7 +782,7 @@ const AnnouncementsPage = () => {
                           placeholder="e.g., Learn More, Get Started, Download"
                         />
                       </div>
-                      
+
                       <div>
                         <label className="form-label mb-2">Button Link *</label>
                         <input
@@ -885,7 +843,7 @@ const AnnouncementsPage = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">

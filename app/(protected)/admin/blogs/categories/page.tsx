@@ -11,23 +11,17 @@ import {
     FaSync,
     FaTimes,
     FaTrash,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatNumber } from '@/lib/utils';
-
-// Custom Gradient Spinner Component
+import { formatNumber } from '@/lib/utils';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -44,9 +38,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interface for PostCategory with Post Count
+);
 interface PostCategory {
   id: number;
   name: string;
@@ -64,26 +56,20 @@ interface PaginationInfo {
 }
 
 const PostCategoriesPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Post Categories', appName);
-  }, [appName]);
-
-  // State for categories data
+  }, [appName]);
   const [categories, setCategories] = useState<PostCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch categories from API
+  const [error, setError] = useState<string | null>(null);
   const fetchCategories = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await fetch('/api/blogs/categories?includePostCount=true');
       const data = await response.json();
-      
+
       if (data.success) {
         const formattedCategories = data.data.map((cat: any) => ({
           id: cat.id,
@@ -101,14 +87,10 @@ const PostCategoriesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Load categories on component mount
+  };
   useEffect(() => {
     fetchCategories();
-  }, []);
-
-  // Dummy fallback data (will be replaced by API data)
+  }, []);
   const dummyPostCategories: PostCategory[] = [
     {
       id: 2,
@@ -200,9 +182,7 @@ const PostCategoriesPage = () => {
       postCount: 0,
       createdAt: '2024-01-01T13:10:00Z',
     },
-  ];
-
-  // State management
+  ];
   const [postCategories, setPostCategories] = useState<PostCategory[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -211,9 +191,7 @@ const PostCategoriesPage = () => {
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
-  });
-
-  // Update postCategories when categories data changes
+  });
   useEffect(() => {
     if (categories.length > 0) {
       setPostCategories(categories);
@@ -235,35 +213,23 @@ const PostCategoriesPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states (using the loading state from API fetch)
+  } | null>(null);
   const postCategoriesLoading = loading;
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // Edit dialog state
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPostCategory, setEditingPostCategory] =
     useState<PostCategory | null>(null);
-  const [editName, setEditName] = useState('');
-
-  // Add dialog state
+  const [editName, setEditName] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [newPostCategoryName, setNewPostCategoryName] = useState('');
-
-  // Utility functions
+  const [newPostCategoryName, setNewPostCategoryName] = useState('');
   const formatID = (id: number) => {
     return id.toString();
-  };
-
-  // Filter post categories based on search term
+  };
   const filteredPostCategories = postCategories.filter(
     (postCategory) =>
       postCategory.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       postCategory.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Update pagination when filtered data changes
+  );
   useEffect(() => {
     const total = filteredPostCategories.length;
     const totalPages = Math.ceil(total / pagination.limit);
@@ -274,16 +240,12 @@ const PostCategoriesPage = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1,
     }));
-  }, [filteredPostCategories.length, pagination.limit]);
-
-  // Get paginated data
+  }, [filteredPostCategories.length, pagination.limit]);
   const getPaginatedData = () => {
     const startIndex = (pagination.page - 1) * pagination.limit;
     const endIndex = startIndex + pagination.limit;
     return filteredPostCategories.slice(startIndex, endIndex);
-  };
-
-  // Show toast notification
+  };
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -295,9 +257,7 @@ const PostCategoriesPage = () => {
   const handleRefresh = () => {
     fetchCategories();
     showToast('Post categories refreshed successfully!', 'success');
-  };
-
-  // Handle post category deletion
+  };
   const handleDeletePostCategory = async (postCategoryId: number) => {
     setDeleteLoading(true);
     try {
@@ -308,7 +268,7 @@ const PostCategoriesPage = () => {
 
       if (data.success) {
         showToast('Post category deleted successfully', 'success');
-        fetchCategories(); // Refresh the list
+        fetchCategories();
       } else {
         showToast(data.error || 'Error deleting post category', 'error');
       }
@@ -320,9 +280,7 @@ const PostCategoriesPage = () => {
       setDeleteDialogOpen(false);
       setPostCategoryToDelete(null);
     }
-  };
-
-  // Handle post category editing
+  };
   const handleEditPostCategory = async () => {
     if (!editingPostCategory || !editName.trim()) return;
 
@@ -340,7 +298,7 @@ const PostCategoriesPage = () => {
 
       if (data.success) {
         showToast('Post category updated successfully', 'success');
-        fetchCategories(); // Refresh the list
+        fetchCategories();
       } else {
         showToast(data.error || 'Error updating post category', 'error');
       }
@@ -352,9 +310,7 @@ const PostCategoriesPage = () => {
       setEditingPostCategory(null);
       setEditName('');
     }
-  };
-
-  // Handle adding new post category
+  };
   const handleAddPostCategory = async () => {
     if (!newPostCategoryName.trim()) return;
 
@@ -372,7 +328,7 @@ const PostCategoriesPage = () => {
 
       if (data.success) {
         showToast('Post category added successfully', 'success');
-        fetchCategories(); // Refresh the list
+        fetchCategories();
       } else {
         showToast(data.error || 'Error adding post category', 'error');
       }
@@ -383,9 +339,7 @@ const PostCategoriesPage = () => {
       setAddDialogOpen(false);
       setNewPostCategoryName('');
     }
-  };
-
-  // Open edit dialog
+  };
   const openEditDialog = (postCategory: PostCategory) => {
     setEditingPostCategory(postCategory);
     setEditName(postCategory.name);
@@ -394,7 +348,7 @@ const PostCategoriesPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -406,10 +360,10 @@ const PostCategoriesPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            {/* First line: Page View Dropdown and Refresh Button */}
+            {}
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
               <select
                 value={pagination.limit}
@@ -440,7 +394,7 @@ const PostCategoriesPage = () => {
                 Refresh
               </button>
 
-              {/* Add Post Category Button */}
+              {}
               <button
                 onClick={() => setAddDialogOpen(true)}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full sm:w-auto"
@@ -450,7 +404,7 @@ const PostCategoriesPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls */}
+            {}
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative flex-1">
                 <FaSearch
@@ -469,7 +423,7 @@ const PostCategoriesPage = () => {
           </div>
         </div>
 
-        {/* Post Categories Table */}
+        {}
         <div className="card">
           <div style={{ padding: '24px 24px 0px 24px' }}>
             {postCategoriesLoading ? (
@@ -510,7 +464,7 @@ const PostCategoriesPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View - Hidden on mobile */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -576,7 +530,7 @@ const PostCategoriesPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            {/* 3 Dot Menu */}
+                            {}
                             <div className="relative">
                               <button
                                 className="btn btn-secondary p-2"
@@ -584,8 +538,7 @@ const PostCategoriesPage = () => {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   const dropdown = e.currentTarget
-                                    .nextElementSibling as HTMLElement;
-                                  // Close other dropdowns
+                                    .nextElementSibling as HTMLElement;
                                   document
                                     .querySelectorAll('.dropdown-menu')
                                     .forEach((menu) => {
@@ -598,7 +551,7 @@ const PostCategoriesPage = () => {
                                 <FaEllipsisH className="h-3 w-3" />
                               </button>
 
-                              {/* Dropdown Menu */}
+                              {}
                               <div className="dropdown-menu hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                                 <div className="py-1">
                                   <button
@@ -642,9 +595,7 @@ const PostCategoriesPage = () => {
                   </table>
                 </div>
 
-                
-
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -709,7 +660,7 @@ const PostCategoriesPage = () => {
           </div>
         </div>
 
-        {/* Delete Confirmation Dialog */}
+        {}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -753,7 +704,7 @@ const PostCategoriesPage = () => {
           </div>
         )}
 
-        {/* Edit Post Category Dialog */}
+        {}
         {editDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -790,7 +741,7 @@ const PostCategoriesPage = () => {
           </div>
         )}
 
-        {/* Add Post Category Dialog */}
+        {}
         {addDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

@@ -13,18 +13,14 @@ import {
   FaTimes,
   FaWallet,
   FaWhatsapp,
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component (matching Profile page)
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component (matching Profile page style)
+);
 const Toast = ({
   message,
   type = 'success',
@@ -55,34 +51,28 @@ function PaymentSuccessContent() {
   const invoice_id = searchParams?.get('invoice_id');
   const amount = searchParams?.get('amount');
   const transaction_id = searchParams?.get('transaction_id');
-  const phone = searchParams?.get('phone');
-
-  // Set document title
+  const phone = searchParams?.get('phone');
   useEffect(() => {
     setPageTitle('Payment Success', appName);
   }, [appName]);
 
-  useEffect(() => {
-    // Show success toast only once when component mounts
+  useEffect(() => {
     setToast({
       message: 'Payment successful! Funds have been added to your account.',
       type: 'success',
-    });
-
-    // Auto-hide toast after 5 seconds
+    });
     const toastTimer = setTimeout(() => setToast(null), 5000);
 
     return () => clearTimeout(toastTimer);
-  }, []); // Empty dependency array to run only once
+  }, []);
 
-  const handleViewTransactions = () => {
-    // Pass the successful transaction details as URL parameters
+  const handleViewTransactions = () => {
     const params = new URLSearchParams();
     if (invoice_id) params.set('invoice_id', invoice_id);
     if (amount) params.set('amount', amount);
     if (transaction_id) params.set('transaction_id', transaction_id);
     if (phone) params.set('phone', phone);
-    params.set('status', 'success'); // Mark as successful transaction
+    params.set('status', 'success');
 
     const url = `/transactions${
       params.toString() ? '?' + params.toString() : ''
@@ -96,7 +86,7 @@ function PaymentSuccessContent() {
 
   return (
     <div className="page-container min-h-screen flex items-center justify-center">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -108,21 +98,21 @@ function PaymentSuccessContent() {
       </div>
 
       <div className="page-content max-w-2xl mx-auto w-full px-0 lg:px-4">
-        {/* Main Success Card */}
+        {}
         <div className="card-mobile card card-padding">
           <div className="text-center">
-            {/* Success Icon - Just Checkmark */}
+            {}
             <div className="flex justify-center mb-6">
               <FaCheckCircle className="lg:w-20 w-16 lg:h-20 h-16 text-green-500" />
             </div>
 
-            {/* Success Message */}
+            {}
             <h2 className="card-title text-center mb-2">Payment Completed!</h2>
             <p className="text-center mb-6" style={{ color: 'var(--text-muted)' }}>
               Funds have been successfully added to your account.
             </p>
 
-            {/* Payment Details */}
+            {}
             {(invoice_id || amount || transaction_id || phone) && (
               <div className="space-y-4 mb-6">
                 <div className="card-header">
@@ -172,7 +162,7 @@ function PaymentSuccessContent() {
               </div>
             )}
 
-            {/* Info Box */}
+            {}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
               <p className="text-blue-800 dark:text-blue-200 text-sm">
                 Your account balance has been updated successfully. You can now
@@ -180,7 +170,7 @@ function PaymentSuccessContent() {
               </p>
             </div>
 
-            {/* Action Buttons */}
+            {}
             <div className="space-y-3">
               <button
                 onClick={handleViewTransactions}
