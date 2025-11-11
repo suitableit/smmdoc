@@ -10,28 +10,6 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 
-const ShimmerStyles = () => (
-  <style dangerouslySetInnerHTML={{__html: `
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
-    .gradient-shimmer {
-      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .dark .gradient-shimmer {
-      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
-      background-size: 200% 100%;
-    }
-  `}} />
-);
-
 const ButtonLoader = () => <div className="loading-spinner"></div>;
 
 const Toast = ({
@@ -93,6 +71,11 @@ const UpdatePricePage = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
 
   useEffect(() => {
+    hasLoadedData.current = false;
+    setIsPageLoading(true);
+  }, []);
+
+  useEffect(() => {
     const loadData = async () => {
       try {
         if (!currentUser) {
@@ -102,14 +85,21 @@ const UpdatePricePage = () => {
         }
 
         if (hasLoadedData.current) {
-          setIsPageLoading(false);
           return;
         }
 
-        setIsPageLoading(true);
         hasLoadedData.current = true;
 
-        const settingsResponse = await fetch('/api/admin/price-settings');
+        const startTime = Date.now();
+        const minLoadingTime = 500;
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const [settingsResponse, providersResponse] = await Promise.all([
+          fetch('/api/admin/price-settings'),
+          fetch('/api/admin/providers?filter=with-services')
+        ]);
+
         if (settingsResponse.ok) {
           const settingsData = await settingsResponse.json();
           if (settingsData.priceSettings) {
@@ -117,7 +107,6 @@ const UpdatePricePage = () => {
           }
         }
 
-        const providersResponse = await fetch('/api/admin/providers?filter=with-services');
         if (providersResponse.ok) {
           const providersData = await providersResponse.json();
           console.log('Providers API Response:', providersData);
@@ -131,6 +120,10 @@ const UpdatePricePage = () => {
           console.log('Failed to fetch providers, status:', providersResponse.status);
           showToast('Failed to load providers', 'error');
         }
+
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
       } catch (error) {
         console.error('Error loading data:', error);
         showToast('Error loading data', 'error');
@@ -181,7 +174,6 @@ const UpdatePricePage = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <ShimmerStyles />
           <div className="flex justify-center">
             <div className="w-full max-w-2xl">
               <div className="card card-padding">
@@ -242,7 +234,6 @@ const UpdatePricePage = () => {
       </div>
 
       <div className="page-content">
-        <ShimmerStyles />
         <div className="flex justify-center">
           <div className="w-full max-w-2xl">
             {}

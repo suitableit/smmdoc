@@ -14,28 +14,6 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 
-const ShimmerStyles = () => (
-  <style dangerouslySetInnerHTML={{__html: `
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
-    .gradient-shimmer {
-      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .dark .gradient-shimmer {
-      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
-      background-size: 200% 100%;
-    }
-  `}} />
-);
-
 const ButtonLoader = () => <div className="loading-spinner"></div>;
 
 const Toast = ({
@@ -593,7 +571,6 @@ const IntegrationPage = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <ShimmerStyles />
           <div className="flex justify-center">
             <div className="page-content">
               <div className="columns-1 md:columns-3 gap-6 space-y-6">

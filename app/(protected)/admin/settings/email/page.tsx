@@ -11,28 +11,6 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 
-const ShimmerStyles = () => (
-  <style dangerouslySetInnerHTML={{__html: `
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
-    .gradient-shimmer {
-      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .dark .gradient-shimmer {
-      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
-      background-size: 200% 100%;
-    }
-  `}} />
-);
-
 const EmailSettingsSkeleton = () => {
   return (
     <>
@@ -40,11 +18,9 @@ const EmailSettingsSkeleton = () => {
         <div className="card card-padding w-full">
           <div className="card-header">
             <div className="card-icon">
-              <div className="h-10 w-10 gradient-shimmer rounded-lg flex-shrink-0" />
+              <FaEnvelope />
             </div>
-            <h3 className="card-title">
-              <div className="h-6 w-40 gradient-shimmer rounded" />
-            </h3>
+            <h3 className="card-title">Setup Email SMTP</h3>
           </div>
           <div className="space-y-4">
             <div className="form-group">
@@ -87,7 +63,7 @@ const EmailSettingsSkeleton = () => {
               <div className="h-10 w-full gradient-shimmer rounded-lg" />
             </div>
             <button className="btn btn-primary w-full" disabled>
-              <span className="inline-block h-5 w-48 gradient-shimmer rounded" />
+              Save Email SMTP Settings
             </button>
           </div>
         </div>
@@ -96,11 +72,9 @@ const EmailSettingsSkeleton = () => {
         <div className="card card-padding w-full">
           <div className="card-header">
             <div className="card-icon">
-              <div className="h-10 w-10 gradient-shimmer rounded-lg flex-shrink-0" />
+              <FaEnvelopeOpen />
             </div>
-            <h3 className="card-title">
-              <div className="h-6 w-28 gradient-shimmer rounded" />
-            </h3>
+            <h3 className="card-title">Test Mail</h3>
           </div>
           <div className="space-y-4">
             <div className="form-group">
@@ -122,20 +96,21 @@ const EmailSettingsSkeleton = () => {
               <div className="h-24 w-full gradient-shimmer rounded-lg" />
             </div>
             <button className="btn btn-primary w-full" disabled>
-              <span className="inline-block h-5 w-32 gradient-shimmer rounded" />
+              Send Test Email
             </button>
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
-                  <div className="w-5 h-5 gradient-shimmer rounded-full" />
+                  <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                    <FaEnvelope className="w-3 h-3 text-white" />
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1">
                   <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
-                    <span className="inline-block h-4 w-40 gradient-shimmer rounded" />
+                    Test Email Configuration
                   </h4>
                   <p className="text-sm text-blue-700 dark:text-blue-300">
-                    <span className="inline-block h-3 w-full gradient-shimmer rounded mb-1" />
-                    <span className="inline-block h-3 w-3/4 gradient-shimmer rounded" />
+                    Use this feature to test your SMTP configuration. Make sure to save your SMTP settings first before sending a test email.
                   </p>
                 </div>
               </div>
@@ -333,7 +308,6 @@ const EmailSettingsPage = () => {
       </div>
 
       <div className="page-content">
-        <ShimmerStyles />
         <div className="flex justify-center">
           <div className="page-content">
             {}

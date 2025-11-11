@@ -27,25 +27,6 @@ const SyncLogsTableSkeleton = () => {
   
   return (
     <>
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes shimmer {
-          0% {
-            background-position: -200% 0;
-          }
-          100% {
-            background-position: 200% 0;
-          }
-        }
-        .gradient-shimmer {
-          background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-        }
-        .dark .gradient-shimmer {
-          background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
-          background-size: 200% 100%;
-        }
-      `}} />
       <div className="hidden lg:block overflow-x-auto">
         <table className="w-full text-sm min-w-[1000px]">
           <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
@@ -295,7 +276,7 @@ const SyncLogsPage = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
-  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsLoading, setLogsLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const getChangeTypeBadge = (changeType: string) => {
@@ -365,6 +346,13 @@ const SyncLogsPage = () => {
       hasPrev: prev.page > 1,
     }));
   }, [filteredSyncLogs.length, pagination.limit]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLogsLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const getPaginatedData = () => {
     const startIndex = (pagination.page - 1) * pagination.limit;
