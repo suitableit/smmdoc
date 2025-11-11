@@ -24,15 +24,139 @@ import {
   FaUndo
 } from 'react-icons/fa';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
-const ButtonLoader = () => <div className="loading-spinner"></div>;
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const ProvidersTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+
+  return (
+    <>
+      <div className="mb-6">
+        <div className="flex flex-wrap gap-2">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <div key={idx} className="h-9 w-20 gradient-shimmer rounded-lg" />
+          ))}
+        </div>
+      </div>
+      <div className="hidden md:block">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 8 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-32 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-24 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-1 justify-end">
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="md:hidden space-y-4">
+        {rows.map((_, idx) => (
+          <div key={idx} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-12 gradient-shimmer rounded" />
+                <div className="h-4 w-32 gradient-shimmer rounded" />
+              </div>
+              <div className="h-6 w-6 gradient-shimmer rounded" />
+            </div>
+            <div className="mb-3">
+              <div className="h-6 w-24 gradient-shimmer rounded-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              <div>
+                <div className="h-3 w-16 gradient-shimmer rounded mb-1" />
+                <div className="h-4 w-20 gradient-shimmer rounded" />
+                <div className="h-3 w-12 gradient-shimmer rounded mt-1" />
+              </div>
+              <div>
+                <div className="h-3 w-12 gradient-shimmer rounded mb-1" />
+                <div className="h-4 w-16 gradient-shimmer rounded" />
+              </div>
+              <div>
+                <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                <div className="h-4 w-20 gradient-shimmer rounded" />
+              </div>
+              <div>
+                <div className="h-3 w-16 gradient-shimmer rounded mb-1" />
+                <div className="h-4 w-24 gradient-shimmer rounded" />
+                <div className="h-3 w-20 gradient-shimmer rounded mt-1" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-8 w-8 gradient-shimmer rounded" />
+              <div className="h-8 w-8 gradient-shimmer rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+};
+
+const ButtonLoader = () => <div className="loading-spinner"></div>;
+
 const Toast = ({
   message,
   type = 'success',
@@ -112,7 +236,8 @@ interface Provider {
   createdAt: Date;
   lastSync: Date;
   description?: string;
-  connectionStatus?: 'connected' | 'disconnected' | 'testing' | 'unknown';
+  connectionStatus?: 'connected' | 'disconnected' | 'testing' | 'unknown';
+
   apiKeyParam?: string;
   actionParam?: string;
   servicesAction?: string;
@@ -145,15 +270,18 @@ interface Provider {
 }
 
 const APIProvidersPage = () => {
-  console.log('🚀 APIProvidersPage component loaded');
+  console.log('🚀 APIProvidersPage component loaded');
+
   if (typeof window !== 'undefined') {
     console.log('🌐 Window object available, component is in browser');
   }
 
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     document.title = `API Providers — ${appName}`;
-  }, [appName]);
+  }, [appName]);
+
   const [providers, setProviders] = useState<Provider[]>([]);
   const [availableProviders, setAvailableProviders] = useState<any[]>([]);
   const [connectionStatuses, setConnectionStatuses] = useState<{[key: number]: 'connected' | 'disconnected' | 'testing' | 'unknown'}>({});
@@ -172,7 +300,8 @@ const APIProvidersPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [providerToDelete, setProviderToDelete] = useState<Provider | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -183,7 +312,8 @@ const APIProvidersPage = () => {
     apiKey: '',
     apiUrl: '',
     httpMethod: 'POST',
-    syncEnabled: true,
+    syncEnabled: true,
+
     apiKeyParam: 'key',
     actionParam: 'action',
     servicesAction: 'services',
@@ -220,7 +350,8 @@ const APIProvidersPage = () => {
     apiUrl: '',
     apiKey: '',
     httpMethod: 'POST',
-    syncEnabled: true,
+    syncEnabled: true,
+
     apiKeyParam: 'key',
     actionParam: 'action',
     servicesAction: 'services',
@@ -250,7 +381,8 @@ const APIProvidersPage = () => {
     responseFormat: 'json',
     rateLimitPerMin: '',
     timeoutSeconds: 30,
-  });
+  });
+
   const fetchProviders = async (filter: string = 'all') => {
     try {
       console.log('🔄 fetchProviders called with filter:', filter);
@@ -260,8 +392,10 @@ const APIProvidersPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('Fetched providers:', result.data.providers);
-        setAvailableProviders(result.data.providers);
+        console.log('Fetched providers:', result.data.providers);
+
+        setAvailableProviders(result.data.providers);
+
         const uiProviders = result.data.providers
           .map((p: any) => ({
             id: p.id,
@@ -282,9 +416,11 @@ const APIProvidersPage = () => {
             deletedAt: p.deletedAt || null,
             description: p.description
           }));
-        setProviders(uiProviders);
+        setProviders(uiProviders);
+
         if (filter !== 'trash') {
-          testAllConnections();
+          testAllConnections();
+
           setTimeout(() => {
             fetchAllProviderBalances();
           }, 2000);
@@ -299,13 +435,15 @@ const APIProvidersPage = () => {
       console.error('Error fetching providers:', error);
       showToast('Failed to fetch providers', 'error');
     }
-  };
+  };
+
   const fetchProviderBalance = async (providerId: number) => {
     try {
       const response = await fetch(`/api/admin/providers/balance?providerId=${providerId}`);
       if (response.ok) {
         const result = await response.json();
-        if (result.success && result.data) {
+        if (result.success && result.data) {
+
           setProviders(prev => prev.map(p => 
             p.id === providerId 
               ? { ...p, currentBalance: result.data.balance || 0 }
@@ -316,12 +454,14 @@ const APIProvidersPage = () => {
     } catch (error) {
       console.error(`Error fetching balance for provider ${providerId}:`, error);
     }
-  };
+  };
+
   const fetchAllProviderBalances = async () => {
     try {
       console.log('🔍 Fetching balances for all active providers...');
       console.log('📋 Total providers in state:', providers.length);
-      console.log('📋 All providers:', providers.map(p => ({ id: p.id, name: p.name, status: p.status })));
+      console.log('📋 All providers:', providers.map(p => ({ id: p.id, name: p.name, status: p.status })));
+
       const activeProviders = providers.filter(p => p.status === 'active');
       console.log('Active providers to check balance:', activeProviders.map(p => ({ id: p.id, name: p.name })));
 
@@ -335,7 +475,8 @@ const APIProvidersPage = () => {
             const result = await response.json();
             console.log(`Balance result for provider ${provider.id}:`, result);
 
-            if (result.success && result.data) {
+            if (result.success && result.data) {
+
               setProviders(prev => prev.map(p => 
                 p.id === provider.id 
                   ? { ...p, currentBalance: result.data.balance || 0 }
@@ -354,7 +495,8 @@ const APIProvidersPage = () => {
     } catch (error) {
       console.error('❌ Error fetching provider balances:', error);
     }
-  };
+  };
+
   const testAllConnections = async () => {
     try {
       const response = await fetch('/api/admin/providers/test-all-connections', {
@@ -367,7 +509,8 @@ const APIProvidersPage = () => {
         result.results.forEach((r: any) => {
           newStatuses[r.id] = r.connected ? 'connected' : 'disconnected';
         });
-        setConnectionStatuses(newStatuses);
+        setConnectionStatuses(newStatuses);
+
         setTimeout(() => {
           fetchAllProviderBalances();
         }, 1000);
@@ -375,7 +518,8 @@ const APIProvidersPage = () => {
     } catch (error) {
       console.error('Error testing connections:', error);
     }
-  };
+  };
+
   const testProviderConnection = async (providerId: number) => {
     setConnectionStatuses(prev => ({ ...prev, [providerId]: 'testing' }));
 
@@ -396,7 +540,8 @@ const APIProvidersPage = () => {
       setConnectionStatuses(prev => ({ ...prev, [providerId]: 'disconnected' }));
       return false;
     }
-  };
+  };
+
   useEffect(() => {
     const loadData = async () => {
       console.log('🔄 loadData called in useEffect');
@@ -406,7 +551,8 @@ const APIProvidersPage = () => {
 
     console.log('🚀 useEffect triggered for initial loading');
     loadData();
-  }, []);
+  }, []);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -433,7 +579,8 @@ const APIProvidersPage = () => {
 
   const handleAddProvider = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsLoading(true);
+
     if (!formData.customProviderName.trim()) {
       showToast('Please enter a provider name', 'error');
       setIsLoading(false);
@@ -450,7 +597,8 @@ const APIProvidersPage = () => {
           customProviderName: formData.customProviderName,
           apiKey: formData.apiKey,
           apiUrl: formData.apiUrl,
-          httpMethod: formData.httpMethod,
+          httpMethod: formData.httpMethod,
+
           apiKeyParam: formData.apiKeyParam,
           actionParam: formData.actionParam,
           servicesAction: formData.servicesAction,
@@ -485,7 +633,8 @@ const APIProvidersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success) {
+
         await fetchProviders(statusFilter);
 
         setFormData({
@@ -493,7 +642,8 @@ const APIProvidersPage = () => {
           apiKey: '',
           apiUrl: '',
           httpMethod: 'POST',
-          syncEnabled: true,
+          syncEnabled: true,
+
           apiKeyParam: 'key',
           actionParam: 'action',
           servicesAction: 'services',
@@ -544,7 +694,8 @@ const APIProvidersPage = () => {
       apiUrl: provider.apiUrl || '',
       apiKey: provider.apiKey || '',
       httpMethod: provider.httpMethod || 'POST',
-      syncEnabled: true,
+      syncEnabled: true,
+
       apiKeyParam: provider.apiKeyParam || 'key',
       actionParam: provider.actionParam || 'action',
       servicesAction: provider.servicesAction || 'services',
@@ -601,7 +752,8 @@ const APIProvidersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success) {
+
         setProviders(prev => prev.map(provider =>
           provider.id === editingProvider.id
             ? {
@@ -622,15 +774,18 @@ const APIProvidersPage = () => {
           syncEnabled: true,
         });
         setShowEditForm(false);
-        setEditingProvider(null);
-        if (typeof window !== 'undefined' && window.localStorage) {
+        setEditingProvider(null);
+
+        if (typeof window !== 'undefined' && window.localStorage) {
+
           const cacheKey = '/api/admin/providers';
           const swrCache = JSON.parse(localStorage.getItem('swr-cache') || '{}');
           if (swrCache[cacheKey]) {
             delete swrCache[cacheKey];
             localStorage.setItem('swr-cache', JSON.stringify(swrCache));
           }
-        }
+        }
+
         window.dispatchEvent(new CustomEvent('providerUpdated', { 
           detail: { providerId: editingProvider.id, providerName: editFormData.name } 
         }));
@@ -665,7 +820,8 @@ const APIProvidersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success) {
+
         setProviders(prev => prev.map(provider =>
           provider.id === providerId
             ? { ...provider, status: newStatus as 'active' | 'inactive' }
@@ -681,7 +837,8 @@ const APIProvidersPage = () => {
     }
   };
 
-  const handleDeleteProvider = async (providerId: number, deleteType: 'trash' | 'permanent') => {
+  const handleDeleteProvider = async (providerId: number, deleteType: 'trash' | 'permanent') => {
+
     if (!providerId || providerId === null || providerId === undefined) {
       showToast('Cannot delete unconfigured provider', 'error');
       return;
@@ -695,8 +852,10 @@ const APIProvidersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        if (deleteType === 'trash') {
+      if (result.success) {
+
+        if (deleteType === 'trash') {
+
           setProviders(prev => prev.map(provider => 
             provider.id === providerId 
               ? { 
@@ -705,11 +864,13 @@ const APIProvidersPage = () => {
                   deletedAt: new Date().toISOString()
                 }
               : provider
-          ));
+          ));
+
           if (statusFilter === 'trash') {
             setTimeout(() => fetchProviders('trash'), 500);
           }
-        } else {
+        } else {
+
           setProviders(prev => prev.filter(provider => provider.id !== providerId));
         }
 
@@ -745,13 +906,15 @@ const APIProvidersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success) {
+
         setProviders(prevProviders =>
           prevProviders.map(p =>
             p.id === provider.id ? { ...p, status: 'active', deletedAt: null } : p
           )
         );
-        showToast(result.message || 'Provider restored successfully!', 'success');
+        showToast(result.message || 'Provider restored successfully!', 'success');
+
         await fetchProviders(statusFilter);
       } else {
         showToast(result.error || 'Failed to restore provider', 'error');
@@ -767,14 +930,17 @@ const APIProvidersPage = () => {
     let timeoutId: NodeJS.Timeout | null = null;
     let controller: AbortController | null = null;
 
-    try {
-      await testAllConnections();
+    try {
+
+      await testAllConnections();
+
       controller = new AbortController();
       timeoutId = setTimeout(() => {
         if (controller) {
           controller.abort();
         }
-      }, 120000);
+      }, 120000);
+
       showToast('Starting sync for all providers (updating existing services only)...', 'pending');
 
       const response = await fetch('/api/admin/providers/sync', {
@@ -807,11 +973,13 @@ const APIProvidersPage = () => {
           `Updated: ${totals.updated} existing services, ` +
           `Price changes: ${totals.priceChanges}, Status changes: ${totals.statusChanges}`,
           'success'
-        );
+        );
+
         setProviders(prev => prev.map(provider => ({
           ...provider,
           lastSync: new Date()
-        })));
+        })));
+
         await fetchProviders(statusFilter);
       } else {
         showToast(`Bulk sync failed: ${result.error}`, 'error');
@@ -827,13 +995,15 @@ const APIProvidersPage = () => {
       } else {
         showToast('Failed to sync all providers', 'error');
       }
-    } finally {
+    } finally {
+
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
       if (controller) {
         controller.abort();
-      }
+      }
+
       setSyncingAll(false);
     }
   };
@@ -844,7 +1014,8 @@ const APIProvidersPage = () => {
     let timeoutId: NodeJS.Timeout | null = null;
     let controller: AbortController | null = null;
 
-    try {
+    try {
+
       const currentStatus = connectionStatuses[providerId];
 
       if (currentStatus === 'disconnected') {
@@ -852,7 +1023,8 @@ const APIProvidersPage = () => {
         return;
       }
 
-      if (currentStatus === 'unknown' || !currentStatus) {
+      if (currentStatus === 'unknown' || !currentStatus) {
+
         const { testProviderConnection: validateConnection } = await import('@/lib/utils/providerValidator');
         const connectionPromise = validateConnection(providerId);
         const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => 
@@ -864,9 +1036,11 @@ const APIProvidersPage = () => {
         if (!isConnected.success) {
           showToast(`Cannot sync: ${isConnected.error || 'Provider API is not connected'}. Please check your API configuration.`, 'error');
           return;
-        }
+        }
+
         setConnectionStatuses(prev => ({ ...prev, [providerId]: 'connected' }));
-      }
+      }
+
       controller = new AbortController();
       timeoutId = setTimeout(() => {
         if (controller) {
@@ -907,13 +1081,16 @@ const APIProvidersPage = () => {
           );
         } else {
           showToast('Provider synchronized successfully!', 'success');
-        }
+        }
+
         setProviders(prev => prev.map(provider =>
           provider.id === providerId
             ? { ...provider, lastSync: new Date() }
             : provider
-        ));
-        await fetchProviders(statusFilter);
+        ));
+
+        await fetchProviders(statusFilter);
+
         setTimeout(() => {
           fetchProviderBalance(providerId);
         }, 1000);
@@ -933,13 +1110,15 @@ const APIProvidersPage = () => {
       } else {
         showToast('Failed to sync provider', 'error');
       }
-    } finally {
+    } finally {
+
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
       if (controller) {
         controller.abort();
-      }
+      }
+
       const elapsedTime = Date.now() - startTime;
       const minSpinTime = 1000;
 
@@ -967,7 +1146,8 @@ const APIProvidersPage = () => {
       case 'inactive': return <FaTimes className="w-4 h-4" />;
       default: return <FaExclamationTriangle className="w-4 h-4" />;
     }
-  };
+  };
+
   const ProviderActions = ({ provider }: { provider: Provider }) => {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -1068,15 +1248,59 @@ const APIProvidersPage = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <div className="card card-padding">
-            <div className="flex items-center justify-center min-h-[400px]">
-              <div className="text-center flex flex-col items-center">
-                <GradientSpinner size="w-16 h-16" className="mb-4" />
-                <div className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
-                  Loading API Providers
+          <ShimmerStyles />
+          <div className="space-y-6">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-24 gradient-shimmer rounded-lg" />
+                <div className="h-10 w-32 gradient-shimmer rounded-lg" />
+              </div>
+              <div className="h-10 w-full md:w-80 gradient-shimmer rounded-lg" />
+            </div>
+            <div className="card card-padding min-h-[600px]">
+              <ProvidersTableSkeleton />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="card card-padding">
+                <div className="card-header mb-4">
+                  <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                  <div className="h-6 w-32 gradient-shimmer rounded ml-3" />
                 </div>
-                <div className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
-                  Please wait while we fetch your provider data...
+                <div className="space-y-3">
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                </div>
+              </div>
+              <div className="card card-padding">
+                <div className="card-header mb-4">
+                  <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                  <div className="h-6 w-24 gradient-shimmer rounded ml-3" />
+                </div>
+                <div className="space-y-4">
+                  {Array.from({ length: 7 }).map((_, idx) => (
+                    <div key={idx} className="flex items-center justify-between">
+                      <div className="h-4 w-32 gradient-shimmer rounded" />
+                      <div className="h-4 w-16 gradient-shimmer rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="card card-padding">
+                <div className="card-header mb-4">
+                  <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                  <div className="h-6 w-28 gradient-shimmer rounded ml-3" />
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 w-24 gradient-shimmer rounded" />
+                    <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                  </div>
+                  {Array.from({ length: 4 }).map((_, idx) => (
+                    <div key={idx} className="flex items-center justify-between">
+                      <div className="h-3 w-20 gradient-shimmer rounded" />
+                      <div className="h-4 w-16 gradient-shimmer rounded" />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -1100,7 +1324,7 @@ const APIProvidersPage = () => {
       </div>
 
       <div className="page-content">
-        {}
+        <ShimmerStyles />
         {showAddForm && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -1406,18 +1630,11 @@ const APIProvidersPage = () => {
           {}
           <div className="card card-padding relative">
             {}
-            {isRefreshing && (
-              <div className="absolute inset-0 bg-white dark:bg-gray-800 flex items-center justify-center z-10 rounded-lg">
-                <div className="text-center">
-                  <GradientSpinner size="w-12 h-12" className="mx-auto mb-3" />
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Refreshing providers...
-                  </p>
-                </div>
-              </div>
-            )}
-            {}
-            <div className="mb-6">
+            {isRefreshing ? (
+              <ProvidersTableSkeleton />
+            ) : (
+              <>
+                <div className="mb-6">
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => {
@@ -1513,10 +1730,12 @@ const APIProvidersPage = () => {
             {}
             <div className="hidden md:block">
               {(() => {
-                const filteredProviders = providers.filter(provider => {
+                const filteredProviders = providers.filter(provider => {
+
                   const matchesSearch = searchQuery === '' ||
                     provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
+                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
+
                   const matchesStatus = statusFilter === 'all' 
                     ? provider.status !== 'trash'
                     : provider.status === statusFilter;
@@ -1552,21 +1771,19 @@ const APIProvidersPage = () => {
 
                 return (
                   <table className="w-full text-sm">
-                    {!isRefreshing && (
-                      <thead className="sticky top-0 bg-white border-b z-10">
-                        <tr>
-                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Provider</th>
-                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Services</th>
-                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Orders</th>
-                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Current Balance</th>
-                          {statusFilter !== 'trash' && <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Sync</th>}
-                          {statusFilter !== 'trash' && <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>}
-                          <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>API Status</th>
-                          <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
-                        </tr>
-                      </thead>
-                    )}
+                    <thead className="sticky top-0 bg-white border-b z-10">
+                      <tr>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Provider</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Services</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Orders</th>
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Current Balance</th>
+                        {statusFilter !== 'trash' && <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Sync</th>}
+                        {statusFilter !== 'trash' && <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>}
+                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>API Status</th>
+                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                      </tr>
+                    </thead>
                     <tbody>
                       {filteredProviders
                     .map((provider, index) => (
@@ -1697,10 +1914,12 @@ const APIProvidersPage = () => {
             {}
             <div className="md:hidden space-y-4">
               {providers
-                .filter(provider => {
+                .filter(provider => {
+
                   const matchesSearch = searchQuery === '' ||
                     provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
+                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
+
                   const matchesStatus = statusFilter === 'all' 
                     ? provider.status !== 'trash'
                     : provider.status === statusFilter;
@@ -1730,10 +1949,12 @@ const APIProvidersPage = () => {
                 </div>
               ) : (
                 providers
-                .filter(provider => {
+                .filter(provider => {
+
                   const matchesSearch = searchQuery === '' ||
                     provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
+                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
+
                   const matchesStatus = statusFilter === 'all' 
                     ? provider.status !== 'trash'
                     : provider.status === statusFilter;
@@ -1827,6 +2048,8 @@ const APIProvidersPage = () => {
               ))
               )}
             </div>
+              </>
+            )}
           </div>
 
           {}
@@ -1893,19 +2116,19 @@ const APIProvidersPage = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Total Orders</span>
                   <span className="font-semibold">
-                    {providers.reduce((sum, p) => sum + p.orders, 0).toLocaleString()}
+                    {providers.reduce((sum, p) => sum + p.orders, 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Imported Services</span>
                   <span className="font-semibold text-orange-600">
-                    {providers.reduce((sum, p) => sum + p.importedServices, 0).toLocaleString()}
+                    {providers.reduce((sum, p) => sum + p.importedServices, 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Active Services</span>
                   <span className="font-semibold text-purple-600">
-                    {providers.reduce((sum, p) => sum + p.activeServices, 0).toLocaleString()}
+                    {providers.reduce((sum, p) => sum + p.activeServices, 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -1940,13 +2163,13 @@ const APIProvidersPage = () => {
                         </span>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Orders: <span className="font-semibold text-green-600">{topProvider.orders.toLocaleString()}</span>
+                        Orders: <span className="font-semibold text-green-600">{topProvider.orders}</span>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Imported: <span className="font-semibold text-orange-600">{topProvider.importedServices.toLocaleString()}</span>
+                        Imported: <span className="font-semibold text-orange-600">{topProvider.importedServices}</span>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Active: <span className="font-semibold text-purple-600">{topProvider.activeServices.toLocaleString()}</span>
+                        Active: <span className="font-semibold text-purple-600">{topProvider.activeServices}</span>
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         Balance: <span className="font-semibold text-blue-600">${topProvider.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -2012,7 +2235,8 @@ const APIProvidersPage = () => {
                       }
                     </p>
 
-                    {providerToDelete.status === 'trash' ? (
+                    {providerToDelete.status === 'trash' ? (
+
                       <div className="p-3 border rounded-lg bg-red-50 border-red-200">
                         <div className="font-medium text-red-800">
                           Permanently Delete
@@ -2021,7 +2245,8 @@ const APIProvidersPage = () => {
                           This will permanently remove the provider and all imported services. This action cannot be undone.
                         </div>
                       </div>
-                    ) : (
+                    ) : (
+
                       <>
                         {}
                         <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">

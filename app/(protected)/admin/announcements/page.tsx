@@ -22,16 +22,82 @@ import {
   FaChevronUp,
   FaSortAmountDown,
   FaSortAmountUp,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
+import { setPageTitle } from '@/lib/utils/set-page-title';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const AnnouncementsSkeleton = () => {
+  const cards = Array.from({ length: 5 });
+
+  return (
+    <div className="space-y-4">
+      {cards.map((_, idx) => (
+        <div key={idx} className="card card-padding">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-6 w-64 gradient-shimmer rounded" />
+                    <div className="h-5 w-16 gradient-shimmer rounded-full" />
+                  </div>
+                  <div className="h-4 w-full gradient-shimmer rounded mb-1" />
+                  <div className="h-4 w-3/4 gradient-shimmer rounded mb-3" />
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                    <div className="h-6 w-24 gradient-shimmer rounded-full" />
+                    <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                  </div>
+                  <div className="h-10 w-32 gradient-shimmer rounded mb-3" />
+                  <div className="flex items-center gap-4">
+                    <div className="h-4 w-32 gradient-shimmer rounded" />
+                    <div className="h-4 w-24 gradient-shimmer rounded" />
+                    <div className="h-4 w-32 gradient-shimmer rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="hidden md:flex items-center gap-2 ml-4">
+              <div className="h-8 w-8 gradient-shimmer rounded-lg" />
+              <div className="h-8 w-8 gradient-shimmer rounded-lg" />
+              <div className="h-8 w-8 gradient-shimmer rounded-lg" />
+            </div>
+          </div>
+          <div className="flex md:hidden items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+            <div className="h-10 w-full gradient-shimmer rounded-lg" />
+            <div className="h-10 w-full gradient-shimmer rounded-lg" />
+            <div className="h-10 w-full gradient-shimmer rounded-lg" />
+          </div>
+        </div>
+      ))}
     </div>
-  </div>
-);
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -48,7 +114,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface Announcement {
   id: string;
   title: string;
@@ -82,10 +149,12 @@ interface AnnouncementFormData {
 }
 
 const AnnouncementsPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('Announcements', appName);
-  }, [appName]);
+  }, [appName]);
+
   const dummyAnnouncements: Announcement[] = [
     {
       id: 'ann_001',
@@ -177,23 +246,28 @@ const AnnouncementsPage = () => {
       buttonText: 'Register Now',
       buttonLink: '/webinar-registration',
     },
-  ];
+  ];
+
   const [announcements, setAnnouncements] = useState<Announcement[]>(dummyAnnouncements);
   const [filteredAnnouncements, setFilteredAnnouncements] = useState<Announcement[]>(dummyAnnouncements);
   const [isLoading, setIsLoading] = useState(false);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [audienceFilter, setAudienceFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'views' | 'title'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
   const [formData, setFormData] = useState<AnnouncementFormData>({
     title: '',
     content: '',
@@ -205,14 +279,23 @@ const AnnouncementsPage = () => {
     buttonEnabled: false,
     buttonText: '',
     buttonLink: '',
-  });
+  });
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnnouncementsLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     let filtered = announcements.filter(announcement => {
       const matchesSearch = announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -222,7 +305,8 @@ const AnnouncementsPage = () => {
       const matchesAudience = audienceFilter === 'all' || announcement.targetedAudience === audienceFilter;
 
       return matchesSearch && matchesStatus && matchesType && matchesAudience;
-    });
+    });
+
     filtered.sort((a, b) => {
       let aValue, bValue;
 
@@ -247,12 +331,14 @@ const AnnouncementsPage = () => {
       } else {
         return aValue < bValue ? 1 : -1;
       }
-    });
+    });
+
     const stickyFiltered = filtered.filter(ann => ann.isSticky);
     const nonStickyFiltered = filtered.filter(ann => !ann.isSticky);
 
     setFilteredAnnouncements([...stickyFiltered, ...nonStickyFiltered]);
-  }, [announcements, searchTerm, statusFilter, typeFilter, audienceFilter, sortBy, sortOrder]);
+  }, [announcements, searchTerm, statusFilter, typeFilter, audienceFilter, sortBy, sortOrder]);
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -266,7 +352,8 @@ const AnnouncementsPage = () => {
       buttonText: '',
       buttonLink: '',
     });
-  };
+  };
+
   const handleCreateAnnouncement = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
       showToast('Please fill in all required fields', 'error');
@@ -305,7 +392,8 @@ const AnnouncementsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   const handleEditAnnouncement = async () => {
     if (!editingAnnouncement || !formData.title.trim() || !formData.content.trim()) {
       showToast('Please fill in all required fields', 'error');
@@ -343,7 +431,8 @@ const AnnouncementsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   const handleDeleteAnnouncement = async (id: string) => {
     try {
       setIsLoading(true);
@@ -357,7 +446,8 @@ const AnnouncementsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'draft' : 'active';
 
@@ -372,7 +462,8 @@ const AnnouncementsPage = () => {
     } catch (error) {
       showToast('Error updating announcement status', 'error');
     }
-  };
+  };
+
   const startEditing = (announcement: Announcement) => {
     setEditingAnnouncement(announcement);
     setFormData({
@@ -387,7 +478,8 @@ const AnnouncementsPage = () => {
       buttonText: announcement.buttonText,
       buttonLink: announcement.buttonLink,
     });
-  };
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'warning': return <FaExclamationTriangle className="h-4 w-4" />;
@@ -429,6 +521,7 @@ const AnnouncementsPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex items-center justify-start">
@@ -510,7 +603,11 @@ const AnnouncementsPage = () => {
 
         {}
         <div className="space-y-4">
-          {filteredAnnouncements.length === 0 ? (
+          {announcementsLoading ? (
+            <div className="min-h-[600px]">
+              <AnnouncementsSkeleton />
+            </div>
+          ) : filteredAnnouncements.length === 0 ? (
             <div className="card card-padding text-center py-12">
               <FaBullhorn className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No announcements found</h3>
@@ -831,7 +928,7 @@ const AnnouncementsPage = () => {
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    <GradientSpinner size="w-4 h-4" />
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <FaSave className="h-4 w-4" />
                   )}
@@ -871,7 +968,7 @@ const AnnouncementsPage = () => {
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    <GradientSpinner size="w-4 h-4" />
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <FaTrash className="h-4 w-4" />
                   )}

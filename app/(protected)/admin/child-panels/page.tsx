@@ -14,10 +14,12 @@ import {
     FaTimes,
     FaTimesCircle,
     FaUserCheck
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+
 const FormField = ({ children }: { children: React.ReactNode }) => (
   <div className="space-y-2">{children}</div>
 );
@@ -52,14 +54,94 @@ const FormMessage = ({
   children?: React.ReactNode 
 }) => (
   children ? <div className={`text-xs text-red-500 mt-1 ${className}`}>{children}</div> : null
-);
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+);
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const ChildPanelsTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[1000px]">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 7 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-4 w-4 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                  <div className="h-3 w-32 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-40 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-1">
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div className="h-5 w-48 gradient-shimmer rounded" />
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <div className="h-9 w-20 gradient-shimmer rounded" />
+          <div className="h-5 w-24 gradient-shimmer rounded" />
+          <div className="h-9 w-16 gradient-shimmer rounded" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -76,7 +158,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface ChildPanel {
   id: number;
   user: {
@@ -123,7 +206,8 @@ interface PaginationInfo {
   totalPages: number;
   hasNext: boolean;
   hasPrev: boolean;
-}
+}
+
 const dummyChildPanels: ChildPanel[] = [
   {
     id: 3001,
@@ -337,10 +421,12 @@ const dummyStats: ChildPanelStats = {
 };
 
 const ChildPanelsPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('Child Panels', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [childPanels, setChildPanels] = useState<ChildPanel[]>(dummyChildPanels);
   const [stats, setStats] = useState<ChildPanelStats>(dummyStats);
 
@@ -359,9 +445,11 @@ const ChildPanelsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-  const [statsLoading, setStatsLoading] = useState(false);
-  const [panelsLoading, setPanelsLoading] = useState(false);
+  } | null>(null);
+
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [panelsLoading, setPanelsLoading] = useState(true);
+
   const [statusDialog, setStatusDialog] = useState<{
     open: boolean;
     panelId: number;
@@ -383,7 +471,8 @@ const ChildPanelsPage = () => {
   });
 
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+
   const [settingsDialog, setSettingsDialog] = useState<{
     open: boolean;
     panel: ChildPanel | null;
@@ -411,7 +500,8 @@ const ChildPanelsPage = () => {
       massOrders: true,
       drip_feed: true,
     },
-  });
+  });
+
   const calculateStatusCounts = (panelsData: ChildPanel[]) => {
     const counts = {
       active: 0,
@@ -428,10 +518,12 @@ const ChildPanelsPage = () => {
     });
 
     return counts;
-  };
+  };
+
   const fetchAllPanelsForCounts = async () => {
     try {
-      console.log('Calculating status counts from dummy data...');
+      console.log('Calculating status counts from dummy data...');
+
       await new Promise(resolve => setTimeout(resolve, 200));
 
       const statusCounts = calculateStatusCounts(dummyChildPanels);
@@ -454,14 +546,18 @@ const ChildPanelsPage = () => {
 
   const fetchChildPanels = async () => {
     try {
-      setPanelsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      let filteredPanels = [...dummyChildPanels];
+      setPanelsLoading(true);
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      let filteredPanels = [...dummyChildPanels];
+
       if (statusFilter !== 'all') {
         filteredPanels = filteredPanels.filter(
           panel => panel.status === statusFilter
         );
-      }
+      }
+
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         filteredPanels = filteredPanels.filter(
@@ -471,7 +567,8 @@ const ChildPanelsPage = () => {
             panel.domain?.toLowerCase().includes(searchLower) ||
             panel.panelName?.toLowerCase().includes(searchLower)
         );
-      }
+      }
+
       const startIndex = (pagination.page - 1) * pagination.limit;
       const endIndex = startIndex + pagination.limit;
       const paginatedPanels = filteredPanels.slice(startIndex, endIndex);
@@ -505,7 +602,8 @@ const ChildPanelsPage = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('Loading stats from dummy data...');
+      console.log('Loading stats from dummy data...');
+
       await new Promise(resolve => setTimeout(resolve, 300));
 
       console.log('Stats loaded successfully:', dummyStats);
@@ -527,14 +625,16 @@ const ChildPanelsPage = () => {
       });
       showToast('Error fetching statistics. Please refresh the page.', 'error');
     }
-  };
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchChildPanels();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm]);
+
   useEffect(() => {
     fetchChildPanels();
   }, [pagination.page, pagination.limit, statusFilter]);
@@ -548,7 +648,8 @@ const ChildPanelsPage = () => {
     };
 
     loadData();
-  }, []);
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownOpen !== null) {
@@ -563,7 +664,8 @@ const ChildPanelsPage = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [dropdownOpen]);
+  }, [dropdownOpen]);
+
   useEffect(() => {
     if (pagination.total > 0) {
       setStats((prev) => ({
@@ -571,14 +673,16 @@ const ChildPanelsPage = () => {
         totalPanels: pagination.total,
       }));
     }
-  }, [pagination.total]);
+  }, [pagination.total]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
@@ -657,13 +761,15 @@ const ChildPanelsPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
+  };
+
   const handleStatusChange = async (
     panelId: number,
     status: string,
     reason: string
   ) => {
-    try {
+    try {
+
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       showToast('Panel status updated successfully', 'success');
@@ -682,15 +788,18 @@ const ChildPanelsPage = () => {
         'error'
       );
     }
-  };
+  };
+
   const openStatusDialog = (panelId: number, currentStatus: string) => {
     setStatusDialog({ open: true, panelId, currentStatus });
     setNewStatus(currentStatus);
     setStatusReason('');
-  };
+  };
+
   const openSettingsDialog = (panel: ChildPanel) => {
     setSettingsDialog({ open: true, panel });
-    setActiveSettingsTab('general');
+    setActiveSettingsTab('general');
+
     setSettingsData({
       panelName: panel.panelName,
       theme: panel.theme,
@@ -711,9 +820,11 @@ const ChildPanelsPage = () => {
         drip_feed: true,
       },
     });
-  };
+  };
+
   const handleSaveSettings = async () => {
-    try {
+    try {
+
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       showToast('Panel settings updated successfully', 'success');
@@ -746,6 +857,7 @@ const ChildPanelsPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
@@ -983,7 +1095,8 @@ const ChildPanelsPage = () => {
                             `Suspending ${selectedPanels.length} selected panels...`,
                             'info'
                           );
-                        }
+                        }
+
                         setSelectedBulkAction('');
                         setSelectedPanels([]);
                       }}
@@ -997,13 +1110,8 @@ const ChildPanelsPage = () => {
             )}
 
             {panelsLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">
-                    Loading child panels...
-                  </div>
-                </div>
+              <div className="min-h-[600px]">
+                <ChildPanelsTableSkeleton />
               </div>
             ) : childPanels.length === 0 ? (
               <div className="text-center py-12">
@@ -1268,7 +1376,7 @@ const ChildPanelsPage = () => {
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {panelsLoading ? (
-                        <GradientSpinner size="w-4 h-4" />
+                        <div className="h-4 w-24 gradient-shimmer rounded" />
                       ) : (
                         `Page ${formatNumber(
                           pagination.page

@@ -11,17 +11,34 @@ import {
   FaSync,
   FaTimes,
   FaTimesCircle,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -38,7 +55,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface CancelRequest {
   id: number;
   order: {
@@ -93,7 +111,8 @@ interface PaginationInfo {
   totalPages: number;
   hasNext: boolean;
   hasPrev: boolean;
-}
+}
+
 const generateDummyData = (): CancelRequest[] => {
   const services = [
     'Instagram Followers',
@@ -200,10 +219,12 @@ const generateDummyData = (): CancelRequest[] => {
 };
 
 const CancelRequestsPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('Order Cancel Requests', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [cancelRequests, setCancelRequests] = useState<CancelRequest[]>([]);
   const [stats, setStats] = useState<CancelRequestStats>({
     totalRequests: 0,
@@ -232,9 +253,11 @@ const CancelRequestsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-  const [statsLoading, setStatsLoading] = useState(false);
-  const [requestsLoading, setRequestsLoading] = useState(false);
+  } | null>(null);
+
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [requestsLoading, setRequestsLoading] = useState(true);
+
   const [approveDialog, setApproveDialog] = useState<{
     open: boolean;
     requestId: string | number;
@@ -261,7 +284,8 @@ const CancelRequestsPage = () => {
     open: false,
     request: null,
   });
-  const [selectedBulkAction, setSelectedBulkAction] = useState('');
+  const [selectedBulkAction, setSelectedBulkAction] = useState('');
+
   const fetchCancelRequests = async (page = 1, status = 'all', search = '') => {
     setRequestsLoading(true);
     setStatsLoading(true);
@@ -286,7 +310,8 @@ const CancelRequestsPage = () => {
           totalPages: 0,
           hasNext: false,
           hasPrev: false
-        });
+        });
+
         const data = result.data || [];
         const pending = data.filter((r: CancelRequest) => r.status === 'pending').length;
         const approved = data.filter((r: CancelRequest) => r.status === 'approved').length;
@@ -319,27 +344,32 @@ const CancelRequestsPage = () => {
       setRequestsLoading(false);
       setStatsLoading(false);
     }
-  };
+  };
+
   useEffect(() => {
     fetchCancelRequests();
-  }, []);
+  }, []);
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchCancelRequests(1, statusFilter, searchTerm);
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter]);
+
   const handlePageChange = (newPage: number) => {
     fetchCancelRequests(newPage, statusFilter, searchTerm);
-  };
+  };
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
@@ -353,7 +383,8 @@ const CancelRequestsPage = () => {
     }
   };
 
-  const handleSelectAll = () => {
+  const handleSelectAll = () => {
+
     const selectableRequests = cancelRequests.filter(
       (request) =>
         request.status !== 'declined' &&
@@ -366,9 +397,11 @@ const CancelRequestsPage = () => {
     if (
       selectedRequests.length === selectableIds.length &&
       selectableIds.length > 0
-    ) {
+    ) {
+
       setSelectedRequests([]);
-    } else {
+    } else {
+
       setSelectedRequests(selectableIds);
     }
   };
@@ -389,7 +422,8 @@ const CancelRequestsPage = () => {
       console.error('Error refreshing data:', error);
       showToast('Error refreshing data. Please try again.', 'error');
     }
-  };
+  };
+
   const handleApproveRequest = async (
     requestId: string | number,
     refundAmount: number,
@@ -424,7 +458,8 @@ const CancelRequestsPage = () => {
         'error'
       );
     }
-  };
+  };
+
   const handleDeclineRequest = async (requestId: number, reason: string) => {
     try {
       setCancelRequests(prev => 
@@ -453,7 +488,8 @@ const CancelRequestsPage = () => {
         'error'
       );
     }
-  };
+  };
+
   const openApproveDialog = (
     requestId: number,
     currentRefundAmount: number
@@ -465,7 +501,8 @@ const CancelRequestsPage = () => {
     });
     setNewRefundAmount(currentRefundAmount.toString());
     setAdminNotes('');
-  };
+  };
+
   const openDeclineDialog = (requestId: number) => {
     setDeclineDialog({ open: true, requestId });
     setDeclineReason('');
@@ -485,6 +522,7 @@ const CancelRequestsPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -563,8 +601,8 @@ const CancelRequestsPage = () => {
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
-                >
-                  All
+                  >
+                    All
                   <span
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
@@ -572,7 +610,11 @@ const CancelRequestsPage = () => {
                         : 'bg-purple-100 text-purple-700'
                     }`}
                   >
-                    {stats.totalRequests}
+                    {statsLoading ? (
+                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
+                    ) : (
+                      stats.totalRequests
+                    )}
                   </span>
                 </button>
                 <button
@@ -591,7 +633,11 @@ const CancelRequestsPage = () => {
                         : 'bg-yellow-100 text-yellow-700'
                     }`}
                   >
-                    {stats.pendingRequests}
+                    {statsLoading ? (
+                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
+                    ) : (
+                      stats.pendingRequests
+                    )}
                   </span>
                 </button>
                 <button
@@ -610,7 +656,11 @@ const CancelRequestsPage = () => {
                         : 'bg-green-100 text-green-700'
                     }`}
                   >
-                    {stats.approvedRequests}
+                    {statsLoading ? (
+                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
+                    ) : (
+                      stats.approvedRequests
+                    )}
                   </span>
                 </button>
                 <button
@@ -629,7 +679,11 @@ const CancelRequestsPage = () => {
                         : 'bg-red-100 text-red-700'
                     }`}
                   >
-                    {stats.declinedRequests}
+                    {statsLoading ? (
+                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
+                    ) : (
+                      stats.declinedRequests
+                    )}
                   </span>
                 </button>
               </div>
@@ -674,7 +728,8 @@ const CancelRequestsPage = () => {
                           `Declining ${selectedRequests.length} selected requests...`,
                           'info'
                         );
-                      }
+                      }
+
                       setSelectedBulkAction('');
                       setSelectedRequests([]);
                     }}
@@ -687,11 +742,119 @@ const CancelRequestsPage = () => {
             )}
 
             {requestsLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">
-                    Loading cancel requests...
+              <div style={{ minHeight: '600px' }}>
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full text-sm min-w-[1100px]">
+                    <thead className="sticky top-0 bg-white border-b z-10">
+                      <tr>
+                        <th className="text-left p-3">
+                          <div className="h-4 w-4 gradient-shimmer rounded" />
+                        </th>
+                        {Array.from({ length: 9 }).map((_, idx) => (
+                          <th key={idx} className="text-left p-3">
+                            <div className="h-4 w-20 gradient-shimmer rounded" />
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: 10 }).map((_, rowIdx) => (
+                        <tr key={rowIdx} className="border-t">
+                          <td className="p-3">
+                            <div className="h-4 w-4 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-6 w-16 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                            <div className="h-3 w-32 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-4 w-32 gradient-shimmer rounded mb-1" />
+                            <div className="h-3 w-24 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-4 w-16 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-4 w-24 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-4 w-12 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-4 w-16 gradient-shimmer rounded" />
+                          </td>
+                          <td className="p-3">
+                            <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-1">
+                              <div className="h-8 w-8 gradient-shimmer rounded" />
+                              <div className="h-8 w-8 gradient-shimmer rounded" />
+                              <div className="h-8 w-8 gradient-shimmer rounded" />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="lg:hidden">
+                  <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <div key={idx} className="card card-padding border-l-4 border-blue-500 mb-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-4 w-4 gradient-shimmer rounded" />
+                            <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                          </div>
+                          <div className="h-8 w-8 gradient-shimmer rounded" />
+                        </div>
+                        <div className="flex items-center justify-between mb-4 pb-4 border-b">
+                          <div>
+                            <div className="h-3 w-12 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                            <div className="h-3 w-32 gradient-shimmer rounded" />
+                          </div>
+                          <div className="h-6 w-16 gradient-shimmer rounded-full" />
+                        </div>
+                        <div className="mb-4">
+                          <div className="h-4 w-32 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-24 gradient-shimmer rounded mb-2" />
+                          <div className="h-3 w-20 gradient-shimmer rounded" />
+                        </div>
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                          <div>
+                            <div className="h-3 w-16 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-12 gradient-shimmer rounded" />
+                          </div>
+                          <div>
+                            <div className="h-3 w-16 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-16 gradient-shimmer rounded" />
+                          </div>
+                          <div>
+                            <div className="h-3 w-20 gradient-shimmer rounded mb-2" />
+                            <div className="h-4 w-20 gradient-shimmer rounded" />
+                          </div>
+                        </div>
+                        <div className="mb-4">
+                          <div className="h-3 w-12 gradient-shimmer rounded mb-2" />
+                          <div className="h-4 w-24 gradient-shimmer rounded" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    <div className="h-5 w-48 gradient-shimmer rounded" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-4 md:mt-0">
+                    <div className="h-9 w-20 gradient-shimmer rounded" />
+                    <div className="h-5 w-24 gradient-shimmer rounded" />
+                    <div className="h-9 w-16 gradient-shimmer rounded" />
                   </div>
                 </div>
               </div>
@@ -1125,9 +1288,7 @@ const CancelRequestsPage = () => {
                     style={{ color: 'var(--text-muted)' }}
                   >
                     {requestsLoading ? (
-                      <div className="flex items-center gap-2">
-                        <span>Loading pagination...</span>
-                      </div>
+                      <div className="h-5 w-48 gradient-shimmer rounded" />
                     ) : (
                       `Showing ${formatNumber(
                         (pagination.page - 1) * pagination.limit + 1
@@ -1152,7 +1313,7 @@ const CancelRequestsPage = () => {
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {requestsLoading ? (
-                        <GradientSpinner size="w-4 h-4" />
+                        <div className="h-5 w-24 gradient-shimmer rounded" />
                       ) : (
                         `Page ${formatNumber(
                           pagination.page

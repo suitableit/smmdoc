@@ -20,13 +20,64 @@ import {
     FaUsers
 } from 'react-icons/fa';
 
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
 );
+
+const SettingsCardSkeleton = () => {
+  return (
+    <div className="card card-padding">
+      <div className="card-header mb-6">
+        <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+        <div className="h-6 w-32 gradient-shimmer rounded ml-3" />
+      </div>
+      <div className="space-y-4">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <div key={idx} className="space-y-2">
+            <div className="h-4 w-24 gradient-shimmer rounded" />
+            <div className="h-10 w-full gradient-shimmer rounded-lg" />
+          </div>
+        ))}
+        <div className="h-10 w-full gradient-shimmer rounded-lg" />
+      </div>
+    </div>
+  );
+};
+
+const SettingsPageSkeleton = () => {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
+        <SettingsCardSkeleton />
+        <SettingsCardSkeleton />
+        <SettingsCardSkeleton />
+      </div>
+      <div className="space-y-6">
+        <SettingsCardSkeleton />
+        <SettingsCardSkeleton />
+        <SettingsCardSkeleton />
+      </div>
+    </div>
+  );
+};
 
 const ImageSkeleton = ({ width, height, className = '' }: { width: number; height: number; className?: string }) => (
   <div 
@@ -801,18 +852,8 @@ const GeneralSettingsPage = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="card card-padding">
-                <div className="flex items-center justify-center min-h-[200px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">Loading settings...</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ShimmerStyles />
+          <SettingsPageSkeleton />
         </div>
       </div>
     );
@@ -840,6 +881,7 @@ const GeneralSettingsPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
             <div className="card card-padding">

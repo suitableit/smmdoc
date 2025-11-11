@@ -14,16 +14,104 @@ import {
     FaTrash,
     FaUserCheck,
     FaUserShield,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { setPageTitle } from '@/lib/utils/set-page-title';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const AdminsTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[1400px]">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 8 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 gradient-shimmer rounded" />
+                    <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                  </div>
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-1">
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div className="h-5 w-48 gradient-shimmer rounded" />
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <div className="h-9 w-20 gradient-shimmer rounded" />
+          <div className="h-5 w-24 gradient-shimmer rounded" />
+          <div className="h-9 w-16 gradient-shimmer rounded" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -40,7 +128,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface Admin {
   id: number;
   username: string;
@@ -131,7 +220,8 @@ interface EditAdminModalProps {
   onClose: () => void;
   onSave: (adminData: Partial<Admin>) => void;
   isLoading: boolean;
-}
+}
+
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -171,10 +261,12 @@ const useClickOutside = (
 };
 
 const AdminsListPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('All Admins', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [stats, setStats] = useState<AdminStats>({
     totalAdmins: 0,
@@ -202,10 +294,12 @@ const AdminsListPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [statsLoading, setStatsLoading] = useState(true);
   const [adminsLoading, setAdminsLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
     adminId: number;
@@ -225,7 +319,8 @@ const AdminsListPage = () => {
     adminId: 0,
     currentRole: '',
   });
-  const [newRole, setNewRole] = useState('');
+  const [newRole, setNewRole] = useState('');
+
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
     admin: Admin | null;
@@ -233,8 +328,10 @@ const AdminsListPage = () => {
     open: false,
     admin: null,
   });
-  const [editFormData, setEditFormData] = useState<Partial<Admin>>({});
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [editFormData, setEditFormData] = useState<Partial<Admin>>({});
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
   const filterOptions = useMemo(
     () => [
       { key: 'all', label: 'All', count: stats.totalAdmins },
@@ -242,7 +339,8 @@ const AdminsListPage = () => {
       { key: 'inactive', label: 'Inactive', count: stats.inactiveAdmins },
     ],
     [stats]
-  );
+  );
+
   const fetchAdmins = useCallback(async () => {
     try {
       setAdminsLoading(true);
@@ -260,7 +358,8 @@ const AdminsListPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success) {
+
         const adminData = (result.data || []).filter((user: Admin) =>
           ['admin', 'moderator'].includes(user.role)
         );
@@ -286,7 +385,8 @@ const AdminsListPage = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      setStatsLoading(true);
+      setStatsLoading(true);
+
       const response = await fetch('/api/admin/users/stats?period=all&role=admin');
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -321,14 +421,16 @@ const AdminsListPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
+  }, []);
+
   useEffect(() => {
     fetchAdmins();
   }, [fetchAdmins]);
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+  }, [fetchStats]);
+
   const showToast = useCallback(
     (
       message: string,
@@ -338,7 +440,8 @@ const AdminsListPage = () => {
       setTimeout(() => setToast(null), 4000);
     },
     []
-  );
+  );
+
   const getStatusIcon = (status: string) => {
     const icons = {
       active: <FaCheckCircle className="h-3 w-3 text-green-500" />,
@@ -354,7 +457,8 @@ const AdminsListPage = () => {
       moderator: <FaUserShield className="h-3 w-3 text-purple-500" />,
     };
     return icons[role as keyof typeof icons] || null;
-  };
+  };
+
   const formatCurrency = useCallback((amount: number) => {
     return `$${amount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
@@ -383,7 +487,8 @@ const AdminsListPage = () => {
   const handleRefresh = useCallback(async () => {
     await Promise.all([fetchAdmins(), fetchStats()]);
     showToast('Data refreshed successfully!', 'success');
-  }, [fetchAdmins, fetchStats, showToast]);
+  }, [fetchAdmins, fetchStats, showToast]);
+
   const handleApiAction = useCallback(
     async (
       url: string,
@@ -424,7 +529,8 @@ const AdminsListPage = () => {
       }
     },
     [fetchAdmins, fetchStats, showToast]
-  );
+  );
+
   const handleDeleteAdmin = useCallback(
     async (adminId: string) => {
       const success = await handleApiAction(
@@ -440,7 +546,8 @@ const AdminsListPage = () => {
       }
     },
     [handleApiAction]
-  );
+  );
+
   const handleStatusUpdate = useCallback(
     async (adminId: string | number, newStatus: string) => {
       return handleApiAction(
@@ -451,7 +558,8 @@ const AdminsListPage = () => {
       );
     },
     [handleApiAction]
-  );
+  );
+
   const handleChangeRole = useCallback(
     async (adminId: string | number, role: string) => {
       const success = await handleApiAction(
@@ -468,7 +576,8 @@ const AdminsListPage = () => {
       return success;
     },
     [handleApiAction]
-  );
+  );
+
   const openUpdateStatusDialog = useCallback(
     (adminId: string | number, currentStatus: string) => {
       setUpdateStatusDialog({ open: true, adminId: typeof adminId === 'string' ? parseInt(adminId) : adminId, currentStatus });
@@ -483,7 +592,8 @@ const AdminsListPage = () => {
       setNewRole(currentRole);
     },
     []
-  );
+  );
+
   const handleEditSave = useCallback(
     async (adminData: Partial<Admin>) => {
       if (!editDialog.admin) return;
@@ -501,7 +611,8 @@ const AdminsListPage = () => {
       }
     },
     [editDialog.admin, handleApiAction]
-  );
+  );
+
   const handlePageChange = useCallback((newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
   }, []);
@@ -520,6 +631,7 @@ const AdminsListPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -654,11 +766,8 @@ const AdminsListPage = () => {
 
           <div style={{ padding: '0 24px' }}>
             {adminsLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">Loading admins...</div>
-                </div>
+              <div className="min-h-[600px]">
+                <AdminsTableSkeleton />
               </div>
             ) : admins.length === 0 ? (
               <div className="text-center py-12">
@@ -993,7 +1102,8 @@ const AdminsListPage = () => {
       </div>
     </div>
   );
-};
+};
+
 const AdminActions: React.FC<AdminActionsProps> = ({
   admin,
   onEdit,
@@ -1106,7 +1216,8 @@ const Pagination: React.FC<PaginationProps> = ({
       </button>
     </div>
   </div>
-);
+);
+
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   isOpen,
   onClose,
@@ -1264,7 +1375,8 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
   onSave,
   isLoading,
 }) => {
-  const [formData, setFormData] = useState<Partial<Admin>>({});
+  const [formData, setFormData] = useState<Partial<Admin>>({});
+
   React.useEffect(() => {
     if (admin) {
       setFormData({
@@ -1297,7 +1409,8 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
     setFormData((prev) => ({ ...prev, password: password }));
-  };
+  };
+
   const availablePermissions = [
     { id: 'view_users', label: 'View Users' },
     { id: 'moderate_content', label: 'Moderate Content' },

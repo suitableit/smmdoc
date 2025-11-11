@@ -7,7 +7,8 @@ import {
   FaShoppingCart,
   FaCalendar,
   FaCog,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 const TrendingUpIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -24,14 +25,109 @@ const ChevronDownIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
   </svg>
-);
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
+);
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const ChartSkeleton = () => {
+  return (
+    <div className="relative h-80 bg-gray-50 rounded-lg p-4">
+      <div className="absolute inset-4 flex flex-col justify-between">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="border-t border-gray-200 border-dashed w-full"></div>
+        ))}
+      </div>
+      <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-4 w-12 gradient-shimmer rounded mr-2"></div>
+        ))}
+      </div>
+      <div className="absolute left-12 right-4 bottom-8 top-4 flex items-end justify-between gap-1">
+        {Array.from({ length: 12 }).map((_, index) => {
+          const heights = [65, 70, 55, 80, 75, 85, 90, 70, 65, 88, 92, 95];
+          return (
+            <div key={index} className="flex flex-col items-center flex-1">
+              <div 
+                className="w-full gradient-shimmer rounded-t-sm"
+                style={{ height: `${heights[index]}%` }}
+              ></div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="absolute left-12 right-4 bottom-0 flex justify-between">
+        {Array.from({ length: 12 }).map((_, index) => (
+          <div key={index} className="flex-1 text-center">
+            <div className="h-3 w-6 gradient-shimmer rounded mx-auto"></div>
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+const PlatformChartSkeleton = () => {
+  return (
+    <div className="relative h-64 bg-gray-50 rounded-lg p-4">
+      <div className="absolute inset-4 flex flex-col justify-between">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="border-t border-gray-200 border-dashed w-full"></div>
+        ))}
+      </div>
+      <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-4 w-12 gradient-shimmer rounded mr-2"></div>
+        ))}
+      </div>
+      <div className="absolute left-12 right-4 bottom-8 top-4 flex items-end justify-between gap-1">
+        {Array.from({ length: 12 }).map((_, index) => {
+          const heights = [65, 70, 55, 80, 75, 85, 90, 70, 65, 88, 92, 95];
+          return (
+            <div key={index} className="flex flex-col justify-end items-center flex-1">
+              <div className="w-full flex flex-col-reverse">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div 
+                    key={i}
+                    className="w-full gradient-shimmer"
+                    style={{ height: `${heights[index] / 5}%` }}
+                  ></div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="absolute left-12 right-4 bottom-0 flex justify-between">
+        {Array.from({ length: 12 }).map((_, index) => (
+          <div key={index} className="flex-1 text-center">
+            <div className="h-3 w-6 gradient-shimmer rounded mx-auto"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const generateSMMData = (year: number) => {
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -42,7 +138,8 @@ const generateSMMData = (year: number) => {
   const baseProfits = [12500, 13800, 17250, 19800, 19200, 21750, 25200, 22800, 20700, 24000, 26250, 28800];
   const basePayments = [85000, 92000, 115000, 132000, 128000, 145000, 168000, 152000, 138000, 160000, 175000, 192000];
 
-  return months.map((month, index) => {
+  return months.map((month, index) => {
+
     const yearMultiplier = year === 2024 ? 1 : year === 2023 ? 0.8 : 0.6;
     const randomVariation = 0.9 + Math.random() * 0.2;
 
@@ -50,7 +147,8 @@ const generateSMMData = (year: number) => {
       month,
       orders: Math.round(baseOrderCounts[index] * yearMultiplier * randomVariation),
       profit: Math.round(baseProfits[index] * yearMultiplier * randomVariation),
-      payments: Math.round(basePayments[index] * yearMultiplier * randomVariation),
+      payments: Math.round(basePayments[index] * yearMultiplier * randomVariation),
+
       instagramOrders: Math.round(baseOrderCounts[index] * 0.35 * yearMultiplier * randomVariation),
       facebookOrders: Math.round(baseOrderCounts[index] * 0.25 * yearMultiplier * randomVariation),
       youtubeOrders: Math.round(baseOrderCounts[index] * 0.20 * yearMultiplier * randomVariation),
@@ -70,7 +168,8 @@ type AnalyticsData = {
   youtubeOrders: number;
   tiktokOrders: number;
   twitterOrders: number;
-};
+};
+
 const CustomChart = ({ data, activeTab, maxValue }: {
   data: AnalyticsData[];
   activeTab: string;
@@ -148,7 +247,8 @@ const CustomChart = ({ data, activeTab, maxValue }: {
       </div>
     </div>
   );
-};
+};
+
 const PlatformChart = ({ data, totalOrders }: { data: AnalyticsData[]; totalOrders: number }) => {
   const platforms = [
     { name: 'Instagram', key: 'instagramOrders', color: 'bg-pink-500' },
@@ -227,7 +327,8 @@ const PlatformChart = ({ data, totalOrders }: { data: AnalyticsData[]; totalOrde
   );
 };
 
-export default function AnalyticsPage() {
+export default function AnalyticsPage() {
+
   useEffect(() => {
     document.title = `Analytics — SMM Panel`;
   }, []);
@@ -238,17 +339,21 @@ export default function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const availableYears = [2024, 2023, 2022];
+  const availableYears = [2024, 2023, 2022];
+
   const formatCurrency = useCallback((amount: number) => {
     return `৳${amount.toFixed(2)}`;
-  }, []);
+  }, []);
+
   useEffect(() => {
-    setLoading(true);
+    setLoading(true);
+
     setTimeout(() => {
       setAnalyticsData(generateSMMData(selectedYear));
       setLoading(false);
     }, 1000);
-  }, [selectedYear]);
+  }, [selectedYear]);
+
   const calculateMetrics = () => {
     if (!analyticsData.length) return { total: 0, trend: 0, isPositive: true, maxValue: 0 };
 
@@ -263,7 +368,8 @@ export default function AnalyticsPage() {
     });
 
     const total = values.reduce((sum, value) => sum + value, 0);
-    const maxValue = Math.max(...values);
+    const maxValue = Math.max(...values);
+
     const firstHalf = values.slice(0, 6).reduce((sum, value) => sum + value, 0);
     const secondHalf = values.slice(6, 12).reduce((sum, value) => sum + value, 0);
 
@@ -272,7 +378,8 @@ export default function AnalyticsPage() {
     return { total, trend, isPositive: trend >= 0, maxValue };
   };
 
-  const metrics = calculateMetrics();
+  const metrics = calculateMetrics();
+
   const TabButton = ({ 
     id, 
     label, 
@@ -316,6 +423,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="page-content">
+      <ShimmerStyles />
       {}
       <div className="mb-6">
         <div className="card card-padding">
@@ -400,10 +508,7 @@ export default function AnalyticsPage() {
                 <div>
                   <p className="text-blue-600 font-semibold">Total {selectedYear}</p>
                   {loading ? (
-                    <div className="flex items-center gap-2 mt-2">
-                      <GradientSpinner size="w-5 h-5" />
-                      <span className="text-sm text-gray-400">Loading...</span>
-                    </div>
+                    <div className="h-8 w-24 gradient-shimmer rounded mt-2" />
                   ) : (
                     <p className="text-2xl font-bold text-blue-700">
                       {activeTab === 'orders' 
@@ -426,10 +531,7 @@ export default function AnalyticsPage() {
                 <div>
                   <p className="text-green-600 font-semibold">Growth Rate</p>
                   {loading ? (
-                    <div className="flex items-center gap-2 mt-2">
-                      <GradientSpinner size="w-5 h-5" />
-                      <span className="text-sm text-gray-400">Loading...</span>
-                    </div>
+                    <div className="h-8 w-20 gradient-shimmer rounded mt-2" />
                   ) : (
                     <p className={`text-2xl font-bold ${metrics.isPositive ? 'text-green-700' : 'text-red-700'}`}>
                       {Math.abs(metrics.trend).toFixed(1)}%
@@ -451,10 +553,7 @@ export default function AnalyticsPage() {
                 <div>
                   <p className="text-purple-600 font-semibold">Monthly Average</p>
                   {loading ? (
-                    <div className="flex items-center gap-2 mt-2">
-                      <GradientSpinner size="w-5 h-5" />
-                      <span className="text-sm text-gray-400">Loading...</span>
-                    </div>
+                    <div className="h-8 w-24 gradient-shimmer rounded mt-2" />
                   ) : (
                     <p className="text-2xl font-bold text-purple-700">
                       {activeTab === 'orders'
@@ -477,12 +576,7 @@ export default function AnalyticsPage() {
                'Monthly Order Volume'}
             </h3>
             {loading ? (
-              <div className="flex items-center justify-center h-80 bg-gray-50 rounded-lg">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-4" />
-                  <p className="text-gray-600">Loading analytics data...</p>
-                </div>
-              </div>
+              <ChartSkeleton />
             ) : (
               <CustomChart
                 data={analyticsData}

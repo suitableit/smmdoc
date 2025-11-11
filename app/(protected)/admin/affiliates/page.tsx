@@ -13,17 +13,112 @@ import {
     FaTimes,
     FaTimesCircle,
     FaUserCheck
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { formatID, formatNumber, formatPrice } from '@/lib/utils';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const AffiliatesTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[1400px]">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 12 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-4 w-4 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                  <div className="h-3 w-32 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-12 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-1">
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div className="h-5 w-48 gradient-shimmer rounded" />
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <div className="h-9 w-20 gradient-shimmer rounded" />
+          <div className="h-5 w-24 gradient-shimmer rounded" />
+          <div className="h-9 w-16 gradient-shimmer rounded" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -40,7 +135,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface AffiliateReferral {
   id: number;
   user: {
@@ -98,7 +194,8 @@ interface PaginationInfo {
   totalPages: number;
   hasNext: boolean;
   hasPrev: boolean;
-}
+}
+
 const dummyAffiliates: AffiliateReferral[] = [
   {
     id: 1001,
@@ -340,10 +437,12 @@ const dummyStats: AffiliateStats = {
 };
 
 const AffiliateReferralsPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('Affiliate Referrals', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [affiliates, setAffiliates] = useState<AffiliateReferral[]>(dummyAffiliates);
   const [stats, setStats] = useState<AffiliateStats>(dummyStats);
 
@@ -362,9 +461,11 @@ const AffiliateReferralsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-  const [statsLoading, setStatsLoading] = useState(false);
-  const [affiliatesLoading, setAffiliatesLoading] = useState(false);
+  } | null>(null);
+
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [affiliatesLoading, setAffiliatesLoading] = useState(true);
+
   const [payoutDialog, setPayoutDialog] = useState<{
     open: boolean;
     affiliateId: number;
@@ -403,7 +504,8 @@ const AffiliateReferralsPage = () => {
   });
 
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+
   const calculateStatusCounts = (affiliatesData: AffiliateReferral[]) => {
     const counts = {
       active: 0,
@@ -419,10 +521,12 @@ const AffiliateReferralsPage = () => {
     });
 
     return counts;
-  };
+  };
+
   const fetchAllAffiliatesForCounts = async () => {
     try {
-      console.log('Calculating status counts from dummy data...');
+      console.log('Calculating status counts from dummy data...');
+
       await new Promise(resolve => setTimeout(resolve, 200));
 
       const statusCounts = calculateStatusCounts(dummyAffiliates);
@@ -443,14 +547,18 @@ const AffiliateReferralsPage = () => {
 
   const fetchAffiliates = async () => {
     try {
-      setAffiliatesLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      let filteredAffiliates = [...dummyAffiliates];
+      setAffiliatesLoading(true);
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      let filteredAffiliates = [...dummyAffiliates];
+
       if (statusFilter !== 'all') {
         filteredAffiliates = filteredAffiliates.filter(
           affiliate => affiliate.status === statusFilter
         );
-      }
+      }
+
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         filteredAffiliates = filteredAffiliates.filter(
@@ -459,7 +567,8 @@ const AffiliateReferralsPage = () => {
             affiliate.user.email?.toLowerCase().includes(searchLower) ||
             affiliate.referralCode?.toLowerCase().includes(searchLower)
         );
-      }
+      }
+
       const startIndex = (pagination.page - 1) * pagination.limit;
       const endIndex = startIndex + pagination.limit;
       const paginatedAffiliates = filteredAffiliates.slice(startIndex, endIndex);
@@ -493,7 +602,8 @@ const AffiliateReferralsPage = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('Loading stats from dummy data...');
+      console.log('Loading stats from dummy data...');
+
       await new Promise(resolve => setTimeout(resolve, 300));
 
       console.log('Stats loaded successfully:', dummyStats);
@@ -517,14 +627,16 @@ const AffiliateReferralsPage = () => {
       });
       showToast('Error fetching statistics. Please refresh the page.', 'error');
     }
-  };
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchAffiliates();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm]);
+
   useEffect(() => {
     fetchAffiliates();
   }, [pagination.page, pagination.limit, statusFilter]);
@@ -538,7 +650,8 @@ const AffiliateReferralsPage = () => {
     };
 
     loadData();
-  }, []);
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownOpen !== null) {
@@ -553,7 +666,8 @@ const AffiliateReferralsPage = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [dropdownOpen]);
+  }, [dropdownOpen]);
+
   useEffect(() => {
     if (pagination.total > 0) {
       setStats((prev) => ({
@@ -561,14 +675,16 @@ const AffiliateReferralsPage = () => {
         totalAffiliates: pagination.total,
       }));
     }
-  }, [pagination.total]);
+  }, [pagination.total]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
@@ -648,7 +764,8 @@ const AffiliateReferralsPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
+  };
+
   const handleProcessPayout = async (
     affiliateId: number,
     amount: number,
@@ -700,7 +817,8 @@ const AffiliateReferralsPage = () => {
         'error'
       );
     }
-  };
+  };
+
   const handleStatusChange = async (
     affiliateId: number,
     status: string,
@@ -743,7 +861,8 @@ const AffiliateReferralsPage = () => {
         'error'
       );
     }
-  };
+  };
+
   const openPayoutDialog = (
     affiliateId: number,
     requestedAmount: number,
@@ -760,7 +879,8 @@ const AffiliateReferralsPage = () => {
     setPayoutAmount(requestedAmount.toString());
     setPayoutMethod(paymentMethod);
     setPayoutNotes('');
-  };
+  };
+
   const openStatusDialog = (affiliateId: number, currentStatus: string) => {
     setStatusDialog({ open: true, affiliateId, currentStatus });
     setNewStatus(currentStatus);
@@ -781,6 +901,7 @@ const AffiliateReferralsPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -980,7 +1101,8 @@ const AffiliateReferralsPage = () => {
                             `Processing payouts for ${selectedAffiliates.length} selected affiliates...`,
                             'info'
                           );
-                        }
+                        }
+
                         setSelectedBulkAction('');
                         setSelectedAffiliates([]);
                       }}
@@ -994,13 +1116,8 @@ const AffiliateReferralsPage = () => {
             )}
 
             {affiliatesLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">
-                    Loading affiliates...
-                  </div>
-                </div>
+              <div className="min-h-[600px]">
+                <AffiliatesTableSkeleton />
               </div>
             ) : affiliates.length === 0 ? (
               <div className="text-center py-12">
@@ -1327,7 +1444,7 @@ const AffiliateReferralsPage = () => {
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {affiliatesLoading ? (
-                        <GradientSpinner size="w-4 h-4" />
+                        <div className="h-4 w-24 gradient-shimmer rounded" />
                       ) : (
                         `Page ${formatNumber(
                           pagination.page

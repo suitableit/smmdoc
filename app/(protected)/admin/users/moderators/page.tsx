@@ -14,16 +14,101 @@ import {
     FaTrash,
     FaUserCheck,
     FaUserShield,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { setPageTitle } from '@/lib/utils/set-page-title';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const ModeratorsTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[1400px]">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 8 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-1">
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div className="h-5 w-48 gradient-shimmer rounded" />
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <div className="h-9 w-20 gradient-shimmer rounded" />
+          <div className="h-5 w-24 gradient-shimmer rounded" />
+          <div className="h-9 w-16 gradient-shimmer rounded" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -40,7 +125,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface Moderator {
   id: number;
   username: string;
@@ -131,7 +217,8 @@ interface EditModeratorModalProps {
   onClose: () => void;
   onSave: (moderatorData: Partial<Moderator>) => void;
   isLoading: boolean;
-}
+}
+
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -168,10 +255,14 @@ const useClickOutside = (ref: React.RefObject<HTMLElement | null>, handler: () =
 };
 
 const ModeratorsPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('All Moderators', appName);
-  }, [appName]);
+  }, [appName]);
+
+
+
   const [moderators, setModerators] = useState<Moderator[]>([]);
   const [stats, setStats] = useState<ModeratorStats>({
     totalModerators: 0,
@@ -199,10 +290,12 @@ const ModeratorsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [statsLoading, setStatsLoading] = useState(true);
   const [moderatorsLoading, setModeratorsLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
     moderatorId: number;
@@ -222,7 +315,8 @@ const ModeratorsPage = () => {
     moderatorId: 0,
     currentRole: '',
   });
-  const [newRole, setNewRole] = useState('');
+  const [newRole, setNewRole] = useState('');
+
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
     moderator: Moderator | null;
@@ -230,16 +324,20 @@ const ModeratorsPage = () => {
     open: false,
     moderator: null,
   });
-  const [editFormData, setEditFormData] = useState<Partial<Moderator>>({});
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [editFormData, setEditFormData] = useState<Partial<Moderator>>({});
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
   const filterOptions = useMemo(() => [
     { key: 'all', label: 'All', count: stats.totalModerators },
     { key: 'active', label: 'Active', count: stats.activeModerators },
     { key: 'inactive', label: 'Inactive', count: stats.inactiveModerators },
-  ], [stats]);
+  ], [stats]);
+
   const fetchModerators = useCallback(async () => {
     try {
-      setModeratorsLoading(true);
+      setModeratorsLoading(true);
+
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -253,7 +351,8 @@ const ModeratorsPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success) {
+
         const moderatorData = (result.data || []).filter((user: Moderator) =>
           user.role === 'moderator'
         );
@@ -277,7 +376,8 @@ const ModeratorsPage = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      setStatsLoading(true);
+      setStatsLoading(true);
+
       const response = await fetch('/api/admin/users/stats?period=all&role=moderator');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -312,21 +412,24 @@ const ModeratorsPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
+  }, []);
+
   useEffect(() => {
     fetchModerators();
   }, [fetchModerators]);
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+  }, [fetchStats]);
+
   const showToast = useCallback((
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  }, []);
+  }, []);
+
   const getStatusIcon = (status: string) => {
     const icons = {
       active: <FaCheckCircle className="h-3 w-3 text-green-500" />,
@@ -342,7 +445,8 @@ const ModeratorsPage = () => {
       moderator: <FaUserShield className="h-3 w-3 text-purple-500" />,
     };
     return icons[role as keyof typeof icons] || null;
-  };
+  };
+
   const formatCurrency = useCallback((amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }, []);
@@ -366,7 +470,8 @@ const ModeratorsPage = () => {
   const handleRefresh = useCallback(async () => {
     await Promise.all([fetchModerators(), fetchStats()]);
     showToast('Data refreshed successfully!', 'success');
-  }, [fetchModerators, fetchStats, showToast]);
+  }, [fetchModerators, fetchStats, showToast]);
+
   const handleApiAction = useCallback(async (
     url: string,
     method: string,
@@ -374,7 +479,8 @@ const ModeratorsPage = () => {
     successMessage?: string
   ) => {
     try {
-      setActionLoading(url);
+      setActionLoading(url);
+
       const response = await fetch(url, {
         method,
         headers: body ? { 'Content-Type': 'application/json' } : undefined,
@@ -401,7 +507,8 @@ const ModeratorsPage = () => {
     } finally {
       setActionLoading(null);
     }
-  }, [fetchModerators, fetchStats, showToast]);
+  }, [fetchModerators, fetchStats, showToast]);
+
   const handleDeleteModerator = useCallback(async (moderatorId: number) => {
     const success = await handleApiAction(
       `/api/admin/users/${moderatorId}`,
@@ -414,7 +521,8 @@ const ModeratorsPage = () => {
       setDeleteDialogOpen(false);
       setModeratorToDelete(null);
     }
-  }, [handleApiAction]);
+  }, [handleApiAction]);
+
   const handleStatusUpdate = useCallback(async (moderatorId: number, newStatus: string) => {
     return handleApiAction(
       `/api/admin/users/${moderatorId}/status`,
@@ -422,7 +530,8 @@ const ModeratorsPage = () => {
       { status: newStatus },
       `Moderator status updated to ${newStatus}`
     );
-  }, [handleApiAction]);
+  }, [handleApiAction]);
+
   const handleChangeRole = useCallback(async (moderatorId: number, role: string) => {
     const success = await handleApiAction(
       `/api/admin/users/${moderatorId}/role`,
@@ -436,7 +545,8 @@ const ModeratorsPage = () => {
       setNewRole('');
     }
     return success;
-  }, [handleApiAction]);
+  }, [handleApiAction]);
+
   const handleEditSave = useCallback(async (moderatorData: Partial<Moderator>) => {
     if (!editDialog.moderator) return;
 
@@ -451,7 +561,8 @@ const ModeratorsPage = () => {
       setEditDialog({ open: false, moderator: null });
       setEditFormData({});
     }
-  }, [editDialog.moderator, handleApiAction]);
+  }, [editDialog.moderator, handleApiAction]);
+
   const openUpdateStatusDialog = useCallback((moderatorId: number, currentStatus: string) => {
     setUpdateStatusDialog({ open: true, moderatorId, currentStatus });
     setNewStatus(currentStatus);
@@ -460,7 +571,8 @@ const ModeratorsPage = () => {
   const openChangeRoleDialog = useCallback((moderatorId: number, currentRole: string) => {
     setChangeRoleDialog({ open: true, moderatorId, currentRole });
     setNewRole(currentRole);
-  }, []);
+  }, []);
+
   const handlePageChange = useCallback((newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
   }, []);
@@ -479,6 +591,7 @@ const ModeratorsPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -613,11 +726,8 @@ const ModeratorsPage = () => {
 
           <div style={{ padding: '0 24px' }}>
             {moderatorsLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">Loading moderators...</div>
-                </div>
+              <div className="min-h-[600px]">
+                <ModeratorsTableSkeleton />
               </div>
             ) : moderators.length === 0 ? (
               <div className="text-center py-12">
@@ -839,7 +949,8 @@ const ModeratorsPage = () => {
       </div>
     </div>
   );
-};
+};
+
 const ModeratorActions: React.FC<ModeratorActionsProps> = ({ moderator, onEdit, onChangeRole, onDelete, isLoading }) => {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -937,7 +1048,8 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoa
       </button>
     </div>
   </div>
-);
+);
+
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpen, onClose, onConfirm, isLoading }) => {
   if (!isOpen) return null;
 
@@ -1041,7 +1153,8 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, 
 };
 
 const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderator, onClose, onSave, isLoading }) => {
-  const [formData, setFormData] = useState<Partial<Moderator>>({});
+  const [formData, setFormData] = useState<Partial<Moderator>>({});
+
   React.useEffect(() => {
     if (moderator) {
       setFormData({
@@ -1068,7 +1181,8 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
     setFormData(prev => ({ ...prev, password: password }));
-  };
+  };
+
   const availablePermissions = [
     { id: 'view_users', label: 'View Users' },
     { id: 'moderate_content', label: 'Moderate Content' },

@@ -27,7 +27,12 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
         timeoutRef.current = null;
       }
       if (abortRef.current) {
-        abortRef.current.abort();
+        try {
+          if (!abortRef.current.signal.aborted) {
+            abortRef.current.abort();
+          }
+        } catch (error) {
+        }
         abortRef.current = null;
       }
     };
@@ -56,7 +61,12 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
     const checkImpersonation = async () => {
 
       if (abortRef.current) {
-        abortRef.current.abort();
+        try {
+          if (!abortRef.current.signal.aborted) {
+            abortRef.current.abort();
+          }
+        } catch (error) {
+        }
       }
       abortRef.current = new AbortController();
 
@@ -75,6 +85,9 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
         scheduleNext(false, impersonating);
       } catch (error) {
         if (!isMountedRef.current) return;
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
         console.error('Error checking impersonation status:', error);
         setIsVisible(false);
         setImpersonatedUser(null);

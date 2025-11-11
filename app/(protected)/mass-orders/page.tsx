@@ -29,14 +29,30 @@ import {
     FaTimesCircle,
 } from 'react-icons/fa';
 import { formatCurrencyAmount } from '@/lib/currency-utils';
-import { useDispatch } from 'react-redux';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { useDispatch } from 'react-redux';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -68,7 +84,8 @@ const Toast = ({
       </button>
     </div>
   </div>
-);
+);
+
 interface StatsCardProps {
   title: string;
   value: string | number;
@@ -107,7 +124,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
       </div>
     </div>
   );
-};
+};
+
 const InstructionsPanel: React.FC = () => {
   return (
     <div className="card card-padding">
@@ -161,7 +179,8 @@ const InstructionsPanel: React.FC = () => {
       </div>
     </div>
   );
-};
+};
+
 export default function MassOrder() {
   const { appName } = useAppNameWithFallback();
 
@@ -195,19 +214,23 @@ export default function MassOrder() {
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [balanceCheck, setBalanceCheck] = useState<ReturnType<typeof checkSufficientBalance> | null>(null);
+  const [balanceCheck, setBalanceCheck] = useState<ReturnType<typeof checkSufficientBalance> | null>(null);
+
   useEffect(() => {
     setPageTitle('Mass Orders', appName);
-  }, [appName]);
+  }, [appName]);
+
   useEffect(() => {
     const checkMassOrderSettings = async () => {
-      try {
+      try {
+
         const response = await axiosInstance.get('/api/user/mass-orders?type=stats');
         if (response.data.success) {
           setMassOrderEnabled(true);
         }
       } catch (error) {
-        console.error('Error checking mass order settings:', error);
+        console.error('Error checking mass order settings:', error);
+
         if (error instanceof Error && 'response' in error) {
           const axiosError = error as any;
           if (axiosError.response?.status === 403) {
@@ -216,14 +239,16 @@ export default function MassOrder() {
             setTimeout(() => {
               router.push('/dashboard');
             }, 3000);
-          } else {
+          } else {
+
             setMassOrderEnabled(false);
             showToast('Unable to verify mass order settings', 'error');
             setTimeout(() => {
               router.push('/dashboard');
             }, 3000);
           }
-        } else {
+        } else {
+
           setMassOrderEnabled(false);
             showToast('Unable to verify mass order settings', 'error');
             setTimeout(() => {
@@ -234,30 +259,35 @@ export default function MassOrder() {
     };
 
     checkMassOrderSettings();
-  }, [router]);
+  }, [router]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsFormLoading(false);
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, []);
+
   const balance = userStats?.balance || 0;
   const totalSpend = userStats?.totalSpent || 0;
-  const totalOrdersCount = userStats?.totalOrders || 0;
+  const totalOrdersCount = userStats?.totalOrders || 0;
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
-  };
+  };
+
   const formatCurrency = (amount: number) => {
     if (currentCurrencyData && currencySettings) {
       return formatCurrencyAmount(amount, currentCurrencyData.code, availableCurrencies, currencySettings);
     }
     return `$${amount.toFixed(2)}`;
-  };
+  };
+
   const validateOrders = useCallback(async (input: string) => {
     if (!input.trim()) {
       setValidationResult(null);
@@ -279,7 +309,8 @@ export default function MassOrder() {
       setValidationResult(result);
       setValidationErrors(formatValidationErrors(result));
       setTotalOrders(result.validOrders.length);
-      setTotalPrice(result.totalCostInUserCurrency);
+      setTotalPrice(result.totalCostInUserCurrency);
+
       if (userStats?.balance !== undefined) {
         const balanceCheckResult = checkSufficientBalance(
           result,
@@ -295,10 +326,12 @@ export default function MassOrder() {
     } finally {
       setIsValidating(false);
     }
-  }, [currentCurrencyData, availableCurrencies, userStats, currencySettings]);
+  }, [currentCurrencyData, availableCurrencies, userStats, currencySettings]);
+
   const handleNewOrderClick = () => {
     router.push('/new-order');
-  };
+  };
+
   const parseOrders = useCallback(async (text: string) => {
     await validateOrders(text);
   }, [validateOrders]);
@@ -307,17 +340,21 @@ export default function MassOrder() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
+    try {
+
       if (!validationResult || validationResult.validOrders.length === 0) {
         showToast('Please enter at least one valid order', 'error');
         return;
-      }
+      }
+
       if (balanceCheck && !balanceCheck.sufficient) {
         showToast(balanceCheck.message || 'Insufficient balance', 'error');
         return;
-      }
+      }
+
       const batchId = `MO-${Date.now()}-${(user?.id || Math.random()).toString().slice(-4)}`;
-      const orderArray = convertToApiFormat(validationResult);
+      const orderArray = convertToApiFormat(validationResult);
+
       const response = await axiosInstance.post('/api/user/mass-orders', {
         orders: orderArray,
         batchId: batchId,
@@ -327,9 +364,12 @@ export default function MassOrder() {
         showToast(
           `Successfully created ${response.data.summary.ordersCreated} orders!`,
           'success'
-        );
-        dispatch(dashboardApi.util.invalidateTags(['UserStats']));
-        refetchUserStats();
+        );
+
+        dispatch(dashboardApi.util.invalidateTags(['UserStats']));
+
+        refetchUserStats();
+
         setOrders('');
         setTotalOrders(0);
         setTotalPrice(0);
@@ -364,6 +404,7 @@ export default function MassOrder() {
       )}
 
       <div className="page-content">
+        <ShimmerStyles />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {}
           <div className="space-y-6">
@@ -391,11 +432,22 @@ export default function MassOrder() {
             {activeTab === 'massOrder' && (
               <div className="card card-padding">
                 {isFormLoading ? (
-                  <div className="text-center py-12 flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-4" />
-                    <div className="text-lg font-medium text-gray-700">
-                      Loading mass order form...
+                  <div className="space-y-4">
+                    <div className="card-header">
+                      <div className="card-icon">
+                        <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                      </div>
+                      <div className="h-6 w-40 gradient-shimmer rounded ml-3" />
                     </div>
+                    <div className="form-group mb-0">
+                      <div className="form-label">
+                        <span className="inline-block h-4 w-56 gradient-shimmer rounded" />
+                      </div>
+                      <div className="relative">
+                        <div className="h-[256px] w-full gradient-shimmer rounded-lg" />
+                      </div>
+                    </div>
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
                   </div>
                 ) : (
                   <>
@@ -430,7 +482,7 @@ export default function MassOrder() {
                           />
                           {isValidating && (
                             <div className="absolute top-3 right-3">
-                              <GradientSpinner size="w-4 h-4" />
+                              <div className="h-4 w-4 gradient-shimmer rounded-full" />
                             </div>
                           )}
                         </div>

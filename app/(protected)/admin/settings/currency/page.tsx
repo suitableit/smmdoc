@@ -13,15 +13,111 @@ import {
     FaSync,
     FaTimes,
     FaTrash
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const CurrencyPageSkeleton = () => {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="card card-padding h-fit">
+        <div className="card-header mb-6">
+          <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+          <div className="h-6 w-40 gradient-shimmer rounded ml-3" />
+        </div>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2">
+              <div className="h-9 w-28 gradient-shimmer rounded-lg" />
+              <div className="h-9 w-24 gradient-shimmer rounded-lg" />
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <div className="min-w-[600px]">
+              <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <div className="grid grid-cols-12 gap-3 flex-1">
+                  <div className="h-4 w-16 gradient-shimmer rounded col-span-2" />
+                  <div className="h-4 w-12 gradient-shimmer rounded col-span-2" />
+                  <div className="h-4 w-16 gradient-shimmer rounded col-span-4" />
+                  <div className="h-4 w-16 gradient-shimmer rounded col-span-2" />
+                  <div className="h-4 w-12 gradient-shimmer rounded col-span-2" />
+                </div>
+                <div className="h-4 w-16 gradient-shimmer rounded" />
+              </div>
+              <div className="space-y-2 mt-2">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg min-h-[60px]">
+                    <div className="grid grid-cols-12 gap-3 flex-1">
+                      <div className="h-6 w-6 gradient-shimmer rounded-full col-span-2" />
+                      <div className="h-4 w-12 gradient-shimmer rounded col-span-2" />
+                      <div className="h-4 w-24 gradient-shimmer rounded col-span-4" />
+                      <div className="h-4 w-8 gradient-shimmer rounded col-span-2" />
+                      <div className="h-4 w-16 gradient-shimmer rounded col-span-2" />
+                    </div>
+                    <div className="flex gap-2 w-20">
+                      <div className="h-6 w-6 gradient-shimmer rounded" />
+                      <div className="h-6 w-6 gradient-shimmer rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="border-t pt-4">
+            <div className="h-5 w-32 gradient-shimmer rounded mb-3" />
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 5 }).map((_, idx) => (
+                <div key={idx} className="space-y-2">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                </div>
+              ))}
+            </div>
+            <div className="h-9 w-full gradient-shimmer rounded-lg mt-4" />
+          </div>
+        </div>
+      </div>
+      <div className="card card-padding h-fit">
+        <div className="card-header mb-6">
+          <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+          <div className="h-6 w-40 gradient-shimmer rounded ml-3" />
+        </div>
+        <div className="space-y-6">
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <div key={idx} className="space-y-2">
+              <div className="h-4 w-32 gradient-shimmer rounded" />
+              <div className="h-10 w-full gradient-shimmer rounded-lg" />
+            </div>
+          ))}
+          <div className="h-10 w-full gradient-shimmer rounded-lg" />
+        </div>
+      </div>
     </div>
-  </div>
-);
-const ButtonLoader = () => <div className="loading-spinner"></div>;
+  );
+};
+
+const ButtonLoader = () => <div className="loading-spinner"></div>;
+
 const Toast = ({
   message,
   type = 'success',
@@ -38,7 +134,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 const Switch = ({ checked, onCheckedChange, onClick, title }: any) => (
   <button
     onClick={onClick}
@@ -47,7 +144,8 @@ const Switch = ({ checked, onCheckedChange, onClick, title }: any) => (
   >
     <span className="switch-thumb" />
   </button>
-);
+);
+
 const CurrencyItem = ({
   currency,
   onEdit,
@@ -209,17 +307,20 @@ const PaymentCurrencyPage = () => {
   const { appName } = useAppNameWithFallback();
 
   const currentUser = useCurrentUser();
-  const { refreshCurrencyData } = useCurrency();
+  const { refreshCurrencyData } = useCurrency();
+
   useEffect(() => {
     setPageTitle('Payment Currency', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isUpdatingRates, setIsUpdatingRates] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [currencySettings, setCurrencySettings] = useState<CurrencySettings>({
     defaultCurrency: 'USD',
     displayDecimals: 2,
@@ -235,14 +336,16 @@ const PaymentCurrencyPage = () => {
     { id: 4, code: 'JPY', name: 'Japanese Yen', symbol: '¥', rate: 150.0000, enabled: false },
     { id: 5, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 121.0000, enabled: true },
     { id: 6, code: 'USDT', name: 'Tether USD', symbol: '₮', rate: 1.0000, enabled: true },
-  ]);
+  ]);
+
   const [newCurrency, setNewCurrency] = useState({
     code: '',
     name: '',
     symbol: '',
     rate: 1,
     symbolPosition: 'left' as 'left' | 'right' | 'left_space' | 'right_space',
-  });
+  });
+
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -255,14 +358,17 @@ const PaymentCurrencyPage = () => {
           if (data.success) {
             if (data.currencySettings) setCurrencySettings(data.currencySettings);
             if (data.currencies) setCurrencies(data.currencies);
-          } else {
+          } else {
+
             console.log('API returned error, using dummy data');
           }
-        } else {
+        } else {
+
           console.log('API request failed, using dummy data');
         }
       } catch (error) {
-        console.error('Error loading currency settings:', error);
+        console.error('Error loading currency settings:', error);
+
         console.log('Exception occurred, using dummy data');
       } finally {
         setIsPageLoading(false);
@@ -270,14 +376,16 @@ const PaymentCurrencyPage = () => {
     };
 
     loadSettings();
-  }, []);
+  }, []);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const saveCurrencySettings = async () => {
     setIsLoading(true);
     try {
@@ -287,7 +395,8 @@ const PaymentCurrencyPage = () => {
         body: JSON.stringify({ currencySettings, currencies }),
       });
 
-      if (response.ok) {
+      if (response.ok) {
+
         clearCurrencyCache();
         await refreshCurrencyData();
         showToast('Currency settings saved successfully!', 'success');
@@ -300,7 +409,8 @@ const PaymentCurrencyPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   const addCurrency = async () => {
     if (newCurrency.code.trim() && newCurrency.name.trim() && newCurrency.symbol.trim()) {
       const newId = Math.max(...currencies.map(c => c.id), 0) + 1;
@@ -311,9 +421,11 @@ const PaymentCurrencyPage = () => {
         symbol: newCurrency.symbol,
         rate: newCurrency.rate,
         enabled: true,
-      };
+      };
+
       const updatedCurrencies = [...currencies, newCurrencyItem];
-      setCurrencies(updatedCurrencies);
+      setCurrencies(updatedCurrencies);
+
       try {
         const response = await fetch('/api/admin/currency-settings', {
           method: 'POST',
@@ -321,7 +433,8 @@ const PaymentCurrencyPage = () => {
           body: JSON.stringify({ currencySettings, currencies: updatedCurrencies }),
         });
 
-        if (response.ok) {
+        if (response.ok) {
+
           clearCurrencyCache();
           await refreshCurrencyData();
           showToast('Currency added and saved successfully!', 'success');
@@ -339,7 +452,8 @@ const PaymentCurrencyPage = () => {
 
   const editCurrency = async (id: number, updates: Partial<Currency>) => {
     const updatedCurrencies = currencies.map(c => c.id === id ? { ...c, ...updates } : c);
-    setCurrencies(updatedCurrencies);
+    setCurrencies(updatedCurrencies);
+
     try {
       const response = await fetch('/api/admin/currency-settings', {
         method: 'POST',
@@ -347,37 +461,45 @@ const PaymentCurrencyPage = () => {
         body: JSON.stringify({ currencySettings, currencies: updatedCurrencies }),
       });
 
-      if (response.ok) {
+      if (response.ok) {
+
         clearCurrencyCache();
         await refreshCurrencyData();
         showToast('Currency updated and saved successfully!', 'success');
       } else {
-        showToast('Currency updated but failed to save', 'error');
+        showToast('Currency updated but failed to save', 'error');
+
         setCurrencies(currencies);
       }
     } catch (error) {
       console.error('Error auto-saving currency:', error);
-      showToast('Currency updated but failed to save', 'error');
+      showToast('Currency updated but failed to save', 'error');
+
       setCurrencies(currencies);
     }
   };
 
-  const deleteCurrency = async (id: number) => {
+  const deleteCurrency = async (id: number) => {
+
     const currencyToDelete = currencies.find(c => c.id === id);
     if (!currencyToDelete) {
       showToast('Currency not found', 'error');
       return;
-    }
+    }
+
     const coreCurrencies = ['USD', 'BDT'];
     if (coreCurrencies.includes(currencyToDelete.code)) {
       showToast(`Cannot delete ${currencyToDelete.code} - it's a core currency`, 'error');
       return;
-    }
+    }
+
     if (!confirm(`Are you sure you want to delete ${currencyToDelete.code} (${currencyToDelete.name})?`)) {
       return;
-    }
+    }
+
     const updatedCurrencies = currencies.filter(c => c.id !== id);
-    setCurrencies(updatedCurrencies);
+    setCurrencies(updatedCurrencies);
+
     try {
       console.log('=== Deleting Currency - Frontend ===');
       console.log('Updated currencies:', updatedCurrencies.map(c => c.code));
@@ -389,20 +511,24 @@ const PaymentCurrencyPage = () => {
         body: JSON.stringify({ currencySettings, currencies: updatedCurrencies }),
       });
 
-      if (response.ok) {
+      if (response.ok) {
+
         clearCurrencyCache();
         await refreshCurrencyData();
-        showToast(`${currencyToDelete.code} deleted successfully!`, 'success');
+        showToast(`${currencyToDelete.code} deleted successfully!`, 'success');
+
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('currencyUpdated'));
         }, 500);
       } else {
-        showToast('Failed to delete currency', 'error');
+        showToast('Failed to delete currency', 'error');
+
         setCurrencies(currencies);
       }
     } catch (error) {
       console.error('Error deleting currency:', error);
-      showToast('Error deleting currency', 'error');
+      showToast('Error deleting currency', 'error');
+
       setCurrencies(currencies);
     }
   };
@@ -412,7 +538,8 @@ const PaymentCurrencyPage = () => {
       c.id === id ? { ...c, enabled: !c.enabled } : c
     );
 
-    setCurrencies(updatedCurrencies);
+    setCurrencies(updatedCurrencies);
+
     try {
       const response = await fetch('/api/admin/currency-settings', {
         method: 'POST',
@@ -420,21 +547,25 @@ const PaymentCurrencyPage = () => {
         body: JSON.stringify({ currencySettings, currencies: updatedCurrencies }),
       });
 
-      if (response.ok) {
+      if (response.ok) {
+
         clearCurrencyCache();
         await refreshCurrencyData();
         const currency = updatedCurrencies.find(c => c.id === id);
         showToast(`${currency?.code} ${currency?.enabled ? 'enabled' : 'disabled'} successfully!`, 'success');
       } else {
-        showToast('Failed to save currency status', 'error');
+        showToast('Failed to save currency status', 'error');
+
         setCurrencies(currencies);
       }
     } catch (error) {
       console.error('Error saving currency status:', error);
-      showToast('Failed to save currency status', 'error');
+      showToast('Failed to save currency status', 'error');
+
       setCurrencies(currencies);
     }
-  };
+  };
+
   const fixCurrencyRates = async () => {
     setIsUpdatingRates(true);
     showToast('Fixing currency rates...', 'pending');
@@ -447,9 +578,11 @@ const PaymentCurrencyPage = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok && data.success) {
+
         clearCurrencyCache();
-        await refreshCurrencyData();
+        await refreshCurrencyData();
+
         const settingsResponse = await fetch('/api/admin/currency-settings');
         if (settingsResponse.ok) {
           const settingsData = await settingsResponse.json();
@@ -468,7 +601,8 @@ const PaymentCurrencyPage = () => {
     } finally {
       setIsUpdatingRates(false);
     }
-  };
+  };
+
   const updateCurrencyRates = async () => {
     setIsUpdatingRates(true);
     showToast('Updating currency rates...', 'pending');
@@ -481,7 +615,8 @@ const PaymentCurrencyPage = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok && data.success) {
+
         clearCurrencyCache();
         await refreshCurrencyData();
 
@@ -495,23 +630,14 @@ const PaymentCurrencyPage = () => {
     } finally {
       setIsUpdatingRates(false);
     }
-  };
+  };
+
   if (isPageLoading) {
     return (
       <div className="page-container">
         <div className="page-content">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {[1, 2].map((i) => (
-              <div key={i} className="card card-padding h-fit">
-                <div className="flex items-center justify-center min-h-[300px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">Loading currency settings...</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ShimmerStyles />
+          <CurrencyPageSkeleton />
         </div>
       </div>
     );
@@ -531,6 +657,7 @@ const PaymentCurrencyPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {}
           <div className="card card-padding h-fit">

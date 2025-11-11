@@ -9,14 +9,31 @@ import {
   FaCheck,
   FaTimes,
   FaInfoCircle,
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+
 const Toast = ({
   message,
   type = 'success',
@@ -43,20 +60,24 @@ interface CustomCodesSettings {
 const CustomCodesPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const currentUser = useCurrentUser();
+  const currentUser = useCurrentUser();
+
   useEffect(() => {
     setPageTitle('Custom Codes', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [customCodesSettings, setCustomCodesSettings] = useState<CustomCodesSettings>({
     headerCodes: '',
     footerCodes: '',
-  });
+  });
+
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -79,14 +100,16 @@ const CustomCodesPage = () => {
     };
 
     loadSettings();
-  }, []);
+  }, []);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const saveCustomCodesSettings = async () => {
     setIsLoading(true);
     try {
@@ -99,7 +122,8 @@ const CustomCodesPage = () => {
       });
 
       if (response.ok) {
-        showToast('Custom codes settings saved successfully!', 'success');
+        showToast('Custom codes settings saved successfully!', 'success');
+
         window.dispatchEvent(new CustomEvent('customCodesUpdated'));
       } else {
         showToast('Failed to save custom codes settings', 'error');
@@ -110,23 +134,66 @@ const CustomCodesPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   if (isPageLoading) {
     return (
       <div className="page-container">
         <div className="page-content">
+          <ShimmerStyles />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {}
-            {[1, 2].map((i) => (
-              <div key={i} className="card card-padding h-fit">
-                <div className="flex items-center justify-center min-h-[200px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">Loading custom codes...</div>
-                  </div>
+            <div className="card card-padding h-fit">
+              <div className="card-header">
+                <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                <div className="h-6 w-32 gradient-shimmer rounded ml-3" />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <div className="h-4 w-full gradient-shimmer rounded mb-2" />
+                  <div className="h-4 w-full gradient-shimmer rounded mb-2" />
+                  <div className="h-4 w-3/4 gradient-shimmer rounded mb-4" />
+                </div>
+                <div className="form-group">
+                  <div className="h-4 w-28 gradient-shimmer rounded mb-2" />
+                  <div className="h-96 w-full gradient-shimmer rounded-lg" />
+                  <div className="h-3 w-3/4 gradient-shimmer rounded mt-2" />
                 </div>
               </div>
-            ))}
+            </div>
+            <div className="card card-padding h-fit">
+              <div className="card-header">
+                <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                <div className="h-6 w-32 gradient-shimmer rounded ml-3" />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <div className="h-4 w-full gradient-shimmer rounded mb-2" />
+                  <div className="h-4 w-full gradient-shimmer rounded mb-2" />
+                  <div className="h-4 w-3/4 gradient-shimmer rounded mb-4" />
+                </div>
+                <div className="form-group">
+                  <div className="h-4 w-28 gradient-shimmer rounded mb-2" />
+                  <div className="h-96 w-full gradient-shimmer rounded-lg" />
+                  <div className="h-3 w-3/4 gradient-shimmer rounded mt-2" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-8">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+              <div className="flex items-center mb-3">
+                <div className="h-5 w-5 gradient-shimmer rounded-full mr-2" />
+                <div className="h-6 w-40 gradient-shimmer rounded" />
+              </div>
+              <div className="space-y-2">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="h-4 w-full gradient-shimmer rounded" />
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="mt-8 flex justify-center">
+            <div className="h-12 w-48 gradient-shimmer rounded-lg" />
           </div>
         </div>
       </div>
@@ -174,7 +241,8 @@ const CustomCodesPage = () => {
                   rows={15}
                   className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none font-mono text-sm"
                   placeholder={`
-<script>
+<script>
+
 </script>
 
 <style>
@@ -216,7 +284,9 @@ const CustomCodesPage = () => {
                   rows={15}
                   className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none font-mono text-sm"
                   placeholder={`
-<script>
+<script>
+
+
 </script>
 
 <div id="custom-footer-content">

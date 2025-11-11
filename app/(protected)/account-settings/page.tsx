@@ -21,12 +21,26 @@ import {
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
 );
 
 const Toast = ({
@@ -857,84 +871,124 @@ const ProfilePage = () => {
     return (
       <div className="page-container">
         <div className="page-content">
+          <ShimmerStyles />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-6">
               <div className="card card-padding">
-                <div className="flex items-center justify-center min-h-[200px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">
-                      Loading account information...
-                    </div>
+                <div className="card-header">
+                  <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                  <div className="h-6 w-40 gradient-shimmer rounded ml-3" />
+                </div>
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="form-group">
+                    <div className="h-4 w-28 gradient-shimmer rounded mb-2" />
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="form-group">
+                    <div className="h-4 w-20 gradient-shimmer rounded mb-2" />
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <div className="h-10 w-32 gradient-shimmer rounded-lg" />
+                    <div className="h-10 w-40 gradient-shimmer rounded-lg" />
                   </div>
                 </div>
               </div>
               <div className="card card-padding">
                 <div className="card-header">
-                  <div className="card-icon">
-                    <FaCamera />
-                  </div>
-                  <h3 className="card-title">Profile Picture</h3>
+                  <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                  <div className="h-6 w-32 gradient-shimmer rounded ml-3" />
                 </div>
-
                 <div className="flex flex-col items-center space-y-4">
                   <div className="relative">
-                    <div className="profile-picture">
-                      {currentUser?.username?.charAt(0) || 'U'}
-                    </div>
-                    <button className="profile-picture-edit">
-                      <FaCamera className="w-4 h-4" />
-                    </button>
+                    <div className="h-24 w-24 gradient-shimmer rounded-full" />
+                    <div className="absolute bottom-0 right-0 h-8 w-8 gradient-shimmer rounded-full border-2 border-white dark:border-gray-800" />
                   </div>
-                  <button className="btn btn-primary">Upload Photo</button>
+                  <div className="h-10 w-32 gradient-shimmer rounded-lg" />
                 </div>
               </div>
               <div className="card card-padding">
-                <div className="flex items-center justify-center min-h-[300px]">
-                  <div className="text-center flex flex-col items-center">
-                    <GradientSpinner size="w-12 h-12" className="mb-3" />
-                    <div className="text-base font-medium">
-                      Loading password settings...
-                    </div>
+                <div className="card-header">
+                  <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                  <div className="h-6 w-36 gradient-shimmer rounded ml-3" />
+                </div>
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <div className="h-4 w-36 gradient-shimmer rounded mb-2" />
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
                   </div>
+                  <div className="form-group">
+                    <div className="h-4 w-28 gradient-shimmer rounded mb-2" />
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="form-group">
+                    <div className="h-4 w-40 gradient-shimmer rounded mb-2" />
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
                 </div>
               </div>
             </div>
             <div className="space-y-6">
               <div className="card card-padding">
                 <div className="card-header mb-4">
-                  <div className="card-icon">
-                    <FaShieldAlt />
-                  </div>
-                  <h3 className="card-title">2FA</h3>
+                  <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                  <div className="h-6 w-16 gradient-shimmer rounded ml-3" />
                 </div>
-
-                <div className="flex items-center justify-center min-h-[100px]">
-                  <GradientSpinner size="w-8 h-8" />
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="h-5 w-48 gradient-shimmer rounded mb-2" />
+                    <div className="h-4 w-full gradient-shimmer rounded mb-1" />
+                    <div className="h-4 w-3/4 gradient-shimmer rounded" />
+                  </div>
+                  <div className="h-6 w-11 gradient-shimmer rounded-full ml-4" />
                 </div>
               </div>
               <div className="card card-padding">
                 <div className="card-header">
-                  <div className="card-icon">
-                    <FaKey />
-                  </div>
-                  <h3 className="card-title">API Keys</h3>
+                  <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                  <div className="h-6 w-28 gradient-shimmer rounded ml-3" />
                 </div>
-
-                <div className="flex items-center justify-center min-h-[150px]">
-                  <GradientSpinner size="w-8 h-8" />
+                <div className="space-y-4">
+                  <div>
+                    <div className="h-4 w-20 gradient-shimmer rounded mb-2" />
+                    <div className="h-[42px] w-full gradient-shimmer rounded-lg" />
+                    <div className="h-3 w-32 gradient-shimmer rounded mt-2" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-10 w-24 gradient-shimmer rounded-lg" />
+                    <div className="h-10 w-32 gradient-shimmer rounded-lg" />
+                  </div>
                 </div>
               </div>
               <div className="card card-padding">
                 <div className="card-header">
-                  <div className="card-icon">
-                    <FaClock />
-                  </div>
-                  <h3 className="card-title">Timezone</h3>
+                  <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                  <div className="h-6 w-28 gradient-shimmer rounded ml-3" />
                 </div>
-
-                <div className="flex items-center justify-center min-h-[120px]">
-                  <GradientSpinner size="w-8 h-8" />
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                </div>
+              </div>
+              <div className="card card-padding">
+                <div className="card-header">
+                  <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+                  <div className="h-6 w-36 gradient-shimmer rounded ml-3" />
+                </div>
+                <div className="space-y-4">
+                  <div className="form-group">
+                    <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
                 </div>
               </div>
             </div>

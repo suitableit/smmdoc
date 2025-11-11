@@ -22,14 +22,30 @@ import {
     FaSpinner,
     FaTimes,
     FaWallet,
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -69,17 +85,20 @@ export function AddFundForm() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     setPageTitle('Add Funds', appName);
-  }, [appName]);
+  }, [appName]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, []);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -96,7 +115,8 @@ export function AddFundForm() {
     mode: 'all',
     resolver: zodResolver(addFundSchema),
     defaultValues: addFundDefaultValues,
-  });
+  });
+
   useEffect(() => {
     const newCurrency = (globalCurrency === 'USD' || globalCurrency === 'BDT') ? globalCurrency : 'BDT';
     setActiveCurrency(newCurrency);
@@ -138,13 +158,15 @@ export function AddFundForm() {
   const handleUSDChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const currentRate = rate || 120;
     const usdValue = parseFloat(e.target.value) || 0;
-    const bdtValue = usdValue * currentRate;
+    const bdtValue = usdValue * currentRate;
+
     form.setValue('amountUSD', e.target.value, { shouldValidate: true });
     form.setValue('amountBDT', bdtValue.toFixed(2), { shouldValidate: true });
     form.setValue('amountBDTConverted', bdtValue.toFixed(2), {
       shouldValidate: true,
     });
-    form.setValue('amount', bdtValue.toFixed(2), { shouldValidate: true });
+    form.setValue('amount', bdtValue.toFixed(2), { shouldValidate: true });
+
     setTotalAmount({
       amount: bdtValue,
       currency: 'BDT',
@@ -154,15 +176,18 @@ export function AddFundForm() {
   const handleBDTChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const currentRate = rate || 120;
     const bdtValue = parseFloat(e.target.value) || 0;
-    const usdValue = bdtValue / currentRate;
+    const usdValue = bdtValue / currentRate;
+
     form.setValue('amountBDT', e.target.value, { shouldValidate: true });
     form.setValue('amountUSD', usdValue.toFixed(2), { shouldValidate: true });
-    form.setValue('amount', bdtValue.toFixed(2), { shouldValidate: true });
+    form.setValue('amount', bdtValue.toFixed(2), { shouldValidate: true });
+
     setTotalAmount({
       amount: bdtValue,
       currency: 'BDT',
     });
-  };
+  };
+
   const onSubmit: SubmitHandler<AddFundSchema> = async (values) => {
     startTransition(async () => {
       try {
@@ -239,72 +264,116 @@ export function AddFundForm() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {}
-        <div className="card card-padding">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center flex flex-col items-center">
-              <GradientSpinner size="w-14 h-14" className="mb-4" />
-              <div className="text-lg font-medium">Loading payment form...</div>
+      <>
+        <ShimmerStyles />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {}
+          <div className="card card-padding">
+            <div className="space-y-6">
+              {}
+              <div
+                className="card"
+                style={{
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                  padding: '20px',
+                }}
+              >
+                <div className="flex flex-wrap items-center justify-between mb-4">
+                  <div className="h-5 w-32 gradient-shimmer rounded" />
+                  <div className="h-6 w-32 gradient-shimmer rounded-full" />
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="form-group">
+                    <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                  </div>
+                  <div className="flex justify-center">
+                    <div className="h-12 w-40 gradient-shimmer rounded-lg" />
+                  </div>
+                </div>
+                <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                </div>
+              </div>
+
+              {}
+              <div className="form-group">
+                <div className="h-10 w-full gradient-shimmer rounded-lg" />
+              </div>
+
+              {}
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                  <div className="h-8 w-32 gradient-shimmer rounded" />
+                </div>
+                <div className="h-4 w-24 gradient-shimmer rounded" />
+              </div>
+
+              {}
+              <div className="h-14 w-full gradient-shimmer rounded-lg" />
+            </div>
+          </div>
+
+          {}
+          <div className="space-y-6">
+            {}
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaCreditCard />
+                </div>
+                <h3 className="card-title">Secure Payment</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                SSL encrypted transactions with UddoktaPay
+              </p>
+            </div>
+
+            {}
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaShieldAlt />
+                </div>
+                <h3 className="card-title">100% Safe</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                Your financial data is protected
+              </p>
+            </div>
+
+            {}
+            <div className="card card-padding">
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaWallet />
+                </div>
+                <h3 className="card-title">Instant Credit</h3>
+              </div>
+              <p className="text-sm text-gray-600">
+                Funds added immediately after payment
+              </p>
             </div>
           </div>
         </div>
-
-        {}
-        <div className="space-y-6">
-          {}
-          <div className="card card-padding">
-            <div className="card-header">
-              <div className="card-icon">
-                <FaCreditCard />
-              </div>
-              <h3 className="card-title">Secure Payment</h3>
-            </div>
-            <p className="text-sm text-gray-600">
-              SSL encrypted transactions with UddoktaPay
-            </p>
-          </div>
-
-          {}
-          <div className="card card-padding">
-            <div className="card-header">
-              <div className="card-icon">
-                <FaShieldAlt />
-              </div>
-              <h3 className="card-title">100% Safe</h3>
-            </div>
-            <p className="text-sm text-gray-600">
-              Your financial data is protected
-            </p>
-          </div>
-
-          {}
-          <div className="card card-padding">
-            <div className="card-header">
-              <div className="card-icon">
-                <FaWallet />
-              </div>
-              <h3 className="card-title">Instant Credit</h3>
-            </div>
-            <p className="text-sm text-gray-600">
-              Funds added immediately after payment
-            </p>
-          </div>
-        </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {}
-      {toastMessage && (
-        <Toast
-          message={toastMessage.message}
-          type={toastMessage.type}
-          onClose={() => setToastMessage(null)}
-        />
-      )}
+    <>
+      <ShimmerStyles />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {}
+        {toastMessage && (
+          <Toast
+            message={toastMessage.message}
+            type={toastMessage.type}
+            onClose={() => setToastMessage(null)}
+          />
+        )}
 
       {}
       <div className="card card-padding">
@@ -335,7 +404,7 @@ export function AddFundForm() {
                     <input
                       type="number"
                       placeholder="0.00"
-                      className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       disabled={isPending}
                       value={form.watch('amountUSD') || ''}
                       onChange={handleUSDChange}
@@ -352,7 +421,7 @@ export function AddFundForm() {
                     <input
                       type="number"
                       placeholder="0.00"
-                      className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       disabled={isPending}
                       value={form.watch('amountBDT') || ''}
                       onChange={handleBDTChange}
@@ -392,7 +461,7 @@ export function AddFundForm() {
                 <div className="relative">
                   <input
                     type="text"
-                    className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     disabled
                     placeholder="0.00 BDT"
                     value={form.watch('amountBDTConverted') || '0.00'}
@@ -405,7 +474,7 @@ export function AddFundForm() {
                 <div className="relative">
                   <input
                     type="text"
-                    className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     disabled
                     placeholder="0.00 USD"
                     value={form.watch('amountUSD') || '0.00'}
@@ -523,5 +592,6 @@ export function AddFundForm() {
         </div>
       </div>
     </div>
+    </>
   );
 }

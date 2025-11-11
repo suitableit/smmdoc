@@ -26,14 +26,66 @@ import {
     FaTimesCircle,
     FaUser,
     FaWallet
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+    .gradient-shimmer-green {
+      background: linear-gradient(90deg, #d1fae5 0%, #a7f3d0 25%, #d1fae5 50%, #a7f3d0 75%, #d1fae5 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer-green {
+      background: linear-gradient(90deg, #064e3b 0%, #065f46 25%, #064e3b 50%, #065f46 75%, #064e3b 100%);
+      background-size: 200% 100%;
+    }
+    .gradient-shimmer-blue {
+      background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 25%, #dbeafe 50%, #bfdbfe 75%, #dbeafe 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer-blue {
+      background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 25%, #1e3a8a 50%, #1e40af 75%, #1e3a8a 100%);
+      background-size: 200% 100%;
+    }
+    .gradient-shimmer-yellow {
+      background: linear-gradient(90deg, #fef3c7 0%, #fde68a 25%, #fef3c7 50%, #fde68a 75%, #fef3c7 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer-yellow {
+      background: linear-gradient(90deg, #78350f 0%, #92400e 25%, #78350f 50%, #92400e 75%, #78350f 100%);
+      background-size: 200% 100%;
+    }
+    .gradient-shimmer-red {
+      background: linear-gradient(90deg, #fee2e2 0%, #fecaca 25%, #fee2e2 50%, #fecaca 75%, #fee2e2 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer-red {
+      background: linear-gradient(90deg, #7f1d1d 0%, #991b1b 25%, #7f1d1d 50%, #991b1b 75%, #7f1d1d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -62,17 +114,20 @@ const DashboardPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [userInfoLoading, setUserInfoLoading] = useState(true);
   const [financeLoading, setFinanceLoading] = useState(true);
   const [statisticsLoading, setStatisticsLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ticketsLoading, setTicketsLoading] = useState(true);
 
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('Dashboard', appName);
-  }, [appName]);
+  }, [appName]);
+
   useEffect(() => {
     const loadUserInfo = async () => {
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -104,27 +159,34 @@ const DashboardPage = () => {
     loadStatistics();
     loadOrders();
     loadTickets();
-  }, []);
-  const userOrders = userStats?.recentOrders || [];
+  }, []);
+
+  const userOrders = userStats?.recentOrders || [];
+
   const balance = userStats?.balance || 0;
   const totalSpend = userStats?.totalSpent || 0;
   const totalOrders = userStats?.totalOrders || 0;
   const pendingOrders = userStats?.ordersByStatus?.pending || 0;
   const completedOrders = userStats?.ordersByStatus?.completed || 0;
   const processingOrders = userStats?.ordersByStatus?.processing || 0;
-  const cancelledOrders = userStats?.ordersByStatus?.cancelled || 0;
-  const formatCurrency = (amount: number) => {
+  const cancelledOrders = userStats?.ordersByStatus?.cancelled || 0;
+
+  const formatCurrency = (amount: number) => {
+
     let convertedAmount = amount;
     let symbol = '৳';
 
-    if (currency === 'BDT') {
+    if (currency === 'BDT') {
+
       convertedAmount = amount;
       symbol = '৳';
-    } else if (currency === 'USD') {
+    } else if (currency === 'USD') {
+
       const bdtToUsdRate = 110;
       convertedAmount = amount / bdtToUsdRate;
       symbol = '$';
-    } else {
+    } else {
+
       const bdtToUsdRate = 110;
       const usdAmount = amount / bdtToUsdRate;
       convertedAmount = usdAmount * (currencyRate || 1);
@@ -140,7 +202,8 @@ const DashboardPage = () => {
     } else {
       router.push('/new-order');
     }
-  };
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -175,7 +238,8 @@ const DashboardPage = () => {
       default:
         return <FaClock className="w-4 h-4" />;
     }
-  };
+  };
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -205,6 +269,7 @@ const DashboardPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           {}
@@ -216,9 +281,7 @@ const DashboardPage = () => {
               <div>
                 <h3 className="card-title">User ID</h3>
                 {userInfoLoading ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400">Loading...</span>
-                  </div>
+                  <div className="h-5 w-24 gradient-shimmer rounded" />
                 ) : (
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                     {user?.id ? formatID(user.id) : 'N/A'}
@@ -237,9 +300,7 @@ const DashboardPage = () => {
               <div>
                 <h3 className="card-title">Username</h3>
                 {userInfoLoading ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400">Loading...</span>
-                  </div>
+                  <div className="h-5 w-20 gradient-shimmer rounded" />
                 ) : (
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                     {user?.username || user?.email?.split('@')[0] || 'User'}
@@ -258,9 +319,7 @@ const DashboardPage = () => {
               <div>
                 <h3 className="card-title">Full Name</h3>
                 {userInfoLoading ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400">Loading...</span>
-                  </div>
+                  <div className="h-5 w-24 gradient-shimmer rounded" />
                 ) : (
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                     {user?.name || 'User'}
@@ -282,10 +341,7 @@ const DashboardPage = () => {
               <div className="flex-1">
                 <h3 className="card-title">Balance</h3>
                 {financeLoading || isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
+                  <div className="h-8 w-24 gradient-shimmer rounded" />
                 ) : (
                   <p className="text-2xl font-bold text-green-600">
                     {formatCurrency(balance)}
@@ -313,10 +369,7 @@ const DashboardPage = () => {
               <div>
                 <h3 className="card-title">Total Orders</h3>
                 {financeLoading || isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
+                  <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
                   <p className="text-2xl font-bold text-blue-600">
                     {formatNumber(totalOrders)}
@@ -335,10 +388,7 @@ const DashboardPage = () => {
               <div>
                 <h3 className="card-title">Total Spend</h3>
                 {financeLoading || isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
+                  <div className="h-8 w-24 gradient-shimmer rounded" />
                 ) : (
                   <p className="text-2xl font-bold text-purple-600">
                     {formatCurrency(totalSpend)}
@@ -374,10 +424,7 @@ const DashboardPage = () => {
                       </div>
                       <div className="text-2xl font-bold text-green-700 dark:text-green-300">
                         {statisticsLoading || isLoading ? (
-                          <div className="flex items-center gap-2">
-                            <GradientSpinner size="w-5 h-5" />
-                            <span className="text-sm text-gray-400">Loading...</span>
-                          </div>
+                          <div className="h-8 w-12 gradient-shimmer-green rounded" />
                         ) : (
                           formatNumber(completedOrders)
                         )}
@@ -399,10 +446,7 @@ const DashboardPage = () => {
                       </div>
                       <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
                         {statisticsLoading || isLoading ? (
-                          <div className="flex items-center gap-2">
-                            <GradientSpinner size="w-5 h-5" />
-                            <span className="text-sm text-gray-400">Loading...</span>
-                          </div>
+                          <div className="h-8 w-12 gradient-shimmer-blue rounded" />
                         ) : (
                           formatNumber(processingOrders)
                         )}
@@ -424,10 +468,7 @@ const DashboardPage = () => {
                       </div>
                       <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
                         {statisticsLoading || isLoading ? (
-                          <div className="flex items-center gap-2">
-                            <GradientSpinner size="w-5 h-5" />
-                            <span className="text-sm text-gray-400">Loading...</span>
-                          </div>
+                          <div className="h-8 w-12 gradient-shimmer-yellow rounded" />
                         ) : (
                           formatNumber(pendingOrders)
                         )}
@@ -449,10 +490,7 @@ const DashboardPage = () => {
                       </div>
                       <div className="text-2xl font-bold text-red-700 dark:text-red-300">
                         {statisticsLoading || isLoading ? (
-                          <div className="flex items-center gap-2">
-                            <GradientSpinner size="w-5 h-5" />
-                            <span className="text-sm text-gray-400">Loading...</span>
-                          </div>
+                          <div className="h-8 w-12 gradient-shimmer-red rounded" />
                         ) : (
                           formatNumber(cancelledOrders)
                         )}
@@ -483,10 +521,45 @@ const DashboardPage = () => {
               </div>
 
               {ordersLoading || isLoading ? (
-                <div className="text-center py-8 flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-4" />
-                  <div className="text-lg font-medium">
-                    Loading recent orders...
+                <div style={{ minHeight: '400px' }}>
+                  <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-t-lg">
+                          {Array.from({ length: 6 }).map((_, idx) => (
+                            <th key={idx} className="text-left py-3 px-4 font-medium">
+                              <div className="h-4 w-16 gradient-shimmer rounded" />
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.from({ length: 5 }).map((_, rowIdx) => (
+                          <tr key={rowIdx} className="border-b border-gray-100 dark:border-gray-800">
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-16 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-4 w-20 gradient-shimmer rounded mb-1" />
+                              <div className="h-3 w-12 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4 hidden md:table-cell">
+                              <div className="h-4 w-16 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4 hidden md:table-cell">
+                              <div className="h-4 w-12 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4 hidden lg:table-cell">
+                              <div className="h-4 w-32 gradient-shimmer rounded mb-1" />
+                              <div className="h-3 w-24 gradient-shimmer rounded" />
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               ) : userOrders.length > 0 ? (
@@ -544,7 +617,8 @@ const DashboardPage = () => {
                             </td>
                             <td className="py-3 px-4 hidden md:table-cell">
                               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {(() => {
+                                {(() => {
+
                                   const usdPrice = order.usdPrice || 0;
                                   const bdtPrice = order.bdtPrice || 0;
 
@@ -558,7 +632,8 @@ const DashboardPage = () => {
                                     displayAmount = usdPrice;
                                   } else if (currentCurrencyData.code === 'BDT') {
                                     displayAmount = bdtPrice;
-                                  } else {
+                                  } else {
+
                                     displayAmount = usdPrice * currentCurrencyData.rate;
                                   }
 
@@ -646,11 +721,10 @@ const DashboardPage = () => {
               </div>
 
               {ticketsLoading ? (
-                <div className="text-center py-8 flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-4" />
-                  <div className="text-lg font-medium">
-                    Loading support tickets...
-                  </div>
+                <div className="text-center py-8">
+                  <div className="h-16 w-16 gradient-shimmer rounded-full mx-auto mb-4" />
+                  <div className="h-6 w-48 gradient-shimmer rounded mx-auto mb-2" />
+                  <div className="h-4 w-64 gradient-shimmer rounded mx-auto" />
                 </div>
               ) : (
                 <div

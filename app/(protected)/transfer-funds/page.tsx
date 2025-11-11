@@ -4,22 +4,40 @@ import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 
 import { useCallback, useEffect, useState, useTransition } from 'react';
-import { FaExchangeAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { FaExchangeAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const useCurrency = () => ({
   currency: 'BDT' as 'USD' | 'BDT',
   rate: 110,
-});
+});
+
 const useUserSettings = () => ({
   settings: { currency: 'BDT', transferFundsPercentage: 3 },
   loading: false,
-});
+});
+
 const Toast = ({
   message,
   type = 'success',
@@ -59,17 +77,20 @@ export default function TransferFund() {
   const [isUserValid, setIsUserValid] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const rate = globalRate;
+  const rate = globalRate;
+
   useEffect(() => {
     setPageTitle('Transfer Funds', appName);
-  }, [appName]);
+  }, [appName]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, []);
+
   const validateUsername = useCallback(async (usernameValue: string) => {
     if (!usernameValue.trim()) {
       setUserValidationError('');
@@ -108,7 +129,8 @@ export default function TransferFund() {
     } finally {
       setIsValidatingUser(false);
     }
-  }, []);
+  }, []);
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       validateUsername(username);
@@ -119,7 +141,8 @@ export default function TransferFund() {
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setUsername(value);
+    setUsername(value);
+
     if (value !== username) {
       setIsUserValid(false);
       setUserValidationError('');
@@ -150,7 +173,8 @@ export default function TransferFund() {
 
     setAmountBDT(e.target.value);
     setAmountUSD(usdValue.toFixed(2));
-  };
+  };
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -191,8 +215,10 @@ export default function TransferFund() {
 
     startTransition(async () => {
       try {
-        showToast('Processing transfer...', 'pending');
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        showToast('Processing transfer...', 'pending');
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         const calculatedFee = (transferAmount * feePercentage) / 100;
         const calculatedTotal = transferAmount + calculatedFee;
 
@@ -215,7 +241,8 @@ export default function TransferFund() {
   const currentAmount =
     activeCurrency === 'USD'
       ? parseFloat(amountUSD) || 0
-      : parseFloat(amountBDT) || 0;
+      : parseFloat(amountBDT) || 0;
+
   const feePercentage = userSettings?.transferFundsPercentage || 3;
   const fee = (currentAmount * feePercentage) / 100;
   const totalAmount = currentAmount + fee;
@@ -224,16 +251,47 @@ export default function TransferFund() {
     return (
       <div className={`page-container ${className}`}>
         <div className="page-content">
+          <ShimmerStyles />
           <div className="max-w-2xl mx-auto">
-            {}
             <div className="card card-padding">
-              <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-14 h-14" className="mb-4" />
-                  <div className="text-lg font-medium">
-                    Loading transfer form...
+              <div className="card-header mb-6">
+                <div className="card-icon">
+                  <FaExchangeAlt />
+                </div>
+                <div className="h-6 w-40 gradient-shimmer rounded" />
+              </div>
+              <div className="h-4 w-64 gradient-shimmer rounded mb-6" />
+              <div className="space-y-6">
+                <div className="form-group">
+                  <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                  <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                </div>
+                <div
+                  className="card"
+                  style={{
+                    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                    padding: '20px',
+                  }}
+                >
+                  <div className="flex flex-wrap items-center justify-between mb-4">
+                    <div className="h-5 w-32 gradient-shimmer rounded" />
+                    <div className="h-6 w-32 gradient-shimmer rounded-full" />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="form-group">
+                      <div className="h-4 w-24 gradient-shimmer rounded mb-2" />
+                      <div className="h-10 w-full gradient-shimmer rounded-lg" />
+                    </div>
+                    <div className="flex justify-center">
+                      <div className="h-12 w-40 gradient-shimmer rounded-lg" />
+                    </div>
+                  </div>
+                  <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                    <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                    <div className="h-10 w-full gradient-shimmer rounded-lg" />
                   </div>
                 </div>
+                <div className="h-14 w-full gradient-shimmer rounded-lg" />
               </div>
             </div>
           </div>
@@ -256,6 +314,7 @@ export default function TransferFund() {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         <div className="max-w-2xl mx-auto">
           {}
           <div className="card card-padding">

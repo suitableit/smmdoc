@@ -12,14 +12,30 @@ import {
   FaClipboardList,
   FaSearch,
   FaTimes,
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+} from 'react-icons/fa';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -72,10 +88,12 @@ export default function UpdateServiceTable() {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
-  const limit = 50;
+  const limit = 50;
+
   useEffect(() => {
     setPageTitle('Service Updates', appName);
-  }, [appName]);
+  }, [appName]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -96,7 +114,8 @@ export default function UpdateServiceTable() {
   useEffect(() => {
     const fetchServices = async () => {
       setLoading(true);
-      try {
+      try {
+
         const response = await fetch(
           `/api/user/services/getUpdateServices?page=${page}&limit=${limit}&search=${debouncedSearch}`,
           revalidate
@@ -127,34 +146,58 @@ export default function UpdateServiceTable() {
     if (page < totalPages) setPage(page + 1);
   };
 
-  const renderSkeletonRows = () => {
-    return Array.from({ length: 5 }).map((_, i) => (
-      <tr key={i} className="border-b border-gray-100">
-        <td className="py-3 px-4">
-          <div className="w-8 h-4 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-        <td className="py-3 px-4">
-          <div className="w-48 h-4 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-        <td className="py-3 px-4">
-          <div className="w-32 h-4 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-        <td className="py-3 px-4">
-          <div className="w-40 h-4 bg-gray-200 rounded animate-pulse"></div>
-        </td>
-      </tr>
-    ));
-  };
 
   if (loading) {
     return (
       <div className="page-container">
         <div className="page-content">
+          <ShimmerStyles />
           <div className="card card-padding">
-            <div className="text-center py-8 flex flex-col items-center">
-              <GradientSpinner size="w-14 h-14" className="mb-4" />
-              <div className="text-lg font-medium">
-                Loading service updates...
+            <div className="flex items-center gap-3 mb-6">
+              <div className="card-icon">
+                <FaBell className="w-5 h-5 text-white" />
+              </div>
+              <div className="h-6 w-40 gradient-shimmer rounded" />
+            </div>
+            <div className="mb-6">
+              <div className="h-10 w-full gradient-shimmer rounded-lg" />
+            </div>
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                    {Array.from({ length: 4 }).map((_, idx) => (
+                      <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
+                        <div className="h-4 w-20 gradient-shimmer rounded" />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 10 }).map((_, idx) => (
+                    <tr key={idx} className="border-b border-gray-200">
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-12 gradient-shimmer rounded" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-48 gradient-shimmer rounded" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-64 gradient-shimmer rounded" />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-32 gradient-shimmer rounded" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+              <div className="h-5 w-32 gradient-shimmer rounded" />
+              <div className="flex gap-2">
+                <div className="h-9 w-20 gradient-shimmer rounded" />
+                <div className="h-9 w-16 gradient-shimmer rounded" />
               </div>
             </div>
           </div>
@@ -175,6 +218,7 @@ export default function UpdateServiceTable() {
       )}
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="card card-padding">
           {}
@@ -225,10 +269,13 @@ export default function UpdateServiceTable() {
                 <tbody>
                   {services?.filter(service => {
                     try {
-                      const updateData = JSON.parse(service.updateText || '{}');
+                      const updateData = JSON.parse(service.updateText || '{}');
+
+
                       const isApiProviderSync = updateData.provider && updateData.providerId && updateData.lastSynced;
                       return !isApiProviderSync;
-                    } catch (error) {
+                    } catch (error) {
+
                       return true;
                     }
                   }).map((service, i) => (
@@ -243,21 +290,25 @@ export default function UpdateServiceTable() {
                         <div className="break-words">
                           {(() => {
                             try {
-                              const updateData = JSON.parse(service.updateText || '{}');
+                              const updateData = JSON.parse(service.updateText || '{}');
+
                               if (updateData.action === 'created' || updateData.type === 'new_service' || updateData.action === 'create') {
                                 return 'New service';
-                              }
+                              }
+
                               if (updateData.action === 'added' || updateData.type === 'service_added' || updateData.action === 'import') {
                                 return 'New service';
                               }
 
                               const updates = [];
                               let hasRateChange = false;
-                              let hasStatusChange = false;
+                              let hasStatusChange = false;
+
                               const rateChange = updateData.changes?.rate || updateData.rate;
                               if (rateChange && rateChange.from !== undefined && rateChange.to !== undefined) {
                                 const oldRate = parseFloat(rateChange.from);
-                                const newRate = parseFloat(rateChange.to);
+                                const newRate = parseFloat(rateChange.to);
+
                                 const formatRate = (rate: number) => {
                                   const formatted = rate.toFixed(6);
                                   return parseFloat(formatted).toString();
@@ -270,7 +321,8 @@ export default function UpdateServiceTable() {
                                   updates.push(`Rate decreased from $${formatRate(oldRate)} to $${formatRate(newRate)}`);
                                   hasRateChange = true;
                                 }
-                              }
+                              }
+
                               const statusChange = updateData.changes?.status || updateData.status;
                               if (statusChange && statusChange.from !== undefined && statusChange.to !== undefined) {
                                 const oldStatus = statusChange.from;
@@ -282,35 +334,43 @@ export default function UpdateServiceTable() {
                                   updates.push('Service disabled');
                                   hasStatusChange = true;
                                 }
-                              }
-                              const infoUpdates = [];
+                              }
+
+                              const infoUpdates = [];
+
                               const minOrderChange = updateData.changes?.min_order || updateData.min_order;
                               if (minOrderChange && minOrderChange.from !== undefined && minOrderChange.to !== undefined) {
                                 infoUpdates.push('min order');
-                              }
+                              }
+
                               const maxOrderChange = updateData.changes?.max_order || updateData.max_order;
                               if (maxOrderChange && maxOrderChange.from !== undefined && maxOrderChange.to !== undefined) {
                                 infoUpdates.push('max order');
-                              }
+                              }
+
                               const nameChange = updateData.changes?.name || updateData.name;
                               if (nameChange && nameChange.from !== undefined && nameChange.to !== undefined) {
                                 infoUpdates.push('name');
-                              }
+                              }
+
                               const descriptionChange = updateData.changes?.description || updateData.description;
                               if (descriptionChange && descriptionChange.from !== undefined && descriptionChange.to !== undefined) {
                                 infoUpdates.push('description');
-                              }
+                              }
+
                               const categoryChange = updateData.changes?.categoryId || updateData.changes?.category || updateData.category;
                               if (categoryChange && categoryChange.from !== undefined && categoryChange.to !== undefined) {
                                 infoUpdates.push('category');
-                              }
+                              }
+
                               if (infoUpdates.length > 0 && !hasRateChange && !hasStatusChange) {
                                 updates.push('Service info updated');
                               }
 
                               return updates.length > 0 ? updates.join(', ') : 'Service updated';
 
-                            } catch (error) {
+                            } catch (error) {
+
                               const text = service.updateText || '';
                               if (text.toLowerCase().includes('created') || text.toLowerCase().includes('new')) {
                                 return 'New service';

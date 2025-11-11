@@ -8,17 +8,135 @@ import {
     FaSync,
     FaTimes,
     FaTrash,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatNumber } from '@/lib/utils';
+import { formatNumber } from '@/lib/utils';
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
+const SyncLogsTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+  
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes shimmer {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+        .gradient-shimmer {
+          background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
+        .dark .gradient-shimmer {
+          background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+          background-size: 200% 100%;
+        }
+      `}} />
+      <div className="hidden lg:block overflow-x-auto">
+        <table className="w-full text-sm min-w-[1000px]">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 7 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-4 w-4 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-8 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-32 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-40 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-20 gradient-shimmer rounded-full mb-1" />
+                  <div className="h-4 w-48 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-8 w-8 gradient-shimmer rounded" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="lg:hidden">
+        <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
+          {rows.map((_, idx) => (
+            <div key={idx} className="card card-padding border-l-4 border-blue-500 mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-4 w-4 gradient-shimmer rounded" />
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                  <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                </div>
+                <div className="h-8 w-8 gradient-shimmer rounded" />
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-2" />
+                  <div className="h-4 w-32 gradient-shimmer rounded" />
+                </div>
+                <div>
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-2" />
+                  <div className="h-4 w-40 gradient-shimmer rounded" />
+                </div>
+              </div>
+              <div className="mb-4">
+                <div className="h-3 w-20 gradient-shimmer rounded mb-2" />
+                <div className="h-4 w-full gradient-shimmer rounded" />
+              </div>
+              <div>
+                <div className="h-3 w-16 gradient-shimmer rounded mb-2" />
+                <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                <div className="h-3 w-20 gradient-shimmer rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 border-t">
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div className="h-5 w-48 gradient-shimmer rounded" />
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <div className="h-9 w-20 gradient-shimmer rounded" />
+          <div className="h-5 w-24 gradient-shimmer rounded" />
+          <div className="h-9 w-16 gradient-shimmer rounded" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -35,7 +153,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface SyncLog {
   id: number;
   slNo: number;
@@ -56,10 +175,12 @@ interface PaginationInfo {
 }
 
 const SyncLogsPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('API Sync Logs', appName);
-  }, [appName]);
+  }, [appName]);
+
   const dummySyncLogs: SyncLog[] = [
     {
       id: 1,
@@ -151,7 +272,8 @@ const SyncLogsPage = () => {
       changeType: 'deleted',
       when: '2024-01-13T10:40:00Z',
     },
-  ];
+  ];
+
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>(dummySyncLogs);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -171,9 +293,11 @@ const SyncLogsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [logsLoading, setLogsLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const getChangeTypeBadge = (changeType: string) => {
     switch (changeType) {
       case 'added':
@@ -207,7 +331,8 @@ const SyncLogsPage = () => {
           </span>
         );
     }
-  };
+  };
+
   const filteredSyncLogs = syncLogs.filter((log) => {
     if (!searchTerm) return true;
 
@@ -227,7 +352,8 @@ const SyncLogsPage = () => {
           log.id.toString().toLowerCase().includes(searchLower)
         );
     }
-  });
+  });
+
   useEffect(() => {
     const total = filteredSyncLogs.length;
     const totalPages = Math.ceil(total / pagination.limit);
@@ -238,12 +364,14 @@ const SyncLogsPage = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1,
     }));
-  }, [filteredSyncLogs.length, pagination.limit]);
+  }, [filteredSyncLogs.length, pagination.limit]);
+
   const getPaginatedData = () => {
     const startIndex = (pagination.page - 1) * pagination.limit;
     const endIndex = startIndex + pagination.limit;
     return filteredSyncLogs.slice(startIndex, endIndex);
-  };
+  };
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -270,15 +398,18 @@ const SyncLogsPage = () => {
   };
 
   const handleRefresh = () => {
-    setLogsLoading(true);
+    setLogsLoading(true);
+
     setTimeout(() => {
       setLogsLoading(false);
       showToast('Sync logs refreshed successfully!', 'success');
     }, 1000);
-  };
+  };
+
   const handleDeleteLog = async (logId: string | number) => {
     setDeleteLoading(true);
-    try {
+    try {
+
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setSyncLogs((prev) => prev.filter((log) => log.id.toString() !== logId.toString()));
@@ -291,9 +422,11 @@ const SyncLogsPage = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
+  };
+
   const handleBulkDelete = async () => {
-    try {
+    try {
+
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       setSyncLogs((prev) =>
@@ -417,16 +550,9 @@ const SyncLogsPage = () => {
             )}
           </div>
 
-          <div style={{ padding: '0 24px' }}>
+          <div style={{ padding: '0 24px' }} className="min-h-[600px]">
             {logsLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">
-                    Loading sync logs...
-                  </div>
-                </div>
-              </div>
+              <SyncLogsTableSkeleton />
             ) : getPaginatedData().length === 0 ? (
               <div className="text-center py-12">
                 <FaBox

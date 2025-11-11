@@ -18,18 +18,120 @@ import {
     FaTrash,
     FaUserCheck,
     FaUsers,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import useCurrency from '@/hooks/useCurrency';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { invalidateUserSessions } from '@/lib/session-invalidation';
+import { invalidateUserSessions } from '@/lib/session-invalidation';
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const UsersTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+  
+  return (
+    <>
+      <ShimmerStyles />
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[1200px]">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 11 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
+                  <div className="h-3 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-12 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-12 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-12 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-1">
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div className="h-5 w-48 gradient-shimmer rounded" />
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <div className="h-9 w-20 gradient-shimmer rounded" />
+          <div className="h-5 w-24 gradient-shimmer rounded" />
+          <div className="h-9 w-16 gradient-shimmer rounded" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -46,7 +148,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface User {
   id: number;
   username: string;
@@ -171,7 +274,8 @@ interface ChangeRoleModalProps {
   onClose: () => void;
   onConfirm: () => void;
   isLoading: boolean;
-}
+}
+
 interface EditUserModalProps {
   isOpen: boolean;
   currentUser: User | null;
@@ -193,7 +297,8 @@ interface EditUserFormData {
   balance: string;
   emailVerified: boolean | null;
   password: string;
-}
+}
+
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -233,11 +338,14 @@ const useClickOutside = (
 };
 
 const UsersListPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('All Users', appName);
-  }, [appName]);
-  const { currency, currentCurrencyData, formatCurrency: formatCurrencyFromContext } = useCurrency();
+  }, [appName]);
+
+  const { currency, currentCurrencyData, formatCurrency: formatCurrencyFromContext } = useCurrency();
+
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<UserStats>({
     totalUsers: 0,
@@ -268,10 +376,12 @@ const UsersListPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [statsLoading, setStatsLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
   const [addDeductBalanceDialog, setAddDeductBalanceDialog] = useState<{
     open: boolean;
     userId: number;
@@ -280,7 +390,8 @@ const UsersListPage = () => {
     open: false,
     userId: 0,
     currentUser: null,
-  });
+  });
+
   const [balanceForm, setBalanceForm] = useState({
     amount: '',
     action: 'add',
@@ -317,7 +428,8 @@ const UsersListPage = () => {
     userId: 0,
     currentRole: '',
   });
-  const [newRole, setNewRole] = useState('');
+  const [newRole, setNewRole] = useState('');
+
   const [editUserDialog, setEditUserDialog] = useState<{
     open: boolean;
     userId: number;
@@ -335,8 +447,10 @@ const UsersListPage = () => {
     balance: '',
     emailVerified: null,
     password: '',
-  });
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  });
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
   const filterOptions = useMemo(
     () => [
       { key: 'all', label: 'All', count: stats.totalUsers },
@@ -346,7 +460,8 @@ const UsersListPage = () => {
       { key: 'banned', label: 'Banned', count: stats.bannedUsers },
     ],
     [stats]
-  );
+  );
+
   const fetchUsers = useCallback(async () => {
     try {
       setUsersLoading(true);
@@ -364,13 +479,16 @@ const UsersListPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success) {
+
         let filteredUsers = (result.data || []).filter(
           (user: User) => user.role === 'user'
-        );
+        );
+
         if (statusFilter === 'pending') {
           filteredUsers = filteredUsers.filter((user: User) => !user.emailVerified);
-        } else if (statusFilter === 'active') {
+        } else if (statusFilter === 'active') {
+
           filteredUsers = filteredUsers.filter((user: User) => user.emailVerified && user.status === 'active');
         }
 
@@ -396,7 +514,8 @@ const UsersListPage = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      setStatsLoading(true);
+      setStatsLoading(true);
+
       const response = await fetch('/api/admin/users/stats?period=all');
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -433,14 +552,16 @@ const UsersListPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
+  }, []);
+
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+  }, [fetchStats]);
+
   const showToast = useCallback(
     (
       message: string,
@@ -450,7 +571,8 @@ const UsersListPage = () => {
       setTimeout(() => setToast(null), 4000);
     },
     []
-  );
+  );
+
   const getStatusIcon = (status: string) => {
     const icons = {
       active: <FaCheckCircle className="h-3 w-3 text-green-500" />,
@@ -458,7 +580,8 @@ const UsersListPage = () => {
       banned: <FaBan className="h-3 w-3 text-red-500" />,
     };
     return icons[status as keyof typeof icons] || icons.active;
-  };
+  };
+
   const formatCurrency = useCallback((amount: number) => {
     return formatCurrencyFromContext(amount);
   }, [formatCurrencyFromContext]);
@@ -492,7 +615,9 @@ const UsersListPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        showToast(result.message || 'Successfully switched to user', 'success');
+        showToast(result.message || 'Successfully switched to user', 'success');
+
+
         setTimeout(() => {
           window.location.replace('/dashboard');
         }, 800);
@@ -510,7 +635,8 @@ const UsersListPage = () => {
   const handleRefresh = useCallback(async () => {
     await Promise.all([fetchUsers(), fetchStats()]);
     showToast('Data refreshed successfully!', 'success');
-  }, [fetchUsers, fetchStats, showToast]);
+  }, [fetchUsers, fetchStats, showToast]);
+
   const handleApiAction = useCallback(
     async (
       url: string,
@@ -533,7 +659,8 @@ const UsersListPage = () => {
           await fetchUsers();
           await fetchStats();
           return true;
-        } else {
+        } else {
+
           const errorMessage = result.error || 'Operation failed';
           showToast(errorMessage, 'error');
           return false;
@@ -550,7 +677,8 @@ const UsersListPage = () => {
       }
     },
     [fetchUsers, fetchStats, showToast]
-  );
+  );
+
   const handleDeleteUser = useCallback(
     async (userId: number) => {
       const success = await handleApiAction(
@@ -560,17 +688,20 @@ const UsersListPage = () => {
         'User deleted successfully'
       );
 
-      if (success) {
+      if (success) {
+
         await invalidateUserSessions(userId);
         setDeleteDialogOpen(false);
         setUserToDelete(null);
       }
     },
     [handleApiAction]
-  );
+  );
+
   const handleStatusUpdate = useCallback(
     async (userId: number, newStatus: string, duration?: string) => {
-      const requestBody: any = { status: newStatus };
+      const requestBody: any = { status: newStatus };
+
       if (newStatus === 'suspended' && duration) {
         requestBody.suspensionDuration = duration;
       }
@@ -580,7 +711,8 @@ const UsersListPage = () => {
         'PUT',
         requestBody,
         `User status updated to ${newStatus}`
-      );
+      );
+
       if (success && (newStatus === 'suspended' || newStatus === 'banned')) {
         await invalidateUserSessions(userId);
       }
@@ -588,7 +720,8 @@ const UsersListPage = () => {
       return success;
     },
     [handleApiAction]
-  );
+  );
+
   const handleBalanceSubmit = useCallback(async () => {
     if (!balanceForm.amount || !addDeductBalanceDialog.currentUser) {
       showToast('Please fill in all required fields', 'error');
@@ -626,7 +759,8 @@ const UsersListPage = () => {
           'success'
         );
         setAddDeductBalanceDialog({ open: false, userId: 0, currentUser: null });
-        setBalanceForm({ amount: '', action: 'add', notes: '' });
+        setBalanceForm({ amount: '', action: 'add', notes: '' });
+
         fetchUsers();
       } else {
         showToast(result.error || 'Failed to update user balance', 'error');
@@ -637,7 +771,8 @@ const UsersListPage = () => {
     } finally {
       setBalanceSubmitting(false);
     }
-  }, [balanceForm, addDeductBalanceDialog.currentUser, fetchUsers]);
+  }, [balanceForm, addDeductBalanceDialog.currentUser, fetchUsers]);
+
   const handleEditDiscount = useCallback(
     async (userId: number, discount: number) => {
       const success = await handleApiAction(
@@ -653,7 +788,8 @@ const UsersListPage = () => {
       }
     },
     [handleApiAction]
-  );
+  );
+
   const handleChangeRole = useCallback(
     async (userId: number, role: string) => {
       const success = await handleApiAction(
@@ -670,7 +806,8 @@ const UsersListPage = () => {
       return success;
     },
     [handleApiAction]
-  );
+  );
+
   const handleResetSpecialPricing = useCallback(
     async (userId: number) => {
       return handleApiAction(
@@ -681,7 +818,8 @@ const UsersListPage = () => {
       );
     },
     [handleApiAction]
-  );
+  );
+
   const handleSetNewApiKey = useCallback(
     async (userId: number) => {
       return handleApiAction(
@@ -692,7 +830,8 @@ const UsersListPage = () => {
       );
     },
     [handleApiAction]
-  );
+  );
+
   const openEditUserDialog = useCallback(
     (userId: number, currentUser: User) => {
       setEditUserDialog({ open: true, userId, currentUser });
@@ -738,7 +877,8 @@ const UsersListPage = () => {
       name: editUserFormData.name,
       email: editUserFormData.email,
       balance: parseFloat(editUserFormData.balance) || 0,
-      emailVerified: editUserFormData.emailVerified,
+      emailVerified: editUserFormData.emailVerified,
+
       status: editUserFormData.emailVerified ? 'active' : 'pending',
       ...(editUserFormData.password && { password: editUserFormData.password }),
     };
@@ -771,7 +911,8 @@ const UsersListPage = () => {
       }
     },
     [users, openEditUserDialog]
-  );
+  );
+
   const openAddDeductBalanceDialog = useCallback(
     (userId: number) => {
       const user = users.find((u) => u.id === userId);
@@ -781,7 +922,8 @@ const UsersListPage = () => {
       }
     },
     [users]
-  );
+  );
+
   const calculateSuspensionDuration = (suspendedUntil: string): string => {
     const suspendedDate = new Date(suspendedUntil);
     const now = new Date();
@@ -791,7 +933,8 @@ const UsersListPage = () => {
 
     const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    const diffMonths = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30));
+    const diffMonths = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30));
+
     if (diffHours <= 24) return '24 hours';
     if (diffHours <= 48) return '48 hours';
     if (diffHours <= 72) return '72 hours';
@@ -806,7 +949,8 @@ const UsersListPage = () => {
     (userId: number, currentStatus: string) => {
       const user = users.find((u) => u.id === userId);
       setUpdateStatusDialog({ open: true, userId, currentStatus });
-      setNewStatus(currentStatus);
+      setNewStatus(currentStatus);
+
       if (currentStatus === 'suspended' && user?.suspendedUntil) {
         const currentDuration = calculateSuspensionDuration(user.suspendedUntil);
         setSuspensionDuration(currentDuration);
@@ -831,7 +975,8 @@ const UsersListPage = () => {
       setNewRole(currentRole);
     },
     []
-  );
+  );
+
   const handlePageChange = useCallback((newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
   }, []);
@@ -850,6 +995,7 @@ const UsersListPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div className="card card-padding">
@@ -860,10 +1006,7 @@ const UsersListPage = () => {
               <div>
                 <h3 className="card-title">Total Users</h3>
                 {statsLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
+                  <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
                   <p className="text-2xl font-bold text-blue-600">
                     {stats.totalUsers.toLocaleString()}
@@ -881,10 +1024,7 @@ const UsersListPage = () => {
               <div>
                 <h3 className="card-title">Active Users</h3>
                 {statsLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
+                  <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
                   <p className="text-2xl font-bold text-green-600">
                     {stats.activeUsers.toLocaleString()}
@@ -902,10 +1042,7 @@ const UsersListPage = () => {
               <div>
                 <h3 className="card-title">Suspended Users</h3>
                 {statsLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
+                  <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
                   <p className="text-2xl font-bold text-yellow-600">
                     {stats.suspendedUsers.toLocaleString()}
@@ -923,10 +1060,7 @@ const UsersListPage = () => {
               <div>
                 <h3 className="card-title">Banned Users</h3>
                 {statsLoading ? (
-                  <div className="flex items-center gap-2">
-                    <GradientSpinner size="w-6 h-6" />
-                    <span className="text-lg text-gray-400">Loading...</span>
-                  </div>
+                  <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
                   <p className="text-2xl font-bold text-red-600">
                     {stats.bannedUsers.toLocaleString()}
@@ -1104,14 +1238,9 @@ const UsersListPage = () => {
             </div>
           </div>
 
-          <div style={{ padding: '0 24px' }}>
+          <div style={{ padding: '0 24px' }} className="min-h-[600px]">
             {usersLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">Loading users...</div>
-                </div>
-              </div>
+              <UsersTableSkeleton />
             ) : users.length === 0 ? (
               <div className="text-center py-12">
                 <FaUsers
@@ -1573,7 +1702,8 @@ const UsersListPage = () => {
       </div>
     </div>
   );
-};
+};
+
 const UserActions: React.FC<UserActionsProps> = ({
   user,
   onView,
@@ -2023,7 +2153,8 @@ const Pagination: React.FC<PaginationProps> = ({
       </button>
     </div>
   </div>
-);
+);
+
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   isOpen,
   onClose,
@@ -2075,7 +2206,8 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
   onClose,
   isLoading,
   onBalanceUpdate,
-}) => {
+}) => {
+
   const { currency, currentCurrencyData, availableCurrencies, convertAmount } = useCurrency();
 
   const [balanceForm, setBalanceForm] = useState({
@@ -2084,7 +2216,8 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
     notes: '',
     username: '',
   });
-  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
+  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
       setBalanceForm({
@@ -2094,7 +2227,8 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
         username: currentUser?.username || '',
       });
     }
-  }, [isOpen, currentUser]);
+  }, [isOpen, currentUser]);
+
   const getDisplayBalance = () => {
     if (!currentUser) return '0.00';
 
@@ -2102,14 +2236,18 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
     const userRate = currentUser.dollarRate || 121.45;
     const isAdminUSD = currency === 'USD' || currency === 'USDT';
 
-    if (isAdminUSD) {
+    if (isAdminUSD) {
+
       const convertedBalance = userBalance / userRate;
       return convertedBalance.toFixed(2);
-    } else {
+    } else {
+
       return userBalance.toFixed(2);
     }
-  };
-  const showModalToast = (message: string, type: 'success' | 'error') => {
+  };
+
+  const showModalToast = (message: string, type: 'success' | 'error') => {
+
     const toast = document.createElement('div');
     toast.className = `fixed top-4 right-4 z-[9999] px-4 py-2 rounded-lg text-white font-medium ${
       type === 'success' ? 'bg-green-500' : 'bg-red-500'
@@ -2254,7 +2392,8 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
                   const amount = parseFloat(balanceForm.amount);
                   if (currency === 'BDT') {
                     return amount.toFixed(2);
-                  }
+                  }
+
                   const convertedAmount = convertAmount(amount, currency, 'BDT');
                   return convertedAmount.toFixed(2);
                 })()} (BDT)</div>
@@ -2495,7 +2634,8 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
       </div>
     </div>
   );
-};
+};
+
 const EditUserModal: React.FC<EditUserModalProps> = ({
   isOpen,
   currentUser,

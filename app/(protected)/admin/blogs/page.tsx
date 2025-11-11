@@ -18,17 +18,100 @@ import {
     FaSync,
     FaTimes,
     FaTrash
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID, formatNumber } from '@/lib/utils';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
+import { formatID, formatNumber } from '@/lib/utils';
+
+const ShimmerStyles = () => (
+  <style dangerouslySetInnerHTML={{__html: `
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    .gradient-shimmer {
+      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .gradient-shimmer {
+      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
+      background-size: 200% 100%;
+    }
+  `}} />
+);
+
+const BlogsTableSkeleton = () => {
+  const rows = Array.from({ length: 10 });
+
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[1400px]">
+          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+            <tr>
+              {Array.from({ length: 7 }).map((_, idx) => (
+                <th key={idx} className="text-left p-3">
+                  <div className="h-4 rounded w-3/4 gradient-shimmer" />
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((_, rowIdx) => (
+              <tr key={rowIdx} className="border-t dark:border-gray-700">
+                <td className="p-3">
+                  <div className="h-4 w-4 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-6 w-16 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="max-w-xs">
+                    <div className="h-4 w-48 gradient-shimmer rounded mb-2" />
+                    <div className="h-3 w-64 gradient-shimmer rounded" />
+                  </div>
+                </td>
+                <td className="p-3">
+                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-3 w-24 gradient-shimmer rounded mb-1" />
+                  <div className="h-3 w-20 gradient-shimmer rounded" />
+                </td>
+                <td className="p-3">
+                  <div className="h-5 w-20 gradient-shimmer rounded-full" />
+                </td>
+                <td className="p-3">
+                  <div className="flex gap-1">
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                    <div className="h-8 w-8 gradient-shimmer rounded" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <div className="h-5 w-48 gradient-shimmer rounded" />
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <div className="h-9 w-20 gradient-shimmer rounded" />
+          <div className="h-5 w-24 gradient-shimmer rounded" />
+          <div className="h-9 w-16 gradient-shimmer rounded" />
+        </div>
+      </div>
+    </>
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -45,7 +128,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface BlogPost {
   id: number;
   title: string;
@@ -92,15 +176,18 @@ interface PaginationInfo {
   totalPages: number;
   hasNext: boolean;
   hasPrev: boolean;
-}
+}
+
 
 const BlogsPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const router = useRouter();
+  const router = useRouter();
+
   useEffect(() => {
     setPageTitle('Blogs', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [stats, setStats] = useState<BlogStats>({
     totalBlogs: 0,
@@ -130,10 +217,12 @@ const BlogsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [statsLoading, setStatsLoading] = useState(false);
   const [blogsLoading, setBlogsLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     blogId: number;
@@ -156,7 +245,8 @@ const BlogsPage = () => {
   const [newStatus, setNewStatus] = useState('');
 
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+
   const calculateStatusCounts = (blogsData: BlogPost[] | undefined | null) => {
     const counts = {
       published: 0,
@@ -174,7 +264,8 @@ const BlogsPage = () => {
     });
 
     return counts;
-  };
+  };
+
   const fetchAllBlogsForCounts = async () => {
     try {
       console.log('Fetching all blogs for status counts from API...');
@@ -198,7 +289,8 @@ const BlogsPage = () => {
         totalBlogs: allBlogs.length,
       }));
     } catch (error) {
-      console.error('Error fetching blogs for counts:', error);
+      console.error('Error fetching blogs for counts:', error);
+
       setStats((prev) => ({
         ...prev,
         publishedBlogs: 0,
@@ -210,7 +302,8 @@ const BlogsPage = () => {
 
   const fetchBlogs = async () => {
     try {
-      setBlogsLoading(true);
+      setBlogsLoading(true);
+
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -243,7 +336,8 @@ const BlogsPage = () => {
       }));
     } catch (error) {
       console.error('Error fetching blogs:', error);
-      showToast('Error fetching blogs. Please try again.', 'error');
+      showToast('Error fetching blogs. Please try again.', 'error');
+
       setBlogs([]);
       setPagination(prev => ({
         ...prev,
@@ -272,7 +366,8 @@ const BlogsPage = () => {
 
       setStats(result.data);
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error('Error fetching stats:', error);
+
       setStats({
         totalBlogs: 0,
         publishedBlogs: 0,
@@ -287,14 +382,16 @@ const BlogsPage = () => {
       });
       showToast('Error fetching statistics. Please try again.', 'error');
     }
-  };
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchBlogs();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm]);
+
   useEffect(() => {
     fetchBlogs();
   }, [pagination.page, pagination.limit, statusFilter]);
@@ -308,7 +405,8 @@ const BlogsPage = () => {
     };
 
     loadData();
-  }, []);
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownOpen !== null) {
@@ -323,7 +421,8 @@ const BlogsPage = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [dropdownOpen]);
+  }, [dropdownOpen]);
+
   useEffect(() => {
     if (pagination.total > 0) {
       setStats((prev) => ({
@@ -331,17 +430,20 @@ const BlogsPage = () => {
         totalBlogs: pagination.total,
       }));
     }
-  }, [pagination.total]);
+  }, [pagination.total]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const handleNewBlogPost = () => {
     router.push('blogs/new-post');
-  };
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'published':
@@ -421,7 +523,8 @@ const BlogsPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
+  };
+
   const handleDeleteBlog = async (blogId: number) => {
     setDeleteLoading(true);
     try {
@@ -451,7 +554,8 @@ const BlogsPage = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
+  };
+
   const handleStatusChange = async (
     blogId: number,
     status: string
@@ -489,10 +593,12 @@ const BlogsPage = () => {
         'error'
       );
     }
-  };
+  };
+
   const openDeleteDialog = (blogId: number, blogTitle: string) => {
     setDeleteDialog({ open: true, blogId, blogTitle });
-  };
+  };
+
   const openStatusDialog = (blogId: number, currentStatus: string) => {
     setStatusDialog({ open: true, blogId, currentStatus });
     setNewStatus(currentStatus);
@@ -513,6 +619,7 @@ const BlogsPage = () => {
       </div>
 
       <div className="page-content">
+        <ShimmerStyles />
         {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
@@ -736,7 +843,8 @@ const BlogsPage = () => {
                           console.error('Error moving blogs to draft:', error);
                           showToast('Failed to move blogs to draft', 'error');
                         }
-                      } else if (selectedBulkAction === 'delete') {
+                      } else if (selectedBulkAction === 'delete') {
+
                         const confirmed = window.confirm(
                           `Are you sure you want to delete ${selectedBlogs.length} selected blog(s)? This action cannot be undone.`
                         );
@@ -768,7 +876,8 @@ const BlogsPage = () => {
                             showToast('Failed to delete blogs', 'error');
                           }
                         }
-                      }
+                      }
+
                       setSelectedBulkAction('');
                       setSelectedBlogs([]);
                     }}
@@ -781,13 +890,8 @@ const BlogsPage = () => {
             )}
 
             {blogsLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center flex flex-col items-center">
-                  <GradientSpinner size="w-12 h-12" className="mb-3" />
-                  <div className="text-base font-medium">
-                    Loading blogs...
-                  </div>
-                </div>
+              <div className="min-h-[600px]">
+                <BlogsTableSkeleton />
               </div>
             ) : blogs.length === 0 ? (
               <div className="text-center py-12">
@@ -1069,7 +1173,7 @@ const BlogsPage = () => {
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {blogsLoading ? (
-                        <GradientSpinner size="w-4 h-4" />
+                        <div className="h-4 w-24 gradient-shimmer rounded" />
                       ) : (
                         `Page ${formatNumber(
                           pagination.page
@@ -1127,7 +1231,7 @@ const BlogsPage = () => {
                         >
                           {deleteLoading ? (
                             <>
-                              <Spinner size="sm" className="mr-2" />
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                               Deleting...
                             </>
                           ) : (
