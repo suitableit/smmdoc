@@ -21,14 +21,98 @@ import {
   FaUser,
   FaUsers,
   FaWallet
-} from 'react-icons/fa';
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
+} from 'react-icons/fa';
+
+const ActivateAffiliateSkeleton = () => {
+  return (
+    <div className="space-y-6">
+      <div className="card card-padding">
+        <div className="text-center">
+          <div className="w-16 h-16 gradient-shimmer rounded-full mx-auto mb-4" />
+          <div className="h-8 w-64 gradient-shimmer rounded mx-auto mb-2" />
+          <div className="h-5 w-96 gradient-shimmer rounded mx-auto" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, idx) => (
+          <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+            <div className="text-center">
+              <div className="w-12 h-12 gradient-shimmer rounded-lg mx-auto mb-3" />
+              <div className="h-6 w-32 gradient-shimmer rounded mx-auto mb-2" />
+              <div className="h-4 w-full gradient-shimmer rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card card-padding">
+        <div className="card-header mb-6">
+          <div className="card-icon">
+            <div className="h-10 w-10 gradient-shimmer rounded-lg" />
+          </div>
+          <div className="h-6 w-48 gradient-shimmer rounded" />
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-4 w-4 gradient-shimmer rounded" />
+              <div className="h-5 w-40 gradient-shimmer rounded" />
+            </div>
+            <div className="h-4 w-32 gradient-shimmer rounded mb-1" />
+            <div className="h-4 w-40 gradient-shimmer rounded" />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-5 w-32 gradient-shimmer rounded" />
+              <div className="h-9 w-40 gradient-shimmer rounded-lg" />
+            </div>
+            <div className="text-center py-8 bg-gray-50 dark:bg-[#1e1f2e] border border-gray-200 dark:border-gray-600 rounded-lg">
+              <div className="h-8 w-8 gradient-shimmer rounded mx-auto mb-2" />
+              <div className="h-4 w-64 gradient-shimmer rounded mx-auto" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="h-4 w-4 gradient-shimmer rounded mt-1" />
+              <div className="h-4 w-64 gradient-shimmer rounded" />
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="flex-1 h-12 gradient-shimmer rounded-lg" />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 gradient-shimmer rounded-lg" />
+            <div className="h-6 w-56 gradient-shimmer rounded" />
+          </div>
+
+          <div className="space-y-6">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <div key={idx} className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 gradient-shimmer rounded-lg" />
+                  <div className="h-5 w-32 gradient-shimmer rounded" />
+                </div>
+                <div className="h-4 w-full gradient-shimmer rounded mb-1" />
+                <div className="h-4 w-3/4 gradient-shimmer rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -115,10 +199,12 @@ export default function ActivateAffiliatePage() {
     swiftCode: '',
   });
   const [showAddForm, setShowAddForm] = useState(false);
-  const [errors, setErrors] = useState<Partial<ActivationFormData>>({});
+  const [errors, setErrors] = useState<Partial<ActivationFormData>>({});
+
   useEffect(() => {
     setPageTitle('Activate Affiliate Account', appName);
-  }, [appName]);
+  }, [appName]);
+
   useEffect(() => {
     const checkAffiliateStatus = async () => {
       try {
@@ -147,14 +233,16 @@ export default function ActivateAffiliatePage() {
     } else {
       setCheckingStatus(false);
     }
-  }, [user]);
+  }, [user]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
-  };
+  };
+
   const validateForm = (): boolean => {
     const newErrors: any = {};
 
@@ -168,7 +256,8 @@ export default function ActivateAffiliatePage() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  };
+
   const validateNewPaymentMethod = (): boolean => {
     const newErrors: any = {};
 
@@ -202,7 +291,8 @@ export default function ActivateAffiliatePage() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  };
+
   const addPaymentMethod = () => {
     if (!validateNewPaymentMethod()) {
       showToast('Please fix the errors below', 'error');
@@ -229,7 +319,8 @@ export default function ActivateAffiliatePage() {
     setFormData(prev => ({
       ...prev,
       paymentMethods: [...prev.paymentMethods, paymentMethod],
-    }));
+    }));
+
     setNewPaymentMethod({
       method: '',
       mobileNumber: '',
@@ -242,14 +333,16 @@ export default function ActivateAffiliatePage() {
     setShowAddForm(false);
     setErrors({});
     showToast('Payment method added successfully!', 'success');
-  };
+  };
+
   const removePaymentMethod = (id: string) => {
     setFormData(prev => ({
       ...prev,
       paymentMethods: prev.paymentMethods.filter(pm => pm.id !== id),
     }));
     showToast('Payment method removed', 'info');
-  };
+  };
+
   const handleActivateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -284,19 +377,22 @@ export default function ActivateAffiliatePage() {
     } finally {
       setLoading(false);
     }
-  };
+  };
+
   const handleInputChange = (field: keyof ActivationFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if ((errors as any)[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
-  };
+  };
+
   const handleNewPaymentMethodChange = (field: keyof NewPaymentMethodForm, value: string) => {
     setNewPaymentMethod(prev => ({ ...prev, [field]: value }));
     if ((errors as any)[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
-  };
+  };
+
   const getPaymentMethodDisplayName = (method: string): string => {
     const names: Record<string, string> = {
       bkash: 'bKash',
@@ -311,11 +407,8 @@ export default function ActivateAffiliatePage() {
   if (checkingStatus) {
     return (
       <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <GradientSpinner className="mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Checking affiliate status...</p>
-          </div>
+        <div className="space-y-6">
+          <ActivateAffiliateSkeleton />
         </div>
       </div>
     );
@@ -785,7 +878,7 @@ export default function ActivateAffiliatePage() {
               >
                 {loading ? (
                   <div className="flex items-center justify-center gap-2">
-                    <GradientSpinner size="w-5 h-5" />
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>Activating...</span>
                   </div>
                 ) : (
